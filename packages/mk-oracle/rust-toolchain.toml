@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.87" # must be in sync with install-rust-cargo.sh
+channel = "1.87.0" # must be in sync with install-rust-cargo.sh
 
 [toolchain.windows]
 targets = ["x86_64-pc-windows-msvc"]

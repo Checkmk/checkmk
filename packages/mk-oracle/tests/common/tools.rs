@@ -4,9 +4,12 @@
 
 use anyhow::{self, Result};
 use mk_oracle::config::authentication::Role;
+use std::path::PathBuf;
+use std::sync::OnceLock;
 
 pub const ORA_ENDPOINT_ENV_VAR_LOCAL: &str = "CI_ORA1_DB_TEST";
-// pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
+#[cfg(windows)]
+pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
 #[allow(dead_code)]
@@ -39,4 +42,38 @@ impl SqlDbEndpoint {
             role: Role::new(parts[5]),
         })
     }
+}
+
+static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
+static PATCHED_PATH: OnceLock<()> = OnceLock::new();
+pub fn add_runtime_to_path() {
+    PATCHED_PATH.get_or_init(_patch_path);
+}
+
+fn _init_runtime_path() -> PathBuf {
+    if let Ok(path) = std::env::var("MK_LIBDIR") {
+        return PathBuf::from(path);
+    }
+    let _this_file: PathBuf = PathBuf::from(file!());
+    _this_file
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("runtimes")
+        .join("oci_light_win_x64.zip")
+}
+
+fn _patch_path() {
+    let cwd = RUNTIME_PATH.get_or_init(_init_runtime_path).clone();
+    unsafe {
+        std::env::set_var(
+            "PATH",
+            format!("{cwd:?};") + &std::env::var("PATH").unwrap(),
+        );
+    }
+    std::env::set_current_dir(cwd).unwrap();
+    eprintln!("PATH={}", std::env::var("PATH").unwrap());
 }

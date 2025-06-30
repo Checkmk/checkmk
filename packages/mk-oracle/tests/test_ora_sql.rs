@@ -11,30 +11,12 @@ use mk_oracle::config::authentication::{AuthType, Role};
 use mk_oracle::config::connection::EngineTag;
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
-use std::path::PathBuf;
-use std::sync::OnceLock;
 
-use crate::common::tools::{SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_LOCAL};
+#[cfg(windows)]
+use crate::common::tools::ORA_ENDPOINT_ENV_VAR_EXT;
+use crate::common::tools::{add_runtime_to_path, SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_LOCAL};
 use mk_oracle::types::{Credentials, InstanceName};
 
-static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
-
-fn _init_runtime_path() -> PathBuf {
-    let _this_file: PathBuf = PathBuf::from(file!());
-    _this_file
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("runtimes")
-        .join("oci_light_win_x64.zip")
-}
-
-fn change_cwd_to_runtime_path() {
-    let runtime_location = RUNTIME_PATH.get_or_init(_init_runtime_path).clone();
-    eprintln!("RUNTIME {:?}", runtime_location);
-    std::env::set_current_dir(runtime_location).unwrap();
-}
 fn make_base_config(
     credentials: &Credentials,
     auth_type: AuthType,
@@ -75,6 +57,7 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
+#[cfg(windows)]
 fn make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
     let config_str = format!(
         r#"
@@ -131,9 +114,10 @@ fn test_environment() {
 fn test_local_connection() {
     let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
     if r.is_err() {
-        println!("Skipping test_local_connection: {}", r.err().unwrap());
+        eprintln!("Skipping test_local_connection: {}", r.err().unwrap());
         return;
     }
+    add_runtime_to_path();
     let endpoint = r.unwrap();
 
     let config = make_base_config(
@@ -147,8 +131,6 @@ fn test_local_connection() {
         endpoint.port,
         InstanceName::from(endpoint.instance.clone()),
     );
-
-    change_cwd_to_runtime_path();
 
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
@@ -173,28 +155,32 @@ fn test_local_connection() {
     assert_eq!(rows.len(), 2);
 }
 
+#[cfg(windows)]
 #[test]
-fn test_local_mini_connection() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
+fn test_remote_mini_connection() {
+    add_runtime_to_path();
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
     if r.is_err() {
-        println!("Skipping test_local_connection: {}", r.err().unwrap());
+        eprintln!("Skipping test_local_connection: {}", r.err().unwrap());
         return;
     }
     let endpoint = r.unwrap();
 
     let config = make_mini_config(
         &Credentials {
-            user: "system".into(),
-            password: "Oracle-dba".into(),
+            user: endpoint.user,
+            password: endpoint.pwd,
         },
         AuthType::Standard,
         &endpoint.host,
     );
 
-    change_cwd_to_runtime_path();
-
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
+    if r.is_err() {
+        eprintln!("Failed to connect: {}", r.err().unwrap());
+        return;
+    }
     assert!(r.is_ok());
     let result = task.query(
         r"

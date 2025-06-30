@@ -244,11 +244,11 @@ try {
     }
 
     if ($packFormat) {
-        & Invoke-Cargo-With-Explicit-Package  "fmt"
+        Invoke-Cargo-With-Explicit-Package "fmt"
     }
 
     if ($packCheckFormat) {
-        & Invoke-Cargo-With-Explicit-Package  "fmt" "--" "--check"
+        Invoke-Cargo-With-Explicit-Package "fmt" "--" "--check"
     }
     if ($packTest) {
         if (-not (Test-Administrator)) {

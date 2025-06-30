@@ -86,7 +86,7 @@ ifeq ($(filter $(EDITION),saas),)
 	    --exclude "cse.py"
 endif
 
-$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS) agent_plugins_py2
+$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent_plugins_py2
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 	install -m 644 $(CHECK_MK_WERKS_PATH) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 

@@ -585,8 +585,20 @@ class HostsAPI(BaseAPI):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
-    def get_all_names(self, ignore: list[str] | None = None) -> list[str]:
-        return [host["id"] for host in self.get_all() if not ignore or host["id"] not in ignore]
+    def get_all_names(
+        self, ignore: list[str] | None = None, allow: list[str] | None = None
+    ) -> list[str]:
+        """Get all host names from the API.
+
+        Args:
+            ignore: List of host names not to be returned, even if found in the system (optional).
+            allow: List of host names to be returned, if found in the system (optional).
+        """
+        return [
+            host_name
+            for host_name in [host["id"] for host in self.get_all()]
+            if (not ignore or host_name not in ignore) and (not allow or host_name in allow)
+        ]
 
     def delete(self, hostname: str) -> None:
         response = self.session.delete(f"/objects/host_config/{hostname}")

@@ -13,17 +13,34 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def dcd_connector(site: Site, interval: int = 5, auto_cleanup: bool = True) -> Iterator[None]:
+def dcd_connector(
+    site: Site,
+    dcd_id: str = "dcd_connector",
+    interval: int = 5,
+    host_attributes: dict[str, object] | None = None,
+    delete_hosts: bool = True,
+    discover_on_creation: bool = True,
+    no_deletion_time_after_init: int = 60,
+    max_cache_age: int = 60,
+    validity_period: int = 60,
+    cleanup: bool = True,
+) -> Iterator[None]:
     """Create and use a DCD connector for site.
 
     Args:
         site: The Site instance where the DCD cycle should be executed.
+        dcd_id: The ID of the DCD connector.
         interval: The interval between each DCD cycle (seconds).
-        auto_cleanup: Specifies if the connector setup is cleaned up at the end.
+        host_attributes: Attributes to set on the newly created host.
+        delete_hosts: Delete piggybacked hosts for which piggyback data is no longer present.
+        discover_on_creation: Run service discovery on new hosts created by this connection.
+        no_deletion_time_after_init: Seconds to prevent host deletion after site startup.
+        max_cache_age: Seconds to keep hosts when piggyback source does not send data.
+        validity_period: Seconds to continue consider outdated piggyback data as valid.
+        cleanup: Specifies if the connector setup is cleaned up at the end.
     """
     logger.info("Creating a DCD connection for piggyback hosts...")
-    dcd_id = "dcd_connector"
-    host_attributes = {
+    host_attributes = host_attributes or {
         "tag_snmp_ds": "no-snmp",
         "tag_agent": "no-agent",
         "tag_piggyback": "piggyback",
@@ -34,19 +51,21 @@ def dcd_connector(site: Site, interval: int = 5, auto_cleanup: bool = True) -> I
         title="DCD Connector for piggyback hosts",
         host_attributes=host_attributes,
         interval=interval,
-        validity_period=60,
-        max_cache_age=60,
-        delete_hosts=True,
-        no_deletion_time_after_init=60,
+        delete_hosts=delete_hosts,
+        discover_on_creation=discover_on_creation,
+        validity_period=validity_period,
+        max_cache_age=max_cache_age,
+        no_deletion_time_after_init=no_deletion_time_after_init,
     )
     with site.openapi.wait_for_completion(300, "get", "activate_changes"):
         site.openapi.changes.activate(force_foreign_changes=True)
     try:
         yield
     finally:
-        if auto_cleanup:
-            site.openapi.dcd.delete(dcd_id)
-            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+        if not cleanup:
+            return
+        site.openapi.dcd.delete(dcd_id)
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def execute_dcd_cycle(

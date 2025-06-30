@@ -356,7 +356,7 @@ def setup_source_host_piggyback(
     logger.info("Running service discovery...")
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)
 
-    with dcd_connector(site, dcd_interval, auto_cleanup=not config.skip_cleanup):
+    with dcd_connector(site, interval=dcd_interval, cleanup=not config.skip_cleanup):
         pb_hosts_from_dump = read_piggyback_hosts_from_dump(
             read_disk_dump(source_host_name, config.dump_dir_integration / "piggyback")
         )

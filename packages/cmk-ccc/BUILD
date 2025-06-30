@@ -23,6 +23,13 @@ py_library(
 )
 
 py_library(
+    name = "resulttype",
+    srcs = ["cmk/ccc/resulttype.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "crash-reporting",
     srcs = ["cmk/ccc/crash_reporting.py"],
     imports = ["."],
@@ -161,6 +168,7 @@ _ALL = [
     "i18n",
     "plugin-registry",
     "profile",
+    "resulttype",
     "site",
     "store",
     "tty",
@@ -225,6 +233,21 @@ py_test(
     deps = [
         "__test__",
         "site",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "resulttype-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_resulttype.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "resulttype",
         requirement("pytest"),
     ],
 )

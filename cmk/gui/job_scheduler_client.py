@@ -12,7 +12,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 
-import cmk.utils.resulttype as result
+import cmk.ccc.resulttype as result
+
 from cmk.utils import paths
 
 from cmk.gui.i18n import _

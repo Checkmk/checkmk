@@ -8,10 +8,10 @@ import os
 import shutil
 import time
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 
-import cmk.utils.resulttype as result
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 
 from cmk.gui import log

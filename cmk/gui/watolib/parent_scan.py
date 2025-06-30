@@ -14,10 +14,10 @@ from livestatus import SiteConfiguration
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.resulttype import Result
 from cmk.ccc.site import SiteId
 
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.resulttype import Result
 
 from cmk.automations.results import Gateway, GatewayResult
 

@@ -19,12 +19,12 @@ from typing import Final, Literal, Protocol
 import livestatus
 
 import cmk.ccc.debug
+import cmk.ccc.resulttype as result
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
-import cmk.utils.resulttype as result
 from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias

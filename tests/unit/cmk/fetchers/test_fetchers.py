@@ -16,10 +16,10 @@ import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from pytest import MonkeyPatch
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.paths import omd_root
 from cmk.utils.sectionname import SectionMap, SectionName

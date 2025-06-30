@@ -29,10 +29,10 @@ import pydantic
 
 from omdlib.type_defs import Config, ConfigChoiceHasError
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
 
-import cmk.utils.resulttype as result
 from cmk.utils import paths
 
 if TYPE_CHECKING:

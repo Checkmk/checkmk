@@ -13,12 +13,12 @@ from pathlib import Path
 
 from tests.testlib.common.repo import qa_test_data_path
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.resulttype import OK
 
-import cmk.utils.resulttype as result
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.resulttype import OK
 
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge

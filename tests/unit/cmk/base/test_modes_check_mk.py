@@ -11,9 +11,8 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-import cmk.utils.resulttype as result
 
 from cmk.fetchers import PiggybackFetcher
 

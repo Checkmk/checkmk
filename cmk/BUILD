@@ -141,6 +141,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:i18n",
     "//packages/cmk-ccc:plugin-registry",
     "//packages/cmk-ccc:profile",
+    "//packages/cmk-ccc:resulttype",
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:tty",

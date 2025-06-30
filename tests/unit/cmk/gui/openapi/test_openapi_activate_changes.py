@@ -10,9 +10,9 @@ from pytest_mock import MockerFixture
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.testlib.unit.utils import reset_registries
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.version import edition
 
-import cmk.utils.resulttype as result
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

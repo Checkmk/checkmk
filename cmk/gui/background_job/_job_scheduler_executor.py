@@ -8,7 +8,7 @@
 import logging
 from typing import override
 
-import cmk.utils.resulttype as result
+import cmk.ccc.resulttype as result
 
 from cmk.gui.job_scheduler_client import JobSchedulerClient, StartupError
 

@@ -11,6 +11,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -20,7 +21,6 @@ from cmk.ccc.exceptions import (
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-import cmk.utils.resulttype as result
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult

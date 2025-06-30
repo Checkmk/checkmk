@@ -10,11 +10,11 @@ from typing import Literal, NamedTuple, NewType, override
 
 from pydantic import BaseModel
 
+import cmk.ccc.resulttype as result
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-import cmk.utils.resulttype as result
 from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult

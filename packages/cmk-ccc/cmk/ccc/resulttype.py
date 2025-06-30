@@ -207,7 +207,7 @@ class OK(Result[T_co, E_co]):
         self,
         *,
         ok: Callable[[T_co], U_co],
-        error: Callable[[E_co], U_co],
+        error: Callable[[E_co], U_co],  # noqa: ARG002
     ) -> U_co:
         return ok(self.join().ok)
 
@@ -273,7 +273,10 @@ class Error(Result[T_co, E_co]):
     def as_optional(self) -> None:
         return None
 
-    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
+    def bind(
+        self,
+        func: Callable[[T_co], Result[U_co, E_co]],  # noqa: ARG002
+    ) -> Result[U_co, E_co]:
         return Error(self.join().error)
 
     def join(self) -> Error[T_co, E_co]:
@@ -288,7 +291,7 @@ class Error(Result[T_co, E_co]):
     def fold(
         self,
         *,
-        ok: Callable[[T_co], U_co],
+        ok: Callable[[T_co], U_co],  # noqa: ARG002
         error: Callable[[E_co], U_co],
     ) -> U_co:
         return error(self.join().error)

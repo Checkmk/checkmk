@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 
-import cmk.utils.resulttype as result
+import cmk.ccc.resulttype as result
 
 Config = dict[str, str]
 Replacements = dict[str, str]

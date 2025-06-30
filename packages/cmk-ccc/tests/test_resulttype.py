@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from cmk.utils.resulttype import Error, OK, Result
+from cmk.ccc.resulttype import Error, OK, Result
 
 
 class TestOk:
@@ -109,14 +109,14 @@ class TestOk:
         ok: Result[object, object] = OK("ok")
         assert result.ok != ok.ok
 
-        other = result.bind(lambda v: ok)
+        other = result.bind(lambda v: ok)  # noqa: ARG005
         assert other != result
         assert other == ok
 
     def test_bind_error(self, result: Result[int, object], value: int) -> None:
         error: Result[int, object] = Error(value + 1)
 
-        other = result.bind(lambda v: error)
+        other = result.bind(lambda v: error)  # noqa: ARG005
         assert other != result
         assert other == error
 
@@ -124,16 +124,16 @@ class TestOk:
         ok = "ok"
         assert not isinstance(result.ok, type(ok))
 
-        other = result.map(lambda v: ok)
+        other = result.map(lambda v: ok)  # noqa: ARG005
         assert other != result
         assert other == OK(ok)
 
     def test_map_error(self, result: Result[int, object]) -> None:
         error = "error"
-        assert result.map_error(lambda v: error) == result
+        assert result.map_error(lambda v: error) == result  # noqa: ARG005
 
     def test_fold(self, result: Result[int, object]) -> None:
-        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "ok"
+        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "ok"  # noqa: ARG005
 
 
 class TestError:
@@ -234,7 +234,7 @@ class TestError:
     def test_bind_ok(self, result: Result[object, int]) -> None:
         ok: Result[object, int] = OK("ok")
 
-        other = result.bind(lambda v: ok)
+        other = result.bind(lambda v: ok)  # noqa: ARG005
         assert other != ok
         assert other == result
 
@@ -242,24 +242,24 @@ class TestError:
         error: Result[object, int] = Error(value + 1)
         assert result.error != error.error
 
-        other = result.bind(lambda v: error)
+        other = result.bind(lambda v: error)  # noqa: ARG005
         assert other != error
         assert other == result
 
     def test_map(self, result: Result[object, int]) -> None:
         ok = "ok"
-        assert result.map(lambda v: ok) == result
+        assert result.map(lambda v: ok) == result  # noqa: ARG005
 
     def test_map_error(self, result: Result[object, int]) -> None:
         error = "error"
         assert not isinstance(result.error, type(error))
 
-        other = result.map_error(lambda v: error)
+        other = result.map_error(lambda v: error)  # noqa: ARG005
         assert other != result
         assert other.error == error
 
     def test_fold(self, result: Result[object, int]) -> None:
-        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "error"
+        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "error"  # noqa: ARG005
 
 
 def test_match_ok() -> None:

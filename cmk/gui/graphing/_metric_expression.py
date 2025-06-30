@@ -11,10 +11,10 @@ from dataclasses import dataclass, KW_ONLY
 from typing import Literal, override
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
 
 from cmk.utils.metrics import MetricName
-from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _, translate_to_current_language

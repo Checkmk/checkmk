@@ -8,9 +8,9 @@ from typing import Literal
 
 import pytest
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
@@ -1432,7 +1432,11 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
     [
         (
             deserialize_tree(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             # No further impact, may not be realistic here
             MutableTree(),
@@ -1449,7 +1453,11 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
         ),
         (
             deserialize_tree(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             _create_root_tree({SDKey("key"): "new value"}),
             # Content of path does not matter here
@@ -1458,7 +1466,11 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
         ),
         (
             deserialize_tree(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             _create_root_tree({SDKey("key"): "new value"}),
             UpdateResult(),

@@ -11,9 +11,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from functools import partial
 from typing import Final, Generic, Protocol, TypeVar
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
 
-import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import SectionMap, SectionName
 

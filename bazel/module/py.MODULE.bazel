@@ -1,3 +1,14 @@
+py3mod = use_extension("//bazel/extensions:create_python_requirements.bzl", "create_python_requirements")
+py3mod.requirements(
+    name = "python_modules",
+    ignored_modules = [
+        # Broken third party packages
+        "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
+    ],
+    requirements_lock = "//:runtime-requirements.txt",
+)
+use_repo(py3mod, "python_modules")
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     environment = {

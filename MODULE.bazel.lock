@@ -296,6 +296,28 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "//bazel/extensions:create_python_requirements.bzl%create_python_requirements": {
+      "general": {
+        "bzlTransitiveDigest": "sxGlPSPCVPUUdB2c+0Jx1Omab1lViUTE+2IkWh2UDmU=",
+        "usagesDigest": "AB0mJN5TeT55kZALab3tqqDGwBYJF8CsGIdjWt3GcUk=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "python_modules": {
+            "bzlFile": "@@//omd/packages/python3-modules:create_python_requirements.bzl",
+            "ruleClassName": "create_python_requirements",
+            "attributes": {
+              "requirements_lock": "//:runtime-requirements.txt",
+              "ignored_modules": [
+                "netapp-ontap"
+              ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
     "@@apple_support~//crosstool:setup.bzl%apple_cc_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "7ii+gFxWSxHhQPrBxfMEHhtrGvHmBTvsh+KOyGunP/s=",

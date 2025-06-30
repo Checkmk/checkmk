@@ -33,17 +33,6 @@ load("//omd/packages/nagios:nagios_http.bzl", "nagios_workspace")
 
 nagios_workspace()
 
-load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
-
-create_python_requirements(
-    name = "python_modules",
-    ignored_modules = [
-        # Broken third party packages
-        "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
-    ],
-    requirements_lock = "//:runtime-requirements.txt",
-)
-
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")
 
 mod_wsgi_workspace()

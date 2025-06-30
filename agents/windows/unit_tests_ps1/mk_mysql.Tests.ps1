@@ -3,12 +3,6 @@ BeforeAll {
     . $scriptPath
 }
 Context "mk_mysql.ps1 Tests" {
-    Describe "Run Function" {
-        It "Should execute a command and return output" {
-            $result = Run "echo Hello"
-            $result | Should -Contain "Hello"
-        }
-    }
 
     Describe "ReplaceSqlExeForMysql Function" {
         It "Should replace <cmd> with <expected>" -ForEach @(

@@ -30,7 +30,7 @@ function Run {
     param (
         [string]$cmdCommand
     )
-    return cmd.exe /s /c $cmdCommand
+    cmd.exe /s /c $cmdCommand
 }
 
 function ReplaceSqlExeForMysql {

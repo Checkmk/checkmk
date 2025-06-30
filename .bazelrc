@@ -11,9 +11,17 @@ common:linux --registry="file://%workspace%/bazel/registry"
 common:windows --registry="file:///%workspace%/bazel/registry"
 common --registry=https://bcr.bazel.build
 
+# reading WORKSPACE is disabled by default for Bazel 8
+common --enable_workspace
+
+# with rules_proto_grpc (5.0.1) we run into
+# >>> Error in resolve_tools: Pass an executable or tools argument to ctx.actions.run
+# without
+common --noincompatible_disallow_ctx_resolve_tools
+
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
-common --experimental_remote_cache_async
+common --remote_cache_async
 common --remote_cache_compression
 # send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
 # only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s

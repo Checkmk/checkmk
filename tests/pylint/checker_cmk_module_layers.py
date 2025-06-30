@@ -115,8 +115,6 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.automations")),
             imported.in_component(Component("cmk.bi")),
             imported.in_component(Component("cmk.piggyback")),
-            imported.in_component(Component("cmk.plugins.mail")),
-            imported.in_component(Component("cmk.plugins.collection")),
             imported.in_component(Component("cmk.discover_plugins")),
             imported.in_component(Component("cmk.agent_based")),
             imported.in_component(Component("cmk.rulesets")),

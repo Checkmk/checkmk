@@ -185,6 +185,7 @@ include \
     packages/check_mk/check_mk.make \
     packages/omd/omd.make \
     packages/appliance/appliance.make \
+    packages/xmlsec1/xmlsec1.make \
 
 ifeq ($(EDITION),enterprise)
 include \

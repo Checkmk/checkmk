@@ -78,7 +78,6 @@ file_from_flag(
                "//omd/packages/robotmk",
                "//omd/packages/snap7",
                "//omd/packages/stunnel",
-               "//omd/packages/xmlsec1",
                "//packages/cmk-agent-receiver:pkg_tar",
                "//packages/cmk-ccc:pkg_tar",
                "//packages/cmk-crypto:pkg_tar",

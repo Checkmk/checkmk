@@ -103,3 +103,11 @@ selects.config_setting_group(
         ":ubuntu-24.04",
     ],
 )
+
+selects.config_setting_group(
+    name = "enterprise_linux",
+    match_any = [
+        ":almalinux",
+        ":sles",
+    ],
+)

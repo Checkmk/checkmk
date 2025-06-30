@@ -59,3 +59,10 @@ configure_make(
     visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":xmlsec1"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)

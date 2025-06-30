@@ -44,7 +44,7 @@ file_from_flag(
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
-    extension = "tar.gz",
+    extension = "tar.xz",
     package_dir_file = ":omd_root_dir",
     deps = [
                #added here instead of above because of disappearing file

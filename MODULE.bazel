@@ -348,11 +348,11 @@ http_archive(
 http_archive(
     name = "erlang",
     build_file = "//omd/packages/erlang:BUILD.erlang.bazel",
-    sha256 = "e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872",
-    strip_prefix = "otp_src_26.2.5.2",
+    sha256 = "a02efb423a7ecdee661b3c3ad2661521d9c00c2dd866c004d95a87d486a03bab",
+    strip_prefix = "otp_src_26.2.5.13",
     urls = [
-        UPSTREAM_MIRROR_URL + "otp_src_26.2.5.2.tar.gz",
-        "https://github.com/erlang/otp/releases/download/OTP-26.2.5.2/otp_src_26.2.5.2.tar.gz",
+        UPSTREAM_MIRROR_URL + "otp_src_26.2.5.13.tar.gz",
+        "https://github.com/erlang/otp/releases/download/OTP-26.2.5.13/otp_src_26.2.5.13.tar.gz",
     ],
 )
 

@@ -1,6 +1,6 @@
 ARG IMAGE_ALMALINUX_9
 # hadolint ignore=DL3006
-FROM ${IMAGE_ALMALINUX_9} as base
+FROM ${IMAGE_ALMALINUX_9} AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -121,7 +121,7 @@ RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-FROM base as builder
+FROM base AS builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD

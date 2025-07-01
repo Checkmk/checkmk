@@ -1,6 +1,6 @@
 ARG IMAGE_CENTOS_7
 # hadolint ignore=DL3006
-FROM ${IMAGE_CENTOS_7} as base
+FROM ${IMAGE_CENTOS_7} AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -120,7 +120,7 @@ RUN yum -y makecache \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-FROM base as builder
+FROM base AS builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD

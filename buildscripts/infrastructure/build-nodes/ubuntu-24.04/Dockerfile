@@ -1,6 +1,6 @@
 ARG IMAGE_UBUNTU_24_04
 # hadolint ignore=DL3006
-FROM ${IMAGE_UBUNTU_24_04} as base
+FROM ${IMAGE_UBUNTU_24_04} AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -86,7 +86,7 @@ RUN apt-get update \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-FROM base as builder
+FROM base AS builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD

@@ -1,6 +1,6 @@
 ARG IMAGE_SLES_15SP1
 # hadolint ignore=DL3006
-FROM ${IMAGE_SLES_15SP1} as base
+FROM ${IMAGE_SLES_15SP1} AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -103,7 +103,7 @@ ENV PATH="/usr/lib/mit/bin:${PATH}"
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-FROM base as builder
+FROM base AS builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD

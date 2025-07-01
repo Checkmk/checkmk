@@ -120,7 +120,9 @@ def replace_passwords() -> None:
         except KeyError:
             bail_out("pwstore: Password '%s' does not exist" % password_id)
 
-        sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
+        sys.argv[num_arg] = (
+            arg[:pos_in_arg] + password + arg[pos_in_arg + len(password.encode("utf-8")) :]
+        )
 
 
 def save(stored_passwords: Mapping[str, str], custom_path: Path | None = None) -> None:

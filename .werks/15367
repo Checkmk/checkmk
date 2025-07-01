@@ -1,0 +1,19 @@
+Title: Special characters in passwords in password store are now fully supported with active checks written in c
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1752498912
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+When using special characters in passwords stored in the password store for an
+active check that is implemented in c (for example the legacy active check
+<code>check_http</code>) the following error message was shown:
+
+C+:
+Invalid --pwstore= option: Password is too long for argument.
+C-:
+
+This was due to the c implementation calculated the length of the password in
+UTF-8 encoded bytes, but the python implementation counted UTF characters.

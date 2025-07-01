@@ -1503,7 +1503,11 @@ def _prepare_check_command(
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
+            # the * placeholder may seem random, but the (binary!) length of the string is actually
+            # important because there is a C implementation of resolve_password_hack that relies on the
+            # binary lengths of the password and the placeholder being equal.
+            # check `cmk_replace_passwords` in `omd/packages/monitoring-plugins/cmk_password_store.h`
+            formatted.append(shlex.quote(preformated_arg % ("*" * len(password.encode("utf-8")))))
             passwords.append((str(len(formatted)), pw_start_index, pw_ident))
 
         else:

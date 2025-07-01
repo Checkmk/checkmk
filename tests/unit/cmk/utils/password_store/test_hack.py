@@ -17,7 +17,7 @@ APPLIED = [
     "--normal",
     "--also-normal",
     "'--password=!!*****!!'",
-    "'--credential=..********..'",
+    "'--credential=..****************..'",
     "--end",
 ]
 PASSWORDS = {

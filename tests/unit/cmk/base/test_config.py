@@ -2860,7 +2860,7 @@ def test_commandline_arguments_password_store(pw: str) -> None:
     password_store.save({"pw-id": pw})
     assert config.commandline_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
-    ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw))
+    ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw.encode("utf-8")))
 
 
 def test_commandline_arguments_not_existing_password(  # type:ignore[no-untyped-def]

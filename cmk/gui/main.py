@@ -27,9 +27,17 @@ def page_index(config: Config) -> None:
     if is_mobile(request, response):
         raise HTTPRedirect(makeuri(request, [], filename="mobile.py"))
 
-    title = get_page_heading(config)
-    content = HTMLWriter.render_iframe("", src=_get_start_url(config), name="main")
-    SidebarRenderer().show(title, content)
+    SidebarRenderer().show(
+        config=config,
+        title=get_page_heading(config),
+        content=HTMLWriter.render_iframe("", src=_get_start_url(config), name="main"),
+        sidebar_config=config.sidebar,
+        screenshot_mode=config.screenshotmode,
+        sidebar_notify_interval=config.sidebar_notify_interval,
+        start_url=config.start_url,
+        show_scrollbar=config.sidebar_show_scrollbar,
+        sidebar_update_interval=config.sidebar_update_interval,
+    )
 
 
 def _get_start_url(config: Config) -> str:

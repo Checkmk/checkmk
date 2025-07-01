@@ -10,7 +10,7 @@ import copy
 import json
 import textwrap
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from enum import Enum
 from typing import Any
 
@@ -21,7 +21,7 @@ import cmk.utils.paths
 
 from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -221,7 +221,7 @@ def transform_old_dict_based_snapins() -> None:
 class UserSidebarConfig:
     """Manages the configuration of the users sidebar"""
 
-    def __init__(self, usr: LoggedInUser, default_config: list[tuple[str, str]]) -> None:
+    def __init__(self, usr: LoggedInUser, default_config: Sequence[tuple[str, str]]) -> None:
         super().__init__()
         self._user = usr
         self._default_config = copy.deepcopy(default_config)
@@ -377,7 +377,19 @@ class UserSidebarSnapin:
 
 
 class SidebarRenderer:
-    def show(self, title: str | None = None, content: HTML | None = None) -> None:
+    def show(
+        self,
+        *,
+        config: Config,
+        title: str | None,
+        content: HTML | None,
+        sidebar_config: Sequence[tuple[str, str]],
+        screenshot_mode: bool,
+        sidebar_notify_interval: int | None,
+        start_url: str,
+        show_scrollbar: bool,
+        sidebar_update_interval: float,
+    ) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideally we should
         # split this up. Possible solutions might be:
@@ -393,42 +405,56 @@ class SidebarRenderer:
 
         html.html_head(title or _("Checkmk Sidebar"), main_javascript="side")
 
-        self._show_body_start()
-        self._show_sidebar()
+        self._show_body_start(
+            screenshot_mode=screenshot_mode, sidebar_notify_interval=sidebar_notify_interval
+        )
+        self._show_sidebar(
+            config,
+            sidebar_config,
+            start_url,
+            show_scrollbar=show_scrollbar,
+            sidebar_update_interval=sidebar_update_interval,
+        )
         self._show_page_content(content)
 
         html.body_end()
 
-    def _show_body_start(self) -> None:
-        body_classes = ["side"] + (["screenshotmode"] if active_config.screenshotmode else [])
+    def _show_body_start(
+        self, *, screenshot_mode: bool, sidebar_notify_interval: int | None
+    ) -> None:
+        body_classes = ["side"] + (["screenshotmode"] if screenshot_mode else [])
 
         if not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
             return
 
-        interval = (
-            active_config.sidebar_notify_interval
-            if active_config.sidebar_notify_interval is not None
-            else "null"
-        )
+        interval = sidebar_notify_interval if sidebar_notify_interval is not None else "null"
         html.open_body(
             class_=body_classes,
             onload=f"cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks({json.dumps(interval)}, {json.dumps(bool(may_acknowledge()))}); ",
             data_theme=theme.get(),
         )
 
-    def _show_sidebar(self) -> None:
+    def _show_sidebar(
+        self,
+        config: Config,
+        sidebar_config: Sequence[tuple[str, str]],
+        start_url: str,
+        *,
+        show_scrollbar: bool,
+        sidebar_update_interval: float,
+    ) -> None:
         if not user.may("general.see_sidebar"):
             html.div("", id_="check_mk_navigation")
             return
 
-        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config = UserSidebarConfig(user, sidebar_config)
 
         html.open_div(
             id_="check_mk_navigation",
             class_="min" if user.get_attribute("nav_hide_icons_title") else None,
         )
-        self._show_sidebar_head()
+        self._show_sidebar_head(start_url)
         html.close_div()
 
         assert user.id is not None
@@ -442,16 +468,28 @@ class SidebarRenderer:
             class_=[] if sidebar_position is None else [sidebar_position],
         )
 
-        self._show_snapin_bar(active_config, user_config)
+        self._show_snapin_bar(
+            config,
+            user_config,
+            show_scrollbar=show_scrollbar,
+            sidebar_update_interval=sidebar_update_interval,
+        )
 
         html.close_div()
 
         if user_config.folded:
             html.final_javascript("cmk.sidebar.fold_sidebar();")
 
-    def _show_snapin_bar(self, config: Config, user_config: UserSidebarConfig) -> None:
+    def _show_snapin_bar(
+        self,
+        config: Config,
+        user_config: UserSidebarConfig,
+        *,
+        show_scrollbar: bool,
+        sidebar_update_interval: float,
+    ) -> None:
         html.open_div(
-            class_="scroll" if active_config.sidebar_show_scrollbar else None,
+            class_="scroll" if show_scrollbar else None,
             id_="side_content",
         )
 
@@ -463,7 +501,7 @@ class SidebarRenderer:
         html.javascript(
             "cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n"
             % (
-                active_config.sidebar_update_interval,
+                sidebar_update_interval,
                 json.dumps(refresh_snapins),
                 json.dumps(restart_snapins),
                 json.dumps(static_snapins),
@@ -626,10 +664,10 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
-    def _show_sidebar_head(self):
+    def _show_sidebar_head(self, start_url: str) -> None:
         html.open_div(id_="side_header")
         html.open_a(
-            href=user.start_url or active_config.start_url,
+            href=user.start_url or start_url,
             target="main",
             title=_("Go to main page"),
         )
@@ -661,13 +699,23 @@ def _render_header_icon() -> None:
 
 
 def page_side(config: Config) -> None:
-    SidebarRenderer().show()
+    SidebarRenderer().show(
+        config=config,
+        title=None,
+        content=None,
+        sidebar_config=config.sidebar,
+        screenshot_mode=config.screenshotmode,
+        sidebar_notify_interval=config.sidebar_notify_interval,
+        start_url=config.start_url,
+        show_scrollbar=config.sidebar_show_scrollbar,
+        sidebar_update_interval=config.sidebar_update_interval,
+    )
 
 
 def ajax_snapin(config: Config) -> None:
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
-    user_config = UserSidebarConfig(user, active_config.sidebar)
+    user_config = UserSidebarConfig(user, config.sidebar)
 
     snapin_id = request.var("name")
     snapin_ids = (
@@ -699,7 +747,7 @@ def ajax_snapin(config: Config) -> None:
 
         with output_funnel.plugged():
             try:
-                snapin_instance.show(active_config)
+                snapin_instance.show(config)
             except Exception as e:
                 write_snapin_exception(e)
                 e_message = (
@@ -828,7 +876,7 @@ def page_add_snapin(config: Config) -> None:
 
         html.open_div(class_=["snapin_preview"])
         html.div("", class_=["clickshield"])
-        SidebarRenderer().render_snapin(active_config, UserSidebarSnapin.from_snapin_type_id(name))
+        SidebarRenderer().render_snapin(config, UserSidebarSnapin.from_snapin_type_id(name))
         html.close_div()
         html.div(snapin_class.description(), class_=["description"])
         html.close_div()
@@ -881,7 +929,7 @@ class AjaxAddSnapin(AjaxPage):
 
         with output_funnel.plugged():
             try:
-                url = SidebarRenderer().render_snapin(active_config, snapin)
+                url = SidebarRenderer().render_snapin(config, snapin)
             finally:
                 snapin_code = output_funnel.drain()
 

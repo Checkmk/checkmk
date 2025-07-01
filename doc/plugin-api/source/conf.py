@@ -66,6 +66,7 @@ suppress_warnings = [
 # suppress_warnings feature we filter out the log message.
 logging.getLogger("sphinx").addFilter(
     lambda s: "duplicate object description of cmk.agent_based.v1" not in s.getMessage()
+    and "duplicate object description of cmk.bakery.v1" not in s.getMessage(),
 )
 
 # Add any paths that contain templates here, relative to this directory.

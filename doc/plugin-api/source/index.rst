@@ -14,9 +14,8 @@ If you want to know how to use the API, please have a look at the articles about
 
 Plugin location and loading
 ===========================
-Most of the plugin APIs (Agent based, Ruleset, Server-side calls and Graphing API) share the same logic when it comes to location and loading of the plugins.
+Most of the plugin APIs (Agent based, Ruleset, Server-side calls, Graphing and Bakery API) share the same logic when it comes to location and loading of the plugins.
 This section will cover those APIs.
-The Bakery API has a different logic for now, but will be adapted in the future versions.
 
 The shipped plugins are located under the ``~/lib/python3/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
@@ -34,6 +33,7 @@ Below the family folder, plugins are categorized into plugin groups:
    * rulesets under the ``rulesets`` folder
    * agent based plugins under the ``agent_based`` folder
    * graphing plugins under the ``graphing`` folder
+   * bakery plugins under the ``bakery`` folder
    * man pages are found in ``checkman``
    * executables (to be run by the code, for instance) go into ``libexec``
    * inventory UI plugins are located under the ``inventory_ui`` folder
@@ -53,6 +53,7 @@ Each plugin expects a different prefix in the variable name:
    - active checks the ``active_check_`` prefix
    - special agents the ``special_agent_`` prefix
    - rule specs the ``rule_spec_`` prefix
+   - bakery plugins the ``bakery_plugin_`` prefix
    - metrics the ``metric_`` prefix
    - translations the ``translation_`` prefix
    - perfometers the ``perfometer_`` prefix

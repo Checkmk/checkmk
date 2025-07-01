@@ -170,7 +170,7 @@ def assert_presence_on_download_server(
             assertion_ok=False,
             message=(
                 f"{ArtifactState().missing if internal_only else ArtifactState().present}: "
-                f"{artifact_name} should {'not' if internal_only else ''} "
+                f"{artifact_name} should {'not ' if internal_only else ''}"
                 "be available on download server!"
             ),
         )

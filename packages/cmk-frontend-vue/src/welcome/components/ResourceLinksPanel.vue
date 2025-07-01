@@ -9,10 +9,12 @@ import usei18n from '@/lib/i18n'
 import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-
-// TODO: send urls from the backend.
+import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 
 const { t } = usei18n('resource-links-panel')
+defineProps<{
+  urls: WelcomeUrls
+}>()
 </script>
 
 <template>
@@ -28,7 +30,7 @@ const { t } = usei18n('resource-links-panel')
         'Your assistant for Checkmk - ask anything from setup to troubleshooting.'
       )
     "
-    url="https://chat.checkmk.com"
+    :url="urls.checkmk_ai"
     variant="borderless"
     :open-in-new-tab="true"
   />
@@ -40,7 +42,7 @@ const { t } = usei18n('resource-links-panel')
         'A step-by-step introduction to help you get started quickly and confidently.'
       )
     "
-    url="https://docs.checkmk.com"
+    :url="urls.checkmk_docs"
     variant="borderless"
     :open-in-new-tab="true"
   />
@@ -49,7 +51,7 @@ const { t } = usei18n('resource-links-panel')
     :subtitle="
       t('community-subtitle', 'Connect with other users and ask questions in our active forum.')
     "
-    url="https://forum.checkmk.com/"
+    :url="urls.checkmk_forum"
     variant="borderless"
     :open-in-new-tab="true"
   />

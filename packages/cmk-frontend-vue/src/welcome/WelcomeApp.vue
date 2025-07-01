@@ -9,8 +9,10 @@ import usei18n from '@/lib/i18n'
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
+import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 
 const { t } = usei18n('welcome-app')
+defineProps<{ urls: WelcomeUrls }>()
 </script>
 
 <template>
@@ -36,7 +38,7 @@ const { t } = usei18n('welcome-app')
         </p>
       </div>
       <div class="welcome-app__panel-right">
-        <ResourceLinksPanel />
+        <ResourceLinksPanel :urls="urls" />
       </div>
     </div>
     <WelcomeFooter class="welcome-app__footer" />

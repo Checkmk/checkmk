@@ -20,6 +20,7 @@ SOURCES_COMMON = [
     "unified_search.json",
     "user_frontend_config.json",
     "vue_formspec_components.json",
+    "welcome.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

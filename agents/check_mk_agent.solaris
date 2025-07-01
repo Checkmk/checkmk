@@ -467,7 +467,7 @@ export_utility_functions() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0p6"
+    echo "Version: 2.4.0p7"
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
 

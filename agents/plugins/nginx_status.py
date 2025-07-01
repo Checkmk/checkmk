@@ -23,7 +23,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-__version__ = "2.4.0p6"
+__version__ = "2.4.0p7"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 

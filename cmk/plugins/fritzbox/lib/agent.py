@@ -39,7 +39,7 @@ import requests
 
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 
-__version__ = "2.4.0p6"
+__version__ = "2.4.0p7"
 
 USER_AGENT = f"checkmk-special-fritzbox-{__version__}"
 

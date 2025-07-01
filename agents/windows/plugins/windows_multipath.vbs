@@ -4,7 +4,7 @@
 ' Date: 2011-02-15
 ' -----------------------------------------------'
 Option Explicit
-Const CMK_VERSION = "2.4.0p6"
+Const CMK_VERSION = "2.4.0p7"
 Dim objWMIService, objItem, colItems, strComputer
 
 ' On Error Resume Next

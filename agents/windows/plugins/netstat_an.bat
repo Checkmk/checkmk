@@ -1,4 +1,4 @@
 @echo off
-set CMK_VERSION="2.4.0p6"
+set CMK_VERSION="2.4.0p7"
 echo ^<^<^<win_netstat^>^>^>
 netstat -anp TCP & netstat -anp TCPv6 & netstat -anp UDP

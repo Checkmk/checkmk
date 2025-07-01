@@ -29,13 +29,14 @@ from cmk.gui.form_specs.private import (
     ListOfStrings,
     MonitoredHostExtended,
     SingleChoiceExtended,
+    StringAutocompleter,
     UserSelection,
 )
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
-from cmk.gui.valuespec import Transform
+from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.wato._check_mk_configuration import RulespecGroupAgent
 from cmk.gui.watolib import config_domains as legacy_config_domains
@@ -828,6 +829,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case UserSelection():
             return _convert_to_legacy_user_selection(to_convert, localizer)
+
+        case StringAutocompleter():
+            return _convert_to_legacy_autocompleter(to_convert, localizer)
 
         case other:
             raise NotImplementedError(other)
@@ -2509,4 +2513,34 @@ def _convert_to_legacy_user_selection(
         help=_localize_optional(to_convert.help_text, localizer),
         only_contacts=legacy_filter.only_contacts,
         only_automation=legacy_filter.only_automation,
+    )
+
+
+def _convert_to_legacy_validation_with_none(
+    v1_validate_funcs: Iterable[Callable[[_ValidateFuncType], object]],
+    localizer: Callable[[str], str],
+) -> Callable[[_ValidateFuncType | None, str], None]:
+    def wrapper(value: _ValidateFuncType | None, var_prefix: str) -> None:
+        if value is None:
+            return
+        try:
+            _ = [v1_validate_func(value) for v1_validate_func in v1_validate_funcs]
+        except ruleset_api_v1.form_specs.validators.ValidationError as e:
+            raise MKUserError(var_prefix, e.message.localize(localizer))
+
+    return wrapper
+
+
+def _convert_to_legacy_autocompleter(
+    to_convert: StringAutocompleter, localizer: Callable[[str], str]
+) -> AjaxDropdownChoice:
+    return AjaxDropdownChoice(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        validate=_convert_to_legacy_validation_with_none(to_convert.custom_validate, localizer)
+        if to_convert.custom_validate
+        else None,
+        autocompleter=AutocompleterConfig(ident=to_convert.autocompleter.data.ident)
+        if to_convert.autocompleter
+        else None,
     )

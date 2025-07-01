@@ -503,10 +503,10 @@ class PageAjaxDiagHost(AjaxPage):
                 args[9] = api_request.get("snmpv3_security_name", "")
 
         result = diag_host(
-            make_automation_config(active_config.sites[host.site_id()]),
+            make_automation_config(config.sites[host.site_id()]),
             hostname,
             _test,
-            active_config.debug,
+            config.debug,
             *args,
         )
         return {

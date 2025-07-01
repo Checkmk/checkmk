@@ -344,10 +344,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             selected_services=self._resolve_selected_services(
                 api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
-            automation_config=make_automation_config(active_config.sites[host.site_id()]),
+            automation_config=make_automation_config(config.sites[host.site_id()]),
             raise_errors=not api_request.discovery_options.ignore_errors,
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -384,7 +384,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             api_request.discovery_options,
         )
         page_code = renderer.render(
-            discovery_result, api_request.update_services, debug=active_config.debug
+            discovery_result, api_request.update_services, debug=config.debug
         )
         datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
@@ -1869,11 +1869,11 @@ class ModeAjaxExecuteCheck(AjaxPage):
         check_csrf_token()
         try:
             active_check_result = active_check(
-                make_automation_config(active_config.sites[self._site]),
+                make_automation_config(config.sites[self._site]),
                 self._host_name,
                 self._check_type,
                 self._item,
-                debug=active_config.debug,
+                debug=config.debug,
             )
             state = 3 if active_check_result.state is None else active_check_result.state
             output = active_check_result.output

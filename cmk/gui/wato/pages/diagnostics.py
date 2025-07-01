@@ -753,7 +753,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 automation_config,
                 results,
                 diagnostics_parameters["timeout"],
-                debug=active_config.debug,
+                debug=debug,
             )
             # The remote tarfiles will be downloaded and the link will point to the local site.
             download_site_id = omd_site()
@@ -874,10 +874,10 @@ class PageDownloadDiagnosticsDump(Page):
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
         timeout = request.get_integer_input_mandatory("timeout")
         file_content = _get_diagnostics_dump_file(
-            make_automation_config(active_config.sites[site_id]),
+            make_automation_config(config.sites[site_id]),
             tarfile_name,
             timeout,
-            debug=active_config.debug,
+            debug=config.debug,
         )
 
         response.set_content_type("application/x-tgz")

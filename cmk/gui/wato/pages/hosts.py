@@ -932,7 +932,7 @@ class PageAjaxPingHost(AjaxPage):
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
 
         result = ping_host(
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=make_automation_config(config.sites[site_id]),
             ping_host_input=PingHostInput(
                 ip_or_dns_name=unquote(ip_or_dns_name),
                 base_cmd=cmd,
@@ -948,7 +948,7 @@ class PageAjaxDiagCmkAgent(AjaxPage):
     def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         result = diag_cmk_agent(
-            automation_config=make_automation_config(active_config.sites[api_request["site_id"]]),
+            automation_config=make_automation_config(config.sites[api_request["site_id"]]),
             diag_cmk_agent_input=DiagCmkAgentInput(
                 host_name=api_request["host_name"],
                 ip_address=api_request["ipaddress"],

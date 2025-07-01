@@ -151,12 +151,10 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        automation_config = make_automation_config(
-            active_config.sites[self._request.host.site_id()]
-        )
+        automation_config = make_automation_config(config.sites[self._request.host.site_id()])
         if request.has_var("_start"):
-            self._start_fetch(automation_config)
-        self._show_status(automation_config)
+            self._start_fetch(automation_config, debug=config.debug)
+        self._show_status(automation_config, debug=config.debug)
 
         html.footer()
 
@@ -192,9 +190,9 @@ class PageFetchAgentOutput(AgentOutputPage):
             )
 
     def _show_status(
-        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig, *, debug: bool
     ) -> None:
-        job_status = self._get_job_status(automation_config)
+        job_status = self._get_job_status(automation_config, debug=debug)
 
         html.h3(_("Job status"))
         if job_status.is_active:
@@ -204,7 +202,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         JobRenderer.show_job_details(job.get_job_id(), job_status, job.may_stop(), job.may_delete())
 
     def _start_fetch(
-        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig, *, debug: bool
     ) -> None:
         """Start the job on the site the host is monitored by"""
         if isinstance(automation_config, LocalAutomationConfig):
@@ -217,11 +215,11 @@ class PageFetchAgentOutput(AgentOutputPage):
             [
                 ("request", repr(self._request.serialize())),
             ],
-            debug=active_config.debug,
+            debug=debug,
         )
 
     def _get_job_status(
-        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig, *, debug: bool
     ) -> JobStatusSpec:
         if isinstance(automation_config, LocalAutomationConfig):
             return get_fetch_agent_job_status(self._request)
@@ -233,7 +231,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                 [
                     ("request", repr(self._request.serialize())),
                 ],
-                debug=active_config.debug,
+                debug=debug,
             )
         )
 

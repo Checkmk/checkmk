@@ -26,7 +26,7 @@ from cmk.automations.results import result_type_registry, SerializedResult
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui import userdb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -167,7 +167,7 @@ class PageAutomation(AjaxPage):
             if lock_config
             else nullcontext()
         ):
-            self._execute_automation(debug=active_config.debug)
+            self._execute_automation(debug=config.debug)
         return None
 
     def _execute_automation(self, *, debug: bool) -> None:
@@ -177,13 +177,13 @@ class PageAutomation(AjaxPage):
                 self._execute_cmk_automation(debug=debug)
                 return
             if self._command == "push-profile":
-                self._execute_push_profile()
+                self._execute_push_profile(debug=debug)
                 return
             try:
                 automation_command = automation_command_registry[self._command]
             except KeyError:
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-            self._execute_automation_command(automation_command)
+            self._execute_automation_command(automation_command, debug=debug)
 
     @staticmethod
     def _format_cmk_automation_result(
@@ -234,12 +234,12 @@ class PageAutomation(AjaxPage):
             )
         )
 
-    def _execute_push_profile(self) -> None:
+    def _execute_push_profile(self, *, debug: bool) -> None:
         try:
             response.set_data(str(watolib_utils.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
-            if active_config.debug:
+            if debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
@@ -270,14 +270,16 @@ class PageAutomation(AjaxPage):
 
         return True
 
-    def _execute_automation_command(self, automation_command: type[AutomationCommand]) -> None:
+    def _execute_automation_command(
+        self, automation_command: type[AutomationCommand], *, debug: bool
+    ) -> None:
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             automation = automation_command()
             response.set_data(repr(automation.execute(automation.get_request())))
         except Exception as e:
             logger.exception("error executing automation command")
-            if active_config.debug:
+            if debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 

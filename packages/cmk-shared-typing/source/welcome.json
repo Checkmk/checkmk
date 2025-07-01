@@ -9,9 +9,13 @@
         },
         "is_start_url": {
             "type": "boolean"
+        },
+        "stage_information": {
+            "type": "object",
+            "$ref": "#/$defs/stage_information"
         }
     },
-    "required": ["urls", "is_start_url"],
+    "required": ["urls", "is_start_url", "stage_information"],
     "$defs": {
         "welcome_urls": {
             "type": "object",
@@ -69,6 +73,21 @@
                 "add_custom_dashboard",
                 "all_dashboards"
             ]
+        },
+        "stage_information": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "finished": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": ["finished", "total"]
         }
     }
 }

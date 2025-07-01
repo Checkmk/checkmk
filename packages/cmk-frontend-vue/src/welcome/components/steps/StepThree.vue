@@ -15,6 +15,7 @@ const { t } = usei18n('welcome-step-3')
 
 defineProps<{
   urls: WelcomeUrls
+  accomplished: boolean
 }>()
 </script>
 
@@ -22,7 +23,7 @@ defineProps<{
   <CmkAccordionStepPanelItem
     :step="3"
     :disabled="false"
-    :accomplished="false"
+    :accomplished="accomplished"
     :title="t('title', 'Explore your hosts and services')"
     :info="t('time', '5-7 min')"
   >

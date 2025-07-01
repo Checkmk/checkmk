@@ -19,10 +19,19 @@ import CmkSpace from '@/components/CmkSpace.vue'
 
 const { t } = usei18n('onboarding-stepper')
 
-defineProps<{
+const props = defineProps<{
   urls: WelcomeUrls
+  finishedSteps: number[]
+  totalSteps: number
 }>()
-const openedItems = ref<string[]>(['step-2'])
+
+const buildStepId = (step: number): string => `step-${step}`
+const getFirstNotFinishedStep = (finishedStages: number[], totalSteps: number): string[] => {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1)
+  const firstUnfinished = steps.find((step) => !finishedStages.includes(step))
+  return firstUnfinished ? [buildStepId(firstUnfinished)] : []
+}
+const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps, props.totalSteps))
 </script>
 
 <template>
@@ -32,10 +41,10 @@ const openedItems = ref<string[]>(['step-2'])
   <CmkSpace />
   <CmkAccordionStepPanel v-model="openedItems">
     <StepOne />
-    <StepTwo :urls="urls" />
-    <StepThree :urls="urls" />
-    <StepFour :urls="urls" />
-    <StepFive :urls="urls" />
+    <StepTwo :urls="urls" :accomplished="finishedSteps.includes(2)" />
+    <StepThree :urls="urls" :accomplished="finishedSteps.includes(3)" />
+    <StepFour :urls="urls" :accomplished="finishedSteps.includes(4)" />
+    <StepFive :urls="urls" :accomplished="finishedSteps.includes(5)" />
   </CmkAccordionStepPanel>
 </template>
 

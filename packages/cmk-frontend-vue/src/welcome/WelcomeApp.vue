@@ -9,16 +9,17 @@ import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeUrls, StageInformation } from 'cmk-shared-typing/typescript/welcome'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 
-defineProps<{
+const props = defineProps<{
   urls: WelcomeUrls
+  stage_information: StageInformation
   is_start_url: boolean
 }>()
 
-const completedSteps = 5
-const totalSteps = 5
+const completedSteps = props.stage_information.finished.length
+const totalSteps = props.stage_information.total
 </script>
 
 <template>
@@ -27,7 +28,11 @@ const totalSteps = 5
     <div class="welcome-app__panels">
       <div class="welcome-app__panel-left">
         <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
-        <OnboardingStepper :urls="urls"></OnboardingStepper>
+        <OnboardingStepper
+          :urls="urls"
+          :finished-steps="stage_information.finished"
+          :total-steps="stage_information.total"
+        ></OnboardingStepper>
       </div>
       <div class="welcome-app__panel-right">
         <ResourceLinksPanel :urls="urls" />

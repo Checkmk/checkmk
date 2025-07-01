@@ -2,23 +2,70 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from collections.abc import Generator
 from dataclasses import asdict
 
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
+from cmk.utils.notify_types import EventRule
+
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri
+from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
+from cmk.gui.watolib.sample_config import get_default_notification_rule
 
-from cmk.shared_typing.welcome import WelcomePage, WelcomeUrls
+from cmk.shared_typing.welcome import StageInformation, WelcomePage, WelcomeUrls
 
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
+
+
+def _compare_notification_rules(
+    notification_rule_1: EventRule,
+    notification_rule_2: EventRule,
+) -> bool:
+    return {k: v for k, v in notification_rule_1.items() if k != "rule_id"} == {
+        k: v for k, v in notification_rule_2.items() if k != "rule_id"
+    }
+
+
+def _get_finished_stages() -> Generator[int]:
+    # Installation (always finished)
+    yield 1
+
+    # Creation of first host
+    if any(Host.all()):
+        yield 2
+
+    # Activation of the host
+    if Query([Hosts.name]).fetchall(sites=sites.live()):
+        yield 3
+
+    notification_rules = NotificationRuleConfigFile().load_for_reading()
+    # Creation of a new notification rule
+    if len(notification_rules) > 1:
+        yield 4
+    # Adjusted the built-in notification rule
+    if len(notification_rules) == 1 and not _compare_notification_rules(
+        notification_rules[0], get_default_notification_rule()
+    ):
+        yield 4
+
+    # Creation of a custom dashboard
+    for user_id, _dashboard_name in get_all_dashboards().keys():
+        if user_id == user.id:
+            yield 5
+            break
 
 
 def _welcome_page(config: Config) -> None:
@@ -151,6 +198,10 @@ def _welcome_page(config: Config) -> None:
                     ),
                 ),
                 is_start_url=user.start_url == "welcome.py",
+                stage_information=StageInformation(
+                    finished=list(_get_finished_stages()),
+                    total=5,
+                ),
             )
         ),
     )

@@ -216,13 +216,17 @@ def test_serialize_license_usage_report() -> None:
         instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
         site_hash="site-hash",
     )
+    # This test will fail after every license protocol bump.
+    # This is because the protocol version is part of the serialized data.
+    # To fix it just look at the diff and update the expected value (or spend some time to improve
+    # this test)
     assert _serialize_dump(
         RawLicenseUsageReport(
             VERSION=get_licensing_protocol_version(),
             history=history.for_report(),
         )
     ) == (
-        b"LQ't#$x~}Qi Qb]`Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Qhbfchd43\\fg7f\\c_5c\\h3d7\\"
+        b"LQ't#$x~}Qi Qb]aQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Qhbfchd43\\fg7f\\c_5c\\h3d7\\"
         b"7a4d2g`6ee3gQ[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ Q"
         b"A=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 7"
         b"2=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _"

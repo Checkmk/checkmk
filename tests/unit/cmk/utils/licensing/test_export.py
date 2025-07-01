@@ -18,6 +18,8 @@ from cmk.utils.licensing.export import (
     SubscriptionDetailsLimitType,
 )
 
+# TODO: SAASDEV-4343 Adjust test cases if needed
+
 
 @pytest.mark.parametrize(
     "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1"]

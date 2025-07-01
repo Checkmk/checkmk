@@ -570,6 +570,39 @@ class ParserV3_0(Parser):
         )
 
 
+def _parse_sample_v3_1(instance_id: UUID | None, site_hash: str, raw: object) -> LicenseUsageSample:
+    if not isinstance(raw, dict):
+        raise TypeError("Parse sample 3.1/3.2: Wrong sample type: %r" % type(raw))
+    if not (raw_instance_id := raw.get("instance_id")):
+        raise ValueError("Parse sample 3.1/3.2: No such instance ID")
+    if not (site_hash := raw.get("site_hash", site_hash)):
+        raise ValueError("Parse sample 3.1/3.2: No such site hash")
+    extensions = _parse_extensions(raw)
+    return LicenseUsageSample(
+        instance_id=UUID(raw_instance_id),
+        site_hash=site_hash,
+        version=raw["version"],
+        edition=raw["edition"],
+        platform=_parse_platform(raw["platform"]),
+        is_cma=raw["is_cma"],
+        sample_time=raw["sample_time"],
+        timezone=raw["timezone"],
+        num_hosts=raw["num_hosts"],
+        num_hosts_cloud=raw["num_hosts_cloud"],
+        num_hosts_shadow=raw["num_hosts_shadow"],
+        num_hosts_excluded=raw["num_hosts_excluded"],
+        num_services=raw["num_services"],
+        num_services_cloud=raw["num_services_cloud"],
+        num_services_shadow=raw["num_services_shadow"],
+        num_services_excluded=raw["num_services_excluded"],
+        num_synthetic_tests=raw["num_synthetic_tests"],
+        num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
+        num_synthetic_kpis=raw["num_synthetic_kpis"],
+        num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
+        extension_ntop=extensions.ntop,
+    )
+
+
 class ParserV3_1(Parser):
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
@@ -577,42 +610,22 @@ class ParserV3_1(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        parsing_version = 3.1
-        if not isinstance(raw, dict):
-            raise TypeError(f"Parse sample {parsing_version}: Wrong sample type: %r" % type(raw))
-        if not (raw_instance_id := raw.get("instance_id")):
-            raise ValueError(f"Parse sample {parsing_version}: No such instance ID")
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError(f"Parse sample {parsing_version}: No such site hash")
-        extensions = _parse_extensions(raw)
-        return LicenseUsageSample(
-            instance_id=UUID(raw_instance_id),
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=raw["num_hosts_cloud"],
-            num_hosts_shadow=raw["num_hosts_shadow"],
-            num_hosts_excluded=raw["num_hosts_excluded"],
-            num_services=raw["num_services"],
-            num_services_cloud=raw["num_services_cloud"],
-            num_services_shadow=raw["num_services_shadow"],
-            num_services_excluded=raw["num_services_excluded"],
-            num_synthetic_tests=raw["num_synthetic_tests"],
-            num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-            num_synthetic_kpis=raw["num_synthetic_kpis"],
-            num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
-            extension_ntop=extensions.ntop,
-        )
+        return _parse_sample_v3_1(instance_id, site_hash, raw)
+
+
+class ParserV3_2(Parser):
+    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
+        return _parse_subscription_details(raw)
+
+    def parse_sample(
+        self, instance_id: UUID | None, site_hash: str, raw: object
+    ) -> LicenseUsageSample:
+        return _parse_sample_v3_1(instance_id, site_hash, raw)
 
 
 def parse_protocol_version(
     raw: object,
-) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1"]:
+) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"]:
     if not isinstance(raw, dict):
         raise TypeError(raw)
     if not isinstance(raw_protocol_version := raw.get("VERSION"), str):
@@ -638,11 +651,15 @@ def parse_protocol_version(
             return "3.0"
         case "3.1":
             return "3.1"
+        case "3.2":
+            return "3.2"
     raise ValueError(f"Unknown protocol version: {raw_protocol_version!r}")
 
 
 def make_parser(
-    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1"],
+    protocol_version: Literal[
+        "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
+    ],
 ) -> Parser:
     match protocol_version:
         case "1.0":
@@ -665,6 +682,8 @@ def make_parser(
             return ParserV3_0()
         case "3.1":
             return ParserV3_1()
+        case "3.2":
+            return ParserV3_2()
 
 
 # .

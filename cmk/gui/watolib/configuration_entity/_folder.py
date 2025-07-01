@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
-from cmk.gui.form_specs.private.catalog import Catalog, Topic, TopicElement
+from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.private.validators import not_empty
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors._registry import get_visitor

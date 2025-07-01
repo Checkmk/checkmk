@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.user import UserId
 
-from cmk.gui.form_specs.private import Catalog, Topic
-from cmk.gui.form_specs.private.catalog import TopicElement
+from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 

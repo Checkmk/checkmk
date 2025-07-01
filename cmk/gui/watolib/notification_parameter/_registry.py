@@ -23,9 +23,9 @@ from cmk.gui.form_specs.private import (
     LegacyValueSpec,
     ListOfStrings,
     not_empty,
+    TopicElement,
 )
 from cmk.gui.form_specs.private import Topic as TopicExtended
-from cmk.gui.form_specs.private.catalog import TopicElement
 from cmk.gui.form_specs.vue.visitors import DefaultValue
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from .cascading_single_choice_extended import CascadingSingleChoiceExtended
-from .catalog import Catalog, Topic
+from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
 from .condition_choices import ConditionChoices
 from .dictionary_extended import DictionaryExtended
@@ -33,6 +33,8 @@ from .validators import not_empty
 __all__ = [
     "CascadingSingleChoiceExtended",
     "Catalog",
+    "TopicElement",
+    "TopicGroup",
     "CommentTextArea",
     "ConditionChoices",
     "DictionaryExtended",

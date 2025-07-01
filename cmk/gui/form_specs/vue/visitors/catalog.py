@@ -8,7 +8,7 @@ from typing import Any, Self
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.private.catalog import Catalog, Topic, TopicElement, TopicGroup
+from cmk.gui.form_specs.private import Catalog, Topic, TopicElement, TopicGroup
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title

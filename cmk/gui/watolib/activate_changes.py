@@ -3598,7 +3598,7 @@ def activate_changes_start(
                 )
             )
 
-    known_sites = enabled_sites().keys()
+    known_sites = enabled_sites(active_config.sites).keys()
     for site in sites:
         if site not in known_sites:
             raise MKUserError(

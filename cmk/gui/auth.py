@@ -308,7 +308,7 @@ def _check_remote_site() -> RemoteSitePseudoUser | None:
         raise MKAuthException(f"RemoteSite auth for invalid page: {page_name}")
 
     with contextlib.suppress(binascii.Error):  # base64 decoding failure
-        for enabled_site in enabled_sites().values():
+        for enabled_site in enabled_sites(active_config.sites).values():
             if "secret" not in enabled_site:
                 continue
             if Secret.from_b64(token).compare(Secret(enabled_site["secret"].encode())):

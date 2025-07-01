@@ -24,7 +24,7 @@ from cmk.ccc.version import __version__, Edition, edition, Version
 
 import cmk.utils.paths
 
-from cmk.gui import hooks, permissions, site_config
+from cmk.gui import hooks, permissions
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
@@ -428,12 +428,7 @@ class LoggedInUser:
         if self.id:
             self.save_file("transids", transids)
 
-    def authorized_sites(
-        self, unfiltered_sites: SiteConfigurations | None = None
-    ) -> SiteConfigurations:
-        if unfiltered_sites is None:
-            unfiltered_sites = site_config.enabled_sites()
-
+    def authorized_sites(self, unfiltered_sites: SiteConfigurations) -> SiteConfigurations:
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
             return SiteConfigurations(dict(unfiltered_sites))

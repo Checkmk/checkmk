@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
@@ -559,7 +560,9 @@ def published_to_user(visual: TVisual) -> bool:
             user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
             return bool(user_groups.intersection(visual["public"][1]))
         if visual["public"][0] == "sites":
-            user_sites = set(user.authorized_sites().keys())
+            user_sites = set(
+                user.authorized_sites(unfiltered_sites=enabled_sites(active_config.sites)).keys()
+            )
             return bool(user_sites.intersection(visual["public"][1]))
 
     return False

@@ -149,9 +149,7 @@ def test_unauthenticated_users_language(monkeypatch: MonkeyPatch, user: LoggedIn
 
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_sites(
-    monkeypatch: MonkeyPatch, user: LoggedInUser
-) -> None:
+def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
     assert user.authorized_sites(
         SiteConfigurations(
             {
@@ -226,14 +224,14 @@ def test_unauthenticated_users_authorized_sites(
         }
     )
 
-    monkeypatch.setattr(
-        "cmk.gui.site_config.enabled_sites",
-        lambda: {
-            "site1": site1_config,
-            "site2": site2_config,
-        },
-    )
-    assert user.authorized_sites() == {
+    assert user.authorized_sites(
+        SiteConfigurations(
+            {
+                SiteId("site1"): site1_config,
+                SiteId("site2"): site2_config,
+            }
+        )
+    ) == {
         "site1": site1_config,
         "site2": site2_config,
     }

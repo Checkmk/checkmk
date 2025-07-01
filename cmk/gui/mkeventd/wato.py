@@ -28,7 +28,7 @@ from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
-from livestatus import LocalConnection, MKLivestatusSocketError
+from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -590,7 +590,7 @@ def vs_mkeventd_rule_pack(
     )
 
 
-def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
+def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = None) -> Dictionary:
     elements = [
         (
             "id",
@@ -1140,7 +1140,8 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 help=_("Apply this rule only on the following sites"),
                 choices=get_event_console_site_choices(),
                 locked_choices=list(
-                    enabled_sites().keys() - dict(get_event_console_site_choices()).keys()
+                    enabled_sites(site_configs).keys()
+                    - dict(get_event_console_site_choices()).keys()
                 ),
                 locked_choices_text_singular=_("%d locked site"),
                 locked_choices_text_plural=_("%d locked sites"),
@@ -2883,7 +2884,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         if not self._new:
             old_id = self._rule["id"]
-        vs = self._valuespec()
+        vs = self._valuespec(config.sites)
         rule = vs.from_html_vars("rule")
         vs.validate_value(dict(rule), "rule")
         if not self._new and old_id != rule["id"]:
@@ -2991,13 +2992,13 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
     def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         with html.form_context("rule"):
-            vs = self._valuespec()
+            vs = self._valuespec(config.sites)
             vs.render_input("rule", dict(self._rule))
             vs.set_focus("rule")
             html.hidden_fields()
 
-    def _valuespec(self) -> Dictionary:
-        return vs_mkeventd_rule(self._rule_pack.get("customer"))
+    def _valuespec(self, site_configs: SiteConfigurations) -> Dictionary:
+        return _vs_mkeventd_rule(site_configs, self._rule_pack.get("customer"))
 
 
 class ModeEventConsoleStatus(ABCEventConsoleMode):
@@ -3046,7 +3047,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             action="mkeventd-switchmode",
             message="Switched replication slave mode to %s" % new_mode,
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
         flash(_("Switched to %s mode") % new_mode)
         return None
@@ -3516,10 +3517,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         filename, mimetype, content = request.uploaded_file("_upload_mib")
         if filename:
             try:
-                flash(self._upload_mib(filename, mimetype, content, debug=active_config.debug))
+                flash(self._upload_mib(filename, mimetype, content, debug=config.debug))
                 return None
             except Exception as e:
-                if active_config.debug:
+                if config.debug:
                     raise
                 raise MKUserError("_upload_mib", "%s" % e)
         return None

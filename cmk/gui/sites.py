@@ -31,6 +31,7 @@ from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
 
+from cmk.gui import site_config
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.flask_app import current_app
@@ -375,9 +376,10 @@ def _get_enabled_and_disabled_sites(
     enabled_sites: SiteConfigurations = SiteConfigurations({})
     disabled_sites: SiteConfigurations = SiteConfigurations({})
 
-    for site_id, site_spec in user.authorized_sites().items():
+    for site_id, site_spec in user.authorized_sites(
+        unfiltered_sites=site_config.enabled_sites(active_config.sites)
+    ).items():
         site_spec = _site_config_for_livestatus(site_id, site_spec)
-        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
 
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec

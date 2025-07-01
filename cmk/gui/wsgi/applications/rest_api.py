@@ -57,6 +57,7 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestGeneralException,
     RestAPIResponseGeneralException,
 )
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
@@ -117,7 +118,9 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         "check_mk_user": {
             "user_id": user.id,
             "user_roles": user.role_ids,
-            "authorized_sites": list(user.authorized_sites()),
+            "authorized_sites": list(
+                user.authorized_sites(unfiltered_sites=enabled_sites(active_config.sites))
+            ),
         },
     }
 

@@ -19,11 +19,11 @@ from cmk.gui.config import active_config
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
-def enabled_sites() -> SiteConfigurations:
+def enabled_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
     return SiteConfigurations(
         {
             site_id: site_config
-            for site_id, site_config in active_config.sites.items()
+            for site_id, site_config in site_configs.items()
             if not site_config["disabled"]
         }
     )

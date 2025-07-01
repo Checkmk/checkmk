@@ -79,7 +79,7 @@ class Performance(SidebarSnapin):
         ]:
             write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
-        if only_sites is None and len(site_config.enabled_sites()) == 1:
+        if only_sites is None and len(site_config.enabled_sites(config.sites)) == 1:
             try:
                 data = sites.live().query(
                     "GET status\nColumns: external_command_buffer_slots "

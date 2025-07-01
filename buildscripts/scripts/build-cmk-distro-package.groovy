@@ -182,7 +182,7 @@ def main() {
                     ],
                 ) {
                     versioning.print_image_tag();
-                    sh("make .venv");
+
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'nexus',

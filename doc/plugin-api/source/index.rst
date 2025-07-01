@@ -10,6 +10,8 @@ This is the plugin API reference from Checkmk.
 This can help you to get exact information about the API.
 If you want to know how to use the API, please have a look at the articles about extending Checkmk in our `user guide <https://docs.checkmk.com/master>`_.
 
+.. _plugin-location-and-loading:
+
 Plugin location and loading
 ===========================
 Most of the plugin APIs (Agent based, Ruleset, Server-side calls and Graphing API) share the same logic when it comes to location and loading of the plugins.

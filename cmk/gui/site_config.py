@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import omd_site, SiteId
@@ -81,13 +83,13 @@ def site_is_local(site_config: SiteConfiguration) -> bool:
     return False
 
 
-def is_single_local_site() -> bool:
-    if len(active_config.sites) > 1:
+def is_single_local_site(sites: Mapping[SiteId, SiteConfiguration]) -> bool:
+    if len(sites) > 1:
         return False
-    if len(active_config.sites) == 0:
+    if not sites:
         return True
 
-    return site_is_local(list(active_config.sites.values())[0])
+    return site_is_local(list(sites.values())[0])
 
 
 def wato_site_ids() -> list[SiteId]:

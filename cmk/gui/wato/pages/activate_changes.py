@@ -1055,7 +1055,9 @@ class AutomationActivateChanges(AutomationCommand[DomainRequests]):
         return "activate-changes"
 
     def get_request(self) -> DomainRequests:
-        verify_remote_site_config(SiteId(request.get_ascii_input_mandatory("site_id")))
+        verify_remote_site_config(
+            active_config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
+        )
         domains = request.get_ascii_input_mandatory("domains")
         try:
             return [DomainRequest(**x) for x in ast.literal_eval(domains)]

@@ -60,7 +60,7 @@ class MasterControlSnapin(SidebarSnapin):
                     isopen=True,
                     title=site_alias,
                 )
-                if not site_config.is_single_local_site()
+                if not site_config.is_single_local_site(config.sites)
                 else nullcontext(False)
             )
             with container:

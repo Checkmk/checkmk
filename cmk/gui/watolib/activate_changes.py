@@ -2911,10 +2911,10 @@ def _execute_post_config_sync_actions(site_id: SiteId, *, local_files_changed: b
     )
 
 
-def verify_remote_site_config(site_id: SiteId) -> None:
+def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id: SiteId) -> None:
     our_id = omd_site()
 
-    if not is_single_local_site():
+    if not is_single_local_site(sites):
         raise MKGeneralException(
             _(
                 "Configuration error. You treat us as "
@@ -3330,7 +3330,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
 
     def get_request(self) -> ReceiveConfigSyncRequest:
         site_id = SiteId(_request.get_ascii_input_mandatory("site_id"))
-        verify_remote_site_config(site_id)
+        verify_remote_site_config(active_config.sites, site_id)
 
         return ReceiveConfigSyncRequest(
             site_id,

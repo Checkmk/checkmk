@@ -8,7 +8,7 @@ import json
 from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -42,7 +42,7 @@ class SiteStatus(SidebarSnapin):
             "and disabling the site connection"
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         html.open_table(cellspacing="0", class_="sitestate")
 
         sites.update_site_states_from_dead_sites()

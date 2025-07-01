@@ -11,11 +11,10 @@ from typing import override
 
 import cmk.ccc.version as cmk_version
 
-from cmk.gui.htmllib.html import html  # pylint: disable=cmk-module-layer-violation
-
-# Does not detect the module hierarchy correctly. Imports are fine.
-from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.sidebar import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.config import Config
+from cmk.gui.htmllib.html import html
+from cmk.gui.i18n import _
+from cmk.gui.sidebar import (
     SidebarSnapin,
     snapin_registry,
 )
@@ -47,7 +46,7 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         return ["admin"]
 
     @override
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         if not cmk_version.is_cma():
             return
 

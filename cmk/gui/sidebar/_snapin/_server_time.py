@@ -5,6 +5,7 @@
 
 import time
 
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 
@@ -28,5 +29,5 @@ class CurrentTime(SidebarSnapin):
     def refresh_regularly(cls):
         return True
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.div(time.strftime("%H:%M"), class_="time")

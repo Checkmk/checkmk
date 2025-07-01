@@ -6,6 +6,7 @@
 import abc
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
@@ -19,7 +20,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
     def _group_type_ident(self):
         raise NotImplementedError()
 
-    def show(self):
+    def show(self, config: Config) -> None:
         group_type = self._group_type_ident()
         html.open_ul()
         for name, alias in sites.all_groups(group_type.replace("group", "")):

@@ -28,5 +28,5 @@ class CurrentTime(SidebarSnapin):  # type: ignore[misc]
     def refresh_regularly(cls):
         return True
 
-    def show(self):
+    def show(self, config):
         pass

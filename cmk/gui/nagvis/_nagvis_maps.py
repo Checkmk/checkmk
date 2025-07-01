@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -28,7 +29,7 @@ class NagVisMaps(SidebarSnapin):
     def refresh_regularly(cls):
         return False
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.div(_("Loading maps..."), class_="loading")
         html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
 

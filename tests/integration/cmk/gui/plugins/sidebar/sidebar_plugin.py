@@ -3,28 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 
 
-class CurrentTime(SidebarSnapin):
+class SnapinTest(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "test"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return "test"
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return "test"
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self):
+    def show(self, config: Config) -> None:
         pass
 
 
-snapin_registry.register(CurrentTime)
+snapin_registry.register(SnapinTest)

@@ -779,6 +779,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
     ModulePath("omd/packages/enterprise/bin/cmk-dcd"): Component("cmk.cee.dcd"),
     ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
+    ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
     ModulePath("cmk/active_checks/check_cmk_inv.py"): Component("cmk.base"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),

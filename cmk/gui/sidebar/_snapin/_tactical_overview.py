@@ -11,7 +11,7 @@ import livestatus
 from cmk.ccc.site import SiteId
 
 from cmk.gui import notifications, sites, visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -174,7 +174,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             ],
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         self._show_rows()
         self._show_failed_notifications()
         self._show_site_status()

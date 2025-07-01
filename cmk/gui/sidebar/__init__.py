@@ -21,7 +21,7 @@ import cmk.utils.paths
 
 from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -189,7 +189,7 @@ def transform_old_dict_based_snapins() -> None:
             def description(cls):
                 return cls._spec.get("description", "")
 
-            def show(self):
+            def show(self, config: Config) -> None:
                 return self._spec["render"]()
 
             @classmethod
@@ -434,20 +434,20 @@ class SidebarRenderer:
             class_=[] if sidebar_position is None else [sidebar_position],
         )
 
-        self._show_snapin_bar(user_config)
+        self._show_snapin_bar(active_config, user_config)
 
         html.close_div()
 
         if user_config.folded:
             html.final_javascript("cmk.sidebar.fold_sidebar();")
 
-    def _show_snapin_bar(self, user_config: UserSidebarConfig) -> None:
+    def _show_snapin_bar(self, config: Config, user_config: UserSidebarConfig) -> None:
         html.open_div(
             class_="scroll" if active_config.sidebar_show_scrollbar else None,
             id_="side_content",
         )
 
-        refresh_snapins, restart_snapins, static_snapins = self._show_snapins(user_config)
+        refresh_snapins, restart_snapins, static_snapins = self._show_snapins(config, user_config)
         self._show_add_snapin_button()
 
         html.close_div()
@@ -462,7 +462,9 @@ class SidebarRenderer:
             )
         )
 
-    def _show_snapins(self, user_config: UserSidebarConfig) -> tuple[list, list, list]:
+    def _show_snapins(
+        self, config: Config, user_config: UserSidebarConfig
+    ) -> tuple[list, list, list]:
         refresh_snapins = []
         restart_snapins = []
         static_snapins = []
@@ -472,7 +474,7 @@ class SidebarRenderer:
 
             # Performs the initial rendering and might return an optional refresh url,
             # when the snapin contents are refreshed from an external source
-            refresh_url = self.render_snapin(snapin)
+            refresh_url = self.render_snapin(config, snapin)
 
             if snapin.snapin_type.refresh_regularly():
                 refresh_snapins.append([name, refresh_url])
@@ -494,7 +496,7 @@ class SidebarRenderer:
         html.close_a()
         html.close_div()
 
-    def render_snapin(self, snapin: UserSidebarSnapin) -> str:
+    def render_snapin(self, config: Config, snapin: UserSidebarSnapin) -> str:
         snapin_class = snapin.snapin_type
         name = snapin_class.type_name()
         snapin_instance = snapin_class()
@@ -589,7 +591,7 @@ class SidebarRenderer:
         try:
             # TODO: Refactor this confusing special case. Add deddicated method or something
             # to let the snapins make the sidebar know that there is a URL to fetch.
-            url = snapin_instance.show()
+            url = snapin_instance.show(config)
             if url is not None:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
@@ -689,7 +691,7 @@ def ajax_snapin():
 
         with output_funnel.plugged():
             try:
-                snapin_instance.show()
+                snapin_instance.show(active_config)
             except Exception as e:
                 write_snapin_exception(e)
                 e_message = (
@@ -818,7 +820,7 @@ def page_add_snapin() -> None:
 
         html.open_div(class_=["snapin_preview"])
         html.div("", class_=["clickshield"])
-        SidebarRenderer().render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
+        SidebarRenderer().render_snapin(active_config, UserSidebarSnapin.from_snapin_type_id(name))
         html.close_div()
         html.div(snapin_class.description(), class_=["description"])
         html.close_div()
@@ -871,7 +873,7 @@ class AjaxAddSnapin(AjaxPage):
 
         with output_funnel.plugged():
             try:
-                url = SidebarRenderer().render_snapin(snapin)
+                url = SidebarRenderer().render_snapin(active_config, snapin)
             finally:
                 snapin_code = output_funnel.drain()
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import site_config, sites, user_sites
+from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -34,7 +35,7 @@ class Performance(SidebarSnapin):
     def refresh_regularly(cls):
         return True
 
-    def show(self):
+    def show(self, config: Config) -> None:
         only_sites = snapin_site_choice("performance", user_sites.get_configured_site_choices())
 
         def write_line(left, right, show_more):

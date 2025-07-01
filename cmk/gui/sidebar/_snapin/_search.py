@@ -23,7 +23,7 @@ from cmk.utils.redis import get_redis_client
 
 import cmk.gui.utils
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -718,7 +718,7 @@ class QuicksearchSnapin(SidebarSnapin):
             "Service label"
         )
 
-    def show(self):
+    def show(self, config: Config) -> None:
         id_ = "mk_side_search_field"
         html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")

@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 from typing import TypedDict
 
 from cmk.gui import site_config, sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -55,8 +55,8 @@ def register(
     main_menu_registry.register(MainMenuSetup)
 
 
-def render_wato(mini: bool) -> None:
-    if not active_config.wato_enabled:
+def render_wato(config: Config, mini: bool) -> None:
+    if not config.wato_enabled:
         html.write_text_permissive(_("Setup is disabled."))
     if not user.may("wato.use"):
         html.write_text_permissive(_("You are not allowed to use the setup."))
@@ -229,8 +229,8 @@ class SidebarSnapinWATOMini(SidebarSnapin):
     def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self) -> None:
-        render_wato(mini=True)
+    def show(self, config: Config) -> None:
+        render_wato(config, mini=True)
 
 
 FolderEntry = TypedDict(
@@ -367,9 +367,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "interaction with any other snap-in."
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         if not site_config.is_wato_slave_site():
-            if not active_config.wato_enabled:
+            if not config.wato_enabled:
                 html.write_text_permissive(_("Setup is disabled."))
 
         user_folders = compute_foldertree()
@@ -382,8 +382,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in get_permitted_views().items():
-            if (not active_config.visible_views or name in active_config.visible_views) and (
-                not active_config.hidden_views or name not in active_config.hidden_views
+            if (not config.visible_views or name in config.visible_views) and (
+                not config.hidden_views or name not in config.hidden_views
             ):
                 views_to_show.append((name, view))
                 if name == dflt_target_name:

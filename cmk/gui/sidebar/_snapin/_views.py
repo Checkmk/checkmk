@@ -10,7 +10,7 @@ from collections.abc import Callable
 from cmk.ccc.user import UserId
 
 from cmk.gui import pagetypes
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -67,7 +67,7 @@ class Views(SidebarSnapin):
     def description(cls):
         return _("Links to global views and dashboards")
 
-    def show(self):
+    def show(self, config: Config) -> None:
         show_main_menu(treename="views", menu=make_main_menu(view_menu_items()))
 
         links = []

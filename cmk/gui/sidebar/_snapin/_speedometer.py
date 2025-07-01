@@ -6,6 +6,7 @@
 import json
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -34,7 +35,7 @@ class Speedometer(SidebarSnapin):
             "the rate that is desired."
         )
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.open_div(class_="speedometer")
         html.img(theme.url("images/speedometer.svg"), id_="speedometerbg")
         html.canvas("", width=str(snapin_width), height="146", id_="speedometer")

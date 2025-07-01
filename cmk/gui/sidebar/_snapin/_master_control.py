@@ -10,6 +10,7 @@ from contextlib import nullcontext
 from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -36,7 +37,7 @@ class MasterControlSnapin(SidebarSnapin):
     def description(cls) -> str:
         return _("Buttons for globally switching states such as enabling checks and notifications")
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
 
@@ -208,4 +209,4 @@ class MasterControlSnapin(SidebarSnapin):
         )
         sites.live().set_only_sites()
 
-        self.show()
+        self.show(active_config)

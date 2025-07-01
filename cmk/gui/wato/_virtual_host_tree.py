@@ -11,7 +11,7 @@ from typing import TypedDict
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -75,9 +75,9 @@ class VirtualHostTree(SidebarSnapin):
             "global settings of the graphical user interface (GUI)."
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         self._load()
-        if not active_config.virtual_host_trees:
+        if not config.virtual_host_trees:
             url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
             html.p(
                 _(

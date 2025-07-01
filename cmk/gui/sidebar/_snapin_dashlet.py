@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import active_config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -87,7 +88,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         styles = snapin_instance.styles()
         if styles:
             html.style(styles)
-        snapin_instance.show()
+        snapin_instance.show(active_config)
         html.close_div()
         html.close_div()
         html.close_div()

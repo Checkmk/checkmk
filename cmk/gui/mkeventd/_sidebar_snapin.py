@@ -12,6 +12,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
@@ -42,7 +43,7 @@ class SidebarSnapinEventConsole(SidebarSnapin):
     def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         only_sites = snapin_site_choice("mkeventd_performance", get_event_console_site_choices())
 
         try:

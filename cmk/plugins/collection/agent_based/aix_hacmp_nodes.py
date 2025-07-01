@@ -24,7 +24,7 @@ def parse_aix_hacmp_nodes(string_table):
         if len(line) == 1:
             parsed[line[0]] = {}
 
-        elif "NODE" in line[0]:
+        elif "node" in line[0].lower():
             if line[1].replace(":", "") in parsed:
                 node_name = line[1].replace(":", "")
                 get_details = True

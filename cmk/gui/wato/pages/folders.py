@@ -20,7 +20,7 @@ from cmk.utils.tags import TagGroupID, TagID
 import cmk.gui.view_utils
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1318,8 +1318,8 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
-    def handle_page(self) -> None:
-        self._handle_exc(self.page)
+    def handle_page(self, config: Config) -> None:
+        self._handle_exc(config, self.page)
 
     @override
     def page(self) -> PageResult:

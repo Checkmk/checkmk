@@ -26,7 +26,7 @@ from cmk.automations.results import result_type_registry, SerializedResult
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui import userdb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -84,8 +84,8 @@ class PageAutomationLogin(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self) -> None:
-        self._handle_exc(self.page)
+    def handle_page(self, config: Config) -> None:
+        self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomationLogin.page")
     def page(self) -> PageResult:
@@ -144,13 +144,13 @@ class PageAutomation(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         # The automation page is accessed unauthenticated. After leaving the index.py area
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
         with SuperUserContext():
-            self._handle_exc(self.page)
+            self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomation.page")
     def page(self) -> PageResult:

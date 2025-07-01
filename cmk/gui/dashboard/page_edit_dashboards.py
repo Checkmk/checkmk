@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -14,7 +15,7 @@ from .store import get_all_dashboards
 from .type_defs import DashboardConfig, DashboardName
 
 
-def page_edit_dashboards() -> None:
+def page_edit_dashboards(config: Config) -> None:
     visuals.page_list(
         what="dashboards",
         title=_("Edit dashboards"),

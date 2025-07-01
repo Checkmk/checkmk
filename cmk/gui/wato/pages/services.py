@@ -32,7 +32,7 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -2321,7 +2321,7 @@ def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | N
     return f"cmk.service_discovery.start({json.dumps(host.name())}, {json.dumps(host.folder().path())}, {json.dumps(options._asdict())}, {json.dumps(transactions.get())}, {json.dumps(request_vars)})"
 
 
-def ajax_popup_service_action_menu() -> None:
+def ajax_popup_service_action_menu(config: Config) -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))

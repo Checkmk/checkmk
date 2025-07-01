@@ -11,7 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import bi as bi
 from cmk.gui.bi import bi_config_aggregation_function_registry
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -293,7 +293,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 
 
-def _bi_map() -> None:
+def _bi_map(config: Config) -> None:
     aggr_name = request.var("aggr_name")
     layout_id = request.var("layout_id")
     title = _("BI visualization")

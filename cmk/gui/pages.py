@@ -14,7 +14,7 @@ from typing import Any, override
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKMissingDataError
@@ -23,7 +23,7 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
-PageHandlerFunc = Callable[[], None]
+PageHandlerFunc = Callable[[Config], None]
 PageResult = object
 
 
@@ -39,7 +39,7 @@ PageResult = object
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         self.page()
 
     @abc.abstractmethod
@@ -63,7 +63,7 @@ class AjaxPage(Page, abc.ABC):
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()
 
-    def _handle_exc(self, method: Callable[[], PageResult]) -> None:
+    def _handle_exc(self, config: Config, method: Callable[[], PageResult]) -> None:
         try:
             method()
         except MKException as e:
@@ -71,7 +71,7 @@ class AjaxPage(Page, abc.ABC):
             html.write_text_permissive(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
-            if active_config.debug:
+            if config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(
@@ -81,7 +81,7 @@ class AjaxPage(Page, abc.ABC):
             html.write_text_permissive(str(e))
 
     @override
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         """The page handler, called by the page registry"""
         response.set_content_type("application/json")
         try:
@@ -93,7 +93,7 @@ class AjaxPage(Page, abc.ABC):
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:
-            if active_config.debug:
+            if config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(

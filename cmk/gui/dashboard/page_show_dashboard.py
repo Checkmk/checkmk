@@ -21,6 +21,7 @@ from cmk.utils import paths
 
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
@@ -91,7 +92,7 @@ DASHLET_PADDING = (
 RASTER = 10  # Raster the dashlet coords are measured in (px)
 
 
-def page_dashboard() -> None:
+def page_dashboard(config: Config) -> None:
     name = request.get_ascii_input_mandatory("name", "")
     if not name:
         name = _get_default_dashboard_name()
@@ -1155,7 +1156,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
     html.close_div()
 
 
-def ajax_dashlet() -> None:
+def ajax_dashlet(config: Config) -> None:
     """Render the inner HTML of a dashlet"""
     name = request.get_ascii_input_mandatory("name", "")
     if not name:

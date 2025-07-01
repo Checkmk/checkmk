@@ -14,6 +14,7 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 
+from cmk.gui.config import Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -37,7 +38,7 @@ from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 
 
-def ajax_popup_add() -> None:
+def ajax_popup_add(config: Config) -> None:
     # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
         add_type=request.get_ascii_input_mandatory("add_type"), name=""
@@ -149,7 +150,7 @@ class CreateInfoModel(BaseModel):
     context: VisualContext | None
 
 
-def ajax_add_visual() -> None:
+def ajax_add_visual(config: Config) -> None:
     check_csrf_token()
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
     try:

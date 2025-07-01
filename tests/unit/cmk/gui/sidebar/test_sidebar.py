@@ -10,7 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui import sidebar
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import UserSidebarSnapin
@@ -330,7 +330,7 @@ def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: Mock
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
         m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
-        sidebar.move_snapin()
+        sidebar.move_snapin(Config())
         m_load.assert_not_called()
 
 
@@ -346,7 +346,7 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
     request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")
 
-    sidebar.move_snapin()
+    sidebar.move_snapin(Config())
 
     if do_save is None:
         m_save.assert_not_called()

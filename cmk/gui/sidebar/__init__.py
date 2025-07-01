@@ -660,11 +660,11 @@ def _render_header_icon() -> None:
         html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
-def page_side():
+def page_side(config: Config) -> None:
     SidebarRenderer().show()
 
 
-def ajax_snapin():
+def ajax_snapin(config: Config) -> None:
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(user, active_config.sidebar)
@@ -763,7 +763,7 @@ class AjaxOpenCloseSnapin(AjaxPage):
         return None
 
 
-def move_snapin() -> None:
+def move_snapin(config: Config) -> None:
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
         return None
@@ -772,7 +772,7 @@ def move_snapin() -> None:
     if snapin_id is None:
         return None
 
-    user_config = UserSidebarConfig(user, active_config.sidebar)
+    user_config = UserSidebarConfig(user, config.sidebar)
 
     try:
         snapin = user_config.get_snapin(snapin_id)
@@ -803,7 +803,7 @@ def move_snapin() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def page_add_snapin() -> None:
+def page_add_snapin(config: Config) -> None:
     if not user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
@@ -895,7 +895,7 @@ class AjaxAddSnapin(AjaxPage):
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file
-def ajax_set_snapin_site():
+def ajax_set_snapin_site(config: Config) -> None:
     response.set_content_type("application/json")
     ident = request.var("ident")
     if ident not in all_snapins():

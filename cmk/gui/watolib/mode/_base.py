@@ -8,6 +8,7 @@ from collections.abc import Collection, Iterable
 from typing import final
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -168,5 +169,5 @@ class WatoMode(abc.ABC):
     def page(self) -> None:
         html.show_message(_("(This module is not yet implemented)"))
 
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         return self.page()

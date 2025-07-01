@@ -738,7 +738,7 @@ class QuicksearchSnapin(SidebarSnapin):
             "search_open": self._page_search_open,
         }
 
-    def _ajax_search(self) -> None:
+    def _ajax_search(self, config: Config) -> None:
         """Generate the search result list"""
         query = _maybe_strip(request.get_str_input("q"))
         if not query:
@@ -773,7 +773,7 @@ class QuicksearchSnapin(SidebarSnapin):
             self._quicksearch_manager._evaluate_results(search_objects), query
         )
 
-    def _page_search_open(self) -> None:
+    def _page_search_open(self, config: Config) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
         query = _maybe_strip(request.var("q"))
         if not query:

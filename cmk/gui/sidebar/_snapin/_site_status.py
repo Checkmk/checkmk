@@ -8,7 +8,7 @@ import json
 from cmk.ccc.site import SiteId
 
 from cmk.gui import sites, user_sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -124,7 +124,7 @@ class SiteStatus(SidebarSnapin):
             "set_all_sites": self._ajax_set_all_sites,
         }
 
-    def _ajax_switch_site(self) -> None:
+    def _ajax_switch_site(self, config: Config) -> None:
         check_csrf_token()
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
@@ -136,7 +136,7 @@ class SiteStatus(SidebarSnapin):
             for info in switch_var.split(","):
                 sitename_str, onoff = info.split(":")
                 sitename = SiteId(sitename_str)
-                if sitename not in active_config.sites:
+                if sitename not in config.sites:
                     continue
 
                 if onoff == "on":
@@ -146,7 +146,7 @@ class SiteStatus(SidebarSnapin):
 
             user.save_site_config()
 
-    def _ajax_set_all_sites(self) -> None:
+    def _ajax_set_all_sites(self, config: Config) -> None:
         sites.update_site_states_from_dead_sites()
         new_state = request.var("_new_state")
 

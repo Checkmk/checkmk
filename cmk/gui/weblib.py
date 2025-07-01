@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -16,7 +17,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_set_rowselection", ajax_set_rowselection))
 
 
-def ajax_tree_openclose() -> None:
+def ajax_tree_openclose(config: Config) -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
 
@@ -42,7 +43,7 @@ def init_selection() -> None:
     user.cleanup_old_selections()
 
 
-def ajax_set_rowselection() -> None:
+def ajax_set_rowselection(config: Config) -> None:
     ident = request.get_str_input_mandatory("id")
     action = request.get_str_input_mandatory("action", "set")
     if action not in ["add", "del", "set", "unset"]:

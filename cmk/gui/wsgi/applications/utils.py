@@ -20,6 +20,7 @@ import cmk.utils.paths
 import cmk.gui.auth
 import cmk.gui.session
 from cmk.gui import login, pages, userdb
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
@@ -56,21 +57,21 @@ class AbstractWSGIApp(abc.ABC):
 
 def ensure_authentication(
     handler: type[pages.Page] | pages.PageHandlerFunc,
-) -> Callable[[], Response]:
+) -> Callable[[Config], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Checkmk GUI supports and initializes the logged-in
     # user objects.
     @functools.wraps(handler)
-    def _call_auth() -> Response:
+    def _call_auth(config: Config) -> Response:
         with login.authenticate() as authenticated:
             if not authenticated:
-                return _handle_not_authenticated()
+                return _handle_not_authenticated(config)
 
             if isinstance(session.user, LoggedInRemoteSite | LoggedInSuperUser):
                 if isinstance(handler, type):
-                    handler().handle_page()
+                    handler().handle_page(config)
                 else:
-                    handler()
+                    handler(config)
                 return response
 
             user_id = session.user.ident
@@ -140,9 +141,9 @@ def ensure_authentication(
             set_user_frontend_config_cookie(request, response, user.frontend_config)
 
             if isinstance(handler, type):
-                handler().handle_page()
+                handler().handle_page(config)
             else:
-                handler()
+                handler(config)
 
             return response
 
@@ -191,7 +192,7 @@ def _ensure_general_access() -> None:
     raise MKAuthException(" ".join(reason))
 
 
-def _handle_not_authenticated() -> Response:
+def _handle_not_authenticated(config: Config) -> Response:
     if fail_silently():
         # While api call don't show the login dialog
         raise MKUnauthenticatedException(_("You are not authenticated."))
@@ -220,11 +221,11 @@ def _handle_not_authenticated() -> Response:
         )
 
         saas_login_page = SingleSignOn()
-        saas_login_page.handle_page()
+        saas_login_page.handle_page(config)
     else:
         login_page = login.LoginPage()
         login_page.set_no_html_output(plain_error())
-        login_page.handle_page()
+        login_page.handle_page(config)
 
     return response
 

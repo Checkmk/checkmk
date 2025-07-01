@@ -15,7 +15,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils.structured_data import SDRawTree, serialize_tree
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -62,7 +62,7 @@ def _write_python(resp):
     response.set_data(repr(resp))
 
 
-def page_host_inv_api() -> None:
+def page_host_inv_api(config: Config) -> None:
     resp: _HostInvAPIResponse
     try:
         api_request = request.get_request()

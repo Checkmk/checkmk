@@ -12,6 +12,7 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 
 import cmk.gui.pages
+from cmk.gui.config import Config
 from cmk.gui.pages import PageEndpoint
 
 
@@ -277,7 +278,7 @@ def test_page_registry_register_page_class(capsys: pytest.CaptureFixture[str]) -
     assert isinstance(handler, type)
     assert issubclass(handler, PageClass)
 
-    handler().handle_page()
+    handler().handle_page(Config())
     assert capsys.readouterr()[0] == "234"
 
 
@@ -287,7 +288,7 @@ def test_page_registry_register_page_handler(
 ) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
-    def page() -> None:
+    def page(config: Config) -> None:
         sys.stdout.write("234")
 
     page_registry.register(PageEndpoint("234handler", page))
@@ -297,12 +298,12 @@ def test_page_registry_register_page_handler(
     handler = endpoint.handler
     assert not isinstance(handler, type)
 
-    handler()
+    handler(Config())
     assert capsys.readouterr()[0] == "234"
 
 
 def test_get_page_handler_default() -> None:
-    def dummy():
+    def dummy(config: Config) -> None:
         pass
 
     handler = cmk.gui.pages.get_page_handler("123handler", dummy)

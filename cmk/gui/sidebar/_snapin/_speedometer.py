@@ -52,7 +52,7 @@ class Speedometer(SidebarSnapin):
             "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
 
-    def _ajax_speedometer(self) -> None:
+    def _ajax_speedometer(self, config: Config) -> None:
         response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute

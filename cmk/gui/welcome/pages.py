@@ -6,6 +6,7 @@
 from dataclasses import asdict
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -19,7 +20,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
 
 
-def _welcome_page() -> None:
+def _welcome_page(config: Config) -> None:
     make_header(html, "Welcome", breadcrumb=Breadcrumb(), show_top_heading=False)
     html.vue_component(
         component_name="cmk-welcome",

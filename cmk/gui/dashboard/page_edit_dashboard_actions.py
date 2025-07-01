@@ -5,6 +5,7 @@
 
 import time
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -17,7 +18,7 @@ from .type_defs import DashboardConfig
 __all__ = ["ajax_dashlet_pos", "page_clone_dashlet", "page_delete_dashlet"]
 
 
-def page_clone_dashlet() -> None:
+def page_clone_dashlet(config: Config) -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -48,7 +49,7 @@ def page_clone_dashlet() -> None:
     raise HTTPRedirect(request.get_url_input("back"))
 
 
-def page_delete_dashlet() -> None:
+def page_delete_dashlet(config: Config) -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -75,7 +76,7 @@ def page_delete_dashlet() -> None:
     raise HTTPRedirect(request.get_url_input("back"))
 
 
-def ajax_dashlet_pos() -> None:
+def ajax_dashlet_pos(config: Config) -> None:
     dashlet_spec, board = check_ajax_update()
 
     board["mtime"] = int(time.time())

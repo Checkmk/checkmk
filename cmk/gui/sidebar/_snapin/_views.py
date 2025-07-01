@@ -81,7 +81,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-def ajax_export_views() -> None:
+def ajax_export_views(config: Config) -> None:
     for view in get_permitted_views().values():
         view["owner"] = UserId.builtin()
         view["public"] = True

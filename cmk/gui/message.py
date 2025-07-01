@@ -18,7 +18,7 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 
 from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -231,7 +231,7 @@ permission_registry.register(
 )
 
 
-def page_message() -> None:
+def page_message(config: Config) -> None:
     if not user.may("general.message"):
         raise MKAuthException(_("You are not allowed to use the message module."))
 

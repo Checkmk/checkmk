@@ -11,6 +11,7 @@ from typing import override
 from cmk.gui import gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -192,9 +193,9 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 
     @override
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         self.action()
-        super().handle_page()
+        super().handle_page(config)
 
     @override
     def page(self) -> PageResult:

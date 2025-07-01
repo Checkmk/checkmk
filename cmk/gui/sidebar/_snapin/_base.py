@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from collections.abc import Callable
 
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageHandlerFunc
 from cmk.gui.type_defs import PermissionName, RoleName
 
-PageHandlers = dict[str, PageHandlerFunc]
+PageHandlers = dict[str, Callable[[Config], None]]
 
 
 # TODO: Transform methods to class methods

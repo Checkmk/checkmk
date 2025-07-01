@@ -11,7 +11,7 @@ from cmk.utils import paths
 from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
@@ -55,7 +55,7 @@ from .pages.not_implemented import ModeNotImplemented
 #   `----------------------------------------------------------------------'
 
 
-def page_handler() -> None:
+def page_handler(config: Config) -> None:
     initialize_wato_html_head()
 
     if not active_config.wato_enabled:
@@ -150,7 +150,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
         )
 
     # Show content
-    mode.handle_page()
+    mode.handle_page(active_config)
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()

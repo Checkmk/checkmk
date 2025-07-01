@@ -567,7 +567,7 @@ function virtual_host_tree_enter(path)
             "sidebar_ajax_tag_tree_enter": self._ajax_tag_tree_enter,
         }
 
-    def _ajax_tag_tree(self) -> None:
+    def _ajax_tag_tree(self, config: Config) -> None:
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         new_tree = request.var("tree_id")
@@ -580,7 +580,7 @@ function virtual_host_tree_enter(path)
         response.set_data("OK")
 
     # TODO: Validate path in current tree
-    def _ajax_tag_tree_enter(self) -> None:
+    def _ajax_tag_tree_enter(self, config: Config) -> None:
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         path = request.get_str_input_mandatory("path").split("|") if request.var("path") else []

@@ -18,7 +18,7 @@ from cmk.ccc.user import UserId
 from cmk.utils.structured_data import SDPath
 
 from cmk.gui import visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
@@ -70,7 +70,7 @@ from .store import get_all_views
 from .view_choices import view_choices
 
 
-def page_edit_view() -> None:
+def page_edit_view(config: Config) -> None:
     def get_view_infos(view: ViewSpec) -> SingleInfos:
         """Return list of available datasources (used to render filters)"""
         # In create mode "datasource" is mandatory, in other mode it's not

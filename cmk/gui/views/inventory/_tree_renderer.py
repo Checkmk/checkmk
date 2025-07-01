@@ -32,7 +32,7 @@ from cmk.utils.structured_data import (
 )
 
 from cmk.gui import inventory
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -322,7 +322,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 
 
 # Ajax call for fetching parts of the tree
-def ajax_inv_render_tree() -> None:
+def ajax_inv_render_tree(config: Config) -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
     host_name = request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(site_id, host_name)

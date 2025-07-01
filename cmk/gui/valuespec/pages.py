@@ -11,6 +11,7 @@ import cmk.utils
 import cmk.utils.paths
 from cmk.utils.encryption import fetch_certificate_details
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -29,7 +30,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 
-def ajax_popup_icon_selector() -> None:
+def ajax_popup_icon_selector(config: Config) -> None:
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
     value = request.var("value")

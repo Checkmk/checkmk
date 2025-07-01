@@ -21,7 +21,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -61,7 +61,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("logwatch", page_show))
 
 
-def page_show() -> None:
+def page_show(config: Config) -> None:
     site = request.get_validated_type_input(SiteId, "site")  # optional site hint
     host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
     file_name = request.get_str_input_mandatory("file", "")

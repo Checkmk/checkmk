@@ -37,6 +37,7 @@ from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -917,7 +918,7 @@ class EditCredentialAlias(ABCUserProfilePage):
 
 
 class JsonPage(Page, abc.ABC):
-    def handle_page(self) -> None:
+    def handle_page(self, config: Config) -> None:
         try:
             response.set_content_type("application/json")
             response.set_data(json.dumps(self.page()))

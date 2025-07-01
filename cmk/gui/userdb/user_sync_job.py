@@ -16,7 +16,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -83,7 +83,7 @@ def _userdb_sync_job_enabled() -> bool:
     return True
 
 
-def ajax_sync() -> None:
+def ajax_sync(config: Config) -> None:
     try:
         job = UserSyncBackgroundJob()
         if (
@@ -103,7 +103,7 @@ def ajax_sync() -> None:
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         gui_logger.exception("error synchronizing user DB")
-        if active_config.debug:
+        if config.debug:
             raise
         response.set_data("ERROR %s\n" % e)
 

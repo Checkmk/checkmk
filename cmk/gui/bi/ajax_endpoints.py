@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
@@ -21,7 +22,7 @@ from .helpers import get_state_assumption_key
 from .view import convert_tree_to_frozen_diff_tree
 
 
-def ajax_set_assumption() -> None:
+def ajax_set_assumption(config: Config) -> None:
     site = request.get_str_input("site")
     host = request.get_str_input("host")
     service = request.get_str_input("service")
@@ -35,7 +36,7 @@ def ajax_set_assumption() -> None:
     user.save_bi_assumptions()
 
 
-def ajax_save_treestate() -> None:
+def ajax_save_treestate(config: Config) -> None:
     path_id = request.get_str_input_mandatory("path")
     current_ex_level_str, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level_str)
@@ -48,7 +49,7 @@ def ajax_save_treestate() -> None:
     user.bi_expansion_level = current_ex_level
 
 
-def ajax_render_tree() -> None:
+def ajax_render_tree(config: Config) -> None:
     aggr_group = request.get_str_input("group")
     aggr_title = request.get_str_input("title")
     omit_root = bool(request.var("omit_root"))

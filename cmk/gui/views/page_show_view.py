@@ -62,6 +62,7 @@ from .store import get_all_views, get_permitted_views
 
 
 def page_show_view(
+    config: Config,
     page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
 ) -> None:
     """Central entry point for the initial HTML page rendering of a view"""

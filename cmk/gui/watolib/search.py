@@ -34,6 +34,7 @@ from cmk.gui.background_job import (
     NoArgs,
     simple_job_target,
 )
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
@@ -291,7 +292,7 @@ def may_see_url(url: str) -> bool:
         if mode:
             mode_permissions_ensurance_registry[mode]().ensure_permissions()
         else:
-            _try_page(file_name)
+            _try_page(file_name, active_config)
         return True
     except MKAuthException:
         return False
@@ -312,16 +313,16 @@ def may_see_url(url: str) -> bool:
         return False
 
 
-def _try_page(file_name: str) -> None:
+def _try_page(file_name: str, config: Config) -> None:
     handler = get_page_handler(file_name)
     if not handler:
         return
 
     with output_funnel.plugged():
         if isinstance(handler, type):
-            handler().handle_page()
+            handler().handle_page(config)
         else:
-            handler()
+            handler(config)
         output_funnel.drain()
 
 

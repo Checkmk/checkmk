@@ -9,7 +9,7 @@ from collections.abc import Collection
 import cmk.utils.paths
 
 from cmk.gui.backup import handler
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -113,8 +113,8 @@ class ModeBackupJobState(handler.PageBackupJobState, WatoMode):
 class PageAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self) -> None:
-        self._handle_exc(self.page)
+    def handle_page(self, config: Config) -> None:
+        self._handle_exc(config, self.page)
 
     def page(self) -> PageResult:
         user.need_permission("wato.backups")

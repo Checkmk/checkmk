@@ -13,7 +13,7 @@ from typing import NamedTuple, TypedDict
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui import message
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -140,13 +140,13 @@ class MainMenuRenderer:
             return output_funnel.drain()
 
 
-def ajax_message_read():
+def ajax_message_read(config: Config) -> None:
     response.set_content_type("application/json")
     try:
         message.delete_gui_message(request.get_str_input_mandatory("id"))
         html.write_text_permissive("OK")
     except Exception:
-        if active_config.debug:
+        if config.debug:
             raise
         html.write_text_permissive("ERROR")
 

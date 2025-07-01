@@ -60,7 +60,7 @@ from cmk.automations.results import ABCAutomationResult
 
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.groups import GroupName
@@ -3844,7 +3844,7 @@ def rebuild_folder_lookup_cache() -> None:
     folder_lookup_cache().rebuild_outdated(max_age=300)
 
 
-def ajax_popup_host_action_menu() -> None:
+def ajax_popup_host_action_menu(config: Config) -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = Host.host(hostname)
     if host is None:

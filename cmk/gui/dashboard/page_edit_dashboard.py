@@ -8,6 +8,7 @@
 import time
 
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary
 
@@ -17,7 +18,7 @@ from .type_defs import DashboardConfig
 __all__ = ["page_edit_dashboard"]
 
 
-def page_edit_dashboard() -> None:
+def page_edit_dashboard(config: Config) -> None:
     visuals.page_edit_visual(
         "dashboards",
         get_all_dashboards(),

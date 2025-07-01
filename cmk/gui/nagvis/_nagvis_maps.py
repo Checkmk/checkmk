@@ -40,7 +40,7 @@ class NagVisMaps(SidebarSnapin):
             "ajax_nagvis_maps_snapin": self._ajax_show_nagvis_maps_snapin,
         }
 
-    def _ajax_show_nagvis_maps_snapin(self) -> None:
+    def _ajax_show_nagvis_maps_snapin(self, config: Config) -> None:
         api_request = request.get_request()
         if api_request["type"] == "table":
             self._show_table(api_request)

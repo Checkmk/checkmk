@@ -10,7 +10,7 @@ from contextlib import nullcontext
 from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -171,7 +171,7 @@ class MasterControlSnapin(SidebarSnapin):
             "switch_master_state": self._ajax_switch_masterstate,
         }
 
-    def _ajax_switch_masterstate(self) -> None:
+    def _ajax_switch_masterstate(self, config: Config) -> None:
         check_csrf_token()
         response.set_content_type("text/plain")
 
@@ -209,4 +209,4 @@ class MasterControlSnapin(SidebarSnapin):
         )
         sites.live().set_only_sites()
 
-        self.show(active_config)
+        self.show(config)

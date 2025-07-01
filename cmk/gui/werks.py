@@ -27,6 +27,7 @@ from cmk.gui.breadcrumb import (
     make_main_menu_breadcrumb,
     make_simple_page_breadcrumb,
 )
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -275,7 +276,7 @@ def _show_werk_options_controls() -> None:
     html.close_div()
 
 
-def page_werk() -> None:
+def page_werk(config: Config) -> None:
     werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
 
     title = ("%s %s - %s") % (

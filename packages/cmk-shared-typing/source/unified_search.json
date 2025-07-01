@@ -10,11 +10,19 @@
         "providers": {
             "type": "object",
             "properties": {
-                "monitoring": { "type": "boolean" },
-                "customize": { "type": "boolean" },
-                "setup": { "type": "boolean" }
+                "monitoring": { "$ref": "#/$defs/provider" },
+                "customize": { "$ref": "#/$defs/provider" },
+                "setup": { "$ref": "#/$defs/provider" }
             },
             "required": ["monitoring", "customize", "setup"]
+        },
+        "provider": {
+            "type": "object",
+            "properties": {
+                "active": { "type": "boolean" },
+                "sort": { "type": "number" }
+            },
+            "required": ["active", "sort"]
         }
     }
 }

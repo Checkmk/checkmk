@@ -6,8 +6,9 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
-from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -16,7 +17,7 @@ from cmk.ccc.hostaddress import HostName
 logger = logging.getLogger(__name__)
 
 
-@skip_if_not_containerized
+@pytest.mark.skip_if_not_containerized
 def test_proxy_register_import_workflow(
     *,
     central_site: Site,

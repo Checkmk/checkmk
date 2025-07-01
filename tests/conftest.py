@@ -53,6 +53,11 @@ class EditionMarker(StrEnum):
     skip_if_not = "skip_if_not_edition"
 
 
+class ContainerizedMarker(StrEnum):
+    skip_if = "skip_if_containerized"
+    skip_if_not = "skip_if_not_containerized"
+
+
 def get_test_type(test_path: Path) -> str:
     testdir_path = Path(__file__).parent.resolve()
     test_path_relative = test_path.resolve().relative_to(testdir_path)
@@ -276,6 +281,14 @@ def pytest_configure(config: pytest.Config) -> None:
         f"{EditionMarker.skip_if_not}(edition): "
         "skips the tests for anything but the given edition(s)",
     )
+    config.addinivalue_line(
+        "markers",
+        f"{ContainerizedMarker.skip_if}: skips the tests for containerized runs",
+    )
+    config.addinivalue_line(
+        "markers",
+        f"{ContainerizedMarker.skip_if_not}: skips the tests for uncontainerized runs",
+    )
 
 
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
@@ -304,6 +317,14 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     unskip_editions = _editions_from_markers(item, EditionMarker.skip_if_not)
     if unskip_editions and current_edition not in unskip_editions:
         pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped implicitly!')
+
+    skip_containerized = next(item.iter_markers(name=ContainerizedMarker.skip_if), None)
+    if skip_containerized and is_containerized():
+        pytest.skip(f"{item.nodeid}: Containerized run excluded!")
+
+    skip_not_containerized = next(item.iter_markers(name=ContainerizedMarker.skip_if_not), None)
+    if skip_not_containerized and not is_containerized():
+        pytest.skip(f"{item.nodeid}: Containerized run required!")
 
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")

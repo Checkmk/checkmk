@@ -5,12 +5,13 @@
 
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.agent import (
     controller_connection_json,
     controller_status_json,
     register_controller,
 )
-from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 
 from cmk.ccc.hostaddress import HostName
@@ -56,7 +57,7 @@ def _test_rename_preserves_registration(
         central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
-@skip_if_not_containerized
+@pytest.mark.skip_if_not_containerized
 def test_rename_preserves_registration_central(
     central_site: Site,
     agent_ctl: Path,
@@ -69,7 +70,7 @@ def test_rename_preserves_registration_central(
     )
 
 
-@skip_if_not_containerized
+@pytest.mark.skip_if_not_containerized
 def test_rename_preserves_registration_remote(
     central_site: Site,
     remote_site: Site,

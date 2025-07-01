@@ -414,6 +414,7 @@ class DocReference(Enum):
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"
     FORECAST_GRAPH = "forecast_graphs"
+    FINETUNING_MONITORING = "intro_finetune"
     GCP = "monitoring_gcp"
     GCP_MANUAL_VM = "monitoring_gcp#_manually_creating_hosts_for_vm_instances"
     GRAPHING_RRDS = "graphing#rrds"

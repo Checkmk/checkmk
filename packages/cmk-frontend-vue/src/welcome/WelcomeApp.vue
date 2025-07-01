@@ -9,17 +9,22 @@ import usei18n from '@/lib/i18n'
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
+import NextSteps from '@/welcome/components/NextSteps.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 
 const { t } = usei18n('welcome-app')
 defineProps<{ urls: WelcomeUrls }>()
+
+const completedSteps = 5
+const totalSteps = 5
 </script>
 
 <template>
   <div class="welcome-app">
-    <WelcomeBanner :completed-steps="1" :total-steps="5" />
+    <WelcomeBanner :completed-steps="completedSteps" :total-steps="totalSteps" />
     <div class="welcome-app__panels">
       <div class="welcome-app__panel-left">
+        <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
         <p>
           {{
             t(
@@ -54,6 +59,9 @@ defineProps<{ urls: WelcomeUrls }>()
 .welcome-app__panels {
   display: flex;
   margin-top: var(--spacing);
+}
+.welcome-app__panel-left {
+  margin-right: var(--spacing);
 }
 .welcome-app__panel-right {
   margin-left: auto;

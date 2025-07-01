@@ -74,6 +74,11 @@
   --icon-validation-error: url('~cmk-frontend/src/themes/facelift/images/icon_validation_error.png');
 
   --icon-checkmk-logo-min: url('~cmk-frontend/src/themes/facelift/images/icon_checkmk_logo_min.svg');
+  --icon-rulesets: url('~cmk-frontend/src/themes/facelift/images/icon_rulesets.svg');
+  --icon-backup: url('~cmk-frontend/src/themes/facelift/images/icon_backup.svg');
+  --icon-contactgroups: url('~cmk-frontend/src/themes/facelift/images/icon_contactgroups.svg');
+  --icon-licensing: url('~cmk-frontend/src/themes/facelift/images/icon_licensing.svg');
+  --icon-sites: url('~cmk-frontend/src/themes/facelift/images/icon_sites.svg');
 }
 
 @layer theme {

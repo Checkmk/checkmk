@@ -29,12 +29,12 @@ const propsCva = cva('', {
 export type Sizes = VariantProps<typeof propsCva>['size']
 export type Colors = VariantProps<typeof propsCva>['color']
 
-export interface CmkChipProps {
+export interface CmkBadgeProps {
   size?: Sizes
   color?: Colors
 }
 
-defineProps<CmkChipProps>()
+defineProps<CmkBadgeProps>()
 </script>
 
 <template>

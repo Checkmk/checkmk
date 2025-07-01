@@ -701,15 +701,15 @@ class QuicksearchSnapin(SidebarSnapin):
         super().__init__()
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "search"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Quicksearch")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _(
             "Interactive search field for direct access to monitoring instances (hosts, services, "
             "host and service groups).<br>You can use the following filters: <i>h:</i> Host,<br> "
@@ -908,7 +908,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
 
 
 class MatchPluginRegistry(cmk.ccc.plugin_registry.Registry[ABCMatchPlugin]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: ABCMatchPlugin) -> str:
         return instance.name
 
     def get_livestatus_match_plugins(self) -> list[ABCLivestatusMatchPlugin]:

@@ -13,21 +13,21 @@ from cmk.gui.i18n import _
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import RoleName
 
-from ._base import SidebarSnapin
+from ._base import PageHandlers, SidebarSnapin
 from ._helpers import snapin_width
 
 
 class Speedometer(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "speedometer"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Service Speed-O-Meter")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _(
             "A gadget that shows your current service check rate in relation to "
             "the scheduled check rate. If the Speed-O-Meter shows a speed "
@@ -47,12 +47,12 @@ class Speedometer(SidebarSnapin):
     def allowed_roles(cls) -> list[RoleName]:
         return ["admin"]
 
-    def page_handlers(self):
+    def page_handlers(self) -> PageHandlers:
         return {
             "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
 
-    def _ajax_speedometer(self):
+    def _ajax_speedometer(self) -> None:
         response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute

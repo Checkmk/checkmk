@@ -18,25 +18,25 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 
-from ._base import SidebarSnapin
+from ._base import PageHandlers, SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
 
 class SiteStatus(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "sitestatus"
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Site status")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _(
             "Connection state of each site and button for enabling "
             "and disabling the site connection"
@@ -118,13 +118,13 @@ class SiteStatus(SidebarSnapin):
     def allowed_roles(cls) -> list[RoleName]:
         return ["user", "admin"]
 
-    def page_handlers(self):
+    def page_handlers(self) -> PageHandlers:
         return {
             "switch_site": self._ajax_switch_site,
             "set_all_sites": self._ajax_set_all_sites,
         }
 
-    def _ajax_switch_site(self):
+    def _ajax_switch_site(self) -> None:
         check_csrf_token()
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
@@ -146,7 +146,7 @@ class SiteStatus(SidebarSnapin):
 
             user.save_site_config()
 
-    def _ajax_set_all_sites(self):
+    def _ajax_set_all_sites(self) -> None:
         sites.update_site_states_from_dead_sites()
         new_state = request.var("_new_state")
 

@@ -16,11 +16,11 @@ from ._helpers import snapin_site_choice
 
 class Performance(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "performance"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Server performance")
 
     @classmethod
@@ -28,11 +28,11 @@ class Performance(SidebarSnapin):
         return True
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Live monitor of the overall performance of all monitoring servers")
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
     def show(self, config: Config) -> None:
@@ -94,7 +94,7 @@ class Performance(SidebarSnapin):
         html.close_table()
 
     @classmethod
-    def refresh_on_restart(cls):
+    def refresh_on_restart(cls) -> bool:
         return True
 
     @classmethod

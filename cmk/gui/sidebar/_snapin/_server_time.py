@@ -14,19 +14,19 @@ from ._base import SidebarSnapin
 
 class CurrentTime(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "time"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Server time")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A large clock showing the current time of the web server")
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
     def show(self, config: Config) -> None:

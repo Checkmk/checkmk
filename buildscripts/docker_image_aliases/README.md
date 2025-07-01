@@ -86,7 +86,7 @@ Dockerfiles which shall be based on an image alias have to reference it using a 
 ```
 ARG IMAGE_CMK_BASE
 # hadolint ignore=DL3006
-FROM ${IMAGE_CMK_BASE} as base
+FROM ${IMAGE_CMK_BASE} AS base
 ```
 
 Note that you can choose a different name for the argument, but for consistancy please use the

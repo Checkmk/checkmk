@@ -2,7 +2,7 @@ ARG IMAGE_UBUNTU_22_04
 
 # hadolint ignore=DL3006
 # Create base image
-FROM ${IMAGE_UBUNTU_22_04} as base
+FROM ${IMAGE_UBUNTU_22_04} AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV \
@@ -93,7 +93,7 @@ RUN apt-get update \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-FROM base as builder
+FROM base AS builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD

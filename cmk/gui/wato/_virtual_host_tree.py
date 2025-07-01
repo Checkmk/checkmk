@@ -20,7 +20,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import PageHandlers, SidebarSnapin
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, VirtualHostTreeSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
@@ -38,12 +38,12 @@ class VirtualHostTree(SidebarSnapin):
     def type_name() -> str:
         return "tag_tree"
 
-    def _load(self) -> None:
-        self._load_trees()
+    def _load(self, virtual_host_trees: Sequence[VirtualHostTreeSpec]) -> None:
+        self._load_trees(virtual_host_trees)
         self._load_user_settings()
 
-    def _load_trees(self) -> None:
-        self._trees = {tree["id"]: tree for tree in active_config.virtual_host_trees}
+    def _load_trees(self, virtual_host_trees: Sequence[VirtualHostTreeSpec]) -> None:
+        self._trees = {tree["id"]: tree for tree in virtual_host_trees}
 
     def _load_user_settings(self) -> None:
         tree_conf = user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
@@ -76,7 +76,7 @@ class VirtualHostTree(SidebarSnapin):
         )
 
     def show(self, config: Config) -> None:
-        self._load()
+        self._load(config.virtual_host_trees)
         if not config.virtual_host_trees:
             url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
             html.p(
@@ -89,7 +89,7 @@ class VirtualHostTree(SidebarSnapin):
             return
 
         self._show_tree_selection()
-        self._show_tree()
+        self._show_tree(config.tags.tag_groups)
 
     def _show_tree_selection(self) -> None:
         with html.form_context("vtree"):
@@ -111,13 +111,13 @@ class VirtualHostTree(SidebarSnapin):
             html.br()
         html.final_javascript(self._javascript())
 
-    def _show_tree(self) -> None:
+    def _show_tree(self, tag_groups: Sequence[TagGroup]) -> None:
         tree_spec = self._trees[self._current_tree_id]["tree_spec"]
 
-        tree = self._compute_tag_tree(tree_spec)
+        tree = self._compute_tag_tree(tree_spec, tag_groups)
         html.open_div(class_="tag_tree")
         self._show_tag_tree_level(
-            tree_spec, [], self._current_tree_path, _("Virtual host tree"), tree
+            tree_spec, [], self._current_tree_path, _("Virtual host tree"), tree, tag_groups
         )
         html.close_div()
 
@@ -133,6 +133,7 @@ class VirtualHostTree(SidebarSnapin):
         cwd: str,
         title: str | HTML,
         tree: Tree,
+        tag_groups: Sequence[TagGroup],
     ) -> None:
         if not self._is_tag_subdir(path=path, cwd=cwd) and not self._is_tag_subdir(
             path=cwd, cwd=path
@@ -144,7 +145,7 @@ class VirtualHostTree(SidebarSnapin):
             bullet = self._tag_tree_bullet(self._tag_tree_worst_state(tree), path, False)
             if self._tag_tree_has_svc_problems(tree):
                 bullet += html.render_icon_button(
-                    self._tag_tree_url(tree_spec, path, "svcproblems"),
+                    self._tag_tree_url(tree_spec, path, "svcproblems", tag_groups),
                     _("Show the service problems contained in this branch"),
                     "svc_problems",
                     target="main",
@@ -161,7 +162,7 @@ class VirtualHostTree(SidebarSnapin):
         with container:
             for (node_title_text, node_value), subtree in sorted(tree.get("_children", {}).items()):
                 subpath = [*path, node_value or ""]
-                url = self._tag_tree_url(tree_spec, subpath, "allhosts")
+                url = self._tag_tree_url(tree_spec, subpath, "allhosts", tag_groups)
 
                 if "_num_hosts" in subtree:
                     node_title_text += " (%d)" % subtree["_num_hosts"]
@@ -174,7 +175,7 @@ class VirtualHostTree(SidebarSnapin):
                             self._tag_tree_bullet(subtree.get("_state", 0), subpath, True)
                         )
                         if subtree.get("_svc_problems"):
-                            url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
+                            url = self._tag_tree_url(tree_spec, subpath, "svcproblems", tag_groups)
                             html.icon_button(
                                 url,
                                 _("Show the service problems contained in this branch"),
@@ -184,7 +185,9 @@ class VirtualHostTree(SidebarSnapin):
                         html.write_html(node_title)
                         html.br()
                 else:
-                    self._show_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
+                    self._show_tag_tree_level(
+                        tree_spec, subpath, cwd, node_title, subtree, tag_groups
+                    )
 
     def _is_tag_subdir(self, path: Sequence[str], cwd: Sequence[str]) -> bool:
         if not cwd:
@@ -209,7 +212,11 @@ class VirtualHostTree(SidebarSnapin):
         return code + " "
 
     def _tag_tree_url(
-        self, tree_spec: Sequence[str], node_values: Sequence[str], viewname: str
+        self,
+        tree_spec: Sequence[str],
+        node_values: Sequence[str],
+        viewname: str,
+        tag_groups: Sequence[TagGroup],
     ) -> str:
         urlvars: HTTPVariables = [
             ("view_name", viewname),
@@ -223,7 +230,7 @@ class VirtualHostTree(SidebarSnapin):
             urlvars += [("is_in_downtime", "0")]
             active_urlvars.append("in_downtime")
 
-        if tag_urlvars := self._get_tag_url_vars(tree_spec, node_values):
+        if tag_urlvars := self._get_tag_url_vars(tree_spec, node_values, tag_groups):
             urlvars += tag_urlvars
             active_urlvars.append("host_tags")
         if wato_folder_urlvars := self._get_folder_url_vars(node_values):
@@ -234,7 +241,7 @@ class VirtualHostTree(SidebarSnapin):
         return makeuri_contextless(request, urlvars, "view.py")
 
     def _get_tag_url_vars(
-        self, tree_spec: Sequence[str], node_values: Sequence[str]
+        self, tree_spec: Sequence[str], node_values: Sequence[str], tag_groups: Sequence[TagGroup]
     ) -> Sequence[tuple[str, str]]:
         urlvars: list[tuple[str, str]] = []
 
@@ -249,7 +256,7 @@ class VirtualHostTree(SidebarSnapin):
 
         for nr, (level_spec, tag) in enumerate(zip(tag_tree_spec, tag_node_values)):
             if level_spec.startswith("topic:"):
-                for tag_group in active_config.tags.tag_groups:
+                for tag_group in tag_groups:
                     for grouped_tag in tag_group.tags:
                         if grouped_tag.id == tag:
                             urlvars.append(("host_tag_%d_grp" % nr, tag_group.id))
@@ -325,11 +332,11 @@ function virtual_host_tree_enter(path)
 }
 """
 
-    def _compute_tag_tree(self, tree_spec: Sequence[str]) -> Tree:
-        tag_groups, topics = self._get_tag_config()
+    def _compute_tag_tree(self, tree_spec: Sequence[str], tag_groups: Sequence[TagGroup]) -> Tree:
+        tag_group_map, topics = self._get_tag_config(tag_groups)
         tree = Tree({})
         for host_row in self._get_all_hosts():
-            self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
+            self._add_host_to_tree(tree_spec, tree, host_row, tag_group_map, topics)
         return tree
 
     def _add_host_to_tree(
@@ -478,18 +485,17 @@ function virtual_host_tree_enter(path)
             else:
                 tree_entry["_state"] = max(state, tree_entry["_state"])
 
-    # Prepare list of host tag groups and topics
     def _get_tag_config(
-        self,
+        self, tag_groups: Sequence[TagGroup]
     ) -> tuple[dict[str, TagGroup], dict[str | None, list[TagGroup]]]:
-        tag_groups: dict[str, TagGroup] = {}
+        tag_group_map: dict[str, TagGroup] = {}
         topics: dict[str | None, list[TagGroup]] = {}
-        for tag_group in active_config.tags.tag_groups:
+        for tag_group in tag_groups:
             if tag_group.topic:
                 topics.setdefault(tag_group.topic, []).append(tag_group)
-            tag_groups[str(tag_group.id)] = tag_group
+            tag_group_map[str(tag_group.id)] = tag_group
 
-        return tag_groups, topics
+        return tag_group_map, topics
 
     def _get_all_hosts(
         self,
@@ -563,7 +569,7 @@ function virtual_host_tree_enter(path)
 
     def _ajax_tag_tree(self) -> None:
         response.set_content_type("application/json")
-        self._load()
+        self._load(active_config.virtual_host_trees)
         new_tree = request.var("tree_id")
 
         if new_tree not in self._trees:
@@ -576,7 +582,7 @@ function virtual_host_tree_enter(path)
     # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self) -> None:
         response.set_content_type("application/json")
-        self._load()
+        self._load(active_config.virtual_host_trees)
         path = request.get_str_input_mandatory("path").split("|") if request.var("path") else []
         self._cwds[self._current_tree_id] = path
         self._save_user_settings()

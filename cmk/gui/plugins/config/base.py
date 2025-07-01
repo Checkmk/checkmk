@@ -6,7 +6,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 from livestatus import BrokerConnections, SiteConfigurations
 
@@ -25,6 +25,7 @@ from cmk.gui.type_defs import (
     IconSpec,
     TrustedCertificateAuthorities,
     UserSpec,
+    VirtualHostTreeSpec,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -79,13 +80,6 @@ def make_default_user_profile() -> UserSpec:
 
 
 ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
-
-
-class VirtualHostTreeSpec(TypedDict):
-    id: str
-    title: str
-    exclude_empty_tag_choices: bool
-    tree_spec: Sequence[str]
 
 
 @dataclass

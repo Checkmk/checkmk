@@ -11,7 +11,7 @@ import livestatus
 from cmk.ccc.site import SiteId
 
 from cmk.gui import notifications, sites, visuals
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -175,12 +175,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         )
 
     def show(self, config: Config) -> None:
-        self._show_rows()
+        self._show_rows(config.staleness_threshold, config.mkeventd_enabled)
         self._show_failed_notifications()
         self._show_site_status()
 
-    def _show_rows(self) -> None:
-        rows = self._get_rows()
+    def _show_rows(self, staleness_threshold: float, mkeventd_enabled: bool) -> None:
+        rows = self._get_rows(staleness_threshold)
 
         if bool([r for r in rows if r.stats is None]):
             html.center(_("No data from any site"))
@@ -204,7 +204,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 stales = 0
 
                 # no events open and disabled in local site: don't show events
-                if amount == 0 and not active_config.mkeventd_enabled:
+                if amount == 0 and not mkeventd_enabled:
                     continue
             else:
                 amount, problems, unhandled_problems, stales = row.stats
@@ -262,7 +262,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.close_tr()
         html.close_table()
 
-    def _get_rows(self) -> list[OverviewRow]:
+    def _get_rows(self, staleness_threshold: float) -> list[OverviewRow]:
         rows = []
         for row_config in self.parameters().rows:
             what, context = row_config.query
@@ -270,7 +270,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             if what == "events" and not user.may("mkeventd.see_in_tactical_overview"):
                 continue
 
-            stats = self._get_stats(what, context)
+            stats = self._get_stats(what, context, staleness_threshold)
 
             rows.append(
                 OverviewRow(
@@ -348,6 +348,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         self,
         what: Literal["hosts", "services", "events"],
         context: VisualContext,
+        staleness_threshold: float,
     ) -> Sequence[int] | None:
         query: str | livestatus.Query
         if what == "hosts":
@@ -355,14 +356,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 infos=["host"], context=context
             )
 
-            query = self._get_host_stats_query(context_filters)
+            query = self._get_host_stats_query(staleness_threshold, context_filters)
 
         elif what == "services":
             context_filters, only_sites = visuals.get_filter_headers(
                 infos=["host", "service"], context=context
             )
 
-            query = self._get_service_stats_query(context_filters)
+            query = self._get_service_stats_query(staleness_threshold, context_filters)
 
         elif what == "events":
             context_filters, only_sites = visuals.get_filter_headers(
@@ -380,7 +381,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             deflt=[0, 0, 0] if what == "events" else None,
         )
 
-    def _get_host_stats_query(self, context_filters: str) -> str:
+    def _get_host_stats_query(self, staleness_threshold: float, context_filters: str) -> str:
         return (
             "GET hosts\n"
             # Total
@@ -399,9 +400,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: host_scheduled_downtime_depth = 0\n"
             "StatsAnd: 2\n"
             "%s"
-        ) % (active_config.staleness_threshold, context_filters)
+        ) % (staleness_threshold, context_filters)
 
-    def _get_service_stats_query(self, context_filters: str) -> str:
+    def _get_service_stats_query(self, staleness_threshold: float, context_filters: str) -> str:
         return (
             "GET services\n"
             # Total
@@ -426,7 +427,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: host_state = 0\n"
             "StatsAnd: 4\n"
             "%s"
-        ) % (active_config.staleness_threshold, context_filters)
+        ) % (staleness_threshold, context_filters)
 
     def _get_event_stats_query(self, context_filters: str) -> livestatus.Query:
         # In case the user is not allowed to see unrelated events

@@ -807,3 +807,10 @@ class CustomHostAttrSpec(CustomAttrSpec): ...
 class CustomUserAttrSpec(CustomAttrSpec):
     # None case should be cleaned up to False
     user_editable: bool | None
+
+
+class VirtualHostTreeSpec(TypedDict):
+    id: str
+    title: str
+    exclude_empty_tag_choices: bool
+    tree_spec: Sequence[str]

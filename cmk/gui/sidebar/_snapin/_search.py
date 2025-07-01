@@ -1469,7 +1469,7 @@ class MenuSearchResultsRenderer(abc.ABC):
     MAX_RESULTS_BEFORE_SHOW_ALL: Final = 10
 
     @abc.abstractmethod
-    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
+    def generate_results(self, query: SearchQuery, config: Config) -> SearchResultsByTopic:
         raise NotImplementedError()
 
     @property
@@ -1482,9 +1482,9 @@ class MenuSearchResultsRenderer(abc.ABC):
     def max_results_after_show_all(self) -> None | int:
         raise NotImplementedError()
 
-    def render(self, query: str) -> str:
+    def render(self, query: str, config: Config) -> str:
         try:
-            results = self.generate_results(query)
+            results = self.generate_results(query, config)
         # Don't render the IncorrectLabelInputError in Main Menu to make the handling of
         # incorrect inputs consistent with other search querys
         except IncorrectLabelInputError:
@@ -1648,7 +1648,7 @@ class MonitorMenuSearchResultsRenderer(MenuSearchResultsRenderer):
     def __init__(self) -> None:
         self._search_manager: Final = QuicksearchManager(raise_too_many_rows_error=False)
 
-    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
+    def generate_results(self, query: SearchQuery, config: Config) -> SearchResultsByTopic:
         return self._search_manager.generate_results(query)
 
 
@@ -1662,8 +1662,8 @@ class SetupMenuSearchResultsRenderer(MenuSearchResultsRenderer):
             PermissionsHandler(),
         )
 
-    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
-        return self._search_manager.search(query)
+    def generate_results(self, query: SearchQuery, config: Config) -> SearchResultsByTopic:
+        return self._search_manager.search(query, config)
 
 
 _TIterItem = TypeVar("_TIterItem")
@@ -1687,14 +1687,14 @@ def _evaluate_iterable_up_to(
 class PageSearchMonitoring(AjaxPage):
     def page(self, config: Config) -> PageResult:
         query = request.get_str_input_mandatory("q")
-        return MonitorMenuSearchResultsRenderer().render(livestatus.lqencode(query))
+        return MonitorMenuSearchResultsRenderer().render(livestatus.lqencode(query), config)
 
 
 class PageSearchSetup(AjaxPage):
     def page(self, config: Config) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
-            return SetupMenuSearchResultsRenderer().render(livestatus.lqencode(query))
+            return SetupMenuSearchResultsRenderer().render(livestatus.lqencode(query), config)
         except IndexNotFoundException:
             with output_funnel.plugged():
                 html.open_div(class_="topic")

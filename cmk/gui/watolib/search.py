@@ -279,7 +279,7 @@ def _set_current_folder(folder_name: str) -> None:
     g.wato_current_folder = g.wato_folders[folder_name]
 
 
-def may_see_url(url: str) -> bool:
+def may_see_url(url: str, config: Config) -> bool:
     file_name, query_vars = file_name_and_query_vars_from_url(url)
     _set_query_vars(query_vars)
 
@@ -339,7 +339,7 @@ class PermissionsHandler:
         }
 
     @staticmethod
-    def _permissions_rule(url: str) -> bool:
+    def _permissions_rule(url: str, config: Config) -> bool:
         _, query_vars = file_name_and_query_vars_from_url(url)
         return may_edit_ruleset(query_vars["varname"][0])
 
@@ -347,19 +347,19 @@ class PermissionsHandler:
         return user.may("wato.use") and self._category_permissions.get(category, True)
 
     @staticmethod
-    def _permission_global_setting(url: str) -> bool:
+    def _permission_global_setting(url: str, config: Config) -> bool:
         if edition(paths.omd_root) is not Edition.CSE:
             return True
         _, query_vars = file_name_and_query_vars_from_url(url)
         return get_global_config().global_settings.is_activated(query_vars["varname"][0])
 
-    def may_see_items(self) -> Mapping[str, Callable[[str], bool]]:
+    def may_see_items(self) -> Mapping[str, Callable[[str, Config], bool]]:
         return {
             "global_settings": self._permission_global_setting,
             "rules": self._permissions_rule,
-            "hosts": lambda url: (
+            "hosts": lambda url, config: (
                 any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
-                or may_see_url(url)
+                or may_see_url(url, active_config)
             ),
             "setup": may_see_url,
         }
@@ -378,7 +378,7 @@ class IndexSearcher:
         self._may_see_item_func = permissions_handler.may_see_items()
         self._user_id = user.ident
 
-    def search(self, query: SearchQuery) -> SearchResultsByTopic:
+    def search(self, query: SearchQuery, config: Config) -> SearchResultsByTopic:
         """
         Sorted search results restricted according to the permissions of the current user.
 
@@ -389,7 +389,7 @@ class IndexSearcher:
         render only, thus avoiding checking the permissions for all found results.
         """
         yield from self._filter_results_by_user_permissions(
-            self._sort_search_results(self._search_redis(query))
+            self._sort_search_results(self._search_redis(query)), config
         )
 
     def _search_redis(
@@ -455,7 +455,7 @@ class IndexSearcher:
                 key_prefix_match_items,
                 category,
             )
-            visibility_check = self._may_see_item_func.get(category, lambda _url: True)
+            visibility_check = self._may_see_item_func.get(category, lambda _url, _config: True)
 
             for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
                 IndexBuilder.key_match_texts(prefix_category),
@@ -537,11 +537,16 @@ class IndexSearcher:
     @staticmethod
     def _filter_results_by_user_permissions(
         results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithVisibilityCheck]]],
+        config: Config,
     ) -> SearchResultsByTopic:
         yield from (
             (
                 topic,
-                (result.result for result in results if result.visibility_check(result.result.url)),
+                (
+                    result.result
+                    for result in results
+                    if result.visibility_check(result.result.url, config)
+                ),
             )
             for topic, results in results_by_topic
         )
@@ -550,7 +555,7 @@ class IndexSearcher:
 @dataclass(frozen=True)
 class _SearchResultWithVisibilityCheck:
     result: SearchResult
-    visibility_check: Callable[[str], bool]
+    visibility_check: Callable[[str, Config], bool]
 
 
 def _index_building_in_background_job(

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-26 18:35+0000\n"
+"PO-Revision-Date: 2025-07-01 01:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -268,7 +268,7 @@ msgid "#Containers"
 msgstr "#Container"
 
 msgid "#Containers paused"
-msgstr "#Container pausieren"
+msgstr "#Container pausiert"
 
 msgid "#Containers running"
 msgstr "#Container aktiv"
@@ -17828,7 +17828,6 @@ msgstr ""
 "sich der Benutzer erneut authentifizieren. Die Sitzungen bleiben beim "
 "Beenden des Browsers nicht bestehen."
 
-#, fuzzy
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
@@ -17838,10 +17837,11 @@ msgid ""
 "to the metric name in the service."
 msgstr ""
 "Legen Sie hier den zu überwachenden Metriknamen als exakten Match fest. "
-"Metriknamen werden aus <a href='https://checkmk.com/werk/18209'>Open "
-"Telemetry-Datenpunktattributen</a> und der <a href='https://checkmk.com/werk/"
-"18108'>Open Telemetry-Metrikeinheit</a> berechnet. Dies muss ein exakter "
-"Match mit dem Metriknamen im Service sein."
+"Metriknamen werden aus <a href='https://checkmk.com/werk/18209"
+"'>OpenTelemetry-Datenpunktattributen</a> oder dem <a href='https://"
+"checkmk.com/werk/18249'>OpenTelemetry-Metriknamen</a> und der <a "
+"href='https://checkmk.com/werk/18249'>OpenTelemetry-Metrikeinheit</a> "
+"berechnet. Dies muss ein exakter Match mit dem Metriknamen im Service sein."
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -24019,9 +24019,11 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed host tag condition (Host tags: %s, Required: %s)"
-msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Merkmale %s)"
+msgstr ""
+"Fehlgeschlagene Bedingung des Host-Merkmals (Host-Merkmale: %s, erforderlich:"
+" %s)"
 
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
@@ -26215,9 +26217,8 @@ msgstr "Datei von SFTP-Server holen"
 msgid "Get header only"
 msgstr "Nur Header abfragen"
 
-#, fuzzy
 msgid "Get started (Welcome)"
-msgstr "Erste Schritte"
+msgstr "Erste Schritte (Willkommen)"
 
 msgid "Getting started"
 msgstr "Erste Schritte"
@@ -33031,17 +33032,16 @@ msgstr ""
 "Alerts gespeichert. Diese Datei wird in regelmäßigen Abständen umbenannt und "
 "neu gestartet, was hier konfiguriert werden kann."
 
-#, fuzzy
 msgid ""
 "In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
 msgstr ""
-"Im Megamenü kann man zwischen zwei Optionen wählen: Grünes Icon für die "
-"Überschriften - die 'Themen' - für ein schlichtes Design. Oder ein farbiges "
-"Icon für jeden Eintrag, damit man mit der Zeit spezifische Einträge "
-"schneller findet."
+"In den Hauptmenüs können Sie zwischen zwei Optionen wählen: Ein grünes "
+"Symbol nur für die Überschriften - die 'Themen' - für ein schlankes Design. "
+"Oder ein farbiges Symbol für jeden Eintrag, so dass Sie im Laufe der Zeit "
+"schneller zu einem bestimmten Eintrag zoomen können."
 
 msgid ""
 "In this directory will be installed <tt>check_mk_agent</tt>, <tt>waitmax</"
@@ -38007,7 +38007,7 @@ msgid "Lower levels on the longest output list"
 msgstr "Untergrenzen für längste Ausgabeliste"
 
 msgid "Lower levels on the total number of client connections"
-msgstr "Untergrenzen für Gesamtanzahl der Client-Verbindungen"
+msgstr "Untergrenzen für die Gesamtanzahl der Client-Verbindungen"
 
 msgid "Lower levels on the total number of clients pending on a blocking call"
 msgstr ""
@@ -42513,9 +42513,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Kein Graph verfügbar: %s"
 
-#, fuzzy
 msgid "No graph recipe found"
-msgstr "Keine gültigen Themenverzeichnisse gefunden."
+msgstr "Kein Graphenrezept gefunden"
 
 #, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
@@ -47576,13 +47575,13 @@ msgstr ""
 "zutrifft."
 
 msgid "Paused"
-msgstr "Angehalten"
-
-msgid "Paused containers"
 msgstr "Pausiert"
 
+msgid "Paused containers"
+msgstr "Pausierte Container"
+
 msgid "Paused containers lower levels"
-msgstr "Untergrenzen für Container im Zustand paused"
+msgstr "Untergrenzen für pausierte Container"
 
 msgid "Paused containers upper levels"
 msgstr "Obergrenzen für pausierte Container"
@@ -48720,11 +48719,10 @@ msgstr ""
 "\"https\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die "
 "Checkmk-Oberfläche über die SSL-Einrichtung zu informieren."
 
-#, fuzzy
 msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
 "Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der Testzeitraum "
-"endet oder wenn Sie eine Lizenz aktivieren. "
+"endet. "
 
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -50728,9 +50726,9 @@ msgstr "An die RRD-Verbindung geschickte Byte-Rate"
 msgid "Rate of change"
 msgstr "Änderungsrate"
 
-#, fuzzy
 msgid "Rate of disk backend bytes removed or overwritten"
-msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
+msgstr ""
+"Rate der entfernten oder überschriebenen Backend-Bytes auf der Festplatte"
 
 msgid "Rate of metrics received"
 msgstr "Empfangene Rate an Metriken"
@@ -59999,7 +59997,7 @@ msgid "State when life cycle state is override_lb_throttled"
 msgstr "Zustand, wenn der Lifecycle-Zustand override_lb_throttled ist"
 
 msgid "State when life cycle state is paused"
-msgstr "Zustand, wenn der Lifecycle-Zustand paused ist"
+msgstr "Zustand, wenn der Lifecycle-Zustand pausiert ist"
 
 msgid "State when life cycle state is running"
 msgstr "Zustand, wenn der Lifecycle-Zustand running ist"
@@ -68392,8 +68390,7 @@ msgid ""
 "description will be visible on the overview page of this rule set."
 msgstr ""
 "Dieses Feld ist für eine kurze Beschreibung des Zwecks der Regel vorgesehen. "
-"Standardmäßig wird diese Beschreibung auf der Übersichtsseite dieses "
-"Regelsatzes angezeigt."
+"Diese Beschreibung wird auf der Übersichtsseite dieses Regelsatzes angezeigt."
 
 msgid ""
 "This field is intended for additional information that may help other users "
@@ -86054,9 +86051,8 @@ msgstr "Passwort:"
 msgid "path echo"
 msgstr "Pfad Echo"
 
-#, fuzzy
 msgid "paused"
-msgstr "Angehalten"
+msgstr "pausiert"
 
 msgid "pending"
 msgstr "anstehend"
@@ -86689,9 +86685,9 @@ msgstr "gestern"
 msgid "you have a connection overflow rate of %.2f/s"
 msgstr "Sie haben eine Verbindungsüberlaufrate von %.2f/s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "Sie müssen den Parameter \"%s\" angeben."
+msgstr ""
 
 msgid "z/OS"
 msgstr "z/OS"

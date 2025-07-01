@@ -15,7 +15,7 @@ from typing import assert_never, Final, Self
 
 from cmk.ccc.exceptions import MKFetcherError
 
-from cmk.utils.serializertype import Deserializer, Serializer
+from cmk.fetchers.serializertype import Deserializer, Serializer
 
 from cmk.crypto.deprecated import AesCbcCipher
 

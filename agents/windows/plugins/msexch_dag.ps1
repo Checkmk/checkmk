@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.2.0p44"
+$CMK_VERSION = "2.2.0p45"
 ## MSExchange Replication
 ## Load Exchange Management Powershell Plugin
 try{ (Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010 -ErrorAction:Stop) }

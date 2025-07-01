@@ -15,6 +15,7 @@ from cmk.base.legacy_checks.aix_hacmp_nodes import (
 
 from cmk.agent_based.v1.type_defs import StringTable
 
+# The word "Node" is capitalized
 _STRING_TABLE_1 = [
     ["pasv0450"],
     ["pasv0449"],
@@ -194,6 +195,7 @@ _STRING_TABLE_1 = [
     ],
 ]
 
+# The word "Node" is capitalized
 _STRING_TABLE_2 = [
     ["sasv0121"],
     ["sasv0122"],
@@ -269,12 +271,67 @@ _STRING_TABLE_2 = [
     ],
 ]
 
+# The word "Node" is not capitalized
+_STRING_TABLE_3 = [
+    ["smaprok01tst"],
+    ["trgprok02tst"],
+    ["Node", "smaprok01tst"],
+    ["Interfaces", "to", "network", "net_ether_01"],
+    [
+        "Communication",
+        "Interface:",
+        "Name",
+        "smaprok01tst,",
+        "Attribute",
+        "public,",
+        "IP",
+        "address",
+        "10.0.18.111",
+    ],
+    [
+        "Communication",
+        "Interface:",
+        "Name",
+        "proktst-s,",
+        "Attribute",
+        "public,",
+        "IP",
+        "address",
+        "10.0.18.110",
+    ],
+    ["Node", "trgprok02tst"],
+    ["Interfaces", "to", "network", "net_ether_01"],
+    [
+        "Communication",
+        "Interface:",
+        "Name",
+        "trgprok02tst,",
+        "Attribute",
+        "public,",
+        "IP",
+        "address",
+        "10.0.18.112",
+    ],
+    [
+        "Communication",
+        "Interface:",
+        "Name",
+        "proktst-s,",
+        "Attribute",
+        "public,",
+        "IP",
+        "address",
+        "10.0.18.110",
+    ],
+]
+
 
 @pytest.mark.parametrize(
     ("string_table", "expected_result"),
     [
         (_STRING_TABLE_1, [("pasv0450", None), ("pasv0449", None)]),
         (_STRING_TABLE_2, [("sasv0121", None), ("sasv0122", None)]),
+        (_STRING_TABLE_3, [("smaprok01tst", None), ("trgprok02tst", None)]),
     ],
 )
 def test_inventory_aix_hacmp_nodes(
@@ -301,6 +358,14 @@ def test_inventory_aix_hacmp_nodes(
             (
                 0,
                 "Network: prod_net, interface: sasv0122, attribute: public, IP: 1.2.3.11, interface: sasc0016, attribute: public, IP: 1.2.3.13, interface: sasc0015, attribute: public, IP: 1.2.3.12",
+            ),
+        ),
+        (
+            _STRING_TABLE_3,
+            "smaprok01tst",
+            (
+                0,
+                "Network: net_ether_01, interface: smaprok01tst, attribute: public, IP: 10.0.18.111, interface: proktst-s, attribute: public, IP: 10.0.18.110",
             ),
         ),
     ],

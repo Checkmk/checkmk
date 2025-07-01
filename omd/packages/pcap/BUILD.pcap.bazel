@@ -1,0 +1,32 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+cmake(
+    name = "pcap",
+    cache_entries = {
+        # List of options from `ccmake`
+        # Minimal set of features to avoid extra dependencies.
+        "BUILD_SHARED_LIBS": "OFF",
+        "BUILD_WITH_LIBNL": "OFF",
+        "DISABLE_BLUETOOTH": "ON",
+        "DISABLE_DAG": "ON",
+        "DISABLE_DBUS": "ON",
+        "DISABLE_LINUX_USBMON": "ON",
+        "DISABLE_NETMAP": "ON",
+        "DISABLE_RDMA": "ON",
+        "DISABLE_SNF": "ON",
+        # "ENABLE_DAG_TX": "OFF",  # unused by the project
+        "ENABLE_PROFILING": "OFF",
+        # "ENABLE_PROTOCHAIN": "ON",  # unused by the project
+        "ENABLE_REMOTE": "OFF",
+    },
+    generate_args = ["-GNinja"],
+    lib_source = ":all_srcs",
+    out_static_libs = ["libpcap.a"],
+    targets = ["pcap_static"],
+    visibility = ["//visibility:public"],
+)

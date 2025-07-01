@@ -259,6 +259,16 @@ exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"
 )
 
 http_archive(
+    name = "pcap",
+    build_file = "//omd/packages/pcap:BUILD.pcap.bazel",
+    integrity = "sha256-hPqJrG0wMCjBxbdUq/93Ik9F7KCpTrGjT/CqnO7OOSU=",
+    strip_prefix = "libpcap-1.10.5",
+    urls = [
+        "https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz",
+    ],
+)
+
+http_archive(
     name = "patch",
     build_file = "//omd/packages/patch:BUILD.patch.bazel",
     patch_args = ["-p1"],

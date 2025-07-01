@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 import pytest
 
-from tests.testlib.pytest_helpers.calls import abort_if_not_containerized
 from tests.testlib.site import Site
 
 
@@ -136,9 +135,6 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
 )
 def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
-    abort_if_not_containerized(
-        plugin.binary_name == "check_mysql"
-    )  # What? Why? Is printing the version dangerous?
 
     cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
     # check=False; '<plugin-name> -V' returns in exit-code 3 for most plugins!

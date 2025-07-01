@@ -18,7 +18,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.site_config import sitenames
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -43,7 +42,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
         site_id = site_id_val
-        if site_id not in sitenames():
+        if site_id not in active_config.sites:
             raise MKUserError(None, _("The requested site does not exist"))
 
         status = (

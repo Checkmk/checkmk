@@ -14,25 +14,21 @@ import cmk.utils.paths
 from cmk.gui.config import active_config
 
 
-def sitenames() -> list[SiteId]:
-    return list(active_config.sites)
-
-
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
 def enabled_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {
-            name: active_config.sites[name]
-            for name in sitenames()
-            if not active_config.sites[name].get("disabled", False)
+            site_id: site_config
+            for site_id, site_config in active_config.sites.items()
+            if not site_config["disabled"]
         }
     )
 
 
 def configured_sites() -> SiteConfigurations:
-    return SiteConfigurations({site_id: active_config.sites[site_id] for site_id in sitenames()})
+    return active_config.sites
 
 
 def has_wato_slave_sites() -> bool:

@@ -41,7 +41,6 @@ from cmk.gui.i18n import _
 from cmk.gui.site_config import (
     has_wato_slave_sites,
     is_wato_slave_site,
-    sitenames,
     wato_slave_sites,
 )
 from cmk.gui.userdb import active_connections as active_connections_
@@ -124,11 +123,12 @@ class ACTestPersistentConnections(ACTest):
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
-        return len(sitenames()) > 1
+        return len(active_config.sites) > 1
 
     def execute(self) -> Iterator[ACSingleResult]:
         yield from (
-            self._check_site(site_id, active_config.sites[site_id]) for site_id in sitenames()
+            self._check_site(site_id, active_config.sites[site_id])
+            for site_id in active_config.sites
         )
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
@@ -181,10 +181,10 @@ class ACTestLiveproxyd(ACTest):
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
-        return len(sitenames()) > 1
+        return len(active_config.sites) > 1
 
     def execute(self) -> Iterator[ACSingleResult]:
-        yield from (self._check_site(site_id) for site_id in sitenames())
+        yield from (self._check_site(site_id) for site_id in active_config.sites)
 
     def _check_site(self, site_id: SiteId) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):

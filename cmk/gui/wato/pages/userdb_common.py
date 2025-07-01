@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import get_login_sites, sitenames
+from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb import (
@@ -222,7 +222,7 @@ def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteI
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)
         if _customer_api.is_global(customer):
-            return sitenames()
+            return list(active_config.sites.keys())
         assert customer is not None
         return list(_customer_api.get_sites_of_customer(customer).keys())
     return get_login_sites()

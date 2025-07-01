@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -1850,7 +1849,7 @@ class DiscoveryPageRenderer:
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
-        if self._site not in sitenames():
+        if self._site not in active_config.sites:
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_validated_type_input_mandatory(HostName, "host")

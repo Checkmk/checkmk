@@ -7,7 +7,7 @@ import json
 
 from cmk.ccc.site import SiteId
 
-from cmk.gui import site_config, sites, user_sites
+from cmk.gui import sites, user_sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -48,7 +48,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in user_sites.sorted_sites():
-            site = active_config.sites[sitename]
+            site = config.sites[sitename]
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
@@ -136,7 +136,7 @@ class SiteStatus(SidebarSnapin):
             for info in switch_var.split(","):
                 sitename_str, onoff = info.split(":")
                 sitename = SiteId(sitename_str)
-                if sitename not in site_config.sitenames():
+                if sitename not in active_config.sites:
                     continue
 
                 if onoff == "on":

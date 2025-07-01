@@ -55,17 +55,17 @@ defineProps<CmkChipProps>()
 
 .small {
   font-size: 10px;
-  padding: 1px 5px;
+  padding: 1px 8px;
 }
 
 .medium {
   font-size: 12px;
-  padding: 3px 8px;
+  padding: 3px 10px;
 }
 
 .large {
   font-size: 14px;
-  padding: 5px 10px;
+  padding: 5px 12px;
 }
 
 .cmk-badge-danger {

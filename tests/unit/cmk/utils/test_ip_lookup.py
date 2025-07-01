@@ -565,7 +565,12 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
     ts.add_host(hostname, tags=tags)
 
     ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
-    assert ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(hostname) == result_address
+    assert (
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
+        == result_address
+    )
 
 
 @pytest.mark.parametrize(
@@ -596,8 +601,11 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
         }[(host, family)],
     )
 
+    ip_lookup_config = config_cache.ip_lookup_config()
     assert (
-        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
         == result_address
     )
 
@@ -621,9 +629,11 @@ def test_lookup_mgmt_board_ip_address_dual_host(
         },
     )
 
-    config_cache = ts.apply(monkeypatch)
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
     assert (
-        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
         == result_address
     )
 
@@ -644,9 +654,11 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
 
-    config_cache = ts.apply(monkeypatch)
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
     assert (
-        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
         is None
     )
 
@@ -670,7 +682,10 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
         },
     )
 
+    ip_lookup_config = config_cache.ip_lookup_config()
     assert (
-        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
         is None
     )

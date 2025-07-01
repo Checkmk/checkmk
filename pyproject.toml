@@ -299,6 +299,7 @@ module = [
   "cmk.gui.rest_api_types.*",
   "cmk.gui.sidebar.*",
   "cmk.gui.userdb.*",
+  "cmk.gui.ldap.ldap_connector",
   "cmk.gui.utils.*",
   "cmk.gui.valuespec.*",
   "cmk.gui.mobile.*",

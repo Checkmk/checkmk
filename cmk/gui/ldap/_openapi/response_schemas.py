@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, override
 
 from marshmallow import post_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -505,7 +505,8 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
         "start_url": LDAPGroupsToSyncStartURL,
     }
 
-    def get_obj_type(self, obj):
+    @override
+    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
         attribute_to_set = obj.get("attribute_to_set")
         if attribute_to_set not in self.type_schemas:
             self.type_schemas[attribute_to_set] = LDAPGroupsToSyncAllOthers
@@ -588,6 +589,12 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 
 
 class LDAPSyncPlugins(BaseSchema):
+    def _fill_mega_menu_icons(
+        self, data: dict[str, str | None], **kwargs: object
+    ) -> dict[str, str | None]:
+        data["mega_menu_icons"] = data.get("main_menu_icons")
+        return data
+
     alias = fields.Nested(
         LDAPSyncPluginAlias,
         description="Populates the alias attribute of the Setup user by synchronizing an attribute "

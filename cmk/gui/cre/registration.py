@@ -32,6 +32,7 @@ from cmk.gui.help_menu import (
     default_info_line,
     default_learning_entries,
 )
+from cmk.gui.ldap.register import register as ldap_registration
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
@@ -66,7 +67,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import default_user_menu_topics
 from cmk.gui.wato import registration as wato_registration
-from cmk.gui.wato.pages import ldap, roles
+from cmk.gui.wato.pages import roles
 from cmk.gui.watolib import network_scan
 from cmk.gui.watolib.activate_changes import (
     activation_features_registry,
@@ -132,7 +133,6 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
-    ldap.register(mode_registry)
     roles.register(mode_registry)
     common_registration(
         main_menu_registry,
@@ -187,6 +187,14 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         default_developer_entries,
         default_about_checkmk_entries,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
+    )
+
+    ldap_registration(
+        mode_registry,
+        endpoint_registry,
+        ac_test_registry,
+        user_connector_registry,
+        ignore_duplicate_endpoints,
     )
 
     features_registry.register(

@@ -24,7 +24,6 @@ from cmk.gui.openapi.endpoints import (
     host_group_config,
     host_internal,
     host_tag_group,
-    ldap_connection,
     notification_rules,
     parent_scan,
     password,
@@ -75,7 +74,6 @@ def register(
     downtime.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     folder_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     configuration_entity.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    ldap_connection.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     host.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     host_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     host_group_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

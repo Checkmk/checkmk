@@ -7,7 +7,7 @@
 import re
 from collections.abc import Callable, Collection
 from copy import deepcopy
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -16,6 +16,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.ldap.ldap_connector import (
+    ldap_attr_of_connection,
+    ldap_attribute_plugins_elements,
+    ldap_filter_of_connection,
+    LDAPAttributePluginGroupsToRoles,
+    LDAPUserConnector,
+)
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
     make_form_submit_link,
@@ -32,13 +39,6 @@ from cmk.gui.userdb import (
     LDAPUserConnectionConfig,
     load_connection_config,
     save_connection_config,
-)
-from cmk.gui.userdb.ldap_connector import (
-    ldap_attr_of_connection,
-    ldap_attribute_plugins_elements,
-    ldap_filter_of_connection,
-    LDAPAttributePluginGroupsToRoles,
-    LDAPUserConnector,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import strip_tags
@@ -64,6 +64,9 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato.pages._password_store_valuespecs import (
+    MigrateNotUpdatedToIndividualOrStoredPassword,
+)
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,
@@ -72,8 +75,6 @@ from cmk.gui.wato.pages.userdb_common import (
     render_connections_page,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
-from ._password_store_valuespecs import MigrateNotUpdatedToIndividualOrStoredPassword
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -685,11 +686,13 @@ class LDAPConnectionValuespec(Dictionary):
 
 
 class ModeLDAPConfig(WatoMode):
+    @override
     @classmethod
     def name(cls) -> str:
         return "ldap_config"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
@@ -697,9 +700,11 @@ class ModeLDAPConfig(WatoMode):
     def type(self) -> str:
         return "ldap"
 
+    @override
     def title(self) -> str:
         return _("LDAP connections")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return add_connections_page_menu(
             title=self.title(),
@@ -708,6 +713,7 @@ class ModeLDAPConfig(WatoMode):
             documentation_reference=DocReference.LDAP,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         return connection_actions(
             config_mode_url=self.mode_url(),
@@ -716,6 +722,7 @@ class ModeLDAPConfig(WatoMode):
             site_configs=active_config.sites,
         )
 
+    @override
     def page(self, config: Config) -> None:
         render_connections_page(
             connection_type=self.type,
@@ -726,17 +733,21 @@ class ModeLDAPConfig(WatoMode):
 
 class ModeEditLDAPConnection(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_ldap_connection"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeLDAPConfig
 
+    @override
     def _from_vars(self) -> None:
         self._connection_id = request.get_ascii_input("id")
         self._connection_cfg: LDAPUserConnectionConfig
@@ -779,12 +790,14 @@ class ModeEditLDAPConnection(WatoMode):
 
         self._connection_id = self._connection_cfg["id"]
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add LDAP connection")
         assert self._connection_id is not None
         return _("Edit LDAP connection: %s") % self._connection_id
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"),
@@ -806,6 +819,7 @@ class ModeEditLDAPConnection(WatoMode):
 
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -854,6 +868,7 @@ class ModeEditLDAPConnection(WatoMode):
         # Handle the case where a user hit "Save & Test" during creation
         return redirect(self.mode_url(_test="1", id=self._connection_cfg["id"]))
 
+    @override
     def page(self, config: Config) -> None:
         html.open_div(id_="ldap")
         html.open_table()

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import MutableMapping
-from typing import Any
+from typing import Any, override
 
 from marshmallow import INCLUDE, post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
@@ -39,7 +39,8 @@ class LDAPCheckboxSelector(OneOfSchema):
     type_field = "state"
     type_field_remove = False
 
-    def get_obj_type(self, obj):
+    @override
+    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
         return obj["state"]
 
 
@@ -663,7 +664,8 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
         "all_others": LDAPSyncPluginGroupAllOthersRequest,
     }
 
-    def get_data_type(self, data):
+    @override
+    def get_data_type(self, data):  # type: ignore[no-untyped-def]
         data_type = data.get(self.type_field)
         if data_type not in ("start_url", "disable_notifications"):
             return "all_others"

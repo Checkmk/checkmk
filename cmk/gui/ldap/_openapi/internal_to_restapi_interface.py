@@ -9,6 +9,7 @@ from typing import Any, cast, get_args, Literal, TypedDict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import DisableNotificationsAttribute
 from cmk.gui.userdb import (
     ACTIVE_DIR,
@@ -40,7 +41,6 @@ from cmk.gui.userdb import (
     UI_THEME,
     UserConnectionConfigFile,
 )
-from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 
 
 class APICheckboxDisabled(TypedDict):

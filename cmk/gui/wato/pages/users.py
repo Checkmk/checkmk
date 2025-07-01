@@ -23,6 +23,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages
+from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -51,7 +52,6 @@ from cmk.gui.userdb import (
     UserConnector,
 )
 from cmk.gui.userdb.htpasswd import hash_password
-from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyncBackgroundJob
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -456,7 +456,10 @@ class ModeUsers(WatoMode):
                     html.icon_button(delete_url, _("Delete"), "delete")
 
                 notifications_url = folder_preserving_link(
-                    [("mode", "user_notifications"), ("user", uid)]
+                    [
+                        ("mode", "user_notifications"),
+                        ("user", uid),
+                    ]
                 )
                 html.icon_button(
                     notifications_url,
@@ -736,7 +739,10 @@ class ModeEditUser(WatoMode):
                 icon_name="topic_events",
                 item=make_simple_link(
                     folder_preserving_link(
-                        [("mode", "user_notifications"), ("user", self._user_id)]
+                        [
+                            ("mode", "user_notifications"),
+                            ("user", self._user_id),
+                        ]
                     )
                 ),
             )

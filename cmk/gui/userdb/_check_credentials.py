@@ -24,7 +24,6 @@ from cmk.utils.log.security_event import log_security_event
 
 from ._connections import active_connections, get_connection
 from ._user_spec import new_user_template
-from .ldap_connector import MKLDAPException
 from .store import load_user, load_users, save_users
 
 auth_logger = gui_logger.getChild("auth")
@@ -115,10 +114,8 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
             load_users_func=load_users,
             save_users_func=save_users,
         )
-    except MKLDAPException as e:
-        _show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)
     except Exception as e:
-        _show_exception(connection_id, _("Error during sync"), e)
+        _show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)
 
 
 # This function is called very often during regular page loads so it has to be efficient

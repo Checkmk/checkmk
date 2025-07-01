@@ -26,9 +26,8 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
-from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.ldap_connection.error_schemas import GETLdapConnection404
-from cmk.gui.openapi.endpoints.ldap_connection.internal_to_restapi_interface import (
+from cmk.gui.ldap._openapi.error_schemas import GETLdapConnection404
+from cmk.gui.ldap._openapi.internal_to_restapi_interface import (
     LDAPConnectionInterface,
     request_ldap_connection,
     request_ldap_connections,
@@ -36,14 +35,15 @@ from cmk.gui.openapi.endpoints.ldap_connection.internal_to_restapi_interface imp
     request_to_delete_ldap_connection,
     request_to_edit_ldap_connection,
 )
-from cmk.gui.openapi.endpoints.ldap_connection.request_schemas import (
+from cmk.gui.ldap._openapi.request_schemas import (
     LDAPConnectionConfigCreateRequest,
     LDAPConnectionConfigUpdateRequest,
 )
-from cmk.gui.openapi.endpoints.ldap_connection.response_schemas import (
+from cmk.gui.ldap._openapi.response_schemas import (
     LDAPConnectionResponse,
     LDAPConnectionResponseCollection,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
     collection_href,

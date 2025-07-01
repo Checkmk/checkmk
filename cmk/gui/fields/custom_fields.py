@@ -13,8 +13,8 @@ from cmk import fields
 from cmk.crypto import certificate, keys
 from cmk.fields import validators
 from cmk.gui.config import active_config
+from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.userdb import connection_choices, get_saml_connections
-from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore

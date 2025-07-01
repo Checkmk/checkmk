@@ -12,10 +12,9 @@ import pytest
 import time_machine
 from pytest import MonkeyPatch
 
+import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-import cmk.utils.render
 from cmk.gui import availability
 
 

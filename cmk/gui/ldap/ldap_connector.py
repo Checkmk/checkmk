@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from typing import Any, cast, Literal
+from typing import Any, cast, Literal, override
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
@@ -80,6 +80,28 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.userdb._connections import (
+    active_connections,
+    ActivePlugins,
+    get_connection,
+    get_ldap_connections,
+    GroupsToAttributes,
+    GroupsToContactGroups,
+    GroupsToRoles,
+    LDAPUserConnectionConfig,
+    SyncAttribute,
+)
+from cmk.gui.userdb._connector import (
+    CheckCredentialsResult,
+    ConnectorType,
+    UserConnector,
+    UserConnectorRegistry,
+)
+from cmk.gui.userdb._roles import load_roles
+from cmk.gui.userdb._user_attribute import get_user_attributes
+from cmk.gui.userdb._user_spec import add_internal_attributes, new_user_template
+from cmk.gui.userdb._user_sync_config import user_sync_config
+from cmk.gui.userdb.store import load_cached_profile, load_users, release_users_lock, save_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -101,24 +123,6 @@ from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.utils import password_store
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.macros import replace_macros_in_str
-
-from ._connections import (
-    active_connections,
-    ActivePlugins,
-    get_connection,
-    get_ldap_connections,
-    GroupsToAttributes,
-    GroupsToContactGroups,
-    GroupsToRoles,
-    LDAPUserConnectionConfig,
-    SyncAttribute,
-)
-from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
-from ._roles import load_roles
-from ._user_attribute import get_user_attributes
-from ._user_spec import add_internal_attributes, new_user_template
-from ._user_sync_config import user_sync_config
-from .store import load_cached_profile, load_users, release_users_lock, save_users
 
 
 def register(
@@ -216,6 +220,7 @@ def _get_ad_locator():
     from activedirectory.protocol import netlogon
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc, name-defined]
+        @override
         def _detect_site(self, domain):
             """Detect our site using the netlogon protocol.
             This modified function only changes the number of parallel queried servers from 3 to 60
@@ -556,14 +561,17 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._save_suffix()
 
     @classmethod
+    @override
     def type(cls) -> str:
         return ConnectorType.LDAP
 
     @classmethod
+    @override
     def title(cls):
         return _("LDAP (Active Directory, OpenLDAP)")
 
     @classmethod
+    @override
     def short_title(cls):
         return _("LDAP")
 
@@ -572,6 +580,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return cls.connection_suffixes
 
     @property
+    @override
     def id(self):
         return self._config["id"]
 
@@ -747,6 +756,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return cmk.utils.paths.tmp_dir / "ldap_caches"
 
     @classmethod
+    @override
     def config_changed(cls) -> None:
         cls._clear_all_ldap_caches()
 
@@ -1522,6 +1532,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     #
 
     # This function only validates credentials, no locked checking or similar
+    @override
     def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
@@ -1643,6 +1654,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
         return changes
 
+    @override
     def do_sync(
         self,
         *,
@@ -1736,6 +1748,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         with self._sync_time_file.open("w", encoding="utf-8") as f:
             f.write("%s\n" % time.time())
 
+    @override
     def is_enabled(self) -> bool:
         sync_config = user_sync_config()
         if isinstance(sync_config, tuple) and self.id not in sync_config[1]:
@@ -1743,6 +1756,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return False
         return True
 
+    @override
     def sync_is_needed(self) -> bool:
         return self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
 
@@ -1758,6 +1772,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
+    @override
     def locked_attributes(self) -> Sequence[str]:
         locked = {"password"}  # This attributes are locked in all cases!
         for _key, params, plugin in self._active_sync_plugins():
@@ -1766,6 +1781,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     # Calculates the attributes added in this connector which shall be written to
     # the multisites users.mk
+    @override
     def multisite_attributes(self) -> list[str]:
         attrs: set[str] = set()
         for _key, _params, plugin in self._active_sync_plugins():
@@ -1774,6 +1790,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
+    @override
     def non_contact_attributes(self) -> list[str]:
         attrs: set[str] = set()
         for _key, _params, plugin in self._active_sync_plugins():
@@ -1912,9 +1929,11 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
             help_text=help_text,
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return [self.ident]
 
+    @override
     def needed_attributes(
         self,
         connection: LDAPUserConnector,
@@ -1922,6 +1941,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
     ) -> list[str]:
         return [params.get("attr", connection._ldap_attr(self.ident)).lower()]
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -1939,6 +1959,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
             return {self.ident: attr_value}
         return {}
 
+    @override
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2115,9 +2136,11 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
             help_text=_("Synchronizes the email of the LDAP user account into Checkmk."),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["email"]
 
+    @override
     def needed_attributes(
         self,
         connection: LDAPUserConnector,
@@ -2125,6 +2148,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
     ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("mail")).lower()]
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2143,6 +2167,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
             return {"email": mail}
         return {}
 
+    @override
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2183,9 +2208,11 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["alias"]
 
+    @override
     def needed_attributes(
         self,
         connection: LDAPUserConnector,
@@ -2193,6 +2220,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
     ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("cn")).lower()]
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2205,6 +2233,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
+    @override
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2252,17 +2281,21 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return []
 
     @property
+    @override
     def multisite_attributes(self) -> list[str]:
         return ["ldap_pw_last_changed"]
 
     @property
+    @override
     def non_contact_attributes(self) -> list[str]:
         return ["ldap_pw_last_changed"]
 
+    @override
     def needed_attributes(
         self,
         connection: LDAPUserConnector,
@@ -2275,6 +2308,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
             attrs.append("useraccountcontrol")
         return attrs
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2322,6 +2356,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
 
         return {}
 
+    @override
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2368,9 +2403,11 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["pager"]
 
+    @override
     def needed_attributes(
         self,
         connection: LDAPUserConnector,
@@ -2378,6 +2415,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
     ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("mobile")).lower()]
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2390,6 +2428,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
+    @override
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2431,9 +2470,11 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["contactgroups"]
 
+    @override
     def needed_attributes(
         self,
         _connection: LDAPUserConnector,
@@ -2441,6 +2482,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
     ) -> list[str]:
         return []
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2462,6 +2504,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
             )
         }
 
+    @override
     def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2497,6 +2540,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, params: dict[str, Any]) -> list[str]:
         attrs = []
         for group_spec in params["groups"]:
@@ -2504,6 +2548,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
             attrs.append(attr_name)
         return attrs
 
+    @override
     def needed_attributes(
         self,
         _connection: LDAPUserConnector,
@@ -2511,6 +2556,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
     ) -> list[str]:
         return []
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2556,6 +2602,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
 
         return update
 
+    @override
     def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
@@ -2633,9 +2680,11 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
             ),
         )
 
+    @override
     def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["roles"]
 
+    @override
     def needed_attributes(
         self,
         _connection: LDAPUserConnector,
@@ -2643,6 +2692,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
     ) -> list[str]:
         return []
 
+    @override
     def sync_func(
         self,
         connection: LDAPUserConnector,
@@ -2740,6 +2790,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
 
         return groups_to_fetch
 
+    @override
     def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,

@@ -22,6 +22,7 @@ import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store, tty
+from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
@@ -30,7 +31,6 @@ import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,

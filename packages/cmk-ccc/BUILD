@@ -37,6 +37,13 @@ py_library(
 )
 
 py_library(
+    name = "cpu-tracking",
+    srcs = ["cmk/ccc/cpu_tracking.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "crash-reporting",
     srcs = ["cmk/ccc/crash_reporting.py"],
     imports = ["."],
@@ -167,6 +174,7 @@ py_library(
 
 _ALL = [
     "cleanup",
+    "cpu-tracking",
     "crash-reporting",
     "daemon",
     "debug",
@@ -302,6 +310,21 @@ py_test(
         "__test__",
         "debug",
         "store",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "cpu-tracking-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_cpu_tracking.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "cpu-tracking",
         requirement("pytest"),
     ],
 )

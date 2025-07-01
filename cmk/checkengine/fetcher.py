@@ -11,10 +11,10 @@ from collections.abc import Sequence
 from typing import Protocol
 
 import cmk.ccc.resulttype as result
+from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.cpu_tracking import Snapshot
 
 from cmk.snmplib import SNMPRawData
 

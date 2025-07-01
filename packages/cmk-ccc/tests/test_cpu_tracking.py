@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from cmk.utils.cpu_tracking import Snapshot
+from cmk.ccc.cpu_tracking import Snapshot
 
 
 def json_identity(serializable: object) -> object:

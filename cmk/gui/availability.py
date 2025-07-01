@@ -25,12 +25,12 @@ from livestatus import (
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
+from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils import dateutils
-from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites

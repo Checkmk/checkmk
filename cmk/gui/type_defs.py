@@ -23,10 +23,10 @@ from typing import (
 
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
+from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule

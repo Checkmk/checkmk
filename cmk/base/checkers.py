@@ -21,6 +21,7 @@ import livestatus
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 from cmk.ccc import tty
+from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
@@ -28,7 +29,6 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.ip_lookup import (
     IPLookup,
     IPLookupOptional,

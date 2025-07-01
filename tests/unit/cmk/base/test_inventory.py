@@ -9,10 +9,10 @@ from typing import Literal
 import pytest
 
 import cmk.ccc.resulttype as result
+from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (

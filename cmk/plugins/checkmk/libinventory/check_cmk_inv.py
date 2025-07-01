@@ -12,13 +12,13 @@ from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,
     make_lookup_ip_address,

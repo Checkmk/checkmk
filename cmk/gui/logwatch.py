@@ -21,7 +21,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
 )
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -75,16 +75,16 @@ def page_show(config: Config) -> None:
         pass  # host_name log dir does not exist
 
     if not host_name:
-        show_log_list()
+        show_log_list(debug=config.debug)
         return
 
     if file_name:
-        show_file(site, host_name, file_name)
+        show_file(site, host_name, file_name, debug=config.debug)
     else:
-        show_host_log_list(site, host_name)
+        show_host_log_list(site, host_name, debug=config.debug)
 
 
-def show_log_list() -> None:
+def show_log_list(*, debug: bool) -> None:
     """Shows a list of all problematic logfiles grouped by host"""
     title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
@@ -98,7 +98,10 @@ def show_log_list() -> None:
         if not logs:
             continue
 
-        all_logs_empty = not any(parse_file(site, host_name, file_name) for file_name in logs)
+        all_logs_empty = not any(
+            parse_file(site, host_name, file_name, hidecontext=False, debug=debug)
+            for file_name in logs
+        )
 
         if all_logs_empty:
             continue  # Logfile vanished
@@ -113,7 +116,7 @@ def show_log_list() -> None:
             ),
             class_="table",
         )
-        list_logs(site, host_name, logs)
+        list_logs(site, host_name, logs, debug=debug)
     html.footer()
 
 
@@ -181,7 +184,7 @@ def analyse_url(
     )
 
 
-def show_host_log_list(site: SiteId | None, host_name: HostName) -> None:
+def show_host_log_list(site: SiteId | None, host_name: HostName, *, debug: bool) -> None:
     """Shows all problematic logfiles of a host"""
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
@@ -192,7 +195,7 @@ def show_host_log_list(site: SiteId | None, host_name: HostName) -> None:
         return
 
     html.open_table(class_=["data"])
-    list_logs(site, host_name, logfiles_of_host(site, host_name))
+    list_logs(site, host_name, logfiles_of_host(site, host_name), debug=debug)
     html.close_table()
 
     html.footer()
@@ -265,7 +268,9 @@ def _host_log_list_page_menu(
     )
 
 
-def list_logs(site: SiteId | None, host_name: HostName, logfile_names: Sequence[str]) -> None:
+def list_logs(
+    site: SiteId | None, host_name: HostName, logfile_names: Sequence[str], *, debug: bool
+) -> None:
     """Displays a table of logfiles"""
     with table_element(empty_text=_("No logs found for this host.")) as table:
         for file_name in logfile_names:
@@ -275,7 +280,7 @@ def list_logs(site: SiteId | None, host_name: HostName, logfile_names: Sequence[
             logfile_link = HTMLWriter.render_a(file_display, href=uri)
 
             try:
-                log_chunks = parse_file(site, host_name, file_name)
+                log_chunks = parse_file(site, host_name, file_name, hidecontext=False, debug=debug)
                 if not log_chunks:
                     continue  # Logfile vanished
 
@@ -290,7 +295,7 @@ def list_logs(site: SiteId | None, host_name: HostName, logfile_names: Sequence[
                 table.cell(_("Entries"), len(log_chunks), css=["number"])
 
             except Exception:
-                if active_config.debug:
+                if debug:
                     raise
                 table.cell(_("Level"), "")
                 table.cell(_("Logfile"), logfile_link)
@@ -298,7 +303,7 @@ def list_logs(site: SiteId | None, host_name: HostName, logfile_names: Sequence[
                 table.cell(_("Entries"), _("Corrupted"))
 
 
-def show_file(site: SiteId | None, host_name: HostName, file_name: str) -> None:
+def show_file(site: SiteId | None, host_name: HostName, file_name: str, *, debug: bool) -> None:
     int_filename = form_file_to_int(file_name)
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
@@ -320,9 +325,10 @@ def show_file(site: SiteId | None, host_name: HostName, file_name: str) -> None:
             host_name,
             int_filename,
             hidecontext=request.var("_hidecontext", "no") == "yes",
+            debug=debug,
         )
     except Exception as e:
-        if active_config.debug:
+        if debug:
             raise
         html.show_error(_("Unable to show logfile: <b>%s</b>") % e)
         html.footer()
@@ -621,7 +627,12 @@ def acknowledge_logfile(
 
 
 def parse_file(
-    site: SiteId | None, host_name: HostName, file_name: str, hidecontext: bool = False
+    site: SiteId | None,
+    host_name: HostName,
+    file_name: str,
+    *,
+    hidecontext: bool,
+    debug: bool,
 ) -> list[dict[str, Any]] | None:
     log_chunks: list[dict[str, Any]] = []
     try:
@@ -694,7 +705,7 @@ def parse_file(
 
                 log_lines.append({"level": line_level, "class": line_class, "line": line_display})
     except Exception as e:
-        if active_config.debug:
+        if debug:
             raise
         raise MKGeneralException(_("Cannot parse log file %s: %s") % (file_name, e))
 

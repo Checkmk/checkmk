@@ -5,39 +5,30 @@
               mso-table-lspace: 0pt;
               mso-table-rspace: 0pt;
               min-width: 220px;
-              max-width: 536px"
+              max-width: 536px;
+              font-size: 14px"
        align="center"
        cellspacing="0"
        cellpadding="0"
        border="0">
-    <tr align="left" style=" background-color: #F1F1F1; height: 35px; ">
-        <th align="left" style="border: 1px solid #DFDFDF; padding-left: 2%">Host</th>
+    <tr align="left"
+        style="background-color: #F1F1F1;
+               height: 35px;
+               width: 100%">
         <th align="left"
             style="border: 1px solid #DFDFDF;
                    padding-left: 2%;
-                   mso-line-height-rule: exactly">Service</th>
-        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%">Event</th>
-        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%">Event date</th>
+                   font-size: 16px">Event summary</th>
     </tr>
     {% for entry in bulk_summary %}
         {% set bulk_service_notification = entry.WHAT == 'SERVICE' %}
         <tr style="border: 1px solid #DFDFDF; height: 35px">
-            <td style="border: 1px solid #DFDFDF;
-                       padding: 0% 2% 0 2%;
-                       width: 15%;
-                       word-break: break-all">{{ entry.LINKEDHOSTNAME | safe }}</td>
-            <td style="border: 1px solid #DFDFDF; padding: 0% 2% 0 2%">
-                {% if bulk_service_notification %}{{ entry.LINKEDSERVICEDESC | safe }}{% endif %}
-            </td>
-            <td height="33"
-                style="font-size: 14px;
-                       font-weight: 600;
-                       border-bottom: 1px solid #e5e5e5;
-                       color: #2c3844">
-                <table style="border-collapse: collapse;" align="center">
+            <td style="border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; width: 15%;">
+                <table style="border-collapse: collapse;">
                     <tr>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="mobile_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
+                            <div class="mobile_event_marker_bulk"
+                                 style="{{ macros.event_marker_bulk_style() }};
                                         {% if service_notification %} {{ state_mapping[entry.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[entry.PREVIOUSHOSTHARDSTATE] }} {% endif %};
                                         display: inline-block;
                                         /* Inline block to respect width */">
@@ -65,7 +56,8 @@
                             <![endif]-->
                         </td>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="mobile_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
+                            <div class="mobile_event_marker_bulk"
+                                 style="{{ macros.event_marker_bulk_style() }};
                                         {% if service_notification %} {{ state_mapping[entry.SERVICESTATE] }} {% else %} {{ state_mapping[entry.HOSTSTATE] }} {% endif %};
                                         display: inline-block;
                                         /* Inline block to respect width */">
@@ -76,10 +68,31 @@
                                 {% endif %}
                             </div>
                         </td>
+                        <td align="right"
+                            width="100%"
+                            style="padding: 0;
+                                   vertical-align: middle">{{ entry.LONGDATETIME }}</td>
+                    </tr>
+                </table>
+                <table>
+                    {% if bulk_service_notification %}
+                        <tr>
+                            <td width="75px" style="padding: 0; font-weight: 600;">Service:</td>
+                            <td width="calc(100% - 75px)"
+                                style="padding: 0;
+                                       word-break: break-word;
+                                       overflow-wrap: break-word">{{ entry.LINKEDSERVICEDESC | safe }}</td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <td width="75px" style="padding: 0; font-weight: 600;">Host:</td>
+                        <td width="calc(100% - 75px)"
+                            style="padding: 0;
+                                   word-break: break-word;
+                                   overflow-wrap: break-word">{{ entry.LINKEDHOSTNAME | safe }}</td>
                     </tr>
                 </table>
             </td>
-            <td style=" border: 1px solid #DFDFDF; width: 27%; padding: 0% 2% 0 2%; ">{{ entry.LONGDATETIME }}</td>
         </tr>
     {% endfor %}
 </table>

@@ -67,6 +67,22 @@ class BakeryPlugin[ConfigType]:
             A valid plugin name must be a non-empty string consisting only
             of letters A-z, digits and the underscore.
 
+        parameter_parser: Function that parses the plugin parameters.
+            It will be passed the preprocessed plugin parameters and can return any python object.
+            The parser parameters will be passed to the other functions.
+
+        files_function: Function that creates file artifacts.
+            It will be passed the plugins configuration as parsed by the `parameters_parser` and must create artifacts of types
+            :class:`Plugin`, :class:`PluginConfig`, :class:`SystemConfig`, or :class:`SystemBinary`.
+
+        scriptlets_function: Function that creates scriptlet artifacts.
+            It will be passed the plugins configuration as parsed by the `parameter_parser` and must create artifacts of type
+            :class:`Scriptlet`.
+
+        windows_config_function: Function that creates windows config artifacts.
+            It will be passed the plugins configuration as parsed by the `parameter_parser` and must create artifacts of types
+            :class:`WindowsConfigEntry`, :class:`WindowsGlobalConfigEntry`, :class:`WindowsSystemConfigEntry`, :class:`WindowsConfigItems`, or :class:`WindowsPluginConfig`.
+
     """
 
     name: str

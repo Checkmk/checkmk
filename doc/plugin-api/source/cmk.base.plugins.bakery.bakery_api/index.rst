@@ -13,3 +13,10 @@ Version 1
 
    v1
    v1.register
+
+Version 2 (UNSTABLE)
+====================
+
+.. toctree::
+
+   v2

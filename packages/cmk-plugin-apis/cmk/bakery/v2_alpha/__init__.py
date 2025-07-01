@@ -10,6 +10,8 @@ WARNING
 It might not even work at all.
 It is not recommended to use this version in production systems.**
 
+
+
 New in this version
 -------------------
 
@@ -35,20 +37,19 @@ To be picked up by the backend, plugins need to be put in the right folder.
 This is described in the section :ref:`plugin-location-and-loading`.
 
 Example:
---------
+########
 
 We register the bakery plugin for our ceph integration from the file
-``~/lib/python3/cmk/plugins/ceph/bakery/ceph.py``:
+``~/lib/python3/cmk/plugins/ceph/bakery/ceph.py``::
 
     #!/usr/bin/env/python3
-
     ...
-
     bakery_plugin_ceph = BakeryPlugin(
         name="ceph",
         parameter_parser=CephConfig.model_validate,
         files_function=get_ceph_files,
     )
+
 
 
 Changed arguments and validation for bakery plug-ins
@@ -59,7 +60,7 @@ compared to the former registry function.
 We now favor type annotations over runtime validation.
 To get slightly easier type annotations, we introduced the `parameter_parser` argument.
 It is strongly recommended to use this argument -- but if you insist to not use it (maybe
-for easier migration), you can use the `:func:`no_op_parser` function.)
+for easier migration), you can use the :func:`no_op_parser` function.)
 
 
 Removed `password_store`
@@ -95,3 +96,32 @@ from ._config import Secret as Secret
 from ._plugins import BakeryPlugin as BakeryPlugin
 from ._plugins import entry_point_prefixes as entry_point_prefixes
 from ._plugins import no_op_parser as no_op_parser
+
+# We need this for the sphinx doc :-/
+__all__ = [
+    # New in v2
+    "BakeryPlugin",
+    "Secret",
+    "no_op_parser",
+    # Re-exported from v1
+    "DebStep",
+    "FileGenerator",
+    "OS",
+    "PkgStep",
+    "Plugin",
+    "PluginConfig",
+    "RpmStep",
+    "Scriptlet",
+    "ScriptletGenerator",
+    "SolStep",
+    "SystemBinary",
+    "SystemConfig",
+    "WindowsConfigContent",
+    "WindowsConfigEntry",
+    "WindowsConfigGenerator",
+    "WindowsConfigItems",
+    "WindowsGlobalConfigEntry",
+    "WindowsSystemConfigEntry",
+    # Entry point prefixes
+    "entry_point_prefixes",
+]

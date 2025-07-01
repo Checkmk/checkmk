@@ -1,0 +1,7 @@
+=============
+cmk.bakery.v2
+=============
+
+.. automodule:: cmk.bakery.v2_alpha
+   :members:
+   :show-inheritance:

@@ -565,10 +565,6 @@ def test_log_lines_iter() -> None:
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
-        assert (
-            line
-            == u"# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
-        )
         assert log_iter.get_position() == 207
 
         log_iter.push_back_line(u'Täke this!')

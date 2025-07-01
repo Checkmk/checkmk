@@ -19,8 +19,11 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import Tuple
+from cmk.gui.form_specs.private import (
+    StringAutocompleter,
+)
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
@@ -41,6 +44,11 @@ from cmk.gui.watolib import timeperiods as legacy_timeperiods
 
 import cmk.rulesets.v1 as api_v1
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing.vue_formspec_components import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+)
 
 
 def _v1_custom_text_validate(value: str) -> None:
@@ -979,6 +987,28 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
             ),
             id="Tuple",
+        ),
+        pytest.param(
+            StringAutocompleter(),
+            legacy_valuespecs.AjaxDropdownChoice(),
+            id="minimal StringAutocompleter",
+        ),
+        pytest.param(
+            StringAutocompleter(
+                title=api_v1.Title("title"),
+                help_text=api_v1.Help("help text"),
+                autocompleter=Autocompleter(
+                    data=AutocompleterData(ident="test-autocompleter", params=AutocompleterParams())
+                ),
+            ),
+            legacy_valuespecs.AjaxDropdownChoice(
+                title="title",
+                help="help text",
+                autocompleter=AutocompleterConfig(
+                    ident="test-autocompleter",
+                ),
+            ),
+            id="StringAutocompleter",
         ),
     ],
 )

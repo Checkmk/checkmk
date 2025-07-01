@@ -1371,9 +1371,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             for (site_id, site_config) in sites.items()
             if is_replication_enabled(site_config)
         ]
-        remote_status = ReplicationStatusFetcher().fetch(
-            replication_sites, debug=active_config.debug
-        )
+        remote_status = ReplicationStatusFetcher().fetch(replication_sites, debug=config.debug)
 
         for site_id, site in sites.items():
             site_id_str: str = site_id

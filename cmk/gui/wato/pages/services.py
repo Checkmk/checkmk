@@ -384,7 +384,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             api_request.discovery_options,
         )
         page_code = renderer.render(
-            discovery_result, api_request.update_services, debug=config.debug
+            discovery_result,
+            api_request.update_services,
+            debug=config.debug,
+            escape_plugin_output=config.escape_plugin_output,
         )
         datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
@@ -638,13 +641,23 @@ class DiscoveryPageRenderer:
         self._options = options
 
     def render(
-        self, discovery_result: DiscoveryResult, update_services: list[str], *, debug: bool
+        self,
+        discovery_result: DiscoveryResult,
+        update_services: list[str],
+        *,
+        debug: bool,
+        escape_plugin_output: bool,
     ) -> str:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry(html, "inline_help")
             self._show_discovered_host_labels(discovery_result)
-            self._show_discovery_details(discovery_result, update_services, debug=debug)
+            self._show_discovery_details(
+                discovery_result,
+                update_services,
+                debug=debug,
+                escape_plugin_output=escape_plugin_output,
+            )
             return output_funnel.drain()
 
     def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
@@ -835,7 +848,12 @@ class DiscoveryPageRenderer:
         return
 
     def _show_discovery_details(
-        self, discovery_result: DiscoveryResult, update_services: list[str], *, debug: bool
+        self,
+        discovery_result: DiscoveryResult,
+        update_services: list[str],
+        *,
+        debug: bool,
+        escape_plugin_output: bool,
     ) -> None:
         if not discovery_result.check_table:
             if not discovery_result.is_active() and self._host.is_cluster():
@@ -881,6 +899,7 @@ class DiscoveryPageRenderer:
                             check,
                             entry.show_bulk_actions,
                             debug=debug,
+                            escape_plugin_output=escape_plugin_output,
                         )
 
                 if entry.show_bulk_actions:
@@ -1100,6 +1119,7 @@ class DiscoveryPageRenderer:
         show_bulk_actions: bool,
         *,
         debug: bool,
+        escape_plugin_output: bool,
     ) -> None:
         statename = "" if entry.state is None else short_service_state_name(entry.state, "")
         if statename == "":
@@ -1128,7 +1148,7 @@ class DiscoveryPageRenderer:
         )
         table.cell(_("Service"), entry.description, css=["service"])
         table.cell(_("Summary"), css=["expanding"])
-        self._show_status_detail(entry)
+        self._show_status_detail(entry, escape_plugin_output=escape_plugin_output)
 
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
             ctype = "check_" + entry.check_plugin_name
@@ -1267,7 +1287,7 @@ class DiscoveryPageRenderer:
                 )
             )
 
-    def _show_status_detail(self, entry: CheckPreviewEntry) -> None:
+    def _show_status_detail(self, entry: CheckPreviewEntry, *, escape_plugin_output: bool) -> None:
         if entry.check_source not in [
             DiscoveryState.CUSTOM,
             DiscoveryState.ACTIVE,
@@ -1281,7 +1301,7 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output,
                         request=request,
-                        shall_escape=active_config.escape_plugin_output,
+                        shall_escape=escape_plugin_output,
                     )
                 )
             return

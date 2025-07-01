@@ -108,11 +108,12 @@ def page_show_view(
             debug=config.debug,
         )
 
-    _may_create_slow_view_log_entry(page_view_tracker, view)
+    _may_create_slow_view_log_entry(page_view_tracker, view, config.slow_views_duration_threshold)
 
 
-def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -> None:
-    duration_threshold = active_config.slow_views_duration_threshold
+def _may_create_slow_view_log_entry(
+    page_view_tracker: CPUTracker, view: View, duration_threshold: int
+) -> None:
     if page_view_tracker.duration.process.elapsed < duration_threshold:
         return
 

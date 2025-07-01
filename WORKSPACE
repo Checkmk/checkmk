@@ -45,10 +45,6 @@ load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native_workspace")
 
 rrdtool_native_workspace()
 
-load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
-
-httplib_workspace()
-
 load("@aspect_rules_lint//lint:ruff.bzl", "fetch_ruff")
 
 fetch_ruff(RUFF_VERSION)

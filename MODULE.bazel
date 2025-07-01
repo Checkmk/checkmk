@@ -58,6 +58,12 @@ bazel_dep(
     dev_dependency = True,
 )
 bazel_dep(
+    name = "cpp-httplib",
+    version = "0.16.3.bzl.1",
+    dev_dependency = True,
+    repo_name = "httplib",
+)
+bazel_dep(
     # Hedron's Compile Commands Extractor for Bazel
     # https://github.com/hedronvision/bazel-compile-commands-extractor
     name = "hedron_compile_commands",

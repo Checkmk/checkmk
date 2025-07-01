@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-18 18:35+0000\n"
+"PO-Revision-Date: 2025-07-01 01:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.12.1\n"
+"X-Generator: Weblate 5.12.2\n"
 
 msgid " "
 msgstr " "
@@ -269,7 +269,7 @@ msgid "#Containers"
 msgstr "#Container"
 
 msgid "#Containers paused"
-msgstr "#Container pausieren"
+msgstr "#Container pausiert"
 
 msgid "#Containers running"
 msgstr "#Container aktiv"
@@ -3521,9 +3521,8 @@ msgstr ""
 msgid "Activate automatic locking of user accounts"
 msgstr "Automatisches Sperren von Benutzerkonten aktivieren"
 
-#, fuzzy
 msgid "Activate changes"
-msgstr "Die Änderungen wurden aktiviert"
+msgstr "Änderungen aktivieren"
 
 #, python-format
 msgid ""
@@ -8382,9 +8381,8 @@ msgstr "Durchschnittliche Auslastung Kern %d"
 msgid "Average utilization core 45"
 msgstr "Durchschnittliche Auslastung Kern 45"
 
-#, fuzzy
 msgid "Average utilization core 46"
-msgstr "Durchschnittliche Auslastung Kern %d"
+msgstr "Durchschnittliche Auslastung Kern 46"
 
 #, fuzzy
 msgid "Average utilization core 47"
@@ -13966,9 +13964,8 @@ msgstr ""
 "sein kann. Diese Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich "
 "oder über den eingestellten Levels liegt."
 
-#, fuzzy
 msgid "Comparison"
-msgstr "Komprimierung"
+msgstr "Vergleich"
 
 msgid "Compatibility"
 msgstr "Kompatibilität"
@@ -14975,7 +14972,7 @@ msgstr ""
 
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
-msgstr ""
+msgstr "Vermittler: Sammlung der Piggyback-Hosts auf der Instanz \"%s\""
 
 msgid "Consider alerts for Prism Central only"
 msgstr "Nur Alerts für Prism Central berücksichtigen"
@@ -18009,7 +18006,6 @@ msgstr ""
 "sich der Benutzer erneut authentifizieren. Die Sitzungen bleiben beim "
 "Beenden des Browsers nicht bestehen."
 
-#, fuzzy
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
@@ -18019,10 +18015,11 @@ msgid ""
 "to the metric name in the service."
 msgstr ""
 "Legen Sie hier den zu überwachenden Metriknamen als exakten Match fest. "
-"Metriknamen werden aus <a href='https://checkmk.com/werk/18209'>Open "
-"Telemetry-Datenpunktattributen</a> und der <a href='https://checkmk.com/werk/"
-"18108'>Open Telemetry-Metrikeinheit</a> berechnet. Dies muss ein exakter "
-"Match mit dem Metriknamen im Service sein."
+"Metriknamen werden aus <a href='https://checkmk.com/werk/18209"
+"'>OpenTelemetry-Datenpunktattributen</a> oder dem <a href='https://"
+"checkmk.com/werk/18249'>OpenTelemetry-Metriknamen</a> und der <a "
+"href='https://checkmk.com/werk/18249'>OpenTelemetry-Metrikeinheit</a> "
+"berechnet. Dies muss ein exakter Match mit dem Metriknamen im Service sein."
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -21838,9 +21835,8 @@ msgstr "Diesen Backup-Job bearbeiten"
 msgid "Edit this backup target"
 msgstr "Dieses Backup-Ziel bearbeiten"
 
-#, fuzzy
 msgid "Edit this configuration"
-msgstr "Diese Verbindung bearbeiten"
+msgstr "Diese Konfiguration bearbeiten"
 
 msgid "Edit this connection"
 msgstr "Diese Verbindung bearbeiten"
@@ -24219,9 +24215,11 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed host tag condition (Host tags: %s, Required: %s)"
-msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Merkmale %s)"
+msgstr ""
+"Fehlgeschlagene Bedingung des Host-Merkmals (Host-Merkmale: %s, erforderlich:"
+" %s)"
 
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
@@ -38505,9 +38503,8 @@ msgstr "Untergrenzen für erstes ausgegebenes Element"
 msgid "Lower levels on the longest output list"
 msgstr "Untergrenzen für erstes ausgegebenes Element"
 
-#, fuzzy
 msgid "Lower levels on the total number of client connections"
-msgstr "Untergrenze für Gesamtanzahl der Verbindungen"
+msgstr "Untergrenzen für die Gesamtanzahl der Client-Verbindungen"
 
 #, fuzzy
 msgid "Lower levels on the total number of clients pending on a blocking call"
@@ -44394,9 +44391,8 @@ msgstr "Anzahl der aufzubewahrenden Konfigurations-Sicherungen"
 msgid "Number of connected clients"
 msgstr "Anzahl der verbundenen Clients"
 
-#, fuzzy
 msgid "Number of connection retries"
-msgstr "Anzahl der Verbindungen"
+msgstr "Anzahl der erneuten Verbindungsversuche"
 
 msgid "Number of connections"
 msgstr "Anzahl der Verbindungen"
@@ -46235,9 +46231,8 @@ msgstr "Oracle Summe Large Writes"
 msgid "Oracle archive log backup small read bytes"
 msgstr "Oracle Summe Small Read in Bytes"
 
-#, fuzzy
 msgid "Oracle archive log backup small reads"
-msgstr "Oracle Summe kleine Lesezugriffe"
+msgstr "Oracle Archiv-Log Backup Small Reads"
 
 #, fuzzy
 msgid "Oracle archive log backup small write bytes"
@@ -48319,13 +48314,13 @@ msgid ""
 msgstr ""
 
 msgid "Paused"
-msgstr "Angehalten"
-
-msgid "Paused containers"
 msgstr "Pausiert"
 
+msgid "Paused containers"
+msgstr "Pausierte Container"
+
 msgid "Paused containers lower levels"
-msgstr "Untergrenzen für Container im Zustand paused"
+msgstr "Untergrenzen für pausierte Container"
 
 msgid "Paused containers upper levels"
 msgstr "Obergrenzen für pausierte Container"
@@ -49522,11 +49517,10 @@ msgstr ""
 "\"https\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die "
 "Checkmk-Oberfläche über die SSL-Einrichtung zu informieren."
 
-#, fuzzy
 msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
-"Ihr kostenloser Testzeitraum ist aktiv! Bitte beachten Sie, dass Ihre "
-"Instanz am Ende des Testzeitraums gelöscht wird. "
+"Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der Testzeitraum "
+"endet. "
 
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -50090,9 +50084,8 @@ msgstr "Portindex"
 msgid "Port index or 'Total'"
 msgstr "Portindex oder 'Total'"
 
-#, fuzzy
 msgid "Port must be between 0 and 65535."
-msgstr "Der Wert für %s muss zwischen %d und %d sein"
+msgstr "Port muss zwischen 0 und 65535 liegen."
 
 msgid "Port number"
 msgstr "Portnummer"
@@ -51569,9 +51562,9 @@ msgstr "An die RRD-Verbindung geschickte Byte-Rate"
 msgid "Rate of change"
 msgstr "Änderungsrate"
 
-#, fuzzy
 msgid "Rate of disk backend bytes removed or overwritten"
-msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
+msgstr ""
+"Rate der entfernten oder überschriebenen Backend-Bytes auf der Festplatte"
 
 msgid "Rate of metrics received"
 msgstr "Empfangene Rate an Metriken"
@@ -60927,7 +60920,7 @@ msgid "State when life cycle state is override_lb_throttled"
 msgstr "Zustand, wenn der Lifecycle-Zustand override_lb_throttled ist"
 
 msgid "State when life cycle state is paused"
-msgstr "Zustand, wenn der Lifecycle-Zustand paused ist"
+msgstr "Zustand, wenn der Lifecycle-Zustand pausiert ist"
 
 msgid "State when life cycle state is running"
 msgstr "Zustand, wenn der Lifecycle-Zustand running ist"
@@ -69182,6 +69175,8 @@ msgid ""
 "This field is intended for a brief description of the rule's purpose. This "
 "description will be visible on the overview page of this rule set."
 msgstr ""
+"Dieses Feld ist für eine kurze Beschreibung des Zwecks der Regel vorgesehen. "
+"Diese Beschreibung wird auf der Übersichtsseite dieses Regelsatzes angezeigt."
 
 msgid ""
 "This field is intended for additional information that may help other users "
@@ -80291,9 +80286,8 @@ msgstr "Version 3"
 msgid "Version 3 and TLS"
 msgstr "Version 3 und TLS"
 
-#, fuzzy
 msgid "Version label"
-msgstr "Version 1"
+msgstr "Versionslabel"
 
 #, fuzzy
 msgid "Version number"
@@ -86987,9 +86981,8 @@ msgstr "Passwort:"
 msgid "path echo"
 msgstr "Pfad Echo"
 
-#, fuzzy
 msgid "paused"
-msgstr "Angehalten"
+msgstr "pausiert"
 
 msgid "pending"
 msgstr "anstehend"
@@ -87644,9 +87637,9 @@ msgstr "gestern"
 msgid "you have a connection overflow rate of %.2f/s"
 msgstr "Sie haben eine Verbindungsüberlaufrate von %.2f/s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "Sie müssen den Parameter \"%s\" angeben."
+msgstr ""
 
 msgid "z/OS"
 msgstr "z/OS"

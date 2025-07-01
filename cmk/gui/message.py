@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import MutableSequence
+from collections.abc import Mapping, MutableSequence, Sequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from functools import partial
 from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc import store
@@ -37,6 +38,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -240,7 +242,7 @@ def page_message(config: Config) -> None:
     menu = _page_menu(breadcrumb)
     make_header(html, title, breadcrumb, menu)
 
-    vs_message = _vs_message()
+    vs_message = _vs_message(config.multisite_users)
 
     if transactions.check_transaction():
         try:
@@ -252,7 +254,8 @@ def page_message(config: Config) -> None:
                     dest=msg["dest"],
                     methods=msg["methods"],
                     valid_till=msg["valid_till"],
-                )
+                ),
+                all_user_ids=[UserId(s) for s in config.multisite_users],
             )
         except MKUserError as e:
             html.user_error(e)
@@ -296,7 +299,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _vs_message() -> Dictionary:
+def _vs_message(users: Mapping[str, UserSpec]) -> Dictionary:
     dest_choices: list[CascadingDropdownChoice] = [
         ("all_users", _("All users")),
         (
@@ -304,10 +307,7 @@ def _vs_message() -> Dictionary:
             _("A list of specific users"),
             DualListChoice(
                 choices=sorted(
-                    [
-                        (uid, u.get("alias", uid))
-                        for uid, u in active_config.multisite_users.items()
-                    ],
+                    [(uid, u.get("alias", uid)) for uid, u in users.items()],
                     key=lambda x: x[1].lower(),
                 ),
                 allow_empty=False,
@@ -368,12 +368,12 @@ def _vs_message() -> Dictionary:
                 ),
             ),
         ],
-        validate=_validate_msg,
+        validate=partial(_validate_msg, users=users),
         optional_keys=[],
     )
 
 
-def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
+def _validate_msg(msg: DictionaryModel, _varprefix: str, users: Mapping[str, UserSpec]) -> None:
     if not msg.get("methods"):
         raise MKUserError("methods", _("Please select at least one messaging method."))
 
@@ -384,7 +384,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
-        existing = set(active_config.multisite_users.keys())
+        existing = set(users.keys())
         for user_id in msg["dest"][1]:
             if user_id not in existing:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
@@ -392,6 +392,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
 
 def _process_message(
     msg_from_vs: MessageFromVS,
+    all_user_ids: Sequence[UserId],
 ) -> None:  # pylint: disable=too-many-branches
     msg = Message(
         text=MessageText(content_type="text", content=msg_from_vs["text"]),
@@ -404,7 +405,7 @@ def _process_message(
         acknowledged=False,
     )
 
-    recipients, num_success, errors = send_message(msg)
+    recipients, num_success, errors = send_message(msg, all_user_ids)
     num_recipients = len(recipients)
 
     message = HTML.with_escaping(_("The message has successfully been sent..."))
@@ -443,6 +444,7 @@ def _process_message(
 
 def send_message(
     msg: Message,
+    all_user_ids: Sequence[UserId],
 ) -> tuple[list[UserId], dict[str, int], dict[MessageMethod, list[tuple]]]:
     if isinstance(msg["dest"], str):
         dest_what = msg["dest"]
@@ -450,7 +452,7 @@ def send_message(
         dest_what = msg["dest"][0]
 
     if dest_what == "all_users":
-        recipients = list(map(UserId, active_config.multisite_users.keys()))
+        recipients = list(all_user_ids)
     elif dest_what == "online":
         recipients = userdb.get_online_user_ids(datetime.now())
     elif dest_what == "list":

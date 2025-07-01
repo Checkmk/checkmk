@@ -935,7 +935,7 @@ def test_test_get_active_service_data_crash_with_debug(
                             ("stored_password", ""),
                         ),
                     },
-                    expanded_args="--pwstore=2@0@/pw/store@stored_password --password " "'***'",
+                    expanded_args="--pwstore=2@0@/pw/store@stored_password --password '***'",
                     detected_executable="check_my_active_check",
                 ),
             ],
@@ -1899,7 +1899,7 @@ def test_make_source_path_local_agent() -> None:
         pytest.param(
             ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
             {"pw-id": "aädg"},
-            "--pwstore=2@11@/my/password/store@pw-id arg1 '--password=****' arg3",
+            "--pwstore=2@11@/my/password/store@pw-id arg1 '--password=*****' arg3",
             id="password store argument",
         ),
         pytest.param(

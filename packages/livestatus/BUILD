@@ -61,11 +61,16 @@ cc_library(
 
 cc_shared_library(
     name = "livestatus_shared",
+    exports_filter = [
+        # It's either this or we need to add a version script for
+        # the linker or default to `-fvisibility=hidden` and export
+        # symbols explicitly in the code.
+        "@re2",
+    ],
     shared_lib_name = "liblivestatus.so",
     visibility = ["//visibility:public"],
     deps = [
         ":livestatus_base",
-        "@re2",
     ],
 )
 

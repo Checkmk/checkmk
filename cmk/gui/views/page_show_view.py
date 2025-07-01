@@ -105,7 +105,7 @@ def page_show_view(
                 show_buttons=True,
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
-            debug=active_config.debug,
+            debug=config.debug,
         )
 
     _may_create_slow_view_log_entry(page_view_tracker, view)

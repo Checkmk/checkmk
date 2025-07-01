@@ -14,7 +14,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -27,7 +27,7 @@ class PageRescheduleCheck(AjaxPage):
 
     def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
-        return self._do_reschedule(api_request)
+        return self._do_reschedule(api_request, config.reschedule_timeout)
 
     @staticmethod
     def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
@@ -37,7 +37,13 @@ class PageRescheduleCheck(AjaxPage):
 
     @staticmethod
     def _wait_for(
-        site: SiteId, host: str, what: str, wait_spec: str, now: int, add_filter: str
+        site: SiteId,
+        host: str,
+        what: str,
+        wait_spec: str,
+        now: int,
+        add_filter: str,
+        reschedule_timeout: float,
     ) -> livestatus.LivestatusRow:
         with sites.only_sites(site):
             return sites.live().query_row(
@@ -54,13 +60,13 @@ class PageRescheduleCheck(AjaxPage):
                     what,
                     livestatus.lqencode(wait_spec),
                     now,
-                    active_config.reschedule_timeout * 1000,
+                    reschedule_timeout * 1000,
                     livestatus.lqencode(host),
                     add_filter,
                 )
             )
 
-    def _do_reschedule(self, api_request: dict[str, Any]) -> PageResult:
+    def _do_reschedule(self, api_request: dict[str, Any], reschedule_timeout: float) -> PageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
@@ -108,17 +114,17 @@ class PageRescheduleCheck(AjaxPage):
                 f"{host};Check_MK",
                 now,
                 "Filter: service_description = Check_MK\n",
+                reschedule_timeout,
             )
 
         self._force_check(now, cmd, spec, site)
-        row = self._wait_for(site, host, what, wait_spec, now, add_filter)
+        row = self._wait_for(site, host, what, wait_spec, now, add_filter, reschedule_timeout)
 
         last_check = row[0]
         if last_check < now:
             return {
                 "state": "TIMEOUT",
-                "message": _("Check not executed within %d seconds")
-                % (active_config.reschedule_timeout),
+                "message": _("Check not executed within %d seconds") % (reschedule_timeout),
             }
 
         if service == "Check_MK":

@@ -13,7 +13,7 @@ from cmk.ccc.user import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -42,7 +42,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
         site_id = site_id_val
-        if site_id not in active_config.sites:
+        if site_id not in config.sites:
             raise MKUserError(None, _("The requested site does not exist"))
 
         status = (
@@ -56,9 +56,9 @@ class ModeAjaxProfileReplication(AjaxPage):
         assert user.id is not None
         result = self._synchronize_profile(
             site_id,
-            RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+            RemoteAutomationConfig.from_site_config(config.sites[site_id]),
             user.id,
-            debug=active_config.debug,
+            debug=config.debug,
         )
 
         if result is not True:

@@ -32,7 +32,7 @@ from cmk.utils.structured_data import (
 )
 
 from cmk.gui import inventory
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -354,7 +354,7 @@ def ajax_inv_render_tree(config: Config) -> None:
                 raw_status_data_tree=raw_status_data_tree,
             )
         except Exception as e:
-            if active_config.debug:
+            if config.debug:
                 html.show_warning("%s" % e)
             user_errors.add(
                 MKUserError(

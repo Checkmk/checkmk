@@ -79,6 +79,21 @@
   --icon-contactgroups: url('~cmk-frontend/src/themes/facelift/images/icon_contactgroups.svg');
   --icon-licensing: url('~cmk-frontend/src/themes/facelift/images/icon_licensing.svg');
   --icon-sites: url('~cmk-frontend/src/themes/facelift/images/icon_sites.svg');
+  --icon-folder: url('~cmk-frontend/src/themes/facelift/images/icon_folder.svg');
+  --icon-networking: url('~cmk-frontend/src/themes/facelift/images/icon_networking.svg');
+  --icon-aws-logo: url('~cmk-frontend/src/themes/facelift/images/icon_aws_logo.svg');
+  --icon-azure-vms: url('~cmk-frontend/src/themes/facelift/images/icon_azure_vms.svg');
+  --icon-gcp: url('~cmk-frontend/src/themes/facelift/images/icon_gcp.svg');
+  --icon-synthetic-monitoring-yellow: url('~cmk-frontend/src/themes/facelift/images/icon_synthetic_monitoring_yellow.svg');
+  --icon-opentelemetry: url('~cmk-frontend/src/themes/facelift/images/icon_opentelemetry.svg');
+  --icon-dashboard: url('~cmk-frontend/src/themes/facelift/images/icon_dashboard.svg');
+  --icon-dashboard-problems: url('~cmk-frontend/src/themes/facelift/images/icon_dashboard_problems.svg');
+  --icon-svc-problems: url('~cmk-frontend/src/themes/facelift/images/icon_svc_problems.svg');
+  --icon-timeperiods: url('~cmk-frontend/src/themes/facelift/images/icon_timeperiods.svg');
+  --icon-hostgroups: url('~cmk-frontend/src/themes/facelift/images/icon_hostgroups.svg');
+  --icon-notifications: url('~cmk-frontend/src/themes/facelift/images/icon_notifications.svg');
+  --icon-analysis: url('~cmk-frontend/src/themes/facelift/images/icon_analysis.svg');
+  --icon-new: url('~cmk-frontend/src/themes/facelift/images/icon_new.svg');
 }
 
 @layer theme {

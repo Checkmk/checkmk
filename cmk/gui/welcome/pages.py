@@ -47,6 +47,105 @@ def _welcome_page(config: Config) -> None:
                         addvars=[("mode", "licensing")],
                         filename="wato.py",
                     ),
+                    add_host=makeuri(
+                        request,
+                        addvars=[("mode", "newhost")],
+                        filename="wato.py",
+                    ),
+                    # TODO: prefill options
+                    network_devices=makeuri(
+                        request,
+                        addvars=[("mode", "newhost")],
+                        filename="wato.py",
+                    ),
+                    aws_quick_setup=makeuri(
+                        request,
+                        addvars=[
+                            ("mode", "new_special_agent_configuration"),
+                            ("varname", "special_agents:aws"),
+                        ],
+                        filename="wato.py",
+                    ),
+                    azure_quick_setup=makeuri(
+                        request,
+                        addvars=[
+                            ("mode", "new_special_agent_configuration"),
+                            ("varname", "special_agents:azure"),
+                        ],
+                        filename="wato.py",
+                    ),
+                    gcp_quick_setup=makeuri(
+                        request,
+                        addvars=[
+                            ("mode", "new_special_agent_configuration"),
+                            ("varname", "special_agents:gcp"),
+                        ],
+                        filename="wato.py",
+                    ),
+                    synthetic_monitoring=makeuri(
+                        request,
+                        addvars=[
+                            ("mode", "robotmk_managed_robots_overview"),
+                        ],
+                        filename="wato.py",
+                    ),
+                    opentelemetry=makeuri(
+                        request,
+                        addvars=[
+                            ("mode", "otel_collectors"),
+                        ],
+                        filename="wato.py",
+                    ),
+                    all_hosts=makeuri(
+                        request,
+                        addvars=[("view_name", "allhosts")],
+                        filename="view.py",
+                    ),
+                    main_dashboard=makeuri(
+                        request,
+                        addvars=[("name", "main")],
+                        filename="dashboard.py",
+                    ),
+                    problem_dashboard=makeuri(
+                        request,
+                        addvars=[("name", "problems")],
+                        filename="dashboard.py",
+                    ),
+                    unhandled_service_problems=makeuri(
+                        request,
+                        addvars=[("view_name", "svcproblems")],
+                        filename="view.py",
+                    ),
+                    time_periods=makeuri(
+                        request,
+                        addvars=[("mode", "timeperiods")],
+                        filename="wato.py",
+                    ),
+                    host_groups=makeuri(
+                        request,
+                        addvars=[("mode", "host_groups")],
+                        filename="wato.py",
+                    ),
+                    add_notification_rule=makeuri(
+                        request,
+                        addvars=[("mode", "notification_rule_quick_setup")],
+                        filename="wato.py",
+                    ),
+                    test_notifications=makeuri(
+                        request,
+                        addvars=[("mode", "test_notifications")],
+                        filename="wato.py",
+                    ),
+                    add_custom_dashboard=makeuri(
+                        request,
+                        addvars=[],
+                        filename="create_dashboard.py",
+                    ),
+                    all_dashboards=makeuri(
+                        request,
+                        addvars=[],
+                        filename="edit_dashboards.py",
+                    ),
                 )
             )
         ),

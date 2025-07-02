@@ -20,7 +20,24 @@
                 "setup_backup": { "type": "string" },
                 "scale_monitoring": { "type": "string" },
                 "fine_tune_monitoring": { "type": "string" },
-                "license_site": { "type": "string" }
+                "license_site": { "type": "string" },
+                "add_host": { "type": "string" },
+                "network_devices": { "type": "string" },
+                "aws_quick_setup": { "type": "string" },
+                "azure_quick_setup": { "type": "string" },
+                "gcp_quick_setup": { "type": "string" },
+                "synthetic_monitoring": { "type": "string" },
+                "opentelemetry": { "type": "string" },
+                "all_hosts": { "type": "string" },
+                "main_dashboard": { "type": "string" },
+                "problem_dashboard": { "type": "string" },
+                "unhandled_service_problems": { "type": "string" },
+                "time_periods": { "type": "string" },
+                "host_groups": { "type": "string" },
+                "add_notification_rule": { "type": "string" },
+                "test_notifications": { "type": "string" },
+                "add_custom_dashboard": { "type": "string" },
+                "all_dashboards": { "type": "string" }
             },
             "required": [
                 "checkmk_ai",
@@ -30,7 +47,24 @@
                 "setup_backup",
                 "scale_monitoring",
                 "fine_tune_monitoring",
-                "license_site"
+                "license_site",
+                "add_host",
+                "network_devices",
+                "aws_quick_setup",
+                "azure_quick_setup",
+                "gcp_quick_setup",
+                "synthetic_monitoring",
+                "opentelemetry",
+                "all_hosts",
+                "main_dashboard",
+                "problem_dashboard",
+                "unhandled_service_problems",
+                "time_periods",
+                "host_groups",
+                "add_notification_rule",
+                "test_notifications",
+                "add_custom_dashboard",
+                "all_dashboards"
             ]
         }
     }

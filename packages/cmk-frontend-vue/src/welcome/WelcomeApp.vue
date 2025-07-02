@@ -5,14 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 
-const { t } = usei18n('welcome-app')
 defineProps<{ urls: WelcomeUrls }>()
 
 const completedSteps = 5
@@ -25,22 +24,7 @@ const totalSteps = 5
     <div class="welcome-app__panels">
       <div class="welcome-app__panel-left">
         <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
-        <p>
-          {{
-            t(
-              'placeholder',
-              'This is just a placeholder for the Welcome page. It will be used to guide you through the first steps of using Checkmk.'
-            )
-          }}
-        </p>
-        <p>
-          {{
-            t(
-              'change-start-url',
-              'In case you want to change the start URL to the main dashboard, you can do so under User > Edit profile > Start URL.'
-            )
-          }}
-        </p>
+        <OnboardingStepper :urls="urls"></OnboardingStepper>
       </div>
       <div class="welcome-app__panel-right">
         <ResourceLinksPanel :urls="urls" />
@@ -62,6 +46,7 @@ const totalSteps = 5
 }
 .welcome-app__panel-left {
   margin-right: var(--spacing);
+  width: 100%;
 }
 .welcome-app__panel-right {
   margin-left: auto;

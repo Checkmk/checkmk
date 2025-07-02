@@ -44,11 +44,11 @@ configure_make(
         "libmsi.so.0.0.0",
     ],
     postfix_script = """
-        mkdir -p $${INSTALLDIR}/{bin,lib}/
-        install -m 755 $${BUILD_TMPDIR}/.libs/msiinfo $${INSTALLDIR}/bin/
-        install -m 755 $${BUILD_TMPDIR}/.libs/msibuild $${INSTALLDIR}/bin/
-        patchelf --set-rpath "\\$$ORIGIN/../lib" $${INSTALLDIR}/bin/msiinfo $${INSTALLDIR}/bin/msibuild
-        install -m 755 $${BUILD_TMPDIR}/libmsi/.libs/libmsi.so* $${INSTALLDIR}/lib
+        mkdir -p ${INSTALLDIR}/{bin,lib}/
+        install -m 755 ${BUILD_TMPDIR}/.libs/msiinfo ${INSTALLDIR}/bin/
+        install -m 755 ${BUILD_TMPDIR}/.libs/msibuild ${INSTALLDIR}/bin/
+        patchelf --set-rpath "\\$ORIGIN/../lib" ${INSTALLDIR}/bin/msiinfo ${INSTALLDIR}/bin/msibuild
+        install -m 755 ${BUILD_TMPDIR}/libmsi/.libs/libmsi.so* ${INSTALLDIR}/lib
     """,
     targets = [
         "-C libmsi",

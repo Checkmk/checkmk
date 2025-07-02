@@ -37,7 +37,7 @@ configure_make(
         "libstunnel.so",
     ],
     postfix_script = """
-        mv $$INSTALLDIR/share/stunnel.bash $$INSTALLDIR/bin
+        mv $INSTALLDIR/share/stunnel.bash $INSTALLDIR/bin
     """,
     visibility = ["//visibility:public"],
     deps = ["@openssl"],

@@ -86,25 +86,25 @@ configure_make(
     ],
     postfix_script = """
         set -x
-        tar xf $${PERL_MODULES_TAR} -C $$(dirname $${PERL_MODULES_TAR});
-        tar xf $${PYTHON_MODULES_TAR} -C $$(dirname $${PYTHON_MODULES_TAR});
+        tar xf ${PERL_MODULES_TAR} -C $(dirname ${PERL_MODULES_TAR});
+        tar xf ${PYTHON_MODULES_TAR} -C $(dirname ${PYTHON_MODULES_TAR});
         mkdir -p lib/python
         cd python && \
-            $${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
+            ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
                 --basedir=.. \
-                --root=$${INSTALLDIR} \
+                --root=${INSTALLDIR} \
                 --prefix='' \
                 --single-version-externally-managed
         cd -
         echo "Build perl"
-            make -C perl DESTDIR=$${INSTALLDIR}/ \
+            make -C perl DESTDIR=${INSTALLDIR}/ \
                 INSTALLSITEARCH=/lib/perl5/lib/perl5 \
                 INSTALLSITEMAN3DIR=/share/man/man3 \
                 INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
                 install
 
-        chmod u+w -R $${INSTALLDIR}
-        chmod 644 $${INSTALLDIR}/share/snmp/mibs/*
+        chmod u+w -R ${INSTALLDIR}
+        chmod 644 ${INSTALLDIR}/share/snmp/mibs/*
     """,
     targets = [
         "",

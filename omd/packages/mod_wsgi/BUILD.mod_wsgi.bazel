@@ -36,7 +36,7 @@ configure_make(
         "mod_wsgi.so",
     ],
     postfix_script = """
-        cp src/server/.libs/mod_wsgi.so $$INSTALLDIR/lib
+        cp src/server/.libs/mod_wsgi.so $INSTALLDIR/lib
     """,
     targets = [""],
     visibility = ["//visibility:public"],

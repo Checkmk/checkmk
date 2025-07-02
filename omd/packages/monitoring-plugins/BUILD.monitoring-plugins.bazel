@@ -84,21 +84,21 @@ POSTFIX_SCRIPT = """
 
     # remove files we don't want to be deployed
     # check_disk_smb is being deployed with check_mk.make, because it was migrated to Python
-    rm -f "$$INSTALLDIR/libexec/check_ifoperstatus" "$$INSTALLDIR/libexec/check_ifstatus" \
-    "$$INSTALLDIR/libexec/check_disk_smb"
+    rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
+    "$INSTALLDIR/libexec/check_disk_smb"
 
     # check_ldaps is just a symlink but would be resolved by bazel -> pkg_mklink is not able to re-create the symlink
     # so just delete the file before hand...
     # TODO: clean up this mess
-    rm -f "$$INSTALLDIR/libexec/check_ldaps"
+    rm -f "$INSTALLDIR/libexec/check_ldaps"
 
     # check_ircd requires the perl module IO::Socket::IP since https://github.com/monitoring-plugins/monitoring-plugins/commit/93cd51bc6221ffc846c69135f2746120683b44c5
     # We don't want to deploy yet another perl module nor cannot guarantee that the required perl version is available under all distros.
-    rm -f "$$INSTALLDIR/libexec/check_ircd"
+    rm -f "$INSTALLDIR/libexec/check_ircd"
 
-    mkdir -p "$$INSTALLDIR/share/doc/monitoring-plugins"
+    mkdir -p "$INSTALLDIR/share/doc/monitoring-plugins"
     cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \
-      "$$INSTALLDIR/share/doc/monitoring-plugins"
+      "$INSTALLDIR/share/doc/monitoring-plugins"
 """
 
 TARGETS = [

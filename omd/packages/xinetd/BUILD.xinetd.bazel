@@ -36,16 +36,16 @@ configure_make(
         "share",
     ],
     postfix_script = """
-        mkdir -p $${INSTALLDIR}/bin
-        install -m 644 $${BUILD_TMPDIR}/xinetd $${INSTALLDIR}/bin
+        mkdir -p ${INSTALLDIR}/bin
+        install -m 644 ${BUILD_TMPDIR}/xinetd ${INSTALLDIR}/bin
 
         # Correct package documentation
-        rm $${INSTALLDIR}/share/man/man8/itox.8
-        rm $${INSTALLDIR}/share/man/man8/xconv.pl.8
+        rm ${INSTALLDIR}/share/man/man8/itox.8
+        rm ${INSTALLDIR}/share/man/man8/xconv.pl.8
 
-        mkdir -p $${INSTALLDIR}/share/doc/xinetd
+        mkdir -p ${INSTALLDIR}/share/doc/xinetd
         for file in CHANGELOG COPYRIGHT README.md; do \
-            install -m 644 $${BUILD_TMPDIR}/$$file $${INSTALLDIR}/share/doc/xinetd; \
+            install -m 644 ${BUILD_TMPDIR}/$file ${INSTALLDIR}/share/doc/xinetd; \
         done
     """,
     visibility = ["//visibility:public"],

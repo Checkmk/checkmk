@@ -87,9 +87,9 @@ configure_make(
         # The install step doesn't put the perl bindings where we
         # expect them.  So let's copy them here.
         LPLP="lib/perl5/lib/perl5"
-        cp -R $${INSTALLDIR}$${EXT_BUILD_DEPS}/$$LPLP/* $${INSTALLDIR}/$$LPLP
+        cp -R ${INSTALLDIR}${EXT_BUILD_DEPS}/$LPLP/* ${INSTALLDIR}/$LPLP
         # remove unnecessary folders
-        rm -rf $${INSTALLDIR}/{home,usr}
+        rm -rf ${INSTALLDIR}/{home,usr}
     """,
     targets = [
         "-C po all",

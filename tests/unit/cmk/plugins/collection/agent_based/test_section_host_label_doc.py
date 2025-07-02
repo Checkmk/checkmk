@@ -30,6 +30,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/check_mk_server",
     "cmk/ceph/osd",
     "cmk/ceph/mon",
+    "cmk/device_model",
     "cmk/device_type",
     "cmk/docker_image",
     "cmk/docker_image_name",

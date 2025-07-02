@@ -119,7 +119,7 @@ class CmkPage(LocatorHelper):
         """
         logger.info("Activate changes")
         try:
-            self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
+            self.main_menu.changes_menu().get_by_role(role="button", name="Open full page")
             self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
             self.activate_selected()
             self.expect_success_state()
@@ -210,6 +210,12 @@ class MainMenu(LocatorHelper):
     ) -> Locator:
         """main menu -> Open setup -> show more(optional) -> sub menu"""
         return self._sub_menu("Setup", sub_menu, show_more, exact)
+
+    def changes_menu(
+        self,
+    ) -> Locator:
+        """main menu -> Open changes -> activate changes app"""
+        return self._sub_menu("Changes", None, False, False)
 
     def user_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
         """main menu -> Open user -> show more(optional) -> sub menu"""

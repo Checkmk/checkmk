@@ -36,11 +36,6 @@ bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 bazel_dep(name = "rules_python", version = "1.4.1")
 bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(name = "rules_uv", version = "0.71.0")
-bazel_dep(
-    # LLVM for clang-tidy, clang-format, and IWYU.
-    name = "toolchains_llvm",
-    version = "1.4.0",
-)
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(
     # Transitive dep required because a dependency in the protobuf-python chain
@@ -124,12 +119,6 @@ single_version_override(
         # https://github.com/aspect-build/rules_lint/pull/576
         "//bazel/patches:rules_lint-feat_format_toml.patch",
     ],
-)
-
-single_version_override(
-    module_name = "toolchains_llvm",
-    patch_strip = 1,
-    patches = ["//bazel/patches:toolchains_llvm-expose_full_archive.patch"],
 )
 
 single_version_override(
@@ -229,6 +218,17 @@ http_file(
     urls = [
         "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
         UPSTREAM_MIRROR_URL + "/taplo-linux-x86_64-0.10.0.gz",
+    ],
+)
+
+http_archive(
+    name = "clang-linux-x86_64",
+    build_file = "//bazel/toolchains/cc/clang:BUILD.clang.bazel",
+    integrity = "sha256-Sl7FOVGlhO02+AJA9vv4/dRrTPbH7ofMLVAY3DfK9nk=",
+    strip_prefix = "LLVM-19.1.7-Linux-X64",
+    urls = [
+        "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz",
+        UPSTREAM_MIRROR_URL + "LLVM-19.1.7-Linux-X64.tar.xz",
     ],
 )
 
@@ -657,10 +657,6 @@ http_archive(
 )
 
 repo_license(name = "repo_license")
-
-llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
-llvm.toolchain(llvm_version = "19.1.7")
-use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 use_repo(multitool, "multitool")

@@ -1,101 +1,46 @@
-load(
-    "@rules_cc//cc:cc_toolchain_config.bzl",
-    "unix_cc_toolchain_config",
-)
-load("@rules_cc//cc:defs.bzl", "cc_toolchain")
-
-filegroup(name = "empty")
-
-unix_cc_toolchain_config(
-    name = "clang19_config",
-    abi_libc_version = "local",
-    abi_version = "local",
-    compile_flags = [
-        "-fstack-protector",
-        "-Wall",
-        "-Wunused-but-set-parameter",
-        "-Wno-free-nonheap-object",
-        "-fno-omit-frame-pointer",
-    ],
-    compiler = "gcc-13",
-    cpu = "k8",
-    cxx_builtin_include_directories = [
-        # List obtained from `clang-19 -E -xc++ - -v < /dev/null` and `realpath`.
-        "/usr/include/c++/13",
-        "/usr/include/x86_64-linux-gnu/c++/13",
-        "/usr/include/c++/13/backward",
-        "/usr/lib/llvm-19/lib/clang/19/include",
-        "/usr/include/x86_64-linux-gnu",
-        "/usr/include",
-    ],
-    cxx_flags = ["-std=c++20"],
-    dbg_compile_flags = ["-g"],
-    host_system_name = "local",
-    link_flags = [
-        # DO NOT USE -fuse-ld=gold here: it is not available on sles15sp5
-        # However, I still don't understand why it would fail as were hardcoding the ld path for the CI toolchain
-        "-Wl,-no-as-needed",
-        "-Wl,-z,relro,-z,now",
-        "-B/usr/bin",
-    ],
-    link_libs = [
-        "-lstdc++",
-        "-lm",
-    ],
-    opt_compile_flags = [
-        "-g0",
-        "-O2",
-        "-D_FORTIFY_SOURCE=1",
-        "-DNDEBUG",
-        "-ffunction-sections",
-        "-fdata-sections",
-    ],
-    opt_link_flags = ["-Wl,--gc-sections"],
-    target_libc = "local",
-    target_system_name = "local",
-    tool_paths = {
-        "ar": "/usr/bin/llvm-ar-19",
-        "cpp": "/usr/bin/clang-cpp-19",
-        "gcc": "/usr/bin/clang-19",
-        "ld": "/usr/bin/ld",
-        "nm": "/usr/bin/llvm-nm-19",
-        "objdump": "/usr/bin/llvm-objdump-19",
-        "strip": "/usr/bin/llvm-strip-19",
-        "objcopy": "/usr/bin/llvm-objcopy-19",
-    },
-    toolchain_identifier = "clang19",
-    unfiltered_compile_flags = [
-        "-Wno-builtin-macro-redefined",
-        "-D__DATE__=\"redacted\"",
-        "-D__TIMESTAMP__=\"redacted\"",
-        "-D__TIME__=\"redacted\"",
-    ],
-)
+load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
 
 cc_toolchain(
-    name = "clang19_toolchain",
-    all_files = ":empty",
-    compiler_files = ":empty",
-    dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    static_runtime_lib = ":empty",
-    strip_files = ":empty",
-    supports_param_files = 0,
-    toolchain_config = ":clang19_config",
-    toolchain_identifier = "clang19",
+    name = "host_clang",
+    args = [
+        # Without a sysroot or `--gcc-install-dir`, llvm searches for
+        # C headers in their default location, that is, `/usr/local/include`,
+        # `/usr/include/<triple>`, and `/usr/include`.
+        # Using those would require setting up a `new_local_repository`, which
+        # is bad for the CI/CQ.
+        #
+        # Passing the gcc sysroot lets llvm use our hermetic C headers.
+        #
+        # See also: `clang -E -xc++ - -v < /dev/null`.
+        "//bazel/toolchains/cc/gcc/bootlin/args:linux_sysroot",
+        "//bazel/toolchains/cc/clang/args:hermetic_libcpp",
+        "//bazel/toolchains/cc/clang/args:link_libs",
+        "//bazel/toolchains/cc/clang/args:lld_linker",
+        "//bazel/toolchains/cc/clang/args:no_absolute_paths_for_builtins",
+        "//bazel/toolchains/cc/args:all_optimizations",
+        # TODO: The next ones are also declared as features.
+        "//bazel/toolchains/cc/args:pic_flags",
+        "//bazel/toolchains/cc/args:unfiltered_compile_flags",
+    ],
+    compiler = "clang",
+    dynamic_runtime_lib = select({
+        "//bazel/platforms:linux_x86_64": "@clang-linux-x86_64//:dynamic_runtime_lib",
+    }),
+    enabled_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
+    known_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
+    static_runtime_lib = select({
+        "//bazel/platforms:linux_x86_64": "@clang-linux-x86_64//:static_runtime_lib",
+    }),
+    tags = ["manual"],
+    tool_map = "//bazel/toolchains/cc/clang/tools",
 )
 
 toolchain(
-    name = "clang19",
+    name = "host_clang_toolchain",
     exec_compatible_with = [
-        "@platforms//cpu:x86_64",
         "@platforms//os:linux",
     ],
-    target_compatible_with = [
-        "@platforms//cpu:x86_64",
-        "@platforms//os:linux",
-    ],
-    toolchain = ":clang19_toolchain",
+    toolchain = ":host_clang",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    visibility = ["//visibility:public"],
 )

@@ -1,0 +1,56 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files(
+    glob(
+        [
+            "bin/*",
+            "lib/*",
+            "share/clang/*",  # clang-rename, clang-tidy-diff...
+        ],
+    ),
+)
+
+filegroup(
+    name = "lib-clang-include",
+    srcs = glob([
+        "lib/clang/*/include/**",
+    ]),
+)
+
+filegroup(
+    name = "cpp-include",
+    srcs = glob([
+        "include/c++/**",
+        "include/x86_64-unknown-linux-gnu/c++/**",
+    ]),
+)
+
+filegroup(
+    name = "builtin_headers",
+    srcs = [
+        ":cpp-include",
+        ":lib-clang-include",
+    ],
+)
+
+filegroup(
+    name = "linker_builtins",
+    data = glob(
+        [
+            "bin/ld*",
+            "bin/lld*",
+            "lib/x86_64-unknown-linux-gnu/*",
+            "lib/clang/*/lib/x86_64-unknown-linux-gnu/*",
+        ],
+    ),
+)
+
+alias(
+    name = "dynamic_runtime_lib",
+    actual = "lib/x86_64-unknown-linux-gnu/libc++.so",
+)
+
+alias(
+    name = "static_runtime_lib",
+    actual = "lib/x86_64-unknown-linux-gnu/libc++.a",
+)

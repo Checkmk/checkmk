@@ -1,6 +1,7 @@
 load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 
@@ -22,14 +23,14 @@ format_multirun(
     visibility = ["//visibility:public"],
 )
 
-alias(
+native_binary(
     name = "clang-format",
-    actual = "@llvm_toolchain//:clang-format",
+    src = "@clang-linux-x86_64//:bin/clang-format",
 )
 
-alias(
+native_binary(
     name = "clangtidy_bin",
-    actual = "@llvm_toolchain//:clang-tidy",
+    src = "@clang-linux-x86_64//:bin/clang-tidy",
 )
 
 filegroup(

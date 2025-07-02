@@ -12,29 +12,120 @@ defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
-  <h2>Small</h2>
-  <CmkBadge size="small">1</CmkBadge>
-  <CmkBadge size="small" color="success">1</CmkBadge>
-  <CmkBadge size="small" color="warning">1</CmkBadge>
-  <CmkBadge size="small" color="danger">1</CmkBadge>
-
-  <h2>Medium</h2>
-  <CmkBadge>1</CmkBadge>
-  <CmkBadge color="success"><CmkIcon size="large" name="checkmark"></CmkIcon></CmkBadge>
-  <CmkBadge color="warning">a</CmkBadge>
-  <CmkBadge color="danger"><CmkIcon size="small" name="check"></CmkIcon></CmkBadge>
-
-  <h2>Large</h2>
-  <CmkBadge size="large">1</CmkBadge>
-  <CmkBadge size="large" color="success"
-    ><CmkIcon size="xlarge" name="checkmark"></CmkIcon
-  ></CmkBadge>
-  <CmkBadge size="large" color="warning">2</CmkBadge>
-  <CmkBadge size="large" color="danger">33</CmkBadge>
+  <table>
+    <thead>
+      <th></th>
+      <th>Fill</th>
+      <th>Outline</th>
+      <th>Circle</th>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Small</th>
+        <td>
+          <div class="flex">
+            <CmkBadge type="fill" size="small">1</CmkBadge>
+            <CmkBadge type="fill" size="small" color="success">99+</CmkBadge>
+            <CmkBadge type="fill" size="small" color="warning">1</CmkBadge>
+            <CmkBadge type="fill" size="small" color="danger">1</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge size="small">1</CmkBadge>
+            <CmkBadge size="small" color="success">1</CmkBadge>
+            <CmkBadge size="small" color="warning">1</CmkBadge>
+            <CmkBadge size="small" color="danger">1</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge shape="circle" size="small">1</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="success">1</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="warning">1</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="danger">1</CmkBadge>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>Medium</th>
+        <td>
+          <div class="flex">
+            <CmkBadge type="fill">online</CmkBadge>
+            <CmkBadge type="fill" color="success"
+              ><CmkIcon size="large" name="checkmark"></CmkIcon
+            ></CmkBadge>
+            <CmkBadge type="fill" color="warning">a</CmkBadge>
+            <CmkBadge type="fill" color="danger"
+              ><CmkIcon size="small" name="check"></CmkIcon
+            ></CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge>1</CmkBadge>
+            <CmkBadge color="success">Ok</CmkBadge>
+            <CmkBadge color="warning">a</CmkBadge>
+            <CmkBadge color="danger"><CmkIcon size="small" name="check"></CmkIcon></CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge>1</CmkBadge>
+            <CmkBadge type="fill" shape="circle" color="success"
+              ><CmkIcon size="large" name="checkmark"></CmkIcon
+            ></CmkBadge>
+            <CmkBadge shape="circle" color="warning">a</CmkBadge>
+            <CmkBadge type="fill" shape="circle" color="danger"
+              ><CmkIcon size="small" name="check"></CmkIcon
+            ></CmkBadge>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>Large</th>
+        <td>
+          <div class="flex">
+            <CmkBadge type="fill" size="large">1</CmkBadge>
+            <CmkBadge type="fill" size="large" color="success"
+              ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
+            ></CmkBadge>
+            <CmkBadge type="fill" size="large" color="warning">2</CmkBadge>
+            <CmkBadge stype="fill" size="large" color="danger">33</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge size="large">1</CmkBadge>
+            <CmkBadge size="large" color="success">yes</CmkBadge>
+            <CmkBadge size="large" color="warning">2</CmkBadge>
+            <CmkBadge size="large" color="danger">33</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="flex">
+            <CmkBadge shape="circle" size="large">1</CmkBadge>
+            <CmkBadge type="fill" shape="circle" size="large" color="success"
+              ><CmkIcon shape="circle" size="xxlarge" name="checkmark"></CmkIcon
+            ></CmkBadge>
+            <CmkBadge shape="circle" size="large" color="warning">2</CmkBadge>
+            <CmkBadge shape="circle" size="large" color="danger">33</CmkBadge>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <style scoped>
-h2 {
-  margin: 16px 0;
+table {
+  background: var(--ux-theme-6);
+  color: var(--color);
+}
+
+.flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

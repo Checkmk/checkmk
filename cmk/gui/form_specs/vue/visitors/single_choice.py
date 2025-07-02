@@ -2,8 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeGuard, TypeVar
+from typing import Generic, TypeAlias, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -30,39 +31,58 @@ T = TypeVar("T")
 
 NO_SELECTION = None
 
-_FallbackModel = str | None
+
+@dataclass
+class _InvalidValueModel(Generic[T]):
+    value: str | None
+    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
 
 
 @dataclass
-class ToleratedValue:
+class ToleratedValue(Generic[T]):
     value: object
+    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
 
 
 @dataclass
-class ValidValue:
+class ValidValue(Generic[T]):
     value: object
+    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
 
 
-_ParsedValueModel = ToleratedValue | ValidValue
+_ParsedValueModel: TypeAlias = ToleratedValue[T] | ValidValue[T]
 
 
 class SingleChoiceVisitor(
-    Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], _ParsedValueModel, _FallbackModel]
+    Generic[T],
+    FormSpecVisitor[private.SingleChoiceExtended[T], _ParsedValueModel[T], _InvalidValueModel[T]],
 ):
-    def _is_valid_choice(self, value: object) -> TypeGuard[T]:
+    @staticmethod
+    def _is_valid_choice(
+        value: object, elements: Sequence[private.SingleChoiceElementExtended[T]]
+    ) -> TypeGuard[T]:
         if isinstance(value, InvalidValue):
             return False
-        if not self.form_spec.elements:
+        if not elements:
             return False
-        return value in [x.name for x in self.form_spec.elements]
+        return value in [x.name for x in elements]
 
     @classmethod
     def option_id(cls, val: object) -> str:
         return option_id(val)
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _get_elements(self) -> Sequence[private.SingleChoiceElementExtended[T]]:
+        if callable(self.form_spec.elements):
+            # Lazy evaluation of elements
+            return self.form_spec.elements()
+        return self.form_spec.elements
+
+    def _parse_value(
+        self, raw_value: object
+    ) -> _ParsedValueModel[T] | InvalidValue[_InvalidValueModel[T]]:
+        elements = self._get_elements()
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FallbackModel = NO_SELECTION
+            fallback_value: _InvalidValueModel[T] = _InvalidValueModel(NO_SELECTION, elements)
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -81,7 +101,7 @@ class SingleChoiceVisitor(
 
         if self.options.data_origin == DataOrigin.FRONTEND:
             # Decode option send from frontend
-            for option in self.form_spec.elements:
+            for option in elements:
                 if self.option_id(option.name) == raw_value:
                     raw_value = option.name
                     break
@@ -89,10 +109,10 @@ class SingleChoiceVisitor(
                 # Found no matching option
                 return InvalidValue(
                     reason=self._compute_invalid_value_display_message(raw_value),
-                    fallback_value=NO_SELECTION,
+                    fallback_value=_InvalidValueModel(NO_SELECTION, elements),
                 )
 
-        if not self._is_valid_choice(raw_value):
+        if not self._is_valid_choice(raw_value, elements):
             # Note: An invalid choice does not always result in an empty value
             # invalid_element_validation: InvalidElementValidator:InvalidElementMode.KEEP
             #   Value is kept
@@ -112,16 +132,16 @@ class SingleChoiceVisitor(
                 # This is the only case where we might return `object` instead of T
                 # The value is tolerated -> not an InvalidValue
                 # Tolerated values might be written back to disk
-                return ToleratedValue(raw_value)
+                return ToleratedValue(raw_value, elements)
             return InvalidValue(
                 reason=self._compute_invalid_value_display_message(raw_value),
-                fallback_value=NO_SELECTION,
+                fallback_value=_InvalidValueModel(NO_SELECTION, elements),
             )
 
-        return ValidValue(raw_value)
+        return ValidValue(raw_value, elements)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+        self, parsed_value: _ParsedValueModel[T] | InvalidValue[_InvalidValueModel[T]]
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -130,7 +150,11 @@ class SingleChoiceVisitor(
                 name=self.option_id(element.name),
                 title=element.title.localize(translate_to_current_language),
             )
-            for element in self.form_spec.elements
+            for element in (
+                parsed_value.fallback_value.available_elements
+                if isinstance(parsed_value, InvalidValue)
+                else parsed_value.available_elements
+            )
         ]
 
         input_hint = compute_title_input_hint(self.form_spec.prefill)
@@ -138,7 +162,7 @@ class SingleChoiceVisitor(
         if isinstance(parsed_value, ToleratedValue):
             parsed_value = InvalidValue(
                 reason=self._compute_invalid_value_display_message(parsed_value.value),
-                fallback_value=NO_SELECTION,
+                fallback_value=_InvalidValueModel(NO_SELECTION, parsed_value.available_elements),
             )
             invalid_validation = self.form_spec.invalid_element_validation
             if invalid_validation and invalid_validation.display:
@@ -158,7 +182,7 @@ class SingleChoiceVisitor(
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 i18n_base=base_i18n_form_spec(),
             ),
-            parsed_value.fallback_value
+            parsed_value.fallback_value.value
             if isinstance(parsed_value, InvalidValue)
             else self.option_id(parsed_value.value),
         )
@@ -178,7 +202,7 @@ class SingleChoiceVisitor(
         return message_localized
 
     def _validate(
-        self, parsed_value: _ParsedValueModel
+        self, parsed_value: _ParsedValueModel[T]
     ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, ToleratedValue):
             # The value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)
@@ -187,5 +211,5 @@ class SingleChoiceVisitor(
             )
         return []
 
-    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
+    def _to_disk(self, parsed_value: _ParsedValueModel[T]) -> object:
         return parsed_value.value

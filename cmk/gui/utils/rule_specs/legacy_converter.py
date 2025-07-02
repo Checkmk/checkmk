@@ -1431,7 +1431,9 @@ def _convert_to_legacy_dropdown_choice(
             element.name.value if isinstance(element.name, enum.Enum) else element.name,
             element.title.localize(localizer),
         )
-        for element in to_convert.elements
+        for element in (
+            to_convert.elements() if callable(to_convert.elements) else to_convert.elements
+        )
     ]
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),

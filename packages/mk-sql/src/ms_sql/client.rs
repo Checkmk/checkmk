@@ -55,9 +55,6 @@ impl ManageEdition for StdClient {
     }
 }
 
-#[cfg(windows)]
-const LOCAL_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
-
 impl OdbcClient {
     pub fn new(conn_string: impl ToString) -> Self {
         Self {
@@ -327,8 +324,10 @@ pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<UniClient> {
 pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
-        log::warn!("Timeout: {e} when creating client from config");
-        anyhow::anyhow!("Timeout: {e} when creating client from config")
+        anyhow::anyhow!(
+            "Timeout: {e} when connecting endpoint, timeout = {:?}",
+            conn.timeout()
+        )
     };
     let client = match auth.auth_type() {
         AuthType::SqlServer | AuthType::Windows => {
@@ -350,7 +349,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
 
         #[cfg(windows)]
         AuthType::Integrated => tokio::time::timeout(
-            LOCAL_TIMEOUT,
+            conn.timeout(),
             ClientBuilder::new()
                 .local_by_port(Some(port), Some(conn.hostname()))
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
@@ -376,7 +375,7 @@ pub async fn connect_custom_instance(
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
-            "Timeout: {e} when creating client from config {:?}",
+            "Timeout: {e} when connecting instance, timeout = {:?}",
             conn.timeout()
         )
     };

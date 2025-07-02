@@ -8,7 +8,7 @@ import os
 import shutil
 import socket
 import sys
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Literal
@@ -21,6 +21,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
@@ -526,3 +527,85 @@ def get_tags_with_groups_from_attributes(
         for key, value in key_value_pairs
         if key.startswith("__TAG_")
     }
+
+
+def get_cluster_nodes_for_config(
+    host_name: HostName,
+    nodes: Sequence[HostName],
+    ip_stack_config: ip_lookup.IPStackConfig,
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
+    host_tags: cmk.utils.tags.HostTags,
+    # these two argemnts and their usage are result of a refactoring.
+    # I am not convinced if it really makes sense to call this callback on eveny host.
+    all_existing_hosts: Iterable[HostName],
+    is_monitored_host: Callable[[HostName], bool],
+) -> Sequence[HostName]:
+    _verify_cluster_address_family(host_name, ip_stack_config, nodes, default_address_family)
+    _verify_cluster_datasource(host_name, nodes, host_tags)
+    monitored_hosts = {h for h in all_existing_hosts if is_monitored_host(h)}
+    nodes = list(nodes[:])
+    for node in nodes:
+        if node not in monitored_hosts:
+            config_warnings.warn(
+                f"Node '{node}' of cluster '{host_name}' is not a monitored host in this site."
+            )
+            nodes.remove(node)
+    return nodes
+
+
+def _verify_cluster_address_family(
+    host_name: HostName,
+    ip_stack_config: ip_lookup.IPStackConfig,
+    nodes: Iterable[HostName],
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
+) -> None:
+    if ip_stack_config is IPStackConfig.NO_IP:
+        cluster_host_family = None
+        address_families = []
+    else:
+        cluster_host_family = (
+            "IPv6" if default_address_family(host_name) is socket.AF_INET6 else "IPv4"
+        )
+        address_families = [
+            f"{host_name}: {cluster_host_family}",
+        ]
+
+    address_family = cluster_host_family
+    mixed = False
+    for nodename in nodes:
+        family = "IPv6" if default_address_family(nodename) is socket.AF_INET6 else "IPv4"
+        address_families.append(f"{nodename}: {family}")
+        if address_family is None:
+            address_family = family
+        elif address_family != family:
+            mixed = True
+
+    if mixed:
+        config_warnings.warn(
+            f"""Cluster '{host_name}' has different primary address families: {", ".join(address_families)}"""
+        )
+
+
+def _verify_cluster_datasource(
+    host_name: HostName,
+    nodes: Iterable[HostName],
+    host_tags: cmk.utils.tags.HostTags,
+) -> None:
+    cluster_tg = host_tags.tags(host_name)
+    cluster_agent_ds = cluster_tg.get(TagGroupID("agent"))
+    cluster_snmp_ds = cluster_tg.get(TagGroupID("snmp_ds"))
+    for nodename in nodes:
+        node_tg = host_tags.tags(nodename)
+        node_agent_ds = node_tg.get(TagGroupID("agent"))
+        node_snmp_ds = node_tg.get(TagGroupID("snmp_ds"))
+        warn_text = f"Cluster '{host_name}' has different datasources as its node"
+        if node_agent_ds != cluster_agent_ds:
+            config_warnings.warn(
+                f"{warn_text} '{nodename}': {cluster_agent_ds} vs. {node_agent_ds}"
+            )
+        if node_snmp_ds != cluster_snmp_ds:
+            config_warnings.warn(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")

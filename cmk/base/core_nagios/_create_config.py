@@ -354,7 +354,7 @@ def create_nagios_host_spec(
 
     if hostname in config_cache.hosts_config.clusters:
         ip_lookup_config = config_cache.ip_lookup_config()
-        nodes = config_cache.get_cluster_nodes_for_config(
+        nodes = core_config.get_cluster_nodes_for_config(
             hostname,
             config_cache.nodes(hostname),
             ip_lookup_config.ip_stack_config(hostname),

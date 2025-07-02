@@ -671,6 +671,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
+          - "CI_ORA2_DB_TEST"
       DIR: "packages/mk-oracle"
       COMMAND: "./run --all &> ${RESULTS}/mk-oracle.txt"
       BAZEL_LOCKS_AMOUNT: 1

@@ -111,6 +111,7 @@ rust_test_suite(
     crate_features = ["build_system_bazel"],
     env_inherit = [
         "CI_TEST_SQL_DB_ENDPOINT",
+        "CI_ORA2_DB_TEST",
     ],
     deps = all_crate_deps() + [
         ":mk-oracle",

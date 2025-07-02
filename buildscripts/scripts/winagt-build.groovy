@@ -36,6 +36,9 @@ def main() {
                 string(
                     credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                     variable:"CI_TEST_SQL_DB_ENDPOINT"),
+                string(
+                    credentialsId: "CI_ORA2_DB_TEST",
+                    variable:"CI_ORA2_DB_TEST"),
             ]) {
                 // The windows.build function will create stages.
                 windows.build(

@@ -1,5 +1,10 @@
 {
     "command_line": "./run --all",
-    "maintainers": ["team-main@checkmk.com"],
-    "sec_vars": ["CI_TEST_SQL_DB_ENDPOINT"]
+    "maintainers": [
+        "team-main@checkmk.com"
+    ],
+    "sec_vars": [
+        "CI_TEST_SQL_DB_ENDPOINT",
+        "CI_ORA2_DB_TEST"
+    ]
 }

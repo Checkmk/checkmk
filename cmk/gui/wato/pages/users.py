@@ -920,7 +920,7 @@ class ModeEditUser(WatoMode):
                 user_attrs["last_pw_change"] = int(time.time())
                 user_attrs.pop("enforce_pw_change", None)
 
-            elif "automation_secret" not in user_attrs and "password" in user_attrs:
+            elif not user_attrs.get("is_automation_user", False) and "password" in user_attrs:
                 del user_attrs["password"]
 
         else:  # password
@@ -941,8 +941,9 @@ class ModeEditUser(WatoMode):
                 raise MKUserError(password2_field_name, _("Passwords don't match"))
 
             # Detect switch from automation to password
-            if "automation_secret" in user_attrs:
-                del user_attrs["automation_secret"]
+            if user_attrs.get("is_automation_user", False):
+                user_attrs.pop("automation_secret", None)
+                user_attrs.pop("store_automation_secret", None)
                 if "password" in user_attrs:
                     del user_attrs["password"]  # which was the hashed automation secret!
             user_attrs["is_automation_user"] = False

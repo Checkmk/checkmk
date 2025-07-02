@@ -32,6 +32,7 @@ class _FreeIPMIParams(BaseModel, frozen=True):
     output_sensor_state: bool = True
     output_sensor_thresholds: bool = False
     ignore_not_available_sensors: bool = False
+    ignore_unrecognized_events: bool = False
     BMC_key: str | None = None
 
 
@@ -87,6 +88,7 @@ def _freeipmi_args(options: _FreeIPMIParams) -> Iterable[str]:
             ("--output_sensor_state", "output_sensor_state"),
             ("--ignore_not_available_sensors", "ignore_not_available_sensors"),
             ("--output_sensor_thresholds", "output_sensor_thresholds"),
+            ("--ignore_unrecognized_events", "ignore_unrecognized_events"),
         ]
         if getattr(options, checkbox)
     )

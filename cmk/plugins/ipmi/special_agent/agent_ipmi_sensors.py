@@ -95,6 +95,11 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
         action="store_true",
         help="Output sensor thresholds",
     )
+    parser_freeipmi.add_argument(
+        "--ignore_unrecognized_events",
+        action="store_true",
+        help="Ignore unrecognized events",
+    )
 
 
 def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
@@ -178,6 +183,7 @@ def _freeipmi_additional_args(
             "output_sensor_state",
             "ignore_not_available_sensors",
             "output_sensor_thresholds",
+            "ignore_unrecognized_events",
         ]
         if getattr(
             args,

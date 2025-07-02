@@ -151,7 +151,7 @@ run_semgrep() {
         --oss-only \
         --use-git-ignore \
         --disable-version-check \
-        cmk tests
+        cmk
 }
 
 run_format() {

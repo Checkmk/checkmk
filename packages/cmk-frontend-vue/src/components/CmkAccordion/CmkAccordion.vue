@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { AccordionRoot } from 'radix-vue'
 import { provide } from 'vue'
-import { triggerItemKey } from './trigger-item'
+import { expandedItemKey, triggerItemKey } from './trigger-item'
 
 export interface CmkAccordionProps {
   minOpen?: number
@@ -14,9 +14,14 @@ export interface CmkAccordionProps {
 }
 
 provide(triggerItemKey, toggleItem)
+provide(expandedItemKey, itemExpanded)
 
 const openedItems = defineModel<string[]>({ required: true })
 const { minOpen = 1, maxOpen = 1 } = defineProps<CmkAccordionProps>()
+
+function itemExpanded(id: string): boolean {
+  return openedItems.value.includes(id)
+}
 
 function toggleItem(id: string): void {
   let opened: string[] = openedItems.value.slice(0)

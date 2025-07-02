@@ -9,20 +9,26 @@ import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
 export interface CmkAccordionItemProps {
   value: string
+  headerAs?: string
   disabled?: boolean | undefined
 }
 
-const props = defineProps<CmkAccordionItemProps>()
+const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordionItemProps>()
 </script>
 
 <template>
-  <AccordionItem :value="props.value" :disabled="props.disabled" class="cmk-accordion-item">
-    <AccordionHeader as="div" class="cmk-accordion-item-header"
+  <AccordionItem :value="value" :disabled="disabled" class="cmk-accordion-item">
+    <AccordionHeader :as="headerAs" class="cmk-accordion-item-header"
       ><CmkAccordionTrigger :value="value" :disabled="disabled ? true : false">
         <slot name="header" />
       </CmkAccordionTrigger>
     </AccordionHeader>
-    <AccordionContent class="cmk-accordion-item-content">
+    <AccordionContent
+      :id="'cmk-accordion-content-'.concat(value)"
+      class="cmk-accordion-item-content"
+      as="section"
+      :aria-labelledby="'cmk-accordion-trigger-'.concat(value)"
+    >
       <div class="cmk-accordion-item-content-wrapper">
         <slot name="content" />
       </div>
@@ -57,7 +63,6 @@ const props = defineProps<CmkAccordionItemProps>()
 }
 
 .cmk-accordion-item-header {
-  padding: 8px 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -65,6 +70,7 @@ const props = defineProps<CmkAccordionItemProps>()
   border-bottom: 1px transparent;
   border-radius: 4px;
   position: relative;
+  margin: 0;
 
   &:hover {
     background: var(--ux-theme-6);

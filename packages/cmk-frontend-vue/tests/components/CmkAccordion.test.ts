@@ -72,7 +72,7 @@ test('Accordion wich opens min and max 1 item at a time', async () => {
   const opened = ref<string[]>(['item-1'])
   render(createAccordionComponent(4, 1, 1, opened))
 
-  const accTrigger2 = screen.getByRole('button', { name: `Open accordion item item-2` })
+  const accTrigger2 = screen.getByRole('button', { name: `Toggle accordion item item-2` })
 
   accTrigger2.click() // open item-2 => item-1 should be closed
 
@@ -83,7 +83,7 @@ test('Accordion wich opens max 1 items at a time and all items can be closed', a
   const opened = ref<string[]>(['item-1'])
   render(createAccordionComponent(4, 0, 1, opened))
 
-  const accTrigger2 = screen.getByRole('button', { name: `Open accordion item item-2` })
+  const accTrigger2 = screen.getByRole('button', { name: `Toggle accordion item item-2` })
 
   await accTrigger2.click() // open item-2
   await checkAccordionState(opened.value, ['item-2'], ['item-1', 'item-3', 'item-4'])
@@ -96,8 +96,8 @@ test('Accordion wich opens max 2 items at a time and all items can be closed', a
   const opened = ref<string[]>(['item-1'])
   render(createAccordionComponent(4, 0, 2, opened))
 
-  const accTrigger2 = screen.getByRole('button', { name: `Open accordion item item-2` })
-  const accTrigger4 = screen.getByRole('button', { name: `Open accordion item item-4` })
+  const accTrigger2 = screen.getByRole('button', { name: `Toggle accordion item item-2` })
+  const accTrigger4 = screen.getByRole('button', { name: `Toggle accordion item item-4` })
 
   await accTrigger2.click() // open item-2
   await accTrigger4.click() // open item-4 => should close item-1
@@ -114,8 +114,8 @@ test('Accordion wich opens all items at a time and at least 2 items have to be o
   render(createAccordionComponent(4, 2, 0, opened))
   await checkAccordionState(opened.value, ['item-1', 'item-4'], ['item-2', 'item-3'])
 
-  const accTrigger2 = screen.getByRole('button', { name: `Open accordion item item-2` })
-  const accTrigger4 = screen.getByRole('button', { name: `Open accordion item item-4` })
+  const accTrigger2 = screen.getByRole('button', { name: `Toggle accordion item item-2` })
+  const accTrigger4 = screen.getByRole('button', { name: `Toggle accordion item item-4` })
 
   await accTrigger2.click() // open item 2
   await checkAccordionState(opened.value, ['item-1', 'item-4', 'item-2'], ['item-3'])
@@ -131,7 +131,7 @@ test('Accordion wich ignores disabled item', async () => {
   const opened = ref<string[]>(['item-1'])
   render(createAccordionComponent(4, 1, 1, opened))
 
-  const accTrigger3 = screen.getByRole('button', { name: `Open accordion item item-3` })
+  const accTrigger3 = screen.getByRole('button', { name: `Toggle accordion item item-3` })
 
   await accTrigger3.click() // open item-3 => disabled, should be ignored
 

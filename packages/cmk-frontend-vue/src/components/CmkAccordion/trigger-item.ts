@@ -14,3 +14,13 @@ export function getInjectedTriggerItem(): (id: string) => void {
   }
   return triggerItem
 }
+
+export const expandedItemKey = Symbol() as InjectionKey<(id: string) => boolean>
+
+export function getIsItemExpandedCallback(): (id: string) => boolean {
+  const expandedItem = inject(expandedItemKey)
+  if (expandedItem === undefined) {
+    throw Error('can only be used inside accordion context')
+  }
+  return expandedItem
+}

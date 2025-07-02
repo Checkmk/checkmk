@@ -137,13 +137,14 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
       v-for="item in items"
       :key="item.id"
       :value="item.id"
+      :title="item.header.title"
       :disabled="item.disabled"
     >
       <template #header>
         <CmkIcon :name="item.header.icon.name" class="demo-accordion-header-icon"></CmkIcon>
-        <h2 class="demo-accordion-header-title">
+        <span class="demo-accordion-header-title">
           {{ item.header.title }}
-        </h2>
+        </span>
       </template>
       <template #content>
         <div v-if="item.id === 'item-1'" class="additional-div">

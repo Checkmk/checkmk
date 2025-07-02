@@ -17,7 +17,7 @@ tiberius = { version = "0.12.3", features = [
 # need to compile OpenSSL. See:
 # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
 # https://github.com/rust-cross/rust-musl-cross/issues/44
-openssl = { version = "0.10.68", features = ["vendored"] }
+openssl = { version = "0.10", features = ["vendored"] }
 tokio = { version = "1.42.0", features = [
   "full",
   "rt",

@@ -1,5 +1,5 @@
 {
-  "checksum": "0272c622d90191594e4afaac3aa5ff08be55a4a090fccc71a960e9aa2a259499",
+  "checksum": "8a5990ea7eb6f5af475c018ecd0a0a86c3bd9da2d0d5fa4a9de20b591a3fd6a5",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4123,7 +4123,7 @@
               "target": "nix"
             },
             {
-              "id": "openssl 0.10.71",
+              "id": "openssl 0.10.73",
               "target": "openssl"
             },
             {
@@ -4167,7 +4167,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -5953,7 +5953,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -8096,7 +8096,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -8788,7 +8788,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -8873,7 +8873,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -8950,7 +8950,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -9049,7 +9049,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -11697,7 +11697,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.71",
+              "id": "openssl 0.10.73",
               "target": "openssl"
             },
             {
@@ -11705,7 +11705,7 @@
               "target": "tiberius"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -11805,7 +11805,7 @@
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.71",
+                "id": "openssl 0.10.73",
                 "target": "openssl"
               },
               {
@@ -11813,7 +11813,7 @@
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.106",
+                "id": "openssl-sys 0.9.109",
                 "target": "openssl_sys"
               }
             ],
@@ -11860,7 +11860,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.106",
+                "id": "openssl-sys 0.9.109",
                 "target": "openssl_sys"
               }
             ]
@@ -13806,14 +13806,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.71": {
+    "openssl 0.10.73": {
       "name": "openssl",
-      "version": "0.10.71",
+      "version": "0.10.73",
       "package_url": "https://github.com/sfackler/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.71/download",
-          "sha256": "5e14130c6a98cd258fdcb0fb6d744152343ff729cbfcb28c656a9d12b999fbcd"
+          "url": "https://static.crates.io/crates/openssl/0.10.73/download",
+          "sha256": "8505734d46c8ab1e19a1dce3aef597ad87dcb4c37e7188231769bd6bd51cebf8"
         }
       },
       "targets": [
@@ -13877,11 +13877,11 @@
               "target": "once_cell"
             },
             {
-              "id": "openssl 0.10.71",
+              "id": "openssl 0.10.73",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.106",
+              "id": "openssl-sys 0.9.109",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -13898,7 +13898,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.71"
+        "version": "0.10.73"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -13910,7 +13910,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.106",
+              "id": "openssl-sys 0.9.109",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -14074,14 +14074,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.106": {
+    "openssl-sys 0.9.109": {
       "name": "openssl-sys",
-      "version": "0.9.106",
+      "version": "0.9.109",
       "package_url": "https://github.com/sfackler/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.106/download",
-          "sha256": "8bb61ea9811cc39e3c2069f40b8b8e2e70d8569b361f879786cc7ed48b777cdd"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.109/download",
+          "sha256": "90096e2e47630d78b7d1c20952dc621f957103f8bc2c8359ec81290d75238571"
         }
       },
       "targets": [
@@ -14135,7 +14135,7 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.106",
+              "id": "openssl-sys 0.9.109",
               "target": "build_script_main"
             }
           ],
@@ -14148,7 +14148,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.106"
+        "version": "0.9.109"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -15536,7 +15536,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -15712,7 +15712,7 @@
                 "target": "once_cell"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -17434,7 +17434,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.44.0",
+                "id": "tokio 1.45.0",
                 "target": "tokio"
               },
               {
@@ -19324,7 +19324,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -19729,7 +19729,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -22128,7 +22128,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -22654,7 +22654,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -23035,14 +23035,14 @@
       ],
       "license_file": "LICENSE-APACHE.md"
     },
-    "tokio 1.44.0": {
+    "tokio 1.45.0": {
       "name": "tokio",
-      "version": "1.44.0",
+      "version": "1.45.0",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.44.0/download",
-          "sha256": "9975ea0f48b5aa3972bf2d888c238182458437cc2a19374b81b25cdf1023fb3a"
+          "url": "https://static.crates.io/crates/tokio/1.45.0/download",
+          "sha256": "2513ca694ef9ede0fb23fe71a4ee4107cb102b9dc1930f6d0fd77aae068ae165"
         }
       },
       "targets": [
@@ -23533,7 +23533,7 @@
           ],
           "selects": {}
         },
-        "version": "1.44.0"
+        "version": "1.45.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -23632,7 +23632,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             }
           ],
@@ -23691,7 +23691,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             }
           ],
@@ -23896,7 +23896,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             }
           ],
@@ -24166,7 +24166,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.44.0",
+              "id": "tokio 1.45.0",
               "target": "tokio"
             },
             {
@@ -26914,8 +26914,6 @@
             "Win32_Graphics_Dwm",
             "Win32_Graphics_Gdi",
             "Win32_Media",
-            "Win32_NetworkManagement",
-            "Win32_NetworkManagement_IpHelper",
             "Win32_Networking",
             "Win32_Networking_WinSock",
             "Win32_Security",
@@ -26925,8 +26923,6 @@
             "Win32_System_Com",
             "Win32_System_Com_StructuredStorage",
             "Win32_System_Console",
-            "Win32_System_Diagnostics",
-            "Win32_System_Diagnostics_Debug",
             "Win32_System_IO",
             "Win32_System_LibraryLoader",
             "Win32_System_Ole",
@@ -27008,6 +27004,8 @@
             "Wdk_Storage_FileSystem",
             "Win32",
             "Win32_Foundation",
+            "Win32_NetworkManagement",
+            "Win32_NetworkManagement_IpHelper",
             "Win32_Networking",
             "Win32_Networking_WinSock",
             "Win32_Security",
@@ -27019,6 +27017,8 @@
             "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Console",
+            "Win32_System_Diagnostics",
+            "Win32_System_Diagnostics_Debug",
             "Win32_System_IO",
             "Win32_System_LibraryLoader",
             "Win32_System_Memory",
@@ -30996,7 +30996,7 @@
     "mail_slot 0.1.3",
     "nix 0.29.0",
     "odbc-api 10.2.0",
-    "openssl 0.10.71",
+    "openssl 0.10.73",
     "os_info 3.10.0",
     "rand 0.8.5",
     "reqwest 0.12.12",
@@ -31008,7 +31008,7 @@
     "serde_with 3.12.0",
     "socket2 0.5.8",
     "tiberius 0.12.3",
-    "tokio 1.44.0",
+    "tokio 1.45.0",
     "tokio-rustls 0.26.2",
     "tokio-util 0.7.13",
     "toml 0.8.20",

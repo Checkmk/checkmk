@@ -14,10 +14,10 @@ const propsCva = cva('', {
       large: 'large'
     },
     color: {
-      default: 'cmk-badge-default',
-      success: 'cmk-badge-success',
-      warning: 'cmk-badge-warning',
-      danger: 'cmk-badge-danger'
+      default: 'cmk-chip-default',
+      success: 'cmk-chip-success',
+      warning: 'cmk-chip-warning',
+      danger: 'cmk-chip-danger'
     }
   },
   defaultVariants: {
@@ -46,7 +46,7 @@ defineProps<CmkChipProps>()
 
 <style scoped>
 .cmk-chip {
-  border-radius: 99999px;
+  border-radius: 4px;
   border: 1px solid var(--custom-scroll-bar-thumb-color);
   color: var(--custom-scroll-bar-thumb-color);
   text-align: center;
@@ -68,20 +68,21 @@ defineProps<CmkChipProps>()
   padding: 5px 12px;
 }
 
-.cmk-badge-danger {
+.cmk-chip-danger {
   background: var(--color-danger);
   border-color: var(--color-danger);
   color: var(--white);
 }
 
-.cmk-badge-warning {
+.cmk-chip-warning {
   background: var(--color-warning);
   border-color: var(--color-warning);
 }
 
-.cmk-badge-success {
+.cmk-chip-success {
   background: var(--success);
   border-color: var(--success);
   color: var(--black);
+  padding: 5px 12px;
 }
 </style>

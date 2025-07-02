@@ -3396,8 +3396,6 @@ class ConfigCache:
 
     def get_cluster_nodes_for_config(self, host_name: HostName) -> Sequence[HostName]:
         nodes = self.nodes(host_name)
-        if not nodes:
-            return ()
 
         ip_lookup_config = self.ip_lookup_config()
         ip_stack_config = ip_lookup_config.ip_stack_config(host_name)

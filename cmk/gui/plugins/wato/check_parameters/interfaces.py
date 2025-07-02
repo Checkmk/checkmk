@@ -160,7 +160,7 @@ def _vs_single_discovery():
                             _vs_labels_conditions(),
                         )
                     ],
-                    optional_keys=["labels"],
+                    optional_keys=["labels", "labels_conditions"],
                 ),
             ),
             (

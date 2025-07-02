@@ -144,8 +144,22 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
         def safe_branch_name = versioning.safe_branch_name();
 
-        container("ubuntu-2404-${safe_branch_name}-latest") {
-            println("'inside_container' is using k8s container 'ubuntu-2404-${safe_branch_name}-latest'");
+        // accessing ID property fails on no docker object, like NULL or empty string
+        def tmp_given_image = args.image ?: "";
+        println("Given image: ${tmp_given_image}");
+        if (tmp_given_image == "") {
+            // "ubuntu-2404-master-latest" is part of "klausi-package-builder-base" pod template
+            tmp_given_image = "ubuntu-2404-${safe_branch_name}-latest";
+            // tmp_given_image = docker_reference_image();
+        } else {
+            // docker.image() object is given
+            // pod template has been extended with that docker image
+            // the container name is "this-distro-container"
+            tmp_given_image = "this-distro-container";
+        }
+
+        container(tmp_given_image) {
+            println("'inside_container' is using k8s container '${tmp_given_image}', ${POD_CONTAINER}, ${POD_LABEL}");
             body();
         }
     }

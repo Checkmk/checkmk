@@ -21307,6 +21307,10 @@ msgstr "Ne surveillez pas les VMs de type placeholder"
 msgid "Do not monitor service"
 msgstr "Ne pas surveiller"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Ne pas surveiller"
+
 msgid "Do not offer this action as a command on open events"
 msgstr ""
 "Ne proposez pas cette action comme une commande sur des événements ouverts"
@@ -24648,6 +24652,10 @@ msgstr "Étiquettes explicites"
 msgid "Explicit list of IP addresses"
 msgstr "Liste explicite d'adresses IP"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Liste explicite d'adresses IP"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr ""
 "Mise en correspondance explicite des codes de sortie d'emploi avec les états"
@@ -24705,6 +24713,10 @@ msgid "Explicitly specified groups"
 msgstr "les groupes explicitement spécifiés"
 
 msgid "Explicitly specify resources"
+msgstr "Spécifier explicitement les ressources"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Spécifier explicitement les ressources"
 
 msgid "Export"
@@ -34558,6 +34570,10 @@ msgstr ""
 "interprétées à tort en Celsius. Avec ce paramètre, vous pouvez forcer la "
 "lecture du capteur à être interprétée comme personnalisée. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Intermission"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -42559,6 +42575,10 @@ msgstr "Surveiller toutes les instances trouvées"
 msgid "Monitor all instances found"
 msgstr "Surveiller toutes les instances trouvées"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Abonnements aux événements"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
 "Surveillez et représentez graphiquement les voies, si le port a de multiples"
@@ -44659,9 +44679,6 @@ msgstr "Depuis le magasin de mots de passe"
 #, fuzzy
 msgid "No password selected"
 msgstr "Depuis le magasin de mots de passe"
-
-msgid "No pending changes"
-msgstr "Aucun changement en cours"
 
 msgid "No pending changes."
 msgstr "Aucun changement en cours."
@@ -57848,6 +57865,9 @@ msgstr ""
 "de cette sélection, les noms des attributs utilisés dans les requêtes LDAP "
 "seront modifiés."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Sélectionnez le type d'élément de contenu"
 
@@ -63657,12 +63677,13 @@ msgstr "Sous-réseau par groupes de sous-réseau DB"
 msgid "Subscription"
 msgstr "Abonnement"
 
-msgid "Subscription ID"
-msgstr "ID de l'abonnement"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activer le contrôle (désactivé : ignorer l'état de l'abonnement)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Régions à surveiller"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -68053,15 +68074,6 @@ msgid ""
 "please apply a valid license or reduce the number of services and restart "
 "the monitoring core"
 msgstr ""
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"Le noyau de surveillance du site cible '%s' a la version '%s'. Cette version "
-"ne prend pas en charge la récupération des informations du fichier journal. "
-"Veuillez passer à une version plus récente."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -90746,6 +90758,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "No pending changes"
+#~ msgstr "Aucun changement en cours"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "Le noyau de surveillance du site cible '%s' a la version '%s'. Cette "
+#~ "version ne prend pas en charge la récupération des informations du "
+#~ "fichier journal. Veuillez passer à une version plus récente."
+
+#~ msgid "Subscription ID"
+#~ msgstr "ID de l'abonnement"
 
 #~ msgid "At least one selection is missing."
 #~ msgstr "Il manque au moins une sélection."

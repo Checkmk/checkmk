@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-01 01:35+0000\n"
+"PO-Revision-Date: 2025-07-01 18:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -17837,8 +17837,8 @@ msgid ""
 "to the metric name in the service."
 msgstr ""
 "Legen Sie hier den zu überwachenden Metriknamen als exakten Match fest. "
-"Metriknamen werden aus <a href='https://checkmk.com/werk/18209"
-"'>OpenTelemetry-Datenpunktattributen</a> oder dem <a href='https://"
+"Metriknamen werden aus <a href='https://checkmk.com/werk/"
+"18209'>OpenTelemetry-Datenpunktattributen</a> oder dem <a href='https://"
 "checkmk.com/werk/18249'>OpenTelemetry-Metriknamen</a> und der <a "
 "href='https://checkmk.com/werk/18249'>OpenTelemetry-Metrikeinheit</a> "
 "berechnet. Dies muss ein exakter Match mit dem Metriknamen im Service sein."
@@ -20395,6 +20395,10 @@ msgstr "Platzhalter-VMs nicht überwachen"
 
 msgid "Do not monitor service"
 msgstr "Service nicht überwachen"
+
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Grenzwerte nicht überwachen"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Aktion nicht als Befehl für offene Ereignisse anbieten"
@@ -23676,6 +23680,10 @@ msgstr "Explizite Labels"
 msgid "Explicit list of IP addresses"
 msgstr "Explizite Liste von IP-Adressen"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Explizite Liste von IP-Adressen"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Explizite Zuordnung von Job-Exit-Codes zu Zuständen"
 
@@ -23729,6 +23737,10 @@ msgid "Explicitly specified groups"
 msgstr "Explizit spezifizierte Gruppen"
 
 msgid "Explicitly specify resources"
+msgstr "Ressourcen explizit auflisten"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Ressourcen explizit auflisten"
 
 msgid "Export"
@@ -24022,8 +24034,8 @@ msgstr "Fehlgeschlagene Standortanfragen"
 #, python-format
 msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
-"Fehlgeschlagene Bedingung des Host-Merkmals (Host-Merkmale: %s, erforderlich:"
-" %s)"
+"Fehlgeschlagene Bedingung des Host-Merkmals (Host-Merkmale: %s, "
+"erforderlich: %s)"
 
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
@@ -26700,7 +26712,7 @@ msgstr ""
 "dürfen"
 
 msgid "Groups and/or users in format Domain\\Name"
-msgstr "Gruppen und/oder Benutzer im Format Domain/Name"
+msgstr "Gruppen und/oder Benutzer im Format Domain\\Name"
 
 msgid "Groups on cluster"
 msgstr "Gruppen auf einem Cluster"
@@ -33011,6 +33023,10 @@ msgstr ""
 "falsch und der Sensor meldet Werte in Fahrenheit, die eigentlich in Celsius "
 "sind. Mit dieser Einstellungen können Sie eine Interpretation einer "
 "bestimmten Einheit erzwingen. "
+
+#, fuzzy
+msgid "In termination"
+msgstr "Unterbrechung"
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -40672,6 +40688,10 @@ msgstr "Alle gefundenen und manuell hinzugefügten Instanzen überwachen"
 msgid "Monitor all instances found"
 msgstr "Alle gefundenen Instanzen überwachen"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Ereignis-Subskriptionen"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
 
@@ -42631,9 +42651,6 @@ msgstr "Kein Passwort angegeben"
 
 msgid "No password selected"
 msgstr "Es wurde kein Passwort ausgewählt"
-
-msgid "No pending changes"
-msgstr "Keine ausstehende Änderungen"
 
 msgid "No pending changes."
 msgstr "Keine ausstehenden Änderungen."
@@ -55005,6 +55022,9 @@ msgstr ""
 "Wählen Sie die Software auf der das LDAP Verzeichnis basiert. Abhängig von "
 "der Auswahl werden z.B. Attributnamen in LDAP Anfragen geändert."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Wählen Sie den Typ des Berichtelements"
 
@@ -60601,11 +60621,12 @@ msgstr "Subnetz pro DB-Subnetzgruppen"
 msgid "Subscription"
 msgstr "Subskription"
 
-msgid "Subscription ID"
-msgstr "Subskriptions-ID"
-
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Zu überwachende Regionen"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -64982,15 +65003,6 @@ msgstr ""
 "überschritten haben. In diesem Fall verwenden Sie bitte eine gültige Lizenz "
 "oder reduzieren Sie die Anzahl der Services und starten Sie den Monitoring-"
 "Kern neu"
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"Der Monitoring-Kern der Zielinstanz '%s' hat die Version '%s'. Diese "
-"unterstützt das Abrufen von Log-Dateiinformationen nicht. Bitte "
-"aktualisieren Sie auf eine neuere Version."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -86727,6 +86739,22 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "No pending changes"
+#~ msgstr "Keine ausstehende Änderungen"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "Der Monitoring-Kern der Zielinstanz '%s' hat die Version '%s'. Diese "
+#~ "unterstützt das Abrufen von Log-Dateiinformationen nicht. Bitte "
+#~ "aktualisieren Sie auf eine neuere Version."
+
+#~ msgid "Subscription ID"
+#~ msgstr "Subskriptions-ID"
 
 #~ msgid "At least one selection is missing."
 #~ msgstr "Mindestens eine Auswahl fehlt."

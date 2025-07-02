@@ -21155,6 +21155,10 @@ msgstr "Geen placeholder VM's monitoren"
 msgid "Do not monitor service"
 msgstr "Controleer niet"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Controleer niet"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Bied deze actie niet aan als een commando bij open gebeurtenissen"
 
@@ -24460,6 +24464,10 @@ msgstr "Expliciete etiketten"
 msgid "Explicit list of IP addresses"
 msgstr "Expliciete lijst van IP-adressen"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Expliciete lijst van IP-adressen"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Expliciete koppeling van de exitcodes van banen aan staten"
 
@@ -24516,6 +24524,10 @@ msgid "Explicitly specified groups"
 msgstr "uitdrukkelijk gespecificeerde groepen"
 
 msgid "Explicitly specify resources"
+msgstr "Expliciet middelen specificeren"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Expliciet middelen specificeren"
 
 msgid "Export"
@@ -34278,6 +34290,10 @@ msgstr ""
 "instelling kunt u forceren dat de uitlezing van de sensor wordt "
 "geïnterpreteerd als aangepast. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Pauze"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -42238,6 +42254,10 @@ msgstr "Controleer alle gevonden gevallen"
 msgid "Monitor all instances found"
 msgstr "Controleer alle gevonden gevallen"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Abonnementen op evenementen"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitor en maak een grafiek van de lanes, als de poort meerdere"
 
@@ -44322,9 +44342,6 @@ msgstr "Van wachtwoord opslag"
 #, fuzzy
 msgid "No password selected"
 msgstr "Van wachtwoord opslag"
-
-msgid "No pending changes"
-msgstr "Geen hangende wijzigingen"
 
 #, fuzzy
 msgid "No pending changes."
@@ -57368,6 +57385,9 @@ msgstr ""
 "de selectie worden bijv. de attribuutnamen die in LDAP-query's worden "
 "gebruikt, gewijzigd."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Selecteer het type inhoudselement"
 
@@ -63123,12 +63143,13 @@ msgstr "Subnet per DB subnet groepen"
 msgid "Subscription"
 msgstr "Abonnement"
 
-msgid "Subscription ID"
-msgstr "Abonnement ID"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Te controleren regio's"
 
 msgid "Substitution"
 msgstr "Substitutie"
@@ -67478,15 +67499,6 @@ msgid ""
 "please apply a valid license or reduce the number of services and restart "
 "the monitoring core"
 msgstr ""
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"De monitoring core van de doelsite '%s' heeft de versie '%s'. Die "
-"ondersteunt het ophalen van logfile informatie niet. Gelieve te upgraden "
-"naar een nieuwere versie."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -89931,6 +89943,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "No pending changes"
+#~ msgstr "Geen hangende wijzigingen"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "De monitoring core van de doelsite '%s' heeft de versie '%s'. Die "
+#~ "ondersteunt het ophalen van logfile informatie niet. Gelieve te upgraden "
+#~ "naar een nieuwere versie."
+
+#~ msgid "Subscription ID"
+#~ msgstr "Abonnement ID"
 
 #, fuzzy
 #~ msgid "At least one selection is missing."

@@ -21156,6 +21156,10 @@ msgstr "Não monitorizar VMs de espaço reservado"
 msgid "Do not monitor service"
 msgstr "Não monitorar"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Não monitorar"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Não ofereça esta ação como um comando sobre eventos abertos"
 
@@ -24451,6 +24455,10 @@ msgstr "Etiquetas explícitas"
 msgid "Explicit list of IP addresses"
 msgstr "Lista explícita de endereços IP"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Lista explícita de endereços IP"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Mapeamento explícito dos códigos de saída do trabalho para os estados"
 
@@ -24507,6 +24515,10 @@ msgid "Explicitly specified groups"
 msgstr "grupos expressamente especificados"
 
 msgid "Explicitly specify resources"
+msgstr "Especificar explicitamente os recursos"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Especificar explicitamente os recursos"
 
 msgid "Export"
@@ -34272,6 +34284,10 @@ msgstr ""
 "interpretados como Celsius. Com este ajuste você pode forçar a leitura do "
 "sensor a ser interpretado como personalizado. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Intervalo"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -42230,6 +42246,10 @@ msgstr "Monitore todas as instâncias encontradas"
 msgid "Monitor all instances found"
 msgstr "Monitore todas as instâncias encontradas"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Assinaturas de eventos"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitore e faça um gráfico das pistas, se a porta tiver múltiplos"
 
@@ -44309,9 +44329,6 @@ msgstr "Da loja de senhas"
 #, fuzzy
 msgid "No password selected"
 msgstr "Da loja de senhas"
-
-msgid "No pending changes"
-msgstr "Sem alterações pendentes"
 
 msgid "No pending changes."
 msgstr "Não há alterações pendentes."
@@ -57356,6 +57373,9 @@ msgstr ""
 "seleção, por exemplo, os nomes dos atributos utilizados nas consultas LDAP "
 "serão alterados."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Selecione o tipo de elemento de conteúdo"
 
@@ -63115,12 +63135,13 @@ msgstr "Subrede por grupos de sub-rede de BD"
 msgid "Subscription"
 msgstr "Assinatura"
 
-msgid "Subscription ID"
-msgstr "ID da Subscrição"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Ativar Verificação (desativar: ignorar status de assinatura)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Regiões a monitorizar"
 
 msgid "Substitution"
 msgstr "Substituição"
@@ -67451,15 +67472,6 @@ msgid ""
 "please apply a valid license or reduce the number of services and restart "
 "the monitoring core"
 msgstr ""
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"O núcleo de monitorização do site alvo '%s' tem a versão '%s'. Isso não "
-"suporta a busca de informações do arquivo de log. Por favor, atualize para "
-"uma versão mais recente."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -89823,6 +89835,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "No pending changes"
+#~ msgstr "Sem alterações pendentes"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "O núcleo de monitorização do site alvo '%s' tem a versão '%s'. Isso não "
+#~ "suporta a busca de informações do arquivo de log. Por favor, atualize "
+#~ "para uma versão mais recente."
+
+#~ msgid "Subscription ID"
+#~ msgstr "ID da Subscrição"
 
 #, fuzzy
 #~ msgid "At least one selection is missing."

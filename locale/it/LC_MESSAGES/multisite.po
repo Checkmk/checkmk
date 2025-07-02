@@ -20984,6 +20984,10 @@ msgstr "Non monitorare le macchine virtuali segnaposto"
 msgid "Do not monitor service"
 msgstr "Non monitorare"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Non monitorare"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Non offrire questa azione come comando su eventi aperti"
 
@@ -24258,6 +24262,10 @@ msgstr "Etichette esplicite"
 msgid "Explicit list of IP addresses"
 msgstr "Elenco esplicito di indirizzi IP"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Elenco esplicito di indirizzi IP"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Mappatura esplicita dei codici di uscita dal lavoro agli stati"
 
@@ -24314,6 +24322,10 @@ msgid "Explicitly specified groups"
 msgstr "gruppi esplicitamente specificati"
 
 msgid "Explicitly specify resources"
+msgstr "Specificare esplicitamente le risorse"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Specificare esplicitamente le risorse"
 
 msgid "Export"
@@ -34008,6 +34020,10 @@ msgstr ""
 "interpretati come Celsius. Con questa impostazione è possibile forzare la "
 "lettura del sensore ad essere interpretata come personalizzata. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Intervallo"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -41886,6 +41902,10 @@ msgstr "Monitorare tutte le istanze rilevate e aggiunte manualmente"
 msgid "Monitor all instances found"
 msgstr "Controlla tutte le istanze trovate"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Iscrizioni agli eventi"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitorare e rappresentare graficamente le corsie, se la porta ha più"
 
@@ -43953,9 +43973,6 @@ msgstr "Dal negozio di password"
 #, fuzzy
 msgid "No password selected"
 msgstr "Dal negozio di password"
-
-msgid "No pending changes"
-msgstr "Nessun cambiamento in sospeso"
 
 msgid "No pending changes."
 msgstr "Nessuna modifica in corso."
@@ -56904,6 +56921,9 @@ msgstr ""
 "selezione, ad esempio, i nomi degli attributi usati nelle interrogazioni "
 "LDAP saranno modificati."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Seleziona il tipo di elemento di contenuto"
 
@@ -62623,12 +62643,13 @@ msgstr "Subnet per gruppi di subnet DB"
 msgid "Subscription"
 msgstr "Abbonamento"
 
-msgid "Subscription ID"
-msgstr "ID dell'abbonamento"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Attivare il controllo (off: ignora lo stato dell'abbonamento)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Regioni da monitorare"
 
 msgid "Substitution"
 msgstr "Sostituzione"
@@ -66929,15 +66950,6 @@ msgid ""
 "please apply a valid license or reduce the number of services and restart "
 "the monitoring core"
 msgstr ""
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"Il nucleo di monitoraggio del sito di destinazione '%s' ha la versione '%s'. "
-"Questa non supporta il recupero delle informazioni del file di log. Si prega "
-"di aggiornare a una versione più recente."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -89168,6 +89180,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "No pending changes"
+#~ msgstr "Nessun cambiamento in sospeso"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "Il nucleo di monitoraggio del sito di destinazione '%s' ha la versione "
+#~ "'%s'. Questa non supporta il recupero delle informazioni del file di log. "
+#~ "Si prega di aggiornare a una versione più recente."
+
+#~ msgid "Subscription ID"
+#~ msgstr "ID dell'abbonamento"
 
 #, fuzzy
 #~ msgid "At least one selection is missing."

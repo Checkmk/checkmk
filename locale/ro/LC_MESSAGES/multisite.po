@@ -21194,6 +21194,10 @@ msgstr "Nu monitorizați mașinile virtuale de tip placeholder"
 msgid "Do not monitor service"
 msgstr "Nu monitorizați"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Nu monitorizați"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Nu oferiți această acțiune ca o comandă pentru evenimentele deschise."
 
@@ -24527,6 +24531,10 @@ msgstr "Etichete explicite"
 msgid "Explicit list of IP addresses"
 msgstr "Lista explicită de adrese IP"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "Lista explicită de adrese IP"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr ""
 "Corelarea explicită a codurilor de ieșire de la locul de muncă cu statele"
@@ -24584,6 +24592,10 @@ msgid "Explicitly specified groups"
 msgstr "grupuri specificate în mod explicit"
 
 msgid "Explicitly specify resources"
+msgstr "Specificarea explicită a resurselor"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Specificarea explicită a resurselor"
 
 msgid "Export"
@@ -34376,6 +34388,10 @@ msgstr ""
 "interpretate greșit ca fiind Celsius. Cu această setare puteți forța ca "
 "citirea senzorului să fie interpretată ca fiind personalizată. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Pauză"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -42306,6 +42322,10 @@ msgstr "Monitorizarea tuturor instanțelor detectate și adăugate manual"
 msgid "Monitor all instances found"
 msgstr "Monitorizarea tuturor instanțelor găsite"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Abonamente la evenimente"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
 "Monitorizați și reprezentați grafic benzile, dacă portul are mai multe benzi"
@@ -44412,9 +44432,6 @@ msgstr "Din magazinul de parole"
 #, fuzzy
 msgid "No password selected"
 msgstr "Din magazinul de parole"
-
-msgid "No pending changes"
-msgstr "Nu există modificări în curs de desfășurare"
 
 msgid "No pending changes."
 msgstr "Nu există modificări în așteptare."
@@ -57478,6 +57495,9 @@ msgstr ""
 "selecție, de exemplu, numele atributelor utilizate în interogările LDAP vor "
 "fi modificate."
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "Selectați tipul de element de conținut"
 
@@ -63310,12 +63330,13 @@ msgstr "Subnet per grupuri de sub-rețele DB"
 msgid "Subscription"
 msgstr "Abonament"
 
-msgid "Subscription ID"
-msgstr "ID-ul abonamentului"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Regiuni de monitorizat"
 
 msgid "Substitution"
 msgstr "Substituție"
@@ -67663,15 +67684,6 @@ msgstr ""
 "limita de 750 de servicii. În acest caz, vă rugăm să aplicați o licență "
 "valabilă sau să reduceți numărul de servicii și să reporniți nucleul de "
 "monitorizare"
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"Nucleul de monitorizare al site-ului țintă '%s' are versiunea '%s'. Aceasta "
-"nu acceptă preluarea informațiilor din fișierul jurnal. Vă rugăm să treceți "
-"la o versiune mai nouă."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -90152,6 +90164,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "No pending changes"
+#~ msgstr "Nu există modificări în curs de desfășurare"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "Nucleul de monitorizare al site-ului țintă '%s' are versiunea '%s'. "
+#~ "Aceasta nu acceptă preluarea informațiilor din fișierul jurnal. Vă rugăm "
+#~ "să treceți la o versiune mai nouă."
+
+#~ msgid "Subscription ID"
+#~ msgstr "ID-ul abonamentului"
 
 #, fuzzy
 #~ msgid "At least one selection is missing."

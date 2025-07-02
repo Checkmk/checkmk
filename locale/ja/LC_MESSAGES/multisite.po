@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-10 17:39+0000\n"
+"PO-Revision-Date: 2025-07-01 18:35+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.0.2\n"
+"X-Generator: Weblate 5.12.2\n"
 
 msgid " "
 msgstr " "
@@ -1288,6 +1288,7 @@ msgstr "< 削除"
 msgid "<< Remove all"
 msgstr "<< すべて削除"
 
+#, fuzzy
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -3294,6 +3295,7 @@ msgstr "承認作成者"
 msgid "Acknowledgement comment"
 msgstr "承認コメント"
 
+#, fuzzy
 msgid "Acknowledgement of problem"
 msgstr "問題の確認"
 
@@ -3738,7 +3740,7 @@ msgid "Add Group"
 msgstr "グループを追加"
 
 msgid "Add Instance"
-msgstr "インスタンスを追加"
+msgstr "インスタンス追加"
 
 msgid "Add LDAP connection"
 msgstr "LDAP接続を追加します"
@@ -6245,7 +6247,7 @@ msgstr "このグループのエイリアスまたは説明。"
 
 #, python-format
 msgid "An connection error occurred: %s"
-msgstr "接続エラーが発生しました：%s"
+msgstr "接続エラーが発生しました: %s"
 
 msgid "An empty value is not allowed here"
 msgstr "ここでは空の値は許可されていません"
@@ -6303,7 +6305,7 @@ msgid ""
 "open the <a href=\"%s\">crash report page</a> and use the form for reporting "
 "the problem."
 msgstr ""
-"リクエストの処理中に内部エラーが発生しました。(Crash ID: %s)この問題をCheckmk"
+"リクエストの処理中に内部エラーが発生しました(Crash ID: %s)。この問題をCheckmk"
 "チームに報告して、この問題の修正に役立てることができます。 <a href=\"%s\">ク"
 "ラッシュレポートページ</a>を開き、フォームを使用して問題を報告してください。"
 
@@ -6313,7 +6315,7 @@ msgid ""
 "can report this issue to your Checkmk administrator. Detailed information "
 "can be found on the crash report page or in <tt>var/log/web.log</tt>."
 msgstr ""
-"リクエストの処理中に内部エラーが発生しました。(Crash ID: %s)この問題は、"
+"リクエストの処理中に内部エラーが発生しました(Crash ID: %s)。この問題は、"
 "Checkmk管理者に報告できます。詳細情報は、クラッシュレポートページまたは"
 "<tt>var/log/web.log</tt>にあります。"
 
@@ -8586,37 +8588,30 @@ msgstr "表示に戻る"
 msgid "Back to view with checkboxes reset"
 msgstr "チェックボックスをリセットした画面に戻る"
 
-#, fuzzy
 msgid "Backend Conn. failures"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続の不具合"
 
 #, fuzzy
 msgid "Backend Conn. not attempted"
 msgstr "バックエンド接続 %s"
 
-#, fuzzy
 msgid "Backend Conn. recycles"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続のリサイクル"
 
-#, fuzzy
 msgid "Backend Conn. requests"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続のリクエスト"
 
-#, fuzzy
 msgid "Backend Conn. retry"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続のリトライ"
 
-#, fuzzy
 msgid "Backend Conn. reuses"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続のリユース"
 
-#, fuzzy
 msgid "Backend Conn. success"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続の成功"
 
-#, fuzzy
 msgid "Backend Conn. too many"
-msgstr "バックエンド接続 %s"
+msgstr "バックエンド接続が多すぎます"
 
 #, fuzzy
 msgid "Backend Conn. was closed"
@@ -9289,9 +9284,8 @@ msgstr "一括通知を開く"
 msgid "Bulk notifications"
 msgstr "一括通知を開く"
 
-#, fuzzy
 msgid "Bulk outside of the timeperiod"
-msgstr "また 期間外のバルク"
+msgstr "期間外の一括"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "明示的な属性の一括削除"
@@ -9986,15 +9980,14 @@ msgstr ""
 "デフォルトでは、エージェントはいくつかのよく利用されている場所に基づいて動的"
 "に保存場所を決定します。代わりにフルパスを指定することができます。"
 
-#, fuzzy
 msgid ""
 "By default, the controller ignores proxy servers configured on the target "
 "system and connects directly (e.g. when querying the agent receiver port "
 "from the Checkmk REST API)."
 msgstr ""
 "デフォルトでは、コントローラーはターゲットシステムで設定されたプロキシサーバ"
-"を無視し、直接接続します (Checkmk REST API からエージェント受信ポートを問い合"
-"わせる場合など)。"
+"を無視し、直接接続します (例 Checkmk REST API からエージェント受信ポートを問"
+"い合わせる場合など)。"
 
 #, fuzzy
 msgid ""
@@ -14018,7 +14011,7 @@ msgstr ""
 "ミュニティを構成することも可能です。ホストの作成時にコミュニティを設定する"
 "と、ルールで定義されたコミュニティが上書きされます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Configure the community to be used when contacting this host via SNMP v1/v2 "
 "or v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
@@ -14028,9 +14021,11 @@ msgid ""
 "security."
 msgstr ""
 "SNMP v1/v2またはv3を介してこのホストに接続するときに使用するコミュニティを構"
-"成できます。<a href=\"%s\">SNMPコミュニティ</a>ルールセットを使用してSNMPコ"
-"ミュニティを構成することも可能です。ホストの作成時にコミュニティを設定する"
-"と、ルールで定義されたコミュニティが上書きされます。"
+"成できます。<a href='%s'>監視対象のSNMP資格情報</a>ルールセットを使用してSNMP"
+"コミュニティを構成することも可能です。ここで明示的にコミュニティを設定する"
+"と、ルールで定義されたコミュニティが上書きされます。SNMPv1およびv2c経由の通信"
+"は暗号化されていません。よりハイレベルなセキュリティを確保するには、SNMPv3の"
+"使用も検討してください。"
 
 msgid ""
 "Configure the discovery of services monitoring network interfaces and switch "
@@ -17148,7 +17143,7 @@ msgstr ""
 "<br><br>制限なしでCheckmkを継続したい場合は、Checkmkサポートにご連絡くださ"
 "い。<br><br>敬具、あなたのCheckmkサーバー"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Dear Checkmk user,<br><br>You have %s left in your Checkmk trial period of "
 "site '%s'.<br><br>%s now to continue using Checkmk as you do today. If you "
@@ -17165,9 +17160,11 @@ msgstr ""
 "は終了します。<br><br>現在と同じようにCheckmkを使用するには、今すぐ %s を入力"
 "してください。すでにライセンスをお持ちの場合は、製品のライセンスページでライ"
 "センスの詳細を入力してください。<br><br>さもないと、試用期間終了後に自動的に"
-"ライセンス状態が「無料」に変換されます。ライセンス状態「無料」のCheckmk最大"
-"サービス制限を満たすために、サービス数を%sから%sに減らす必要があります。"
-"<br><br>敬具　Checkmk サーバー"
+"ライセンス状態が「無料」に変換されます。このライセンス状態では、ライセンス"
+"「無料」のCheckmkの最大サービス制限を満たすために、サービス数を%sから%sに減ら"
+"す必要があります。<br><br>分散監視設定では、リモートサイトは含まれないため、"
+"ローカルサイトのサービスのみがカウントされます。分散環境は、ライセンス「無"
+"料」ではご利用いただけませんのでご注意ください。敬具 Checkmk サーバー"
 
 msgid "Debug"
 msgstr "デバッグ"
@@ -17874,7 +17871,6 @@ msgstr "選択したホストを削除"
 msgid "Delete selected rules"
 msgstr "選択したルールを削除"
 
-#, fuzzy
 msgid "Delete selected rulesets"
 msgstr "選択したルールを削除"
 
@@ -20086,6 +20082,10 @@ msgstr "プレースホルダーVMsを監視しない"
 
 #, fuzzy
 msgid "Do not monitor service"
+msgstr "監視しない"
+
+#, fuzzy
+msgid "Do not monitor subscriptions"
 msgstr "監視しない"
 
 msgid "Do not offer this action as a command on open events"
@@ -23327,6 +23327,10 @@ msgstr "明示的なラベル"
 msgid "Explicit list of IP addresses"
 msgstr "IPアドレスの明示的なリスト"
 
+#, fuzzy
+msgid "Explicit list of subscription IDs"
+msgstr "IPアドレスの明示的なリスト"
+
 msgid "Explicit mapping of job exit codes to states"
 msgstr "ジョブ終了コードの状態への明示的なマッピング"
 
@@ -23382,6 +23386,10 @@ msgid "Explicitly specified groups"
 msgstr "明示的に指定されたグループ"
 
 msgid "Explicitly specify resources"
+msgstr "リソースを明示的に指定する"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "リソースを明示的に指定する"
 
 msgid "Export"
@@ -24207,6 +24215,7 @@ msgstr "フィールド名: "
 msgid "Field data size"
 msgstr "フィールドデータサイズ"
 
+#, fuzzy
 msgid "Field(s) to use as a hostname key"
 msgstr "ホスト名キーとして使用するフィールド(複数可)"
 
@@ -30447,7 +30456,7 @@ msgid "Icons and Actions"
 msgstr "%dアイコンとアクション"
 
 msgid "Ideas Portal"
-msgstr ""
+msgstr "アイディアポータル"
 
 msgid "Ident of the value"
 msgstr "値のID"
@@ -32737,6 +32746,10 @@ msgstr ""
 "まれに、センサーによって通知される単位が間違っている場合があります。たとえ"
 "ば、センサーが摂氏を誤解して華氏で値を送信します。この設定を使用すると、セン"
 "サーの読み取り値をカスタマイズされたものとして解釈するように強制できます。 "
+
+#, fuzzy
+msgid "In termination"
+msgstr "休憩"
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -40394,6 +40407,10 @@ msgstr "検出され、手動で追加されたすべてのインスタンスを
 msgid "Monitor all instances found"
 msgstr "見つかったすべてのインスタンスを監視する"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "イベントサブスクリプション"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "ポートが複数ある場合は、レーンを監視してグラフ化します"
 
@@ -42418,9 +42435,6 @@ msgstr "パスワードストアから"
 #, fuzzy
 msgid "No password selected"
 msgstr "パスワードストアから"
-
-msgid "No pending changes"
-msgstr "保留中の変更はありません"
 
 msgid "No pending changes."
 msgstr "保留中の変更はありません。"
@@ -46239,16 +46253,16 @@ msgstr ""
 "そうでない場合は、次のルールマッチのために新しいイベントを1つからカウントしま"
 "す。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
 "Checkmk in license state 'Free'."
 msgstr ""
-"そうしないと、試用期間終了後自動的にライセンス状態「無料」に変換されます。"
-"「無料」のライセンス状態Checkmkの最大サービス数を超えるため、サービス数を%sか"
-"ら%sに減らす必要があります"
+"そうしないと、試用期間終了後自動的にライセンス状態「Free」に変換されます。今"
+"のライセンス状態では、ライセンス状態「Free」のCheckmkの最大サービス数を超える"
+"ため、サービス数を%sから%sに減らす必要があります。"
 
 msgid ""
 "Otherwise, you will not be able to 'Activate changes' after your Checkmk "
@@ -48424,9 +48438,10 @@ msgid ""
 "href=\"%s\">Escape HTML in service output</a> or <a href=\"%s\">Escape HTML "
 "in host output</a> instead of <a href=\"%s\">disabling escaping globally</a>"
 msgstr ""
-"<a href=\"%s\">Escape HTML in service output</a>または<a href=\"%s\">Escape "
-"HTML in host output</a>を<a href=\"%s\">disabling escaping globally</a>の代わ"
-"りに、ホストまたはサービスルールセットに構成することを検討してください"
+"ホストまたはサービスのルールセット<a href=\"%s\">Escape HTML in service "
+"output</a>または<a href=\"%s\">Escape HTML in host output</a>を、<a "
+"href=\"%s\">disabling escaping globally</a>の代わりに、に構成することを検討し"
+"てください"
 
 #, fuzzy, python-format
 msgid "Please contact the Checkmk sales team at %s and renew your license."
@@ -50264,7 +50279,6 @@ msgstr "スキップするキュー"
 msgid "Queues to monitor"
 msgstr "監視するキュー"
 
-#, fuzzy
 msgid "Quick Setup"
 msgstr "クイックセットアップ"
 
@@ -54956,6 +54970,9 @@ msgstr ""
 "LDAPディレクトリのベースとなるソフトウェアを選択します。選択内容に応じて、"
 "LDAPクエリで使用される属性名などが変更されます。"
 
+msgid "Select the subscriptions you want to monitor."
+msgstr ""
+
 msgid "Select the type of content element"
 msgstr "コンテンツ要素のタイプを選択します"
 
@@ -57852,14 +57869,13 @@ msgstr ""
 "一部のGUI拡張機能を読み込めませんでした。これは、互換性のない拡張パッケージが"
 "原因である可能性があります。"
 
-#, fuzzy
 msgid ""
 "Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
 "instead of what is left. In this case it's possible to upturn the levels to "
 "handle this behavior"
 msgstr ""
 "一部のプリンター（例：コニカのドラムカートリッジ）では、残量ではなく、使用可"
-"能な燃料が返されます。この場合、レベルを上げて対応することが可能です"
+"能な燃料を返します。この場合、レベルを上げてこの動作を処理することが可能です"
 
 msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
@@ -57944,9 +57960,9 @@ msgid ""
 "between two bulks of PINGs being sent. Per default we send with the full "
 "possible rate"
 msgstr ""
-"一部のファイアウォールは、1ミリ秒で数千のPINGパケットを処理できません。 この"
-"設定を使用すると、送信されるPINGの2つのバルクの間に小さな待機時間を強制できま"
-"す。 デフォルトでは、可能な限りのレートで送信します"
+"一部のファイアウォールは、1ミリ秒で数千のPINGパケットを処理できないものもあり"
+"ます。 この設定により、2つのバルクのPING間の待ち時間を短くすることができま"
+"す。 デフォルトでは、可能な限りフルレートで送信します"
 
 #, fuzzy
 msgid "Some help text"
@@ -58352,10 +58368,10 @@ msgid ""
 "tt> to the end forces an excact match. Pattern use <b>regular expressions</"
 "b>. A <tt>.*</tt> will match an arbitrary text."
 msgstr ""
-"このルールが適用されるサービスパターンのリストを指定します。パターンは、対象"
-"となるサービスの<b>beginning</b>と一致必要があります。末尾に<tt>$</tt>を追加"
-"すると、完全一致が強制されます。パターンは<b>正規表現</b>を使用します。"
-"<tt>.*</tt>をつけると任意のテキストに一致します。"
+"このルールが適用されるサービスパターンのリストを指定します。パターンは、問題"
+"のサービスの<b>始まり</b>と一致しなければなりません。末尾に<tt>$</tt>を付ける"
+"と、完全一致が強制されます。パターンは<b>正規表現</b>を使用します。<tt>.*</"
+"tt>をつけると任意のテキストに一致します。"
 
 msgid ""
 "Specify a user-friendly name that will be displayed in the service details, "
@@ -60444,13 +60460,14 @@ msgstr "DBサブネットグループごとのサブネット"
 msgid "Subscription"
 msgstr "サブスクリプション"
 
-msgid "Subscription ID"
-msgstr "サブスクリプションID"
-
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr ""
 "チェックをアクティブにします(オフ: サブスクリプションステータスを無視します)"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "監視対象領域"
 
 msgid "Substitution"
 msgstr "置換"
@@ -64554,15 +64571,6 @@ msgstr ""
 "監視コアにアクセスできません。これは、30日間の試用期間が終了し、750サービスの"
 "制限を超えている可能性があります。この場合、有効なライセンスを適用するか、"
 "サービス数を減らして本機の再起動を行ってください"
-
-#, python-format
-msgid ""
-"The monitoring core of the target site '%s' has the version '%s'. That does "
-"not support fetching logfile information. Please upgrade to a newer version."
-msgstr ""
-"ターゲットサイト '%s'の監視コアのバージョンは '%s'です。これは、ログファイル"
-"情報のフェッチをサポートしていません。新しいバージョンにアップグレードしてく"
-"ださい。"
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -68960,7 +68968,7 @@ msgstr ""
 "に必要なすべての情報を取得します。"
 
 msgid "This plug-in has no paramaters"
-msgstr "このプラグインにはパラメータはありません"
+msgstr "このプラグインにはパラメータがありません。"
 
 msgid ""
 "This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see werk "
@@ -69610,13 +69618,12 @@ msgid ""
 "REST API"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "This rule configures the Redfish integration to query management controller "
 "via the Redfish REST API"
 msgstr ""
-"このルールは、HP MSAのWebインターフェイスを通じてデータを収集する通常の"
-"Checkmk Agentではなく、HP MSA Agentを選択します"
+"このルールはRedfish REST API経由で管理コントローラにクエリを送信するように"
+"Redfish統合を設定します"
 
 msgid ""
 "This rule configures the storage scheme of historic metric data for hosts. "
@@ -70138,7 +70145,7 @@ msgstr ""
 
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
-"このルールセットでは、データベースのCPU使用率のレベルを設定することができます"
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
 
 #, fuzzy
 msgid "This ruleset allows you to configure levels for the database throughput"
@@ -74343,8 +74350,7 @@ msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
 msgstr ""
-"この文字数でコンテンツを切り捨てます。値がゼロの場合、切り捨てられないことを"
-"意味します"
+"この文字数でコンテンツを切り捨てます。ゼロ値は切り捨てないことを意味します"
 
 msgid "Trunk"
 msgstr "トランク"
@@ -75193,9 +75199,9 @@ msgstr "不明なユーザー"
 msgid "Unknown rule with ID %s"
 msgstr "不明なサイト%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown ruleset: %s"
-msgstr "不明なユーザー: %s"
+msgstr "不明なルール: %s"
 
 #, fuzzy
 msgid "Unknown rulesets"
@@ -82490,7 +82496,7 @@ msgid ""
 "You cannot mix volume name and UUID in 'Mountpoint for block devices', 'Item "
 "appearance' or 'Grouping'"
 msgstr ""
-"\"ブロックデバイスのマウントポイント\"、\"アイテムの外観\"、\"グループ化\"で"
+"「ブロックデバイスのマウントポイント」、「アイテムの外観」、「グループ化」で"
 "は、ボリューム名とUUIDを混在させることはできません"
 
 msgid "You cannot query for time ranges that are before the horizon."
@@ -85667,6 +85673,22 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "No pending changes"
+#~ msgstr "保留中の変更はありません"
+
+#, python-format
+#~ msgid ""
+#~ "The monitoring core of the target site '%s' has the version '%s'. That "
+#~ "does not support fetching logfile information. Please upgrade to a newer "
+#~ "version."
+#~ msgstr ""
+#~ "ターゲットサイト '%s'の監視コアのバージョンは '%s'です。これは、ログファイ"
+#~ "ル情報のフェッチをサポートしていません。新しいバージョンにアップグレードし"
+#~ "てください。"
+
+#~ msgid "Subscription ID"
+#~ msgstr "サブスクリプションID"
 
 #~ msgid "At least one selection is missing."
 #~ msgstr "少なくとも1つのセレクションが欠けています。"

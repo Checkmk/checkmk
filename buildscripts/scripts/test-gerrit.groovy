@@ -237,7 +237,7 @@ def main() {
                     customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                     deleteOutputFiles: false,
                     failIfNotNew: false,    // as they are copied from the single tests
-                    pattern: "results/*junit.xml",
+                    pattern: "results/*junit.xml,results/testlogs/tests/**/test.xml",
                     skipNoTestFiles: true,
                     stopProcessingIfError: true,
                 )

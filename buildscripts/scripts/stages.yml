@@ -284,7 +284,6 @@ STAGES:
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/testlogs/tests/**/test.xml"
 
     - NAME: "Python License Headers Test"

@@ -848,6 +848,67 @@ def test_serialize_license_usage_report() -> None:
             ),
             id="3.1",
         ),
+        pytest.param(
+            {
+                "VERSION": "3.2",
+                "history": [
+                    {
+                        "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
+                        "site_hash": "the-site-hash",
+                        "version": "",
+                        "edition": "",
+                        "platform": (
+                            "A very long string with len>50 describing the platform"
+                            " a Checkmk server is operating on."
+                        ),
+                        "is_cma": False,
+                        "sample_time": 1,
+                        "timezone": "",
+                        "num_hosts": 2,
+                        "num_hosts_cloud": 1,
+                        "num_hosts_shadow": 6,
+                        "num_hosts_excluded": 3,
+                        "num_services": 4,
+                        "num_services_cloud": 2,
+                        "num_services_shadow": 7,
+                        "num_services_excluded": 5,
+                        "num_synthetic_tests": 1,
+                        "num_synthetic_tests_excluded": 2,
+                        "num_synthetic_kpis": 3,
+                        "num_synthetic_kpis_excluded": 4,
+                        "extension_ntop": True,
+                    },
+                ],
+            },
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("4b66f726-c4fc-454b-80a6-4917d1b386ce"),
+                        site_hash="the-site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_hosts_cloud=1,
+                        num_hosts_shadow=6,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_cloud=2,
+                        num_services_shadow=7,
+                        num_services_excluded=5,
+                        num_synthetic_tests=1,
+                        num_synthetic_tests_excluded=2,
+                        num_synthetic_kpis=3,
+                        num_synthetic_kpis_excluded=4,
+                        extension_ntop=True,
+                    ),
+                ]
+            ),
+            id="3.2",
+        ),
     ],
 )
 def test_license_usage_report(

@@ -146,12 +146,12 @@ from .visitors._type_defs import (
     DEFAULT_VALUE,
     DefaultValue,
     DiskModel,
-    FrontendModel,
     VisitorOptions,
 )
 from .visitors._type_defs import FormSpecValidationError as FormSpecValidationError
 
 T = TypeVar("T")
+_FrontendModel = TypeVar("_FrontendModel")
 
 
 class DisplayMode(Enum):
@@ -323,7 +323,7 @@ def validate_value_from_frontend(
 
 
 def transform_to_disk_model(
-    form_spec: FormSpec[T], value_from_frontend: FrontendModel | DefaultValue = DEFAULT_VALUE
+    form_spec: FormSpec[T], value_from_frontend: _FrontendModel | DefaultValue = DEFAULT_VALUE
 ) -> DiskModel:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.to_disk(value_from_frontend)

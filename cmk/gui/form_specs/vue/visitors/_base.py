@@ -11,9 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.form_specs.vue.visitors._type_defs import (
     DataOrigin,
     DiskModel,
-    FrontendModel,
     InvalidValue,
-    ParsedValueModel,
     VisitorOptions,
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
@@ -28,8 +26,11 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 
+_ParsedValueModel = TypeVar("_ParsedValueModel")
+_InvalidValueModel = TypeVar("_InvalidValueModel")
 
-class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, FrontendModel]):
+
+class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _InvalidValueModel]):
     @final
     def __init__(self, form_spec: FormSpecModel, options: VisitorOptions) -> None:
         self.form_spec = form_spec
@@ -88,7 +89,9 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
         return value
 
     @abc.abstractmethod
-    def _parse_value(self, raw_value: object) -> ParsedValueModel | InvalidValue[FrontendModel]:
+    def _parse_value(
+        self, raw_value: object
+    ) -> _ParsedValueModel | InvalidValue[_InvalidValueModel]:
         """Handle the raw value from the form and return a parsed value.
 
         E.g., replaces DefaultValue sentinel with the actual default value
@@ -96,22 +99,24 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
 
     @abc.abstractmethod
     def _to_vue(
-        self, parsed_value: ParsedValueModel | InvalidValue[FrontendModel]
-    ) -> tuple[shared_type_defs.FormSpec, FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_InvalidValueModel]
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     def _validators(self) -> Sequence[Callable[[DiskModel], object]]:
         return compute_validators(self.form_spec)
 
-    def _validate(self, parsed_value: ParsedValueModel) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(
+        self, parsed_value: _ParsedValueModel
+    ) -> list[shared_type_defs.ValidationMessage]:
         """Validates the nested values of this form spec"""
         return []
 
     @abc.abstractmethod
-    def _to_disk(self, parsed_value: ParsedValueModel) -> DiskModel:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> DiskModel:
         """Transforms the value into a serializable format for disk storage."""
 
-    def _mask(self, parsed_value: ParsedValueModel) -> DiskModel:
+    def _mask(self, parsed_value: _ParsedValueModel) -> DiskModel:
         """Obscure any sensitive information in the provided value
 
         Container-like ValueSpecs must recurse over their items, allow these to mask their

@@ -9,8 +9,6 @@ from typing import Any, Generic, TypeVar
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 DiskModel = Any
-FrontendModel = TypeVar("FrontendModel")
-ParsedValueModel = TypeVar("ParsedValueModel")
 
 
 class DefaultValue:
@@ -38,9 +36,12 @@ class VisitorOptions:
     data_origin: DataOrigin
 
 
+_ModelT = TypeVar("_ModelT")
+
+
 @dataclass
-class InvalidValue(Generic[FrontendModel]):
-    fallback_value: FrontendModel
+class InvalidValue(Generic[_ModelT]):
+    fallback_value: _ModelT
     reason: str
 
 

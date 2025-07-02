@@ -106,6 +106,8 @@ def levels_spec() -> Levels:
                 "cmk_postprocessed",
                 "predictive_levels",
                 {
+                    "__reference_metric__": "foo",
+                    "__direction__": "lower",
                     "period": "wday",
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -150,6 +152,8 @@ def levels_spec() -> Levels:
                 "cmk_postprocessed",
                 "predictive_levels",
                 {
+                    "__reference_metric__": "foo",
+                    "__direction__": "lower",
                     "period": "wday",
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -182,6 +186,8 @@ def levels_spec() -> Levels:
                 "cmk_postprocessed",
                 "predictive_levels",
                 {
+                    "__reference_metric__": "foo",
+                    "__direction__": "lower",
                     "period": "day",
                     "horizon": 3,
                     "levels": ("stdev", (10.0, 20.0)),

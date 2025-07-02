@@ -44,7 +44,7 @@ class FetchedResource(Enum):
     environment = "environment"
     qtree_quota = "qtree_quota"
     snapvault = "snapvault"
-    fc_interfaces = "fc_ports"
+    fc_interfaces = "fc_interfaces"
 
     def __str__(self):
         return self.value

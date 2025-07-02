@@ -8,13 +8,13 @@ extern crate common;
 mod common;
 
 use mk_oracle::config::authentication::{AuthType, Role};
-use mk_oracle::config::connection::EngineTag;
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 
-#[cfg(windows)]
-use crate::common::tools::ORA_ENDPOINT_ENV_VAR_EXT;
-use crate::common::tools::{add_runtime_to_path, SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_LOCAL};
+use crate::common::tools::{
+    platform::add_runtime_to_path, SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_EXT,
+    ORA_ENDPOINT_ENV_VAR_LOCAL,
+};
 use mk_oracle::types::{Credentials, InstanceName};
 
 fn make_base_config(
@@ -57,7 +57,6 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
-#[cfg(windows)]
 fn make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
     let config_str = format!(
         r#"
@@ -75,23 +74,6 @@ oracle:
         credentials.user, credentials.password, auth_type, address,
     );
     Config::from_string(config_str).unwrap().unwrap()
-}
-
-#[test]
-fn test_config_to_remove() {
-    let config = make_base_config(
-        &Credentials {
-            user: "sys".to_string(),
-            password: "Oracle-dba".to_string(),
-        },
-        AuthType::Standard,
-        None,
-        "localhost",
-        1521,
-        InstanceName::from("XE"),
-    );
-
-    assert_eq!(config.conn().engine_tag(), &EngineTag::Std);
 }
 
 #[test]
@@ -155,15 +137,11 @@ fn test_local_connection() {
     assert_eq!(rows.len(), 2);
 }
 
-#[cfg(windows)]
 #[test]
 fn test_remote_mini_connection() {
-    add_runtime_to_path();
     let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
-    if r.is_err() {
-        eprintln!("Skipping test_local_connection: {}", r.err().unwrap());
-        return;
-    }
+    assert!(r.is_ok());
+    add_runtime_to_path();
     let endpoint = r.unwrap();
 
     let config = make_mini_config(
@@ -177,10 +155,8 @@ fn test_remote_mini_connection() {
 
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
-    if r.is_err() {
-        eprintln!("Failed to connect: {}", r.err().unwrap());
-        return;
-    }
+    println!("{:?}", r);
+    println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
     let result = task.query(
         r"

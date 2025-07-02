@@ -193,6 +193,10 @@ $result = 1
 try {
     $mainStartTime = Get-Date
 
+    if ( "$env:CI_ORA2_DB_TEST" -eq "" ) {
+        Write-Error "CI_ORA2_DB_TEST environment variable is not set. Please set it to the test registry name." -ErrorAction Stop
+    }
+
     & rustup --version > nul
     if ($LASTEXITCODE -ne 0) {
         Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop

@@ -118,6 +118,31 @@ run_check_format() {
     bazel run //:format.check "$PWD"
 }
 
+run_test_all() {
+    # 1. obtain rebundled client
+    bazel build //omd/packages/oci:oci_light_lin_x64
+
+    # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
+    # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
+    path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
+    path_to_runtime="${PWD}/runtimes/oci_light_lin_x64.zip"
+    mkdir -p "${path_to_runtime}"
+    unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
+
+    # 3. relink libaio
+    libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
+    if [ -e "${libaio}" ]; then
+        ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
+    else
+        echo "libaio absent. Integration tsting is not possible"
+    fi
+
+    export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
+    bazel test :all \
+        --test_env=CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}" \
+        --test_env=LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+}
+
 main() {
     # Change to the directory where this script resides, it makes many things easier
     # and we can call this script from everywhere.
@@ -125,7 +150,7 @@ main() {
     parse_options "$@"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all
-    test ${RUN_UNIT_TESTS} = yes && bazel build //omd/packages/oci:oci_light_lin_x64 && bazel test :all
+    test ${RUN_UNIT_TESTS} = yes && run_test_all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format

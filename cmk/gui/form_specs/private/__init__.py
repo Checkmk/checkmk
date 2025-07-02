@@ -24,7 +24,12 @@ from .single_choice_extended import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from .string_autocompleter import StringAutocompleter
+from .string_autocompleter import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    StringAutocompleter,
+)
 from .time_specific import TimeSpecific
 from .two_column_dictionary import TwoColumnDictionary
 from .user_selection import UserSelection
@@ -54,6 +59,9 @@ __all__ = [
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
     "Source",
+    "Autocompleter",
+    "AutocompleterData",
+    "AutocompleterParams",
     "StringAutocompleter",
     "TimeSpecific",
     "TwoColumnDictionary",

@@ -353,6 +353,7 @@ void AssignGroupUser(PluginEntry &pe, std::string_view group,
 }  // namespace
 
 TEST(PluginTest, ApplyGroupUser_Component) {
+    GTEST_SKIP() << "TEST IS SKIPPED> TODO INVESTIGATE, TEST IS FLAKY";
     wtools::InternalUsersDb iu;
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));

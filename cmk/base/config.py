@@ -3513,7 +3513,7 @@ class ConfigCache:
 
         return s
 
-    def translate_commandline(
+    def translate_fetcher_commandline(
         self,
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
@@ -3523,19 +3523,6 @@ class ConfigCache:
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
             attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
-            if host_name in self.hosts_config.clusters:
-                # TODO(ml): What is the difference between this and `self.parents()`?
-                parents_list = self.get_cluster_nodes_for_config(host_name)
-                attrs.setdefault("alias", f"cluster of {', '.join(parents_list)}")
-                attrs.update(
-                    self.get_cluster_attributes(
-                        host_name,
-                        host_ip_family,
-                        parents_list,
-                        ip_address_of,
-                    )
-                )
-
             macros = ConfigCache.get_host_macros_from_attributes(host_name, attrs)
             return ConfigCache.replace_macros(cmd, macros)
 
@@ -4013,7 +4000,7 @@ class FetcherFactory:
             password=ipmi_credentials.get("password"),
         )
 
-    def _make_program_commandline(
+    def _make_fetcher_program_commandline(
         self,
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
@@ -4021,7 +4008,7 @@ class FetcherFactory:
         ip_address_of: IPLookup,
         program: str,
     ) -> str:
-        return self._config_cache.translate_commandline(
+        return self._config_cache.translate_fetcher_commandline(
             host_name, host_ip_family, ip_address, program, ip_address_of
         )
 
@@ -4034,7 +4021,7 @@ class FetcherFactory:
         program: str,
         stdin: str | None,
     ) -> ProgramFetcher:
-        cmdline = self._make_program_commandline(
+        cmdline = self._make_fetcher_program_commandline(
             host_name, host_ip_family, ip_address, self._ip_lookup, program
         )
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())

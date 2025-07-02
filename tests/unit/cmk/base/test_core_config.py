@@ -312,7 +312,7 @@ def test_template_translation(
     config_cache = ts.apply(monkeypatch)
 
     assert (
-        config_cache.translate_commandline(
+        config_cache.translate_fetcher_commandline(
             hostname, socket.AddressFamily.AF_INET, ipaddress, template, lambda *a: HostAddress("")
         )
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"

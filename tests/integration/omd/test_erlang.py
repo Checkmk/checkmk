@@ -19,7 +19,7 @@ def test_erl_version(site: Site) -> None:
         "[code:root_dir(),'releases',erlang:system_info(otp_release),'OTP_VERSION']"
         ")),io:fwrite(Version),halt().",
     ]
-    assert "26.2.5.2" in site.check_output(cmd)
+    assert "26.2.5.13" in site.check_output(cmd)
 
 
 def test_erlang_ssl_smoke(site: Site) -> None:

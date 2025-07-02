@@ -65,7 +65,6 @@ RUN apt-get install -y --fix-missing \
     libmysqlclient-dev \
     libncurses5-dev \
     libpango1.0-dev \
-    libpcap-dev \
     libperl-dev \
     libpq-dev \
     libreadline-dev \

@@ -1,6 +1,5 @@
 datamodel-code-generator==0.26.1  # Locked to 0.26.1 since 0.26.3 handled const strings differently which broke inheritance. CMK-23465
 pymongo<4.9  # 4.9 has no pymongo.database.Database anymore CMK-23463
-setuptools <=70.3.0  # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context CMK-23471
 # TODO: replace pysnmp-lextudio with the non-suffix pysnmp package. pysnmp-lextudio is deprecated:
 # https://pypi.org/project/pysnmp-lextudio/
 # All *-lextudio packages and pyasn1 are pinned due to their dependencies.
@@ -11,3 +10,6 @@ snmpsim-lextudio==1.1.0 # CMK-23472
 boto3<1.37.25  # Pinned due to 1.37.25 not being presented as suitable for our builds -> builds fail CMK-23473
 pydantic<2.11  # Newer versions lead to test failures CMK-23474
 pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-24026
+schemathesis<4 # breaking changes here that require updates to the code CMK-24390
+pytest<8.4 # breaking changes with pytest-playwright CMK-24472
+

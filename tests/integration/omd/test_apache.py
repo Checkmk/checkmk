@@ -10,6 +10,7 @@ import pytest
 import requests
 
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 
 def test_http_methods(site: Site) -> None:
@@ -28,3 +29,24 @@ def test_http_methods(site: Site) -> None:
         if re.match(r'^.*"PROPFIND /\w+/check_mk/ HTTP/1.1" 405 \d+ "-" "' + user_agent, line):
             return
     pytest.fail("Could not find regex in logfile")
+
+
+@pytest.mark.parametrize(
+    ["size", "status_code"],
+    [
+        pytest.param(1024 * 1024 * (100 - 1), 200, id="under_limit"),
+        pytest.param(1024 * 1024 * 100, 413, id="at_limit"),
+        pytest.param(1024 * 1024 * (100 * 10), 413, id="over_limit"),
+    ],
+)
+def test_upload_limit(site: Site, web: CMKWebSession, size: int, status_code: int) -> None:
+    """
+    Check that the 100MB file size limit is enforced.
+    """
+
+    file = "a" * size
+    web.post(
+        f"/{site.id}/check_mk/wato.py",
+        files={"any_file": file},
+        expected_code=status_code,
+    )

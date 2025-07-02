@@ -34034,6 +34034,10 @@ msgstr ""
 "instelling kunt u forceren dat de uitlezing van de sensor wordt "
 "geïnterpreteerd als aangepast. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Pauze"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "

@@ -34028,6 +34028,10 @@ msgstr ""
 "interpretados como Celsius. Com este ajuste você pode forçar a leitura do "
 "sensor a ser interpretado como personalizado. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Intervalo"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "

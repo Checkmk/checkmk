@@ -34345,6 +34345,10 @@ msgstr ""
 "interprétées à tort en Celsius. Avec ce paramètre, vous pouvez forcer la "
 "lecture du capteur à être interprétée comme personnalisée. "
 
+#, fuzzy
+msgid "In termination"
+msgstr "Intermission"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "

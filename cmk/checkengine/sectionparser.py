@@ -13,9 +13,9 @@ from typing import Any, Final, Generic, NamedTuple, Self, TypeVar
 
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.validatedstr import ValidatedString
 
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.validatedstr import ValidatedString
 
 from cmk.piggyback.backend import store_piggyback_raw_data
 

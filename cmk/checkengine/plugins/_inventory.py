@@ -7,8 +7,9 @@
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc.validatedstr import ValidatedString
+
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,

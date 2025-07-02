@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping, MutableMapping
 from typing import TypeAlias, TypeVar
 
-from cmk.utils.validatedstr import ValidatedString
+from cmk.ccc.validatedstr import ValidatedString
 
 __all__ = ["SectionName", "SectionMap"]
 

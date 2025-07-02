@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.validatedstr import ValidatedString
 
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey

@@ -8,8 +8,10 @@ import pickle
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-from cmk.utils.validatedstr import ValidatedString
+from cmk.ccc.validatedstr import ValidatedString
+
+
+class SectionName(ValidatedString): ...
 
 
 @pytest.mark.parametrize(
@@ -38,7 +40,7 @@ def test_copyability() -> None:
     section_name = SectionName("SectionName")
     assert section_name == copy.copy(section_name)
     assert section_name == copy.deepcopy(section_name)
-    assert section_name == pickle.loads(pickle.dumps(section_name))
+    assert section_name == pickle.loads(pickle.dumps(section_name))  # nosec
 
 
 def test_plugin_name_as_key() -> None:

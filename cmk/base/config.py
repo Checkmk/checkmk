@@ -3394,22 +3394,28 @@ class ConfigCache:
 
         return attrs
 
-    def get_cluster_nodes_for_config(self, host_name: HostName) -> Sequence[HostName]:
-        nodes = self.nodes(host_name)
-
-        ip_lookup_config = self.ip_lookup_config()
-        ip_stack_config = ip_lookup_config.ip_stack_config(host_name)
-
+    def get_cluster_nodes_for_config(
+        self,
+        host_name: HostName,
+        nodes: Sequence[HostName],
+        ip_stack_config: ip_lookup.IPStackConfig,
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
+        host_tags: cmk.utils.tags.HostTags,
+        # these two argemnts and their usage are result of a refactoring.
+        # I am not convinced if it really makes sense to call this callback on eveny host.
+        all_existing_hosts: Iterable[HostName],
+        is_monitored_host: Callable[[HostName], bool],
+    ) -> Sequence[HostName]:
         self._verify_cluster_address_family(
-            host_name, ip_stack_config, nodes, ip_lookup_config.default_address_family
+            host_name, ip_stack_config, nodes, default_address_family
         )
-        self._verify_cluster_datasource(host_name, nodes, self.host_tags)
+        self._verify_cluster_datasource(host_name, nodes, host_tags)
+        monitored_hosts = {h for h in all_existing_hosts if is_monitored_host(h)}
         nodes = list(nodes[:])
-        active_hosts = {
-            hn for hn in self.hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
-        }
         for node in nodes:
-            if node not in active_hosts:
+            if node not in monitored_hosts:
                 config_warnings.warn(
                     f"Node '{node}' of cluster '{host_name}' is not a monitored host in this site."
                 )

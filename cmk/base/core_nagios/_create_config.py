@@ -353,7 +353,16 @@ def create_nagios_host_spec(
     ip = attrs["address"]
 
     if hostname in config_cache.hosts_config.clusters:
-        nodes = config_cache.get_cluster_nodes_for_config(hostname)
+        ip_lookup_config = config_cache.ip_lookup_config()
+        nodes = config_cache.get_cluster_nodes_for_config(
+            hostname,
+            config_cache.nodes(hostname),
+            ip_lookup_config.ip_stack_config(hostname),
+            ip_lookup_config.default_address_family,
+            config_cache.host_tags,
+            config_cache.hosts_config.hosts,
+            lambda h: config_cache.is_active(h) and config_cache.is_online(h),
+        )
         attrs.update(
             config_cache.get_cluster_attributes(hostname, host_ip_family, nodes, ip_address_of)
         )

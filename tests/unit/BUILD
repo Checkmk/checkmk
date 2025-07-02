@@ -87,11 +87,18 @@ py_test(
             "**/tree_test_data/**",
             "**/*.json",
             "**/*.log",
-            "**/*.pem",
-            "**/*.xml",
         ],
         exclude = ["**/*.py"],
-    ),
+    ) + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": glob(
+            [
+                "**/*.xml",
+                "**/*.pem",
+            ],
+            allow_empty = True,
+        ),
+    }),
     main = ":__test__.py",
     deps = [
         ":__test__",

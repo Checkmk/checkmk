@@ -75,7 +75,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup_config,
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=lambda *a: None,
     )

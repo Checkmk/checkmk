@@ -80,7 +80,7 @@ def test_do_create_config_nagios(
         get_ip_stack_config=lambda host_name: ip_lookup.IPStackConfig.IPv4,
         default_address_family=lambda host_name: socket.AddressFamily.AF_INET,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup_config,
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=(),
             error_handler=ip_lookup.CollectFailedHosts(),
         ),
@@ -102,7 +102,7 @@ def test_do_create_config_nagios_collects_passwords(
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_lookup_config = core_scenario.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup_config,
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=(),
         error_handler=ip_lookup.CollectFailedHosts(),
     )

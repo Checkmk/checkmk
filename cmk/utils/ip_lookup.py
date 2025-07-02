@@ -158,12 +158,15 @@ def make_lookup_ip_address(
 class ConfiguredIPLookup(Generic[_TErrHandler]):
     def __init__(
         self,
-        config: IPLookupConfig,
+        lookup: Callable[
+            [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+            HostAddress,
+        ],
         *,
         allow_empty: Container[HostName],
         error_handler: _TErrHandler,
     ) -> None:
-        self._lookup: Final = make_lookup_ip_address(config)
+        self._lookup: Final = lookup
         self.error_handler: Final[_TErrHandler] = error_handler
         self._allow_empty: Final = allow_empty
 

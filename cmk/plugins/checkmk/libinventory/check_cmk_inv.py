@@ -140,8 +140,9 @@ def inventory_as_check(
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of_bare = make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ConfiguredIPLookup(
-        ip_lookup_config,
+        ip_address_of_bare,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -159,7 +160,7 @@ def inventory_as_check(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=ip_address_of_bare,
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,

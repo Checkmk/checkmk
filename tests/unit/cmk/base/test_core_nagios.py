@@ -325,7 +325,7 @@ def test_create_nagios_host_spec(
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        config_cache.ip_lookup_config(),
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )

@@ -6,8 +6,8 @@ load("//omd/packages/erlang:vars.bzl", "PLACE_HOLDER")
 OMD_ROOT_AWARE = [
     "lib/erlang/bin/erl",
     "lib/erlang/bin/start",
-    "lib/erlang/erts-14.2.5.2/bin/erl",
-    "lib/erlang/erts-14.2.5.2/bin/start",
+    "lib/erlang/erts-14.2.5.10/bin/erl",
+    "lib/erlang/erts-14.2.5.10/bin/start",
 ]
 
 BIN_SYMLINKS = [
@@ -28,25 +28,25 @@ LIB_OSMON_PRIV_BIN = [
 ]
 
 LIB_ERTS_BIN = [
-    "lib/erlang/erts-14.2.5.2/bin/beam.smp",
-    "lib/erlang/erts-14.2.5.2/bin/ct_run",
-    "lib/erlang/erts-14.2.5.2/bin/dialyzer",
-    "lib/erlang/erts-14.2.5.2/bin/dyn_erl",
-    "lib/erlang/erts-14.2.5.2/bin/epmd",
-    "lib/erlang/erts-14.2.5.2/bin/erl.src",
-    "lib/erlang/erts-14.2.5.2/bin/erl_call",
-    "lib/erlang/erts-14.2.5.2/bin/erl_child_setup",
-    "lib/erlang/erts-14.2.5.2/bin/erlc",
-    "lib/erlang/erts-14.2.5.2/bin/erlexec",
-    "lib/erlang/erts-14.2.5.2/bin/escript",
-    "lib/erlang/erts-14.2.5.2/bin/heart",
-    "lib/erlang/erts-14.2.5.2/bin/inet_gethost",
-    "lib/erlang/erts-14.2.5.2/bin/run_erl",
-    "lib/erlang/erts-14.2.5.2/bin/start.src",
-    "lib/erlang/erts-14.2.5.2/bin/start_erl.src",
-    "lib/erlang/erts-14.2.5.2/bin/to_erl",
-    "lib/erlang/erts-14.2.5.2/bin/typer",
-    "lib/erlang/erts-14.2.5.2/bin/yielding_c_fun",
+    "lib/erlang/erts-14.2.5.10/bin/beam.smp",
+    "lib/erlang/erts-14.2.5.10/bin/ct_run",
+    "lib/erlang/erts-14.2.5.10/bin/dialyzer",
+    "lib/erlang/erts-14.2.5.10/bin/dyn_erl",
+    "lib/erlang/erts-14.2.5.10/bin/epmd",
+    "lib/erlang/erts-14.2.5.10/bin/erl.src",
+    "lib/erlang/erts-14.2.5.10/bin/erl_call",
+    "lib/erlang/erts-14.2.5.10/bin/erl_child_setup",
+    "lib/erlang/erts-14.2.5.10/bin/erlc",
+    "lib/erlang/erts-14.2.5.10/bin/erlexec",
+    "lib/erlang/erts-14.2.5.10/bin/escript",
+    "lib/erlang/erts-14.2.5.10/bin/heart",
+    "lib/erlang/erts-14.2.5.10/bin/inet_gethost",
+    "lib/erlang/erts-14.2.5.10/bin/run_erl",
+    "lib/erlang/erts-14.2.5.10/bin/start.src",
+    "lib/erlang/erts-14.2.5.10/bin/start_erl.src",
+    "lib/erlang/erts-14.2.5.10/bin/to_erl",
+    "lib/erlang/erts-14.2.5.10/bin/typer",
+    "lib/erlang/erts-14.2.5.10/bin/yielding_c_fun",
 ]
 
 LIB_BIN = [
@@ -161,7 +161,7 @@ pkg_files(
 pkg_mklink(
     name = "epmd_lib_link",
     link_name = "lib/erlang/bin/epmd",
-    target = "../erts-14.2.5.2/bin/epmd",
+    target = "../erts-14.2.5.10/bin/epmd",
 )
 
 pkg_files(
@@ -179,7 +179,7 @@ pkg_files(
     attributes = pkg_attributes(
         mode = "0755",
     ),
-    prefix = "lib/erlang/erts-14.2.5.2/bin",
+    prefix = "lib/erlang/erts-14.2.5.10/bin",
 )
 
 pkg_files(

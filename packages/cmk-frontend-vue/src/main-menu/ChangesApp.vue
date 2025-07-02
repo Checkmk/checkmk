@@ -17,6 +17,7 @@ import { Api } from '@/lib/api-client'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkChip from '@/components/CmkChip.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -170,123 +171,127 @@ onMounted(() => {
 
 <template>
   <DefaultPopup class="mainmenu-popout">
-    <h1 class="mainmenu-popout-title">
-      {{ t('activate-pending-changes', 'Activate pending changes') }}
-    </h1>
-    <CmkButtonSubmit
-      class="cmk-button-submit"
-      :disabled="sitesAndChanges.pendingChanges.length === 0 || activateChangesInProgress"
-      @click="() => activateAllChanges()"
-    >
-      {{ t('activate-changes-on-all-sites', 'Activate changes (on all sites)') }}
-    </CmkButtonSubmit>
-    <CmkButton
-      variant="secondary"
-      class="cmk-button-secondary"
-      @click="() => openActivateChangesPage()"
-      >{{ t('open-full-page', 'Open full page') }}
-    </CmkButton>
-    <br />
+    <div class="mainmenu-popout-header">
+      <h1 class="mainmenu-popout-title">
+        {{ t('activate-pending-changes', 'Activate pending changes') }}
+      </h1>
+      <CmkButtonSubmit
+        class="cmk-button-submit"
+        :disabled="sitesAndChanges.pendingChanges.length === 0 || activateChangesInProgress"
+        @click="() => activateAllChanges()"
+      >
+        {{ t('activate-changes-on-all-sites', 'Activate changes (on all sites)') }}
+      </CmkButtonSubmit>
+      <CmkButton
+        variant="secondary"
+        class="cmk-button-secondary"
+        @click="() => openActivateChangesPage()"
+        >{{ t('open-full-page', 'Open full page') }}
+      </CmkButton>
+    </div>
     <CmkCollapsibleTitle
       :title="'Activation status'"
       class="collapsible-title"
       :open="activationStatusCollapsible"
       @toggle-open="activationStatusCollapsible = !activationStatusCollapsible"
+    />
+    <CmkScrollContainer
+      height="auto"
+      :class="[
+        { 'display-none': !activationStatusCollapsible },
+        { 'add-flex': sitesAndChanges.sites.length > 2 }
+      ]"
     >
-    </CmkCollapsibleTitle>
-    <CmkCollapsible v-for="site in sitesAndChanges.sites" :key="site.siteId" :open="true">
-      <CmkIndent
-        v-if="activationStatusCollapsible && sitesRecentlyActivated.includes(site.siteId)"
-        class="sites_status"
-      >
-        <div class="site-activate-success">
-          <span class="site-name-activate-success">{{ site.siteName }}</span>
-          <span :class="[`status-${site.onlineStatus}`]">{{ site.onlineStatus }}</span>
-          <span class="site-version-activate-success grey-text">{{ site.version }}</span>
-        </div>
-        <CmkIcon variant="inline" name="save" />
-        <span>{{ t('changes-successfully-activated', 'Changes successfully activated') }}</span>
-        <br />
-        <span class="grey-text start-end-time">{{ activationStartAndEndTimes }}</span>
-      </CmkIndent>
-      <CmkIndent
-        v-if="activationStatusCollapsible && !sitesRecentlyActivated.includes(site.siteId)"
-        :key="site.siteId"
-        class="sites-status"
-      >
-        <div class="site-name-status-version">
-          <span class="site-name">{{ site.siteName }}</span>
-          <CmkChip
-            :content="site.onlineStatus"
-            :color="statusColor(site.onlineStatus)"
-            size="small"
-          ></CmkChip>
-          <span class="site-version grey-text">{{ site.version }}</span>
-        </div>
-        <div>
-          <div v-if="site.changes > 0">
-            <div v-if="activateChangesInProgress" class="progress-bar">
-              <CmkProgressbar max="unknown"></CmkProgressbar>
+      <CmkCollapsible :open="activationStatusCollapsible">
+        <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
+          <CmkIndent v-if="sitesRecentlyActivated.includes(site.siteId)" class="sites_status">
+            <div class="site-activate-success">
+              <span class="site-name-activate-success">{{ site.siteName }}</span>
+              <span :class="[`status-${site.onlineStatus}`]">{{ site.onlineStatus }}</span>
+              <span class="site-version-activate-success grey-text">{{ site.version }}</span>
             </div>
-            <div v-else>
-              <span class="grey-text">{{ t('changes', 'Changes:') }} {{ site.changes }}</span
-              ><br />
-              <span>{{ t('activation-needed', 'Activation needed') }}</span>
-            </div>
-          </div>
-          <div v-else class="no-pending-changes">
             <CmkIcon variant="inline" name="save" />
-            <span>{{ t('no-pending-changes', 'No pending changes') }}</span>
-          </div>
-        </div>
-      </CmkIndent>
-    </CmkCollapsible>
-    <br />
+            <span>{{ t('changes-successfully-activated', 'Changes successfully activated') }}</span>
+            <br />
+            <span class="grey-text start-end-time">{{ activationStartAndEndTimes }}</span>
+          </CmkIndent>
+          <CmkIndent v-if="!sitesRecentlyActivated.includes(site.siteId)" :key="site.siteId">
+            <div class="site-name-status-version">
+              <span class="site-name">{{ site.siteName }}</span>
+              <CmkChip
+                :content="site.onlineStatus"
+                :color="statusColor(site.onlineStatus)"
+                size="small"
+              ></CmkChip>
+              <span class="site-version grey-text">{{ site.version }}</span>
+            </div>
+            <div>
+              <div v-if="site.changes > 0">
+                <div v-if="activateChangesInProgress" class="progress-bar">
+                  <CmkProgressbar max="unknown"></CmkProgressbar>
+                </div>
+                <div v-else>
+                  <span class="grey-text">{{ t('changes', 'Changes:') }} {{ site.changes }}</span
+                  ><br />
+                  <span>{{ t('activation-needed', 'Activation needed') }}</span>
+                </div>
+              </div>
+              <div v-else class="no-pending-changes">
+                <CmkIcon variant="inline" name="save" />
+                <span>{{ t('no-pending-changes', 'No pending changes') }}</span>
+              </div>
+            </div>
+          </CmkIndent>
+        </template>
+      </CmkCollapsible>
+    </CmkScrollContainer>
+
     <CmkCollapsibleTitle
       v-if="sitesAndChanges.pendingChanges.length > 0 || sitesRecentlyActivated.length > 0"
       :title="`Pending changes`"
       class="collapsible-title"
       :open="pendingChangesCollapsible"
       @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
-    >
-    </CmkCollapsibleTitle>
-    <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
-      <CmkIndent
-        v-if="sitesAndChanges.pendingChanges.length === 0 && sitesRecentlyActivated.length > 0"
-        class="pending-changes"
-      >
-        <div class="pending-changes-activate-success">
-          <span>
-            <CmkIcon variant="plain" size="xxlarge" name="save" />
+    />
+    <CmkScrollContainer class="container-pending-changes" height="auto">
+      <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
+        <CmkIndent
+          v-if="sitesAndChanges.pendingChanges.length === 0 && sitesRecentlyActivated.length > 0"
+          class="pending-changes"
+        >
+          <div class="pending-changes-activate-success">
+            <span>
+              <CmkIcon variant="plain" size="xxlarge" name="save" />
+            </span>
+            <br />
+            <span class="no-pending-changes-text">{{
+              t('no-pending-changes', 'No pending changes')
+            }}</span>
+            <br />
+            <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
+          </div>
+        </CmkIndent>
+        <CmkIndent
+          v-for="change in sitesAndChanges.pendingChanges"
+          v-else
+          :key="change.changeId"
+          class="pending-changes"
+        >
+          <span class="pending-changes-change-text">
+            {{ change.changeText }}
           </span>
           <br />
-          <span class="no-pending-changes-text">{{
-            t('no-pending-changes', 'No pending changes')
-          }}</span>
+          <span class="pending-changes-which-sites">
+            {{ change.whichSites }}
+          </span>
           <br />
-          <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
-        </div>
-      </CmkIndent>
-      <CmkIndent
-        v-for="change in sitesAndChanges.pendingChanges"
-        v-else-if="pendingChangesCollapsible"
-        :key="change.changeId"
-        class="pending-changes"
-      >
-        <span class="pending-changes-change-text">
-          {{ change.changeText }}
-        </span>
-        <br />
-        <span class="pending-changes-which-sites">
-          {{ change.whichSites }}
-        </span>
-        <br />
-        <div class="pending-change-user">
-          <span class="grey-text">{{ change.user }}</span>
-          <span class="grey-text">{{ change.timestring }}</span>
-        </div>
-      </CmkIndent>
-    </CmkCollapsible>
+          <div class="pending-change-user">
+            <span class="grey-text">{{ change.user }}</span>
+            <span class="grey-text">{{ change.timestring }}</span>
+          </div>
+        </CmkIndent>
+      </CmkCollapsible>
+    </CmkScrollContainer>
   </DefaultPopup>
 </template>
 
@@ -331,7 +336,6 @@ onMounted(() => {
 
 .mainmenu-popout-title {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-top: 5px;
   margin-bottom: 15px;
@@ -342,8 +346,21 @@ onMounted(() => {
   }
 }
 .mainmenu-popout {
+  display: flex;
+  flex-direction: column;
   background-color: var(--ux-theme-2);
   padding: 20px;
+}
+
+.display-none {
+  display: none;
+}
+.add-flex {
+  flex: 2;
+}
+
+.container-pending-changes {
+  flex: 5;
 }
 
 .cmk-button-submit {

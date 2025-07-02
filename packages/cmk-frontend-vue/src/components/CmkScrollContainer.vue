@@ -21,16 +21,14 @@ export type ScrollContainerVariants = VariantProps<typeof scrollContainerVariant
 
 export interface ScrollContainerProps {
   maxHeight?: string
+  height?: string
   type?: ScrollContainerVariants['type']
 }
-const { type, maxHeight = '100%' } = defineProps<ScrollContainerProps>()
+const { type, maxHeight = '100%', height = '100%' } = defineProps<ScrollContainerProps>()
 </script>
 
 <template>
-  <div
-    :style="{ maxHeight, height: '100%', overflow: 'auto' }"
-    :class="scrollContainerVariants({ type })"
-  >
+  <div :style="{ maxHeight, height, overflow: 'auto' }" :class="scrollContainerVariants({ type })">
     <slot></slot>
   </div>
 </template>

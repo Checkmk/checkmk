@@ -156,9 +156,10 @@ def provide_agent_binaries(Map args) {
                 condition: run_condition && build_instance,
                 raiseOnError: true,
             ) {
-                dir("${checkout_dir}/${args.artifacts_base_dir}/${job_name}") {
-                    sh(details.install_cmd);
-                }
+                // prevent "_tmp" directories created by the Jenkins groovy dir() command
+                def install_cmd = "cd ${checkout_dir}/${args.artifacts_base_dir}/${job_name};";
+                install_cmd += details.install_cmd;
+                sh(install_cmd);
             }
         }]
     }

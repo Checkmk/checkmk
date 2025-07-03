@@ -23,6 +23,8 @@ from cmk.gui.utils.urls import makeuri
 @dataclass(frozen=True)
 class ChangesMenuItem(MainMenuData):
     activate_changes_url: str
+    user_has_activate_foreign: bool
+    user_name: str
 
 
 def _hide_menu() -> bool:
@@ -38,6 +40,8 @@ def _data(request: Request) -> ChangesMenuItem:
             addvars=[("mode", "changelog")],
             filename="wato.py",
         ),
+        user_has_activate_foreign=user.may("wato.activateforeign"),
+        user_name=user.ident,
     )
 
 

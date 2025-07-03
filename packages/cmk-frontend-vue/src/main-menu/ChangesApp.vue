@@ -18,10 +18,13 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkChip from '@/components/CmkChip.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
   activate_changes_url: string
+  user_has_activate_foreign: boolean
+  user_name: string
 }>()
 
 const activationStatusCollapsible = ref<boolean>(true)
@@ -177,7 +180,11 @@ onMounted(() => {
       </h1>
       <CmkButtonSubmit
         class="cmk-button-submit"
-        :disabled="sitesAndChanges.pendingChanges.length === 0 || activateChangesInProgress"
+        :disabled="
+          sitesAndChanges.pendingChanges.length === 0 ||
+          activateChangesInProgress ||
+          !user_has_activate_foreign
+        "
         @click="() => activateAllChanges()"
       >
         {{ t('activate-changes-on-all-sites', 'Activate changes (on all sites)') }}
@@ -188,6 +195,18 @@ onMounted(() => {
         @click="() => openActivateChangesPage()"
         >{{ t('open-full-page', 'Open full page') }}
       </CmkButton>
+      <CmkAlertBox
+        v-if="!user_has_activate_foreign && sitesAndChanges.pendingChanges.length > 0"
+        variant="warning"
+        class="cmk-alert-box"
+      >
+        {{
+          t(
+            'activate-foreign-changes-info',
+            'Sorry, you are not allowed to activate changes of other users.'
+          )
+        }}
+      </CmkAlertBox>
     </div>
     <CmkCollapsibleTitle
       :title="'Activation status'"
@@ -276,6 +295,7 @@ onMounted(() => {
           v-else
           :key="change.changeId"
           class="pending-changes"
+          :class="{ 'red-text': change.user !== user_name }"
         >
           <span class="pending-changes-change-text">
             {{ change.changeText }}
@@ -286,8 +306,8 @@ onMounted(() => {
           </span>
           <br />
           <div class="pending-change-user">
-            <span class="grey-text">{{ change.user }}</span>
-            <span class="grey-text">{{ change.timestring }}</span>
+            <span :class="{ 'grey-text': change.user === user_name }">{{ change.user }} </span>
+            <span :class="{ 'grey-text': change.user === user_name }">{{ change.timestring }}</span>
           </div>
         </CmkIndent>
       </CmkCollapsible>
@@ -424,6 +444,9 @@ onMounted(() => {
 }
 
 .grey-text {
-  --font-color-dimmed: var(--grey-4-dimmed);
+  color: rgb(150, 150, 150);
+}
+.red-text {
+  color: var(--color-danger);
 }
 </style>

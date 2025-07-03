@@ -82,7 +82,7 @@ declare const cmk: any
 function activateChangesComplete(starttime: number): void {
   activateChangesInProgress.value = false
   sitesRecentlyActivated.value = sitesAndChanges.value.sites
-    .filter((site) => site.changes > 0)
+    .filter((site) => site.changes > 0 && site.onlineStatus === 'online')
     .map((site) => site.siteId)
 
   void fetchPendingChangesAjax()
@@ -107,7 +107,7 @@ async function activateAllChanges() {
       {
         redirect: true,
         sites: sitesAndChanges.value.sites
-          .filter((site) => site.changes > 0)
+          .filter((site) => site.changes > 0 && site.onlineStatus === 'online')
           .map((site) => site.siteId),
         force_foreign_changes: true
       },
@@ -246,7 +246,10 @@ onMounted(() => {
             </div>
             <div>
               <div v-if="site.changes > 0">
-                <div v-if="activateChangesInProgress" class="progress-bar">
+                <div
+                  v-if="activateChangesInProgress && site.onlineStatus === 'online'"
+                  class="progress-bar"
+                >
                   <CmkProgressbar max="unknown"></CmkProgressbar>
                 </div>
                 <div v-else>

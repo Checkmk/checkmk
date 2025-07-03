@@ -68,7 +68,6 @@ install:
 	done
 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
-	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \
 	   $(_PWD)/debian/postinst.in > $(_PWD)/debian/postinst
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/preinst.in > $(_PWD)/debian/preinst

@@ -215,7 +215,6 @@ omd.spec: omd.spec.in
 	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
 	    -e 's/%{edition}/$(EDITION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_INIT_NAME)#g' \
 	    omd.spec.in > omd.spec

@@ -47,8 +47,10 @@ case "$1" in
     if [ ! -d /etc/bash_completion.d ]; then
         mkdir /etc/bash_completion.d
     fi
+    # Priority is hardcoded to 38, as this used to be OMD_SERIAL which was removed
+    # see also 34983bf3d7130434f7355cbbac020ffd94c2d90c
     update-alternatives --install /omd/versions/default \
-       omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
+       omd /omd/versions/###OMD_VERSION### 38 \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
        --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/bash_completion \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \

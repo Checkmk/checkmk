@@ -559,9 +559,16 @@ def _allowed_for_robotmk(
     return any(
         (
             _allow_default_plus_gui_and_base(imported=imported, component=component),
-            _is_allowed_for_plugins(imported=imported, component=component),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.cee.bakery")),
+            _allow(
+                "cmk.agent_based.v2",
+                "cmk.graphing.v1",
+                "cmk.rulesets.v1",
+                "cmk.server_side_calls.v1",
+                "cmk.special_agents.v0_unstable",
+                "cmk.plugins",
+                "cmk.checkengine",
+                "cmk.cee.bakery",
+            ),
         )
     )
 
@@ -733,7 +740,33 @@ _COMPONENTS = (
             "cmk.ccc",
         ),
     ),
-    (Component("cmk.plugins"), _is_allowed_for_plugins),
+    (
+        Component("cmk.plugins.otel"),
+        _allow(
+            "cmk.agent_based.v1",
+            "cmk.agent_based.v2",
+            "cmk.graphing.v1",
+            "cmk.rulesets.v1",
+            "cmk.gui.form_specs.private",
+            "cmk.server_side_calls.v1",
+            "cmk.special_agents.v0_unstable",
+            "cmk.plugins",
+        ),
+    ),
+    (
+        Component("cmk.plugins"),
+        _allow(
+            "cmk.agent_based.v1",
+            "cmk.agent_based.v2",
+            "cmk.graphing.v1",
+            "cmk.rulesets.v1",
+            "cmk.server_side_calls.v1",
+            "cmk.special_agents.v0_unstable",
+            "cmk.plugins",
+            "cmk.utils",  # FIXME (should only be password store)
+            "cmk.ccc",  # FIXME
+        ),
+    ),
     (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_for_cmk_update_config),

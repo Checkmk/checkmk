@@ -16,7 +16,6 @@ from cmk.ccc.site import omd_site
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -85,6 +84,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.wato import ContactGroupSelection, PERMISSION_SECTION_WATO, TileMenuRenderer
+from cmk.gui.watolib import changes as changes_
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.groups_io import load_contact_group_information
@@ -256,7 +256,7 @@ class ABCBIMode(WatoMode):
 
     def _add_change(self, action_name: str, text: LogMessage) -> None:
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
-        _changes.add_change(
+        changes_.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,

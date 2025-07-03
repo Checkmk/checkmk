@@ -1271,25 +1271,9 @@ function mark_message_read(msg_id: string) {
     call_ajax("sidebar_message_read.py?id=" + msg_id);
 }
 
-interface Sites {
-  siteId: string
-  siteName: string
-  onlineStatus: string
-  changes: number
-  version: string
-}
 
-interface PendingChanges {
-  changeId: string
-  changeText: string
-  user: string
-  time: number
-  whichSites: string
-  timestring?: string
-}
 interface AjaxSidebarGetPendingChanges {
-    sites: Array<Sites>;
-    pendingChanges: Array<PendingChanges>;
+    number_of_pending_changes: number;
 }
 
 function handle_pending_changes(_data: any, response_text: string) {
@@ -1300,21 +1284,20 @@ function handle_pending_changes(_data: any, response_text: string) {
     }
     const l = document.getElementById("changes_label");
     if (l) {
-        if (response.result.pendingChanges.length === 0) {
+        if (response.result.number_of_pending_changes === 0) {
             l.style.display = "none";
             return;
         }
         l.innerText =
-            response.result.pendingChanges.length > 10
+            response.result.number_of_pending_changes > 10
                 ? "10+"
-                : response.result.pendingChanges.length.toString();
+                : response.result.number_of_pending_changes.toString();
         l.style.display = "inline";
     }
 }
 
 function update_pending_changes() {
-    // retrieve new messages
-    call_ajax("ajax_sidebar_get_pending_changes.py", {
+    call_ajax("ajax_sidebar_get_number_of_pending_changes.py", {
         response_handler: handle_pending_changes,
     });
 }

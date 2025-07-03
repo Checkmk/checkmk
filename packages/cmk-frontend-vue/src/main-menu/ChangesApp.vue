@@ -130,7 +130,7 @@ async function activateAllChanges() {
 async function fetchPendingChangesAjax(): Promise<void> {
   try {
     const dataAsJson = (await ajaxCall.get(
-      'ajax_sidebar_get_pending_changes.py'
+      'ajax_sidebar_get_sites_and_changes.py'
     )) as SitesAndChanges
 
     if (Array.isArray(dataAsJson.pendingChanges)) {

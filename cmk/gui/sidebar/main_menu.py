@@ -151,7 +151,16 @@ def ajax_message_read():
         html.write_text_permissive("ERROR")
 
 
-class PageAjaxSidebarActivateMenu(AjaxPage):
+class PageAjaxSidebarChangesMenu(AjaxPage):
+    def page(self) -> PageResult:
+        return {
+            "number_of_pending_changes": len(
+                ActivateChanges().get_all_data_required_for_activation_popout()["pendingChanges"]
+            )
+        }
+
+
+class PageAjaxSitesAndChanges(AjaxPage):
     def page(self) -> PageResult:
         return ActivateChanges().get_all_data_required_for_activation_popout()
 

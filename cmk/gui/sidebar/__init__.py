@@ -71,9 +71,10 @@ from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,
-    PageAjaxSidebarActivateMenu,
+    PageAjaxSidebarChangesMenu,
     PageAjaxSidebarGetMessages,
     PageAjaxSidebarGetUnackIncompWerks,
+    PageAjaxSitesAndChanges,
 )
 
 # TODO: Kept for pre 1.6 plug-in compatibility
@@ -102,7 +103,10 @@ def register(
         PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks)
     )
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_pending_changes", PageAjaxSidebarActivateMenu)
+        PageEndpoint("ajax_sidebar_get_number_of_pending_changes", PageAjaxSidebarChangesMenu)
+    )
+    page_registry.register(
+        PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges)
     )
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(

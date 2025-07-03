@@ -25,13 +25,13 @@ from ._utils import (
 )
 
 type _ParsedValueModel = float
-type _FrontendModel = float | Literal[""]
+type _FallbackModel = float | Literal[""]
 
 
-class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = ""
+            fallback_value: _FallbackModel = ""
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -44,7 +44,7 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FrontendModel]):
         #  23 / -23 / "23" / "-23" / 23.0 / "-23.0" -> OK
         #  other                                    -> INVALID
         if not isinstance(raw_value, float | int):
-            return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value="")
+            return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value="")
 
         return float(raw_value)
 
@@ -52,8 +52,8 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FrontendModel]):
         return [IsFloat()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.Float, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.Float, object]:
         title, help_text = get_title_and_help(self.form_spec)
         input_hint = compute_input_hint(self.form_spec.prefill)
         input_hint_str = None if input_hint is None else str(input_hint)

@@ -29,10 +29,10 @@ from ._utils import (
 ModelTopic = str
 ModelTopicElement = str
 _ParsedValueModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
-_FrontendModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
+_FallbackModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
 
 
-class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]):
+class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]):
     def _resolve_topic_to_elements(self, topic: Topic) -> Mapping[str, TopicElement]:
         topic_to_elements: dict[str, TopicElement] = {}
         if isinstance(topic.elements, list):
@@ -72,7 +72,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
 
         return resolved_value
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if not isinstance(raw_value, dict) and not isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
 
@@ -113,8 +113,8 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
         )
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.Catalog, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.Catalog, object]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value

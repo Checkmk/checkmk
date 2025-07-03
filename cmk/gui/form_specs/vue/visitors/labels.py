@@ -16,11 +16,11 @@ from ._type_defs import InvalidValue
 from ._utils import get_title_and_help
 
 _ParsedValueModel = Mapping[str, str]
-_FrontendModel = Mapping[str, str]
+_FallbackModel = Mapping[str, str]
 
 
-class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if not isinstance(raw_value, dict):
             return InvalidValue(reason=_("Invalid data"), fallback_value={})
 
@@ -31,7 +31,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Labels, Mapping[str, str]]:
         title, help_text = get_title_and_help(self.form_spec)
 

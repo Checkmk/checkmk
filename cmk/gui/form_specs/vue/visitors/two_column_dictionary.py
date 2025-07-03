@@ -15,7 +15,7 @@ from ._type_defs import InvalidValue
 class TwoColumnDictionaryVisitor(DictionaryVisitor):
     def _to_vue(
         self, parsed_value: Mapping[str, object] | InvalidValue[Mapping[str, object]]
-    ) -> tuple[shared_type_defs.TwoColumnDictionary, Mapping[str, object]]:
+    ) -> tuple[shared_type_defs.TwoColumnDictionary, object]:
         schema, value = super()._to_vue(parsed_value)
         schema_args = asdict(schema)
         del schema_args["type"]

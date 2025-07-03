@@ -26,17 +26,17 @@ from ._utils import (
 )
 
 _ParsedValueModel = str | None
-_FrontendModel = str | None
+_FallbackModel = str | None
 
 
 class SingleChoiceEditableVisitor(
-    FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FrontendModel]
+    FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FallbackModel]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if raw_value is None:
             return None
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = None
+            fallback_value: _FallbackModel = None
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill, fallback_value),
                 InvalidValue,
@@ -44,7 +44,7 @@ class SingleChoiceEditableVisitor(
                 return prefill_default
             raw_value = prefill_default
         if not isinstance(raw_value, str):
-            return InvalidValue[_FrontendModel](
+            return InvalidValue[_FallbackModel](
                 reason=_("Invalid data: value is not a string."), fallback_value=None
             )
         return raw_value
@@ -61,8 +61,8 @@ class SingleChoiceEditableVisitor(
         return validators + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.SingleChoiceEditable, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.SingleChoiceEditable, object]:
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (
             get_list_of_configuration_entities,

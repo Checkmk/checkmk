@@ -25,15 +25,15 @@ from ._utils import (
 )
 
 _ParsedValueModel = tuple[str, object]
-_FrontendModel = tuple[str, object]
+_FallbackModel = tuple[str, object]
 
 
 class CascadingSingleChoiceVisitor(
-    FormSpecVisitor[CascadingSingleChoiceExtended, _ParsedValueModel, _FrontendModel]
+    FormSpecVisitor[CascadingSingleChoiceExtended, _ParsedValueModel, _FallbackModel]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = ("", None)
+            fallback_value: _FallbackModel = ("", None)
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill, fallback_value),
                 InvalidValue,
@@ -54,8 +54,8 @@ class CascadingSingleChoiceVisitor(
         return tuple(raw_value)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.CascadingSingleChoice, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.CascadingSingleChoice, object]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value

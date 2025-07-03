@@ -20,11 +20,11 @@ from ._utils import (
 )
 
 _ParsedValueModel = str
-_FrontendModel = str
+_FallbackModel = str
 
 
-class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill, ""), InvalidValue
@@ -37,8 +37,8 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fr
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.MultilineText, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.MultilineText, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.MultilineText(

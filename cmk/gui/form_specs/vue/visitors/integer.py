@@ -25,13 +25,13 @@ from ._utils import (
 )
 
 _ParsedValueModel = int
-_FrontendModel = int | Literal[""]
+_FallbackModel = int | Literal[""]
 
 
-class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = ""
+            fallback_value: _FallbackModel = ""
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -44,14 +44,14 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FrontendModel]
         #  23 / -23 / "23" / "-23" -> OK
         #  23.0 / "23.0" / other   -> INVALID
         if not isinstance(raw_value, int):
-            return InvalidValue[_FrontendModel](
+            return InvalidValue[_FallbackModel](
                 reason=_("Not an integer number"), fallback_value=""
             )
 
         try:
             return int(raw_value)
         except ValueError:
-            return InvalidValue[_FrontendModel](
+            return InvalidValue[_FallbackModel](
                 reason=_("Not an integer number"), fallback_value=""
             )
 
@@ -59,7 +59,7 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FrontendModel]
         return [IsInteger()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Integer, Literal[""] | int]:
         title, help_text = get_title_and_help(self.form_spec)
         input_hint = compute_input_hint(self.form_spec.prefill)

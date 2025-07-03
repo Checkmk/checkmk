@@ -22,13 +22,13 @@ from ._utils import (
 )
 
 _ParsedValueModel = str
-_FrontendModel = str
+_FallbackModel = str
 
 
-class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = ""
+            fallback_value: _FallbackModel = ""
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -43,8 +43,8 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fro
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.String, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.String, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.String(

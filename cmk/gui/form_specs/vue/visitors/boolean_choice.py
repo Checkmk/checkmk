@@ -19,11 +19,11 @@ from ._utils import (
 )
 
 type _ParsedValueModel = bool
-type _FrontendModel = bool
+type _FallbackModel = bool
 
 
-class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
@@ -34,8 +34,8 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, _ParsedValueModel, _Fr
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.BooleanChoice, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.BooleanChoice, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.BooleanChoice(

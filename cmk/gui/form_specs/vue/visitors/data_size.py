@@ -44,12 +44,12 @@ _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
 }
 
 _ParseValueModel = int
-_FrontendModel = list[str]
+_FallbackModel = list[str]
 
 
-class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel]):
+class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel]):
     def _convert_to_value_and_unit(
-        self, parsed_value: float | InvalidValue[_FrontendModel]
+        self, parsed_value: float | InvalidValue[_FallbackModel]
     ) -> tuple[str, str]:
         displayed_magnitudes = self.form_spec.displayed_magnitudes
         used_magnitudes = [_magnitudes_map[x] for x in displayed_magnitudes]
@@ -68,7 +68,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel
 
         return str(parsed_value), used_magnitudes[-1][0]
 
-    def _convert_to_value(self, value: str, unit: str) -> int | InvalidValue[_FrontendModel]:
+    def _convert_to_value(self, value: str, unit: str) -> int | InvalidValue[_FallbackModel]:
         try:
             converted_value = float(value)
         except ValueError:
@@ -82,7 +82,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel
                 return int(converted_value * factor)
         return int(converted_value)
 
-    def _parse_value(self, raw_value: object) -> _ParseValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParseValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(
@@ -106,8 +106,8 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParseValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.DataSize, _FrontendModel]:
+        self, parsed_value: _ParseValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.DataSize, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         if isinstance(parsed_value, InvalidValue):

@@ -21,11 +21,11 @@ from ._utils import (
 )
 
 _ParsedValueModel = Sequence[str]
-_FrontendModel = Sequence[str]
+_FallbackModel = Sequence[str]
 
 
-class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
@@ -40,8 +40,8 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fr
         return [x for x in raw_value if x]
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.ListOfStrings, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.ListOfStrings, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         element_visitor = get_visitor(self.form_spec.string_spec, self.options)

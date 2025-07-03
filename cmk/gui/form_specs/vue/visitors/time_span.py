@@ -49,13 +49,13 @@ def _render_value(value: float) -> str:
 
 
 _ParsedValueModel = float
-_FrontendModel = float | None
+_FallbackModel = float | None
 
 
-class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = None
+            fallback_value: _FallbackModel = None
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -66,12 +66,12 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendMode
             raw_value = prefill_default
 
         if not isinstance(raw_value, float | int):
-            return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value=None)
+            return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value=None)
 
         try:
             return float(raw_value)
         except ValueError:
-            return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value=None)
+            return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value=None)
 
     def _validators(self) -> Sequence[Callable[[float], object]]:
         def custom_validate() -> Iterator[Callable[[float], object]]:
@@ -106,8 +106,8 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendMode
         return [IsFloat()] + list(custom_validate())
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.TimeSpan, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.TimeSpan, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.TimeSpan(

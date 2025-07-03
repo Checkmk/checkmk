@@ -25,10 +25,10 @@ from ._utils import (
 )
 
 _ParsedValueModel = Mapping[str, object]
-_FrontendModel = Mapping[str, object]
+_FallbackModel = Mapping[str, object]
 
 
-class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _FrontendModel]):
+class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _FallbackModel]):
     def _compute_default_values(self) -> _ParsedValueModel:
         default_values = {
             k: DEFAULT_VALUE for k, el in self.form_spec.elements.items() if el.required
@@ -57,34 +57,34 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         valid_keys = self.form_spec.elements.keys()
         return list(value.keys() - valid_keys - self._get_static_elements())
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         raw_value = (
             self._compute_default_values() if isinstance(raw_value, DefaultValue) else raw_value
         )
         if not isinstance(raw_value, Mapping):
-            return InvalidValue[_FrontendModel](
+            return InvalidValue[_FallbackModel](
                 reason=_("Invalid datatype of value: %s") % type(raw_value),
-                fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
+                fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
             )
 
         try:
             resolved_dict = self._resolve_static_elements(raw_value)
             if invalid_keys := self._get_invalid_keys(resolved_dict):
-                return InvalidValue[_FrontendModel](
+                return InvalidValue[_FallbackModel](
                     reason=_("Dictionary contains invalid keys: %r") % invalid_keys,
-                    fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
+                    fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
                 )
             return resolved_dict
         except ValueError as e:
             # This can happen during parsing the static elements with ast.literal_eval
-            return InvalidValue[_FrontendModel](
+            return InvalidValue[_FallbackModel](
                 reason=_("General value error: %s") % e,
-                fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
+                fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
             )
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.Dictionary, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.Dictionary, object]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value

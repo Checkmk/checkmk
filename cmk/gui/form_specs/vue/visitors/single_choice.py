@@ -30,7 +30,7 @@ T = TypeVar("T")
 
 NO_SELECTION = None
 
-_FrontendModel = str | None
+_FallbackModel = str | None
 
 
 @dataclass
@@ -47,7 +47,7 @@ _ParsedValueModel = ToleratedValue | ValidValue
 
 
 class SingleChoiceVisitor(
-    Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], _ParsedValueModel, _FrontendModel]
+    Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], _ParsedValueModel, _FallbackModel]
 ):
     def _is_valid_choice(self, value: object) -> TypeGuard[T]:
         if isinstance(value, InvalidValue):
@@ -60,9 +60,9 @@ class SingleChoiceVisitor(
     def option_id(cls, val: object) -> str:
         return option_id(val)
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            fallback_value: _FrontendModel = NO_SELECTION
+            fallback_value: _FallbackModel = NO_SELECTION
             if isinstance(
                 prefill_default := get_prefill_default(
                     self.form_spec.prefill, fallback_value=fallback_value
@@ -121,7 +121,7 @@ class SingleChoiceVisitor(
         return ValidValue(raw_value)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 

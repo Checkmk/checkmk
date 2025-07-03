@@ -20,11 +20,11 @@ from ._utils import (
 )
 
 _ParsedValueModel = object
-_FrontendModel = object | None
+_FallbackModel = object | None
 
 
-class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         # Note: the raw_value None is reserved for the optional choice checkbox
         if isinstance(raw_value, DefaultValue):
             return None
@@ -39,8 +39,8 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
         return localize(Label(" Activate this option"))
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.OptionalChoice, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.OptionalChoice, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         visitor = get_visitor(self.form_spec.parameter_form, self.options)

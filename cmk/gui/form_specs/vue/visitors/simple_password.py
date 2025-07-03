@@ -18,11 +18,11 @@ from ._type_defs import DataOrigin, DefaultValue, InvalidValue
 from ._utils import compute_validators, get_title_and_help, optional_validation
 
 _ParsedValueModel = str
-_FrontendModel = tuple[str, bool]
+_FallbackModel = tuple[str, bool]
 
 
-class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
 
@@ -45,8 +45,8 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
         return [not_empty()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.SimplePassword, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.SimplePassword, object]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             encrypted_password = parsed_value.fallback_value[0]

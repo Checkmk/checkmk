@@ -30,11 +30,11 @@ class _TimeperiodConfig(TypedDict):
 
 
 _ParsedValueModel = object
-_FrontendModel = object
+_FallbackModel = object
 
 
-class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         # Since an inactive time specific form spec leaves no traces in the data
         # we can not make any assumptions/tests on the raw_value and return it "as is".
         if self._is_active(raw_value):
@@ -62,7 +62,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fron
         return [(x["timeperiod"], x["parameters"]) for x in config]
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.TimeSpecific, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 

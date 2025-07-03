@@ -22,21 +22,21 @@ from ._utils import (
 
 _FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
 _ParsedValueModel = int | float | str | bool | None
-_FrontendModel = int | float | str | bool | None
+_FallbackModel = int | float | str | bool | None
 
 
 class FixedValueVisitor(
-    FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FrontendModel]
+    FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FallbackModel]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         return self.form_spec.value
 
     def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.FixedValue, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.FixedValue, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.FixedValue(

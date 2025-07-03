@@ -12,17 +12,17 @@ from ._registry import get_visitor
 from ._type_defs import DataOrigin, InvalidValue
 
 _ParsedValueModel = object
-_FrontendModel = object
+_FallbackModel = object
 
 
 class TransformVisitor(
     FormSpecVisitor[
         TransformDataForLegacyFormatOrRecomposeFunction,
         _ParsedValueModel,
-        _FrontendModel,
+        _FallbackModel,
     ]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if self.options.data_origin == DataOrigin.FRONTEND:
             return raw_value
         try:
@@ -31,7 +31,7 @@ class TransformVisitor(
             return InvalidValue(reason=_("Unable to transform value"), fallback_value=raw_value)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[VueComponents.FormSpec, object]:
         return get_visitor(self.form_spec.wrapped_form_spec, self.options).to_vue(parsed_value)
 

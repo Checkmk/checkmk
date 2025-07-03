@@ -26,7 +26,7 @@ from ._utils import (
 )
 
 _UNSUPPORTED_VALUE_FROM_FRONTEND = Literal["Unsupported value received from frontend"]
-_FrontendModel = list[shared_type_defs.ConditionChoicesValue]
+_FallbackModel = list[shared_type_defs.ConditionChoicesValue]
 
 
 def _condition_to_value(name: str, condition: Condition) -> shared_type_defs.ConditionChoicesValue:
@@ -100,7 +100,7 @@ def _value_to_condition(condition_value: object) -> tuple[ConditionGroupID, Cond
         raise TypeError(_UNSUPPORTED_VALUE_FROM_FRONTEND)
 
 
-def _parse_frontend(raw_value: object) -> Conditions | InvalidValue[_FrontendModel]:
+def _parse_frontend(raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
     if not isinstance(raw_value, list):
         return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
@@ -110,7 +110,7 @@ def _parse_frontend(raw_value: object) -> Conditions | InvalidValue[_FrontendMod
         return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
 
-def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FrontendModel]:
+def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
     if not isinstance(raw_value, dict):
         # TODO: discuss DEFAULT_VALUE scenario
         return InvalidValue(reason=_("Invalid data"), fallback_value=[])
@@ -137,16 +137,16 @@ def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FrontendModel]:
     return cast(Conditions, raw_value)
 
 
-class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> Conditions | InvalidValue[_FrontendModel]:
+class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
         if self.options.data_origin == DataOrigin.FRONTEND:
             return _parse_frontend(raw_value)
 
         return _parse_disk(raw_value)
 
     def _to_vue(
-        self, parsed_value: Conditions | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.ConditionChoices, _FrontendModel]:
+        self, parsed_value: Conditions | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.ConditionChoices, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         conditions = self.form_spec.get_conditions()

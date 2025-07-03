@@ -25,16 +25,16 @@ from ._utils import compute_validators, get_title_and_help, option_id
 T = TypeVar("T")
 
 _ParsedValueModel = Sequence[T]
-_FrontendModel = Sequence[T]
+_FallbackModel = Sequence[T]
 
 
 class ListUniqueSelectionVisitor(
     Generic[T],
-    FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel[T], _FrontendModel[T]],
+    FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel[T], _FallbackModel[T]],
 ):
     def _parse_value(
         self, raw_value: object
-    ) -> _ParsedValueModel[T] | InvalidValue[_FrontendModel[T]]:
+    ) -> _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
@@ -43,8 +43,8 @@ class ListUniqueSelectionVisitor(
         return raw_value
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel[T] | InvalidValue[_FrontendModel[T]]
-    ) -> tuple[shared_type_defs.ListUniqueSelection, _FrontendModel[T]]:
+        self, parsed_value: _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]
+    ) -> tuple[shared_type_defs.ListUniqueSelection, _FallbackModel[T]]:
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value
 

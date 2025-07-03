@@ -27,10 +27,10 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 
 _ParsedValueModel = TypeVar("_ParsedValueModel")
-_InvalidValueModel = TypeVar("_InvalidValueModel")
+_FallbackDataModel = TypeVar("_FallbackDataModel")
 
 
-class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _InvalidValueModel]):
+class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _FallbackDataModel]):
     @final
     def __init__(self, form_spec: FormSpecModel, options: VisitorOptions) -> None:
         self.form_spec = form_spec
@@ -91,7 +91,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Invali
     @abc.abstractmethod
     def _parse_value(
         self, raw_value: object
-    ) -> _ParsedValueModel | InvalidValue[_InvalidValueModel]:
+    ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
         """Handle the raw value from the form and return a parsed value.
 
         E.g., replaces DefaultValue sentinel with the actual default value
@@ -99,7 +99,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Invali
 
     @abc.abstractmethod
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_InvalidValueModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackDataModel]
     ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 

@@ -17,7 +17,9 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 class MetricVisitor(StringVisitor):
-    def _to_vue(self, parsed_value: str | InvalidValue[str]) -> tuple[shared_type_defs.Metric, str]:
+    def _to_vue(
+        self, parsed_value: str | InvalidValue[str]
+    ) -> tuple[shared_type_defs.Metric, object]:
         string_autocompleter, value = super()._to_vue(parsed_value)
         string_autocompleter_args = asdict(string_autocompleter)
         del string_autocompleter_args["type"]

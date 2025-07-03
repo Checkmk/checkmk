@@ -81,14 +81,14 @@ def compute_validators(form_spec: FormSpec[Any]) -> list[Callable[[Any], object]
 
 
 _PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title]
-_InvalidValueModel = TypeVar("_InvalidValueModel")
+_FallbackDataModel = TypeVar("_FallbackDataModel")
 
 
 def get_prefill_default(
-    prefill: _PrefillTypes[ModelT], fallback_value: _InvalidValueModel
-) -> ModelT | InvalidValue[_InvalidValueModel]:
+    prefill: _PrefillTypes[ModelT], fallback_value: _FallbackDataModel
+) -> ModelT | InvalidValue[_FallbackDataModel]:
     if not isinstance(prefill, DefaultValue):
-        return InvalidValue[_InvalidValueModel](
+        return InvalidValue[_FallbackDataModel](
             reason=_("Prefill value is an input hint"), fallback_value=fallback_value
         )
     return prefill.value

@@ -16,11 +16,11 @@ from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
 from ._utils import compute_validators, get_title_and_help
 
 _ParsedValueModel = tuple[object, ...]
-_FrontendModel = list[object]
+_FallbackModel = list[object]
 
 
-class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return (DEFAULT_VALUE,) * len(self.form_spec.elements)
 
@@ -45,8 +45,8 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
         return tuple(raw_value)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.Tuple, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.Tuple, object]:
         title, help_text = get_title_and_help(self.form_spec)
         vue_specs = []
         vue_elements: list[object] = []

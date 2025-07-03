@@ -20,10 +20,10 @@ from ._type_defs import DataOrigin, DefaultValue, InvalidValue
 from ._utils import get_title_and_help
 
 _ParsedValueModel = object
-_FrontendModel = object
+_FallbackModel = object
 
 
-class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel, _FrontendModel]):
+class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel, _FallbackModel]):
     """Visitor for LegacyValuespecs. Due to the nature of the legacy valuespecs, we can not
     directly convert them to Vue components. Instead, we need to generate the HTML code in the backend
     and pass it to the frontend. The frontend will then render the form as HTML.
@@ -37,7 +37,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         except MKUserError:
             return InvalidValue(reason=_("Unable to migrate value"), fallback_value=value)
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         return raw_value
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
@@ -54,8 +54,8 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         return input_html, str(readonly_html)
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
-    ) -> tuple[shared_type_defs.LegacyValuespec, _FrontendModel]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.LegacyValuespec, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         varprefix = None

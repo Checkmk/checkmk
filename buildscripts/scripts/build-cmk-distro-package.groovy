@@ -143,7 +143,6 @@ def main() {
                     # needed only because upstream_build() only downloads relative
                     # to `base-dir` which has to be `checkout_dir`
                     cp ${checkout_dir}/${artifacts_base_dir}/omd/* ${checkout_dir}/omd
-                    rm -rf ${checkout_dir}/${artifacts_base_dir}
                 """);
             }
         },

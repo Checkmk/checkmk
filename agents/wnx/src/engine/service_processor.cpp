@@ -83,13 +83,6 @@ ServiceProcessor::OptionalTasksResults
 ServiceProcessor::executeOptionalTasks() {
     switch (GetModus()) {
         case Modus::service: {
-            if (cma::install::IsCleanInstallationRequired()) {
-                XLOG::l.i(
-                    "Clean installation is required, removing old files from {}",
-                    cma::cfg::GetCfg().getUserDir());
-
-                cma::install::RemoveCleanInstallationFlag();
-            }
             const bool installed = cfg::cap::Install();
             cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
             // service must reload config: service may reconfigure itself

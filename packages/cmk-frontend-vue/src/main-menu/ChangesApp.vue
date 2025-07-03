@@ -298,7 +298,7 @@ onMounted(() => {
           v-else
           :key="change.changeId"
           class="pending-changes"
-          :class="{ 'red-text': change.user !== user_name }"
+          :class="{ 'red-text': change.user !== user_name && change.user !== null }"
         >
           <span class="pending-changes-change-text">
             {{ change.changeText }}
@@ -308,9 +308,12 @@ onMounted(() => {
             {{ change.whichSites }}
           </span>
           <br />
-          <div class="pending-change-user">
-            <span :class="{ 'grey-text': change.user === user_name }">{{ change.user }} </span>
-            <span :class="{ 'grey-text': change.user === user_name }">{{ change.timestring }}</span>
+          <div
+            class="pending-change-user"
+            :class="{ 'grey-text': change.user === user_name || change.user === null }"
+          >
+            <span>{{ change.user }} </span>
+            <span>{{ change.timestring }}</span>
           </div>
         </CmkIndent>
       </CmkCollapsible>

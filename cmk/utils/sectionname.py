@@ -6,15 +6,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, MutableMapping
-from typing import TypeAlias, TypeVar
-
-from cmk.ccc.validatedstr import ValidatedString
+from typing import NewType, TypeAlias, TypeVar
 
 __all__ = ["SectionName", "SectionMap"]
 
 
-class SectionName(ValidatedString):
-    pass
+SectionName = NewType("SectionName", str)
 
 
 _T_co = TypeVar("_T_co", covariant=True)

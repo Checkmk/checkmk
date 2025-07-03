@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.ccc.validatedstr import ValidatedString
+from typing import NewType
 
-
-class RuleSetName(ValidatedString):
-    pass
+# this might well be obsolete now.
+RuleSetName = NewType("RuleSetName", str)

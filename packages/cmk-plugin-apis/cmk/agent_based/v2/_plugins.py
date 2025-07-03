@@ -5,9 +5,10 @@
 """All objects defined here are intended to be exposed in the API"""
 
 import functools
+import string
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, Literal, overload, TypeVar
+from typing import Any, Final, Generic, Literal, overload, TypeVar
 
 from cmk.agent_based.v1 import SNMPTree
 from cmk.agent_based.v1._detection import SNMPDetectSpecification  # sorry
@@ -163,9 +164,11 @@ class AgentSection(Generic[_Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         supersedes: list[str] | None = None,
     ) -> None:
-        self.name = name
+        self.name = _validate_name(name)
         self.parse_function = parse_function
-        self.parsed_section_name = parsed_section_name
+        self.parsed_section_name = (
+            None if parsed_section_name is None else _validate_name(parsed_section_name)
+        )
         self.host_label_function = host_label_function
         self.host_label_default_parameters = host_label_default_parameters
         self.host_label_ruleset_name = host_label_ruleset_name
@@ -331,11 +334,13 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         supersedes: list[str] | None = None,
     ) -> None:
-        self.name = name
+        self.name = _validate_name(name)
         self.detect = detect
         self.fetch = [fetch]
         self.parse_function = self._wrap_in_upacker(parse_function)
-        self.parsed_section_name = parsed_section_name
+        self.parsed_section_name = (
+            None if parsed_section_name is None else _validate_name(parsed_section_name)
+        )
         self.host_label_function = host_label_function
         self.host_label_default_parameters = host_label_default_parameters
         self.host_label_ruleset_name = host_label_ruleset_name
@@ -488,11 +493,13 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         supersedes: list[str] | None = None,
     ) -> None:
-        self.name = name
+        self.name = _validate_name(name)
         self.detect = detect
         self.fetch = fetch
         self.parse_function = parse_function
-        self.parsed_section_name = parsed_section_name
+        self.parsed_section_name = (
+            None if parsed_section_name is None else _validate_name(parsed_section_name)
+        )
         self.host_label_function = host_label_function
         self.host_label_default_parameters = host_label_default_parameters
         self.host_label_ruleset_name = host_label_ruleset_name
@@ -572,6 +579,9 @@ class CheckPlugin:
     check_ruleset_name: str | None = None
     cluster_check_function: CheckFunction | None = None
 
+    def __post_init__(self) -> None:
+        _ = _validate_name(self.name)
+
 
 @dataclass(frozen=True, kw_only=True)
 class InventoryPlugin:
@@ -613,6 +623,9 @@ class InventoryPlugin:
     inventory_default_parameters: Mapping[str, object] | None = None
     inventory_ruleset_name: str | None = None
 
+    def __post_init__(self) -> None:
+        _ = _validate_name(self.name)
+
 
 def entry_point_prefixes() -> (  # type: ignore[explicit-any]
     Mapping[
@@ -650,3 +663,20 @@ def entry_point_prefixes() -> (  # type: ignore[explicit-any]
         CheckPlugin: "check_plugin_",
         InventoryPlugin: "inventory_plugin_",
     }
+
+
+# A plug-in name must be a non-empty string consisting only
+# of letters A-z, digits and the underscore.
+_VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits
+
+
+def _validate_name(raw: str) -> str:
+    if not isinstance(raw, str):
+        raise TypeError(f"Names must be non-empty strings: {raw!r}")
+    if not raw:
+        raise ValueError(f"Names must be non-empty strings: {raw!r}")
+
+    if invalid := "".join(c for c in raw if c not in _VALID_CHARACTERS):
+        raise ValueError(f"Invalid characters in {raw!r}: {invalid!r}")
+
+    return raw

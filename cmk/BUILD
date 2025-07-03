@@ -162,7 +162,6 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
-    "//packages/cmk-ccc:validatedstr",
     "//packages/cmk-ccc:version",
     "//packages/cmk-crypto",
     "//packages/cmk-events",

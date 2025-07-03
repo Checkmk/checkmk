@@ -46,7 +46,7 @@ from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private import LegacyValueSpec
@@ -310,7 +310,7 @@ class ABCRulesetMode(WatoMode):
     def title(self) -> str:
         return self._title
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._help:
             html.help(self._help)
 
@@ -521,15 +521,15 @@ class ModeRuleSearch(ABCRulesetMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._page_type is PageType.RuleSearch and not request.has_var("filled_in"):
             search_form(
                 title="%s: " % _("Quick search"),
                 default_value=self._search_options.get("fulltext", ""),
             )
-        super().page()
+        super().page(config)
 
-    def action(self) -> HTTPRedirect:
+    def action(self, config: Config) -> HTTPRedirect:
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         return redirect(makeuri(request, []))
 
@@ -1124,7 +1124,7 @@ class ModeEditRuleset(WatoMode):
                 is_suggested=True,
             )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         back_url = self.mode_url(
             varname=self._name,
             host=self._hostname or "",
@@ -1172,7 +1172,7 @@ class ModeEditRuleset(WatoMode):
         )
         return redirect(back_url)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not active_config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
@@ -1715,7 +1715,7 @@ class ModeRuleSearchForm(WatoMode):
         )
         return menu
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("rule_search", method="POST"):
             html.hidden_field("mode", self.back_mode, add_var=True)
 
@@ -2136,7 +2136,7 @@ class ABCEditRuleMode(WatoMode):
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))]
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -2285,7 +2285,7 @@ class ABCEditRuleMode(WatoMode):
         # Non _ vars are always added as hidden vars into a form
         return "_vue_edit_rule"
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
         help_text = self._ruleset.help()
@@ -3300,7 +3300,7 @@ class ModeExportRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         pass
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         rule_config = self._rule.ruleset.valuespec().mask(self._rule.value)
         content_id = "rule_representation"
         success_msg = _("Successfully copied to clipboard.")
@@ -3590,7 +3590,7 @@ class ModeUnknownRulesets(WatoMode):
             HTMLWriter.render_tt(pformat(rulespec["condition"]).replace("\n", "<br>")),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
             debug=active_config.debug
         )
@@ -3699,7 +3699,7 @@ class ModeUnknownRulesets(WatoMode):
 
         return None
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         d_cp_rule_ids = [

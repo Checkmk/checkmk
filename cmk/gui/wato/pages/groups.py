@@ -14,7 +14,7 @@ import cmk.utils.paths
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupName, GroupSpec, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -138,7 +138,7 @@ class ModeGroups(WatoMode, abc.ABC):
             inpage_search=PageMenuSearch(),
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             request.del_var("_transid")
             return redirect(makeuri(request=request, addvars=list(request.itervars())))
@@ -198,7 +198,7 @@ class ModeGroups(WatoMode, abc.ABC):
         table.cell(_("Name"), name)
         table.cell(_("Alias"), group["alias"])
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._groups:
             self._page_no_groups()
             return
@@ -258,7 +258,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _determine_additional_group_data(self) -> None:
         pass
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -296,7 +296,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
             _("Group"), breadcrumb, form_name="group", button_name="_save"
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("group", method="POST"):
             forms.header(_("Properties"))
             forms.section(_("Name"), simple=not self._new, is_required=True)

@@ -10,7 +10,7 @@ from copy import deepcopy
 from typing import Any, cast
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -708,12 +708,12 @@ class ModeLDAPConfig(WatoMode):
             documentation_reference=DocReference.LDAP,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         return connection_actions(
             config_mode_url=self.mode_url(), connection_type=self.type, custom_config_dirs=()
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         render_connections_page(
             connection_type=self.type,
             edit_mode_path="edit_ldap_connection",
@@ -803,7 +803,7 @@ class ModeEditLDAPConnection(WatoMode):
 
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -851,7 +851,7 @@ class ModeEditLDAPConnection(WatoMode):
         # Handle the case where a user hit "Save & Test" during creation
         return redirect(self.mode_url(_test="1", id=self._connection_cfg["id"]))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.open_div(id_="ldap")
         html.open_table()
         html.open_tr()

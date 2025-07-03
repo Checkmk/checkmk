@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -51,7 +51,7 @@ class ModeRandomHosts(WatoMode):
             _("Hosts"), breadcrumb, form_name="random", button_name="_save", save_title=_("Start!")
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -65,7 +65,7 @@ class ModeRandomHosts(WatoMode):
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=folder.path()))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("random"):
             forms.header(_("Add random hosts"))
             forms.section(_("Number to create"))

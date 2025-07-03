@@ -25,7 +25,7 @@ from cmk.utils.urls import is_allowed_url
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
@@ -240,7 +240,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
     def _new_button_label(self) -> str:
         return _("Add %s") % self._mode_type.name_singular()
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.transaction_valid():
             return None
 
@@ -291,7 +291,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
     def _delete_confirm_message(self) -> str:
         return ""
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
     def _show_table(self, entries: dict[str, _T]) -> None:
@@ -704,7 +704,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         # No typing support from form specs here, so we need to cast
         self._entry = cast(_T, config)
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.transaction_valid():
@@ -757,7 +757,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def _save(self, entries: dict[str, _T]) -> None:
         self._store.save(entries, pprint_value=active_config.wato_pprint_config)
 
-    def page(self, form_name: str = "edit") -> None:
+    def page(self, config: Config, form_name: str = "edit") -> None:
         html.enable_help_toggle()
         with html.form_context(form_name, method="POST"):
             self._page_form_quick_setup_warning()

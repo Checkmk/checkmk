@@ -16,7 +16,7 @@ from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -167,7 +167,7 @@ class ModePatternEditor(WatoMode):
                 ),
             )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.help(
             _(
                 "On this page you can test the defined log file patterns against a custom text, "

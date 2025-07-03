@@ -13,7 +13,7 @@ from typing import Generic, TypeVar
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -144,7 +144,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def _add_extra_form_sections(self) -> None:
         pass
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
 
@@ -220,7 +220,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
         return redirect(mode_url(self._type + "_attrs"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         with html.form_context("attr"):
             forms.header(_("Properties"))
@@ -503,7 +503,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         raise NotImplementedError()
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             request.del_var("_transid")
             return redirect(makeuri(request=request, addvars=list(request.itervars())))
@@ -527,7 +527,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         )
         return redirect(self.mode_url())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._attrs:
             html.div(_("No custom attributes are defined yet."), class_="info")
             return

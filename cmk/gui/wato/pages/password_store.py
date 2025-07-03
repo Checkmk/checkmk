@@ -7,6 +7,7 @@ from collections.abc import Collection
 
 from cmk.utils.password_store import Password
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -123,7 +124,7 @@ class ModePasswords(SimpleListMode[Password]):
         else:
             super()._show_delete_action(nr, ident, entry)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.p(
             _(
                 "This password management module stores the passwords you use in your checks and "
@@ -138,7 +139,7 @@ class ModePasswords(SimpleListMode[Password]):
                 "for monitoring. So all those passwords have to be stored readable by the monitoring."
             )
         )
-        super().page()
+        super().page(config)
 
     def _show_entry_cells(self, table: Table, ident: str, entry: Password) -> None:
         table.cell(_("ID"), ident)

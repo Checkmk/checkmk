@@ -222,7 +222,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
 
         return True
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if request.var("_action") != "discard":
             return None
 
@@ -276,7 +276,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         html.footer()
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self.has_changes():
             html.open_div(class_="wato")
             html.show_message(_("No pending changes."))
@@ -543,7 +543,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         return self._license_allows_activation()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._quick_setup_activation_msg()
         self._activation_msg()
         self._activation_form()

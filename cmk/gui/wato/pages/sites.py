@@ -319,11 +319,11 @@ class ModeEditSite(WatoMode):
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         site_spec = self._site_from_valuespec()
         return self.save_site_changes(site_spec)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("site"):
             self._valuespec().render_input("site", dict(self._site))
 
@@ -693,7 +693,7 @@ class ModeEditBrokerConnection(WatoMode):
                 _("Connection id %s already exists.") % connection_id,
             )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
 
@@ -731,7 +731,7 @@ class ModeEditBrokerConnection(WatoMode):
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("broker_connection"):
             connection_vs = (
                 {
@@ -873,7 +873,7 @@ class ModeDistributedMonitoring(WatoMode):
         page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.DISTRIBUTED_MONITORING)
         return page_menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         delete_id = request.get_ascii_input("_delete")
@@ -1132,7 +1132,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.footer()
         return FinalizeRequest(code=200)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if is_free():
@@ -1566,7 +1566,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return menu
 
     # TODO: Consolidate with ModeEditGlobals.action()
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         varname = request.get_ascii_input("_varname")
         action = request.get_ascii_input("_action")
         if not varname:
@@ -1637,7 +1637,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "edit_site_configvar"
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.help(
             _(
                 "Here you can configure global settings, that should just be applied "
@@ -1755,7 +1755,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
 
@@ -1817,7 +1817,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not is_livestatus_encrypted(self._site):
             html.show_message(
                 _("The livestatus connection to this site is configured not to be encrypted.")

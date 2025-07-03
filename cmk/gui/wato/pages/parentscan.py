@@ -10,7 +10,7 @@ from typing import cast, Literal, override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -147,7 +147,7 @@ class ModeParentScan(WatoMode):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         try:
@@ -212,7 +212,7 @@ class ModeParentScan(WatoMode):
         return entries
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._job.is_active():
             html.show_message(
                 _('Parent scan currently running in <a href="%s">background</a>.')

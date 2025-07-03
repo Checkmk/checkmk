@@ -8,6 +8,7 @@ from collections.abc import Collection
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -58,7 +59,7 @@ class ModeSearch(WatoMode):
     def title(self) -> str:
         return _("Search for hosts below %s") % self._folder.title()
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         return redirect(
@@ -98,7 +99,7 @@ class ModeSearch(WatoMode):
 
         return list(search_vars.items())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.help(
             _(
                 "For the host name field, a partial word search (infix search) is used "

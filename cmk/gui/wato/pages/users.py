@@ -18,7 +18,7 @@ from cmk.utils import paths, render
 from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -279,7 +279,7 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "saml_config")])),
             )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -344,7 +344,7 @@ class ModeUsers(WatoMode):
         if selected_users:
             delete_users(selected_users, user_features_registry.features().sites)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._job_snapshot.exists:
             # Skip if snapshot doesnt exists
             pass
@@ -775,7 +775,7 @@ class ModeEditUser(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -986,7 +986,7 @@ class ModeEditUser(WatoMode):
                 role for role in self._roles.keys() if html.get_checkbox("role_" + role)
             ]
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # Let exceptions from loading notification scripts happen now
         load_notification_scripts()
 

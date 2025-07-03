@@ -9,7 +9,7 @@ from collections.abc import Collection
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -86,7 +86,7 @@ class ModeIcons(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -119,7 +119,7 @@ class ModeIcons(WatoMode):
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _("Unable to upload icon: %s") % e)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.p(
             _(
                 "Here you can add icons, for example to use them in bookmarks or "

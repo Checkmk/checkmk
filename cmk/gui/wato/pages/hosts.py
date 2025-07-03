@@ -243,7 +243,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     # TODO: Extract cluster specific parts from this method
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
         if self._mode == "edit":
@@ -483,7 +483,7 @@ class ModeEditHost(ABCHostMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         folder = folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -781,7 +781,7 @@ class CreateHostMode(ABCHostMode):
         self._verify_host_type(host)
         return host
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
 

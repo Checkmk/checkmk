@@ -48,7 +48,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, hooks, log, sites, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator
@@ -1826,7 +1826,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -1949,7 +1949,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         _save_mkeventd_rules(rule_packs)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -2325,7 +2325,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -2418,7 +2418,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             )
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         search_expression = self._search_expression()
 
@@ -2723,7 +2723,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rule_packs"))
 
@@ -2786,7 +2786,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         with html.form_context("rule_pack"):
             vs = self._valuespec()
@@ -2877,7 +2877,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
@@ -2988,7 +2988,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             execute_command("RESETCOUNTERS", [rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         with html.form_context("rule"):
             vs = self._valuespec()
@@ -3033,7 +3033,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not user.may("mkeventd.switchmode"):
             return None
 
@@ -3051,7 +3051,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         flash(_("Switched to %s mode") % new_mode)
         return None
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
 
         warning = _("The Event Console Daemon is currently not running. ")
@@ -3173,7 +3173,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return menu
 
     # TODO: Consolidate with ModeEditGlobals.action()
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         varname = request.var("_varname")
         action = request.var("_action")
         if not varname:
@@ -3213,7 +3213,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         self._show_configuration_variables()
 
@@ -3348,7 +3348,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -3390,7 +3390,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         } | {mib_upload_dir() / filename}:
             path.unlink(missing_ok=True)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         for mib_path, title in mib_dirs():
             is_custom_dir = mib_path == mib_upload_dir()
@@ -3508,7 +3508,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not request.uploaded_file("_upload_mib"):
@@ -3657,7 +3657,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 raise e
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._verify_ec_enabled()
         html.h3(_("Upload MIB file"))
         html.write_text_permissive(

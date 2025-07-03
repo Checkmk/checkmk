@@ -15,7 +15,7 @@ from cmk.checkengine.discovery import DiscoverySettings
 
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -125,7 +125,7 @@ class ModeBulkDiscovery(WatoMode):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         user.need_permission("wato.services")
@@ -157,7 +157,7 @@ class ModeBulkDiscovery(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         user.need_permission("wato.services")
 
         if self._job.is_active():

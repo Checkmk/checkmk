@@ -17,7 +17,7 @@ from cmk.ccc.exceptions import MKGeneralException
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -356,7 +356,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         current = self._current_settings.get(self._varname)
@@ -456,7 +456,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         # Non _ vars are always added as hidden vars into a form
         return "_vue_global_settings"
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
 
@@ -577,7 +577,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             item=make_simple_link("wato.py?mode=sites"),
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         varname = request.var("_varname")
         if not varname:
             return None
@@ -617,7 +617,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("globalvars"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._show_configuration_variables()
 
 

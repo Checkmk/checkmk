@@ -7,7 +7,7 @@
 from collections.abc import Collection
 
 from cmk.gui import userdb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -127,7 +127,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
                 % (self._mode_type.name_singular(), self._search_url(ident)),
             )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.p(
             _(
                 "This module can be used to define conditions for Checkmk rules in a central place. "
@@ -136,7 +136,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
                 "rule sets."
             )
         )
-        super().page()
+        super().page(config)
 
     def _show_action_cell(
         self,

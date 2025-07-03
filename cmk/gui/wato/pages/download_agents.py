@@ -14,6 +14,7 @@ import cmk.utils.render
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -115,7 +116,7 @@ class ABCModeDownloadAgents(WatoMode):
             "/windows/plugins/.gitattributes",
         }
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.open_div(class_="rulesets")
 
         if packed := self._packed_agents():

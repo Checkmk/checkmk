@@ -46,7 +46,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
@@ -876,7 +876,7 @@ class ModeNotifications(ABCNotificationsMode):
             ),
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if request.has_var("_show_user"):
@@ -910,7 +910,7 @@ class ModeNotifications(ABCNotificationsMode):
             },
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._show_overview()
         self._show_rules(analyse=None)
 
@@ -1348,7 +1348,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             ),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         result = self._get_result_from_request(debug=active_config.debug)
         self._show_bulk_notifications(debug=active_config.debug)
         self._show_notification_backlog()
@@ -1480,7 +1480,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(css=["notification_context hidden"])
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if request.has_var("_show_bulks"):
@@ -1667,7 +1667,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if request.has_var("_show_user"):
@@ -1694,7 +1694,7 @@ class ModeTestNotifications(ModeNotifications):
 
         return redirect(self.mode_url())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number
@@ -2444,7 +2444,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def title(self) -> str:
         return _("Custom notification table for user %s") % self._user_id()
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url(user=self._user_id()))
 
@@ -2474,7 +2474,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
         return redirect(self.mode_url(user=self._user_id()))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
@@ -3175,7 +3175,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             _("Notification rule"), breadcrumb, form_name="rule", button_name="_save"
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -3214,7 +3214,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         return self._back_mode()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
@@ -3466,7 +3466,7 @@ class ModeNotificationParametersOverview(WatoMode):
         menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
         return menu
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.vue_component(
             component_name="cmk-notification-parameters-overview",
             data=asdict(self._get_notification_parameters_data()),
@@ -3629,7 +3629,7 @@ class ABCNotificationParameterMode(WatoMode):
             button_name="_save",
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         self._parameters = self._load_parameters()
@@ -3767,7 +3767,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._method() not in load_notification_scripts():
             raise MKUserError(None, _("Notification method '%s' does not exist") % self._method())
 
@@ -3978,7 +3978,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     def _form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return notification_parameter_registry.form_spec(self._method())
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -4017,7 +4017,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     def _validate_form_spec(self, origin: DataOrigin) -> bool:
         return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         value, origin = self._get_parameter_value_and_origin()
 
         with html.form_context("parameter", method="POST"):
@@ -4090,7 +4090,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
             cancel_url=mode_url(mode_name=ModeNotifications.name()),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.enable_help_toggle()
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):

@@ -19,7 +19,7 @@ from cmk.utils import man_pages
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -88,7 +88,7 @@ class ModeCheckPlugins(WatoMode):
         menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.help(
             _(
                 "This catalog of check plug-ins gives you a complete listing of all plug-ins "
@@ -137,7 +137,7 @@ class ModeCheckPluginSearch(WatoMode):
     def title(self) -> str:
         return "{}: {}".format(_("Check plug-ins matching"), self._search)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         search_form(title="%s: " % _("Search for check plug-ins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
@@ -259,7 +259,7 @@ class ModeCheckPluginTopic(WatoMode):
             return "unsorted"
         return self._topic_title
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if isinstance(self._manpages, list):
             _render_manpage_list(self._titles, self._manpages, self._path[-1], self._topic_title)
             return
@@ -578,7 +578,7 @@ class ModeCheckManPage(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()

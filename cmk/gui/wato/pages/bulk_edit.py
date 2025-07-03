@@ -12,7 +12,7 @@ from typing import override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -79,7 +79,7 @@ class ModeBulkEdit(WatoMode):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -102,7 +102,7 @@ class ModeBulkEdit(WatoMode):
         return redirect(self._folder.url())
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         host_names = get_hostnames_from_checkboxes(self._folder)
         hosts = {host_name: self._folder.load_host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
@@ -185,7 +185,7 @@ class ModeBulkCleanup(WatoMode):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -215,7 +215,7 @@ class ModeBulkCleanup(WatoMode):
         return to_clean
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         hosts = get_hosts_from_checkboxes(self._folder)
 
         html.p(

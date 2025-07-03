@@ -21,7 +21,7 @@ from cmk.ccc.site import SiteId
 import cmk.utils.paths
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -106,7 +106,7 @@ class ModeAnalyzeConfig(WatoMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
 
@@ -136,7 +136,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         return None
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._analyze_sites():
             html.show_message(
                 _(

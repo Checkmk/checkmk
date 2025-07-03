@@ -16,7 +16,7 @@ from cmk.utils.tags import TagGroupID, TagID
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -173,7 +173,7 @@ class ModeTags(ABCTagMode):
         menu.add_doc_reference(_("Host tags"), DocReference.HOST_TAGS)
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(makeuri(request, []))
 
@@ -309,7 +309,7 @@ class ModeTags(ABCTagMode):
         )
         return None
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
             TileMenuRenderer(
                 [
@@ -548,7 +548,7 @@ class ModeTagUsage(ABCTagMode):
     def title(self) -> str:
         return _("Tag usage")
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self._show_tag_list()
         self._show_aux_tag_list()
 
@@ -688,7 +688,7 @@ class ModeEditAuxtag(ABCEditTagMode):
             _("Tag"), breadcrumb, form_name="aux_tag", button_name="_save"
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
@@ -716,7 +716,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("aux_tag"):
             self._valuespec().render_input("aux_tag", self._aux_tag.to_config())
 
@@ -777,7 +777,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             _("Tag group"), breadcrumb, form_name="tag_group", button_name="_save"
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -845,7 +845,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("tag_group", method="POST"):
             self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())
 

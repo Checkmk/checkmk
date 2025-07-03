@@ -17,6 +17,7 @@ from cmk.utils.paths import (
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.cert_info import cert_info_registry, CertificateInfo
+from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -112,7 +113,7 @@ class ModeCertificateOverview(WatoMode):
         # Todo: should change to "certificate.view" once we have a permission for this
         return []
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.div(
             HTML.without_escaping(
                 _(

@@ -13,7 +13,7 @@ from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -144,7 +144,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         )
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         enable_page_menu_entry(html, "inline_help")
         html.vue_component(
             component_name="cmk-quick-setup",
@@ -245,7 +245,7 @@ class ModeEditConfigurationBundles(WatoMode):
         return menu
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not active_config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
@@ -322,7 +322,7 @@ class ModeEditConfigurationBundles(WatoMode):
         return make_action_link(vars_)
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
             return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
@@ -571,7 +571,7 @@ class EditDCDConnection(Protocol):
 
     def page(self, form_name: str) -> None: ...
 
-    def action(self) -> ActionResult: ...
+    def action(self, config: Config) -> ActionResult: ...
 
 
 class ModeConfigurationBundle(WatoMode):
@@ -661,7 +661,7 @@ class ModeConfigurationBundle(WatoMode):
         )
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._existing_bundle:
             html.open_div(class_="really")
             html.h3(_("The configuration bundle %s does not exist") % self._bundle_id)
@@ -781,7 +781,7 @@ class ModeConfigurationBundle(WatoMode):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -800,12 +800,12 @@ class ModeConfigurationBundle(WatoMode):
 
         if request.has_var("_save"):
             vs = self._configuration_vs(self._bundle_id)
-            config = vs.from_html_vars(self.FORM_PREFIX)
-            vs.validate_value(config, "edit_bundle")
+            bundle_config = vs.from_html_vars(self.FORM_PREFIX)
+            vs.validate_value(bundle_config, "edit_bundle")
             self._bundle.update(
                 {
-                    "title": config["_name"],
-                    "comment": config["_comment"],
+                    "title": bundle_config["_name"],
+                    "comment": bundle_config["_comment"],
                 }
             )
             edit_config_bundle_configuration(

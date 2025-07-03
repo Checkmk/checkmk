@@ -21,6 +21,7 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
@@ -169,7 +170,7 @@ class PageKeyManagement:
     def _may_edit_config(self) -> bool:
         return True
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if self._may_edit_config() and request.has_var("_delete"):
@@ -217,7 +218,7 @@ class PageKeyManagement:
     def _table_title(self) -> str:
         raise NotImplementedError()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
@@ -268,7 +269,7 @@ class PageEditKey:
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if transactions.check_transaction():
@@ -313,7 +314,7 @@ class PageEditKey:
             )
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # Currently only "new" is supported
         with html.form_context("key", method="POST"):
             html.prevent_password_auto_completion()
@@ -365,7 +366,7 @@ class PageUploadKey:
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if transactions.check_transaction():
@@ -434,7 +435,7 @@ class PageUploadKey:
             )
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # Note about the cert/key requirements:
         # * The private key has to be an RSA key because both backup encryption and agent signing
         #   currently assume that. The algorithms are still hardcoded.
@@ -525,7 +526,7 @@ class PageDownloadKey:
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if transactions.check_transaction():
@@ -565,7 +566,7 @@ class PageDownloadKey:
     def _file_name(self, key_id: int, key: Key) -> str:
         raise NotImplementedError()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.p(
             _(
                 "To be able to download the key, you need to unlock the key by entering the "

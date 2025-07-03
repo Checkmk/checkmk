@@ -160,14 +160,12 @@ class WatoMode(abc.ABC):
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)
 
-    def buttons(self) -> None:
-        pass
+    def buttons(self) -> None: ...
 
-    def action(self) -> ActionResult:
-        pass
+    def action(self, config: Config) -> ActionResult: ...
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.show_message(_("(This module is not yet implemented)"))
 
     def handle_page(self, config: Config) -> None:
-        return self.page()
+        return self.page(config)

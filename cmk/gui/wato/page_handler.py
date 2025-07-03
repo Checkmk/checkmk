@@ -100,7 +100,7 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> Non
             if read_only.is_enabled() and not read_only.may_override():
                 raise MKUserError(None, read_only.message())
 
-            result = mode.action()
+            result = mode.action(config)
             if isinstance(result, tuple | str | bool):
                 raise MKGeneralException(
                     f'WatoMode "{current_mode}" returns unsupported return value: {result!r}'

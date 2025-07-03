@@ -26,7 +26,7 @@ from cmk.utils.timeperiod import (
 
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -255,7 +255,7 @@ class ModeTimeperiods(WatoMode):
         menu.add_doc_reference(_("Time periods"), DocReference.TIMEPERIODS)
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         delname = request.var("_delete")
         if not delname:
             return redirect(mode_url("timeperiods"))
@@ -287,7 +287,7 @@ class ModeTimeperiods(WatoMode):
 
         return redirect(mode_url("timeperiods"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with table_element(
             "timeperiods", empty_text=_("There are no time periods defined yet.")
         ) as table:
@@ -417,11 +417,11 @@ class ModeTimeperiodImportICal(WatoMode):
         ):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not request.var("upload"):
             self._show_import_ical_page()
         else:
-            self._show_add_timeperiod_page()
+            self._show_add_timeperiod_page(config)
 
     def _show_import_ical_page(self) -> None:
         html.p(
@@ -439,7 +439,7 @@ class ModeTimeperiodImportICal(WatoMode):
             forms.end()
             html.hidden_fields()
 
-    def _show_add_timeperiod_page(self) -> None:
+    def _show_add_timeperiod_page(self, config: Config) -> None:
         # If an ICalendar file is uploaded, we process the htmlvars here, to avoid
         # "Request URI too long exceptions"
         vs_ical = self._vs_ical()
@@ -501,7 +501,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         request.set_var("mode", "edit_timeperiod")
 
-        ModeEditTimeperiod().page()
+        ModeEditTimeperiod().page(config)
 
 
 class ModeEditTimeperiod(WatoMode):
@@ -729,7 +729,7 @@ class ModeEditTimeperiod(WatoMode):
 
         return False
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -761,7 +761,7 @@ class ModeEditTimeperiod(WatoMode):
         self._timeperiods = load_timeperiods()
         return redirect(mode_url("timeperiods"))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("timeperiod", method="POST"):
             self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
             forms.end()

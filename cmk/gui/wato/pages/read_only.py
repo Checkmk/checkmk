@@ -11,7 +11,7 @@ from cmk.ccc import store
 
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -57,7 +57,7 @@ class ModeManageReadOnly(WatoMode):
             _("Mode"), breadcrumb, form_name="read_only", button_name="_save"
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         settings = self._vs().from_html_vars("_read_only")
@@ -76,7 +76,7 @@ class ModeManageReadOnly(WatoMode):
             pprint_value=active_config.wato_pprint_config,
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.p(
             _(
                 "The Setup configuration can be set to read only mode for all users that are not "

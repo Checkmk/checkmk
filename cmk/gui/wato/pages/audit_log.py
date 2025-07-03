@@ -10,6 +10,7 @@ from collections.abc import Collection, Iterator
 from cmk.utils import render
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -262,7 +263,7 @@ class ModeAuditLog(WatoMode):
             self._display_audit_log_options()
             return HTML.without_escaping(output_funnel.drain())
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -280,7 +281,7 @@ class ModeAuditLog(WatoMode):
 
         return redirect(makeuri(request, []))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("fileselection_form", method="POST"):
             if not request.has_var("file_selection"):
                 html.write_text_permissive(_("Please choose an audit log to view:"))

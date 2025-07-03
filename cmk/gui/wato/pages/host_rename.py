@@ -24,7 +24,7 @@ from cmk.utils.regex import regex
 from cmk.gui import forms
 from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -138,7 +138,7 @@ class ModeBulkRenameHost(WatoMode):
 
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         renaming_config = self._vs_renaming_config().from_html_vars("")
@@ -329,7 +329,7 @@ class ModeBulkRenameHost(WatoMode):
             return hostname
         return None
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("bulk_rename_host", method="POST"):
             self._vs_renaming_config().render_input("", {})
             html.hidden_fields()
@@ -554,7 +554,7 @@ class ModeRenameHost(WatoMode):
 
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         renamed_host_site = self._host.site_id()
         if ActivateChanges().get_pending_changes_info().has_changes():
             raise MKUserError(
@@ -613,7 +613,7 @@ class ModeRenameHost(WatoMode):
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.help(
             _(
                 "The renaming of hosts is a complex operation since a host's name is being "

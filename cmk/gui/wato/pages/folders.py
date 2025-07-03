@@ -600,7 +600,7 @@ class ModeFolder(WatoMode):
             )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if request.var("_search"):  # just commit to search form
@@ -740,7 +740,7 @@ class ModeFolder(WatoMode):
         return None
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not self._folder.permissions.may("read"):
             reason = self._folder.permissions.reason_why_may_not("read")
             if reason:
@@ -1410,7 +1410,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         )
 
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if (backfolder := request.var("backfolder")) is not None:
@@ -1433,7 +1433,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         new = self._is_new
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         folder.permissions.need_permission("read")

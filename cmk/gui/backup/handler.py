@@ -56,6 +56,7 @@ from cmk.utils.schedule import next_scheduled_time
 
 from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -140,13 +141,13 @@ def hostname() -> str:
     return socket.gethostname()
 
 
-class Config:
+class BackupConfig:
     def __init__(self, config: RawConfig) -> None:
         self._config = config
         self._cronjob_path = omd_root / "etc/cron.d/mkbackup"
 
     @classmethod
-    def load(cls) -> Config:
+    def load(cls) -> BackupConfig:
         return cls(RawConfig.load())
 
     @property
@@ -487,12 +488,12 @@ class PageBackup:
             is_suggested=True,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if (ident := request.var("_job")) is None:
             raise MKUserError("_job", _("Missing job ID."))
 
         try:
-            job = Config.load().jobs[ident]
+            job = BackupConfig.load().jobs[ident]
         except KeyError:
             raise MKUserError("_job", _("This backup job does not exist."))
 
@@ -519,7 +520,7 @@ class PageBackup:
         job.cleanup()
 
         with contextlib.suppress(KeyError):
-            Config.load().delete_job(job.ident)
+            BackupConfig.load().delete_job(job.ident)
 
         flash(_("The job has been deleted."))
 
@@ -531,14 +532,16 @@ class PageBackup:
         job.stop()
         flash(_("The backup has been stopped."))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         show_key_download_warning(self.key_store.load())
         self._show_job_list()
 
     def _show_job_list(self) -> None:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
-            for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
+            for nr, job in enumerate(
+                sorted(BackupConfig.load().jobs.values(), key=lambda j: j.ident)
+            ):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)
@@ -676,7 +679,7 @@ class PageEditBackupJob:
 
         if job_ident is not None:
             try:
-                job = Config.load().jobs[job_ident]
+                job = BackupConfig.load().jobs[job_ident]
             except KeyError:
                 raise MKUserError("target", _("This backup job does not exist."))
 
@@ -742,7 +745,7 @@ class PageEditBackupJob:
             ],
         )
 
-    def vs_backup_job(self, config: Config) -> Dictionary:
+    def vs_backup_job(self, backup_config: BackupConfig) -> Dictionary:
         if self._new:
             ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
@@ -756,7 +759,7 @@ class PageEditBackupJob:
                         allow_empty=False,
                         size=_OUTER_TEXT_FIELD_SIZE,
                         validate=lambda ident, varprefix: self._validate_backup_job_ident(
-                            config,
+                            backup_config,
                             ident,
                             varprefix,
                         ),
@@ -787,9 +790,9 @@ class PageEditBackupJob:
                     "target",
                     DropdownChoice(
                         title=_("Target"),
-                        choices=self.backup_target_choices(config),
+                        choices=self.backup_target_choices(backup_config),
                         validate=lambda target_id, varprefix: self._validate_target(
-                            config,
+                            backup_config,
                             target_id,
                             varprefix,
                         ),
@@ -851,43 +854,45 @@ class PageEditBackupJob:
 
     def _validate_target(
         self,
-        config: Config,
+        backup_config: BackupConfig,
         target_id: TargetId | None,
         varprefix: str,
     ) -> None:
         if not target_id:
             raise MKUserError(varprefix, _("You need to provide an ID"))
-        config.all_targets[target_id].validate(varprefix)
+        backup_config.all_targets[target_id].validate(varprefix)
 
-    def _validate_backup_job_ident(self, config: Config, value: str, varprefix: str) -> None:
+    def _validate_backup_job_ident(
+        self, backup_config: BackupConfig, value: str, varprefix: str
+    ) -> None:
         if value == "restore":
             raise MKUserError(varprefix, _("You need to choose another ID."))
 
-        if value in config.jobs:
+        if value in backup_config.jobs:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
     def backup_key_choices(self) -> Sequence[tuple[str, str]]:
         return self.key_store.choices()
 
-    def backup_target_choices(self, config: Config) -> Sequence[tuple[TargetId, str]]:
+    def backup_target_choices(self, backup_config: BackupConfig) -> Sequence[tuple[TargetId, str]]:
         return [
             (
                 target.ident,
                 target.title,
             )
             for target in sorted(
-                config.all_targets.values(),
+                backup_config.all_targets.values(),
                 key=lambda t: t.ident,
             )
         ]
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-        backup_config = Config.load()
+        backup_config = BackupConfig.load()
         vs = self.vs_backup_job(backup_config)
 
         job_config = vs.from_html_vars("edit_job")
@@ -908,11 +913,11 @@ class PageEditBackupJob:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("edit_job", method="POST"):
             html.prevent_password_auto_completion()
 
-            vs = self.vs_backup_job(Config.load())
+            vs = self.vs_backup_job(BackupConfig.load())
 
             vs.render_input("edit_job", dict(self._job_cfg))
             vs.set_focus("edit_job")
@@ -936,7 +941,7 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.open_div(id_="job_details")
         self.show_job_details()
         html.close_div()
@@ -1019,7 +1024,7 @@ class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
         if (job_ident := request.var("job")) is None:
             raise MKUserError("job", _("You need to specify a backup job."))
         try:
-            tmp = Config.load().jobs[job_ident]
+            tmp = BackupConfig.load().jobs[job_ident]
         except KeyError:
             raise MKUserError("job", _("This backup job does not exist."))
         self._job = tmp
@@ -1520,10 +1525,10 @@ class Target:
         return self._target_type().title()
 
 
-def _show_site_and_system_targets(config: Config) -> None:
-    _show_target_list(config.site_targets.values(), False)
+def _show_site_and_system_targets(backup_config: BackupConfig) -> None:
+    _show_target_list(backup_config.site_targets.values(), False)
     if cmk_version.is_cma():
-        _show_target_list(config.cma_system_targets.values(), True)
+        _show_target_list(backup_config.cma_system_targets.values(), True)
 
 
 def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
@@ -1614,38 +1619,38 @@ class PageBackupTargets:
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         if not (ident := request.var("target")):
             raise MKUserError("target", _("This backup target does not exist."))
 
-        config = Config.load()
+        backup_config = BackupConfig.load()
 
         try:
-            target = config.site_targets[TargetId(ident)]
+            target = backup_config.site_targets[TargetId(ident)]
         except KeyError:
             raise MKUserError("target", _("This backup target does not exist."))
 
-        self._verify_not_used(config, target.ident)
+        self._verify_not_used(backup_config, target.ident)
 
         with contextlib.suppress(KeyError):
-            config.delete_target(target.ident)
+            backup_config.delete_target(target.ident)
 
         flash(_("The target has been deleted."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-    def _verify_not_used(self, config: Config, target_id: TargetId) -> None:
-        if jobs := [job for job in config.jobs.values() if job.target_ident() == target_id]:
+    def _verify_not_used(self, backup_config: BackupConfig, target_id: TargetId) -> None:
+        if jobs := [job for job in backup_config.jobs.values() if job.target_ident() == target_id]:
             raise MKUserError(
                 "target",
                 _("You can not delete this target because it is used by these backup jobs: %s")
                 % ", ".join(job.title for job in jobs),
             )
 
-    def page(self) -> None:
-        _show_site_and_system_targets(Config.load())
+    def page(self, config: Config) -> None:
+        _show_site_and_system_targets(BackupConfig.load())
 
 
 class PageEditBackupTarget:
@@ -1656,7 +1661,7 @@ class PageEditBackupTarget:
         if target_ident is not None:
             target_ident = TargetId(target_ident)
             try:
-                target = Config.load().site_targets[target_ident]
+                target = BackupConfig.load().site_targets[target_ident]
             except KeyError:
                 raise MKUserError("target", _("This backup target does not exist."))
 
@@ -1678,7 +1683,7 @@ class PageEditBackupTarget:
             _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
         )
 
-    def vs_backup_target(self, config: Config) -> Dictionary:
+    def vs_backup_target(self, backup_config: BackupConfig) -> Dictionary:
         if self._new:
             ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
@@ -1692,7 +1697,7 @@ class PageEditBackupTarget:
                         allow_empty=False,
                         size=_OUTER_TEXT_FIELD_SIZE,
                         validate=lambda ident, varprefix: self.validate_backup_target_ident(
-                            config,
+                            backup_config,
                             ident,
                             varprefix,
                         ),
@@ -1741,17 +1746,19 @@ class PageEditBackupTarget:
             render="form",
         )
 
-    def validate_backup_target_ident(self, config: Config, value: str, varprefix: str) -> None:
-        if TargetId(value) in config.site_targets:
+    def validate_backup_target_ident(
+        self, backup_config: BackupConfig, value: str, varprefix: str
+    ) -> None:
+        if TargetId(value) in backup_config.site_targets:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-        backup_config = Config.load()
+        backup_config = BackupConfig.load()
         vs = self.vs_backup_target(backup_config)
 
         target_config = vs.from_html_vars("edit_target")
@@ -1773,11 +1780,11 @@ class PageEditBackupTarget:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("edit_target", method="POST"):
             html.prevent_password_auto_completion()
 
-            vs = self.vs_backup_target(Config.load())
+            vs = self.vs_backup_target(BackupConfig.load())
 
             vs.render_input("edit_target", dict(self._target_cfg))
             vs.set_focus("edit_target")
@@ -1811,12 +1818,12 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def title(self) -> str:
         return _("Keys for backups")
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         show_key_download_warning(self.key_store.load())
-        super().page()
+        super().page(config)
 
     def _key_in_use(self, key_id: int, key: Key) -> bool:
-        for job in Config.load().jobs.values():
+        for job in BackupConfig.load().jobs.values():
             if (job_key_id := job.key_ident()) and str(key_id) == job_key_id:
                 return True
         return False
@@ -1987,7 +1994,7 @@ class PageBackupRestore:
             raise MKUserError("target_p_target", _("This backup target does not exist."))
 
     def _get_target(self, target_ident: TargetId) -> Target:
-        return Config.load().all_targets[target_ident]
+        return BackupConfig.load().all_targets[target_ident]
 
     def title(self) -> str:
         if not self._target:
@@ -2048,7 +2055,7 @@ class PageBackupRestore:
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         action = request.var("_action")
         backup_ident = request.var("_backup")
 
@@ -2198,9 +2205,9 @@ class PageBackupRestore:
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._restore_was_started():
-            self._show_restore_progress()
+            self._show_restore_progress(config)
 
         elif self._target:
             self._show_backup_list()
@@ -2210,7 +2217,7 @@ class PageBackupRestore:
 
     def _show_target_list(self) -> None:
         html.p(_("Please choose a target to perform the restore from."))
-        _show_site_and_system_targets(Config.load())
+        _show_site_and_system_targets(BackupConfig.load())
 
     def _show_backup_list(self) -> None:
         assert self._target is not None
@@ -2274,8 +2281,8 @@ class PageBackupRestore:
                 else:
                     html.write_text_permissive(_("No"))
 
-    def _show_restore_progress(self) -> None:
-        PageBackupRestoreState().page()
+    def _show_restore_progress(self, config: Config) -> None:
+        PageBackupRestoreState().page(config)
 
 
 class PageBackupRestoreState(PageAbstractMKBackupJobState[RestoreJob]):

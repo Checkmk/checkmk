@@ -180,7 +180,7 @@ class ModeDiagnostics(WatoMode):
         menu.add_doc_reference(self.title(), DocReference[self.name().upper()])
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -209,7 +209,7 @@ class ModeDiagnostics(WatoMode):
 
         return redirect(self._job.detail_url())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if self._job.is_active():
             raise HTTPRedirect(self._job.detail_url())
 

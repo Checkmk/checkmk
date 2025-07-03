@@ -21,7 +21,7 @@ from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 import cmk.gui.view_utils
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -131,7 +131,7 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             yield make_service_status_link(self._host.name(), self._service)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         for_host: bool = not self._service
 

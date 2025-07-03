@@ -103,7 +103,7 @@ class ModeBackgroundJobsOverview(WatoMode):
         return _("Background jobs overview")
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
@@ -111,7 +111,7 @@ class ModeBackgroundJobsOverview(WatoMode):
 
     # Mypy requires the explicit return, pylint does not like it.
     @override
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         return None
@@ -171,7 +171,7 @@ class ModeBackgroundJobDetails(WatoMode):
         return request.get_url_input("back_url", deflt="")
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         job = BackgroundJob(job_id := request.get_ascii_input_mandatory("job_id"))
         if job.is_active():
             html.div(html.render_message(_("Loading...")), id_="async_progress_msg")

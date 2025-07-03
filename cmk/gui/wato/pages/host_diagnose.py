@@ -16,7 +16,7 @@ from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -148,7 +148,7 @@ class ModeDiagHost(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -185,7 +185,7 @@ class ModeDiagHost(WatoMode):
                 return_message.append(_("SNMP credentials"))
                 attributes["snmp_community"] = new["snmp_community"]
 
-            self._host.update_attributes(attributes, pprint_value=active_config.wato_pprint_config)
+            self._host.update_attributes(attributes, pprint_value=config.wato_pprint_config)
 
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
@@ -208,7 +208,7 @@ class ModeDiagHost(WatoMode):
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.open_div(class_="diag_host")
         html.open_table()
         html.open_tr()

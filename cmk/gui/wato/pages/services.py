@@ -197,7 +197,7 @@ class ModeDiscovery(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return service_page_menu(breadcrumb, self._host, self._options)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # This is needed to make the discovery page show the help toggle
         # button. The help texts on this page are only added dynamically via
         # AJAX.

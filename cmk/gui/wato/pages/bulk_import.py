@@ -23,7 +23,7 @@ from cmk.ccc.hostaddress import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -136,7 +136,7 @@ class ModeBulkImport(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if transactions.transaction_valid():
@@ -425,7 +425,7 @@ class ModeBulkImport(WatoMode):
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not request.has_var("file_id"):
             self._upload_form()
         else:

@@ -355,7 +355,7 @@ class ModeBIEditPack(ABCBIMode):
             return _("Edit BI Pack %s") % self.bi_pack.title
         return _("Add BI Pack")
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if transactions.check_transaction():
@@ -399,7 +399,7 @@ class ModeBIEditPack(ABCBIMode):
             save_title=_("Save") if self._bi_pack else _("Create"),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("bi_pack", method="POST"):
             if self._bi_pack is None:
                 vs_config = self._vs_pack().from_html_vars("bi_pack")
@@ -569,7 +569,7 @@ class ModeBIPacks(ABCBIMode):
         page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.BI)
         return page_menu
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -597,7 +597,7 @@ class ModeBIPacks(ABCBIMode):
         self._bi_packs.save_config()
         return redirect(self.mode_url())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
             for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
                 if not may_use_rules_in_pack(pack):
@@ -817,7 +817,7 @@ class ModeBIRules(ABCBIMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
 
         if not transactions.check_transaction():
@@ -897,7 +897,7 @@ class ModeBIRules(ABCBIMode):
             )
         self._bi_packs.save_config()
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self.verify_pack_permission(self.bi_pack)
         if self.bi_pack.num_aggregations() == 0 and self.bi_pack.num_rules() == 0:
             menu = TileMenuRenderer()
@@ -1178,7 +1178,7 @@ class ModeBIEditRule(ABCBIMode):
             save_is_enabled=is_contact_for_pack(self.bi_pack),
         )
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -1252,7 +1252,7 @@ class ModeBIEditRule(ABCBIMode):
                 forbidden_packs.add(pack_id)
         return forbidden_packs
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         self.verify_pack_permission(self.bi_pack)
         schema_inst = BIRuleSchema()
 
@@ -1750,7 +1750,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ids[bi_aggregation.id] = (bi_pack, bi_aggregation)
         return ids
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
         self.verify_pack_permission(self.bi_pack)
@@ -1808,7 +1808,7 @@ class BIModeEditAggregation(ABCBIMode):
 
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         with html.form_context("biaggr", method="POST"):
             # For rendering of the BI aggregation valuespecs we need this
             # schema.load(schema.dump(...)) call, because the value for label conditions as given in
@@ -2059,7 +2059,7 @@ class BIModeAggregations(ABCBIMode):
     def have_rules(self) -> bool:
         return sum(x.num_rules() for x in self._bi_packs.get_packs().values()) > 0
 
-    def action(self) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
@@ -2200,7 +2200,7 @@ class BIModeAggregations(ABCBIMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if request.has_var("reload_page"):
             url = mode_url(self.name(), pack=self.bi_pack.id)
             html.reload_whole_page(url)
@@ -2385,7 +2385,7 @@ class ModeBIRuleTree(ABCBIMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
             with table_element(sortable=False, searchable=False) as table:

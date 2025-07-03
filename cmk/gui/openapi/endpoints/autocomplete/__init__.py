@@ -14,6 +14,7 @@ from typing import Any
 
 from cmk.ccc.version import Edition
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.autocomplete.request_schemas import RequestSchema
 from cmk.gui.openapi.endpoints.autocomplete.response_schemas import ResponseSchema
@@ -61,7 +62,7 @@ def show(params: Mapping[str, Any]) -> Response:
         return problem(404, f"Autocompleter {autocompleter} not found.")
 
     try:
-        choices = function(value, parameters)
+        choices = function(active_config, value, parameters)
 
     except KeyError as e:
         return problem(400, "Missing field", f"Missing field: {e}")

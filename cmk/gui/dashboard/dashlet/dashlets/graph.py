@@ -18,6 +18,7 @@ from cmk.ccc.user import UserId
 from cmk.utils.macros import MacroMapping
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
@@ -438,7 +439,9 @@ def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
     )
 
 
-def graph_templates_autocompleter(value_entered_by_user: str, params: dict) -> Choices:
+def graph_templates_autocompleter(
+    config: Config, value_entered_by_user: str, params: dict
+) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""

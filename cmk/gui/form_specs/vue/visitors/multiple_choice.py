@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from typing import assert_never, TypedDict
 
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.private.multiple_choice import (
     MultipleChoiceExtended,
     MultipleChoiceExtendedLayout,
@@ -44,7 +45,9 @@ class MultipleChoiceVisitor(
             autocompleter_ident = self.form_spec.elements.data.ident
             autocompleter_fn = autocompleter_registry[autocompleter_ident]
             return [
-                {"name": name, "title": title} for name, title in autocompleter_fn("", {}) if name
+                {"name": name, "title": title}
+                for name, title in autocompleter_fn(active_config, "", {})
+                if name
             ]
         return [
             {"name": element.name, "title": element.title.localize(translate_to_current_language)}

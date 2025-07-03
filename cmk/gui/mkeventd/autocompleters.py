@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 
 from .defines import syslog_facilities
 from .helpers import service_levels
 
 
-def service_levels_autocompleter(value: str, params: dict) -> Choices:
+def service_levels_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -18,7 +19,7 @@ def service_levels_autocompleter(value: str, params: dict) -> Choices:
     return empty_choices + _filter_choices(value, choices)
 
 
-def syslog_facilities_autocompleter(value: str, params: dict) -> Choices:
+def syslog_facilities_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """

@@ -14,7 +14,7 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 from cmk.utils.regex import regex
 
 from cmk.gui import sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
@@ -82,7 +82,7 @@ def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
 
 
-def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
+def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -99,7 +99,7 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     return _sorted_unique_lq(query, 200, value, params)
 
 
-def hostgroup_autocompleter(value: str, params: dict) -> Choices:
+def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -121,7 +121,7 @@ def hostgroup_autocompleter(value: str, params: dict) -> Choices:
     return choices
 
 
-def check_command_autocompleter(value: str, params: dict) -> Choices:
+def check_command_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -134,7 +134,9 @@ def check_command_autocompleter(value: str, params: dict) -> Choices:
     return empty_choices + choices
 
 
-def monitored_service_description_autocompleter(value: str, params: dict) -> Choices:
+def monitored_service_description_autocompleter(
+    config: Config, value: str, params: dict
+) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -155,7 +157,7 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
     return _sorted_unique_lq(query, 200, value, params)
 
 
-def kubernetes_labels_autocompleter(value: str, params: dict) -> Choices:
+def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:
     filter_id = params["group_type"]
     object_type = filter_id.removeprefix("kubernetes_")
     label_name = f"cmk/kubernetes/{object_type}"
@@ -183,17 +185,17 @@ def kubernetes_labels_autocompleter(value: str, params: dict) -> Choices:
     return __live_query_to_choices(_query_callback, 200, value, params)
 
 
-def tag_group_autocompleter(value: str, params: dict) -> Choices:
+def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return sorted(
-        (v for v in active_config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
+        (v for v in config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
 
-def tag_group_opt_autocompleter(value: str, params: dict) -> Choices:
+def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Choices:
     grouped: Choices = []
 
-    for tag_group in active_config.tags.tag_groups:
+    for tag_group in config.tags.tag_groups:
         if tag_group.id == params["group_id"]:
             grouped.append(("", ""))
             for grouped_tag in tag_group.tags:
@@ -203,7 +205,7 @@ def tag_group_opt_autocompleter(value: str, params: dict) -> Choices:
     return grouped
 
 
-def label_autocompleter(value: str, params: dict) -> Choices:
+def label_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return all known labels to support tagify label input dropdown completion"""
     group_labels: Sequence[str] = params.get("context", {}).get("group_labels", [])
     all_labels: Sequence[tuple[str, str]] = Labels.get_labels(
@@ -222,10 +224,10 @@ def label_autocompleter(value: str, params: dict) -> Choices:
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def check_types_autocompleter(value: str, params: dict) -> Choices:
+def check_types_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return [
         (str(cn), (str(cn) + " - " + c["title"]))
-        for (cn, c) in get_check_information_cached(debug=active_config.debug).items()
+        for (cn, c) in get_check_information_cached(debug=config.debug).items()
         if not cn.is_management_name()
     ]
 
@@ -254,7 +256,7 @@ class PageVsAutocomplete(AjaxPage):
         if completer is None:
             raise MKUserError("ident", _("Invalid ident: %s") % ident)
 
-        result_data = completer(api_request["value"], api_request["params"])
+        result_data = completer(config, api_request["value"], api_request["params"])
 
         # Check for correct result_data format
         assert isinstance(result_data, list)

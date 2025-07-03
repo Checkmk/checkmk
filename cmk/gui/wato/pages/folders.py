@@ -121,7 +121,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     )
 
 
-def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
+def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []

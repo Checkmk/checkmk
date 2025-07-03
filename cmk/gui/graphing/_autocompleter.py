@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 
 from ._from_api import metrics_from_api
@@ -10,7 +11,7 @@ from ._metrics import registered_metric_ids_and_titles
 from ._valuespecs import metrics_of_query
 
 
-def metrics_autocompleter(value: str, params: dict) -> Choices:
+def metrics_autocompleter(config: Config, value: str, params: dict) -> Choices:
     context = params.get("context", {})
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")

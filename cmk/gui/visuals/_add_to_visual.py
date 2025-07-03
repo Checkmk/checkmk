@@ -213,7 +213,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
     ]
 
 
-def add_to_dashboard_choices_autocompleter(value: str, params: dict) -> Choices:
+def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return get_visual_choices(
         visual_type="dashboards",
         value=value,

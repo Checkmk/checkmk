@@ -7,6 +7,7 @@ import re
 
 from cmk.ccc.hostaddress import HostName
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
@@ -23,7 +24,7 @@ class ConfigHostname(AjaxDropdownChoice):
     ident = "config_hostname"
 
 
-def config_hostname_autocompleter(value: str, params: dict) -> Choices:
+def config_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """

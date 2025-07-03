@@ -1,4 +1,5 @@
 # docker build \
+# --build-arg IMAGE_BASE=$(buildscripts/docker_image_aliases/resolve.py IMAGE_PYTHON_3_12) \
 # --tag minimal-alpine-checkmk-ci-2.4.0 \
 # -f buildscripts/scripts/Dockerfile .
 #
@@ -8,6 +9,7 @@
 # --name alpine321 \
 # minimal-alpine-checkmk-ci-2.4.0:latest bash
 #
+
 ARG IMAGE_BASE
 FROM ${IMAGE_BASE}
 # above image is python:3.12-alpine3.21
@@ -25,8 +27,8 @@ RUN apk update && \
 # install checkmk-dev-tools to run ci-artifacts
 # install pyyaml to parse editions.yml and stages.yml
 RUN pip3 install --break-system-packages \
- "checkmk-dev-tools>=0.6.0" \
- pyyaml
+ "checkmk-dev-tools==0.10.1" \
+ "pyyaml==6.0.2"
 
 # verify installation
 RUN cmk-dev info

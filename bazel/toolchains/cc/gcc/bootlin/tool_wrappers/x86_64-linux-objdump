@@ -1,2 +1,0 @@
-#!/bin/bash
-exec "${EXT_BUILD_ROOT:-.}"/external/_main~_repo_rules~gcc-linux-x86_64/bin/x86_64-buildroot-linux-gnu-objdump "$@"

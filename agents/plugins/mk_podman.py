@@ -155,7 +155,7 @@ def query_engine(session: requests_unixsocket.Session, socket_path: str) -> JSON
 def query_pods(session: requests_unixsocket.Session, socket_path: str) -> JSONSection | Error:
     endpoint = "/v4.0.0/libpod/pods/json"
     try:
-        response = session.get(build_url_callable(socket_path, endpoint))
+        response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
         response.raise_for_status()
     except Exception as e:
         return Error(build_url_human_readable(socket_path, endpoint), str(e))

@@ -233,6 +233,7 @@ CATALOG_TITLES: Final = {
     "pfsense": "pfsense",
     "phone": "Telephony",
     "plesk": "Plesk",
+    "podman": "Podman",
     "postfix": "Postfix",
     "postgresql": "PostgreSQL",
     "power": "Power supplies and PDUs",

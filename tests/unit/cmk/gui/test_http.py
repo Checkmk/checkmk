@@ -6,11 +6,15 @@
 import io
 import time
 from collections.abc import Iterator
+from contextlib import nullcontext
 
 import pytest
 from pydantic import BaseModel
 from pytest import MonkeyPatch
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.test import create_environ
+
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
@@ -18,6 +22,7 @@ from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 global_request = request
+MAX_FORM_SIZE = 20  # MBs, as seen in cmk.gui.http::Request.max_form_memory_size
 
 RequestContextFixture = Iterator[None]
 
@@ -359,6 +364,36 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
         response.headers.getlist("Set-Cookie")[-1]
         == f"auth_SITE=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path={COOKIE_PATH}"
     )
+
+
+@pytest.mark.parametrize(
+    ["size_mb", "error"],
+    [
+        pytest.param(1024 * 1024 * (MAX_FORM_SIZE - 1), False, id="under_limit"),
+        pytest.param(1024 * 1024 * MAX_FORM_SIZE, True, id="at_limit"),
+        pytest.param(1024 * 1024 * (MAX_FORM_SIZE * 10), True, id="over_limit"),
+    ],
+)
+def test_response_413_form_size_limit(
+    wsgi_app: WebTestAppForCMK,
+    patch_theme: None,
+    size_mb: int,
+    error: bool,
+) -> None:
+    """Validate the maximum form size remains under 20MB.
+
+    Args:
+        wsgi_app (WebTestAppForCMK): wsgi client of the flask application.
+        patch_theme (None): patch frontend configuration for unit testing.
+        size_mb (int): size of data added to the form.
+        error (bool): whether an error is raised or not.
+    """
+    content = "a" * size_mb
+    with pytest.raises(RequestEntityTooLarge) if error else nullcontext():
+        wsgi_app.post(
+            "/NO_SITE/check_mk/login.py",
+            data={"_username": content},
+        )
 
 
 # User IDs in Checkmk may contain non ascii characters. When they need to be encoded,

@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""mk_logwatch
+This is the Check_MK Agent plugin. If configured it will be called by the
+agent without arguments.
+
+Options:
+    -d               Debug mode: No saving of status.
+    -c CONFIG_FILE   Use this config file
+    -h               Show help.
+    --no_state       No state
+    -v               Verbose output for debugging purposes (no debug mode).
+
+You should find an example configuration file at
+'../cfg_examples/logwatch.cfg' relative to this file.
+"""
+
+
+    """
+    Side effect:
+    - In case agent plugin is called with debug option set -> depends on global
+      LOGGER and stdout.
+
+    Determine the name of the state file dependent on ENV variable and config:
+    $REMOTE set, no cluster set or no ip match -> logwatch.state.<formatted-REMOTE>
+    $REMOTE set, cluster set and ip match      -> logwatch.state.<cluster-name>
+    $REMOTE not set and a tty                  -> logwatch.state.local
+    $REMOTE not set and not a tty              -> logwatch.state
+
+    $REMOTE is determined by the check_mk_agent and varies dependent on how the
+    check_mk_agent is accessed:
+    - telnet ($REMOTE_HOST): $REMOTE is in IPv6 notation. IPv4 is extended to IPv6
+                             notation e.g. ::ffff:127.0.0.1
+    - ssh ($SSH_CLIENT): $REMOTE is either in IPv4 or IPv6 notation dependent on the
+                         IP family of the remote host.
+
+    <formatted-REMOTE> is REMOTE with colons (:) replaced with underscores (_) for
+    IPv6 address, is to IPv6 notation extended address with colons (:) replaced with
+    underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
+    an IPv4 or IPv6 address.
+    """
+
+    """
+    Evaluate globbing pattern to a list of logfile IDs
+
+    Return a list of Tuples:
+     * one identifier for opening the file as used by os.open (byte str or unicode)
+     * one unicode str, safe for writing
+
+    Glob matching of hard linked, unbroken soft linked/symlinked files.
+    No tilde expansion is done, but *, ?, and character ranges expressed with []
+    will be correctly matched.
+
+    No support for recursive globs ** (supported beginning with Python3.5 only).
+
+    Hard linked dublicates of files are not filtered.
+    Soft links may not be detected properly dependent on the Python runtime
+    [Python Standard Lib, os.path.islink()].
+    """
+    

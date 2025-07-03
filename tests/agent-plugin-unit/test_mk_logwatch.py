@@ -558,17 +558,21 @@ def test_log_lines_iter_encoding(
 
 
 def test_log_lines_iter() -> None:
-    txt_file = lw.__file__.rstrip('c')
+    txt_file = _path_to_testfile("test_data_for_mk_logwatch.txt")
     with lw.LogLinesIter(txt_file, "utf-8" if os.name == "nt" else None) as log_iter:
-        log_iter.set_position(122)
-        assert log_iter.get_position() == 122
+        log_iter.set_position(99)
+        assert log_iter.get_position() == 99
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
-        assert log_iter.get_position() == 207
+        assert (
+            line
+            == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
+        )
+        assert log_iter.get_position() == 184
 
         log_iter.push_back_line(u'Täke this!')
-        assert log_iter.get_position() == 196
+        assert log_iter.get_position() == 173
         assert log_iter.next_line() == u'Täke this!'
 
         log_iter.skip_remaining()

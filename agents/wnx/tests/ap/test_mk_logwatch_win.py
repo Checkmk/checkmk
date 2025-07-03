@@ -562,10 +562,10 @@ def test_log_lines_iter_encoding(
 
 
 def test_log_lines_iter() -> None:
-    txt_file = lw.__file__.rstrip('c')
-    with lw.LogLinesIter(txt_file, None) as log_iter:
-        log_iter.set_position(122)
-        assert log_iter.get_position() == 122
+    txt_file = _windows_dataset_path("test_data_for_mk_logwatch_crlf.txt")
+    with lw.LogLinesIter(txt_file, "utf-8" if os.name == "nt" else None) as log_iter:
+        log_iter.set_position(101)
+        assert log_iter.get_position() == 101
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
@@ -573,10 +573,10 @@ def test_log_lines_iter() -> None:
             line
             == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
         )
-        assert log_iter.get_position() == 207
+        assert log_iter.get_position() == 245
 
         log_iter.push_back_line('Täke this!')
-        assert log_iter.get_position() == 196
+        assert log_iter.get_position() == 234
         assert log_iter.next_line() == 'Täke this!'
 
         log_iter.skip_remaining()

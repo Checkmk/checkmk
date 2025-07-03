@@ -239,7 +239,7 @@ class CustomUserAttributes(BaseSchema):
 class CreateUser(CustomUserAttributes):
     username = Username(
         required=True,
-        should_exist=False,
+        presence="should_not_exist",
         description="An unique username for the user",
         example="cmkuser",
     )

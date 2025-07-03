@@ -43,7 +43,7 @@ TIMESTAMP_RANGE = tuple[float, float]
 USERNAME = {
     "username": Username(
         required=True,
-        should_exist=True,
+        presence="should_exist",
         description="An unique username for the user",
         example="cmkuser",
     )

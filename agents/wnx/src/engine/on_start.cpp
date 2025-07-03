@@ -95,6 +95,7 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
         }
         case AppType::srv:
             if (install::IsCleanInstallationRequired()) {
+                install::RemoveCleanInstallationFlag();
                 try {
                     auto data_dir = fs::path(tools::win::GetSomeSystemFolder(
                                         FOLDERID_ProgramData)) /
@@ -108,7 +109,6 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
                     XLOG::details::LogWindowsEventError(
                         102, "Exception during clean installation {}",
                         e.what());
-                    install::RemoveCleanInstallationFlag();
                 }
             }
             GetCfg().initFolders(cma::srv::kServiceName, L"", L"");

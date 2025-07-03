@@ -46,7 +46,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         # Stage 1: Check if the value is invalid
         if isinstance(parsed_value, InvalidValue):
-            return create_validation_error(parsed_value.fallback_value, parsed_value.reason)
+            return create_validation_error(self._to_vue(parsed_value)[1], parsed_value.reason)
 
         # Stage 2: Check if the value of the nested elements report problems
         if nested_validations := self._validate(parsed_value):

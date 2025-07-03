@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
-    get_visitor,
-    SingleChoiceVisitor,
+    DefaultValue,
     VisitorOptions,
 )
+from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
+from cmk.gui.form_specs.vue.visitors._type_defs import InvalidValue
 
-from cmk.rulesets.v1 import Message, Title
-from cmk.rulesets.v1.form_specs import SingleChoice, SingleChoiceElement
+import cmk.shared_typing.vue_formspec_components as VueTypes
+from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
@@ -18,17 +20,75 @@ def nonstop_complainer(name: str) -> None:
     raise ValidationError(Message("Ugh, tests, am I right?"))
 
 
+class RandomSentinel: ...
+
+
+_ParsedValue = str
+_FallbackModel = RandomSentinel
+
+
+class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValue | InvalidValue[_FallbackModel]:
+        if isinstance(raw_value, DefaultValue):
+            return "this isn't under test"
+
+        if raw_value == "error":
+            return InvalidValue(
+                reason="This is a dummy error",
+                fallback_value=RandomSentinel(),
+            )
+
+        return str(raw_value)
+
+    def _to_vue(
+        self, parsed_value: _ParsedValue | InvalidValue[_FallbackModel]
+    ) -> tuple[VueTypes.String, object]:
+        frontend_value = (
+            "frontend_fallback"
+            if isinstance(parsed_value, InvalidValue)
+            else f"frontend_{parsed_value}"
+        )
+
+        return (
+            VueTypes.String(
+                title="Dummy String",
+                help="Dummy Help",
+                label=None,
+                validators=[],
+                input_hint=None,
+                field_size=VueTypes.StringFieldSize.SMALL,
+                autocompleter=None,
+                i18n_base=VueTypes.I18nFormSpecBase(required=""),
+            ),
+            frontend_value,
+        )
+
+    def _to_disk(self, parsed_value: _ParsedValue) -> object:
+        return parsed_value
+
+
 def test_validate_returns_frontend_representation_of_replacement_value() -> None:
     # GIVEN
-    spec = SingleChoice(
-        elements=[SingleChoiceElement(name="foo", title=Title("Foo"))],
-        custom_validate=[nonstop_complainer],
+    visitor = DummyVisitor(String(), options=VisitorOptions(data_origin=DataOrigin.DISK))
+
+    # WHEN
+    validation = visitor.validate("error")
+
+    # THEN
+    assert validation
+    assert validation[0].replacement_value == "frontend_fallback"
+
+
+def test_validate_returns_frontend_representation_of_parsed_value() -> None:
+    # GIVEN
+    visitor = DummyVisitor(
+        String(custom_validate=[nonstop_complainer]),
+        options=VisitorOptions(data_origin=DataOrigin.DISK),
     )
-    visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
 
     # WHEN
     validation = visitor.validate("foo")
 
     # THEN
     assert validation
-    assert validation[0].replacement_value == SingleChoiceVisitor.option_id("foo")
+    assert validation[0].replacement_value == "frontend_foo"

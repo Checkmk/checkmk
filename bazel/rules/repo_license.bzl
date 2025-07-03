@@ -1,5 +1,3 @@
-"""Detects whether the repo is pure GPL or enterprise and GPL."""
-
 def _is_non_free_repo(repository_ctx):
     return repository_ctx.path(Label("//:non-free")).exists
 
@@ -18,4 +16,5 @@ def _repo_license_impl(repository_ctx):
 
 detect_repo_license = repository_rule(
     implementation = _repo_license_impl,
+    doc = "Detects whether the repo is pure GPL or enterprise and GPL",
 )

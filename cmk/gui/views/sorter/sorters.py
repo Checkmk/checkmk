@@ -144,6 +144,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("host_group_memberlist", cmp_string_list)
     declare_1to1_sorter("host_contacts", cmp_string_list)
     declare_1to1_sorter("host_contact_groups", cmp_string_list)
+    declare_1to1_sorter("host_docker_node", cmp_num_split)
 
     # Host group
     declare_1to1_sorter("hg_num_services", cmp_simple_number)

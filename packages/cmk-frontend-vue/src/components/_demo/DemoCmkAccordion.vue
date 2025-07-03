@@ -12,6 +12,7 @@ import CmkDropdown from '../CmkDropdown.vue'
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
 import CmkIcon from '../CmkIcon.vue'
 import CmkButton from '../CmkButton.vue'
+import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -144,6 +145,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
         <CmkIcon :name="item.header.icon.name" class="demo-accordion-header-icon"></CmkIcon>
         <span class="demo-accordion-header-title">
           {{ item.header.title }}
+          <CmkAccordionItemStateIndicator :value="item.id"></CmkAccordionItemStateIndicator>
         </span>
       </template>
       <template #content>

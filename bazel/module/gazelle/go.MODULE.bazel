@@ -5,6 +5,7 @@ go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
 use_repo(
     go_deps,
+    "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_clickhouseexporter",
     "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_fileexporter",
     "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_syslogexporter",
     "com_github_open_telemetry_opentelemetry_collector_contrib_extension_basicauthextension",

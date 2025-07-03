@@ -48,8 +48,9 @@ def test_otel_collector_build_configuration(site: Site) -> None:
     assert actual_config["buildinfo"]["description"] == expected_config["dist"]["description"]
 
     for comp_type in ("exporters", "receivers", "processors", "extensions"):
-        for a, e in zip(actual_config[comp_type], expected_config[comp_type]):
-            assert a["module"] == e["gomod"]
+        actual_config_for_type = sorted([a["module"] for a in actual_config[comp_type]])
+        expected_config_for_type = sorted([e["gomod"] for e in expected_config[comp_type]])
+        assert actual_config_for_type == expected_config_for_type
 
 
 @contextmanager

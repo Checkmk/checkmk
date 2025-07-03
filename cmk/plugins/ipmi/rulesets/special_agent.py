@@ -122,6 +122,14 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                     help_text=Help("Ignore not-available (i.e. N/A) sensors in output"),
                 ),
             ),
+            "ignore_unrecognized_events": DictElement(
+                required=False,
+                parameter_form=BooleanChoice(
+                    title=Title("Ignore unrecognized events"),
+                    label=Label("Enable"),
+                    help_text=Help("Ignore unrecognized events"),
+                ),
+            ),
         },
     )
 

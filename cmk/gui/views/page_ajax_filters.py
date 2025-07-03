@@ -6,6 +6,7 @@
 import abc
 
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -21,7 +22,7 @@ class ABCAjaxInitialFilters(AjaxPage):
     def _get_context(self, page_name: str) -> VisualContext:
         raise NotImplementedError()
 
-    def page(self) -> dict[str, str]:
+    def page(self, config: Config) -> dict[str, str]:
         api_request = self.webapi_request()
         varprefix = api_request.get("varprefix", "")
         page_name = api_request.get("page_name", "")

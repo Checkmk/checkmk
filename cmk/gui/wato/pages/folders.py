@@ -1322,7 +1322,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
         self._handle_exc(config, self.page)
 
     @override
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         html.span(self._move_title())
 
         choices = self._get_choices()
@@ -1557,7 +1557,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 class PageAjaxSetFoldertree(AjaxPage):
     @override
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

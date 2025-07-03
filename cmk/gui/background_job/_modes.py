@@ -198,7 +198,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
         super().handle_page(config)
 
     @override
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         with output_funnel.plugged():
             api_request = request.get_request()
             job_snapshot = self._show_details_page(api_request["job_id"])

@@ -16,7 +16,7 @@ from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -421,7 +421,7 @@ class ModeDiagHost(WatoMode):
 
 
 class PageAjaxDiagHost(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))

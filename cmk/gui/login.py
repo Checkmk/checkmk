@@ -25,7 +25,7 @@ import cmk.gui.mobile
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -119,13 +119,13 @@ def del_auth_cookie() -> None:
 
 class SaasLoginPage(Page):
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         raise HTTPRedirect("cognito_sso.py")
 
 
 class SaasLogoutPage(Page):
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         raise HTTPRedirect("cognito_logout.py")
 
 
@@ -150,10 +150,10 @@ class LoginPage(Page):
         self._no_html_output = no_html_output
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(request.var("lang", active_config.default_language))
+        cmk.gui.i18n.localize(request.var("lang", config.default_language))
 
         self._do_login()
 
@@ -161,7 +161,7 @@ class LoginPage(Page):
             raise MKAuthException(_("Invalid login credentials."))
 
         if is_mobile(request, response):
-            cmk.gui.mobile.page_login()
+            cmk.gui.mobile.page_login(config)
             return
 
         self._show_login_page()
@@ -449,7 +449,7 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
 
 class LogoutPage(Page):
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         assert user.id is not None
 
         session.invalidate()

@@ -514,8 +514,8 @@ class Overridable(Base[_T_OverridableConfig]):
         handlers = super().page_handlers()
         handlers.update(
             {
-                "%ss" % cls.type_name(): lambda config: ListPage(cls).page(),
-                "edit_%s" % cls.type_name(): lambda config: EditPage(cls).page(),
+                "%ss" % cls.type_name(): lambda config: ListPage(cls).page(config),
+                "edit_%s" % cls.type_name(): lambda config: EditPage(cls).page(config),
             }
         )
         return handlers
@@ -956,7 +956,7 @@ class ListPage(Page, Generic[_T]):
         self._type = pagetype
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
@@ -1175,7 +1175,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
         self._type = pagetype
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 

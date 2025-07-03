@@ -20,7 +20,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.gui import pdf
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
@@ -58,7 +58,7 @@ from ._utils import get_graph_data_from_livestatus
 # of a host or service.
 #    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):
             # This page used to be noauth but restricted to local ips.

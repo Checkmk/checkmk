@@ -23,7 +23,7 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
@@ -145,7 +145,7 @@ class AgentOutputPage(Page, abc.ABC):
 
 
 class PageFetchAgentOutput(AgentOutputPage):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         title = self._title()
         make_header(html, title, self._breadcrumb(title))
 
@@ -418,7 +418,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
 
 class PageDownloadAgentOutput(AgentOutputPage):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         file_name = self.file_name(
             self._request.host.site_id(), self._request.host.name(), self._request.agent_type
         )

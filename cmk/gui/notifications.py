@@ -12,7 +12,7 @@ import cmk.utils.render
 import cmk.gui.pages
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.header import make_header
@@ -195,7 +195,7 @@ class ClearFailedNotificationPage(Page):
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         acktime = request.get_float_input_mandatory("acktime", time.time())
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())

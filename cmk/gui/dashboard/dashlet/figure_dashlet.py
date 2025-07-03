@@ -9,6 +9,7 @@ from typing import cast
 
 from cmk.ccc.user import UserId
 
+from cmk.gui.config import Config
 from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
@@ -28,7 +29,7 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 
 
 class FigureDashletPage(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
         dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")
         try:

@@ -1685,13 +1685,13 @@ def _evaluate_iterable_up_to(
 
 
 class PageSearchMonitoring(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         query = request.get_str_input_mandatory("q")
         return MonitorMenuSearchResultsRenderer().render(livestatus.lqencode(query))
 
 
 class PageSearchSetup(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
             return SetupMenuSearchResultsRenderer().render(livestatus.lqencode(query))

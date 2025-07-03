@@ -152,7 +152,7 @@ def ajax_message_read(config: Config) -> None:
 
 
 class PageAjaxSidebarChangesMenu(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         return {
             "number_of_pending_changes": len(
                 ActivateChanges().get_all_data_required_for_activation_popout()["pendingChanges"]
@@ -161,7 +161,7 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 
 
 class PageAjaxSitesAndChanges(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         return ActivateChanges().get_all_data_required_for_activation_popout()
 
 
@@ -171,7 +171,7 @@ class PopUpMessage(TypedDict):
 
 
 class PageAjaxSidebarGetMessages(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         popup_msg: list[PopUpMessage] = []
         hint_msg: int = 0
 
@@ -192,7 +192,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
 
 
 class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
 

@@ -734,7 +734,7 @@ def view_editor_sorter_specs(
 
 
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
 
         if api_request["painter_type"] == "painter":

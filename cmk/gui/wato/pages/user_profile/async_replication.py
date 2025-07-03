@@ -13,7 +13,7 @@ from cmk.ccc.user import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -34,7 +34,7 @@ def register(page_registry: PageRegistry) -> None:
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         ajax_request = self.webapi_request()
 

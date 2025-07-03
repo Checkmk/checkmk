@@ -7,7 +7,7 @@ import abc
 
 from cmk.gui import session
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -68,7 +68,7 @@ class ABCUserProfilePage(Page):
     def _breadcrumb(self) -> Breadcrumb:
         return make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         title = self._page_title()
         breadcrumb = self._breadcrumb()
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))

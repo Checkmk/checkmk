@@ -22,7 +22,7 @@ from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
@@ -554,7 +554,7 @@ def _graph_margin_ex(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraph(cmk.gui.pages.Page):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
         try:
@@ -798,7 +798,7 @@ def _render_graph_container_html(
 
 
 class AjaxRenderGraphContent(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
         api_request = request.get_request()
@@ -945,7 +945,7 @@ def estimate_graph_step_for_html(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraphHover(cmk.gui.pages.Page):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")
         try:

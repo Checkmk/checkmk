@@ -40,10 +40,10 @@ PageResult = object
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
     def handle_page(self, config: Config) -> None:
-        self.page()
+        self.page(config)
 
     @abc.abstractmethod
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -63,9 +63,9 @@ class AjaxPage(Page, abc.ABC):
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()
 
-    def _handle_exc(self, config: Config, method: Callable[[], PageResult]) -> None:
+    def _handle_exc(self, config: Config, method: Callable[[Config], PageResult]) -> None:
         try:
-            method()
+            method(config)
         except MKException as e:
             response.status_code = http_client.BAD_REQUEST
             html.write_text_permissive(str(e))
@@ -85,7 +85,7 @@ class AjaxPage(Page, abc.ABC):
         """The page handler, called by the page registry"""
         response.set_content_type("application/json")
         try:
-            action_response = self.page()
+            action_response = self.page(config)
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
             resp = {"result_code": 1, "result": str(e), "severity": "success"}

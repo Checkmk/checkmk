@@ -19,7 +19,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -1533,7 +1533,7 @@ class BIAggregationForm(Dictionary):
 
 
 class AjaxBIRulePreview(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
@@ -1574,7 +1574,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 
 class AjaxBIAggregationPreview(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         # Prepare compiler
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)

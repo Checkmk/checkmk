@@ -38,7 +38,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -1360,7 +1360,7 @@ class ModeDistributedMonitoring(WatoMode):
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         user.need_permission("wato.sites")
 
         site_states = {}

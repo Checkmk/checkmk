@@ -300,7 +300,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
 
 
 class ModeAjaxServiceDiscovery(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.hosts")
 
@@ -1865,7 +1865,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         # TODO: Validate
         self._item = request.get_str_input_mandatory("item")
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         try:
             active_check_result = active_check(

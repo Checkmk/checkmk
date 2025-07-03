@@ -13,6 +13,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -60,7 +61,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"

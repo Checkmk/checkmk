@@ -28,7 +28,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -116,7 +116,7 @@ class ABCCrashReportPage(Page, abc.ABC):
 
 
 class PageCrash(ABCCrashReportPage):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
@@ -689,7 +689,7 @@ def _show_agent_output(row: CrashReportRow) -> None:
 
 
 class PageDownloadCrashReport(ABCCrashReportPage):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         user.need_permission("general.see_crash_reports")
 
         filename = "Checkmk_Crash_{}_{}_{}.tar.gz".format(

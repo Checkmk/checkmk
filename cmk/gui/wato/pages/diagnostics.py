@@ -53,7 +53,7 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
@@ -864,7 +864,7 @@ def _create_file_path() -> str:
 
 
 class PageDownloadDiagnosticsDump(Page):
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         if not user.may("wato.diagnostics"):
             raise MKAuthException(
                 _("Sorry, you lack the permission for downloading diagnostics dumps.")

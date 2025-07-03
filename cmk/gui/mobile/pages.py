@@ -7,7 +7,7 @@ from cmk.ccc.site import omd_site
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui import visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -180,7 +180,7 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     html.close_ul()
 
 
-def page_login() -> None:
+def page_login(config: Config) -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
@@ -233,7 +233,7 @@ def page_login() -> None:
 
 
 class PageMobileIndex(Page):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         _page_index()
         return None
 
@@ -293,8 +293,8 @@ def _page_index() -> None:
 
 
 class PageMobileView(Page):
-    def page(self) -> PageResult:
-        _page_view(debug=active_config.debug)
+    def page(self, config: Config) -> PageResult:
+        _page_view(debug=config.debug)
         return None
 
 

@@ -14,7 +14,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -25,7 +25,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
         return self._do_reschedule(api_request)
 

@@ -26,7 +26,7 @@ from cmk.utils.setup_search_index import request_index_rebuild
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -980,7 +980,7 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Dictionary | None:
 
 
 class PageAjaxStartActivation(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.activate")
 
@@ -1029,7 +1029,7 @@ class PageAjaxStartActivation(AjaxPage):
 
 
 class PageAjaxActivationState(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()

@@ -88,7 +88,7 @@ class PageAutomationLogin(AjaxPage):
         self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomationLogin.page")
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
@@ -153,7 +153,7 @@ class PageAutomation(AjaxPage):
             self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomation.page")
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         # To prevent mixups in written files we use the same lock here as for
         # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,

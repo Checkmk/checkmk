@@ -56,7 +56,7 @@ def register(
 
 
 class AjaxFetchAggregationData(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
 
@@ -269,7 +269,7 @@ class NodeVisualizationBIDataMapper:
 
 
 class AjaxSaveBIAggregationLayout(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
@@ -279,7 +279,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 
 
 class AjaxDeleteBIAggregationLayout(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         for_aggregation = request.var("aggregation_name")
         active_config.bi_layouts["aggregations"].pop(for_aggregation)
@@ -288,7 +288,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 
 
 class AjaxLoadBIAggregationLayout(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 

@@ -46,7 +46,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
         raise NotImplementedError()
 
-    def page(self) -> dict:
+    def page(self, config: Config) -> dict:
         api_request = request.get_request()
         vs = ListOfMultiple(
             choices=self._get_choices(api_request), choice_page_name="unused_dummy_page"
@@ -57,7 +57,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 
 
 class AjaxFetchCA(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("general.server_side_requests")
 

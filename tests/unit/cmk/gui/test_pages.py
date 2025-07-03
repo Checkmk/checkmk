@@ -267,7 +267,7 @@ def test_page_registry_register_page_class(capsys: pytest.CaptureFixture[str]) -
     page_registry = cmk.gui.pages.PageRegistry()
 
     class PageClass(cmk.gui.pages.Page):
-        def page(self) -> None:
+        def page(self, config: Config) -> None:
             sys.stdout.write("234")
 
     page_registry.register(PageEndpoint("234handler", PageClass))

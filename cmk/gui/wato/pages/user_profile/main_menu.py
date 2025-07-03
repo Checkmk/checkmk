@@ -7,6 +7,7 @@
 
 from collections.abc import Callable
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -182,7 +183,7 @@ def default_user_menu_topics(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
@@ -203,7 +204,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         check_csrf_token()
         _set_user_attribute(
             "ui_sidebar_position",
@@ -215,7 +216,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
 
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         try:
             check_csrf_token()
             name = request.get_str_input_mandatory("name")

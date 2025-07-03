@@ -14,7 +14,7 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 from cmk.utils.regex import regex
 
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
@@ -245,7 +245,7 @@ def validate_autocompleter_data(api_request):
 
 
 class PageVsAutocomplete(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]

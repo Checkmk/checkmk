@@ -27,6 +27,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
+from cmk.gui.config import Config
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing._from_api import (
     graphs_from_api,
@@ -179,7 +180,7 @@ def load_plugins() -> None:
 
 class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     @override
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         """This page is called for the popup of the graph icon of hosts/services."""
         host_service_graph_popup_cmk(
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
@@ -193,7 +194,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
 
 class PageGraphDashlet(cmk.gui.pages.Page):
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         html.write_html(
             host_service_graph_dashlet_cmk(
                 parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),

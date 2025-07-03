@@ -22,7 +22,7 @@ from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInpu
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -926,7 +926,7 @@ class ModeCreateCluster(CreateHostMode):
 
 
 class PageAjaxPingHost(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
@@ -945,7 +945,7 @@ class PageAjaxPingHost(AjaxPage):
 
 
 class PageAjaxDiagCmkAgent(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         result = diag_cmk_agent(
             automation_config=make_automation_config(active_config.sites[api_request["site_id"]]),

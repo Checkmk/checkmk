@@ -921,7 +921,7 @@ class JsonPage(Page, abc.ABC):
     def handle_page(self, config: Config) -> None:
         try:
             response.set_content_type("application/json")
-            response.set_data(json.dumps(self.page()))
+            response.set_data(json.dumps(self.page(config)))
         except MKGeneralException as e:
             response.status_code = http_client.BAD_REQUEST
             response.set_data(str(e))
@@ -934,7 +934,7 @@ class JsonPage(Page, abc.ABC):
             response.set_data(str(e))
 
     @abc.abstractmethod
-    def page(self) -> JsonSerializable:
+    def page(self, config: Config) -> JsonSerializable:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -953,7 +953,7 @@ def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
 
 
 class UserWebAuthnRegisterBegin(JsonPage):
-    def page(self) -> JsonSerializable:
+    def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
         if not session.two_factor_enforced():
@@ -979,7 +979,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
 
 
 class UserWebAuthnRegisterComplete(JsonPage):
-    def page(self) -> JsonSerializable:
+    def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
         if not session.two_factor_enforced():
@@ -1210,7 +1210,7 @@ class UserLoginTwoFactor(Page):
                 _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         assert user.id is not None
 
         html.render_headfoot = False
@@ -1268,7 +1268,7 @@ class UserLoginTwoFactor(Page):
 
 
 class UserWebAuthnLoginBegin(JsonPage):
-    def page(self) -> JsonSerializable:
+    def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):
@@ -1287,7 +1287,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
 
 class UserWebAuthnLoginComplete(JsonPage):
-    def page(self) -> JsonSerializable:
+    def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):

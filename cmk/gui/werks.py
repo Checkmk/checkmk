@@ -133,7 +133,7 @@ _WerkTableOptionColumns = Literal[
 
 class ChangeLogPage(Page):
     @override
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(
             main_menu_registry["help"], _("Change log (Werks)")
         )

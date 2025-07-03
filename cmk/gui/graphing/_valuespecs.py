@@ -11,6 +11,7 @@ from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.utils.metrics import MetricName as MetricName_
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -410,7 +411,7 @@ def _vs_type_from_formatter(
 
 
 class PageVsAutocomplete(AjaxPage):
-    def page(self) -> PageResult:
+    def page(self, config: Config) -> PageResult:
         if metric_name := self.webapi_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
             unit_choice_for_metric = _unit_choice_from_unit_spec(metric_spec.unit_spec)

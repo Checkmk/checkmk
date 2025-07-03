@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -43,7 +43,7 @@ class UserProfileReplicate(Page):
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), title)
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))

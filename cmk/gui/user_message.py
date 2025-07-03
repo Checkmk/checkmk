@@ -68,7 +68,7 @@ class PageUserMessage(Page):
         )
 
     @override
-    def page(self) -> None:
+    def page(self, config: Config) -> None:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), _("Messages"))
         make_header(html, _("Your messages"), breadcrumb, self.page_menu(breadcrumb))
 

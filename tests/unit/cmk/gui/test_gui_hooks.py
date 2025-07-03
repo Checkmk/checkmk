@@ -15,6 +15,7 @@ from tests.unit.cmk.web_test_app import WebTestAppForCMK
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui import hooks
+from cmk.gui.config import Config
 from cmk.gui.pages import Page, page_registry, PageEndpoint
 
 
@@ -77,7 +78,7 @@ def test_request_memoize_request_integration(
         return mock()
 
     class PageClass(Page):
-        def page(self) -> None:
+        def page(self, config: Config) -> None:
             mock.return_value = 1
             assert memoized() == 1
 
@@ -138,7 +139,7 @@ def test_threaded_memoize(
         return x * x
 
     class PageClass(Page):
-        def page(self) -> None:
+        def page(self, config: Config) -> None:
             def worker(i: int) -> None:
                 cached_function(i)
                 cached_function(i)

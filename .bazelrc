@@ -11,6 +11,9 @@ common:linux --registry="file://%workspace%/bazel/registry"
 common:windows --registry="file:///%workspace%/bazel/registry"
 common --registry=https://bcr.bazel.build
 
+# enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
+common:linux --disk_cache=~/.cache/bazel_disk_cache/
+
 # reading WORKSPACE is disabled by default for Bazel 8
 common --enable_workspace
 

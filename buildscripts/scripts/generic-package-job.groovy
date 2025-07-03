@@ -3,7 +3,7 @@
 /// file: generic-package-job.groovy
 
 def secret_list(secret_vars) {
-    return secret_vars ? secret_vars.split(',') : [];
+    return secret_vars ? secret_vars.split(' ') : [];
 }
 
 def validate_parameters() {

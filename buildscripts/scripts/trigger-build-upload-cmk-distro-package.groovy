@@ -97,17 +97,13 @@ def main() {
                 notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}")
             }
 
+            // Without this stage in place the whole job would fail, unclear why
             smart_stage(
-                name: "Copy artifacts",
+                name: "Say hello",
                 condition: build_instance,
                 raiseOnError: true,
             ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
-                    selector: specific(build_instance.getId()),
-                    target: "${checkout_dir}/${download_dir}/",
-                    fingerprintArtifacts: true,
-                )
+                sh("echo hello");
             }
         }]
     }

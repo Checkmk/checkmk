@@ -2163,10 +2163,10 @@ def get_bulk_tasks(
     mgmt_client: MgmtApiClient,
     args: Args,
     group_labels: GroupLabels,
-    monitored_resources_types: set[str],
+    monitored_services: set[str],
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Iterator[asyncio.Task]:
-    if FetchedResource.virtual_machines.type in monitored_resources_types:
+    if FetchedResource.virtual_machines.type in monitored_services:
         yield asyncio.create_task(
             process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
         )
@@ -2222,12 +2222,10 @@ async def process_resources(
     args: Args,
     group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
+    monitored_services: set[str],
 ) -> None:
-    monitored_resources_types = set(args.services)
     monitored_resources_by_id = {
-        r.info["id"].lower(): r
-        for r in selected_resources
-        if r.info["type"] in monitored_resources_types
+        r.info["id"].lower(): r for r in selected_resources if r.info["type"] in monitored_services
     }
 
     tasks = {
@@ -2236,7 +2234,7 @@ async def process_resources(
             mgmt_client,
             args,
             group_labels,
-            monitored_resources_types,
+            monitored_services,
             monitored_resources_by_id,
         ),
         process_single_resources(mgmt_client, args, monitored_resources_by_id),
@@ -2252,7 +2250,9 @@ async def process_resources(
             write_exception_to_agent_info_section(e, "Management client (async)")
 
 
-async def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
+async def main_subscription(
+    args: Args, selector: Selector, subscription: str, monitored_services: set[str]
+) -> None:
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
         deserialize_http_proxy_config(args.proxy),
@@ -2282,10 +2282,15 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
     write_group_info(monitored_groups, selected_resources, group_labels)
 
     await process_metrics(mgmt_client, selected_resources, args)
-    await asyncio.gather(
-        process_usage_details(mgmt_client, monitored_groups, args),
-        process_resources(mgmt_client, args, group_labels, selected_resources),
-    )
+
+    tasks = {
+        process_usage_details(mgmt_client, monitored_groups, args)
+        if "usage_details" in monitored_services
+        else None,
+        process_resources(mgmt_client, args, group_labels, selected_resources, monitored_services),
+    }
+    tasks.discard(None)
+    await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
     write_remaining_reads(mgmt_client.ratelimit)
 
@@ -2324,7 +2329,10 @@ async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) 
     monitored_services = set(args.services)
     await asyncio.gather(
         main_graph_client(args, monitored_services),
-        *{main_subscription(args, selector, subscription) for subscription in subscriptions},
+        *{
+            main_subscription(args, selector, subscription, monitored_services)
+            for subscription in subscriptions
+        },
     )
 
 

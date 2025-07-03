@@ -395,7 +395,6 @@ class ConfigurationConnectionAttributes(OneOfSchema):
 class SiteLoginRequest(BaseSchema):
     username = Username(
         required=True,
-        should_exist=True,
         description="An administrative user's username.",
         example="cmkadmin",
     )

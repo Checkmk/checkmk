@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import usei18n from '@/lib/i18n'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import DefaultPopup from './DefaultPopup.vue'
@@ -167,6 +167,18 @@ async function checkIfMenuActive(): Promise<void> {
   }, 300)
 }
 
+const activateChangesButtonDisabled = computed((): boolean => {
+  if (!props.user_has_activate_foreign) {
+    return true
+  }
+  if (activateChangesInProgress.value) {
+    return true
+  }
+  return !sitesAndChanges.value.sites.some(
+    (site) => site.onlineStatus === 'online' && site.changes > 0
+  )
+})
+
 onMounted(() => {
   void checkIfMenuActive()
 })
@@ -180,11 +192,7 @@ onMounted(() => {
       </h1>
       <CmkButtonSubmit
         class="cmk-button-submit"
-        :disabled="
-          sitesAndChanges.pendingChanges.length === 0 ||
-          activateChangesInProgress ||
-          !user_has_activate_foreign
-        "
+        :disabled="activateChangesButtonDisabled"
         @click="() => activateAllChanges()"
       >
         {{ t('activate-changes-on-all-sites', 'Activate changes (on all sites)') }}

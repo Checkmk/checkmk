@@ -14,7 +14,6 @@ from typing import TypeVar
 import pytest
 from faker import Faker
 from playwright.sync_api import BrowserContext, Page
-from random_order.config import Config as RandomOrderConfig  # type: ignore[import-untyped]
 
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
@@ -275,14 +274,3 @@ def _email_manager() -> Iterator[EmailManager]:
     """
     with EmailManager() as email_manager:
         yield email_manager
-
-
-def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
-    """This is a workaround for the issue that pytest does not sort the collected items.
-
-    It is caused by a bug that is fixed in pytest 8.0.0:
-    https://github.com/microsoft/playwright-pytest/issues/195
-    TODO CMK-23788: Remove after pytest upgrade
-    """
-    if not RandomOrderConfig(config).is_enabled:
-        items.sort(key=lambda item: item.nodeid)

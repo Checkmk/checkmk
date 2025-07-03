@@ -96,19 +96,6 @@ def main() {
             if ("${build_instance.result}" != "SUCCESS") {
                 notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}")
             }
-
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: true,
-            ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
-                    selector: specific(build_instance.getId()),
-                    target: "${checkout_dir}/${download_dir}/",
-                    fingerprintArtifacts: true,
-                )
-            }
         }]
     }
 

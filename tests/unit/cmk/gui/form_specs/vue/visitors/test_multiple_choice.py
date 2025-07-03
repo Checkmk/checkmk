@@ -5,14 +5,9 @@
 
 import pytest
 
-from cmk.ccc.user import UserId
-
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
+from cmk.gui.form_specs.vue.visitors import get_visitor, IncomingData, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.visitors._type_defs import (
     DefaultValue as FormSpecDefaultValue,
-)
-from cmk.gui.form_specs.vue.visitors._type_defs import (
-    VisitorOptions,
 )
 
 from cmk.rulesets.v1 import Title
@@ -38,22 +33,21 @@ SORTED_GOOD_CHOICES_DISK = sorted(["foo", "bar"])
 
 
 @pytest.mark.parametrize(
-    "data_origin, sorted_good_choices",
+    "sorted_good_choices",
     [
-        (DataOrigin.DISK, SORTED_GOOD_CHOICES_DISK),
-        (DataOrigin.FRONTEND, SORTED_GOOD_CHOICES_FRONTEND),
+        RawDiskData(SORTED_GOOD_CHOICES_DISK),
+        RawFrontendData(SORTED_GOOD_CHOICES_FRONTEND),
     ],
 )
 def test_multiple_choice(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
-    sorted_good_choices: list,
+    # request_context: None,
+    # patch_theme: None,
+    # with_user: tuple[UserId, str],
+    sorted_good_choices: IncomingData,
     multiple_choice_spec: MultipleChoice,
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
-    visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(multiple_choice_spec)
     _vue_spec, vue_value = visitor.to_vue(sorted_good_choices)
     # Send good choice to vue
     assert vue_value == SORTED_GOOD_CHOICES_FRONTEND
@@ -79,20 +73,16 @@ SORTED_SOME_BAD_CHOICE_FILTERED_DISK = sorted(["foo", "bar"])
 
 
 @pytest.mark.parametrize(
-    "data_origin, some_bad_choice",
-    [(DataOrigin.DISK, SOME_BAD_CHOICE_DISK), (DataOrigin.FRONTEND, SOME_BAD_CHOICE_FRONTEND)],
+    "some_bad_choice",
+    [RawDiskData(SOME_BAD_CHOICE_DISK), RawFrontendData(SOME_BAD_CHOICE_FRONTEND)],
 )
 def test_multiple_choice_with_invalid_key(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
-    some_bad_choice: list,
+    some_bad_choice: IncomingData,
     multiple_choice_spec: MultipleChoice,
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
     # Check behaviour: Invalid keys are filtered out during parsing
-    visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(multiple_choice_spec)
     _vue_spec, vue_value = visitor.to_vue(some_bad_choice)
     # Send good choice to vue
     assert vue_value == SORTED_SOME_BAD_CHOICE_FILTERED_FRONTEND
@@ -105,11 +95,6 @@ def test_multiple_choice_with_invalid_key(
     assert visitor.to_disk(some_bad_choice) == SORTED_SOME_BAD_CHOICE_FILTERED_DISK
 
 
-def test_parse_default_value(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    multiple_choice_spec: MultipleChoice,
-) -> None:
-    visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=DataOrigin.DISK))
+def test_parse_default_value(multiple_choice_spec: MultipleChoice) -> None:
+    visitor = get_visitor(multiple_choice_spec)
     assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND

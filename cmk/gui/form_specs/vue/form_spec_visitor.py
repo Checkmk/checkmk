@@ -129,6 +129,7 @@ from .visitors import (
     MultipleChoiceVisitor,
     OptionalChoiceVisitor,
     PasswordVisitor,
+    RawFrontendData,
     register_recomposer_function,
     register_visitor_class,
     SimplePasswordVisitor,
@@ -142,16 +143,12 @@ from .visitors import (
     TwoColumnDictionaryVisitor,
 )
 from .visitors._type_defs import (
-    DataOrigin,
     DEFAULT_VALUE,
-    DefaultValue,
-    DiskModel,
-    VisitorOptions,
+    IncomingData,
 )
 from .visitors._type_defs import FormSpecValidationError as FormSpecValidationError
 
 T = TypeVar("T")
-_FrontendModel = TypeVar("_FrontendModel")
 
 
 class DisplayMode(Enum):
@@ -277,24 +274,16 @@ def process_validation_messages(
         raise FormSpecValidationError(validation_messages)
 
 
-def get_vue_value(field_id: str, fallback_value: Any) -> Any:
-    """Returns the value of a vue formular field"""
-    if request.has_var(field_id):
-        return json.loads(request.get_str_input_mandatory(field_id))
-    return fallback_value
-
-
 def render_form_spec(
     form_spec: FormSpec[T],
     field_id: str,
-    value: Any,
-    origin: DataOrigin,
+    value: IncomingData,
     do_validate: bool,
     display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
     vue_app_config = serialize_data_for_frontend(
-        form_spec, field_id, origin, do_validate, value, display_mode
+        form_spec, field_id, do_validate, value, display_mode
     )
     if active_config.load_frontend_vue == "inject":
         logger.warning(
@@ -309,36 +298,33 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
     """Computes/validates the value from a vue formular field"""
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
-    value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
-    visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
+    value_from_frontend = RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
+    visitor = get_visitor(form_spec)
     _process_validation_errors(visitor.validate(value_from_frontend))
     return visitor.to_disk(value_from_frontend)
 
 
 def validate_value_from_frontend(
-    form_spec: FormSpec[T], value_from_frontend: Any
+    form_spec: FormSpec[T], value: IncomingData
 ) -> Sequence[shared_type_defs.ValidationMessage]:
-    visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
-    return visitor.validate(value_from_frontend)
+    visitor = get_visitor(form_spec)
+    return visitor.validate(value)
 
 
-def transform_to_disk_model(
-    form_spec: FormSpec[T], value_from_frontend: _FrontendModel | DefaultValue = DEFAULT_VALUE
-) -> DiskModel:
-    visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
-    return visitor.to_disk(value_from_frontend)
+def transform_to_disk_model(form_spec: FormSpec[T], value: IncomingData = DEFAULT_VALUE) -> object:
+    visitor = get_visitor(form_spec)
+    return visitor.to_disk(value)
 
 
 def serialize_data_for_frontend(
     form_spec: FormSpec[T],
     field_id: str,
-    origin: DataOrigin,
     do_validate: bool,
-    value: Any = DEFAULT_VALUE,
+    value: IncomingData = DEFAULT_VALUE,
     display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
-    visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
+    visitor = get_visitor(form_spec)
     vue_component, vue_value = visitor.to_vue(value)
 
     validation: list[shared_type_defs.ValidationMessage] = []

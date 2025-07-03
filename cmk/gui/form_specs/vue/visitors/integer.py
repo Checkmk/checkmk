@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import Integer
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -29,7 +29,9 @@ _FallbackModel = int | Literal[""]
 
 
 class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = ""
             if isinstance(
@@ -39,17 +41,19 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            value: object = prefill_default
+        else:
+            value = raw_value.value
 
         #  23 / -23 / "23" / "-23" -> OK
         #  23.0 / "23.0" / other   -> INVALID
-        if not isinstance(raw_value, int):
+        if not isinstance(value, int):
             return InvalidValue[_FallbackModel](
                 reason=_("Not an integer number"), fallback_value=""
             )
 
         try:
-            return int(raw_value)
+            return int(value)
         except ValueError:
             return InvalidValue[_FallbackModel](
                 reason=_("Not an integer number"), fallback_value=""

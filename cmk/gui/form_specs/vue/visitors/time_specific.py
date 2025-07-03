@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 from collections.abc import Sequence
-from typing import Any, TypedDict
+from typing import Any, TypedDict, TypeGuard
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
@@ -17,7 +17,14 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, InvalidValue
+from ._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
+)
 from ._utils import compute_validators, get_title_and_help
 
 _default_value_key = shared_type_defs.TimeSpecific.default_value_key
@@ -29,25 +36,31 @@ class _TimeperiodConfig(TypedDict):
     parameters: object
 
 
-_ParsedValueModel = object
+_ParsedValueModel = IncomingData
 _FallbackModel = object
 
 
 class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         # Since an inactive time specific form spec leaves no traces in the data
         # we can not make any assumptions/tests on the raw_value and return it "as is".
         if self._is_active(raw_value):
+            value = raw_value.value
             # At least some basic tests if both keys are present
-            assert isinstance(raw_value, dict)
-            if not (_ts_values_key in raw_value and _default_value_key in raw_value):
+            assert isinstance(value, dict)
+            if not (_ts_values_key in value and _default_value_key in value):
                 return InvalidValue(reason=_("Invalid time specific data"), fallback_value={})
 
-            if self.options.data_origin == DataOrigin.DISK:
-                return {
-                    _default_value_key: raw_value[_default_value_key],
-                    _ts_values_key: self._convert_to_dict_config(raw_value[_ts_values_key]),
-                }
+            if isinstance(raw_value, RawDiskData):
+                assert isinstance(value, dict)
+                return RawDiskData(
+                    {
+                        _default_value_key: value[_default_value_key],
+                        _ts_values_key: self._convert_to_dict_config(value[_ts_values_key]),
+                    }
+                )
             return raw_value
         return raw_value
 
@@ -72,6 +85,9 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
         enabled_visitor = self._time_specific_enabled_visitor()
         enabled_spec = enabled_visitor.to_vue(DEFAULT_VALUE)[0]
 
+        if isinstance(parsed_value, InvalidValue):
+            parsed_value = RawDiskData(parsed_value.fallback_value)
+
         return (
             shared_type_defs.TimeSpecific(
                 title=title,
@@ -95,6 +111,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         disk_value = self._get_current_visitor(parsed_value).to_disk(parsed_value)
         if self._is_active(parsed_value):
+            assert isinstance(disk_value, dict)
             # Convert value to ugly tuple format
             disk_value = {
                 _default_value_key: disk_value[_default_value_key],
@@ -102,12 +119,14 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
             }
         return disk_value
 
-    def _is_active(self, data: object) -> bool:
-        if isinstance(data, dict):
-            return _default_value_key in data
+    def _is_active(self, raw_value: IncomingData) -> TypeGuard[RawDiskData | RawFrontendData]:
+        if isinstance(raw_value, DefaultValue):
+            return False
+        if isinstance(raw_value.value, dict):
+            return _default_value_key in raw_value.value
         return False
 
-    def _get_current_visitor(self, parsed_value: object) -> FormSpecVisitor[Any, Any, Any]:
+    def _get_current_visitor(self, parsed_value: IncomingData) -> FormSpecVisitor[Any, Any, Any]:
         return (
             self._time_specific_enabled_visitor()
             if self._is_active(parsed_value)
@@ -155,7 +174,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
         )
 
     def _time_specific_enabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
-        return get_visitor(self._time_specific_spec(), self.options)
+        return get_visitor(self._time_specific_spec())
 
     def _time_specific_disabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
-        return get_visitor(self.form_spec.parameter_form, self.options)
+        return get_visitor(self.form_spec.parameter_form)

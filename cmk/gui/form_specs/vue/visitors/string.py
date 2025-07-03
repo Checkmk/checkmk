@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import FieldSize
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -26,7 +26,9 @@ _FallbackModel = str
 
 
 class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = ""
             if isinstance(
@@ -36,11 +38,12 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            raw_value = RawFrontendData(prefill_default)
 
-        if not isinstance(raw_value, str):
+        if not isinstance(raw_value.value, str):
             return InvalidValue(reason=_("Invalid string"), fallback_value="")
-        return raw_value
+
+        return raw_value.value
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]

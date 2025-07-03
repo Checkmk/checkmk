@@ -11,7 +11,7 @@ from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.private.validators import not_empty
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors._registry import get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, VisitorOptions
+from cmk.gui.form_specs.vue.visitors._type_defs import RawFrontendData
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
 
 from cmk.rulesets.v1 import Help, Message, Title
@@ -88,14 +88,16 @@ def _append_full_parent_title(title: str, parent_folder: Folder | None) -> str:
     return f"{_append_full_parent_title(parent_folder.title(), parent_folder.parent())}/{title}"
 
 
-def save_folder_from_slidein_schema(data: object, *, pprint_value: bool) -> FolderDescription:
+def save_folder_from_slidein_schema(
+    data: RawFrontendData, *, pprint_value: bool
+) -> FolderDescription:
     """Save a folder from data returned from folder slide in.
 
     Raises:
         FormSpecValidationError: if the data does not match the form spec
     """
     form_spec = get_folder_slidein_schema()
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
+    visitor = get_visitor(form_spec)
 
     validation_errors = visitor.validate(data)
     process_validation_messages(validation_errors)

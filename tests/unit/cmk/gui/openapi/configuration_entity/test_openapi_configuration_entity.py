@@ -10,6 +10,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
+from cmk.gui.form_specs.vue.visitors import RawFrontendData
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
@@ -87,10 +88,12 @@ def test_update_configuration_entity(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {
-            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
-            "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
-        },
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
+            }
+        ),
         object_id=None,
         pprint_value=False,
     )
@@ -167,10 +170,12 @@ def test_list_configuration_entities(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {
-            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
-            "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
-        },
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+            }
+        ),
         object_id=None,
         pprint_value=False,
     )
@@ -194,10 +199,12 @@ def test_get_configuration_entity(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {
-            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
-            "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
-        },
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+            }
+        ),
         object_id=None,
         pprint_value=False,
     )

@@ -8,8 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.gui.form_specs.vue.visitors._registry import get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
@@ -38,11 +37,13 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
 
 def test_folder_save_returns_full_title(create_folder_test_environment: None) -> None:
     # GIVEN
-    visitor = get_visitor(get_folder_slidein_schema(), VisitorOptions(DataOrigin.DISK))
-    _, data = visitor.to_vue({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
+    visitor = get_visitor(get_folder_slidein_schema())
+    _, data = visitor.to_vue(
+        RawDiskData({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
+    )
 
     # WHEN
-    description = save_folder_from_slidein_schema(data, pprint_value=False)
+    description = save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False)
 
     # THEN
     assert description.title == f"{SUB_FOLDER_TITLE}/foo"
@@ -54,11 +55,13 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
 )
 def test_folder_save_roundtrip(create_folder_test_environment: None, parent_folder: str) -> None:
     # GIVEN
-    visitor = get_visitor(get_folder_slidein_schema(), VisitorOptions(DataOrigin.DISK))
-    _, data = visitor.to_vue({"general": {"title": "foo", "parent_folder": parent_folder}})
+    visitor = get_visitor(get_folder_slidein_schema())
+    _, data = visitor.to_vue(
+        RawDiskData({"general": {"title": "foo", "parent_folder": parent_folder}})
+    )
 
     # WHEN
-    save_folder_from_slidein_schema(data, pprint_value=False)
+    save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False)
 
     # THEN
     parent = folder_tree().all_folders()[parent_folder]

@@ -8,8 +8,13 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import OptionalChoice
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, VisitorOptions
+from cmk.gui.form_specs.vue.visitors import (
+    DEFAULT_VALUE,
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+)
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, Integer
@@ -29,17 +34,22 @@ def spec() -> OptionalChoice:
     )
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
 @pytest.mark.parametrize(
-    ["source_value", "expected_value"], [[42] * 2, [None] * 2, [DEFAULT_VALUE, None]]
+    ["source_value", "expected_value"],
+    [
+        [RawDiskData(42), 42],
+        [RawFrontendData(42), 42],
+        [RawDiskData(None), None],
+        [RawFrontendData(None), None],
+        [DEFAULT_VALUE, None],
+    ],
 )
 def test_optional_choice_valid_value(
     optional_choice_spec: OptionalChoice,
-    data_origin: DataOrigin,
-    source_value: int | None | DefaultValue,
+    source_value: IncomingData,
     expected_value: int | None,
 ) -> None:
-    visitor = get_visitor(optional_choice_spec, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(optional_choice_spec)
     _vue_spec, vue_value = visitor.to_vue(source_value)
     assert vue_value == expected_value
 
@@ -51,23 +61,25 @@ def test_optional_choice_valid_value(
     assert visitor.to_disk(source_value) == expected_value
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize("data_wrapper", [RawFrontendData, RawDiskData])
 @pytest.mark.parametrize("source_value", ["abc", (None,)])
 def test_optional_choice_invalid_parameter_form_value(
-    optional_choice_spec: OptionalChoice, data_origin: DataOrigin, source_value: str | tuple[None]
+    optional_choice_spec: OptionalChoice,
+    data_wrapper: type[RawDiskData | RawFrontendData],
+    source_value: RawDiskData | RawFrontendData,
 ) -> None:
     class SomeClass:
         pass
 
-    visitor = get_visitor(optional_choice_spec, VisitorOptions(data_origin=data_origin))
-    _vue_spec, vue_value = visitor.to_vue(SomeClass)
+    visitor = get_visitor(optional_choice_spec)
+    _vue_spec, vue_value = visitor.to_vue(data_wrapper(SomeClass))
     # Note: this is the INVALID_VALUE result of the embedded Integer parameter_form
     assert vue_value == ""
 
     # Check validation message
-    validation_messages = visitor.validate(SomeClass)
+    validation_messages = visitor.validate(data_wrapper(SomeClass))
     assert len(validation_messages) == 1
 
     # Invalid value causes exception
     with pytest.raises(MKGeneralException):
-        visitor.to_disk(source_value)
+        visitor.to_disk(data_wrapper(source_value))

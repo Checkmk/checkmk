@@ -12,7 +12,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import get_title_and_help
 
 _ParsedValueModel = Mapping[str, str]
@@ -20,15 +20,17 @@ _FallbackModel = Mapping[str, str]
 
 
 class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
-        if not isinstance(raw_value, dict):
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+        if isinstance(raw_value, DefaultValue) or not isinstance(raw_value.value, dict):
             return InvalidValue(reason=_("Invalid data"), fallback_value={})
 
-        for value in raw_value.values():
+        for value in raw_value.value.values():
             if not isinstance(value, str):
                 return InvalidValue(reason=_("Invalid data"), fallback_value={})
 
-        return raw_value
+        return raw_value.value
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]

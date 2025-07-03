@@ -4,35 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private import Labels, World
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
 
 labels = {"cmk/check_mk_server": "yes"}
 
 
 def test_labels_can_serialize_to_disk() -> None:
-    frontend_visitor = get_visitor(
-        Labels(world=World.CORE),
-        VisitorOptions(data_origin=DataOrigin.FRONTEND),
-    )
-    disk_visitor = get_visitor(
-        Labels(world=World.CORE),
-        VisitorOptions(data_origin=DataOrigin.DISK),
-    )
-
-    disk_visitor.to_disk(labels)
-    frontend_visitor.to_disk(labels)
+    visitor = get_visitor(Labels(world=World.CORE))
+    visitor.to_disk(RawDiskData(labels))
+    visitor.to_disk(RawFrontendData(labels))
 
 
 def test_labels_pass_validation() -> None:
-    frontend_visitor = get_visitor(
-        Labels(world=World.CORE),
-        VisitorOptions(data_origin=DataOrigin.FRONTEND),
-    )
-    disk_visitor = get_visitor(
-        Labels(world=World.CORE),
-        VisitorOptions(data_origin=DataOrigin.DISK),
-    )
-
-    assert not disk_visitor.validate(labels)
-    assert not frontend_visitor.validate(labels)
+    visitor = get_visitor(Labels(world=World.CORE))
+    assert not visitor.validate(RawDiskData(labels))
+    assert not visitor.validate(RawFrontendData(labels))

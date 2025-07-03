@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import MatchingScope, RegularExpression
@@ -14,13 +14,13 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 @pytest.mark.parametrize(
     "value",
     [
-        ".*",
-        "",  # Acceptable at the moment
+        RawDiskData(".*"),
+        RawDiskData(""),  # Acceptable at the moment
     ],
 )
-def test_validate_ok_regex(request_context: None, value: str) -> None:
+def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec, options=VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = get_visitor(form_spec)
 
     errors = visitor.validate(value)
 
@@ -29,8 +29,10 @@ def test_validate_ok_regex(request_context: None, value: str) -> None:
 
 def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec, options=VisitorOptions(data_origin=DataOrigin.DISK))
-    global_flags_in_middle_regex = "~(?i)^(?!.*\b(deprecated|dev|lab|sysprepped|Omnistack)\b).*$"
+    visitor = get_visitor(form_spec)
+    global_flags_in_middle_regex = RawDiskData(
+        "~(?i)^(?!.*\b(deprecated|dev|lab|sysprepped|Omnistack)\b).*$"
+    )
 
     errors = visitor.validate(global_flags_in_middle_regex)
 
@@ -40,8 +42,8 @@ def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
 
 def test_syntax_error_is_invalid(request_context: None) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec, options=VisitorOptions(data_origin=DataOrigin.DISK))
-    syntax_error_regex = "^(.*server.*}$"
+    visitor = get_visitor(form_spec)
+    syntax_error_regex = RawDiskData("^(.*server.*}$")
 
     errors = visitor.validate(syntax_error_regex)
 
@@ -56,9 +58,9 @@ def test_custom_validate_is_applied(request_context: None) -> None:
     form_spec = RegularExpression(
         predefined_help_text=MatchingScope.FULL, custom_validate=[custom_validator]
     )
-    visitor = get_visitor(form_spec, options=VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = get_visitor(form_spec)
 
-    errors = visitor.validate("foo")
+    errors = visitor.validate(RawDiskData("foo"))
 
     assert len(errors) == 1
     assert errors[0].message == "Custom validation failed"

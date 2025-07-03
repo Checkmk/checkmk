@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from enum import auto, Enum
 from typing import Any, Generic, TypeVar
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
@@ -18,22 +17,17 @@ class DefaultValue:
 DEFAULT_VALUE = DefaultValue()
 
 
-class Unset:
-    pass
+@dataclass(frozen=True)
+class RawFrontendData:
+    value: object
 
 
-UNSET = Unset()
+@dataclass(frozen=True)
+class RawDiskData:
+    value: object
 
 
-class DataOrigin(Enum):
-    DISK = auto()
-    FRONTEND = auto()
-
-
-@dataclass
-class VisitorOptions:
-    # Depending on the origin, we will call the migrate function
-    data_origin: DataOrigin
+IncomingData = RawFrontendData | RawDiskData | DefaultValue
 
 
 _ModelT = TypeVar("_ModelT")

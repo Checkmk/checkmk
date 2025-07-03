@@ -56,7 +56,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1590,8 +1590,7 @@ class ModeEditRuleset(WatoMode):
             render_form_spec(
                 form_spec,
                 rule.id,
-                value,
-                DataOrigin.DISK,
+                RawDiskData(value),
                 True,
                 display_mode=DisplayMode.READONLY,
             )
@@ -2297,13 +2296,12 @@ class ABCEditRuleMode(WatoMode):
         with html.form_context("rule_editor", method="POST"):
             self._page_form(debug=config.debug)
 
-    def _get_rule_value_and_origin(self) -> tuple[Any, DataOrigin]:
+    def _get_rule_value(self) -> RawDiskData | RawFrontendData:
         if request.has_var(self._vue_field_id()):
-            return (
-                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
-                DataOrigin.FRONTEND,
+            return RawFrontendData(
+                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
             )
-        return self._rule.value, DataOrigin.DISK
+        return RawDiskData(self._rule.value)
 
     @property
     def folder(self) -> Folder:
@@ -2346,23 +2344,21 @@ class ABCEditRuleMode(WatoMode):
                     valuespec.render_input("ve", self._rule.value)
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
-                    value, origin = self._get_rule_value_and_origin()
+                    value = self._get_rule_value()
                     render_form_spec(
                         registered_form_spec,
                         self._vue_field_id(),
                         value,
-                        origin,
                         self._should_validate_on_render(),
                     )
                 case RenderMode.BACKEND_AND_FRONTEND:
                     forms.section("Current setting as VUE")
                     assert registered_form_spec is not None
-                    value, origin = self._get_rule_value_and_origin()
+                    value = self._get_rule_value()
                     render_form_spec(
                         registered_form_spec,
                         self._vue_field_id(),
                         value,
-                        origin,
                         self._should_validate_on_render(),
                     )
                     forms.section("Backend rendered (read only)")

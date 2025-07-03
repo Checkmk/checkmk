@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Iterator, Sequence
+from typing import cast
 
 from cmk.ccc.i18n import _
 
@@ -17,7 +18,7 @@ from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import (
     compute_input_hint,
     compute_validators,
@@ -53,7 +54,9 @@ _FallbackModel = float | None
 
 
 class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = None
             if isinstance(
@@ -63,18 +66,20 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackMode
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            value: object = prefill_default
+        else:
+            value = raw_value.value
 
-        if not isinstance(raw_value, float | int):
+        if not isinstance(value, float | int):
             return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value=None)
 
         try:
-            return float(raw_value)
+            return float(value)
         except ValueError:
             return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value=None)
 
-    def _validators(self) -> Sequence[Callable[[float], object]]:
-        def custom_validate() -> Iterator[Callable[[float], object]]:
+    def _validators(self) -> Sequence[Callable[[object], object]]:
+        def custom_validate() -> Iterator[Callable[[object], object]]:
             for validator in compute_validators(self.form_spec):
                 if isinstance(validator, NumberInRange):
                     min_value, max_value = validator.range
@@ -95,10 +100,13 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackMode
                     else:
                         raise RuntimeError()  # is impossible because of NumberInRange init function
 
-                    yield NumberInRange(
-                        min_value=min_value,
-                        max_value=max_value,
-                        error_msg=message,
+                    yield cast(
+                        Callable[[object], object],
+                        NumberInRange(
+                            min_value=min_value,
+                            max_value=max_value,
+                            error_msg=message,
+                        ),
                     )
                 else:
                     yield validator

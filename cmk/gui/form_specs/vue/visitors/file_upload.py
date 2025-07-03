@@ -23,7 +23,7 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData
 from ._utils import (
     compute_validators,
     get_title_and_help,
@@ -98,27 +98,30 @@ class _FileExtensionValidator:
 
 
 class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadModel]):
-    def _parse_value(self, raw_value: object) -> FileUploadModel | InvalidValue[FileUploadModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> FileUploadModel | InvalidValue[FileUploadModel]:
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("Using default value"), fallback_value=FileUploadModel())
 
-        if self.options.data_origin == DataOrigin.DISK:
-            if not isinstance(raw_value, tuple):
+        if isinstance(raw_value, RawDiskData):
+            if not isinstance(raw_value.value, tuple):
                 return InvalidValue(
                     reason=_("Invalid data format"), fallback_value=FileUploadModel()
                 )
 
             return FileUploadModel(
-                file_name=raw_value[0],
-                file_type=raw_value[1],
-                file_content_encrypted=self.encrypt_content(raw_value[2]),
+                file_name=raw_value.value[0],
+                file_type=raw_value.value[1],
+                file_content_encrypted=self.encrypt_content(raw_value.value[2]),
             )
 
         # Handle DataOrigin.FRONTEND
-        if not isinstance(raw_value, dict):
+        value = raw_value.value
+        if not isinstance(value, dict):
             return InvalidValue(reason=_("Invalid data format"), fallback_value=FileUploadModel())
 
-        input_uuid = raw_value["input_uuid"]
+        input_uuid = value["input_uuid"]
         uploaded_file = request.files.get(input_uuid)
 
         if uploaded_file is not None:
@@ -133,17 +136,17 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
                     file_content_encrypted=self.encrypt_content(file_content),
                 )
 
-        if raw_value.get("file_name") is None:
+        if value.get("file_name") is None:
             return InvalidValue(
                 reason=_("Invalid data. Missing filename"), fallback_value=FileUploadModel()
             )
 
-        # Existing file, all data is already in raw_value
+        # Existing file, all data is already in value
         return FileUploadModel(
             input_uuid=input_uuid,
-            file_name=raw_value["file_name"],
-            file_type=raw_value["file_type"],
-            file_content_encrypted=raw_value["file_content_encrypted"],
+            file_name=value["file_name"],
+            file_type=value["file_type"],
+            file_content_encrypted=value["file_content_encrypted"],
         )
 
     @classmethod

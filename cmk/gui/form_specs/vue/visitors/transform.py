@@ -9,9 +9,9 @@ from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, InvalidValue
+from ._type_defs import IncomingData, InvalidValue, RawDiskData
 
-_ParsedValueModel = object
+_ParsedValueModel = IncomingData
 _FallbackModel = object
 
 
@@ -22,23 +22,33 @@ class TransformVisitor(
         _FallbackModel,
     ]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
-        if self.options.data_origin == DataOrigin.FRONTEND:
-            return raw_value
-        try:
-            return self.form_spec.from_disk(raw_value)
-        except ValueError:
-            return InvalidValue(reason=_("Unable to transform value"), fallback_value=raw_value)
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+        if isinstance(raw_value, RawDiskData):
+            try:
+                return RawDiskData(self.form_spec.from_disk(raw_value.value))
+            except ValueError:
+                return InvalidValue(
+                    reason=_("Unable to transform value"), fallback_value=raw_value.value
+                )
+
+        return raw_value
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[VueComponents.FormSpec, object]:
-        return get_visitor(self.form_spec.wrapped_form_spec, self.options).to_vue(parsed_value)
+        value = (
+            RawDiskData(parsed_value.fallback_value)
+            if isinstance(parsed_value, InvalidValue)
+            else parsed_value
+        )
+        return get_visitor(self.form_spec.wrapped_form_spec).to_vue(value)
 
     def _validate(self, parsed_value: _ParsedValueModel) -> list[VueComponents.ValidationMessage]:
-        return get_visitor(self.form_spec.wrapped_form_spec, self.options).validate(parsed_value)
+        return get_visitor(self.form_spec.wrapped_form_spec).validate(parsed_value)
 
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return self.form_spec.to_disk(
-            get_visitor(self.form_spec.wrapped_form_spec, self.options).to_disk(parsed_value)
+            get_visitor(self.form_spec.wrapped_form_spec).to_disk(parsed_value)
         )

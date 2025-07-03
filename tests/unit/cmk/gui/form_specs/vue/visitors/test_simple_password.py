@@ -9,8 +9,7 @@ import pytest
 from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.converter import SimplePassword
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.utils.encrypter import Encrypter
 
 
@@ -19,8 +18,8 @@ def test_simple_password_encrypts_disk_password(
     patch_theme: None,
     with_user: tuple[UserId, str],
 ) -> None:
-    password = "some_password"
-    pw_visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=DataOrigin.DISK))
+    password = RawDiskData("some_password")
+    pw_visitor = get_visitor(SimplePassword())
     _, frontend_value = pw_visitor.to_vue(password)
 
     assert isinstance(frontend_value, tuple)
@@ -28,18 +27,18 @@ def test_simple_password_encrypts_disk_password(
     assert isinstance(frontend_value[0], str)
 
     assert frontend_value[1], "Password is encrypted"
-    assert frontend_value[0] != password
+    assert frontend_value[0] != password.value
 
 
 @pytest.mark.parametrize(
-    ["data_origin", "value"],
+    "value",
     [
-        [DataOrigin.DISK, "some_password"],
-        [DataOrigin.FRONTEND, ["some_password", False]],
+        RawDiskData("some_password"),
+        RawFrontendData(["some_password", False]),
     ],
 )
-def test_simple_password_masks_password(data_origin: DataOrigin, value: object) -> None:
-    visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=data_origin))
+def test_simple_password_masks_password(value: RawDiskData | RawFrontendData) -> None:
+    visitor = get_visitor(SimplePassword())
     password = visitor.mask(value)
 
     assert password == "******"
@@ -65,8 +64,8 @@ def test_simple_password_encrypts_frontend_password(
     if password[1]:
         password_value[0] = base64.b64encode(Encrypter.encrypt(password[0])).decode("ascii")
 
-    pw_visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=DataOrigin.FRONTEND))
-    _, frontend_value = pw_visitor.to_vue(password_value)
+    pw_visitor = get_visitor(SimplePassword())
+    _, frontend_value = pw_visitor.to_vue(RawFrontendData(password_value))
 
     assert isinstance(frontend_value, tuple)
     assert len(frontend_value) == 2

@@ -14,7 +14,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
@@ -167,7 +167,9 @@ def form_spec_parse(
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> ParsedFormData:
     return {
-        form_spec_id: transform_to_disk_model(expected_formspecs_map[form_spec_id], form_data)
+        form_spec_id: transform_to_disk_model(
+            expected_formspecs_map[form_spec_id], RawFrontendData(form_data)
+        )
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()
     }
@@ -193,8 +195,9 @@ def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormDat
                 serialize_data_for_frontend(
                     form_spec=form_spec,
                     field_id=str(widget.id),
-                    origin=DataOrigin.DISK,
-                    value=prefill_data.get(widget.id) if prefill_data else DEFAULT_VALUE,
+                    value=(
+                        RawDiskData(prefill_data.get(widget.id)) if prefill_data else DEFAULT_VALUE
+                    ),
                     do_validate=False,
                 )
             ),

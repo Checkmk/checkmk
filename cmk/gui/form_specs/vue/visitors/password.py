@@ -17,7 +17,7 @@ from cmk.rulesets.v1.form_specs import Password
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData
 from ._utils import (
     base_i18n_form_spec,
     compute_validators,
@@ -37,30 +37,30 @@ VuePassword = tuple[Literal["explicit_password", "stored_password"], PasswordId,
 
 
 class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
-    def _parse_value(self, raw_value: object) -> ParsedPassword | InvalidValue[VuePassword]:
+    def _parse_value(self, raw_value: IncomingData) -> ParsedPassword | InvalidValue[VuePassword]:
         fallback_value: VuePassword = ("explicit_password", "", "", False)
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
-        if not isinstance(raw_value, tuple | list):
+        if not isinstance(raw_value.value, tuple | list):
             return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
-        match self.options.data_origin:
-            case DataOrigin.DISK:
-                if not raw_value[0] == "cmk_postprocessed":
+        match raw_value:
+            case RawDiskData():
+                if not raw_value.value[0] == "cmk_postprocessed":
                     return InvalidValue(
                         reason=_("No password provided"), fallback_value=fallback_value
                     )
                 try:
-                    password_type, (password_id, password) = raw_value[1:]
+                    password_type, (password_id, password) = raw_value.value[1:]
                 except (TypeError, ValueError):
                     return InvalidValue(
                         reason=_("No password provided"), fallback_value=fallback_value
                     )
                 encrypted = False
-            case DataOrigin.FRONTEND:
+            case RawFrontendData():
                 try:
-                    password_type, password_id, password, encrypted = raw_value
+                    password_type, password_id, password, encrypted = raw_value.value
                 except (TypeError, ValueError):
                     return InvalidValue(
                         reason=_("No password provided"), fallback_value=fallback_value

@@ -5,8 +5,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawFrontendData
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
@@ -34,9 +33,9 @@ def test_time_span_validator() -> None:
             )
         ]
     )
-    visitor = get_visitor(time_span_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
+    visitor = get_visitor(time_span_spec)
 
-    assert visitor.validate(1) == [
+    assert visitor.validate(RawFrontendData(1)) == [
         shared_type_defs.ValidationMessage(
             location=[],
             message="Allowed values range from 1 hours to 7 days.",
@@ -57,9 +56,9 @@ def test_time_span_validator_custom_message() -> None:
             )
         ]
     )
-    visitor = get_visitor(time_span_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
+    visitor = get_visitor(time_span_spec)
 
-    assert visitor.validate(1) == [
+    assert visitor.validate(RawFrontendData(1)) == [
         shared_type_defs.ValidationMessage(
             location=[],
             # custom error_msg from above is overwritten :-(

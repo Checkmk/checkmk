@@ -13,7 +13,13 @@ from cmk.gui.form_specs.private.multiple_choice import (
 )
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, DefaultValue, InvalidValue
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
+)
 from cmk.gui.form_specs.vue.visitors._utils import (
     compute_validators,
     get_prefill_default,
@@ -66,7 +72,9 @@ class MultipleChoiceVisitor(
     def _build_data_format_from_names(self, names: Sequence[str]) -> _ParsedValueModel:
         return [element for element in self._get_elements() if element["name"] in names]
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = []
             if isinstance(
@@ -78,17 +86,19 @@ class MultipleChoiceVisitor(
                 self._build_data_format_from_names(prefill_default), key=lambda v: v["name"]
             )
 
-        if not isinstance(raw_value, list):
+        if not isinstance(raw_value.value, list):
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
-        match self.options.data_origin:
-            case DataOrigin.DISK:
+        match raw_value:
+            case RawDiskData():
                 return sorted(
-                    self._build_data_format_from_names(raw_value), key=lambda v: v["name"]
+                    self._build_data_format_from_names(raw_value.value), key=lambda v: v["name"]
                 )
-            case DataOrigin.FRONTEND:
+            case RawFrontendData():
                 # Filter out invalid choices without warning
-                return sorted(self._filter_out_invalid_choices(raw_value), key=lambda v: v["name"])
+                return sorted(
+                    self._filter_out_invalid_choices(raw_value.value), key=lambda v: v["name"]
+                )
             case other:
                 assert_never(other)
 

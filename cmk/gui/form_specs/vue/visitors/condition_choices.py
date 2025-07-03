@@ -16,7 +16,7 @@ from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from ._utils import (
     base_i18n_form_spec,
     compute_validation_errors,
@@ -112,7 +112,6 @@ def _parse_frontend(raw_value: object) -> Conditions | InvalidValue[_FallbackMod
 
 def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
     if not isinstance(raw_value, dict):
-        # TODO: discuss DEFAULT_VALUE scenario
         return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
     for group in raw_value.values():
@@ -138,11 +137,16 @@ def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
 
 
 class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
-        if self.options.data_origin == DataOrigin.FRONTEND:
-            return _parse_frontend(raw_value)
+    def _parse_value(self, raw_value: IncomingData) -> Conditions | InvalidValue[_FallbackModel]:
+        if isinstance(raw_value, DefaultValue):
+            return InvalidValue(
+                fallback_value=[], reason=_("No default values can be set for condition choices.")
+            )
 
-        return _parse_disk(raw_value)
+        if isinstance(raw_value, RawFrontendData):
+            return _parse_frontend(raw_value.value)
+
+        return _parse_disk(raw_value.value)
 
     def _to_vue(
         self, parsed_value: Conditions | InvalidValue[_FallbackModel]

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import cast, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from cmk.gui.form_specs.private import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.list_unique_selection import (
@@ -19,47 +19,58 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
+from ._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
+)
 from ._utils import compute_validators, get_title_and_help, option_id
 
 T = TypeVar("T")
 
-_ParsedValueModel = Sequence[T]
-_FallbackModel = Sequence[T]
+_ParsedValueModel = Sequence[RawFrontendData | RawDiskData]
+_FallbackModel = Sequence[RawDiskData]
 
 
 class ListUniqueSelectionVisitor(
     Generic[T],
-    FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel[T], _FallbackModel[T]],
+    FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel, _FallbackModel],
 ):
     def _parse_value(
-        self, raw_value: object
-    ) -> _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]:
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
-            return self.form_spec.prefill.value
+            return [RawDiskData(v) for v in self.form_spec.prefill.value]
 
-        if not isinstance(raw_value, list):
+        if not isinstance(raw_value.value, list):
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])
-        return raw_value
+
+        if isinstance(raw_value, RawDiskData):
+            return [RawDiskData(entry) for entry in raw_value.value]
+
+        return [RawFrontendData(entry) for entry in raw_value.value]
 
     def _to_vue(
-        self, parsed_value: _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]
-    ) -> tuple[shared_type_defs.ListUniqueSelection, _FallbackModel[T]]:
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
+    ) -> tuple[shared_type_defs.ListUniqueSelection, object]:
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value
 
         title, help_text = get_title_and_help(self.form_spec)
 
-        element_visitor = get_visitor(self._build_element_template(), self.options)
+        element_visitor = get_visitor(self._build_element_template())
         element_schema, element_vue_default_value = element_visitor.to_vue(DEFAULT_VALUE)
 
-        list_values: list[T] = []
+        list_values: list[object] = []
         for entry in parsed_value:
             # Note: InputHints are not really supported for list elements
             #       We just collect data for a given template
             #       The data cannot be a mixture between values and InputHint
             _spec, element_vue_value = element_visitor.to_vue(entry)
-            list_values.append(cast(T, element_vue_value))
+            list_values.append(element_vue_value)
 
         assert isinstance(
             element_schema,
@@ -124,10 +135,10 @@ class ListUniqueSelectionVisitor(
         raise ValueError("Invalid single_choice_type")
 
     def _validate(
-        self, parsed_value: _ParsedValueModel[T]
+        self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         element_validations: list[shared_type_defs.ValidationMessage] = []
-        element_visitor = get_visitor(self._build_element_template(), self.options)
+        element_visitor = get_visitor(self._build_element_template())
 
         for idx, entry in enumerate(parsed_value):
             for validation in element_visitor.validate(entry):
@@ -140,9 +151,9 @@ class ListUniqueSelectionVisitor(
                 )
         return element_validations
 
-    def _to_disk(self, parsed_value: _ParsedValueModel[T]) -> list[T]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> list[T]:
         disk_values = []
-        element_visitor = get_visitor(self._build_element_template(), self.options)
+        element_visitor = get_visitor(self._build_element_template())
         for entry in parsed_value:
             disk_values.append(element_visitor.to_disk(entry))
         return disk_values

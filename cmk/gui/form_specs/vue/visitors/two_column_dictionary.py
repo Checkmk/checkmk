@@ -2,10 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
+from cmk.gui.form_specs.vue.visitors.dictionary import (
+    _FallbackModel,
+    _ParsedValueModel,
+    DictionaryVisitor,
+)
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
@@ -14,7 +17,7 @@ from ._type_defs import InvalidValue
 
 class TwoColumnDictionaryVisitor(DictionaryVisitor):
     def _to_vue(
-        self, parsed_value: Mapping[str, object] | InvalidValue[Mapping[str, object]]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.TwoColumnDictionary, object]:
         schema, value = super()._to_vue(parsed_value)
         schema_args = asdict(schema)

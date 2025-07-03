@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import MultilineText
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import (
     compute_input_hint,
     compute_label,
@@ -24,17 +24,21 @@ _FallbackModel = str
 
 
 class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill, ""), InvalidValue
             ):
                 return prefill_default
-            raw_value = prefill_default
+            value: object = prefill_default
+        else:
+            value = raw_value.value
 
-        if not isinstance(raw_value, str):
+        if not isinstance(value, str):
             return InvalidValue(reason=_("Invalid text"), fallback_value="")
-        return raw_value
+        return value
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]

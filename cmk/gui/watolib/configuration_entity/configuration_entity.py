@@ -8,12 +8,8 @@ from typing import assert_never, NamedTuple, NewType
 
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
-from cmk.gui.form_specs.vue.visitors import (
-    DataOrigin,
-    get_visitor,
-    VisitorOptions,
-)
-from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors import get_visitor
+from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, RawFrontendData
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
@@ -58,7 +54,7 @@ def save_configuration_entity(
             param = save_notification_parameter(
                 notification_parameter_registry,
                 NotificationParameterMethod(entity_type_specifier),
-                data,
+                RawFrontendData(data),
                 object_id=NotificationParameterID(object_id) if object_id else None,
                 pprint_value=pprint_value,
             )
@@ -66,7 +62,9 @@ def save_configuration_entity(
                 ident=EntityId(param.ident), description=param.description
             )
         case ConfigEntityType.folder:
-            folder = save_folder_from_slidein_schema(data, pprint_value=pprint_value)
+            folder = save_folder_from_slidein_schema(
+                RawFrontendData(data), pprint_value=pprint_value
+            )
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title
             )
@@ -97,7 +95,7 @@ def get_configuration_entity_schema(
     entity_type_specifier: str,
 ) -> ConfigurationEntitySchema:
     form_spec = _get_configuration_fs(entity_type, entity_type_specifier)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
+    visitor = get_visitor(form_spec)
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return ConfigurationEntitySchema(schema=schema, default_values=default_values)
 

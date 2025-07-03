@@ -18,7 +18,14 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, InvalidValue, VisitorOptions
+from ._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
+)
 from ._utils import (
     base_i18n_form_spec,
     create_validation_error,
@@ -28,8 +35,8 @@ from ._utils import (
 
 ModelTopic = str
 ModelTopicElement = str
-_ParsedValueModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
-_FallbackModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
+_ParsedValueModel = Mapping[ModelTopic, Mapping[ModelTopicElement, IncomingData]]
+_FallbackModel = Mapping[ModelTopic, Mapping[ModelTopicElement, RawDiskData]]
 
 
 class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]):
@@ -46,7 +53,9 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         return topic.elements
 
     def _resolve_default_values(
-        self, raw_value: DefaultValue | dict[str, dict[str, object] | DefaultValue]
+        self,
+        raw_value: DefaultValue | dict[str, dict[str, object]],
+        DataWrapper: type[RawDiskData | RawFrontendData],
     ) -> _ParsedValueModel:
         # The catalog can be treated as a dictionary of dictionaries
         # Because of this, the default value are resolved one level deeper
@@ -57,31 +66,37 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
             tmp_value = raw_value
 
         # Specific topics can be set to DefaultValue, too
-        resolved_value: dict[str, dict[str, object]] = {}
+        resolved_value: dict[str, dict[str, IncomingData]] = {}
         for topic_name, topic in self.form_spec.elements.items():
             topic_value = tmp_value.get(topic_name, DEFAULT_VALUE)
-            resolved_value[topic_name] = (
-                {
+            if isinstance(topic_value, DefaultValue):
+                resolved_value[topic_name] = {
                     element_name: DEFAULT_VALUE
                     for element_name, element in self._resolve_topic_to_elements(topic).items()
                     if element.required
                 }
-                if isinstance(topic_value, DefaultValue)
-                else topic_value
-            )
+            else:
+                resolved_value[topic_name] = {
+                    str(k): DataWrapper(v) for k, v in topic_value.items()
+                }
 
         return resolved_value
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
-        if not isinstance(raw_value, dict) and not isinstance(raw_value, DefaultValue):
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+        DataWrapper = RawFrontendData if isinstance(raw_value, RawFrontendData) else RawDiskData
+        if isinstance(raw_value, DefaultValue):
+            value = self._resolve_default_values(raw_value, DataWrapper=DataWrapper)
+        elif not isinstance(raw_value.value, dict):
+            return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
+        else:
+            value = self._resolve_default_values(raw_value.value, DataWrapper=DataWrapper)
+
+        if not all(topic_name in value for topic_name in self.form_spec.elements.keys()):
             return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
 
-        raw_value = self._resolve_default_values(raw_value)
-
-        if not all(topic_name in raw_value for topic_name in self.form_spec.elements.keys()):
-            return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
-
-        return raw_value
+        return value
 
     def _compute_topic_group_spec(
         self,
@@ -136,7 +151,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
 
             element_lookup: dict[str, tuple[shared_type_defs.FormSpec, object]] = {}
             for element_name, element in actual_elements.items():
-                element_visitor = get_visitor(element.parameter_form, self.options)
+                element_visitor = get_visitor(element.parameter_form)
                 is_active = element_name in topic_values
                 spec, value = element_visitor.to_vue(
                     topic_values[element_name] if is_active else DEFAULT_VALUE
@@ -179,13 +194,10 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         for topic_name, topic in self.form_spec.elements.items():
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
-                element_visitor = get_visitor(element.parameter_form, self.options)
+                element_visitor = get_visitor(element.parameter_form)
                 if element_name not in topic_values:
                     if element.required:
-                        default_value_visitor = get_visitor(
-                            element.parameter_form, VisitorOptions(DataOrigin.DISK)
-                        )
-                        _spec, element_default_value = default_value_visitor.to_vue(DEFAULT_VALUE)
+                        _spec, element_default_value = element_visitor.to_vue(DEFAULT_VALUE)
                         return create_validation_error(
                             element_default_value,
                             f"Required element {element_name} missing in topic {topic_name}",
@@ -210,7 +222,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
                 if element_name in topic_values:
-                    element_visitor = get_visitor(element.parameter_form, self.options)
+                    element_visitor = get_visitor(element.parameter_form)
                     disk_values[topic_name][element_name] = element_visitor.to_disk(
                         topic_values[element_name]
                     )

@@ -8,7 +8,6 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -32,14 +31,12 @@ def register_recomposer_function(
     form_spec_recomposer_registry[form_spec_class] = recomposer_function
 
 
-def get_visitor(
-    form_spec: FormSpec[Any], options: VisitorOptions
-) -> FormSpecVisitor[FormSpec[Any], Any, Any]:
+def get_visitor(form_spec: FormSpec[Any]) -> FormSpecVisitor[FormSpec[Any], Any, Any]:
     if recompose_function := form_spec_recomposer_registry.get(form_spec.__class__):
-        return get_visitor(recompose_function(form_spec), options)
+        return get_visitor(recompose_function(form_spec))
 
     if visitor_class := form_spec_visitor_registry.get(form_spec.__class__):
-        return visitor_class(form_spec, options)
+        return visitor_class(form_spec)
 
     raise MKGeneralException(
         f"No visitor found for form spec class: {form_spec.__class__.__name__}"

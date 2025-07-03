@@ -16,11 +16,7 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
-from cmk.gui.form_specs.vue.visitors import (
-    DataOrigin,
-    get_visitor,
-    VisitorOptions,
-)
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
 
@@ -59,7 +55,7 @@ def _to_param_item(data: object) -> NotificationParameterItem:
 def save_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_method: NotificationParameterMethod,
-    data: object,
+    data: RawFrontendData,
     *,
     object_id: NotificationParameterID | None,
     pprint_value: bool,
@@ -70,7 +66,7 @@ def save_notification_parameter(
         FormSpecValidationError: if the data does not match the form spec
     """
     form_spec = registry.form_spec(parameter_method)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
+    visitor = get_visitor(form_spec)
 
     validation_errors = visitor.validate(data)
     process_validation_messages(validation_errors)
@@ -127,8 +123,8 @@ def get_notification_parameter(
     if item is None or method is None:
         raise KeyError(parameter_id)
     form_spec = registry.form_spec(method)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
-    _, values = visitor.to_vue(item)
+    visitor = get_visitor(form_spec)
+    _, values = visitor.to_vue(RawDiskData(item))
     assert isinstance(values, Mapping)
     assert isinstance(item, Mapping)
     assert isinstance(item["general"], Mapping)

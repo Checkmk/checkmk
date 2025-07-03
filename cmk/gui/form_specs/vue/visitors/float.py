@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import Float
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -29,7 +29,9 @@ type _FallbackModel = float | Literal[""]
 
 
 class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = ""
             if isinstance(
@@ -39,16 +41,18 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            value: object = prefill_default
+        else:
+            value = raw_value.value
 
         #  23 / -23 / "23" / "-23" / 23.0 / "-23.0" -> OK
         #  other                                    -> INVALID
-        if not isinstance(raw_value, float | int):
+        if not isinstance(value, float | int):
             return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value="")
 
-        return float(raw_value)
+        return float(value)
 
-    def _validators(self) -> Sequence[Callable[[float], object]]:
+    def _validators(self) -> Sequence[Callable[[object], object]]:
         return [IsFloat()] + compute_validators(self.form_spec)
 
     def _to_vue(

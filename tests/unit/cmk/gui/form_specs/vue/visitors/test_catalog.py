@@ -5,8 +5,7 @@
 from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
@@ -31,12 +30,12 @@ def test_catalog_validation_simple(
             )
         }
     )
-    visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = get_visitor(spec)
 
-    validation_messages = visitor.validate({"some_key": {"key": "string"}})
+    validation_messages = visitor.validate(RawDiskData({"some_key": {"key": "string"}}))
     assert validation_messages == []
 
-    validation_messages = visitor.validate({"some_key": {"key": ""}})
+    validation_messages = visitor.validate(RawDiskData({"some_key": {"key": ""}}))
     assert validation_messages == [
         ValidationMessage(
             location=[
@@ -62,8 +61,8 @@ def test_catalog_serializes_empty_topics_to_disk() -> None:
             )
         }
     )
-    visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = get_visitor(spec)
 
-    disk_data = visitor.to_disk({"some_topic": {}})
+    disk_data = visitor.to_disk(RawDiskData({"some_topic": {}}))
 
     assert disk_data == {"some_topic": {}}

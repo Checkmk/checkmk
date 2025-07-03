@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import FixedValue
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import InvalidValue
+from ._type_defs import IncomingData, InvalidValue
 from ._utils import (
     compute_validators,
     get_title_and_help,
@@ -28,7 +28,9 @@ _FallbackModel = int | float | str | bool | None
 class FixedValueVisitor(
     FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FallbackModel]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         return self.form_spec.value
 
     def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:

@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import BooleanChoice
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue
 from ._utils import (
     compute_validators,
     get_title_and_help,
@@ -23,15 +23,17 @@ type _FallbackModel = bool
 
 
 class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
-        if not isinstance(raw_value, bool):
+        if not isinstance(raw_value.value, bool):
             return InvalidValue(
                 reason=_("Invalid choice, falling back to False"), fallback_value=False
             )
-        return raw_value
+        return raw_value.value
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]

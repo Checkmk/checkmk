@@ -7,11 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.ccc.user import UserId
-
-from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, DEFAULT_VALUE
-from cmk.gui.session import UserContext
+from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
 
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -76,28 +72,28 @@ def _build_value_validation_for_class_with_input_hint(
     [
         (
             String(),
-            "foo",
+            RawDiskData("foo"),
             True,
         ),
         (
             String(
                 custom_validate=(validators.LengthInRange(min_value=4),),
             ),
-            "foo",
+            RawDiskData("foo"),
             False,
         ),
         (
             String(
                 custom_validate=(validators.LengthInRange(min_value=4),),
             ),
-            "foobar",
+            RawDiskData("foobar"),
             True,
         ),
         (
             DataSize(
                 displayed_magnitudes=[SIMagnitude.MEGA],
             ),
-            5,
+            RawDiskData(5),
             True,
         ),
         (
@@ -109,47 +105,9 @@ def _build_value_validation_for_class_with_input_hint(
                     ),
                 ),
             ),
-            5,
+            RawDiskData(5),
             False,
         ),
-    ]
-    + list(
-        _build_value_validation_for_class_with_input_hint(
-            Integer, 5, [5, 10, 5, 10], [10.1, "5", "10", "5.1", "asdf", {}, None]
-        )
-    )
-    + list(
-        _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["5", "10.0", "asdf", {}, None]
-        )
-    )
-    + list(
-        _build_value_validation_for_class_with_input_hint(String, "5", ["10"], [_Unconvertible()])
-    ),
-)
-def test_validation(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    form_spec: FormSpec,
-    value: Any,
-    valid: bool,
-) -> None:
-    with UserContext(with_user[0]):
-        vue_app_config = serialize_data_for_frontend(
-            form_spec,
-            "foo_field_id",
-            DataOrigin.DISK,
-            do_validate=True,
-            value=value,
-        )
-
-        assert (not vue_app_config.validation) == valid
-
-
-@pytest.mark.parametrize(
-    "form_spec, value, valid",
-    [
         (
             CascadingSingleChoice(
                 elements=[
@@ -165,42 +123,79 @@ def test_validation(
                     ),
                 ]
             ),
-            [
-                "regex",
-                "some_string",
-            ],
+            RawFrontendData(
+                [
+                    "regex",
+                    "some_string",
+                ]
+            ),
             True,
-        )
+        ),
     ]
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Integer, 5, [5, 10], [10.1, "10", "asdf", {}, None]
+            Integer,
+            5,
+            [RawDiskData(5), RawDiskData(10), RawFrontendData(5), RawFrontendData(10)],
+            [
+                RawDiskData(10.1),
+                RawDiskData("5"),
+                RawDiskData("10"),
+                RawDiskData("5.1"),
+                RawDiskData("asdf"),
+                RawDiskData({}),
+                RawDiskData(None),
+                RawFrontendData(10.1),
+                RawFrontendData("10"),
+                RawFrontendData("asdf"),
+                RawFrontendData({}),
+                RawFrontendData(None),
+            ],
         )
     )
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["10", "10.1", "10.1.1", "asdf", {}, None]
+            Float,
+            5.0,
+            [
+                RawDiskData(5.0),
+                RawDiskData(10.0),
+                RawDiskData(5),
+                RawDiskData(10),
+                RawFrontendData(5.0),
+                RawFrontendData(10.0),
+                RawFrontendData(5),
+                RawFrontendData(10),
+            ],
+            [
+                RawDiskData("5"),
+                RawDiskData("10.0"),
+                RawDiskData("asdf"),
+                RawDiskData({}),
+                RawDiskData(None),
+                RawFrontendData("10"),
+                RawFrontendData("10.1"),
+                RawFrontendData("10.1.1"),
+                RawFrontendData("asdf"),
+                RawFrontendData({}),
+                RawFrontendData(None),
+            ],
         )
     )
     + list(
-        _build_value_validation_for_class_with_input_hint(String, "5", ["10"], [_Unconvertible()])
+        _build_value_validation_for_class_with_input_hint(
+            String,
+            "5",
+            [RawDiskData("10"), RawFrontendData("10")],
+            [RawDiskData(_Unconvertible()), RawFrontendData(_Unconvertible())],
+        )
     ),
 )
-def test_validation_frontend(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
+def test_validation(
     form_spec: FormSpec,
     value: Any,
     valid: bool,
 ) -> None:
-    with UserContext(with_user[0]):
-        vue_app_config = serialize_data_for_frontend(
-            form_spec,
-            "foo_field_id",
-            DataOrigin.FRONTEND,
-            do_validate=True,
-            value=value,
-        )
+    visitor = get_visitor(form_spec)
 
-        assert (not vue_app_config.validation) == valid
+    assert (len(visitor.validate(value)) == 0) == valid

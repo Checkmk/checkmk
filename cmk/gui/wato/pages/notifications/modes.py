@@ -51,7 +51,7 @@ from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
-from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -3690,14 +3690,13 @@ class ABCNotificationParameterMode(WatoMode):
 
     def _get_parameter_value_and_origin(
         self,
-    ) -> tuple[NotificationParameterItem, DataOrigin]:
+    ) -> RawFrontendData | RawDiskData:
         if request.has_var(self._vue_field_id()):
-            return (
-                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
-                DataOrigin.FRONTEND,
+            return RawFrontendData(
+                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
             )
 
-        return self._parameter, DataOrigin.DISK
+        return RawDiskData(self._parameter)
 
     def _method(self) -> str:
         return request.get_str_input_mandatory("method")
@@ -4014,19 +4013,20 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         return self._back_mode()
 
-    def _validate_form_spec(self, origin: DataOrigin) -> bool:
-        return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
+    def _validate_form_spec(self, data: RawDiskData | RawFrontendData) -> bool:
+        return isinstance(data, RawFrontendData) or (
+            isinstance(data, RawDiskData) and not self._new
+        )
 
     def page(self, config: Config) -> None:
-        value, origin = self._get_parameter_value_and_origin()
+        value = self._get_parameter_value_and_origin()
 
         with html.form_context("parameter", method="POST"):
             render_form_spec(
                 self._form_spec(),
                 self._vue_field_id(),
                 value,
-                origin,
-                self._validate_form_spec(origin),
+                self._validate_form_spec(value),
             )
 
             forms.end()

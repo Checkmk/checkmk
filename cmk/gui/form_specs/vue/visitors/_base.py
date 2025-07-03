@@ -9,12 +9,11 @@ from typing import Any, final, Generic, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.vue.visitors._type_defs import (
-    DataOrigin,
     DiskModel,
+    IncomingData,
     InvalidValue,
-    VisitorOptions,
+    RawDiskData,
 )
-from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
 from cmk.gui.form_specs.vue.visitors._utils import (
     compute_validation_errors,
     compute_validators,
@@ -32,17 +31,16 @@ _FallbackDataModel = TypeVar("_FallbackDataModel")
 
 class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _FallbackDataModel]):
     @final
-    def __init__(self, form_spec: FormSpecModel, options: VisitorOptions) -> None:
+    def __init__(self, form_spec: FormSpecModel) -> None:
         self.form_spec = form_spec
-        self.options = options
 
     @final
-    def to_vue(self, raw_value: object) -> tuple[shared_type_defs.FormSpec, object]:
+    def to_vue(self, raw_value: IncomingData) -> tuple[shared_type_defs.FormSpec, object]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         return self._to_vue(parsed_value)
 
     @final
-    def validate(self, raw_value: object) -> list[shared_type_defs.ValidationMessage]:
+    def validate(self, raw_value: IncomingData) -> list[shared_type_defs.ValidationMessage]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         # Stage 1: Check if the value is invalid
         if isinstance(parsed_value, InvalidValue):
@@ -62,7 +60,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         )
 
     @final
-    def to_disk(self, raw_value: object) -> DiskModel:
+    def to_disk(self, raw_value: IncomingData) -> DiskModel:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException(
@@ -71,7 +69,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         return self._to_disk(parsed_value)
 
     @final
-    def mask(self, raw_value: object) -> DiskModel:
+    def mask(self, raw_value: IncomingData) -> DiskModel:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException(
@@ -79,18 +77,14 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
             )
         return self._mask(parsed_value)
 
-    def _migrate_disk_value(self, value: object) -> object:
-        if (
-            not isinstance(value, FormSpecDefaultValue)
-            and self.options.data_origin == DataOrigin.DISK
-            and self.form_spec.migrate
-        ):
-            return self.form_spec.migrate(value)
+    def _migrate_disk_value(self, value: IncomingData) -> IncomingData:
+        if isinstance(value, RawDiskData) and self.form_spec.migrate:
+            return RawDiskData(value=self.form_spec.migrate(value.value))
         return value
 
     @abc.abstractmethod
     def _parse_value(
-        self, raw_value: object
+        self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
         """Handle the raw value from the form and return a parsed value.
 
@@ -122,4 +116,4 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         Container-like ValueSpecs must recurse over their items, allow these to mask their
         values. Other ValueSpecs that don't have a need for masking sensitive information
         can simply return the input value."""
-        self._to_disk(parsed_value)
+        return self._to_disk(parsed_value)

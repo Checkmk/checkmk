@@ -7,8 +7,13 @@ import pytest
 
 from cmk.gui.form_specs.private import ListUniqueSelection, SingleChoiceElementExtended
 from cmk.gui.form_specs.private.list_unique_selection import UniqueSingleChoiceElement
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, SingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import (
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+    SingleChoiceVisitor,
+)
 
 from cmk.rulesets.v1 import Title
 
@@ -38,17 +43,17 @@ def spec() -> ListUniqueSelection:
     ["value", "expected_value"],
     [
         (
-            ["foo", "bar"],
+            RawDiskData(["foo", "bar"]),
             [SingleChoiceVisitor.option_id("foo"), SingleChoiceVisitor.option_id("bar")],
         ),
     ],
 )
 def test_list_unique_selection_visitor_to_vue(
-    value: list[str],
+    value: IncomingData,
     expected_value: list[str],
     list_unique_selection_spec: ListUniqueSelection,
 ) -> None:
-    visitor = get_visitor(list_unique_selection_spec, VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = get_visitor(list_unique_selection_spec)
     vue_value = visitor.to_vue(value)[1]
     assert vue_value == expected_value
     assert len(visitor.validate(value)) == 0
@@ -58,19 +63,19 @@ def test_list_unique_selection_visitor_to_vue(
     ["value", "expected_value"],
     [
         (
-            [SingleChoiceVisitor.option_id("foo"), SingleChoiceVisitor.option_id("bar")],
+            RawFrontendData(
+                [SingleChoiceVisitor.option_id("foo"), SingleChoiceVisitor.option_id("bar")]
+            ),
             ["foo", "bar"],
         ),
     ],
 )
 def test_list_unique_selection_visitor_to_disk(
-    value: list[str],
+    value: IncomingData,
     expected_value: list[str],
     list_unique_selection_spec: ListUniqueSelection,
 ) -> None:
-    visitor = get_visitor(
-        list_unique_selection_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND)
-    )
+    visitor = get_visitor(list_unique_selection_spec)
     disk_value = visitor.to_disk(value)
     assert disk_value == expected_value
     assert len(visitor.validate(value)) == 0

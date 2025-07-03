@@ -4,17 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
 from collections.abc import Callable, Sequence
+from typing import Any
 
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.form_specs.vue.visitors import IncomingData, RawDiskData
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, InvalidValue
 from ._utils import compute_validators, get_title_and_help, optional_validation
 
 _ParsedValueModel = str
@@ -22,18 +24,20 @@ _FallbackModel = tuple[str, bool]
 
 
 class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
 
-        if self.options.data_origin == DataOrigin.DISK:
-            if not isinstance(raw_value, str):
+        if isinstance(raw_value, RawDiskData):
+            if not isinstance(raw_value.value, str):
                 return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
-            return raw_value
+            return raw_value.value
 
-        if not isinstance(raw_value, list):
+        if not isinstance(raw_value.value, list):
             return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
-        password, encrypted = raw_value
+        password, encrypted = raw_value.value
         if not isinstance(password, str):
             return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
 
@@ -41,7 +45,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
             Encrypter.decrypt(base64.b64decode(password.encode("ascii"))) if encrypted else password
         )
 
-    def _validators(self) -> Sequence[Callable[[str], object]]:
+    def _validators(self) -> Sequence[Callable[[Any], object]]:
         return [not_empty()] + compute_validators(self.form_spec)
 
     def _to_vue(

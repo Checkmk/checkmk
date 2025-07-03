@@ -17,7 +17,6 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin
 from cmk.gui.form_specs.vue.visitors._type_defs import DiskModel
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
@@ -146,7 +145,6 @@ def _get_rule_defaults(parameter_form: Dictionary) -> DiskModel:
         serialize_data_for_frontend(
             form_spec=parameter_form,
             field_id="rule_id",
-            origin=DataOrigin.DISK,
             do_validate=False,
         ).data,
     )

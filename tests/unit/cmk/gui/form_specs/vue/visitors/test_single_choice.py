@@ -8,8 +8,12 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, SingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, SingleChoiceVisitor
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    DEFAULT_VALUE,
+    RawDiskData,
+    RawFrontendData,
+)
 from cmk.gui.form_specs.vue.visitors.single_choice import NO_SELECTION
 
 from cmk.rulesets.v1 import Title
@@ -33,23 +37,23 @@ def single_choice_spec(validator: InvalidElementValidator | None = None) -> Sing
     )
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
 @pytest.mark.parametrize(
     "invalid_choice",
     [
-        pytest.param("wuff", id="same data type than element name"),
-        pytest.param(1, id="different data type than element name"),
+        pytest.param(RawDiskData("wuff"), id="same data type than element name"),
+        pytest.param(RawFrontendData("wuff"), id="same data type than element name"),
+        pytest.param(RawDiskData(1), id="different data type than element name"),
+        pytest.param(RawFrontendData(1), id="different data type than element name"),
     ],
 )
 def test_invalid_single_choice_validator_keep(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
-    invalid_choice: object,
+    invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.KEEP))
-    visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(single_choice)
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -60,25 +64,30 @@ def test_invalid_single_choice_validator_keep(
     assert validation_messages[0].replacement_value == NO_SELECTION
 
     # Invalid value is sent back to disk
-    if data_origin == DataOrigin.FRONTEND:
+    if isinstance(invalid_choice, RawFrontendData):
         # You can not save an invalid value in the frontend
         with pytest.raises(MKGeneralException):
             visitor.to_disk(invalid_choice)
     else:
         # If it comes from disk, it is sent back to disk
-        assert visitor.to_disk(invalid_choice) == invalid_choice
+        assert visitor.to_disk(invalid_choice) == invalid_choice.value
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize(
+    "invalid_choice",
+    [
+        RawDiskData("wuff"),
+        RawFrontendData("wuff"),
+    ],
+)
 def test_invalid_single_choice_validator_complain(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
+    invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
-    invalid_choice = "wuff"
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.COMPLAIN))
-    visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(single_choice)
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -90,19 +99,24 @@ def test_invalid_single_choice_validator_complain(
 
     # Invalid value causes exception
     with pytest.raises(MKGeneralException):
-        visitor.to_disk("wuff")
+        visitor.to_disk(invalid_choice)
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize(
+    "invalid_choice",
+    [
+        RawDiskData("wuff"),
+        RawFrontendData("wuff"),
+    ],
+)
 def test_invalid_single_choice_validator_none(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
+    invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
-    invalid_choice = "wuff"
     single_choice = single_choice_spec(None)
-    visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(single_choice)
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -114,39 +128,36 @@ def test_invalid_single_choice_validator_none(
 
     # Invalid value causes exception
     with pytest.raises(MKGeneralException):
-        visitor.to_disk("wuff")
+        visitor.to_disk(invalid_choice)
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize(
+    "valid_choice",
+    [
+        RawDiskData("bar"),
+        RawFrontendData(SingleChoiceVisitor.option_id("bar")),
+    ],
+)
 def test_single_choice_valid_value(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
+    valid_choice: RawFrontendData | RawDiskData,
 ) -> None:
-    valid_choice = "bar"
     single_choice = single_choice_spec(None)
-    visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
+    visitor = get_visitor(single_choice)
 
-    if data_origin == DataOrigin.FRONTEND:
-        raw_value = SingleChoiceVisitor.option_id(valid_choice)
-    else:
-        raw_value = valid_choice
-
-    vue_spec, vue_value = visitor.to_vue(raw_value)
+    vue_spec, vue_value = visitor.to_vue(valid_choice)
     assert vue_spec.type == "single_choice"
-    assert vue_value == SingleChoiceVisitor.option_id(valid_choice)
+    assert vue_value == SingleChoiceVisitor.option_id("bar")
 
-    validation_messages = visitor.validate(raw_value)
+    validation_messages = visitor.validate(valid_choice)
     assert len(validation_messages) == 0
 
-    assert visitor.to_disk(raw_value) == "bar"
+    assert visitor.to_disk(valid_choice) == "bar"
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
-def test_default_value_from_any_origin(
-    data_origin: DataOrigin,
-) -> None:
+def test_default_value_roundtrip() -> None:
     single_choice = SingleChoice(
         elements=[
             SingleChoiceElement(name="foo", title=Title("foo")),
@@ -154,9 +165,6 @@ def test_default_value_from_any_origin(
         ],
         prefill=DefaultValue("bar"),
     )
-    to_frontend_visitor = get_visitor(single_choice, VisitorOptions(data_origin))
-    _, vue_value = to_frontend_visitor.to_vue(DEFAULT_VALUE)
-
-    to_disk_visitor = get_visitor(single_choice, VisitorOptions(DataOrigin.FRONTEND))
-    value = to_disk_visitor.to_disk(vue_value)
-    assert value == "bar"
+    visitor = get_visitor(single_choice)
+    _, vue_value = visitor.to_vue(DEFAULT_VALUE)
+    assert visitor.to_disk(RawFrontendData(vue_value)) == "bar"

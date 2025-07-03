@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.form_specs.vue.visitors import IncomingData
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Message
@@ -32,7 +33,9 @@ _FallbackModel = str | None
 class SingleChoiceEditableVisitor(
     FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FallbackModel]
 ):
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if raw_value is None:
             return None
         if isinstance(raw_value, DefaultValue):
@@ -42,12 +45,15 @@ class SingleChoiceEditableVisitor(
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
-        if not isinstance(raw_value, str):
+            value: object = prefill_default
+        else:
+            value = raw_value.value
+
+        if not isinstance(value, str):
             return InvalidValue[_FallbackModel](
                 reason=_("Invalid data: value is not a string."), fallback_value=None
             )
-        return raw_value
+        return value
 
     def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:
         def _validate_not_none(value: str | None) -> None:
@@ -119,5 +125,5 @@ class SingleChoiceEditableVisitor(
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _to_disk(self, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return parsed_value

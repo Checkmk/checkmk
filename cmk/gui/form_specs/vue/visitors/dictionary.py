@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
 from collections.abc import Mapping, Sequence
-from typing import cast
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -16,7 +15,14 @@ from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, InvalidValue
+from ._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
+)
 from ._utils import (
     base_i18n_form_spec,
     compute_validators,
@@ -24,8 +30,8 @@ from ._utils import (
     localize,
 )
 
-_ParsedValueModel = Mapping[str, object]
-_FallbackModel = Mapping[str, object]
+_ParsedValueModel = Mapping[str, IncomingData]
+_FallbackModel = _ParsedValueModel
 
 
 class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _FallbackModel]):
@@ -43,43 +49,60 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
     def _compute_static_elements(self, parsed_value: Mapping[str, object]) -> dict[str, str]:
         return {x: repr(y) for x, y in parsed_value.items() if x in self._get_static_elements()}
 
-    def _resolve_static_elements(self, raw_value: Mapping[str, object]) -> dict[str, object]:
-        # Create a shallow copy, we might modify some of the keys in the raw_value
-        value = dict(raw_value)
-        if self.options.data_origin == DataOrigin.FRONTEND:
-            for ignored_key in self._get_static_elements():
-                if ignored_value := value.get(ignored_key):
-                    assert isinstance(ignored_value, str)
-                    value[ignored_key] = ast.literal_eval(ignored_value)
-        return value
+    def _resolve_static_elements(self, raw_value: dict[str, object]) -> dict[str, object]:
+        for ignored_key in self._get_static_elements():
+            if ignored_value := raw_value.get(ignored_key):
+                assert isinstance(ignored_value, str)
+                raw_value[ignored_key] = ast.literal_eval(ignored_value)
+        return raw_value
 
     def _get_invalid_keys(self, value: dict[str, object]) -> Sequence[str]:
         valid_keys = self.form_spec.elements.keys()
         return list(value.keys() - valid_keys - self._get_static_elements())
 
-    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
-        raw_value = (
-            self._compute_default_values() if isinstance(raw_value, DefaultValue) else raw_value
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
+        value = (
+            self._compute_default_values()
+            if isinstance(raw_value, DefaultValue)
+            else raw_value.value
         )
-        if not isinstance(raw_value, Mapping):
+        if not isinstance(value, Mapping):
             return InvalidValue[_FallbackModel](
-                reason=_("Invalid datatype of value: %s") % type(raw_value),
-                fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
+                reason=_("Invalid datatype of value: %s") % type(value),
+                fallback_value=self._compute_default_values(),
             )
 
         try:
-            resolved_dict = self._resolve_static_elements(raw_value)
+            resolved_dict = dict(value)
+            if isinstance(raw_value, RawFrontendData):
+                resolved_dict = self._resolve_static_elements(resolved_dict)
             if invalid_keys := self._get_invalid_keys(resolved_dict):
                 return InvalidValue[_FallbackModel](
                     reason=_("Dictionary contains invalid keys: %r") % invalid_keys,
-                    fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
+                    fallback_value=self._compute_default_values(),
                 )
+            for k, v in resolved_dict.items():
+                if isinstance(v, DefaultValue):
+                    pass
+                elif isinstance(raw_value, RawDiskData):
+                    resolved_dict[k] = RawDiskData(v)
+                elif isinstance(raw_value, RawFrontendData):
+                    resolved_dict[k] = RawFrontendData(v)
+                else:
+                    # This should never happen, but we handle it gracefully
+                    # to avoid breaking the parsing of the form spec.
+                    return InvalidValue[_FallbackModel](
+                        reason=_("Unexpected dictionary type: %s") % type(raw_value),
+                        fallback_value=self._compute_default_values(),
+                    )
             return resolved_dict
         except ValueError as e:
             # This can happen during parsing the static elements with ast.literal_eval
             return InvalidValue[_FallbackModel](
                 reason=_("General value error: %s") % e,
-                fallback_value=cast(_FallbackModel, self.to_vue(DEFAULT_VALUE)[1]),
+                fallback_value=self._compute_default_values(),
             )
 
     def _to_vue(
@@ -93,7 +116,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         vue_values = {}
 
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form, self.options)
+            element_visitor = get_visitor(dict_element.parameter_form)
             is_active = key_name in parsed_value
             element_value = parsed_value[key_name] if is_active else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
@@ -148,7 +171,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}
         element_validations = []
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form, self.options)
+            element_visitor = get_visitor(dict_element.parameter_form)
 
             if key_name not in parsed_value:
                 if dict_element.required:
@@ -175,7 +198,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
     def _to_disk(self, parsed_value: _ParsedValueModel) -> dict[str, object]:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form, self.options)
+            element_visitor = get_visitor(dict_element.parameter_form)
             is_active = key_name in parsed_value
             if is_active:
                 disk_values[key_name] = element_visitor.to_disk(parsed_value[key_name])

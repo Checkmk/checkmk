@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.vue.visitors import (
-    DataOrigin,
     DefaultValue,
-    VisitorOptions,
+    IncomingData,
+    RawDiskData,
 )
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import InvalidValue
@@ -28,17 +28,17 @@ _FallbackModel = RandomSentinel
 
 
 class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
-    def _parse_value(self, raw_value: object) -> _ParsedValue | InvalidValue[_FallbackModel]:
+    def _parse_value(self, raw_value: IncomingData) -> _ParsedValue | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return "this isn't under test"
 
-        if raw_value == "error":
+        if raw_value.value == "error":
             return InvalidValue(
                 reason="This is a dummy error",
                 fallback_value=RandomSentinel(),
             )
 
-        return str(raw_value)
+        return str(raw_value.value)
 
     def _to_vue(
         self, parsed_value: _ParsedValue | InvalidValue[_FallbackModel]
@@ -69,10 +69,10 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
 
 def test_validate_returns_frontend_representation_of_replacement_value() -> None:
     # GIVEN
-    visitor = DummyVisitor(String(), options=VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = DummyVisitor(String())
 
     # WHEN
-    validation = visitor.validate("error")
+    validation = visitor.validate(RawDiskData("error"))
 
     # THEN
     assert validation
@@ -83,11 +83,10 @@ def test_validate_returns_frontend_representation_of_parsed_value() -> None:
     # GIVEN
     visitor = DummyVisitor(
         String(custom_validate=[nonstop_complainer]),
-        options=VisitorOptions(data_origin=DataOrigin.DISK),
     )
 
     # WHEN
-    validation = visitor.validate("foo")
+    validation = visitor.validate(RawDiskData("foo"))
 
     # THEN
     assert validation

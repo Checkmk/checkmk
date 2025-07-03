@@ -35,7 +35,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors import (
+    DEFAULT_VALUE,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+)
 from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -801,24 +806,23 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         vs.set_focus("_edit")
 
     def _page_form_render_entry_form_spec(self, form_spec: FormSpec) -> None:
-        value, origin, do_validate = self._get_render_settings()
-        render_form_spec(form_spec, self._vue_field_id(), value, origin, do_validate)
+        value, do_validate = self._get_render_settings()
+        render_form_spec(form_spec, self._vue_field_id(), value, do_validate)
 
     def _vue_field_id(self) -> str:
         return f"_edit_{self._mode_type.type_name()}"
 
-    def _get_render_settings(self) -> tuple[Any, DataOrigin, DoValidate]:
+    def _get_render_settings(self) -> tuple[IncomingData, DoValidate]:
         if request.has_var(self._vue_field_id()):
             # The form was submitted, always validate data
             return (
-                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
-                DataOrigin.FRONTEND,
+                RawFrontendData(json.loads(request.get_str_input_mandatory(self._vue_field_id()))),
                 True,
             )
 
         if self._new and self._clone is None:
             # New form, no validation
-            return DEFAULT_VALUE, DataOrigin.DISK, False
+            return DEFAULT_VALUE, False
 
         if self._clone is not None:
             self._ident = self._clone
@@ -831,7 +835,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         cloned_entry: Any = copy.deepcopy(self._entry)
         cloned_entry["ident"] = self._ident
         catalog_config = catalog_converter.convert_flat_to_catalog_config(cloned_entry)
-        return catalog_config, DataOrigin.DISK, True
+        return RawDiskData(catalog_config), True
 
 
 def convert_dict_elements_vs2fs(elements: list[DictionaryEntry]) -> dict[str, DictElement]:

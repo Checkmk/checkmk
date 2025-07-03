@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, InvalidValue
+from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from ._utils import (
     compute_input_hint,
     compute_validators,
@@ -82,7 +82,9 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel
                 return int(converted_value * factor)
         return int(converted_value)
 
-    def _parse_value(self, raw_value: object) -> _ParseValueModel | InvalidValue[_FallbackModel]:
+    def _parse_value(
+        self, raw_value: IncomingData
+    ) -> _ParseValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(
@@ -92,18 +94,19 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            value: object = prefill_default
+        elif isinstance(raw_value, RawFrontendData) and isinstance(raw_value.value, list):
+            value = self._convert_to_value(raw_value.value[0], raw_value.value[1])
+        else:
+            value = raw_value.value
 
-        if self.options.data_origin == DataOrigin.FRONTEND and isinstance(raw_value, list):
-            raw_value = self._convert_to_value(raw_value[0], raw_value[1])
-
-        if not isinstance(raw_value, int):
+        if not isinstance(value, int):
             return InvalidValue(
                 reason=_("Invalid number"),
                 fallback_value=["", _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]],
             )
 
-        return raw_value
+        return value
 
     def _to_vue(
         self, parsed_value: _ParseValueModel | InvalidValue[_FallbackModel]

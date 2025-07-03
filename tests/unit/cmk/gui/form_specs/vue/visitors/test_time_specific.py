@@ -2,15 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.private import TimeSpecific
 from cmk.gui.form_specs.vue.visitors import (
-    DataOrigin,
     DEFAULT_VALUE,
     get_visitor,
+    RawDiskData,
     SingleChoiceVisitor,
-    VisitorOptions,
 )
 
 from cmk.rulesets.v1 import Title
@@ -38,29 +36,15 @@ def time_specific_dict_spec() -> TimeSpecific:
     )
 
 
-def test_time_specific_default_value_with_int(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
-    visitor = get_visitor(
-        time_specific_int_spec(),
-        VisitorOptions(data_origin=DataOrigin.DISK),
-    )
+def test_time_specific_default_value_with_int() -> None:
+    visitor = get_visitor(time_specific_int_spec())
 
     _spec, value = visitor.to_vue(DEFAULT_VALUE)
     assert isinstance(value, int)
 
 
-def test_time_specific_default_value_with_dict(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
-    visitor = get_visitor(
-        time_specific_dict_spec(),
-        VisitorOptions(data_origin=DataOrigin.DISK),
-    )
+def test_time_specific_default_value_with_dict() -> None:
+    visitor = get_visitor(time_specific_dict_spec())
 
     _spec, value = visitor.to_vue(DEFAULT_VALUE)
     assert isinstance(value, dict)
@@ -68,21 +52,16 @@ def test_time_specific_default_value_with_dict(
     assert shared_type_defs.TimeSpecific.default_value_key not in value
 
 
-def test_time_specific_wrapping(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
-    visitor = get_visitor(
-        time_specific_dict_spec(),
-        VisitorOptions(data_origin=DataOrigin.DISK),
-    )
+def test_time_specific_wrapping() -> None:
+    visitor = get_visitor(time_specific_dict_spec())
 
     _spec, frontend_value = visitor.to_vue(
-        {
-            "tp_default_value": {"foo": 25},
-            "tp_values": [("24X7", {"foo": 25})],
-        }
+        RawDiskData(
+            {
+                "tp_default_value": {"foo": 25},
+                "tp_values": [("24X7", {"foo": 25})],
+            }
+        )
     )
     assert frontend_value == {
         "tp_default_value": {"foo": 25},
@@ -92,24 +71,21 @@ def test_time_specific_wrapping(
     }
 
 
-def test_time_specific_wrapping_error(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
+def test_time_specific_wrapping_error() -> None:
     visitor = get_visitor(
         time_specific_dict_spec(),
-        VisitorOptions(data_origin=DataOrigin.DISK),
     )
 
     validation_messages = visitor.validate(
-        {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25, "baff": 24})]}
+        RawDiskData(
+            {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25, "baff": 24})]}
+        )
     )
     assert len(validation_messages) == 1
     assert validation_messages[0].replacement_value == {}
 
     _spec, frontend_value = visitor.to_vue(
-        {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25})]}
+        RawDiskData({"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25})]})
     )
     assert frontend_value == {
         "tp_default_value": {"foo": 25},

@@ -5,11 +5,8 @@
 
 import pytest
 
-from cmk.ccc.user import UserId
-
 from cmk.gui.form_specs.private import ListOfStrings
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
 
 from cmk.rulesets.v1.form_specs import String
 
@@ -19,16 +16,13 @@ def spec() -> ListOfStrings:
     return ListOfStrings(string_spec=String())
 
 
-@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize("data_wrapper", [RawFrontendData, RawDiskData])
 def test_list_of_strings_filter(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    data_origin: DataOrigin,
+    data_wrapper: type[RawFrontendData | RawDiskData],
     string_spec: ListOfStrings,
 ) -> None:
-    entries = ["foo", "", "bar", "baz", ""]
-    visitor = get_visitor(string_spec, VisitorOptions(data_origin=data_origin))
+    entries = data_wrapper(["foo", "", "bar", "baz", ""])
+    visitor = get_visitor(string_spec)
     # Check filtering
     _vue_spec, vue_value = visitor.to_vue(entries)
     assert vue_value == ["foo", "bar", "baz"]

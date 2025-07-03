@@ -21,11 +21,9 @@ from cmk.utils.paths import check_mk_config_dir, omd_root
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
-    DataOrigin,
     get_visitor,
-    VisitorOptions,
+    RawDiskData,
 )
-from cmk.gui.form_specs.vue.visitors._type_defs import DiskModel
 from cmk.gui.watolib import sample_config
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
@@ -132,22 +130,24 @@ class MigrateNotifications(UpdateAction):
         method: NotificationParameterMethod,
         parameter: dict[str, Any],
         nr: int,
-    ) -> DiskModel:
-        data = NotificationParameterItem(
-            general=NotificationParameterGeneralInfos(
-                description="Migrated from notification rule #%d" % nr,
-                comment="Auto migrated on update",
-                docu_url="",
-            ),
-            parameter_properties={"method_parameters": parameter},
+    ) -> NotificationParameterItem:
+        data = RawDiskData(
+            NotificationParameterItem(
+                general=NotificationParameterGeneralInfos(
+                    description="Migrated from notification rule #%d" % nr,
+                    comment="Auto migrated on update",
+                    docu_url="",
+                ),
+                parameter_properties={"method_parameters": parameter},
+            )
         )
         form_spec = notification_parameter_registry.form_spec(method)
-        visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
+        visitor = get_visitor(form_spec)
 
         validation_errors = visitor.validate(data)
         process_validation_messages(validation_errors)
 
-        return visitor.to_disk(data)
+        return cast(NotificationParameterItem, visitor.to_disk(data))
 
 
 update_action_registry.register(

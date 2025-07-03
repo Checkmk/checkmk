@@ -96,6 +96,15 @@ def main() {
             if ("${build_instance.result}" != "SUCCESS") {
                 notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}")
             }
+
+            // Without this stage in place the whole job would fail, unclear why
+            smart_stage(
+                name: "Say hello",
+                condition: build_instance,
+                raiseOnError: true,
+            ) {
+                sh("echo hello");
+            }
         }]
     }
 

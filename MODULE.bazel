@@ -214,12 +214,12 @@ new_local_repository(
 
 # Build custom OpenTelementry collector
 
-OCB_VERSION = "0.113.0"
+OCB_VERSION = "0.129.0"
 
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
-    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
+    sha256 = "bbf3da6e8e1353d5a6ea2bcc7cc118e8b67e3e8fac74013b0b06fb5704734c9a",
     url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
 )
 
@@ -227,7 +227,7 @@ bazel_dep(name = "gazelle", version = "0.42.0")
 bazel_dep(name = "rules_go", version = "0.50.1")
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.22.10")
+go_sdk.download(version = "1.23.10")
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
@@ -266,6 +266,12 @@ go_deps.gazelle_override(
         "gazelle:proto disable",
     ],
     path = "github.com/prometheus/prometheus",
+)
+go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "go.opentelemetry.io/collector/pdata/xpdata",
 )
 go_deps.gazelle_override(
     build_file_generation = "on",

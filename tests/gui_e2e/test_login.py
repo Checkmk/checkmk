@@ -15,6 +15,7 @@ from tests.gui_e2e.testlib.open_ldap import Group, OpenLDAPManager, User
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
+from tests.testlib.utils import is_containerized
 
 
 @pytest.fixture(name="tmp_path_module", scope="module")
@@ -105,6 +106,7 @@ def test_redirected_to_desired_page(
     expect(login_page.page).to_have_url(re.compile(f"{re.escape(cmk_page)}$"))
 
 
+@pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
 def test_ldap_user_login_success(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
@@ -123,6 +125,7 @@ def test_ldap_user_login_success(
     login_page.main_area.check_page_title("Problem dashboard")
 
 
+@pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
 def test_ldap_user_login_failed(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,

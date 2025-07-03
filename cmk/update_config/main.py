@@ -191,6 +191,11 @@ def _load_plugins(logger: logging.Logger) -> None:
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
         (
+            load_plugins_with_exceptions("cmk.update_config.cce.plugins.actions")
+            if edition(paths.omd_root) in (Edition.CCE, Edition.CME, Edition.CSE)
+            else []
+        ),
+        (
             load_plugins_with_exceptions("cmk.update_config.cme.plugins.actions")
             if edition(paths.omd_root) is Edition.CME
             else []

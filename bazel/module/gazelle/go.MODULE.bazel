@@ -1,5 +1,5 @@
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.22.10")
+go_sdk.download(version = "1.23.10")
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
@@ -39,6 +39,12 @@ go_deps.gazelle_override(
         "gazelle:proto disable",
     ],
     path = "github.com/prometheus/prometheus",
+)
+go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "go.opentelemetry.io/collector/pdata/xpdata",
 )
 go_deps.gazelle_override(
     build_file_generation = "on",

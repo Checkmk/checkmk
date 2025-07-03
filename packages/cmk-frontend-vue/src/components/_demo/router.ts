@@ -47,6 +47,7 @@ import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoTypography from './DemoTypography.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
+import DemoCmkStepPanel from './DemoCmkStepPanel.vue'
 
 interface Route {
   path: string
@@ -65,6 +66,11 @@ const routes: Route[] = [
     path: '/accordion',
     name: 'CmkAccordion',
     component: DemoCmkAccordion
+  },
+  {
+    path: '/step-panel',
+    name: 'CmkStepPanel',
+    component: DemoCmkStepPanel
   },
   {
     path: '/tabs',

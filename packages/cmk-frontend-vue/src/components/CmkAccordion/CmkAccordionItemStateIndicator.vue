@@ -7,13 +7,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { getIsItemExpandedCallback } from './trigger-item'
 
 const isItemExpanded = getIsItemExpandedCallback()
+
 defineProps<{
   value: string
 }>()
 </script>
 
 <template>
-  <span class="cmk-accordion-item-state-indicator" :class="{ open: isItemExpanded(value) }"></span>
+  <span
+    class="cmk-accordion-item-state-indicator"
+    :class="{ open: typeof value !== 'undefined' && isItemExpanded(value) }"
+  ></span>
 </template>
 
 <style scoped>

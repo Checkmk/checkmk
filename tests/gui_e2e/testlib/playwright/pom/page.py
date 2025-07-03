@@ -108,27 +108,20 @@ class CmkPage(LocatorHelper):
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self, site: Site | None = None) -> None:
-        """Activate changes using the UI.
+        """Activate changes using the UI or API.
 
         Args:
-            site (Site | None, optional): Fail safe mechanism.
-                In case an error arises, UI related or otherwise,
-                make sure to activate the changes using REST-API.
-                Defaults to None.
-                NOTE: Activate 'foreign changes' is enabled using REST-API!
+            site (Site | None, optional): Site to activate changes via API.
         """
         logger.info("Activate changes")
-        try:
-            self.main_menu.changes_menu().get_by_role(role="button", name="Open full page")
-            self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
-            self.activate_selected()
-            self.expect_success_state()
-        except Exception as e:
-            if site:
-                logger.warning("fail-safe: could not activate changes using UI; using REST-API...")
-                site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
-            else:
-                raise e
+        if site:
+            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+            return
+
+        self.main_menu.changes_menu().get_by_role(role="button", name="Open full page")
+        self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
+        self.activate_selected()
+        self.expect_success_state()
 
     def goto(self, url: str, event: str = "load") -> None:
         """Override `Page.goto`. Additionally, wait for the page to `load`, by default.

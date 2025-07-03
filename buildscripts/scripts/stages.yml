@@ -165,6 +165,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
 
+    - NAME: CHANGED_CMK_RELAY_PROTOCOLS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-relay-protocols/' || true"
+
     - NAME: CHANGED_CMK_WERKS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks/' || true"
 
@@ -597,6 +600,14 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
+
+    - NAME: "Package cmk-relay-protocols"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_RELAY_PROTOCOLS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "packages/cmk-relay-protocols"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-relay-protocols.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-relay-protocols files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-protocols.txt"
 
     - NAME: "Package cmk-otel-collector"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS

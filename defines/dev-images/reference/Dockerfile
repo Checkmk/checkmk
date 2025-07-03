@@ -24,7 +24,8 @@ RUN apt-get install -y \
     lsb-release \
     msitools \
     wget \
-    tree
+    tree  \
+    libaio1
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed

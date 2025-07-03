@@ -44,6 +44,7 @@ XDG_CACHE_HOME     ?= $(HOME)/.cache
 PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
 CMK_VERSION        := $(VERSION)
+OMD_SERIAL         := 38
 
 OMD_BASE           := /omd
 OMD_PHYSICAL_BASE  := /opt/omd

@@ -1491,16 +1491,16 @@ class Username(base.String):
         example: str,
         required: bool = True,
         validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
-        should_exist: bool = True,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
         **kwargs: Any,
     ):
-        self._should_exist = should_exist
         super().__init__(
             example=example,
             required=required,
             validate=validate,
             **kwargs,
         )
+        self.presence = presence
 
     def _validate(self, value):
         super()._validate(value)
@@ -1513,9 +1513,9 @@ class Username(base.String):
 
         # TODO: change to names list only
         usernames = load_users()
-        if self._should_exist and value not in usernames:
+        if self.presence == "should_exist" and value not in usernames:
             raise self.make_error("should_exist", username=value)
-        if not self._should_exist and value in usernames:
+        if self.presence == "should_not_exist" and value in usernames:
             raise self.make_error("should_not_exist", username=value)
 
 

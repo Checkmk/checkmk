@@ -24,7 +24,7 @@ def get_tmp_path_module(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(name="open_ldap_manager", scope="module")
 def create_open_ldap_manager(tmp_path_module: Path) -> Iterator[OpenLDAPManager]:
-    """Create EmailManager instance.
+    """Create OpenLDAPManager instance.
 
     OpenLDAPManager handles setting up and tearing down local LDAP server. It creates
     specified groups and users in the LDAP server.

@@ -249,6 +249,19 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
+def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
+    ruleset = "diskstat_inventory"
+    resp = clients.Rule.create(
+        ruleset=ruleset,
+        folder="/",
+        properties={"description": "Test", "disabled": False},
+        value_raw="{'summary': True}",
+        conditions={},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
 def test_openapi_list_rules(
     clients: ClientRegistry,
     new_rule: tuple[Response, dict[str, typing.Any]],

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Final
+from typing import cast, Final
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -37,20 +37,31 @@ from cmk.rulesets.v1.rule_specs import (
 _MB = 1000**2
 
 
-def migrate_diskstat_inventory(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError(value)
+def _migrate_to_required_values(value: object) -> Mapping[str, object]:
+    # We made the fields required so we need to make sure that default values are migrated
+    if isinstance(value, dict):
+        default_values = {
+            "summary": True,
+            "lvm": False,
+            "vxvm": False,
+            "diskless": False,
+        }
+        default_values.update(value)
+        return default_values
+    return cast(dict, value)
 
-    if isinstance((physical := value.get("physical")), str):
-        return value
 
-    return {
-        **{f: f in value and value[f] for f in ("summary", "lvm", "vxvm", "diskless")},
-        **({} if physical is None else {"physical": "name"}),
-    }
+def _migrate_physical(value: object) -> str:
+    if not isinstance(value, str):
+        physical_value = "name"
+        # and there was a change in the structure in the physical key
+        if isinstance(value, dict):
+            physical_value = value.get("service_description", "name")
+        return physical_value
+    return value
 
 
-def _valuespec_diskstat_inventory() -> Dictionary:
+def _form_spec_diskstat_inventory() -> Dictionary:
     return Dictionary(
         elements={
             "summary": DictElement(
@@ -81,6 +92,7 @@ def _valuespec_diskstat_inventory() -> Dictionary:
                         "Device names aren't persistent and can change after a reboot or an update. "
                         "In case WWN is not available, device name will be used."
                     ),
+                    migrate=_migrate_physical,
                 ),
             ),
             "lvm": DictElement(
@@ -108,7 +120,7 @@ def _valuespec_diskstat_inventory() -> Dictionary:
                 ),
             ),
         },
-        migrate=migrate_diskstat_inventory,
+        migrate=_migrate_to_required_values,
     )
 
 
@@ -116,7 +128,7 @@ rule_spec_diskstat_inventory = DiscoveryParameters(
     topic=Topic.GENERAL,
     name="diskstat_inventory",
     title=Title("Disk IO discovery"),
-    parameter_form=_valuespec_diskstat_inventory,
+    parameter_form=_form_spec_diskstat_inventory,
 )
 
 

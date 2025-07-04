@@ -49,6 +49,7 @@ class StageInfo(TypedDict, total=False):
     SKIPPED: str
     RESULT_CHECK_TYPE: str
     RESULT_CHECK_FILE_PATTERN: str
+    JENKINS_TEST_RESULT_PATH: str
 
 
 Stages = Sequence[StageInfo]
@@ -123,6 +124,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
         RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_FILE_PATTERN", "")),
+        JENKINS_TEST_RESULT_PATH=str(raw_stage.get("JENKINS_TEST_RESULT_PATH", "")),
     )
 
 
@@ -170,6 +172,7 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
         RESULT_CHECK_TYPE=replace_variables(in_data["RESULT_CHECK_TYPE"], env_vars),
         RESULT_CHECK_FILE_PATTERN=replace_variables(in_data["RESULT_CHECK_FILE_PATTERN"], env_vars),
+        JENKINS_TEST_RESULT_PATH=replace_variables(in_data["JENKINS_TEST_RESULT_PATH"], env_vars),
     )
 
 
@@ -189,6 +192,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             COMMAND=stage["COMMAND"],
             RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],
             RESULT_CHECK_FILE_PATTERN=stage["RESULT_CHECK_FILE_PATTERN"],
+            JENKINS_TEST_RESULT_PATH=stage["JENKINS_TEST_RESULT_PATH"],
         )
         if no_skip or not skip_stage
         else StageInfo(  #

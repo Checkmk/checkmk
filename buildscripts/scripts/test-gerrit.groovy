@@ -152,6 +152,7 @@ def main() {
                             duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
                             status: "${build_instance.getResult()}".toLowerCase(),
                             triggered_build_url: build_instance.getAbsoluteUrl(),
+                            test_result_path: item.JENKINS_TEST_RESULT_PATH,
                         ];
                     }
                     update_result_table(current_description, analyse_mapping);
@@ -207,6 +208,27 @@ def main() {
                                 unstable: false,
                             ]],
                         );
+                        if (item.RESULT_CHECK_TYPE == "JUNIT") {
+                            dir("${checkout_dir}") {
+                                try {
+                                    xunit(
+                                        checksName: item.NAME,
+                                        tools: [
+                                            Custom(
+                                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                                                deleteOutputFiles: false,
+                                                failIfNotNew: false, // as they are copied from the single tests
+                                                pattern: item.RESULT_CHECK_FILE_PATTERN,
+                                                skipNoTestFiles: true,
+                                                stopProcessingIfError: true,
+                                            )
+                                        ]
+                                    );
+                                } catch (Exception exc) {
+                                    print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -217,21 +239,6 @@ def main() {
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);
         currentBuild.result = results_of_parallel.values().every { it } ? "SUCCESS" : "FAILURE";
-    }
-
-    stage("Analyse Issues") {
-        dir("${checkout_dir}") {
-            xunit([
-                Custom(
-                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                    deleteOutputFiles: false,
-                    failIfNotNew: false,    // as they are copied from the single tests
-                    pattern: "results/*junit.xml,results/testlogs/tests/**/test.xml",
-                    skipNoTestFiles: true,
-                    stopProcessingIfError: true,
-                )
-            ]);
-        }
     }
 
     stage("Archive artifacts") {
@@ -249,7 +256,7 @@ def update_result_table(static_description, table_data) {
 
 def render_description(job_results) {
     def job_result_table_html = """<table><tr style='text-align: left; padding: 50px 50px;'>
-    <th>${['Stage', 'Duration', 'Status', 'Issues', 'Report files'].join("</th><th>")}</th></tr>""";
+    <th>${['Stage', 'Duration', 'Status', 'Issues', 'Test report', 'Report files'].join("</th><th>")}</th></tr>""";
     job_results.each { entry ->
         job_result_table_html += job_result_row(entry.value);
     };
@@ -263,6 +270,7 @@ def job_result_row(Map args) {
     def pattern_url = "n/a";
     def triggered_build = args.stepName;
     def issue_link = "n/a";
+    def test_result_link = "n/a";
 
     if (args.pattern != null && args.pattern != '--') {
         pattern_url = "<a href='artifact/${args.pattern}'>${args.pattern}</a>";
@@ -273,6 +281,10 @@ def job_result_row(Map args) {
     if (args.unique_parser_name) {
         issue_link = "<a href='${currentBuild.absoluteUrl}/${args.unique_parser_name}'>issues</a>";
     }
+    if (args.test_result_path && args.triggered_build_url) {
+        test_result_link = "<a href='${currentBuild.absoluteUrl}/${args.test_result_path}'>test report</a>";
+    }
+
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;
     def logSec = ((totalSeconds > 0) ? Math.log(totalSeconds) : 0 / Math.log(3)).toInteger();
     def dur_str = "${totalSeconds.intdiv(60)}m:${totalSeconds % 60}s ${"•" * Math.min(10, logSec)}${" " * (10 - Math.min(10, logSec))}";
@@ -281,6 +293,7 @@ def job_result_row(Map args) {
     <td style='font-family: monospace; white-space: pre; text-align: right;'>${dur_str}</td>
     <td style='color: ${['ongoing': 'blue', 'success': 'green', 'skipped': 'grey', 'failure': 'red'][args.status]};font-weight: bold;'>${args.status}</td>
     <td>${issue_link}</td>
+    <td>${test_result_link}</td>
     <td>${pattern_url}</td>
     </tr>""";
 }

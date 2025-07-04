@@ -694,15 +694,22 @@ class Site:
         return output
 
     @contextmanager
-    def copy_file(self, name: str | Path, target: str | Path) -> Iterator[None]:
-        """Copies a file from the same directory as the caller to the site"""
+    def copy_file(self, source_path: str | Path, target_path: str | Path) -> Iterator[Path]:
+        """Copies a file from the same directory as the caller to the site.
+
+        If absolute paths are passed, those will override the default source and target paths.
+
+        Args:
+            source_path: Source path of the file (either absolute or relative to the callers folder).
+            target_path: Target path of the file (either absolute or relative to the site).
+        """
         caller_file = Path(inspect.stack()[2].filename)
-        source_path = caller_file.parent / name
-        target_path = Path(target)
+        source_path = caller_file.parent / source_path
+        target_path = self.path(target_path)
         self.makedirs(target_path.parent)
         self.write_file(target_path, source_path.read_text())
         try:
-            yield
+            yield target_path
         finally:
             self.delete_file(target_path)
 

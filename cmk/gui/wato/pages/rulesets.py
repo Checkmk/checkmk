@@ -322,7 +322,7 @@ class ABCRulesetMode(WatoMode):
                         name: ruleset
                         for name, ruleset in self._rulesets().get_rulesets().items()
                         if ruleset.matches_search_with_rules(
-                            self._search_options, debug=active_config.debug
+                            self._search_options, debug=config.debug
                         )
                     }
                 )
@@ -1167,13 +1167,11 @@ class ModeEditRuleset(WatoMode):
                     msg_type="warning",
                 )
 
-        rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
         return redirect(back_url)
 
     def page(self, config: Config) -> None:
-        if not active_config.wato_hide_varnames:
+        if not config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
             )
@@ -1190,7 +1188,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset, site_configs=active_config.sites, debug=active_config.debug)
+        self._rule_listing(ruleset, site_configs=config.sites, debug=config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -2153,7 +2151,7 @@ class ABCEditRuleMode(WatoMode):
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
-            self._save_rule()
+            self._save_rule(pprint_value=config.wato_pprint_config, debug=config.debug)
 
         elif is_locked_by_quick_setup(self._rule.locked_by):
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
@@ -2161,7 +2159,9 @@ class ABCEditRuleMode(WatoMode):
 
         else:
             # Move rule to new folder during editing
-            self._remove_from_orig_folder()
+            self._remove_from_orig_folder(
+                pprint_value=config.wato_pprint_config, debug=config.debug
+            )
 
             # Set new folder
             self._rule.folder = new_rule_folder
@@ -2169,9 +2169,7 @@ class ABCEditRuleMode(WatoMode):
             self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save_folder(
-                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-            )
+            self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
@@ -2182,7 +2180,7 @@ class ABCEditRuleMode(WatoMode):
                 sites=affected_sites,
                 diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
                 object_ref=self._rule.object_ref(),
-                use_git=active_config.wato_use_git,
+                use_git=config.wato_use_git,
             )
 
         flash(self._success_message())
@@ -2258,14 +2256,11 @@ class ABCEditRuleMode(WatoMode):
         return RuleConditions(**store_entries[condition_id]["conditions"])
 
     @abc.abstractmethod
-    def _save_rule(self) -> None:
-        raise NotImplementedError()
+    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None: ...
 
-    def _remove_from_orig_folder(self) -> None:
+    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False)
-        self._rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     def _success_message(self) -> str:
         return _('Edited rule in ruleset "%s" in folder "%s"') % (
@@ -2300,7 +2295,7 @@ class ABCEditRuleMode(WatoMode):
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
-            self._page_form(debug=active_config.debug)
+            self._page_form(debug=config.debug)
 
     def _get_rule_value_and_origin(self) -> tuple[Any, DataOrigin]:
         if request.has_var(self._vue_field_id()):
@@ -3167,12 +3162,10 @@ class ModeEditRule(ABCEditRuleMode):
         request.set_var(cls.VAR_RULE_ID, rule_id)
         request.set_var(cls.VAR_RULE_SPEC_NAME, rule_spec_name)
 
-    def _save_rule(self) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
 
 class ModeCloneRule(ABCEditRuleMode):
@@ -3187,13 +3180,11 @@ class ModeCloneRule(ABCEditRuleMode):
         super()._set_rule()
         self._rule = self._orig_rule.clone(preserve_id=False)
 
-    def _save_rule(self) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
-    def _remove_from_orig_folder(self) -> None:
+    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
 
     def _page_form_quick_setup_warning(self) -> None:
@@ -3275,11 +3266,9 @@ class ModeNewRule(ABCEditRuleMode):
             )
         )
 
-    def _save_rule(self) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
-        self._rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
         self._ruleset.add_new_rule_change(index, self._folder, self._rule)
 
     def _success_message(self) -> str:
@@ -3297,7 +3286,7 @@ class ModeExportRule(ABCEditRuleMode):
     def title(self) -> str:
         return _("Rule representation: %s") % self._rulespec.title
 
-    def _save_rule(self) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
         pass
 
     def page(self, config: Config) -> None:
@@ -3592,7 +3581,7 @@ class ModeUnknownRulesets(WatoMode):
 
     def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
-            debug=active_config.debug
+            debug=config.debug
         )
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
@@ -3626,7 +3615,12 @@ class ModeUnknownRulesets(WatoMode):
         ruleset.delete_rule(rule)
 
     def _bulk_delete_selected_rules(
-        self, selected_cp_rule_ids: Sequence[str], selected_rule_ids: Sequence[str]
+        self,
+        selected_cp_rule_ids: Sequence[str],
+        selected_rule_ids: Sequence[str],
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         do_reset = False
@@ -3642,9 +3636,7 @@ class ModeUnknownRulesets(WatoMode):
         for folder, rulesets_and_rules in by_folder.items():
             for ruleset, rule in rulesets_and_rules:
                 self._delete_cp_rule(rulesets, ruleset, rule)
-            rulesets.save_folder(
-                folder, pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-            )
+            rulesets.save_folder(folder, pprint_value=pprint_value, debug=debug)
 
         do_save = False
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
@@ -3656,13 +3648,13 @@ class ModeUnknownRulesets(WatoMode):
                         do_reset = True
 
         if do_save:
-            rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
+            rulesets.save(pprint_value=pprint_value, debug=debug)
         if do_reset:
             deprecations.reset_scheduling()
         return redirect(self.mode_url())
 
     def _delete_selected_cp_rule(
-        self, selected_ruleset_name: str, selected_rule_id: str
+        self, selected_ruleset_name: str, selected_rule_id: str, pprint_value: bool, debug: bool
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         if not (ruleset := rulesets.get_rulesets().get(selected_ruleset_name)):
@@ -3674,8 +3666,8 @@ class ModeUnknownRulesets(WatoMode):
                     self._delete_cp_rule(rulesets, ruleset, rule)
                     rulesets.save_folder(
                         rule.folder,
-                        pprint_value=active_config.wato_pprint_config,
-                        debug=active_config.debug,
+                        pprint_value=pprint_value,
+                        debug=debug,
                     )
                     deprecations.reset_scheduling()
                     return redirect(self.mode_url())
@@ -3683,7 +3675,7 @@ class ModeUnknownRulesets(WatoMode):
         return None
 
     def _delete_selected_rule(
-        self, selected_ruleset_name: str, selected_rule_id: str
+        self, selected_ruleset_name: str, selected_rule_id: str, *, pprint_value: bool, debug: bool
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
@@ -3691,9 +3683,7 @@ class ModeUnknownRulesets(WatoMode):
                 for rulespec in rulespecs:
                     if rulespec["id"] == selected_rule_id:
                         rulesets.delete_unknown_rule(folder_path, ruleset_name, rulespec["id"])
-                        rulesets.save(
-                            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-                        )
+                        rulesets.save(pprint_value=pprint_value, debug=debug)
                         deprecations.reset_scheduling()
                         return redirect(self.mode_url())
 
@@ -3711,16 +3701,31 @@ class ModeUnknownRulesets(WatoMode):
             for vn, _vv in request.itervars(prefix="_c_unknown_rule")
         ]
         if request.var("_bulk_delete_selected_unknown_rulesets") and (d_cp_rule_ids or d_rule_ids):
-            return self._bulk_delete_selected_rules(d_cp_rule_ids, d_rule_ids)
+            return self._bulk_delete_selected_rules(
+                d_cp_rule_ids,
+                d_rule_ids,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+            )
 
         if (d_ruleset_name := request.var("_delete_cp_ruleset_name")) and (
             d_rule_id := request.var("_delete_cp_rule_id")
         ):
-            return self._delete_selected_cp_rule(d_ruleset_name, d_rule_id)
+            return self._delete_selected_cp_rule(
+                d_ruleset_name,
+                d_rule_id,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+            )
 
         if (d_ruleset_name := request.var("_delete_ruleset_name")) and (
             d_rule_id := request.var("_delete_rule_id")
         ):
-            return self._delete_selected_rule(d_ruleset_name, d_rule_id)
+            return self._delete_selected_rule(
+                d_ruleset_name,
+                d_rule_id,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+            )
 
         return None

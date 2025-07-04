@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -60,7 +60,7 @@ class ModeRandomHosts(WatoMode):
         folders = request.get_integer_input_mandatory("folders")
         levels = request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(
-            folder, count, folders, levels, pprint_value=active_config.wato_pprint_config
+            folder, count, folders, levels, pprint_value=config.wato_pprint_config
         )
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=folder.path()))

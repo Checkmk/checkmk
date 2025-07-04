@@ -6,12 +6,13 @@
 
 import time
 from collections.abc import Collection
+from typing import Any
 
 from cmk.ccc import store
 
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -45,10 +46,6 @@ class ModeManageReadOnly(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["set_read_only"]
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._settings = active_config.wato_read_only
-
     def title(self) -> str:
         return _("Manage configuration read only mode")
 
@@ -62,18 +59,18 @@ class ModeManageReadOnly(WatoMode):
 
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
-        self._settings = settings
 
-        self._save()
+        self._save(settings, pprint_value=config.wato_pprint_config)
+        config.wato_read_only = settings
         flash(_("Saved read only settings"))
         return redirect(mode_url("read_only"))
 
-    def _save(self):
+    def _save(self, settings: dict[str, Any], *, pprint_value: bool) -> None:
         store.save_to_mk_file(
             multisite_dir() / "read_only.mk",
             key="wato_read_only",
-            value=self._settings,
-            pprint_value=active_config.wato_pprint_config,
+            value=settings,
+            pprint_value=pprint_value,
         )
 
     def page(self, config: Config) -> None:
@@ -85,7 +82,7 @@ class ModeManageReadOnly(WatoMode):
             )
         )
         with html.form_context("read_only", method="POST"):
-            self._vs().render_input("_read_only", self._settings)
+            self._vs().render_input("_read_only", config.wato_read_only)
             html.hidden_fields()
 
     def _vs(self):

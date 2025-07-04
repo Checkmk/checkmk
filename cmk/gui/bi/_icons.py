@@ -79,11 +79,13 @@ def _render_aggregation_icon(
         "check_mk_active-bi_aggr!"
     ):
         command = row["service_check_command"]
+        address = row["host_address"]
+        name = row["host_name"]
+
         args = shlex.split(command)
 
-        aggr_name = args[4] if "stored_passwords" in args[0] else args[3]
-        aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
-        aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
+        raw_aggr_name = args[4] if "stored_passwords" in args[0] else args[3]
+        aggr_name = raw_aggr_name.replace("$HOSTADDRESS$", address).replace("$HOSTNAME$", name)
 
         return (
             "aggr",

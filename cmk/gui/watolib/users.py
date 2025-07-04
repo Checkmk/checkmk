@@ -404,8 +404,10 @@ class UserFeaturesRegistry(Registry[UserFeatures]):
 user_features_registry = UserFeaturesRegistry()
 
 
-def get_enabled_remote_sites_for_logged_in_user(logged_in_user: LoggedInUser) -> SiteConfigurations:
-    all_enabled_slave_sites = site_config.wato_slave_sites()
+def get_enabled_remote_sites_for_logged_in_user(
+    logged_in_user: LoggedInUser, site_configs: SiteConfigurations
+) -> SiteConfigurations:
+    all_enabled_slave_sites = site_config.wato_slave_sites(site_configs)
     if (
         site_ids_for_user := user_features_registry.features().sites(logged_in_user.attributes)
     ) is None:

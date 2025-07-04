@@ -9,6 +9,7 @@ from datetime import datetime
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -112,7 +113,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         origtarget = request.get_str_input_mandatory("_origtarget", "user_change_pw.py")
-        if get_enabled_remote_sites_for_logged_in_user(user):
+        if get_enabled_remote_sites_for_logged_in_user(user, active_config.sites):
             raise redirect(
                 makeuri_contextless(
                     request, [("back", origtarget)], filename="user_profile_replicate.py"

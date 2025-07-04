@@ -15,7 +15,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedDict
 
-from livestatus import LivestatusResponse, SiteConfiguration
+from livestatus import LivestatusResponse, SiteConfiguration, SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -2477,7 +2477,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def page(self, config: Config) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites(),
+                sites=_get_notification_sync_sites(active_config.sites),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
             html.h3(_("Notification Rules"))
@@ -2489,11 +2489,11 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         )
 
 
-def _get_notification_sync_sites() -> list[SiteId]:
+def _get_notification_sync_sites(site_configs: SiteConfigurations) -> list[SiteId]:
     return sorted(
         site_id
-        for site_id in wato_slave_sites()
-        if not site_is_local(active_config.sites[SiteId(site_id)])
+        for site_id in wato_slave_sites(site_configs)
+        if not site_is_local(site_configs[SiteId(site_id)])
     )
 
 
@@ -3217,7 +3217,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def page(self, config: Config) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites(),
+                sites=_get_notification_sync_sites(config.sites),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
             return

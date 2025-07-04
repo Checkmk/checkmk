@@ -200,7 +200,7 @@ class ClearFailedNotificationPage(Page):
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
-            if get_enabled_remote_sites_for_logged_in_user(user):
+            if get_enabled_remote_sites_for_logged_in_user(user, config.sites):
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     main_menu_registry.menu_monitoring(), title

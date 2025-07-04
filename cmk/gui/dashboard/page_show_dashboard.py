@@ -13,6 +13,8 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from typing import Literal
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.user import UserId
@@ -98,7 +100,7 @@ def page_dashboard(config: Config) -> None:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
 
-    draw_dashboard(name)
+    _draw_dashboard(name, config.sites)
 
 
 def _get_default_dashboard_name() -> str:
@@ -122,8 +124,7 @@ def _get_default_dashboard_name() -> str:
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
-# Actual rendering function
-def draw_dashboard(name: DashboardName) -> None:
+def _draw_dashboard(name: DashboardName, site_configs: SiteConfigurations) -> None:
     mode = "display"
     if request.var("edit") == "1":
         mode = "edit"
@@ -188,7 +189,7 @@ def draw_dashboard(name: DashboardName) -> None:
     )
 
     # replication is only needed if we have remote sites
-    if need_replication and get_enabled_remote_sites_for_logged_in_user(user):
+    if need_replication and get_enabled_remote_sites_for_logged_in_user(user, site_configs):
         save_and_replicate_all_dashboards(
             makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
         )

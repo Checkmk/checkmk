@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from cmk.gui import forms, userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -86,7 +87,7 @@ class UserProfile(ABCUserProfilePage):
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
-        if get_enabled_remote_sites_for_logged_in_user(user):
+        if get_enabled_remote_sites_for_logged_in_user(user, active_config.sites):
             back_url = "user_profile_replicate.py?back=user_profile.py"
         else:
             back_url = "user_profile.py"

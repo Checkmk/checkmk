@@ -644,13 +644,19 @@ class SitesApiMgr:
 
     def get_connected_sites_to_update(
         self,
+        *,
         new_or_deleted_connection: bool,
         modified_site: SiteId,
         current_site_config: SiteConfiguration,
         old_site_config: SiteConfiguration | None,
+        site_configs: SiteConfigurations,
     ) -> set[SiteId]:
         return self.site_mgmt.get_connected_sites_to_update(
-            new_or_deleted_connection, modified_site, current_site_config, old_site_config
+            new_or_deleted_connection=new_or_deleted_connection,
+            modified_site=modified_site,
+            current_config=current_site_config,
+            old_config=old_site_config,
+            site_configs=site_configs,
         )
 
     def get_broker_connections(self) -> BrokerConnections:

@@ -261,10 +261,11 @@ def _convert_validate_and_save_site_data(
         internal_config: SiteConfiguration = site_obj.to_internal()
 
         sites_to_update = SitesApiMgr().get_connected_sites_to_update(
-            is_new_connection,
-            site_id,
+            new_or_deleted_connection=is_new_connection,
+            modified_site=site_id,
             current_site_config=internal_config,
             old_site_config=old_site_config,
+            site_configs=SitesApiMgr().get_all_sites(),
         )
         SitesApiMgr().validate_and_save_site(
             site_id,

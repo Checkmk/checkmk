@@ -145,7 +145,9 @@ def execute_host_label_sync_job(config: Config) -> None:
     if not has_wato_slave_sites():
         return
 
-    DiscoveredHostLabelSyncJob().do_sync(remote_sites=wato_slave_sites(), debug=config.debug)
+    DiscoveredHostLabelSyncJob().do_sync(
+        remote_sites=wato_slave_sites(config.sites), debug=config.debug
+    )
 
     now = time.time()
     if (

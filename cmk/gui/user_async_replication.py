@@ -19,7 +19,8 @@ from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 def user_profile_async_replication_page(back_url: str) -> None:
     user_profile_async_replication_dialog(
-        sites=list(get_enabled_remote_sites_for_logged_in_user(user)), back_url=back_url
+        sites=list(get_enabled_remote_sites_for_logged_in_user(user, active_config.sites)),
+        back_url=back_url,
     )
     html.footer()
 

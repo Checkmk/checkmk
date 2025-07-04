@@ -14,7 +14,7 @@ from pathlib import Path
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -137,7 +137,7 @@ class SyncRemoteSitesJob:
 
     def shall_start(self) -> bool:
         """Some basic preliminary check to decide quickly whether to start the job"""
-        return bool(wato_slave_sites())
+        return bool(wato_slave_sites(active_config.sites))
 
     def do_execute(
         self, *, sites: Sequence[tuple[SiteId, RemoteAutomationConfig]], debug: bool
@@ -323,15 +323,20 @@ def _execute_sync_remote_sites(config: Config) -> None:
     if is_wato_slave_site():
         return
 
-    if not wato_slave_sites():
+    if not (
+        remote_site_configs := [
+            (site_id, site_config)
+            for site_id, site_config in wato_slave_sites(config.sites).items()
+            if "secret" in site_config
+        ]
+    ):
         logger.debug("Job shall not start")
         return
 
     SyncRemoteSitesJob().do_execute(
         sites=[
             (site_id, RemoteAutomationConfig.from_site_config(site_config))
-            for site_id, site_config in wato_slave_sites().items()
-            if "secret" in site_config
+            for site_id, site_config in remote_site_configs
         ],
         debug=config.debug,
     )

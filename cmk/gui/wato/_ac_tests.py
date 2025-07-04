@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 import urllib3
 
-from livestatus import LocalConnection, SiteConfiguration
+from livestatus import LocalConnection, SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -1136,10 +1136,10 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
     def is_relevant(self) -> bool:
-        return has_wato_slave_sites() and self._replicates_mkps()
+        return has_wato_slave_sites() and self._replicates_mkps(active_config.sites)
 
-    def _replicates_mkps(self) -> bool:
-        return any(site.get("replicate_mkps") for site in wato_slave_sites().values())
+    def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
+        return any(site.get("replicate_mkps") for site in wato_slave_sites(site_configs).values())
 
     def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()

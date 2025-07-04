@@ -292,10 +292,12 @@ class SiteManagement:
     @classmethod
     def get_connected_sites_to_update(
         cls,
+        *,
         new_or_deleted_connection: bool,
         modified_site: SiteId,
         current_config: SiteConfiguration,
-        old_config: SiteConfiguration | None = None,
+        old_config: SiteConfiguration | None,
+        site_configs: SiteConfigurations,
     ) -> set[SiteId]:
         connected = {omd_site()}
 
@@ -303,7 +305,7 @@ class SiteManagement:
             old_config
             and is_replication_enabled(old_config) != is_replication_enabled(current_config)
         ):
-            connected |= set(wato_slave_sites().keys())
+            connected |= set(wato_slave_sites(site_configs).keys())
             return connected
 
         if old_config is None:
@@ -567,7 +569,11 @@ class SiteManagement:
         domains = cls._affected_config_domains()
 
         connected_sites = cls.get_connected_sites_to_update(
-            new_or_deleted_connection=True, modified_site=site_id, current_config=all_sites[site_id]
+            new_or_deleted_connection=True,
+            modified_site=site_id,
+            current_config=all_sites[site_id],
+            old_config=None,
+            site_configs=all_sites,
         )
 
         del all_sites[site_id]

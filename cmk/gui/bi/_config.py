@@ -11,7 +11,6 @@ from typing import Any, overload, TypedDict
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
@@ -43,7 +42,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.site_config import wato_slave_sites
+from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils import escaping
@@ -254,13 +253,12 @@ class ABCBIMode(WatoMode):
         return escaping.escape_attribute(bi_pack.title)
 
     def _add_change(self, action_name: str, text: LogMessage) -> None:
-        site_ids = list(wato_slave_sites().keys()) + [omd_site()]
         changes_.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,
             domains=[ConfigDomainGUI()],
-            sites=site_ids,
+            sites=wato_site_ids(),
             use_git=active_config.wato_use_git,
         )
 

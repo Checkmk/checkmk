@@ -296,10 +296,11 @@ class ModeEditSite(WatoMode):
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
         sites_to_update = site_management_registry["site_management"].get_connected_sites_to_update(
-            self._new,
-            self._site_id,
-            site_spec,
-            self._site,
+            new_or_deleted_connection=self._new,
+            modified_site=self._site_id,
+            current_config=site_spec,
+            old_config=self._site,
+            site_configs=configured_sites,
         )
 
         self._site = configured_sites[self._site_id] = site_spec
@@ -772,7 +773,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     def _basic_elements(self):
         replicated_sites_choices = [
-            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites().items()
+            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites(active_config.sites).items()
         ]
 
         return [

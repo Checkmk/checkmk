@@ -14,11 +14,6 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
 
     dir("${checkout_dir}") {
-        setCustomBuildProperty(
-            key: "path_hashes",
-            value: versioning.path_hashes(["agents/wnx/.*", "agents/windows/.*", "packages/cmk-agent-ctl/.*", "packages/mk-sql/.*"])
-        );
-
         stage("make setversion") {
             bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
         }

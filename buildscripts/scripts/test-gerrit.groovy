@@ -6,7 +6,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main_parallel() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
-    def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
@@ -18,8 +17,6 @@ def main_parallel() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
     def stage_info = null;
 
-    // do not touch the status page during the build, it might be overwritten/dropped by another parallel step
-    // add elements to this mapping to render them at the end
     def analyse_mapping = [:];
 
     print(
@@ -39,10 +36,7 @@ def main_parallel() {
         sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
     }
 
-    /// Add description to the build
-    test_gerrit_helper.desc_init();
-    test_gerrit_helper.desc_add_line("${GERRIT_CHANGE_SUBJECT}");
-    test_gerrit_helper.desc_add_table(['Stage', 'Duration', 'Status', 'Parsed results', 'Result files']);
+    def current_description = currentBuild.description;
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
@@ -70,6 +64,7 @@ def main_parallel() {
             duration: groovy.time.TimeCategory.minus(new Date(), time_job_started),
             status: "success",
         ];
+        update_result_table(current_description, analyse_mapping);
         stage_info = load_json("${result_dir}/stages.json");
     }
 
@@ -101,7 +96,6 @@ def main_parallel() {
                     condition: run_condition,
                     raiseOnError: false,
                 ) {
-                    // build_params has to be a local variable of a stage to avoid re-using it from other stages
                     def build_params = [:];
 
                     switch("${item.NAME}") {
@@ -130,36 +124,37 @@ def main_parallel() {
                             ];
                             break;
                     }
-                    // preparing the mapping entry here before the smart_build call
-                    // ensures the stage is always listed in the job overview independant of the result
-                    // or failures during execution or similar
-                    analyse_mapping["${item.NAME}"] = [
-                        stepName: item.NAME,
-                        duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
-                        status: "failure",
-                    ];
-
-                    build_instance = smart_build(
-                        // see global-defaults.yml, needs to run in minimal container
-                        use_upstream_build: true,
-                        relative_job_name: relative_job_name,
-                        build_params: build_params,
-                        build_params_no_check: [
-                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                        ],
-                        no_remove_others: true, // do not delete other files in the dest dir
-                        download: false,    // use copyArtifacts to avoid nested directories
-                        print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
-                    );
 
                     analyse_mapping["${item.NAME}"] = [
                         stepName: item.NAME,
                         duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
-                        status: "${build_instance.getResult()}".toLowerCase(),
-                        triggered_build_url: build_instance.getAbsoluteUrl(),
+                        status: "ongoing",
                     ];
+
+                    try {
+                        build_instance = smart_build(
+                            // see global-defaults.yml, needs to run in minimal container
+                            use_upstream_build: true,
+                            relative_job_name: relative_job_name,
+                            build_params: build_params,
+                            build_params_no_check: [
+                                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                                CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                                CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                            ],
+                            no_remove_others: true, // do not delete other files in the dest dir
+                            download: false,    // use copyArtifacts to avoid nested directories
+                            print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
+                        );
+                    } finally {
+                        analyse_mapping["${item.NAME}"] = [
+                            stepName: item.NAME,
+                            duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
+                            status: "${build_instance.getResult()}".toLowerCase(),
+                            triggered_build_url: build_instance.getAbsoluteUrl(),
+                        ];
+                    }
+                    update_result_table(current_description, analyse_mapping);
                 }
 
                 smart_stage(
@@ -216,18 +211,12 @@ def main_parallel() {
                 }
             }
         }]
-    }
+    /// add a dummy step which populates the result table before the first real step has finished
+    } + [first_update: {sleep(2); update_result_table(current_description, analyse_mapping);}]
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);
         currentBuild.result = results_of_parallel.values().every { it } ? "SUCCESS" : "FAILURE";
-    }
-
-    stage("Render job page") {
-        analyse_mapping.each { entry ->
-            test_gerrit_helper.desc_add_status_row_gerrit(entry.value);
-        };
-        test_gerrit_helper.desc_add_table_bottom();
     }
 
     stage("Analyse Issues") {
@@ -372,4 +361,47 @@ def main() {
         main_sequential();
     }
 }
+
+def update_result_table(static_description, table_data) {
+    currentBuild.description = "<br><h3>${GERRIT_CHANGE_SUBJECT}</h3>" + render_description(table_data) + "<br>" + static_description;
+}
+
+def render_description(job_results) {
+    def job_result_table_html = """<table><tr style='text-align: left; padding: 50px 50px;'>
+    <th>${['Stage', 'Duration', 'Status', 'Issues', 'Report files'].join("</th><th>")}</th></tr>""";
+    job_results.each { entry ->
+        job_result_table_html += job_result_row(entry.value);
+    };
+    job_result_table_html += "</table>";
+    return job_result_table_html;
+}
+
+def job_result_row(Map args) {
+    // 'Stage'                    'Duration'      'Status'  'Parsed results'                'Result files'
+    // Python Typing(<-JOB_URL)   11.078 seconds  success   (Analyser URL (<-ANALYSER_URL))  results/python-typing.txt(<-ARTIFACTS_URL)
+    def pattern_url = "n/a";
+    def triggered_build = args.stepName;
+    def issue_link = "n/a";
+
+    if (args.pattern != null && args.pattern != '--') {
+        pattern_url = "<a href='artifact/${args.pattern}'>${args.pattern}</a>";
+    }
+    if (args.triggered_build_url) {
+        triggered_build = "<a href='${args.triggered_build_url}'>${args.stepName}</a>";
+    }
+    if (args.unique_parser_name) {
+        issue_link = "<a href='${currentBuild.absoluteUrl}/${args.unique_parser_name}'>issues</a>";
+    }
+    def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;
+    def logSec = ((totalSeconds > 0) ? Math.log(totalSeconds) : 0 / Math.log(3)).toInteger();
+    def dur_str = "${totalSeconds.intdiv(60)}m:${totalSeconds % 60}s ${"•" * Math.min(10, logSec)}${" " * (10 - Math.min(10, logSec))}";
+    return """<tr>
+    <td>${triggered_build}</td>
+    <td style='font-family: monospace; white-space: pre; text-align: right;'>${dur_str}</td>
+    <td style='color: ${['ongoing': 'blue', 'success': 'green', 'skipped': 'grey', 'failure': 'red'][args.status]};font-weight: bold;'>${args.status}</td>
+    <td>${issue_link}</td>
+    <td>${pattern_url}</td>
+    </tr>""";
+}
+
 return this;

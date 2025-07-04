@@ -265,19 +265,17 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             break;
     }
 
-    if (as_stage) {
-        analyse_issue_stages(issues);
-    }
-    else {
+    if (! as_stage) {
         return issues;
     }
+    publish_issue_stages(issues);
 }
 /* groovylint-enable MethodSize, LineLength */
 
 // pusblish issues stage based on given issue parser(s)
-def analyse_issue_stages(issues) {
+def publish_issue_stages(issues) {
     if (issues) {
-        stage("Analyse Issues") {
+        stage("Publish issues") {
             publishIssues(
                 issues: issues,
                 trendChartType: "TOOLS_ONLY",

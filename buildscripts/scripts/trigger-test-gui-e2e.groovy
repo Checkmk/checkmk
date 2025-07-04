@@ -2,8 +2,6 @@
 
 /// file: trigger-test-gui-e2e.groovy
 
-/// Runs `test-gui-e2e-f12less` for specified editions
-/// in separate builds paralelly
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
@@ -25,11 +23,11 @@ def main() {
     def params_editions = params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep();
     def selected_editions = [];
     if (params_editions) {
-      selected_editions = params_editions;
+        selected_editions = params_editions;
     } else if ("editions" in job_params_from_comments) {
-      selected_editions = job_params_from_comments.get("editions");
+        selected_editions = job_params_from_comments.get("editions");
     } else {
-      selected_editions = selected_editions_default;
+        selected_editions = selected_editions_default;
     }
 
     print(

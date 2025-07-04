@@ -2,8 +2,6 @@
 
 /// file: trigger-all-nightlies-fast.groovy
 
-/// This job will trigger all other nightly build chains on a fixed node
-
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {

@@ -12,7 +12,7 @@
 
 def build_cloud_images_names(version) {
     def version_suffix = "${version}-build-${env.BUILD_NUMBER}";
-    return ["cmk-ami-https-${version_suffix}", "cmk-azure-${version_suffix}"]
+    return ["cmk-ami-https-${version_suffix}", "cmk-azure-${version_suffix}"];
 }
 
 def main() {
@@ -27,7 +27,7 @@ def main() {
         error("The AMI/Azure builds must currently *only* use the cloud edition.");
     }
 
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(), branch_version, VERSION)
     if (cmk_version != versioning.strip_rc_number_from_version(cmk_version)) {
@@ -37,11 +37,11 @@ def main() {
     }
     def ami_image_name = build_cloud_images_names(cmk_version)[0];
     def azure_image_name = build_cloud_images_names(cmk_version)[1];
-    def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name)
-    def cloud_targets = ["amazon-ebs", "azure-arm"]
-    def build_cloud_images = params.BUILD_CLOUD_IMAGES
-    def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE
-    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"]
+    def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name);
+    def cloud_targets = ["amazon-ebs", "azure-arm"];
+    def build_cloud_images = params.BUILD_CLOUD_IMAGES;
+    def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE;
+    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"];
 
     currentBuild.description += (
         """
@@ -79,7 +79,7 @@ def main() {
             // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
             // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
             sh("make .venv");
-            parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
+            parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images));
         }
     }
 }
@@ -141,8 +141,8 @@ def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envv
                     withEnv(env_secret_map["env"] + packer_envvars) {
                         dir("${checkout_dir}/packer") {
                             sh("""
-                                   packer build -only="checkmk-ansible.${target}.builder" .;
-                            """)
+                               packer build -only="checkmk-ansible.${target}.builder" .;
+                            """);
                             }
                         }
                     }
@@ -189,7 +189,7 @@ def create_publish_stages(targets_names, version, publish) {
                             --product-id '${AWS_AMI_IMAGE_PRODUCT_ID}' \
                             --azure-subscription-id '${SUBSCRIPTION_ID}' \
                             --azure-resource-group '${AZURE_RESOURCE_GROUP}';
-                        """)
+                        """);
                         }
                     }
                 }

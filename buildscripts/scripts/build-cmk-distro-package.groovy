@@ -33,7 +33,7 @@ def main() {
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
         "DEBEMAIL='feedback@checkmk.com'",
-    ]
+    ];
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -204,7 +204,7 @@ def main() {
 
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
                     if (!package_type) {
-                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}")
+                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
                     }
                 }
             }

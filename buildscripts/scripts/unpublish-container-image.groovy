@@ -1,9 +1,6 @@
 #!groovy
 
-/// file: unpublish-container-images.groovy
-
-/// Remove container images from public registries.
-
+/// file: unpublish-container-image.groovy
 
 def main() {
     // Check for required job params
@@ -29,7 +26,6 @@ def main() {
             set_docker_group_id: true,
             mount_credentials: true,
         ) {
-
             withCredentials([
                 usernamePassword(
                     credentialsId: helper.registry_credentials_id(EDITION),
@@ -42,19 +38,18 @@ def main() {
             ]) {
                 withEnv(["PYTHONUNBUFFERED=1"]) {
                     dir("${checkout_dir}") {
-
-                        command = """scripts/run-uvenv \
+                        def command = """scripts/run-uvenv \
                         buildscripts/scripts/unpublish-container-image.py \
                         --editions_file editions.yml --edition ${EDITION} \
                         ${ACTION}
-                        """
+                        """;
 
                         if (ACTION == "delete") {
                             if (DRY_RUN) {
-                                command += " --dry-run"
+                                command += " --dry-run";
                             }
 
-                            command += " --image-tag ${TAG_TO_DELETE}"
+                            command += " --image-tag ${TAG_TO_DELETE}";
                         }
 
                         sh(script: command);

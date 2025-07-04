@@ -2,8 +2,6 @@
 
 /// file: winagt-build-modules.groovy
 
-/// builds python module for windows agent
-
 def main() {
     check_job_parameters(["VERSION"]);
 

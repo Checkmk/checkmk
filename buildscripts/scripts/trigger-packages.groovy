@@ -60,7 +60,7 @@ def main() {
 
                 if ("${build_instance.result}" != "SUCCESS") {
                     if (send_notification_mail) {
-                        notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.absoluteUrl}" + "console")
+                        notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.absoluteUrl}" + "console");
                     }
                     throw new Exception("Job ${stepName} failed");
                 }

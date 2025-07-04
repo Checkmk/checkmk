@@ -4,10 +4,6 @@
 
 /// Build Checkmk Docker image
 
-/// Jenkins artifacts: ???
-/// Other artifacts: ???
-/// Depends on: Jammy Ubuntu 22.04, see check_mk/docker_image/Dockerfile
-
 /* groovylint-disable MethodSize */
 def main() {
     check_job_parameters([
@@ -126,7 +122,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         },
         "Build Package": {
@@ -169,7 +165,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         }
     ];

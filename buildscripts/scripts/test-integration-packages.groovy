@@ -2,8 +2,6 @@
 
 /// file: test-integration-packages.groovy
 
-/// Run integration tests for the checkmk OS packages
-
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
@@ -27,7 +25,7 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
+    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests";
     def all_distros = versioning.get_distros(override: "all");
     def selected_distros = versioning.get_distros(
         edition: EDITION,

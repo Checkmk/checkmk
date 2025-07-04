@@ -106,7 +106,8 @@ def main() {
                 sshUserPrivateKey(
                     credentialsId: credentials_id,
                     keyFileVariable: 'keyfile',
-                    usernameVariable: 'user')
+                    usernameVariable: 'user',
+                )
             ]) {
                 sh("""
                     rsync --verbose \

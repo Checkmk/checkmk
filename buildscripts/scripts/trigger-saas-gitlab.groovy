@@ -2,8 +2,6 @@
 
 /// file: trigger-saas-gitlab.groovy
 
-/// Trigger job chains in the saas project on gitlab
-
 def main() {
     check_job_parameters([
         "VERSION",

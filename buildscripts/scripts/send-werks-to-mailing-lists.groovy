@@ -99,7 +99,11 @@ def main() {
     stage("Send mails") {
         inside_container(args: docker_args) {
             withCredentials([
-                sshUserPrivateKey(credentialsId: "jenkins-gerrit-fips-compliant-ssh-key", keyFileVariable: 'keyfile', usernameVariable: 'user')
+                sshUserPrivateKey(
+                    credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+                    keyFileVariable: 'keyfile',
+                    usernameVariable: 'user'
+                )
             ]) {
                 withEnv(["GIT_SSH_COMMAND=ssh -o \"StrictHostKeyChecking no\" -i ${keyfile} -l ${user}"]) {
                     dir("${checkout_dir}") {

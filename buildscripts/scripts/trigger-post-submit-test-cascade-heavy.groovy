@@ -2,8 +2,6 @@
 
 /// file: trigger-post-submit-test-cascade-full.groovy
 
-/// Trigger post submit test cascade of heavy jobs
-
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

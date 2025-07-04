@@ -242,6 +242,8 @@ STAGES:
       TEXT_ON_SKIP: "No omdlib files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-omdlib-junit.xml"
+      # Can't be more specific due to disjunct pytest.tests.unit.omdlib pytest.omd.packages.omd.omdlib
+      JENKINS_TEST_RESULT_PATH: "testReport/"
 
     - NAME: "Python Doc Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_REQUIREMENTS_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_CMK_BUILD_FILE,CHANGED_AGENT_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
@@ -267,6 +269,9 @@ STAGES:
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/testlogs/tests/**/test.xml"
+      # Can't be more specific since currently the test name equals the bazel target
+      # eg //tests/unit:repo.tests.unit.checks
+      JENKINS_TEST_RESULT_PATH: "testReport/"
 
     - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
@@ -278,6 +283,7 @@ STAGES:
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_license_headers/"
 
     - NAME: "Python Requirements Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_REQUIREMENTS_LOCK,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
@@ -288,6 +294,7 @@ STAGES:
       TEXT_ON_SKIP: "Requirements files not changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-requirements-junit.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_requirements/"
 
     - NAME: "Python File Content Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FILES_REL
@@ -304,6 +311,7 @@ STAGES:
       TEXT_ON_SKIP: "No files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality.file_content/"
 
     - NAME: "Python Werks Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
@@ -315,6 +323,7 @@ STAGES:
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_werks/"
 
     - NAME: "Python Werks validate"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS,CHANGED_RUN_UVENV_SCRIPT
@@ -381,6 +390,9 @@ STAGES:
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/semgrep_results.xml"
+      # can't be more specific due to mangled test name, e.g.
+      #  "semgrep%20results._home_jenkins_workspace_checkmk_master_cv_test-gerrit-single_19_checkout_cmk_plugins_collection_agent_based_systemd_units/"
+      JENKINS_TEST_RESULT_PATH: "testReport/"
 
     - NAME: "Shell Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES

@@ -201,23 +201,19 @@ void main() {
                     ]) {
                         /// Don't use withEnv, see
                         /// https://issues.jenkins.io/browse/JENKINS-43632
-                        if (package_type == "deb") {
-                            def license_flag = ""
-                            if (edition == "community") {
-                                license_flag = '--//:repo_license="gpl"'
-                            }
-                            sh("""
-                                bazel build \
-                                    --cmk_version=${cmk_version} \
-                                    --cmk_edition=${edition} \
-                                    ${license_flag} \
-                                    --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                            //omd:deb_${edition}
-                            """);
-                            sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.deb ${checkout_dir}");
-                        } else {
-                            sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
+                        def license_flag = ""
+                        if (edition == "community") {
+                            license_flag = '--//:repo_license="gpl"'
                         }
+                        sh("""
+                            bazel build \
+                                --cmk_version=${cmk_version} \
+                                --cmk_edition=${edition} \
+                                ${license_flag} \
+                                --execution_log_json_file="${checkout_dir}/deps_install.json" \
+                        //omd:${package_type}_${edition}
+                        """);
+                        sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
                     }
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
                     if (!package_type) {

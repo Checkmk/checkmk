@@ -11,6 +11,8 @@ load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
+load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
+load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
     "requirements.txt",
@@ -556,6 +558,70 @@ pkg_tar(
     templates = "//omd/debian:templates",
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+write_omd_spec(
+    name = "omd_spec",
+    apache_conf_dir = select({
+        "@cmk//distro:almalinux": "/etc/httpd/conf.d",
+        "@cmk//distro:sles": "/etc/apache2/conf.d",
+        "//conditions:default": "",
+    }),
+    apache_init_name = select({
+        "@cmk//distro:almalinux": "httpd",
+        "@cmk//distro:sles": "apache2",
+        "//conditions:default": "",
+    }),
+    dependencies = "//omd/distros:dependencies",
+    distro_code = select({
+        "@cmk//distro:almalinux-10": "el10",
+        "@cmk//distro:almalinux-8": "el8",
+        "@cmk//distro:almalinux-9": "el9",
+        "@cmk//distro:sles-15sp5": "sles15sp5",
+        "@cmk//distro:sles-15sp6": "sles15sp6",
+        "@cmk//distro:sles-15sp7": "sles15sp7",
+        "//conditions:default": "",
+    }),
+    edition = "@cmk//edition",
+    omd_spec = "omd.spec",
+    omd_spec_in = ":omd.spec.in",
+    tags = ["manual"],
+    target_compatible_with = select({
+        "@cmk//distro:almalinux": [],
+        "@cmk//distro:sles": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    version = "@cmk//version",
+)
+
+[pkg_rpm_from_tar(
+    name = "rpm_" + edition,
+    distro_code = select({
+        "@cmk//distro:almalinux-10": "el10",
+        "@cmk//distro:almalinux-8": "el8",
+        "@cmk//distro:almalinux-9": "el9",
+        "@cmk//distro:sles-15sp5": "sles15sp5",
+        "@cmk//distro:sles-15sp6": "sles15sp6",
+        "@cmk//distro:sles-15sp7": "sles15sp7",
+        "//conditions:default": "",
+    }),
+    edition = "@cmk//edition",
+    input_tarball = "deps_install_" + edition,
+    omd_spec = ":omd_spec",
+    rpm = "cmk_rpm_" + edition,
+    tags = ["manual"],
+    target_compatible_with = select({
+        "@cmk//distro:almalinux": [],
+        "@cmk//distro:sles": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    version = "@cmk//version",
 ) for edition in [
     "community",
     "ultimate",

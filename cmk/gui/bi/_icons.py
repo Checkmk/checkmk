@@ -75,32 +75,32 @@ def _render_aggregation_icon(
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
     # service_check_command looks like:
     # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."
-    if what == "service" and row.get("service_check_command", "").startswith(
-        "check_mk_active-bi_aggr!"
-    ):
-        command = row["service_check_command"]
-        address = row["host_address"]
-        name = row["host_name"]
+    bi_aggr_check = row.get("service_check_command", "").startswith("check_mk_active-bi_aggr!")
 
-        args = shlex.split(command)
+    if what != "service" or not bi_aggr_check:
+        return None
 
-        raw_aggr_name = args[4] if "stored_passwords" in args[0] else args[3]
-        aggr_name = raw_aggr_name.replace("$HOSTADDRESS$", address).replace("$HOSTNAME$", name)
+    command = row["service_check_command"]
+    address = row["host_address"]
+    name = row["host_name"]
 
-        return (
-            "aggr",
-            _("Open this Aggregation"),
-            makeuri_contextless(
-                request,
-                [
-                    ("view_name", "aggr_single"),
-                    ("aggr_name", aggr_name),
-                ],
-                filename="view.py",
-            ),
-        )
+    args = shlex.split(command)
 
-    return None
+    raw_aggr_name = args[4] if "stored_passwords" in args[0] else args[3]
+    aggr_name = raw_aggr_name.replace("$HOSTADDRESS$", address).replace("$HOSTNAME$", name)
+
+    return (
+        "aggr",
+        _("Open this Aggregation"),
+        makeuri_contextless(
+            request,
+            [
+                ("view_name", "aggr_single"),
+                ("aggr_name", aggr_name),
+            ],
+            filename="view.py",
+        ),
+    )
 
 
 AggregationIcon = Icon(

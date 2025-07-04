@@ -88,10 +88,13 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     shall_terminate = threading.Event()
     state = SchedulerState()
 
+    def _wait() -> None:
+        shall_terminate.wait()
+
     jobs = [
         CronJob(
             name="threaded_job",
-            callable=shall_terminate.wait,
+            callable=_wait,
             run_in_thread=True,
             interval=timedelta(minutes=1),
         ),

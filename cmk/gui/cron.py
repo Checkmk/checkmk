@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import Any, override
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -15,8 +15,7 @@ from cmk.ccc.plugin_registry import Registry
 @dataclass
 class CronJob:
     name: str
-    # the callable should really return None, but some jobs return something (which is then ignored)
-    callable: Callable[[], Any] | partial
+    callable: Callable[[], None] | partial
     interval: timedelta
     run_in_thread: bool = False
 

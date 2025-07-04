@@ -42,10 +42,6 @@ def main() {
             artifacts: "${output_file}",
             fingerprint: true,
         );
-        setCustomBuildProperty(
-            key: "path_hashes",
-            value: directory_hashes(DEPENDENCY_PATH_HASHES.split(",").grep().collect {keyvalue -> keyvalue.split("=")[0]}),
-        );
     }
 }
 

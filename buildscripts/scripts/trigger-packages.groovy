@@ -42,7 +42,6 @@ def main() {
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-package",
                     force_build: params.FORCE_BUILD,
-                    dependency_paths: [p.path] + p.dependencies,
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         PACKAGE_PATH:  p.path,

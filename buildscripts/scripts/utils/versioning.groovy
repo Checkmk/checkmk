@@ -256,12 +256,4 @@ def is_official_release(version) {
     }
 }
 
-def path_hashes(includedRegions) {
-    return directory_hashes(includedRegions.collect({entry ->
-        // truncate at last occurrence of '/' if available
-        def last_slash_pos = entry.lastIndexOf('/');
-        last_slash_pos > 0 ? entry.substring(0, last_slash_pos) : entry
-    }));
-}
-
 return this;

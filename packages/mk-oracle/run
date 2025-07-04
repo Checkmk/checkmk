@@ -138,9 +138,7 @@ run_test_all() {
     fi
 
     export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
-    bazel test :all \
-        --test_env=CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}" \
-        --test_env=LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+    bazel test :all
 }
 
 main() {

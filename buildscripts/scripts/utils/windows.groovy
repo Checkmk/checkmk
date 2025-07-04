@@ -93,11 +93,6 @@ def build(Map args) {
                             fingerprint: true,
                         );
                     }
-                } else {
-                    stash(
-                        name: args.STASH_NAME,
-                        includes: artifacts
-                    );
                 }
             }
         }

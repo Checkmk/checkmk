@@ -14,7 +14,7 @@ from cmk.utils.http_proxy_config import NoProxyConfig
 
 from cmk.plugins.azure.special_agent.agent_azure import (
     _AuthorityURLs,
-    _write_resource_health_section,
+    _get_resource_health_sections,
     ApiError,
     Args,
     AzureResource,
@@ -824,7 +824,7 @@ async def test_write_resource_health_section(
     expected_output: str,
 ) -> None:
     sections = list(
-        _write_resource_health_section(
+        _get_resource_health_sections(
             resource_health,
             monitored_resources,
         )

@@ -2025,17 +2025,34 @@ async def process_usage_details(
 async def process_resource_health(
     mgmt_client: MgmtApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_groups: Sequence[str],
+    debug: bool,
 ) -> Sequence[AzureSection]:
-    response = await mgmt_client.get_async(
-        "providers/Microsoft.ResourceHealth/availabilityStatuses",
-        params={
-            "api-version": "2025-05-01",
-            "$top": "1000",  # retrieves up to 1000 (still not clear what) per request
-        },
-        key="value",
+    multi_response = await asyncio.gather(
+        *(
+            mgmt_client.get_async(
+                f"/resourceGroups/{resource_group}/providers/Microsoft.ResourceHealth/availabilityStatuses",
+                params={
+                    "api-version": "2025-05-01",
+                    "$top": "1000",  # retrieves up to 1000 (still not clear what) per request
+                },
+                key="value",
+            )
+            for resource_group in monitored_groups
+        ),
+        return_exceptions=True,
     )
 
-    return _write_resource_health_section(response, monitored_resources_by_id)
+    health_values: list[ResourceHealth] = []
+    for response in multi_response:
+        if isinstance(response, BaseException):
+            if debug:
+                raise response
+            write_exception_to_agent_info_section(response, "Resource Health client")
+            continue
+        health_values.extend(response)
+
+    return _get_resource_health_sections(health_values, monitored_resources_by_id)
 
 
 async def process_virtual_machines(
@@ -2135,7 +2152,7 @@ class ResourceHealth(TypedDict, total=False):
     properties: Required[Mapping[str, str]]
 
 
-def _write_resource_health_section(
+def _get_resource_health_sections(
     resource_health_view: list[ResourceHealth],
     resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
@@ -2261,13 +2278,16 @@ async def process_resources(
     group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
     monitored_services: set[str],
+    monitored_groups: Sequence[str],
 ) -> None:
     monitored_resources_by_id = {
         r.info["id"].lower(): r for r in selected_resources if r.info["type"] in monitored_services
     }
 
     tasks = {
-        process_resource_health(mgmt_client, monitored_resources_by_id),
+        process_resource_health(
+            mgmt_client, monitored_resources_by_id, monitored_groups, args.debug
+        ),
         *get_bulk_tasks(
             mgmt_client,
             args,
@@ -2336,7 +2356,14 @@ async def main_subscription(
         process_usage_details(mgmt_client, monitored_groups, args)
         if "usage_details" in monitored_services
         else None,
-        process_resources(mgmt_client, args, group_labels, selected_resources, monitored_services),
+        process_resources(
+            mgmt_client,
+            args,
+            group_labels,
+            selected_resources,
+            monitored_services,
+            monitored_groups,
+        ),
     }
     tasks.discard(None)
     await asyncio.gather(*tasks)  # type: ignore[arg-type]

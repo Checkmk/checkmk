@@ -168,7 +168,7 @@ def main_parallel() {
                         selector: specific(build_instance.getId()),
                         target: "${checkout_dir}",
                         fingerprintArtifacts: true,
-                    )
+                    );
 
                     analyse_mapping["${item.NAME}"] << [
                         pattern: "${item.RESULT_CHECK_FILE_PATTERN}",

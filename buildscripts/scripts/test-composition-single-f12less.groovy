@@ -25,7 +25,7 @@ def main() {
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests"
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
 
     // Use the directory also used by tests/testlib/containers.py to have it find

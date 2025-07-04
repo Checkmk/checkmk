@@ -2,7 +2,6 @@
 
 /// file: build-linux-agent-updater.groovy
 
-
 def main() {
     check_job_parameters([
         "DISABLE_CACHE",
@@ -78,7 +77,7 @@ def main() {
                 }
             }]
         }
-        parallel agent_builds;
+        parallel(agent_builds);
 
         stage("Create and sign deb/rpm packages") {
             dir("${checkout_dir}/agents") {

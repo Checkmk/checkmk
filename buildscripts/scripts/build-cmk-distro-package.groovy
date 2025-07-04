@@ -199,7 +199,7 @@ def main() {
 
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
                     if (!package_type) {
-                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}")
+                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
                     }
                 }
             }

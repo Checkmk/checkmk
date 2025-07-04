@@ -171,7 +171,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         }
     ];
@@ -224,7 +224,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         }]
     }
@@ -261,7 +261,7 @@ def main() {
                 filtered_files_to_upload += item;
             }
         }
-        print("Filtered files to upload: ${filtered_files_to_upload}")
+        print("Filtered files to upload: ${filtered_files_to_upload}");
 
         filtered_files_to_upload.each { filename ->
             artifacts_helper.upload_via_rsync(

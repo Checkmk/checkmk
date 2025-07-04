@@ -34,7 +34,7 @@ def main() {
                     }
                 }]
             }
-            parallel test_builds;
+            parallel(test_builds);
 
             // Python 2.7 tests fail if they run in parallel with 3.x tests
             stage("Test for python2.7") {

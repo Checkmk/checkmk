@@ -20,7 +20,7 @@ def main() {
         "DEPENDENCY_PATH_HASHES",
     ]);
 
-    validate_parameters()
+    validate_parameters();
 
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     currentBuild.description = "Running ${PACKAGE_PATH}<br>${currentBuild.description}";

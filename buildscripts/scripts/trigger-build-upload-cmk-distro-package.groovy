@@ -2,9 +2,6 @@
 
 /// file: trigger-build-upload-cmk-distro-package.groovy
 
-/// Triggers a distribution package build (.rpm, .dep, etc.) for a given
-/// edition/distribution at a given git hash and uploads it to the tstsbuild server
-
 def main() {
     check_job_parameters([
         "EDITION",
@@ -59,7 +56,7 @@ def main() {
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");
-        build_node = "fra"
+        build_node = "fra";
     }
 
     def stages = all_editions.collectEntries { edition ->
@@ -94,7 +91,7 @@ def main() {
             }
 
             if ("${build_instance.result}" != "SUCCESS") {
-                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}")
+                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}");
             }
 
             // Without this stage in place the whole job would fail, unclear why

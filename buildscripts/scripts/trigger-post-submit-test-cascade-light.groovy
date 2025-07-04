@@ -2,8 +2,6 @@
 
 /// file: trigger-post-submit-test-cascade-light.groovy
 
-/// Trigger post submit test cascade of lightweight jobs
-
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

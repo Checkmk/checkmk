@@ -2,8 +2,6 @@
 
 /// file: trigger-cmk-build-chain.groovy
 
-/// This job will trigger other jobs
-
 import java.time.LocalDate
 
 def main() {

@@ -7,7 +7,7 @@ def build(Map args) {
     def artifacts_dir = 'artefacts';
 
     dir(artifacts_dir) {
-        stage("Download  artifacts") {
+        stage("Download artifacts") {
             if (args.TARGET == "test_integration") {
                 copyArtifacts(
                     projectName: "${jenkins_base_folder}/winagt-build",

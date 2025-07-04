@@ -2,12 +2,6 @@
 
 /// file: test-integration-docker.groovy
 
-/// Run integration tests for the Checkmk Docker image
-
-/// Jenkins artifacts: ???
-/// Other artifacts: ???
-/// Depends on: ???
-
 def main() {
     check_job_parameters([
         "EDITION",
@@ -24,7 +18,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
-    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy")
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
@@ -95,7 +89,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         },
         "Build Package": {
@@ -137,7 +131,7 @@ def main() {
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,
-                )
+                );
             }
         }
     ];

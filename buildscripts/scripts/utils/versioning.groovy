@@ -2,7 +2,6 @@
 
 /// file: versioning.groovy
 
-// library for calculation of version numbers
 import groovy.transform.Field
 
 /* groovylint-disable DuplicateListLiteral */
@@ -74,9 +73,9 @@ def branch_name() {
         if (branch_name_is_branch_version("${checkout_dir}")) {
             // this is only required as "master" is called "stable branch + 0.1.0"
             // e.g. 2.3.0 (stable) + 0.1.0 = 2.4.0
-            return env.GERRIT_BRANCH ?: get_branch_version("${checkout_dir}")
+            return env.GERRIT_BRANCH ?: get_branch_version("${checkout_dir}");
         } else {
-            return env.GERRIT_BRANCH ?: "master"
+            return env.GERRIT_BRANCH ?: "master";
         }
     } else {
         // defined in global-defaults.yml
@@ -236,7 +235,7 @@ def delete_non_cre_files() {
         "cce.py",
         "cse.py",
     ]
-    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
+    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories
     sh("""
         bash -c \"find . \\

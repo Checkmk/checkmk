@@ -7,7 +7,7 @@ def main() {
         // Sphinx supports many different builders.
         // We have to use the same for creating new documentation and for
         // copying the documentation over.
-        def sphinx_builder = "html"
+        def sphinx_builder = "html";
 
         stage("Update") {
             inside_container() {

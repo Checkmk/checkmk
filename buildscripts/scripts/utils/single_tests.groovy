@@ -52,7 +52,7 @@ def fetch_package(Map args) {
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");
-        build_node = "fra"
+        build_node = "fra";
     }
 
     inside_container_minimal(safe_branch_name: args.safe_branch_name) {

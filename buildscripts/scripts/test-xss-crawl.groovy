@@ -55,10 +55,6 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    // todo: add upstream project to description
-    // todo: add error to description
-    // todo: build progress mins?
-
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(

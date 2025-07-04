@@ -61,7 +61,7 @@ def main() {
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");
-        build_node = "fra"
+        build_node = "fra";
     }
 
     dir("${checkout_dir}") {

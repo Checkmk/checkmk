@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from typing import Final
 
 from cmk.gui import log
+from cmk.gui.config import Config
 
 from ._base import BackgroundJob
 from ._defines import BackgroundJobDefines
@@ -89,7 +90,7 @@ class BackgroundJobManager:
             self._logger.error(traceback.format_exc())
 
 
-def execute_housekeeping_job() -> None:
+def execute_housekeeping_job(config: Config) -> None:
     housekeep_classes = list(job_registry.values())
     BackgroundJobManager(log.logger).do_housekeeping(housekeep_classes)
 

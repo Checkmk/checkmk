@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, UTC
 import pytest
 import time_machine
 
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob
 from cmk.gui.job_scheduler._scheduler import run_scheduled_jobs, SchedulerState
 
@@ -26,12 +27,12 @@ def test_run_scheduled_jobs() -> None:
     jobs = [
         CronJob(
             name="job1",
-            callable=lambda: called.update({"job1": called["job1"] + 1}),
+            callable=lambda config: called.update({"job1": called["job1"] + 1}),
             interval=timedelta(minutes=1),
         ),
         CronJob(
             name="job2",
-            callable=lambda: called.update({"job2": called["job2"] + 1}),
+            callable=lambda config: called.update({"job2": called["job2"] + 1}),
             interval=timedelta(minutes=5),
         ),
     ]
@@ -67,7 +68,7 @@ def test_run_scheduled_jobs_in_thread() -> None:
     jobs = [
         CronJob(
             name="threaded_job",
-            callable=called.set,
+            callable=lambda config: called.set(),
             run_in_thread=True,
             interval=timedelta(minutes=5),
         ),
@@ -88,7 +89,7 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     shall_terminate = threading.Event()
     state = SchedulerState()
 
-    def _wait() -> None:
+    def _wait(config: Config) -> None:
         shall_terminate.wait()
 
     jobs = [

@@ -3833,7 +3833,7 @@ def _ensure_trailing_slash(path: str) -> PathWithSlash:
     return path.rstrip("/") + "/"
 
 
-def rebuild_folder_lookup_cache() -> None:
+def rebuild_folder_lookup_cache(config: Config) -> None:
     """Rebuild folder lookup cache around ~5AM
     This needs to be done, since the cachefile might include outdated/vanished hosts"""
 

@@ -21,17 +21,17 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.urls import makeuri_contextless
 
-from ..logged_in import user
 from ._connections import active_connections
 from ._user_sync_config import user_sync_config
 from .store import general_userdb_job, load_users, save_users
 
 
-def execute_userdb_job() -> None:
+def execute_userdb_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""

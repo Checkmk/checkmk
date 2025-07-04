@@ -23,6 +23,7 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
 
 from cmk.gui import userdb
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -30,7 +31,6 @@ from cmk.gui.log import logger
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import is_wato_slave_site, site_is_local
 
-from ..config import active_config
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
 from .automations import do_remote_automation, RemoteAutomationConfig
@@ -50,7 +50,7 @@ class NetworkScanRequest(NamedTuple):
     folder_path: str
 
 
-def execute_network_scan_job() -> None:
+def execute_network_scan_job(config: Config) -> None:
     """Executed by the multisite cron job once a minute. Is only executed in the
     central site. Finds the next folder to scan and starts it via WATO
     automation. The result is written to the folder in the master site."""
@@ -82,14 +82,14 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
         try:
-            if site_is_local(site_config := active_config.sites[folder.site_id()]):
+            if site_is_local(site_config := config.sites[folder.site_id()]):
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(
                     RemoteAutomationConfig.from_site_config(site_config),
                     "network-scan",
                     [("folder", folder.path())],
-                    debug=active_config.debug,
+                    debug=config.debug,
                 )
                 assert isinstance(raw_response, list)
                 found = raw_response
@@ -101,8 +101,8 @@ def execute_network_scan_job() -> None:
                 folder,
                 found,
                 run_as,
-                pprint_value=active_config.wato_pprint_config,
-                debug=active_config.debug,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
             )
 
             result.update(

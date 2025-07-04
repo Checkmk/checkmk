@@ -11,11 +11,13 @@ from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
+from cmk.gui.config import Config
+
 
 @dataclass
 class CronJob:
     name: str
-    callable: Callable[[], None] | partial
+    callable: Callable[[Config], None] | partial
     interval: timedelta
     run_in_thread: bool = False
 

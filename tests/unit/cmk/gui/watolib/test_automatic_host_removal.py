@@ -17,6 +17,7 @@ from pytest_mock import MockerFixture
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
@@ -26,9 +27,37 @@ from cmk.automations.results import AnalyzeHostRuleMatchesResult
 
 from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
 
+from cmk.gui.config import Config
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
+
+from cmk.livestatus_client import SiteConfiguration
+
+
+def default_site_config() -> SiteConfiguration:
+    return SiteConfiguration(
+        {
+            "id": SiteId("mysite"),
+            "alias": "Local site mysite",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/mysite/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": None,
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_sync": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+        }
+    )
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -49,7 +78,7 @@ def test_remove_hosts_no_rules_early_return(
     activate_changes_mock: MagicMock,
     request_context: None,
 ) -> None:
-    automatic_host_removal.execute_host_removal_job()
+    automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
 
 
@@ -213,6 +242,8 @@ def test_execute_host_removal_job(
     activate_changes_mock: MagicMock,
     mock_delete_hosts_automation: MagicMock,
 ) -> None:
+    config = Config()
+    config.sites[SiteId("NO_SITE")] = default_site_config()
     with (
         time_machine.travel(datetime.datetime.fromtimestamp(1000, tz=ZoneInfo("UTC"))),
         mock_livestatus(expect_status_query=False),
@@ -226,7 +257,7 @@ def test_execute_host_removal_job(
                 "ColumnHeaders: off",
             ]
         )
-        automatic_host_removal.execute_host_removal_job()
+        automatic_host_removal.execute_host_removal_job(config)
 
     assert sorted(folder_tree().root_folder().all_hosts_recursively()) == [
         "host_crit_keep",

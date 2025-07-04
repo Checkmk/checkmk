@@ -10,6 +10,7 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import InventoryPaths
 
+from cmk.gui.config import Config
 from cmk.gui.inventory._housekeeping import InventoryHousekeeping
 
 
@@ -18,7 +19,7 @@ def test_nothing_to_do(tmp_path: Path) -> None:
     archive_host = inv_paths.archive_host(HostName("hostname"))
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert not archive_host.exists()
     assert not delta_cache_host.exists()
 
@@ -29,7 +30,7 @@ def test_only_archive_host(tmp_path: Path) -> None:
     archive_host.mkdir(parents=True, exist_ok=True)
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert archive_host.exists()
     assert not delta_cache_host.exists()
 
@@ -40,7 +41,7 @@ def test_only_delta_cache_host_exists(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert not archive_host.exists()
     assert delta_cache_host.exists()
 
@@ -52,7 +53,7 @@ def test_both_exist(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert archive_host.exists()
     assert delta_cache_host.exists()
 
@@ -64,7 +65,7 @@ def test_rm_delta_cache_host(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname2"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert archive_host.exists()
     assert not delta_cache_host.exists()
 
@@ -91,7 +92,7 @@ def test_no_inventory_tree(tmp_path: Path) -> None:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.legacy.touch()
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert not inventory_tree.exists()
     assert archive_tree_1.exists()
     assert archive_tree_2.exists()
@@ -125,7 +126,7 @@ def test_no_archive_tree_1(tmp_path: Path) -> None:
         file_path.legacy.touch()
     os.utime(inventory_tree.legacy, (100, 100))
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert inventory_tree.exists()
     assert not archive_tree_1.exists()
     assert archive_tree_2.exists()
@@ -159,7 +160,7 @@ def test_no_archive_tree_2(tmp_path: Path) -> None:
         file_path.legacy.touch()
     os.utime(inventory_tree.legacy, (100, 100))
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert inventory_tree.exists()
     assert archive_tree_1.exists()
     assert not archive_tree_2.exists()
@@ -193,7 +194,7 @@ def test_no_archive_tree_3(tmp_path: Path) -> None:
         file_path.legacy.touch()
     os.utime(inventory_tree.legacy, (100, 100))
 
-    InventoryHousekeeping(tmp_path)()
+    InventoryHousekeeping(tmp_path)(Config())
     assert inventory_tree.exists()
     assert archive_tree_1.exists()
     assert archive_tree_2.exists()

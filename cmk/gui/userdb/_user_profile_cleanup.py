@@ -8,12 +8,13 @@ from datetime import datetime, timedelta
 
 import cmk.utils.paths
 
+from cmk.gui.config import Config
 from cmk.gui.log import logger
 
 from .store import load_users
 
 
-def execute_user_profile_cleanup_job() -> None:
+def execute_user_profile_cleanup_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""

@@ -17,7 +17,7 @@ from cmk.gui.background_job import (
     NoArgs,
     simple_job_target,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -113,7 +113,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         job_interface.send_result_message(_("Successfully discovered hosts"))
 
 
-def execute_autodiscovery() -> None:
+def execute_autodiscovery(config: Config) -> None:
     # Only execute the job in case there is some work to do. The directory was so far internal to
     # "autodiscovery" automation which is implemented in cmk.base.automations.checkm_mk. But since
     # this condition saves us a lot of overhead and this function is part of the feature, it seems

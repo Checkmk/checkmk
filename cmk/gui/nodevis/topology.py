@@ -1548,7 +1548,7 @@ def _register_builtin_views():
     )
 
 
-def cleanup_topology_layouts() -> None:
+def cleanup_topology_layouts(config: Config) -> None:
     """Topology layouts are currently restricted to a maximum number of 10000"""
     topology_configs_dir.mkdir(parents=True, exist_ok=True)
 

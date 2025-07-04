@@ -21,7 +21,7 @@ from cmk.utils.paths import log_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 import cmk.gui.log
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
@@ -43,7 +43,7 @@ _LOGGER = cmk.gui.log.logger.getChild("automatic_host_removal")
 _LOGGER_BACKGROUND_JOB = _LOGGER.getChild("background_job")
 
 
-def execute_host_removal_job() -> None:
+def execute_host_removal_job(config: Config) -> None:
     if is_wato_slave_site():
         return
 
@@ -67,11 +67,11 @@ def execute_host_removal_job() -> None:
                 for site_id, hosts in _hosts_to_be_removed(
                     automation_configs={
                         site_id: make_automation_config(
-                            active_config.sites[site_id],
+                            config.sites[site_id],
                         )
                         for site_id in wato_site_ids()
                     },
-                    debug=active_config.debug,
+                    debug=config.debug,
                 )
                 if hosts
             }
@@ -93,12 +93,12 @@ def execute_host_removal_job() -> None:
                 folder.delete_hosts(
                     hostnames,
                     automation=delete_hosts,
-                    pprint_value=active_config.wato_pprint_config,
-                    debug=active_config.debug,
+                    pprint_value=config.wato_pprint_config,
+                    debug=config.debug,
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")
-        _activate_changes(hosts_to_be_removed, debug=active_config.debug)
+        _activate_changes(hosts_to_be_removed, debug=config.debug)
 
         _LOGGER.info("Host removal background job finished")
     except RedisConnectionError as e:

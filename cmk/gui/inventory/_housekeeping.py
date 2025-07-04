@@ -12,13 +12,15 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import InventoryPaths
 
+from cmk.gui.config import Config
+
 
 class InventoryHousekeeping:
     def __init__(self, omd_root: Path) -> None:
         super().__init__()
         self.inv_paths = InventoryPaths(omd_root)
 
-    def __call__(self) -> None:
+    def __call__(self, config: Config) -> None:
         if not (self.inv_paths.delta_cache_dir.exists() and self.inv_paths.archive_dir.exists()):
             return
 

@@ -72,7 +72,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
     JobTarget,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import Request
@@ -2066,7 +2066,7 @@ class ActivationCleanupJob:
         return ids
 
 
-def execute_activation_cleanup_job() -> None:
+def execute_activation_cleanup_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""

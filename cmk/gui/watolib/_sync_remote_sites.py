@@ -14,7 +14,7 @@ from pathlib import Path
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -319,7 +319,7 @@ class SyncRemoteSitesJob:
         )
 
 
-def _execute_sync_remote_sites() -> None:
+def _execute_sync_remote_sites(config: Config) -> None:
     if is_wato_slave_site():
         return
 
@@ -333,5 +333,5 @@ def _execute_sync_remote_sites() -> None:
             for site_id, site_config in wato_slave_sites().items()
             if "secret" in site_config
         ],
-        debug=active_config.debug,
+        debug=config.debug,
     )

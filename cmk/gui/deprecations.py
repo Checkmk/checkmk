@@ -25,7 +25,7 @@ from cmk.utils.html import replace_state_markers
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -447,7 +447,7 @@ def _find_problems_to_send(
             )
 
 
-def execute_deprecation_tests_and_notify_users() -> None:
+def execute_deprecation_tests_and_notify_users(config: Config) -> None:
     if is_wato_slave_site():
         return
 
@@ -465,10 +465,10 @@ def execute_deprecation_tests_and_notify_users() -> None:
                 logger,
                 request,
                 SiteConfigurations(
-                    {site_id: active_config.sites[site_id] for site_id in site_versions_by_site_id}
+                    {site_id: config.sites[site_id] for site_id in site_versions_by_site_id}
                 ),
                 categories=["deprecations"],
-                debug=active_config.debug,
+                debug=config.debug,
             )
         )
     ):

@@ -26,7 +26,6 @@ from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
@@ -2209,9 +2208,6 @@ class BIModeAggregations(ABCBIMode):
         with html.form_context(
             "bulk_action_form",
             method="POST",
-            require_confirmation=RequireConfirmation(
-                html=_("Do you really want to move the selected aggregations?")
-            ),
         ):
             self._render_aggregations()
             html.hidden_field("selection_id", SelectionId.from_request(request))

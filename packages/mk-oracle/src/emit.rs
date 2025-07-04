@@ -4,16 +4,11 @@
 
 use crate::types::PiggybackHostName;
 
-use super::config::defines::defaults;
 const PREFIX: &str = "oracle";
 
 pub fn header(name: &str, separator: char) -> String {
-    if separator == defaults::DEFAULT_SEP {
-        format!("<<<{PREFIX}_{name}>>>\n")
-    } else {
-        let sep = separator as u8;
-        format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
-    }
+    let sep = separator as u8;
+    format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
 }
 
 pub fn piggyback_header(piggyback_host_name: &PiggybackHostName) -> String {

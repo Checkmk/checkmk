@@ -2,84 +2,72 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::collections::HashSet;
-
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
 use anyhow::Result;
 
+// "tablespaces", "rman", "jobs", "ts_quotas", "resumable", "locks"
 pub mod names {
     pub const INSTANCE: &str = "instance";
-    pub const COUNTERS: &str = "counters";
-    pub const BLOCKED_SESSIONS: &str = "blocked_sessions";
-    pub const BACKUP: &str = "backup";
-    pub const TRANSACTION_LOG: &str = "transactionlogs";
-    pub const DATAFILES: &str = "datafiles";
-    pub const DATABASES: &str = "databases";
-    pub const CLUSTERS: &str = "clusters";
-
-    pub const TABLE_SPACES: &str = "tablespaces";
-    pub const CONNECTIONS: &str = "connections";
-
-    // query based section
+    pub const SESSIONS: &str = "sessions";
+    pub const LOG_SWITCHES: &str = "logswitches";
+    pub const UNDO_STAT: &str = "undostat";
+    pub const RECOVERY_AREA: &str = "recovery_area";
+    pub const PROCESSES: &str = "processes";
+    pub const RECOVERY_STATUS: &str = "recovery_status";
+    pub const LONG_ACTIVE_SESSIONS: &str = "longactivesessions";
+    pub const DATAGUARD_STATS: &str = "dataguard_stats";
+    pub const PERFORMANCE: &str = "performance";
+    pub const SYSTEM_PARAMETER: &str = "systemparameter";
+    pub const LOCKS: &str = "locks";
+    pub const TABLESPACES: &str = "tablespaces";
+    pub const RMAN: &str = "rman";
     pub const JOBS: &str = "jobs";
-    pub const MIRRORING: &str = "mirroring";
-    pub const AVAILABILITY_GROUPS: &str = "availability_groups";
+    pub const RESUMABLE: &str = "resumable";
+    pub const IO_STATS: &str = "iostats";
+    pub const ASM_DISK_GROUP: &str = "asm_diskgroup";
 }
 
-/// TODO(sk): convert into HashSet
-const PIPE_SEP_SECTIONS: [&str; 8] = [
-    names::INSTANCE,
-    names::COUNTERS,
-    names::BLOCKED_SESSIONS,
-    names::BACKUP,
-    names::TRANSACTION_LOG,
-    names::DATAFILES,
-    names::DATABASES,
-    names::CLUSTERS,
-];
-
-const SPACE_SEP_SECTIONS: [&str; 2] = [names::TABLE_SPACES, names::CONNECTIONS];
-
-const QUERY_BASED_SECTIONS: [&str; 3] = [names::JOBS, names::MIRRORING, names::AVAILABILITY_GROUPS];
-const PREDEFINED_SECTIONS: [&str; 13] = [
-    names::INSTANCE,
-    names::DATABASES,
-    names::COUNTERS,
-    names::BLOCKED_SESSIONS,
-    names::TRANSACTION_LOG,
-    names::CLUSTERS,
-    names::MIRRORING,
-    names::AVAILABILITY_GROUPS,
-    names::CONNECTIONS,
-    names::TABLE_SPACES,
-    names::DATAFILES,
-    names::BACKUP,
-    names::JOBS,
-];
-
-const ASYNC_SECTIONS: [&str; 4] = [
-    names::TABLE_SPACES,
-    names::DATAFILES,
-    names::BACKUP,
-    names::JOBS,
-];
-
-const PER_DATABASE_SECTIONS: [&str; 5] = [
-    names::DATABASES,
-    names::TRANSACTION_LOG,
-    names::TABLE_SPACES,
-    names::DATAFILES,
-    names::CLUSTERS,
-];
-
-const FIRST_LINE_SECTIONS: [&str; 2] = [names::MIRRORING, names::JOBS];
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum SectionKind {
     Sync,
     Async,
     Disabled,
 }
+
+const PREDEFINED_SECTIONS: [&str; 17] = [
+    names::INSTANCE,
+    names::SESSIONS,
+    names::LOG_SWITCHES,
+    names::UNDO_STAT,
+    names::RECOVERY_AREA,
+    names::PROCESSES,
+    names::RECOVERY_STATUS,
+    names::LONG_ACTIVE_SESSIONS,
+    names::DATAGUARD_STATS,
+    names::PERFORMANCE,
+    names::SYSTEM_PARAMETER,
+    names::LOCKS,
+    names::TABLESPACES,
+    names::RMAN,
+    names::JOBS,
+    names::RESUMABLE,
+    names::IO_STATS,
+];
+
+const PREDEFINED_ASYNC_SECTIONS: [&str; 5] = [
+    names::TABLESPACES,
+    names::RMAN,
+    names::JOBS,
+    names::RESUMABLE,
+    names::IO_STATS,
+];
+
+#[allow(dead_code)]
+const ASM_SECTIONS: [&str; 3] = [names::INSTANCE, names::PROCESSES, names::ASM_DISK_GROUP];
+
+#[allow(dead_code)]
+const ASM_ASYNC_SECTIONS: [&str; 1] = [names::ASM_DISK_GROUP];
 
 pub struct SectionBuilder {
     name: String,
@@ -92,11 +80,10 @@ pub struct SectionBuilder {
 impl SectionBuilder {
     pub fn new<S: Into<String>>(name: S) -> Self {
         let name = name.into();
-        let sep = get_default_separator(&name);
-        let is_async = ASYNC_SECTIONS.contains(&name.as_str());
+        let is_async = PREDEFINED_ASYNC_SECTIONS.contains(&name.as_str());
         Self {
             name,
-            sep,
+            sep: defaults::DEFAULT_SEP,
             is_async,
             is_disabled: false,
             sql: None,
@@ -191,30 +178,6 @@ fn get_predefined_sections() -> Vec<Section> {
         .collect()
 }
 
-pub fn get_per_database_sections() -> Vec<String> {
-    PER_DATABASE_SECTIONS
-        .iter()
-        .map(|&s| s.to_string())
-        .collect()
-}
-
-fn get_predefined_section_names() -> Vec<String> {
-    get_predefined_sections()
-        .iter()
-        .map(|s| s.name().to_owned())
-        .collect()
-}
-
-fn get_decorated_section_names() -> Vec<String> {
-    FIRST_LINE_SECTIONS.iter().map(|&s| s.to_owned()).collect()
-}
-
-pub fn get_plain_section_names() -> HashSet<String> {
-    let all = hash_set(&get_predefined_section_names());
-    let decorated = hash_set(&get_decorated_section_names());
-    (&all - &decorated).into_iter().collect()
-}
-
 impl Section {
     /// Converts entry to Section
     /// - databases:     # name
@@ -297,27 +260,15 @@ impl Sections {
     }
 }
 
-fn get_default_separator(name: &str) -> char {
-    if PIPE_SEP_SECTIONS.contains(&name) {
-        '|'
-    } else if SPACE_SEP_SECTIONS.contains(&name) {
-        ' '
-    } else if QUERY_BASED_SECTIONS.contains(&name) {
-        '\t'
-    } else {
-        log::warn!("Unknown section: {}", name);
-        ' '
-    }
-}
-
-fn hash_set<T: AsRef<str>>(v: &[T]) -> HashSet<String> {
-    HashSet::from_iter(v.iter().map(|s| s.as_ref().to_string()))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::config::yaml::test_tools::create_yaml;
+    use std::collections::HashSet;
+
+    fn hash_set<T: AsRef<str>>(v: &[T]) -> HashSet<String> {
+        HashSet::from_iter(v.iter().map(|s| s.as_ref().to_string()))
+    }
 
     pub const SECTIONS_FULL: &str = r#"
 sections:
@@ -364,28 +315,31 @@ sections:
     #[test]
     fn test_sections_from_yaml_default() {
         let s = Sections::from_yaml(&create_sections_yaml_default(), &Sections::default()).unwrap();
-        assert_eq!(
-            HashSet::from_iter(
-                s.select(&[SectionKind::Sync])
-                    .iter()
-                    .map(|s| s.name().to_string())
-            ),
-            (&hash_set(&PREDEFINED_SECTIONS) - &hash_set(&ASYNC_SECTIONS))
-        );
-        assert_eq!(
-            s.select(&[SectionKind::Async])
+        let syncs = HashSet::from_iter(
+            s.select(&[SectionKind::Sync])
                 .iter()
-                .map(|s| s.name())
-                .collect::<Vec<&str>>(),
-            ASYNC_SECTIONS
+                .map(|s| s.name().to_string()),
         );
+        assert_eq!(
+            syncs,
+            (&hash_set(&PREDEFINED_SECTIONS) - &hash_set(&PREDEFINED_ASYNC_SECTIONS))
+        );
+
+        let asyncs = s
+            .select(&[SectionKind::Async])
+            .iter()
+            .map(|s| s.name())
+            .collect::<Vec<&str>>();
+        assert_eq!(asyncs, PREDEFINED_ASYNC_SECTIONS);
+
         assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
+
         assert_eq!(
             Sections::from_yaml(&create_yaml("_sections:\n"), &Sections::default())
                 .unwrap()
                 .sections()
                 .len(),
-            13
+            17
         );
     }
 
@@ -395,24 +349,5 @@ sections:
 _nothing: "nothing"
 "#;
         create_yaml(SOURCE)
-    }
-
-    #[test]
-    fn test_known_sections() {
-        assert_eq!(get_default_separator("zu"), ' ');
-        assert_eq!(get_default_separator("tablespaces"), ' ');
-        assert_eq!(get_default_separator("connections"), ' ');
-        assert_eq!(get_default_separator("jobs"), '\t');
-        assert_eq!(get_default_separator("mirroring"), '\t');
-        assert_eq!(get_default_separator("availability_groups"), '\t');
-        assert_eq!(get_default_separator("instance"), '|');
-    }
-    #[test]
-    fn test_get_no_first_line() {
-        assert_eq!(
-            get_plain_section_names(),
-            (&hash_set(&get_predefined_section_names())
-                - &hash_set(&get_decorated_section_names()))
-        );
     }
 }

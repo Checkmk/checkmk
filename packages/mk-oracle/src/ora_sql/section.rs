@@ -3,10 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::sqls::{self, find_known_query};
-use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
-use crate::{constants, types::InstanceName, utils};
+use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
@@ -23,15 +22,7 @@ pub struct Section {
     name: String,
     sep: char,
     cache_age: Option<u32>,
-    decorated: bool,
     header_name: String,
-}
-
-fn to_header_name(name: &str) -> &str {
-    match name {
-        names::CLUSTERS => "cluster",
-        _ => name,
-    }
 }
 
 impl Section {
@@ -50,8 +41,7 @@ impl Section {
             name: section.name().into(),
             sep: section.sep(),
             cache_age,
-            decorated: !get_plain_section_names().contains(section.name()),
-            header_name: to_header_name(section.name()).into(),
+            header_name: section.name().into(),
         }
     }
 
@@ -102,19 +92,11 @@ impl Section {
         self.cache_age.unwrap_or_default()
     }
 
-    pub fn first_line(&self, value: Option<&InstanceName>) -> String {
-        if self.decorated {
-            value.map(|v| format!("{}\n", v)).unwrap_or_default()
-        } else {
-            String::new()
-        }
-    }
-
     /// try to find the section's query in the sql directory for instance with the given version
     /// or in the known queries if custom sql query is not provided
     pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         match self.name.as_ref() {
-            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
+            names::INSTANCE => find_known_query(sqls::Id::Instance)
                 .map(str::to_string)
                 .ok(),
             _ => self.find_query(sql_dir, instance_version),
@@ -204,21 +186,7 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
 
 lazy_static::lazy_static! {
     static ref SECTION_MAP: HashMap<&'static str, sqls::Id> = HashMap::from([
-        (names::INSTANCE, sqls::Id::InstanceProperties),
-        (names::COUNTERS, sqls::Id::Counters),
-        (names::BACKUP, sqls::Id::Backup),
-        (names::BLOCKED_SESSIONS, sqls::Id::BlockedSessions),
-        (names::DATABASES, sqls::Id::Databases),
-        (names::CONNECTIONS, sqls::Id::Connections),
-
-        (names::TRANSACTION_LOG, sqls::Id::TransactionLogs),
-        (names::DATAFILES, sqls::Id::Datafiles),
-        (names::TABLE_SPACES, sqls::Id::TableSpaces),
-        (names::CLUSTERS, sqls::Id::Clusters),
-
-        (names::JOBS, sqls::Id::Jobs),
-        (names::MIRRORING, sqls::Id::Mirroring),
-        (names::AVAILABILITY_GROUPS, sqls::Id::AvailabilityGroups),
+        (names::INSTANCE, sqls::Id::Instance),
     ]);
 }
 
@@ -262,33 +230,14 @@ mod tests {
                 .build(),
             Some(100),
         );
-        assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(09)>>>\n");
+        assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(124)>>>\n");
     }
 
     /// We test only few parameters
     #[test]
     fn test_get_ids() {
-        assert_eq!(get_sql_id(names::JOBS).unwrap(), sqls::Id::Jobs);
-        assert_eq!(
-            get_sql_id(section::names::MIRRORING).unwrap(),
-            sqls::Id::Mirroring
-        );
-        assert_eq!(
-            get_sql_id(names::AVAILABILITY_GROUPS).unwrap(),
-            sqls::Id::AvailabilityGroups
-        );
-        assert_eq!(get_sql_id(names::COUNTERS).unwrap(), sqls::Id::Counters);
-        assert_eq!(get_sql_id(names::CLUSTERS).unwrap(), sqls::Id::Clusters);
-        assert_eq!(
-            get_sql_id(names::CONNECTIONS).unwrap(),
-            sqls::Id::Connections
-        );
+        assert_eq!(get_sql_id(names::INSTANCE).unwrap(), sqls::Id::Instance);
+        // TODO: add all..
         assert!(get_sql_id("").is_none());
-    }
-
-    #[test]
-    fn test_header_name() {
-        assert_eq!(to_header_name(names::CLUSTERS), "cluster");
-        assert_eq!(to_header_name("xxx"), "xxx");
     }
 }

@@ -1,0 +1,3392 @@
+#!/bin/bash
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# shellcheck disable=SC1091
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.5.0b1"
+
+# Checkmk agent plugin for monitoring ORACLE databases
+# This plugin is a result of the common work of Thorsten Bruhns
+# and Mathias Kettner. Thorsten is responsible for the ORACLE
+# stuff, Mathias for the shell hacking...
+
+# This plugin works for Linux, Solaris and AIX.
+# See http://docs.checkmk.com/master/en/monitoring_oracle.html
+# for more details regarding configuration.
+
+# TODO
+# - cleanup ORACLE_SID, MK_SID, local sid
+# - separate remote instance, local, ASM
+
+#   .--default config------------------------------------------------------.
+#   |       _       __             _ _                      __ _           |
+#   |    __| | ___ / _| __ _ _   _| | |_    ___ ___  _ __  / _(_) __ _     |
+#   |   / _` |/ _ \ |_ / _` | | | | | __|  / __/ _ \| '_ \| |_| |/ _` |    |
+#   |  | (_| |  __/  _| (_| | |_| | | |_  | (_| (_) | | | |  _| | (_| |    |
+#   |   \__,_|\___|_|  \__,_|\__,_|_|\__|  \___\___/|_| |_|_| |_|\__, |    |
+#   |                                                            |___/     |
+#   '----------------------------------------------------------------------'
+
+load_default_config() {
+    SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks systemparameter"
+    ASYNC_SECTIONS="tablespaces rman jobs resumable iostats"
+    SYNC_ASM_SECTIONS="instance processes"
+    ASYNC_ASM_SECTIONS="asm_diskgroup"
+    CACHE_MAXAGE=600
+    OLRLOC=/etc/oracle/olr.loc
+    MAX_TASKS=1
+}
+
+# .
+#   .--usage---------------------------------------------------------------.
+#   |                                                                      |
+#   |                     _   _ ___  __ _  __ _  ___                       |
+#   |                    | | | / __|/ _` |/ _` |/ _ \                      |
+#   |                    | |_| \__ \ (_| | (_| |  __/                      |
+#   |                     \__,_|___/\__,_|\__, |\___|                      |
+#   |                                     |___/                            |
+#   '----------------------------------------------------------------------'
+
+display_usage() {
+    load_default_config
+    cat <<MK-ORA-USAGE
+
+USAGE:
+  mk_oracle [OPTIONS]
+
+DESCRIPTION:
+  Check_MK agent plugin for monitoring ORACLE databases. This plugin works for
+  Linux, Solaris and AIX. See https://docs.checkmk.com/master/en/monitoring_oracle.html for
+  more details regarding configuration.
+
+OPTIONS:
+  -h, --help            Shows this help message and exit
+
+  -d                    Enable full bash debugging
+
+  -t                    Just check the connection
+
+  -l, --log             Logs certain steps during execution.
+                        Note: These sections are executed as synchronous sections
+                        The logfile is in the folder \$MK_VARDIR/log.
+
+  --no-spool        Writes output to stdout instead of the spool file if systemd is used.
+                        Note: The option doesn't influence the behavior of the script
+                        if xinetd is used to run the check_mk_agent.
+
+  -s, --sections <section>,...
+                        Execute only these sections.
+                        Note: These sections are execute as synchronous sections
+
+  --oratestversion      Set a custom Oracleversion during execution.
+                        This parameter is only for development. Example: 12.1
+
+CONFIGURATION:
+  The following variables can be used in the configuration file mk_oracle.cfg;
+  mk_oracle.cfg is in the folder \$MK_CONFDIR or \$MK_VARDIR.
+
+  SYNC_SECTIONS="<section> ..."
+                        Specify which sections will be executed synchronously.
+                        Default is "$SYNC_SECTIONS"
+
+  ASYNC_SECTIONS="<section> ..."
+                        Specify which sections will be executed asynchronously.
+                        Default is "$ASYNC_SECTIONS"
+
+  SYNC_ASM_SECTIONS="<section> ..."
+                        Specify which ASM sections will be executed synchronously.
+                        Default is "$SYNC_ASM_SECTIONS"
+
+  ASYNC_ASM_SECTIONS="<section> ..."
+                        Specify which ASM sections will be executed asynchronously.
+                        Default is "$ASYNC_ASM_SECTIONS"
+
+  CACHE_MAXAGE=<age>    Interval for running async checks (in seconds).
+                        Default is "$CACHE_MAXAGE"
+
+  OLRLOC=/PATH/TO/olr.loc
+                        Disable the discovery from GI/Restart. A fully configured
+                        oratab is mandatory, when this has been disabled. Be aware!
+                        Please disable OLRLOC for failover cluster with custom
+                        clusterware resources.
+                        Default is "$OLRLOC"
+
+  ONLY_SIDS="<sid> ..." Specify which SIDs will be checked.
+                        This variable has priority 1.
+                        Default is empty.
+
+  SKIP_SIDS="<sid> ..." Specify which SIDs will not be checked.
+                        This variable has priority 2.
+                        Default is empty.
+
+  EXCLUDE_<sid>="<section> ..."
+                        Exclude sections for a specific SID. Valid values
+                        are "ALL" or specific section names.
+                        For ASM SIDs you cannot use this concept but you
+                        can use SKIP_SIDS="+ASM1 ..." instead.
+                        This variable has priority 3.
+                        Default is empty.
+
+  MAX_TASKS=<Number>    Specify how many SIDs to check in parallel
+                        Default is "$MAX_TASKS"
+
+CONFIGURATION REMOTE INSTANCES:
+  REMOTE_INSTANCE_<id>="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:<version>:<tnsalias>"
+                        <piggybackhost> and <tnsalias> are optional.
+
+CONFIGURATION CUSTOM SQLS:
+  The following variables for custom SQLs can be used in the configuration file
+  mk_oracle.cfg. Global variables can be set in mk_oracle.cfg; local variables
+  can be set within a section definition. Sections are defined in mk_oracle.cfg.
+  There are global and local variables. The local variables have precedence and
+  overwrite the global ones.
+  The variable "\$ORACLE_SID" can be used within every section.
+
+  SQLS_DBUSER="<username>"
+  SQLS_DBPASSWORD="<password>"
+  SQLS_DBSYSCONNECT="SYSDBA|SYSOPER"
+  SQLS_TNSALIAS="<tnsalias>"
+                        Dedicated credentials that can be configured per
+                        section for custom_sqls.
+                        SQLS_DBSYSCONNECT needs to be set if the user is
+                        sysdba or sysoper. Otherwise just skip this option.
+
+  SQLS_SECTIONS="<section>,..."
+                        Registry of custom SQL sections. If this configuration
+                        variable is not set or empty then no custom SQL sections
+                        will be executed. A custom SQL section looks like:
+
+                            section () {
+                                VAR=VALUE
+                                ...
+                            }
+
+                        Can only be set globally.
+                        Default is empty.
+
+  SQLS_SIDS="<sid>,..." List of SIDs for which the custom SQLs will be executed.
+                        If not set then the section will be ignored. You can use
+                        "\$SIDS" in order to execute the custom SQLs for all SIDs.
+                        Can be set globally or within a section definition.
+
+  SQLS_DIR=/PATH/TO/SQLDIR
+                        Path of the directory where the SQLs are stored.
+                        Can be set globally or within a section definition.
+
+  SQLS_SQL=<name.sql>   File containing a SQL statement.
+                        Can be set globally or within a section definition.
+
+  SQLS_PARAMETERS=<params>
+                        Parameters as a string, double quotes will be removed.
+                        Can be set globally or within a section definition.
+
+  SQLS_SECTION_NAME="<name>"
+                        By default the section header is 'oracle_sql' is used and
+                        the check plugin "oracle_sql" processes this data. The data
+                        must have a fixed form:
+
+                            <<<oracle_sql:sep(58)>>>
+                            [[[<item>]]]
+                            details:DETAILS
+                            perfdata:NAME=VAL;WARN;CRIT;MIN;MAX ...
+                            long:LONG
+                            ...
+                            exit:CODE
+
+                        By default the <item> is "<sid>|<sql-name>".
+                        Can be set globally or within a section definition.
+                        If \$SQLS_MAX_CACHE_AGE is set and the section name is 'oracle_sql'
+                        then the cache information is appended to the instance header, ie.:
+
+                            <<<oracle_sql:sep(58)>>>
+                            [[[<item-1>|cached(<MTIME-1>,<MAX_AGE-1>)]]]
+                            ...
+                            [[[<item-2>|cached(<MTIME-2>,<MAX_AGE-2>)]]]
+                            ...
+
+  SQLS_SECTION_SEP="<sep>"
+                        Only useful if SQLS_SECTION_NAME is not 'oracle_sql'.
+                        ASCII code, eg. '58' means ':'.
+                        Can be set globally or within a section definition.
+                        If an error occurs, the error message will have the
+                        following format, independent of the separator chosen.
+
+                            <sid>|FAILURE|<error description>
+
+  SQLS_ITEM_NAME=item_name
+                        Only useful if SQLS_SECTION_NAME is 'oracle_sql'. In
+                        this case the <item> is "<sid>|\$SQLS_ITEM_NAME".
+                        Can only be set within a section definition.
+
+  SQLS_MAX_CACHE_AGE=<age>
+                        See CACHE_MAX_AGE.
+                        Can be set globally or within a section definition.
+
+MK-ORA-USAGE
+}
+
+# .
+#   .--args----------------------------------------------------------------.
+#   |                                                                      |
+#   |                          __ _ _ __ __ _ ___                          |
+#   |                         / _` | '__/ _` / __|                         |
+#   |                        | (_| | | | (_| \__ \                         |
+#   |                         \__,_|_|  \__, |___/                         |
+#   |                                   |___/                              |
+#   '----------------------------------------------------------------------'
+
+MK_ORA_NOSPOOL=false
+MK_ORA_DEBUG=false
+MK_ORA_DEBUG_CONNECT=false
+MK_ORA_LOGGING=false
+export MK_ORA_LOGGING
+
+while test -n "$1"; do
+    case "$1" in
+        -h | --help)
+            display_usage
+            exit 0
+            ;;
+
+        -d)
+            set -xv
+            MK_ORA_DEBUG=true
+            shift
+            ;;
+
+        -t)
+            MK_ORA_DEBUG_CONNECT=true
+            shift
+            ;;
+
+        -l | --log)
+            MK_ORA_LOGGING=true
+            shift
+            ;;
+
+        --no-spool)
+            MK_ORA_NOSPOOL=true
+            shift
+            ;;
+
+        -s | --sections)
+            shift
+            MK_ORA_SECTIONS=$(echo "$1" | tr ',' ' ')
+            shift
+            ;;
+        --oratestversion)
+            shift
+            MK_ORA_TESTVERSION="$1"
+            shift
+            ;;
+
+        *)
+            shift
+            ;;
+    esac
+done
+
+# .
+#   .--config--------------------------------------------------------------.
+#   |                                      __ _                            |
+#   |                      ___ ___  _ __  / _(_) __ _                      |
+#   |                     / __/ _ \| '_ \| |_| |/ _` |                     |
+#   |                    | (_| (_) | | | |  _| | (_| |                     |
+#   |                     \___\___/|_| |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   '----------------------------------------------------------------------'
+
+filter_sections() {
+    local opt_sync_sections=
+    local opt_async_sections=
+    local opt_sync_asm_sections=
+    local opt_async_asm_sections=
+    local opt_sqls_sections=
+
+    for section in $MK_ORA_SECTIONS; do
+        if [ -n "$SYNC_SECTIONS" ] && [[ "$SYNC_SECTIONS" == *"$section"* ]]; then
+            opt_sync_sections="$opt_sync_sections $section"
+        elif [ -n "$ASYNC_SECTIONS" ] && [[ "$ASYNC_SECTIONS" == *"$section"* ]]; then
+            opt_async_sections="$opt_async_sections $section"
+        fi
+
+        if [ -n "$SYNC_ASM_SECTIONS" ] && [[ "$SYNC_ASM_SECTIONS" == *"$section"* ]]; then
+            opt_sync_asm_sections="$opt_sync_asm_sections $section"
+        elif [ -n "$ASYNC_ASM_SECTIONS" ] && [[ "$ASYNC_ASM_SECTIONS" == *"$section"* ]]; then
+            opt_async_asm_sections="$opt_async_asm_sections $section"
+        fi
+
+        if [ -n "$SQLS_SECTIONS" ] && [[ "$SQLS_SECTIONS" == *"$section"* ]]; then
+            opt_sqls_sections="$opt_sqls_sections $section"
+        fi
+    done
+
+    SYNC_SECTIONS=$opt_sync_sections
+    ASYNC_SECTIONS=$opt_async_sections
+    SYNC_ASM_SECTIONS=$opt_sync_asm_sections
+    ASYNC_ASM_SECTIONS=$opt_async_asm_sections
+    SQLS_SECTIONS=$opt_sqls_sections
+}
+
+load_config() {
+    if [ ! "$MK_CONFDIR" ]; then
+        echo "MK_CONFDIR not set!" >&2
+        exit 1
+    fi
+
+    if [ ! "$MK_VARDIR" ]; then
+        #TODO Which default? (run_cached/ mk_oracle.found, log file)
+        export MK_VARDIR=$MK_CONFDIR
+    fi
+
+    if [ ! -d "$MK_VARDIR/log" ]; then
+        mkdir "$MK_VARDIR/log"
+    fi
+
+    load_default_config
+
+    # Source the optional configuration file for this agent plugin
+    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
+        # shellcheck source=../cfg_examples/mk_oracle.cfg
+        . "$MK_CONFDIR/mk_oracle.cfg"
+    fi
+
+    if [ -d "$MK_CONFDIR/mk_oracle.d" ] && [ "$(ls -A "$MK_CONFDIR/mk_oracle.d")" ]; then
+        for cfg in "$MK_CONFDIR"/mk_oracle.d/*.cfg; do
+            # shellcheck disable=SC1090
+            . "$cfg"
+        done
+    fi
+
+    if [ -n "$MK_ORA_SECTIONS" ]; then
+        filter_sections
+    fi
+
+    # globals
+    custom_sqls_sections=$(echo "$SQLS_SECTIONS" | tr ',' ' ')
+
+    # globals and locals
+    custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
+    custom_sqls_section_sep="$SQLS_SECTION_SEP"
+    custom_sqls_sids="$SQLS_SIDS"
+    custom_sqls_dir="$SQLS_DIR"
+    custom_sqls_sql="$SQLS_SQL"
+    custom_sqls_parameters="$SQLS_PARAMETERS"
+    custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
+    unset_custom_sqls_vars
+
+    if $MK_ORA_LOGGING || [ -n "$MK_ORA_SECTIONS" ]; then
+        MK_DEBUG_MODE=true
+    else
+        MK_DEBUG_MODE=false
+    fi
+}
+
+# .
+#   .--OS env--------------------------------------------------------------.
+#   |                     ___  ____                                        |
+#   |                    / _ \/ ___|    ___ _ ____   __                    |
+#   |                   | | | \___ \   / _ \ '_ \ \ / /                    |
+#   |                   | |_| |___) | |  __/ | | \ V /                     |
+#   |                    \___/|____/   \___|_| |_|\_/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+OS_TYPE=$(uname -s)
+
+unsupported_os() {
+    logging -c -e "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
+    exit 1
+}
+
+set_os_env() {
+    if [ "$OS_TYPE" = 'Linux' ]; then
+        GREP="grep"
+        AWK="awk"
+
+    elif [ "$OS_TYPE" = 'SunOS' ]; then
+        # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
+        export PATH=$PATH:/usr/ucb:/usr/proc/bin:opt/sfw/bin:/opt/sfw/sbin:/usr/sfw/bin:/usr/sfw/sbin:/opt/csw/bin
+        GREP="/usr/xpg4/bin/grep"
+        if [ ! -x "$GREP" ]; then
+            logging -c -e "[set_os_env]" "Please make sure that ${GREP} is existing on Solaris. Aborting mk_oracle plugin."
+            exit 127
+        fi
+
+        AWK="nawk"
+
+    elif [ "$OS_TYPE" = 'AIX' ]; then
+        GREP="grep"
+        AWK="awk"
+
+    elif [ "$OS_TYPE" = 'HP-UX' ]; then
+        GREP="grep"
+        AWK="awk"
+
+    else
+        unsupported_os
+
+    fi
+
+    export GREP AWK
+}
+
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
+# Please keep this in sync with the agents!
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
+# Please keep this in sync with the agents!
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null ||
+        stat -f %m "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+}
+
+# .
+#   .--logging-------------------------------------------------------------.
+#   |                  _                   _                               |
+#   |                 | | ___   __ _  __ _(_)_ __   __ _                   |
+#   |                 | |/ _ \ / _` |/ _` | | '_ \ / _` |                  |
+#   |                 | | (_) | (_| | (_| | | | | | (_| |                  |
+#   |                 |_|\___/ \__, |\__, |_|_| |_|\__, |                  |
+#   |                          |___/ |___/         |___/                   |
+#   '----------------------------------------------------------------------'
+
+# How to use logging function:
+# Basic form:
+#   logging "[WHEREIAM]"
+#
+# Logging without ID ELSEWHERE:
+#   logging "[ELSEWHERE]"
+#
+# Logging with ID:
+#   logging "[ID]"
+#
+# Logging with ID in function:
+#   logging "[ID] [FUNC-NAME]"
+#
+# Logging with ID elsewhere:
+#   logging "[ID] [ELSEWHERE]"
+#
+# Add some useful messages:
+#   logging "" "Set ORACLE_HOME=${ORACLE_HOME}"
+#
+# There are some optional flags for prefix in log lines:
+#   Flag        Criticality         Meaning
+# --------------------------------------------------------------
+#   '-o'        0 (OK)              clear
+#   '-w'        1 (WARNING)         error but plugin goes on
+#   '-c'        2 (CRITICAL)        error and plugin exits
+#   '-u'        3 (UNKNOWN)         ?
+#   '-e'                            Writes message to stderr, too
+#
+# Add some useful messages:
+#   logging "" "Set OS environment" "OS: ${OS_TYPE}" "GREP: ${GREP}"
+#
+# Examples:
+#   logging "[${SID}] [set_ora_env]" "Found local ORACLE_HOME: ${ORACLE_HOME}"
+#   >>> 2018-05-15 16:27:43 [0] [352] [this-sid] [set_ora_env] Found local ORACLE_HOME: /path/to/ora/home
+#
+#   logging "[preliminaries]" "Set OS environment" "OS: ${OS_TYPE}" "GREP: ${GREP}" "AWK: ${AWK}"
+#   >>> 2018-05-15 16:27:43 [0] [1748] [preliminaries] Set OS environment
+#   >>> 2018-05-15 16:27:44 [0] [1748] [preliminaries] OS: Linux
+#   >>> 2018-05-15 16:27:45 [0] [1748] [preliminaries] GREP: /bin/grep
+#   >>> 2018-05-15 16:27:46 [0] [1748] [preliminaries] AWK: /usr/bin/awk
+#
+#   logging -c "[${SID}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
+#   >>> 2018-05-15 16:27:43 [2] [362] [this-sid] [set_ora_env] ORA-99999 oratab not found in local mode
+#
+# If you need to declare some headers:
+#   logging "" "-- Set OS environment --" "OS: ${OS_TYPE}" "GREP: ${GREP}"
+#   >>> 2018-05-15 16:27:43 [0] [1748] [preliminaries] -- Set OS environment --
+#   >>> 2018-05-15 16:27:44 [0] [1748] [preliminaries] OS: Linux
+#   >>> 2018-05-15 16:27:45 [0] [1748] [preliminaries] GREP: /bin/grep
+
+logging() {
+    if $MK_ORA_LOGGING; then
+        local log_file=${MK_VARDIR}/log/mk_oracle_task_${TASK_NR:-0}.log
+        local criticality=
+        local args=
+        local header=
+        local to_stderr=false
+
+        i=0
+        while test -n "$1"; do
+            case "$1" in
+                -o)
+                    criticality="0" # OK, default
+                    shift
+                    ;;
+
+                -w)
+                    criticality="1" # WARNING
+                    shift
+                    ;;
+
+                -c)
+                    criticality="2" # CRITICAL
+                    shift
+                    ;;
+
+                -u)
+                    criticality="3" # UNKNOWN
+                    shift
+                    ;;
+
+                -e)
+                    to_stderr=true
+                    shift
+                    ;;
+
+                *)
+                    args[i]="$1"
+                    i=$((i + 1))
+                    shift
+                    ;;
+            esac
+        done
+
+        if [ -z "${criticality}" ]; then
+            criticality="0"
+        fi
+
+        header="$(perl -MPOSIX -le 'print strftime "%F %T", localtime $^T') [${criticality}] ${args[0]}"
+
+        if [ "${#args[@]}" -le 1 ]; then
+            echo "$header" >>"$log_file"
+            if [ $to_stderr = true ]; then
+                echo "$header" >&2
+            fi
+        else
+            for arg in "${args[@]:1}"; do
+                echo "${header} $arg" >>"$log_file"
+                if [ $to_stderr = true ]; then
+                    echo "${header} $arg" >&2
+                fi
+            done
+        fi
+    fi
+}
+
+# .
+#   .--ORA env-------------------------------------------------------------.
+#   |                ___  ____      _                                      |
+#   |               / _ \|  _ \    / \      ___ _ ____   __                |
+#   |              | | | | |_) |  / _ \    / _ \ '_ \ \ / /                |
+#   |              | |_| |  _ <  / ___ \  |  __/ | | \ V /                 |
+#   |               \___/|_| \_\/_/   \_\  \___|_| |_|\_/                  |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+set_ora_env() {
+    local sid=${1}
+    ORACLE_SID="$sid"
+    unset ORA_HOME_SOURCE
+
+    if [[ "$sid" =~ ^REMOTE_INSTANCE_.* ]]; then
+        # we get the ORACLE_HOME from mk_oracle.cfg for REMOTE execution
+        ORACLE_HOME=${ORACLE_HOME:-${REMOTE_ORACLE_HOME}}
+        export ORA_HOME_SOURCE="(remote):"
+
+    else
+        # we work in local mode
+        # GI/Restart installed?
+        if [ -f ${OLRLOC} ]; then
+            # oratab is not supported in Grid-Infrastructure 12.2+
+            # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
+            # OLRLOC holds crs_home
+            crs_home=$(get_crs_home_from_olrloc "${OLRLOC}")
+            export ORA_HOME_SOURCE="(GI):    "
+
+            # set ORACLE_HOME = crs_home for ASM
+            if [ "${ORACLE_SID:0:1}" = '+' ]; then
+                # shellcheck disable=SC2154
+                ORACLE_HOME=${crs_home}
+            else
+                crsctl_path="${crs_home}"/bin/crsctl
+                EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
+                # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\" | ${GREP} -m1 ^ORACLE_HOME= | cut -d= -f2")
+            fi
+        else
+            # Single Instance with oratab
+            test -f /etc/oratab && ORATAB=/etc/oratab
+            # /var/opt/oracle/oratab is needed for Oracle Solaris
+            test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
+            if ! test -f "${ORATAB:-""}"; then
+                logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
+                exit 1
+            fi
+            ORACLE_HOME=$("${GREP}" "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
+            export ORA_HOME_SOURCE="(oratab):"
+        fi
+
+        if [ -z "${ORACLE_HOME}" ]; then
+            # cut last number from SID for Oracle RAC to find entry in oratab
+            ORACLE_HOME=$("${GREP}" "^${ORACLE_SID/%[0-9]/}:" <"${ORATAB}" | cut -d":" -f2)
+        fi
+    fi
+
+    if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
+        logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for SID '${ORACLE_SID}' not found or not existing!"
+        return 2
+    fi
+
+    TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
+    if ! test -f "${TNS_ADMIN}/sqlnet.ora"; then
+        logging -c -e "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
+        exit 1
+    fi
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID
+}
+
+set_ora_version() {
+    if [ "$MK_ORA_TESTVERSION" ]; then
+        # TODO: How is MK_ORA_TESTVERSION used? How many digits does it have?
+        ORACLE_VERSION_FOUR_PARTS="$MK_ORA_TESTVERSION"
+        logging -o -e "[${sid}] [set_ora_version]" "Custom ORACLE_VERSION: ${ORACLE_VERSION_SHORT}"
+    elif [ "$1" ]; then
+        # Used for REMOTE_INSTANCES
+        ORACLE_VERSION_FOUR_PARTS="$1"
+    else
+        # Get the sql version by call sqlplus
+        ORACLE_VERSION_FOUR_PARTS="$(get_sqlplus_version_with_precision 4)"
+    fi
+
+    ORACLE_VERSION_SHORT=$(echo "${ORACLE_VERSION_FOUR_PARTS}" | cut -d"." -f-2)
+
+    NUMERIC_ORACLE_VERSION=${ORACLE_VERSION_SHORT//./}
+    NUMERIC_ORACLE_VERSION_FOUR_PARTS=${ORACLE_VERSION_FOUR_PARTS//./}
+    export NUMERIC_ORACLE_VERSION
+    export NUMERIC_ORACLE_VERSION_FOUR_PARTS
+}
+
+# .
+#   .--SQL Queries---------------------------------------------------------.
+#   |        ____   ___  _        ___                  _                   |
+#   |       / ___| / _ \| |      / _ \ _   _  ___ _ __(_) ___  ___         |
+#   |       \___ \| | | | |     | | | | | | |/ _ \ '__| |/ _ \/ __|        |
+#   |        ___) | |_| | |___  | |_| | |_| |  __/ |  | |  __/\__ \        |
+#   |       |____/ \__\_\_____|  \__\_\\__,_|\___|_|  |_|\___||___/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | The following functions create SQL queries for ORACLE and output     |
+#   | them to stdout. All queries output the database name or the instane  |
+#   | name as first column.                                                |
+#   | V$BUFFER_POOL_STATISTICS: Convert Instancedata to cdb$root in        |
+#   |                           cdb-environments (only con_id = 0!)        |
+#   | V$SGAINFO: Convert Instancedata to cdb$root in cdb-environments      |
+#   '----------------------------------------------------------------------'
+
+#TODO Create subsections in query and parse them in related check plugin.
+sql_iostats() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT <<<oracle_performance:sep(124)>>>'
+        echo "WITH iostat_file AS (
+                SELECT con_id,
+                    filetype_name,
+                    SUM(large_read_reqs) large_read_reqs,
+                    SUM(large_read_servicetime) large_read_servicetime,
+                    SUM(large_write_reqs) large_write_reqs,
+                    SUM(large_write_servicetime) large_write_servicetime,
+                    SUM(small_read_reqs) small_read_reqs,
+                    SUM(small_read_servicetime) small_read_servicetime,
+                    SUM(small_sync_read_reqs) small_sync_read_reqs,
+                    SUM(small_write_reqs) small_write_reqs,
+                    SUM(small_write_servicetime) small_write_servicetime,
+                    SUM(small_read_megabytes * 1024 * 1024) small_read_bytes,
+                    SUM(large_read_megabytes * 1024 * 1024) large_read_bytes,
+                    SUM(small_write_megabytes * 1024 * 1024) small_write_bytes,
+                    SUM(large_write_megabytes * 1024 * 1024) large_write_bytes
+                FROM v\$iostat_file
+                GROUP BY con_id,
+                    filetype_name
+            )
+            SELECT upper(
+                    DECODE(
+                        d.cdb,
+                        'NO',
+                        i.instance_name,
+                        i.instance_name || '.' || vd.name
+                    )
+                )
+                || '|iostat_file'
+                || '|' || filetype_name
+                || '|' || small_read_reqs
+                || '|' || large_read_reqs
+                || '|' || small_write_reqs
+                || '|' || large_write_reqs
+                || '|' || small_read_servicetime
+                || '|' || large_read_servicetime
+                || '|' || small_write_servicetime
+                || '|' || large_write_servicetime
+                || '|' || small_read_bytes
+                || '|' || large_read_bytes
+                || '|' || small_write_bytes
+                || '|' || large_write_bytes
+            FROM iostat_file io
+                JOIN v\$containers vd ON io.con_id = vd.con_id
+                JOIN v\$instance i ON 1 = 1
+                JOIN v\$database d ON 1 = 1
+            ORDER BY vd.con_id,
+                io.filetype_name;"
+    fi
+}
+
+sql_performance() {
+
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT <<<oracle_performance:sep(124)>>>'
+        echo "        select upper(DECODE(cdb,'NO',instance_name
+                                             ,instance_name || '.' || con_name) )
+                     ||'|'|| 'sys_time_model'
+                     ||'|'|| STAT_NAME
+                     ||'|'|| Round(value/1000000)
+              from (
+              select d.cdb, i.instance_name, s.stat_name, s.value, vd.name con_name
+                  from v\$instance i
+                  join v\$con_sys_time_model s on s.stat_name in('DB time', 'DB CPU')
+                  join v\$containers vd on vd.con_id = s.con_id
+                  join v\$database d on d.cdb = 'YES'
+                  where vd.con_id <> 2
+                  union all
+                  select d.cdb, i.instance_name, s.stat_name, s.value, null
+                  from v\$instance i
+                  join v\$sys_time_model s on s.stat_name in('DB time', 'DB CPU')
+                  join v\$database d on d.cdb = 'NO'
+                  order by stat_name);
+              select upper(decode(cdb, 'NO', instance_name
+                                           ,instance_name || '.'||con_name))
+                     ||'|'|| 'sys_wait_class'
+                     ||'|'|| WAIT_CLASS
+                     ||'|'|| Round(total_waits)
+                     ||'|'|| Round(time_waited)
+                     ||'|'|| Round(total_waits_fg)
+                     ||'|'|| Round(time_waited_fg)
+              from (
+                  select i.instance_name, vd.con_id, S.WAIT_CLASS
+                        , s.total_waits, s.time_waited, s.total_waits_fg
+                        , s.time_waited_fg, vd.name con_name, d.cdb
+                  from v\$instance i
+                  join v\$database d on d.cdb = 'YES'
+                  join v\$containers vd on 1=1
+                  join v\$con_system_wait_class s on vd.con_id = s.con_id
+                  where s.WAIT_CLASS <> 'Idle'
+                  union all
+                  select i.instance_name, 0, S.WAIT_CLASS
+                        , s.total_waits, s.time_waited, s.total_waits_fg
+                        , s.time_waited_fg, null, d.cdb
+                  from v\$instance i
+                  join v\$database d on d.cdb = 'NO'
+                  join v\$system_wait_class s on s.WAIT_CLASS <> 'Idle'
+                   )
+              order by con_name, wait_class;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
+                     ||'|'|| 'buffer_pool_statistics'
+                     ||'|'|| b.name
+                     ||'|'|| b.db_block_gets
+                     ||'|'|| b.db_block_change
+                     ||'|'|| b.consistent_gets
+                     ||'|'|| b.physical_reads
+                     ||'|'|| b.physical_writes
+                     ||'|'|| b.FREE_BUFFER_WAIT
+                     ||'|'|| b.BUFFER_BUSY_WAIT
+              from v\$instance i
+              join V\$BUFFER_POOL_STATISTICS b on b.con_id = 0
+              join v\$database d on 1=1;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
+                     ||'|'|| 'SGA_info'
+                     ||'|'|| s.name
+                     ||'|'|| s.bytes
+              from v\$instance i
+              join V\$sgainfo s on s.con_id = 0
+              join v\$database d on 1=1;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
+                     ||'|'|| 'librarycache'
+                     ||'|'|| b.namespace
+                     ||'|'|| b.gets
+                     ||'|'|| b.gethits
+                     ||'|'|| b.pins
+                     ||'|'|| b.pinhits
+                     ||'|'|| b.reloads
+                     ||'|'|| b.invalidations
+              from v\$instance i
+              join V\$librarycache b on b.con_id = 0
+              join v\$database d on 1=1;
+SET SERVEROUTPUT ON
+SET FEEDBACK OFF
+DECLARE
+    l_i_cursor_id     INTEGER;
+    l_n_rowcount      NUMBER;
+    l_vc_name   VARCHAR2(200);
+    l_vc_value  VARCHAR2(200);
+    l_vc_unit   VARCHAR2(20);
+    l_vc_sql    VARCHAR2(200);
+    l_vc_step   VARCHAR2(137);
+BEGIN
+    dbms_output.enable(200000);
+    l_i_cursor_id := dbms_sql.open_cursor(security_level => 2);
+    l_vc_step := 'before con';
+    FOR con IN (
+        SELECT
+         upper(DECODE(d.cdb,'NO',i.instance_name
+                           ,i.instance_name || '.' || c.name
+                     )
+              ) iname, c.name
+        FROM
+            v\$containers c,
+            v\$database d,
+            v\$instance i
+        WHERE
+            c.open_mode LIKE 'READ %'
+            AND c.name <> 'PDB\$SEED'
+        ORDER BY c.con_id) LOOP
+        l_vc_sql := 'select name, value, unit from v\$pgastat order by name';
+        l_vc_step := 'parse: ' || con.name;
+        dbms_sql.parse(c => l_i_cursor_id, statement => l_vc_sql, language_flag => dbms_sql
+        .native, container => con.name);
+        dbms_sql.define_column(l_i_cursor_id, 1, l_vc_name, 200);
+        dbms_sql.define_column(l_i_cursor_id, 2, l_vc_value, 200);
+        dbms_sql.define_column(l_i_cursor_id, 3, l_vc_unit, 200);
+        l_vc_step := 'execute: ' || con.name;
+        l_n_rowcount := dbms_sql.execute_and_fetch(l_i_cursor_id);
+        LOOP
+            EXIT WHEN dbms_sql.fetch_rows(l_i_cursor_id) = 0;
+            dbms_sql.column_value(l_i_cursor_id, 1, l_vc_name);
+            dbms_sql.column_value(l_i_cursor_id, 2, l_vc_value);
+            dbms_sql.column_value(l_i_cursor_id, 3, l_vc_unit);
+            dbms_output.put_line(con.iname ||'|PGA_info|'||l_vc_name||'|'||l_vc_value||'|'||l_vc_unit);
+        END LOOP;
+    END LOOP;
+    dbms_sql.close_cursor(l_i_cursor_id);
+EXCEPTION
+    WHEN OTHERS THEN
+        FOR cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) LOOP
+            dbms_output.put_line(cur1.instance_name || '| Debug: '|| l_vc_step || ': ' || sqlerrm);
+        END LOOP;
+END;
+/
+"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo "PROMPT <<<oracle_performance:sep(124)>>>"
+        echo "select upper(i.INSTANCE_NAME)
+                     ||'|'|| 'sys_time_model'
+                     ||'|'|| S.STAT_NAME
+                     ||'|'|| Round(s.value/1000000)
+              from v\$instance i,
+                   v\$sys_time_model s
+              where s.stat_name in('DB time', 'DB CPU')
+              order by s.stat_name;
+              select upper(i.INSTANCE_NAME)
+                     ||'|'|| 'buffer_pool_statistics'
+                     ||'|'|| b.name
+                     ||'|'|| b.db_block_gets
+                     ||'|'|| b.db_block_change
+                     ||'|'|| b.consistent_gets
+                     ||'|'|| b.physical_reads
+                     ||'|'|| b.physical_writes
+                     ||'|'|| b.FREE_BUFFER_WAIT
+                     ||'|'|| b.BUFFER_BUSY_WAIT
+              from v\$instance i, V\$BUFFER_POOL_STATISTICS b;
+              select upper(i.INSTANCE_NAME)
+                     ||'|'|| 'SGA_info'
+                     ||'|'|| s.name
+                     ||'|'|| s.bytes
+              from v\$sgainfo s, v\$instance i;
+              select upper(i.INSTANCE_NAME)
+                     ||'|'|| 'librarycache'
+                     ||'|'|| b.namespace
+                     ||'|'|| b.gets
+                     ||'|'|| b.gethits
+                     ||'|'|| b.pins
+                     ||'|'|| b.pinhits
+                     ||'|'|| b.reloads
+                     ||'|'|| b.invalidations
+              from v\$instance i, V\$librarycache b;"
+    fi
+}
+
+sql_tablespaces() {
+
+    echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
+                                 , 0, decode(vp.con_id, null, d.NAME
+                                            ,d.NAME||''.''||vp.name)
+                                 , i.instance_name))
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || dbf.contents
+                  || ''|'' || i.version
+           from v\$database d
+           join v\$instance i on 1=1
+           join (
+                    select f.con_id, f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                    f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                    from cdb_data_files f
+                    join cdb_tablespaces t on f.tablespace_name = t.tablespace_name
+                                          and f.con_id = t.con_id
+                    left outer join cdb_free_space fs on f.file_id = fs.file_id
+                                                     and f.con_id = fs.con_id
+                    group by f.con_id, f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                    t.block_size, t.status, t.contents
+                ) dbf on 1=1
+           left outer join v\$pdbs vp on dbf.con_id = vp.con_id
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
+                                 , 0, decode(dbf.con_id, null, d.NAME
+                                            ,dbf.name)
+                                 , i.instance_name))
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || ''TEMPORARY''
+                  || ''|'' || i.version
+           FROM v\$database d
+           JOIN v\$instance i ON 1 = 1
+           JOIN (
+                 SELECT vp.name,
+                        vp.con_id,
+                        f.file_name,
+                        t.tablespace_name,
+                        f.status fstatus,
+                        f.autoextensible,
+                        f.blocks,
+                        f.maxblocks,
+                        f.user_blocks,
+                        f.increment_by,
+                        ''ONLINE'' online_status,
+                        t.block_size,
+                        t.status tstatus,
+                        f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
+                        t.contents
+                 FROM cdb_tablespaces t
+                 JOIN (
+                       SELECT vp.con_id
+                             ,d.name || ''.''|| vp.name name
+                       FROM v\$containers vp
+                       JOIN v\$database d ON 1 = 1
+                       WHERE d.cdb = ''YES''
+                         AND vp.con_id <> 2
+                       UNION ALL
+                       SELECT 0
+                             ,name
+                       FROM v\$database
+                      ) vp ON t.con_id = vp.con_id
+                 LEFT OUTER JOIN cdb_temp_files f ON t.con_id = f.con_id
+                                                 AND t.tablespace_name = f.tablespace_name
+                 LEFT OUTER JOIN gv\$tempseg_usage tu ON f.con_id = tu.con_id
+                                                      AND f.tablespace_name = tu.tablespace
+                                                      AND f.RELATIVE_FNO = tu.SEGRFNO#
+                 WHERE t.contents = ''TEMPORARY''
+                 GROUP BY vp.name,
+                          vp.con_id,
+                          f.file_name,
+                          t.tablespace_name,
+                          f.status,
+                          f.autoextensible,
+                          f.blocks,
+                          f.maxblocks,
+                          f.user_blocks,
+                          f.increment_by,
+                          t.block_size,
+                          t.status,
+                          t.contents
+                ) dbf ON 1 = 1
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121) 2: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
+                  ||''|''|| blocks ||''|''|| maxblocks ||''|''|| USER_BLOCKS ||''|''|| INCREMENT_BY
+                  ||''|''|| ONLINE_STATUS ||''|''|| BLOCK_SIZE
+                  ||''|''|| decode(tstatus,''READ ONLY'', ''READONLY'', tstatus) || ''|'' || free_blocks
+                  ||''|''|| contents
+                  ||''|''|| iversion
+           from v\$database d , v\$instance i, (
+                    select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                    f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents,
+                    (select version from v\$instance) iversion
+                    from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                    where f.tablespace_name = t.tablespace_name
+                    and f.file_id = fs.file_id(+)
+                    group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                    t.block_size, t.status, t.contents)
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
+                                 , 0, dbf.name
+                                 , i.instance_name))
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || ''TEMPORARY''
+                  || ''|'' || i.version
+           FROM v\$database d
+           JOIN v\$instance i ON 1 = 1
+           JOIN (
+                 SELECT vp.name,
+                        f.file_name,
+                        t.tablespace_name,
+                        f.status fstatus,
+                        f.autoextensible,
+                        f.blocks,
+                        f.maxblocks,
+                        f.user_blocks,
+                        f.increment_by,
+                        ''ONLINE'' online_status,
+                        t.block_size,
+                        t.status tstatus,
+                        f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
+                        t.contents
+                 FROM dba_tablespaces t
+                 JOIN ( SELECT 0
+                             ,name
+                       FROM v\$database
+                      ) vp ON 1=1
+                 LEFT OUTER JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
+                 LEFT OUTER JOIN gv\$tempseg_usage tu ON f.tablespace_name = tu.tablespace
+                                                      AND f.RELATIVE_FNO = tu.SEGRFNO#
+                 WHERE t.contents = ''TEMPORARY''
+                 GROUP BY vp.name,
+                          f.file_name,
+                          t.tablespace_name,
+                          f.status,
+                          f.autoextensible,
+                          f.blocks,
+                          f.maxblocks,
+                          f.user_blocks,
+                          f.increment_by,
+                          t.block_size,
+                          t.status,
+                          t.contents
+                ) dbf ON 1 = 1'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 92 ]; then
+        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
+                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
+                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
+                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
+                  ||'|'|| contents
+           from v\$database d , v\$instance i, (
+                    select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                    'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                    from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                    where f.tablespace_name = t.tablespace_name
+                    and f.file_id = fs.file_id(+)
+                    group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, 'ONLINE',
+                    t.block_size, t.status, t.contents
+                    UNION
+                    select f.file_name, f.tablespace_name, 'ONLINE' status, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
+                    t.BLOCK_SIZE, 'TEMP' status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
+                    from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
+                    WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+                    GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
+                    f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
+                    'TEMP', t.block_size, t.status);"
+    fi
+}
+
+sql_dataguard_stats() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| upper(d.DB_UNIQUE_NAME)
+                     ||'|'|| d.DATABASE_ROLE
+                     ||'|'|| ds.name
+                     ||'|'|| ds.value
+                     ||'|'|| d.SWITCHOVER_STATUS
+                     ||'|'|| d.DATAGUARD_BROKER
+                     ||'|'|| d.PROTECTION_MODE
+                     ||'|'|| d.FS_FAILOVER_STATUS
+                     ||'|'|| d.FS_FAILOVER_OBSERVER_PRESENT
+                     ||'|'|| d.FS_FAILOVER_OBSERVER_HOST
+                     ||'|'|| d.FS_FAILOVER_CURRENT_TARGET
+                     ||'|'|| ms.status
+                     ||'|'|| d.open_mode
+              FROM  v\$database d
+              JOIN  v\$parameter vp on 1=1
+              JOIN v\$instance i on 1=1
+              left outer join V\$dataguard_stats ds on 1=1
+              left outer join (select listagg(to_char(inst_id) || '.' || status, ', ') WITHIN GROUP (ORDER BY to_char(inst_id) || '.' || status) status
+                                from gv\$managed_standby
+                               where  process = 'MRP0') ms on 1=1
+              WHERE vp.name = 'log_archive_config'
+              AND   vp.value is not null
+              ORDER BY 1;"
+    fi
+}
+
+sql_recovery_status() {
+    echo 'PROMPT <<<oracle_recovery_status:sep(124)>>>'
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}
+                                 , 0, decode(vp.con_id, null, d.NAME
+                                            ,d.NAME||'.'||vp.name)
+                                 , i.instance_name))
+                     ||'|'|| d.DB_UNIQUE_NAME
+                     ||'|'|| d.DATABASE_ROLE
+                     ||'|'|| d.open_mode
+                     ||'|'|| dh.file#
+                     ||'|'|| round((dh.CHECKPOINT_TIME-to_date('01.01.1970','dd.mm.yyyy'))*24*60*60)
+                     ||'|'|| round((sysdate-dh.CHECKPOINT_TIME)*24*60*60)
+                     ||'|'|| dh.STATUS
+                     ||'|'|| dh.RECOVER
+                     ||'|'|| dh.FUZZY
+                     ||'|'|| dh.CHECKPOINT_CHANGE#
+                     ||'|'|| nvl(vb.STATUS, 'unknown')
+                     ||'|'|| nvl2(vb.TIME, round((sysdate-vb.TIME)*24*60*60), 0)
+              FROM  V\$datafile_header dh
+              JOIN v\$database d on 1=1
+              JOIN v\$instance i on 1=1
+              LEFT OUTER JOIN v\$backup vb on vb.file# = dh.file#
+              LEFT OUTER JOIN V\$PDBS vp on dh.con_id = vp.con_id
+              ORDER BY dh.file#;"
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| d.DB_UNIQUE_NAME
+                     ||'|'|| d.DATABASE_ROLE
+                     ||'|'|| d.open_mode
+                     ||'|'|| dh.file#
+                     ||'|'|| round((dh.CHECKPOINT_TIME-to_date('01.01.1970','dd.mm.yyyy'))*24*60*60)
+                     ||'|'|| round((sysdate-dh.CHECKPOINT_TIME)*24*60*60)
+                     ||'|'|| dh.STATUS
+                     ||'|'|| dh.RECOVER
+                     ||'|'|| dh.FUZZY
+                     ||'|'|| dh.CHECKPOINT_CHANGE#
+              FROM  V\$datafile_header dh, v\$database d, v\$instance i
+              ORDER BY dh.file#;
+             "
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 92 ]; then
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| d.DATABASE_ROLE
+                     ||'|'|| d.open_mode
+                     ||'|'|| dh.file#
+                     ||'|'|| round((dh.CHECKPOINT_TIME-to_date('01.01.1970','dd.mm.yyyy'))*24*60*60)
+                     ||'|'|| round((sysdate-dh.CHECKPOINT_TIME)*24*60*60)
+                     ||'|'|| dh.STATUS
+                     ||'|'|| dh.RECOVER
+                     ||'|'|| dh.FUZZY
+                     ||'|'|| dh.CHECKPOINT_CHANGE#
+              FROM  V\$datafile_header dh, v\$database d, v\$instance i
+              ORDER BY dh.file#;
+             "
+    fi
+}
+
+sql_rman() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+
+        local archive_target="'PRIMARY'"
+        if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
+            archive_target="'PRIMARY', 'LOCAL'"
+        fi
+
+        echo 'PROMPT <<<oracle_rman:sep(124)>>>'
+        echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
+                     || '|'|| 'COMPLETED'
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| case when INCREMENTAL_LEVEL IS NULL
+                              then 'DB_FULL'
+                              else 'DB_INCR'
+                              end
+                     || '|'|| INCREMENTAL_LEVEL
+                     || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
+                     || '|'|| INCREMENTAL_CHANGE#
+                from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name)) name
+                           , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+                      from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
+                            from v\$backup_datafile bd
+                            join v\$datafile_header dh on dh.file# = bd.file#
+                            where dh.status = 'ONLINE'
+                              and dh.con_id <> 2
+                            group by bd.file#, bd.INCREMENTAL_LEVEL
+                                           ) bd
+                     join v\$backup_datafile bd2 on bd2.file# = bd.file#
+                                               and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+                     join v\$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
+                     join v\$instance i on 1=1
+                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
+                            , bd2.INCREMENTAL_LEVEL
+                            , bd2.INCREMENTAL_CHANGE#
+                     order by name, bd2.INCREMENTAL_LEVEL);
+
+              select /*$HINT_RMAN check_mk rman2 */ name
+                    || '|' || 'COMPLETED'
+                    || '|'
+                    || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
+                    || '|' || 'CONTROLFILE'
+                    || '|'
+                    || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
+                    || '|' || '0'
+              from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
+                          ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+                    from v\$database d
+                    join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+                    join v\$instance i on 1=1
+                    group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                   );
+
+              select /*$HINT_RMAN check_mk rman3 */ name
+                     || '|COMPLETED'
+                     || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|ARCHIVELOG||'
+                     || round((sysdate - completed)*24*60,0)
+                     || '|'
+              from (
+                    select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
+                         , max(a.completion_time) completed
+                         , case when a.backup_count > 0 then 1 else 0 end
+                    from v\$archived_log a, v\$database d, v\$instance i
+                    where a.backup_count > 0
+                          and a.dest_id in
+                          (select b.dest_id
+                           from v\$archive_dest b
+                           where b.target IN (${archive_target})
+                             and b.SCHEDULE = 'ACTIVE'
+                          )
+                    group by d.NAME, i.instance_name
+                           , case when a.backup_count > 0 then 1 else 0 end);"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT <<<oracle_rman:sep(124)>>>'
+        echo "select /*${HINT_RMAN} check_mk rman1 */ upper(name)
+                     || '|'|| 'COMPLETED'
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| case when INCREMENTAL_LEVEL IS NULL
+                              then 'DB_FULL'
+                              else 'DB_INCR'
+                              end
+                     || '|'|| INCREMENTAL_LEVEL
+                     || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
+                     || '|'|| INCREMENTAL_CHANGE#
+                from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name)) name
+                           , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+                      from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
+                            from v\$backup_datafile bd
+                            join v\$datafile_header dh on dh.file# = bd.file#
+                            where dh.status = 'ONLINE'
+                            group by bd.file#, bd.INCREMENTAL_LEVEL
+                                           ) bd
+                     join v\$backup_datafile bd2 on bd2.file# = bd.file#
+                                               and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+                     join v\$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
+                     join v\$instance i on 1=1
+                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
+                            , bd2.INCREMENTAL_LEVEL
+                            , bd2.INCREMENTAL_CHANGE#
+                     order by name, bd2.INCREMENTAL_LEVEL);
+
+              select /*${HINT_RMAN} check_mk rman2 */ name
+                    || '|' || 'COMPLETED'
+                    || '|'
+                    || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
+                    || '|' || 'CONTROLFILE'
+                    || '|'
+                    || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
+                    || '|' || '0'
+              from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
+                          ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+                    from v\$database d
+                    join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+                    join v\$instance i on 1=1
+                    group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                   );
+
+              select /*${HINT_RMAN} check_mk rman3 */ name
+                     || '|COMPLETED'
+                     || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|ARCHIVELOG||'
+                     || round((sysdate - completed)*24*60,0)
+                     || '|'
+              from (
+                    select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
+                         , max(a.completion_time) completed
+                         , case when a.backup_count > 0 then 1 else 0 end
+                    from v\$archived_log a, v\$database d, v\$instance i
+                    where a.backup_count > 0
+                          and a.dest_id in
+                          (select b.dest_id
+                           from v\$archive_dest b
+                           where b.target = 'PRIMARY'
+                             and b.SCHEDULE = 'ACTIVE'
+                          )
+                    group by d.NAME, i.instance_name
+                           , case when a.backup_count > 0 then 1 else 0 end);"
+    fi
+}
+
+sql_recovery_area() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT <<<oracle_recovery_area:sep(124)>>>'
+        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| round((SPACE_USED-SPACE_RECLAIMABLE)/
+                               (CASE NVL(SPACE_LIMIT,1) WHEN 0 THEN 1 ELSE SPACE_LIMIT END)*100)
+                     ||'|'|| round(SPACE_LIMIT/1024/1024)
+                     ||'|'|| round(SPACE_USED/1024/1024)
+                     ||'|'|| round(SPACE_RECLAIMABLE/1024/1024)
+                     ||'|'|| d.FLASHBACK_ON
+              from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;"
+    fi
+}
+
+sql_undostat() {
+    echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo "select decode(vp.con_id, null, upper(i.INSTANCE_NAME)
+                           ,upper(i.INSTANCE_NAME || '.' || vp.name))
+                     ||'|'|| ACTIVEBLKS
+                     ||'|'|| MAXCONCURRENCY
+                     ||'|'|| TUNED_UNDORETENTION
+                     ||'|'|| maxquerylen
+                     ||'|'|| NOSPACEERRCNT
+              from v\$instance i
+              join
+                  (select * from v\$undostat
+                    where TUNED_UNDORETENTION > 0
+                   order by end_time desc
+                   fetch next 1 rows only
+                  ) u on 1=1
+              left outer join v\$pdbs vp on vp.con_id = u.con_id;
+             "
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo "select upper(i.INSTANCE_NAME)
+                     ||'|'|| ACTIVEBLKS
+                     ||'|'|| MAXCONCURRENCY
+                     ||'|'|| TUNED_UNDORETENTION
+                     ||'|'|| maxquerylen
+                     ||'|'|| NOSPACEERRCNT
+              from v\$instance i,
+                  (select * from (select *
+                                  from v\$undostat order by end_time desc
+                                 )
+                            where rownum = 1
+                              and TUNED_UNDORETENTION > 0
+                  );"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 92 ]; then
+        # TUNED_UNDORETENTION and ACTIVEBLKS are not availibe in Oracle <=9.2!
+        # we sent a -1 for filtering in check_undostat
+        echo "select upper(i.INSTANCE_NAME)
+                     ||'|-1'
+                     ||'|'|| MAXCONCURRENCY
+                     ||'|-1'
+                     ||'|'|| maxquerylen
+                     ||'|'|| NOSPACEERRCNT
+                  from v\$instance i,
+                  (select * from (select *
+                                  from v\$undostat order by end_time desc
+                                 )
+                            where rownum = 1
+                  );"
+    fi
+}
+
+sql_resumable() {
+
+    echo 'PROMPT <<<oracle_resumable:sep(124)>>>'
+    echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(i.INSTANCE_NAME)
+                         ||''|''|| u.username
+                         ||''|''|| a.SESSION_ID
+                         ||''|''|| a.status
+                         ||''|''|| a.TIMEOUT
+                         ||''|''|| round((sysdate-to_date(a.SUSPEND_TIME,''mm/dd/yy hh24:mi:ss''))*24*60*60)
+                         ||''|''|| a.ERROR_NUMBER
+                         ||''|''|| to_char(to_date(a.SUSPEND_TIME, ''mm/dd/yy hh24:mi:ss''),''mm/dd/yy_hh24:mi:ss'')
+                         ||''|''|| a.RESUME_TIME
+                         ||''|''|| a.ERROR_MSG
+                  from dba_resumable a, v\$instance i, dba_users u
+                  where a.INSTANCE_ID = i.INSTANCE_NUMBER
+                  and u.user_id = a.user_id
+                  and a.SUSPEND_TIME is not null
+                  union all
+                  select upper(i.INSTANCE_NAME)
+                         || ''|||||||||''
+                  from v\$instance i'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '| Debug: '||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+}
+
+sql_jobs() {
+
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+
+        echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'SELECT upper(vp.name)
+                     ||''|''|| j.OWNER
+                     ||''|''|| j.JOB_NAME
+                     ||''|''|| j.STATE
+                     ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                     ||''|''|| j.RUN_COUNT
+                     ||''|''|| j.ENABLED
+                     ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                     ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                     ||''|''|| jd.STATUS
+              FROM cdb_scheduler_jobs j
+              JOIN ( SELECT vp.con_id
+                           ,d.name || ''|'' || vp.name name
+                       FROM v\$containers vp
+                       JOIN v\$database d on 1=1
+                      WHERE d.cdb = ''YES'' and vp.con_id <> 2
+                        AND d.database_role = ''PRIMARY''
+                        AND d.open_mode = ''READ WRITE''
+                    UNION ALL
+                     SELECT 0, name
+                       FROM v\$database d
+                      WHERE d.database_role = ''PRIMARY''
+                        AND d.open_mode = ''READ WRITE''
+               ) vp on j.con_id = vp.con_id
+                           left outer join (SELECT con_id, owner, job_name, max(LOG_ID) log_id
+                                  FROM cdb_scheduler_job_run_details dd
+                                 group by con_id, owner, job_name
+                               ) jm on  jm.JOB_NAME = j.JOB_NAME
+                                   and jm.owner=j.OWNER
+                                   and jm.con_id = j.con_id
+              left outer join cdb_scheduler_job_run_details jd
+                              on  jd.con_id = jm.con_id
+                              AND jd.owner = jm.OWNER
+                              AND jd.JOB_NAME = jm.JOB_NAME
+                              AND jd.LOG_ID = jm.LOG_ID
+              WHERE not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+
+        echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
+                     ||''|''|| j.OWNER
+                     ||''|''|| j.JOB_NAME
+                     ||''|''|| j.STATE
+                     ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                     ||''|''|| j.RUN_COUNT
+                     ||''|''|| j.ENABLED
+                     ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                     ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                     ||''|''|| jd.STATUS
+              FROM dba_scheduler_jobs j
+              join v\$database vd on 1 = 1
+              join v\$instance i on 1 = 1
+              left outer join (SELECT owner, job_name, max(LOG_ID) log_id
+                                        FROM dba_scheduler_job_run_details dd
+                                        group by owner, job_name
+                              ) jm on  jm.JOB_NAME = j.JOB_NAME
+                                   and jm.owner=j.OWNER
+              left outer join dba_scheduler_job_run_details jd
+                              on  jd.owner = jm.OWNER
+                              AND jd.JOB_NAME = jm.JOB_NAME
+                              AND jd.LOG_ID = jm.LOG_ID
+              WHERE vd.database_role = ''PRIMARY''
+                AND vd.open_mode = ''READ WRITE''
+                AND not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102): ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
+    fi
+}
+
+sql_ts_quotas() {
+    echo 'PROMPT <<<oracle_ts_quotas:sep(124)>>>'
+    echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                 ||'|'|| Q.USERNAME
+                 ||'|'|| Q.TABLESPACE_NAME
+                 ||'|'|| Q.BYTES
+                 ||'|'|| Q.MAX_BYTES
+          from dba_ts_quotas Q, v\$database d, v\$instance i
+          where max_bytes > 0
+          union all
+          select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                 ||'|||'
+          from v\$database d, v\$instance i
+          order by 1;"
+}
+
+sql_version() {
+    echo 'PROMPT <<<oracle_version>>>'
+    echo "select upper(i.INSTANCE_NAME)
+         || ' ' || banner
+         from v\$version, v\$instance i
+         where banner like 'Oracle%';"
+}
+
+sql_systemparameter() {
+    # TODO In the future, all data needed for HW/SW Inventory, should
+    # implement a "persist:$UNTIL" to reduce amount of data transmission
+    echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
+    echo "select upper(i.instance_name)
+         || '|' || NAME
+         || '|' || DISPLAY_VALUE
+         || '|' || ISDEFAULT
+         from v\$system_parameter, v\$instance i
+         where name not like '!_%' ESCAPE '!';"
+}
+
+sql_instance() {
+    echo 'prompt <<<oracle_instance:sep(124)>>>'
+
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 180 ]; then
+        # Oracle 18c introduced another version column with Release Update information
+        # version       version_full
+        # 18.0.0.0.0    18.5.0.0.0
+        # 19.0.0.0.0    19.5.0.0.0
+        local version_column="version_full"
+    else
+        local version_column="version"
+    fi
+
+    if [ "${ORACLE_SID:0:1}" = '+' ]; then
+        # ASM
+        echo "select upper(i.instance_name)
+                     || '|' || i.${version_column}
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || '0'
+                     || '|' || 'NO'
+                     || '|' || 'ASM'
+                     || '|' || 'NO'
+                     || '|' || i.instance_name
+                     || '|' || i.host_name
+                from v\$instance i;"
+
+    # The next query is special: recovery_status is only available from 12.1.0.2 on, that's why we need
+    # a higher precision oracle version
+    # https://docs.oracle.com/database/121/REFRN/GUID-A399F608-36C8-4DF0-9A13-CEE25637653E.htm#REFRN30652
+    elif [ "$NUMERIC_ORACLE_VERSION_FOUR_PARTS" -ge 12102 ]; then
+        echo "select upper(instance_name)
+                         || '|' || version
+                         || '|' || status
+                         || '|' || logins
+                         || '|' || archiver
+                         || '|' || round((sysdate - startup_time) * 24*60*60)
+                         || '|' || dbid
+                         || '|' || log_mode
+                         || '|' || database_role
+                         || '|' || force_logging
+                         || '|' || name
+                         || '|' || to_char(created, 'ddmmyyyyhh24mi')
+                         || '|' || upper(value)
+                         || '|' || con_id
+                         || '|' || pname
+                         || '|' || pdbid
+                         || '|' || popen_mode
+                         || '|' || prestricted
+                         || '|' || ptotal_time
+                         || '|' || precovery_status
+                         || '|' || round(nvl(popen_time, -1))
+                         || '|' || pblock_size
+                         || '|' || host_name
+                  from(
+                      select i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
+                            ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
+                            ,d.name, d.created, p.value, vp.con_id, vp.name pname
+                            ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
+                            ,vp.block_size pblock_size, vp.recovery_status precovery_status
+                            ,(cast(systimestamp as date) - cast(open_time as date))  * 24*60*60 popen_time
+                        from v\$instance i
+                        join v\$database d on 1=1
+                        join v\$parameter p on 1=1
+                        join v\$pdbs vp on 1=1
+                        where p.name = 'enable_pluggable_database'
+                      union all
+                      select
+                             i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
+                            ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
+                            ,d.name, d.created, p.value, 0 con_id, null pname
+                            ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
+                            ,0 pblock_size, null precovery_status, null popen_time
+                        from v\$instance i
+                        join v\$database d on 1=1
+                        join v\$parameter p on 1=1
+                        where p.name = 'enable_pluggable_database'
+                        order by con_id
+                      );
+             "
+    else
+        # normal Instance
+        echo "select upper(i.instance_name)
+                     || '|' || i.VERSION
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || DBID
+                     || '|' || LOG_MODE
+                     || '|' || DATABASE_ROLE
+                     || '|' || FORCE_LOGGING
+                     || '|' || d.name
+                     || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
+                     || '|' || i.host_name
+                from v\$instance i, v\$database d;"
+    fi
+}
+
+sql_sessions() {
+    echo 'prompt <<<oracle_sessions:sep(124)>>>'
+
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo "SELECT upper(vp.name)
+                     || '|' || ltrim(COUNT(1))
+                     || decode(vp.con_id
+                               , 0, '|'||ltrim(rtrim(LIMIT_VALUE))||'|-1')
+              FROM ( SELECT vp.con_id
+                         ,i.instance_name || '.' || vp.name name
+                     FROM v\$containers vp
+                     JOIN v\$instance i ON 1 = 1
+                     JOIN v\$database d on 1=1
+                     WHERE d.cdb = 'YES' and vp.con_id <> 2
+                    UNION ALL
+                     SELECT 0, instance_name
+                     FROM v\$instance
+                   ) vp
+              JOIN v\$resource_limit rl on RESOURCE_NAME = 'sessions'
+              LEFT OUTER JOIN v\$session vs ON vp.con_id = vs.con_id
+              GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE
+              ORDER BY 1;"
+
+    else
+        echo "select upper(i.instance_name)
+                     || '|' || CURRENT_UTILIZATION
+                     || '|' || ltrim(LIMIT_VALUE)
+                     || '|' || MAX_UTILIZATION
+              from v\$resource_limit, v\$instance i
+              where RESOURCE_NAME = 'sessions';"
+    fi
+}
+
+sql_processes() {
+    echo 'prompt <<<oracle_processes:sep(124)>>>'
+    echo "select upper(i.instance_name)
+                  || '|' || CURRENT_UTILIZATION
+                  || '|' || ltrim(rtrim(LIMIT_VALUE))
+           from v\$resource_limit, v\$instance i
+           where RESOURCE_NAME = 'processes';"
+}
+
+sql_logswitches() {
+    echo 'prompt <<<oracle_logswitches:sep(124)>>>'
+    echo "select upper(i.instance_name)
+                  || '|' || logswitches
+           from v\$instance i ,
+                (select count(1) logswitches
+                 from v\$loghist h , v\$instance i
+                 where h.first_time > sysdate - 1/24
+                 and h.thread# = i.instance_number
+                );"
+}
+
+sql_locks() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'prompt <<<oracle_locks:sep(124)>>>'
+        echo "select upper(vp.name)
+                     || '|' || b.sid
+                     || '|' || b.serial#
+                     || '|' || b.machine
+                     || '|' || b.program
+                     || '|' || b.process
+                     || '|' || b.osuser
+                     || '|' || b.username
+                     || '|' || b.SECONDS_IN_WAIT
+                     || '|' || b.BLOCKING_SESSION_STATUS
+                     || '|' || bs.inst_id
+                     || '|' || bs.sid
+                     || '|' || bs.serial#
+                     || '|' || bs.machine
+                     || '|' || bs.program
+                     || '|' || bs.process
+                     || '|' || bs.osuser
+                     || '|' || bs.username
+              from v\$session b
+              join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
+                                 and bs.sid = b.BLOCKING_SESSION
+                                 and bs.con_id = b.con_id
+              join ( SELECT vp.con_id
+                           ,i.instance_name || '.' || vp.name name
+                 FROM v\$containers vp
+                 JOIN v\$instance i ON 1 = 1
+                 JOIN v\$database d on 1=1
+                 WHERE d.cdb = 'YES' and vp.con_id <> 2
+                UNION ALL
+                 SELECT 0, instance_name
+                 FROM v\$instance
+               ) vp on b.con_id = vp.con_id
+              where b.BLOCKING_SESSION is not null;
+
+              SELECT upper(i.instance_name || '.' || vp.name)
+                     || '|||||||||||||||||'
+                FROM v\$containers vp
+                JOIN v\$instance i ON 1 = 1
+                 JOIN v\$database d on 1=1
+                WHERE d.cdb = 'YES' and vp.con_id <> 2
+               UNION ALL
+                SELECT upper(i.instance_name)
+                     || '|||||||||||||||||'
+                FROM v\$instance i;
+        "
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'prompt <<<oracle_locks:sep(124)>>>'
+        echo "select upper(i.instance_name)
+                     || '|' || b.sid
+                     || '|' || b.serial#
+                     || '|' || b.machine
+                     || '|' || b.program
+                     || '|' || b.process
+                     || '|' || b.osuser
+                     || '|' || b.username
+                     || '|' || b.SECONDS_IN_WAIT
+                     || '|' || b.BLOCKING_SESSION_STATUS
+                     || '|' || bs.inst_id
+                     || '|' || bs.sid
+                     || '|' || bs.serial#
+                     || '|' || bs.machine
+                     || '|' || bs.program
+                     || '|' || bs.process
+                     || '|' || bs.osuser
+                     || '|' || bs.username
+              from v\$session b
+              join v\$instance i on 1=1
+              join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
+                                 and bs.sid = b.BLOCKING_SESSION
+              where b.BLOCKING_SESSION is not null;
+              select upper(i.instance_name)
+                     || '|||||||||||||||||'
+              from v\$instance i;"
+    fi
+}
+
+sql_locks_old() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'prompt <<<oracle_locks:sep(124)>>>'
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(i.instance_name)
+                         || ''|'' || a.sid
+                         || ''|'' || b.serial#
+                         || ''|'' || b.machine
+                         || ''|'' || b.program
+                         || ''|'' || b.process
+                         || ''|'' || b.osuser
+                         || ''|'' || a.ctime
+                         || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
+                         || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
+                          from V\$LOCK a, v\$session b, dba_objects c, v\$instance i
+                          where (a.id1, a.id2, a.type)
+                                     IN (SELECT id1, id2, type
+                                         FROM GV\$LOCK
+                                         WHERE request>0
+                                        )
+                          and request=0
+                          and a.sid = b.sid
+                          and a.id1 = c.object_id (+)
+                          union all
+                          select upper(i.instance_name) || ''|||||||||''
+                          from  v\$instance i'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '| Debug (101): '||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+    fi
+}
+
+sql_longactivesessions() {
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+
+        echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
+        echo "select upper(vp.name)
+                     || '|' || s.sid
+                     || '|' || s.serial#
+                     || '|' || s.machine
+                     || '|' || s.process
+                     || '|' || s.osuser
+                     || '|' || s.program
+                     || '|' || s.last_call_et
+                     || '|' || s.sql_id
+              from v\$session s
+              join ( SELECT vp.con_id
+                           ,i.instance_name || '.' || vp.name name
+                 FROM v\$containers vp
+                 JOIN v\$instance i ON 1 = 1
+                 JOIN v\$database d on 1=1
+                 WHERE d.cdb = 'YES' and vp.con_id <> 2
+                UNION ALL
+                 SELECT 0, instance_name
+                 FROM v\$instance
+                   ) vp on 1=1
+              where s.status = 'ACTIVE'
+                and s.type != 'BACKGROUND'
+                and s.username is not null
+                and s.username not in('PUBLIC')
+                and s.last_call_et > 60*60;
+
+              SELECT upper(i.instance_name || '.' || vp.name)
+                     || '||||||||'
+                FROM v\$containers vp
+                JOIN v\$instance i ON 1 = 1
+                JOIN v\$database d on 1=1
+               WHERE d.cdb = 'YES' and vp.con_id <> 2
+               UNION ALL
+              SELECT upper(i.instance_name)
+                     || '||||||||'
+                FROM v\$instance i;
+             "
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
+        echo "select upper(i.instance_name)
+                     || '|' || s.sid
+                     || '|' || s.serial#
+                     || '|' || s.machine
+                     || '|' || s.process
+                     || '|' || s.osuser
+                     || '|' || s.program
+                     || '|' || s.last_call_et
+                     || '|' || s.sql_id
+              from v\$session s, v\$instance i
+              where s.status = 'ACTIVE'
+              and type != 'BACKGROUND'
+              and s.username is not null
+              and s.username not in('PUBLIC')
+              and s.last_call_et > 60*60
+              union all
+              select upper(i.instance_name)
+                     || '||||||||'
+              from v\$instance i;"
+    fi
+}
+
+sql_asm_diskgroup() {
+    echo 'prompt <<<oracle_asm_diskgroup:sep(124)>>>'
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 112 ]; then
+
+        echo "SELECT g.state
+           || '|' || g.type
+           || '|' || g.name
+           || '|' || g.BLOCK_SIZE
+           || '|' || g.ALLOCATION_UNIT_SIZE
+           || '|' || g.REQUIRED_MIRROR_FREE_MB
+           || '|' || sum(d.total_mb)
+           || '|' || sum(d.free_mb)
+           || '|' || d.failgroup
+           || '|' || max(d.VOTING_FILE)
+           || '|' || d.FAILGROUP_TYPE
+           || '|' || g.offline_disks
+           || '|' || min(decode(d.REPAIR_TIMER, 0, 8640000, d.REPAIR_TIMER))
+           || '|' || count(*)
+      FROM v\$asm_diskgroup g
+      LEFT OUTER JOIN v\$asm_disk d on d.group_number = g.group_number
+                                   and d.group_number = g.group_number
+                                   and d.group_number <> 0
+      GROUP BY g.name
+             , g.state
+             , g.type
+             , d.failgroup
+             , d.VOTING_FILE
+             , g.BLOCK_SIZE
+             , g.ALLOCATION_UNIT_SIZE
+             , g.REQUIRED_MIRROR_FREE_MB
+             , g.offline_disks
+             , d.FAILGROUP_TYPE
+             , d.REPAIR_TIMER
+      ORDER BY g.name, d.failgroup;"
+
+    elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo "select STATE
+                     || '|' || TYPE
+                     || '|' || 'N'
+                     || '|' || sector_size
+                     || '|' || block_size
+                     || '|' || allocation_unit_size
+                     || '|' || total_mb
+                     || '|' || free_mb
+                     || '|' || required_mirror_free_mb
+                     || '|' || usable_file_mb
+                     || '|' || offline_disks
+                     || '|' || 'N'
+                     || '|' || name || '/'
+                from v\$asm_diskgroup;"
+    fi
+}
+
+# .
+#   .--custom SQL----------------------------------------------------------.
+#   |                       _                    ____   ___  _             |
+#   |         ___ _   _ ___| |_ ___  _ __ ___   / ___| / _ \| |            |
+#   |        / __| | | / __| __/ _ \| '_ ` _ \  \___ \| | | | |            |
+#   |       | (__| |_| \__ \ || (_) | | | | | |  ___) | |_| | |___         |
+#   |        \___|\__,_|___/\__\___/|_| |_| |_| |____/ \__\_\_____|        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+unset_custom_sqls_vars() {
+    unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
+    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
+}
+
+sid_matches_defined_sids() {
+    # first parameter is a list of coma separated values (SQLS_SIDS)
+    # second parameter is a single value (current sid)
+
+    # split $1 into array on , or newline
+    IFS=$',\n' read -d '' -ra sids_array <<<"$1"
+    # check if array contains $2
+    printf '%s\n' "${sids_array[@]}" | "${GREP}" -F -x -- "$2" >/dev/null
+}
+
+do_custom_sqls() {
+    for section in $custom_sqls_sections; do
+        if ! type "$section" >/dev/null 2>&1; then
+            logging -w "[${MK_SID}] [custom_sql] [${section}]" \
+                "Definition of '${section}' not found in configuration"
+            continue
+        fi
+
+        $section
+
+        local sids="${SQLS_SIDS:-$custom_sqls_sids}"
+        # If SID is not part of sids we can skip the rest
+        if ! sid_matches_defined_sids "$sids" "$MK_SID"; then
+            logging -w "[${MK_SID}] [custom_sql] [${section}]" \
+                "Skipping this section, runs only on SIDs '$sids'"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        local section_name=${SQLS_SECTION_NAME:-$custom_sqls_section_name}
+        local sql_dir=${SQLS_DIR:-$custom_sqls_dir}
+        local sql=${SQLS_SQL:-$custom_sqls_sql}
+
+        # If no section name, SQL dir or file is stated or SQL file does not exist we skip the rest
+        if [ -z "$section_name" ]; then
+            logging -w "[${MK_SID}] [custom_sql] [${section}]" \
+                "Empty section name"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ ! -d "$sql_dir" ] || [ ! -r "$sql_dir" ]; then
+            logging -w "[${MK_SID}] [custom_sql] [${section}]" \
+                "SQL folder '${sql_dir}' not found or not readable"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ ! -f "${sql_dir}/$sql" ] || [ ! -r "${sql_dir}/$sql" ]; then
+            logging -w "[${MK_SID}] [custom_sql] [${section}]" \
+                "SQL file '${sql_dir}/$sql' not found or not readable"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ -n "$SQLS_SECTION_SEP" ]; then
+            local section_sep="$SQLS_SECTION_SEP"
+        elif [ -n "$custom_sqls_section_sep" ]; then
+            local section_sep="$custom_sqls_section_sep"
+        else
+            local section_sep=
+        fi
+
+        if [ "$section_name" == "oracle_sql" ]; then
+            local section_header="${section_name}:sep(58)"
+        elif [ -n "${section_sep}" ]; then
+            local section_header="${section_name}:sep(${section_sep})"
+        else
+            local section_header="$section_name"
+        fi
+
+        if [ "$section_name" = "oracle_sql" ]; then
+            if [[ "$MK_SID" =~ ^REMOTE_INSTANCE_.* ]]; then
+                if [ -z "$SQLS_ITEM_SID" ]; then
+                    # we can not extract MK_SID from REMOTE_INSTANCE_ variable name
+                    # get MK_SID from mk_oracle.cfg when SQLS_ITEM_SID is not defined
+                    # => needed when tnsnames.ora is used without SID in CFGLINE...
+                    local SQLS_ITEM_SID
+                    SQLS_ITEM_SID=$(eval "echo \${$MK_SID}" | cut -d":" -f7)
+                fi
+            else
+                # local connection mode
+                local SQLS_ITEM_SID="$MK_SID"
+            fi
+            logging "[${MK_SID}] [custom_sql] [${section}]" \
+                "SQLS_ITEM_SID: $SQLS_ITEM_SID"
+
+            if [ -n "$SQLS_ITEM_NAME" ]; then
+                local item="${SQLS_ITEM_SID}|${SQLS_ITEM_NAME}"
+            else
+                local item="${SQLS_ITEM_SID}|${sql}"
+            fi
+        else
+            local item=
+        fi
+
+        local parameters=${SQLS_PARAMETERS:-$custom_sqls_parameters}
+
+        if $MK_DEBUG_MODE; then
+            local max_cache_age=
+        elif [ -n "$SQLS_MAX_CACHE_AGE" ]; then
+            local max_cache_age="$SQLS_MAX_CACHE_AGE"
+        else
+            local max_cache_age="$custom_sqls_max_cache_age"
+        fi
+
+        if [ -n "$SQLS_DBUSER" ]; then
+            # set custom credentials from section
+            db_connect=$(mk_ora_db_connect "$MK_SID")
+            export MK_DB_CONNECT=$db_connect
+        fi
+
+        unset_custom_sqls_vars
+
+        MK_CUSTOM_SQLS_SECTION="$section"
+        export MK_CUSTOM_SQLS_SECTION_HEADER="$section_header"
+        export MK_CUSTOM_SQLS_ITEM="$item"
+        MK_CUSTOM_SQLS_SECTION_QUERY=$(custom_sql_section "$sql_dir" "$sql" "$parameters")
+        export MK_CUSTOM_SQLS_SECTION_QUERY
+
+        logging "[${MK_SID}] [custom_sql] [${section}]" \
+            "Section name   : $MK_CUSTOM_SQLS_SECTION" \
+            "Section header : $MK_CUSTOM_SQLS_SECTION_HEADER" \
+            "Section item   : $MK_CUSTOM_SQLS_ITEM" \
+            "Max cache age  : $max_cache_age" \
+            "Custom query   : $MK_CUSTOM_SQLS_SECTION_QUERY"
+
+        if $MK_ORA_DEBUG_CONNECT; then
+            do_testmode_custom_sql
+        else
+            if [ -z "$max_cache_age" ]; then
+                local output=
+                output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
+                handle_custom_sql_errors "$output"
+            else
+                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}" "$section_name"
+            fi
+        fi
+    done
+}
+
+custom_sql_section() {
+    local sql_dir="$1"
+    local sql="$2"
+    local params="$3"
+    local sql_content=
+
+    echo "PROMPT <<<${MK_CUSTOM_SQLS_SECTION_HEADER}>>>"
+    if [ -n "$MK_CUSTOM_SQLS_ITEM" ]; then
+        echo "PROMPT [[[${MK_CUSTOM_SQLS_ITEM}]]]"
+    fi
+
+    echo -e "SET VERIFY OFF;"
+    echo -e "SET TERMOUT ON;"
+    echo -e "SET serveroutput ON;"
+
+    if [ -n "$params" ]; then
+        echo -e "$params"
+    fi
+
+    sql_content=$(cat "$sql_dir/$sql")
+    echo -e "$sql_content"
+}
+
+do_async_custom_sqls() {
+    local output=
+    output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_async_custom_sqls" "yes")
+    logging "[${MK_SID}] [${MK_CUSTOM_SQLS_SECTION_QUERY}] [do_async_custom_sql]" "Output: $output"
+    handle_custom_sql_errors "$output"
+}
+
+handle_custom_sql_errors() {
+    local output="$1"
+    local errors=
+    errors=$(echo -e "$output" | ${GREP} -e "ERROR at line" -e "ORA-" -e "SP2-" | tr '\n' ' ')
+    if [ -n "$errors" ]; then
+        echo "<<<${MK_CUSTOM_SQLS_SECTION_HEADER}>>>"
+        if [ -n "$MK_CUSTOM_SQLS_ITEM" ]; then
+            echo "[[[${MK_CUSTOM_SQLS_ITEM}]]]"
+        fi
+        # connection error already returns '$SID|FAILURE|' in mk_ora_sqplplus
+        errors=${errors#*FAILURE|}
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$errors"
+    else
+        echo "$output"
+    fi
+}
+
+# .
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
+# END COMMON PLUGIN CODE
+
+get_crs_home_from_olrloc() {
+    "${GREP}" "crs_home" "${1}" | cut -d"=" -f2
+}
+
+get_sqlplus_version_with_precision() {
+    precision="$1"
+    sqlplus_path="${ORACLE_HOME}"/bin/sqlplus
+    EXECUTION_MODE="$(get_binary_execution_mode "$sqlplus_path" "$(get_binary_owner "$sqlplus_path")")"
+    $EXECUTION_MODE "\"${sqlplus_path}\" -V" | ${GREP} ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
+}
+
+print_dummy_sections() {
+    for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
+        echo "<<<oracle_${section}>>>"
+    done
+}
+
+do_dummy_sections() {
+    if [ -n "$MK_ORA_SECTIONS" ]; then
+        return
+    fi
+
+    print_dummy_sections
+
+    for piggyback_host in $PIGGYBACK_HOSTS; do
+        echo "<<<<${piggyback_host}>>>>"
+        print_dummy_sections
+        echo "<<<<>>>>"
+    done
+}
+
+skip_sid() {
+    local sid="$1"
+    if [ "$ONLY_SIDS" ]; then
+        [[ " $ONLY_SIDS " != *" $sid "* ]]
+        return
+    fi
+
+    if [ "$SKIP_SIDS" ]; then
+        [[ " $SKIP_SIDS " == *" $sid "* ]]
+        return
+    fi
+
+    EXCLUDE=EXCLUDE_$sid
+    # Handle explicit exclusion of instances but not for +ASM
+    if [[ "$EXCLUDE" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]; then
+        EXCLUDE=${!EXCLUDE}
+        [ "$EXCLUDE" = "ALL" ]
+        return
+    fi
+
+    false
+}
+
+remove_excluded_sections() {
+    # We exclude instance section because we have already executed
+    # the sql_instance section at the beginning for every SID.
+    local sections="$1"
+    local excluded="$2"
+    for section in $sections; do
+        if [[ "$excluded" != *"$section"* ]]; then
+            echo "$section"
+        fi
+    done
+}
+
+ora_session_environment() {
+    echo 'set pages 0 trimspool on feedback off lines 8000'
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ] && [ ! "$DISABLE_ORA_SESSION_SETTINGS" ]; then
+        echo 'set echo off'
+        echo 'alter session set "_optimizer_mjc_enabled"=false;'
+
+        # cursor_sharing is not valid for ASM instances
+        if [ ! "${ORACLE_SID:0:1}" = '+' ]; then
+            echo 'alter session set cursor_sharing=exact;'
+        fi
+
+        echo 'set echo on'
+    fi
+    #TODO Do not exit after first error otherwise
+    # section specific errors won't be seen any more.
+    #echo 'whenever sqlerror exit 1'
+    echo ' '
+}
+
+# .
+#   .--run cached----------------------------------------------------------.
+#   |                                           _              _           |
+#   |         _ __ _   _ _ __     ___ __ _  ___| |__   ___  __| |          |
+#   |        | '__| | | | '_ \   / __/ _` |/ __| '_ \ / _ \/ _` |          |
+#   |        | |  | |_| | | | | | (_| (_| | (__| | | |  __/ (_| |          |
+#   |        |_|   \__,_|_| |_|  \___\__,_|\___|_| |_|\___|\__,_|          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+run_cached() {
+    if $MK_DEBUG_MODE; then
+        # Just to be sure
+        return
+    fi
+
+    MAXAGE="${1}"
+    # Attention: CMD will contain the shell function to be executed. Make sure to export all needed functions during
+    # that execution (see e.g. export -f logging)
+    CMD="${2}"
+    IDENTIFIER="${3}"
+    SECTION_NAME="${4}"
+    if [ "${SECTION_NAME}" = "oracle_sql" ]; then
+        NAME="oracle_${MK_SID}${IDENTIFIER}_${MAXAGE}"
+    else
+        NAME="oracle_${MK_SID}${IDENTIFIER}"
+    fi
+
+    CREATION_TIMEOUT=$((MAXAGE * 2))
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
+    REFRESH_INTERVAL="${MAXAGE}"
+
+    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
+
+    NOW="$(get_epoch)"
+    MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
+
+    if [ -s "${CACHEFILE}" ] && [ $((NOW - MTIME)) -le "${OUTPUT_TIMEOUT}" ]; then
+        # Output the file (if it is not too outdated)
+        CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        # prefix or insert cache info, unless already present.
+        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
+        if [ "${SECTION_NAME}" = "oracle_sql" ]; then
+            sed -e "s/^\[\[\[\(.*\)\]\]\]$/[[[\1|${CACHE_INFO}]]]/g" "${CACHEFILE}"
+        elif [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
+            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
+        else
+            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+        fi
+    fi
+
+    # Error information about plugin, if available.
+    # Output independent of cachefile existance
+    #
+    # Watch out!
+    # You cannot consolidate the error reporting with the agents.
+    # *This* way of error reporting is not suitable for the regular agents, because
+    # it might interrupt a 'local' or 'mrpe' section -- the agents use the SPOOL DIR
+    # for that. However, the SPOOL DIR is not known to this plugin.
+    [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
+
+    # Kill the process if it is running too long (cache file not accessed for more than CREATION_TIMEOUT seconds).
+    # If killing succeeds, remove CACHFILE.new.PID.
+    # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+    # It will be reported to the Check_MK agent service later on, by the sync part.
+    # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
+    for cfile in "${CACHEFILE}.new."*; do
+        [ -e "${cfile}" ] || break # no match
+        TRYING_SINCE="$(get_file_atime "${cfile}")"
+        [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
+        if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
+            {
+                echo "<<<checkmk_cached_plugins:sep(124)>>>"
+                pid="${cfile##*.new.}"
+                printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
+
+                # Workaround for AIX to kill child processes
+                if [ "$OS_TYPE" = 'AIX' ] && [ -x "$(command -v proctree 2>/dev/null)" ]; then
+                    # shellcheck disable=SC2016
+                    pidlist="$(proctree "$pid" 2>/dev/null | $AWK '{ printf $1" "}')"
+                fi
+                pidlist="${pidlist:-"${pid}"}"
+                # shellcheck disable=SC2086
+                kill -9 ${pidlist} >/dev/null 2>&1 && sleep 2 # TODO: what about child processes under non-AIX systems?
+
+                if [ -n "$(ps -o args= -p "${pid}")" ]; then
+                    printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
+                else
+                    rm -f "${cfile}"
+                fi
+            } >"${CACHEFILE}".fail 2>&1
+        fi
+    done
+
+    # This does the right thing, regardless whether the pattern matches!
+    _cfile_in_use() {
+        for cfile in "${CACHEFILE}.new."*; do
+            printf "%s\n" "${cfile}"
+            break
+        done
+    }
+
+    # Time to refresh cache file and new job not yet running?
+    if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
+        THIS_SHELL="$(ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//')"
+        # Start it. If the command fails the output is thrown away
+        if $MK_ORA_DEBUG; then
+            cat <<HERE | "${THIS_SHELL}"
+exec > "${CACHEFILE}.new.\$\$" || exit 1
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
+HERE
+        else
+            cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
+exec > "${CACHEFILE}.new.\$\$" || exit 1
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
+HERE
+
+        fi
+    fi
+
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
+}
+
+# .
+#   .--DB connect----------------------------------------------------------.
+#   |          ____  ____                                    _             |
+#   |         |  _ \| __ )    ___ ___  _ __  _ __   ___  ___| |_           |
+#   |         | | | |  _ \   / __/ _ \| '_ \| '_ \ / _ \/ __| __|          |
+#   |         | |_| | |_) | | (_| (_) | | | | | | |  __/ (__| |_           |
+#   |         |____/|____/   \___\___/|_| |_|_| |_|\___|\___|\__|          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+mk_ora_db_connect() {
+    local sid="$1"
+    local CFGTNSALIAS=""
+
+    ORADBUSER=""
+    DBPASSWORD=""
+    offset=${offset:-0}
+
+    if [[ "$sid" =~ ^REMOTE_INSTANCE_.* ]]; then
+        # working on REMOTE_-Mode!
+        ORACFGLINE=$(eval "echo \${$1}")
+        ORACLE_SID=$(echo "${ORACFGLINE}" | cut -d":" -f7)
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f9)
+
+    else
+        # working with locally running instances
+        TNSALIAS=${ORACLE_SID}
+
+        # ASM use '+' as 1st character in SID!
+        if [ "${ORACLE_SID:0:1}" = '+' ]; then
+            ORACFGLINE=${ASMUSER}
+
+        else
+            # use an individuel user or the default DBUSER from mk_oracle.cfg
+            # It's possible that the config file uses only upper case, but
+            # the fetched SID is lower case. And vice versa. To handle this, we
+            # need to try both cases.
+            # Important: This does not cover config variables that uses both
+            # upper and lower case letters. We simply cannot handle that!
+            #
+            # Disabling shellcheck because false-positive warning regarding
+            # single quotes. AWK needs these single quotes to work as inteded.
+            # shellcheck disable=SC2016
+            dummy_upper="DBUSER_$(echo "$ORACLE_SID" | "$AWK" '{ print toupper($0) }')"
+            # shellcheck disable=SC2016
+            dummy_lower="DBUSER_$(echo "$ORACLE_SID" | "$AWK" '{ print tolower($0) }')"
+            if [ "${!dummy_upper}" = '' ]; then
+                if [ "${!dummy_lower}" = '' ]; then
+                    ORACFGLINE=${DBUSER}
+                else
+                    ORACFGLINE=${!dummy_lower}
+                fi
+            else
+                ORACFGLINE=${!dummy_upper}
+            fi
+        fi
+
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f$((6 + offset)))
+    fi
+
+    if [ -n "$SQLS_DBUSER" ]; then
+        ORADBUSER=${SQLS_DBUSER}
+        DBPASSWORD=${SQLS_DBPASSWORD}
+        DBSYSCONNECT=${SQLS_DBSYSCONNECT:-}
+    else
+        ORADBUSER=$(echo "${ORACFGLINE}" | cut -d":" -f$((1 + offset)))
+        DBPASSWORD=$(echo "${ORACFGLINE}" | cut -d":" -f$((2 + offset)))
+        DBSYSCONNECT=$(echo "${ORACFGLINE}" | cut -d":" -f$((3 + offset)))
+    fi
+    DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4 + offset)))
+    DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5 + offset)))
+
+    if [ -f $OLRLOC ] && [ -n "$crs_home" ]; then
+        if [ -d "$crs_home" ]; then
+            # we found GI/Restart
+            # => Use hostname instead of localhost
+            DBHOST=${DBHOST:-$(hostname)}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected. crs_home: $crs_home"
+        else
+            DBHOST=${DBHOST:-"localhost"}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected, crs_home missing"
+        fi
+    else
+        DBHOST=${DBHOST:-"localhost"}
+        logging "[${sid}] [mk_ora_db_connect]" "Single Instance"
+    fi
+
+    if [ -n "$CFGTNSALIAS" ]; then
+        logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
+    fi
+
+    TNSPINGOK=no
+    if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
+        if [ "${ORADBUSER:0:2}" = '/@' ]; then
+            P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
+        else
+            # use TNSALIAS from ORACFGLINE or ORACLE_SID when empty
+            P_TNSALIAS_P=${CFGTNSALIAS:-${ORACLE_SID}}
+        fi
+
+        # PREFIX / POSTFIX makes no sense for ASM
+        # => only 1 Instance with known connection possible
+        if [ -n "$P_TNSALIAS_P" ] && [ ! "${ORACLE_SID:0:1}" = '+' ]; then
+            PREFIX_SID="PREFIX_$sid"
+            PREFIX_SID=${!PREFIX_SID}
+            if [ -n "$PREFIX_SID" ]; then
+                P_TNSALIAS_P="$PREFIX_SID$P_TNSALIAS_P"
+            elif [ -n "$PREFIX" ]; then
+                P_TNSALIAS_P="$PREFIX$P_TNSALIAS_P"
+            fi
+
+            POSTFIX_SID="POSTFIX_$sid"
+            POSTFIX_SID=${!POSTFIX_SID}
+            if [ -n "$POSTFIX_SID" ]; then
+                P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX_SID"
+            elif [ -n "$POSTFIX" ]; then
+                P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX"
+            fi
+        fi
+
+        TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
+
+        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
+
+        tnsping_path="${ORACLE_HOME}"/bin/tnsping
+        if [ -f "${tnsping_path}" ]; then
+            EXECUTION_MODE="$(get_binary_execution_mode "$tnsping_path" "$(get_binary_owner "$tnsping_path")")"
+            if $EXECUTION_MODE "\"${tnsping_path}\" \"$TNSALIAS\"" >/dev/null 2>&1; then
+                TNSPINGOK=yes
+            else
+                unset TNSALIAS
+            fi
+        else
+            # if the binary tnsping does not exist we can not check whether the
+            # database is reachable or not, so we assume the database is
+            # reachable:
+            TNSPINGOK=yes
+        fi
+    else
+        if [ -z "$CFGTNSALIAS" ]; then
+            unset TNSALIAS
+        else
+            TNSALIAS=${SQLS_TNSALIAS:-${CFGTNSALIAS}}
+        fi
+    fi
+
+    logging "[${sid}] [mk_ora_db_connect]" \
+        "ORA DB user    : $ORADBUSER" \
+        "DB sys connect : $DBSYSCONNECT" \
+        "DB host        : $DBHOST" \
+        "DB port        : $DBPORT" \
+        "TNS alias      : $TNSALIAS" \
+        "TNS PING       : ${TNSPINGOK}"
+
+    if [ ! "${ORACFGLINE}" ]; then
+        # no configuration found
+        # => use the wallet with tnsnames.ora or EZCONNECT
+        TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
+    else
+        if [ "${DBSYSCONNECT}" ]; then
+            assysdbaconnect=" as "${DBSYSCONNECT}
+        fi
+
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
+
+        # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
+        if [ "${ORADBUSER:0:1}" = '/' ]; then
+            # connect with / and wallet
+            ORADBUSER=""
+            DBPASSWORD=""
+            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
+                # create an EZCONNECT string when no tnsnames.ora is usable
+                # or no alias is configured in CFGTNSALIAS
+                # defaults to localhost:1521/<ORACLE_SID>
+                TNSALIAS="${DBHOST}:${DBPORT:-1521}/${ORACLE_SID}"
+            fi
+        fi
+    fi
+
+    logging "[${sid}] [mk_ora_db_connect]" "DB connection: ${ORADBUSER}/${DBPASSWORD//?/*}@${TNSALIAS}${assysdbaconnect}"
+    echo "${ORADBUSER}/${DBPASSWORD}@${TNSALIAS}${assysdbaconnect}"
+
+}
+
+# .
+#   .--mk ora sqlplus------------------------------------------------------.
+#   |            _                                  _       _              |
+#   |  _ __ ___ | | __   ___  _ __ __ _   ___  __ _| |_ __ | |_   _ ___    |
+#   | | '_ ` _ \| |/ /  / _ \| '__/ _` | / __|/ _` | | '_ \| | | | / __|   |
+#   | | | | | | |   <  | (_) | | | (_| | \__ \ (_| | | |_) | | |_| \__ \   |
+#   | |_| |_| |_|_|\_\  \___/|_|  \__,_| |___/\__, |_| .__/|_|\__,_|___/   |
+#   |                                            |_| |_|                   |
+#   '----------------------------------------------------------------------'
+
+mk_ora_sqlplus() {
+    # Executes a SQL query by using sqlplus binary.
+    # The query will be piped-in and consumed via cat - so always execute cat at the very beginning of the function
+    function_stdin="$(cat)"
+    local from_where="$1"
+    local print_elapsed_time="$2"
+    local start_time=
+    local elapsed_time=
+    local output=
+
+    logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Piggyback host: $MK_PIGGYBACK_HOST"
+
+    start_time="$(perl -MTime::HiRes=time -wle 'print time')"
+    read -r -d '' pipe_input <<EOM
+WHENEVER SQLERROR EXIT 1
+connect ${MK_DB_CONNECT}
+WHENEVER SQLERROR CONTINUE
+$(ora_session_environment)${function_stdin}
+EOM
+    SQLPLUS=${ORACLE_HOME}/bin/sqlplus
+    if [ ! -x "${SQLPLUS}" ]; then
+        logging -w -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
+        return 1
+    fi
+
+    if [ -n "$MK_PIGGYBACK_HOST" ]; then
+        echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
+    fi
+
+    EXECUTION_USER="$(get_binary_owner "$SQLPLUS")"
+    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$EXECUTION_USER")"
+
+    if ! $EXECUTION_MODE "test -r \"${TNS_ADMIN}/sqlnet.ora\""; then
+        # we can not read sqlnet.ora!
+        # set_ora_env already checked that the file exists
+        # and we want to transport a meaningful error message to the ui and in logging
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! If you use the bakery to roll out the agent use 'sqlnet.ora permission group' setting of the 'Oracle databases' agent rule or directly modify permissions of the file (use 'mk_oracle --no-spool -t' for instructions)."
+        logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
+
+        echo '<<<oracle_instance:sep(124)>>>'
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$sqlnet_ora_error"
+        exit 1
+
+    fi
+
+    if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
+        echo -e "$output"
+
+        elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
+
+        if [ "$print_elapsed_time" = "yes" ]; then
+            echo "elapsed:$elapsed_time"
+        fi
+
+        logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
+
+    else
+        output=$(
+            echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |
+                sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/"
+            echo
+        )
+
+        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Found '^ERROR at line'"
+
+        if $MK_ORA_DEBUG_CONNECT; then
+            echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
+            echo -e "    Error Message:          ${output:0:100}"
+            exit 1
+        else
+            echo '<<<oracle_instance:sep(124)>>>'
+            echo -e "$output"
+            echo
+        fi
+    fi
+
+    if [ -n "$MK_PIGGYBACK_HOST" ]; then
+        echo "<<<<>>>>"
+    fi
+}
+
+# .
+#   .--do checks-----------------------------------------------------------.
+#   |                 _              _               _                     |
+#   |              __| | ___     ___| |__   ___  ___| | _____              |
+#   |             / _` |/ _ \   / __| '_ \ / _ \/ __| |/ / __|             |
+#   |            | (_| | (_) | | (__| | | |  __/ (__|   <\__ \             |
+#   |             \__,_|\___/   \___|_| |_|\___|\___|_|\_\___/             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# Create one SQL statements for several sections and run
+# these with sqlplus. The exitcode is preserved.
+do_sync_checks() {
+    logging "[${MK_SID}] [do_sync_checks]" "Query: $MK_SYNC_SECTIONS_QUERY"
+    echo "$MK_SYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_sync_checks"
+}
+
+do_async_checks() {
+    logging "[${MK_SID}] [do_async_checks]" "Query: $MK_ASYNC_SECTIONS_QUERY"
+    echo "$MK_ASYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_async_checks"
+}
+
+do_suggest_group() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+    if id -Gn "$USER" | "${GREP}" '\boinstall\b' >/dev/null; then
+        echo "  We suggest to change the group to oinstall and give $MODE permission for the group:"
+        echo "  chgrp oinstall \"$FILE\""
+        local m="x"
+        if [ "$MODE" = "read" ]; then
+            m="r"
+        fi
+        echo "  chmod g+$m \"$FILE\""
+    fi
+}
+
+do_test_file_permission() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+
+    local m="-x"
+    if [ "$MODE" = "read" ]; then
+        m="-r"
+    fi
+
+    if su "${USER}" -c "test $m \"$FILE\""; then
+        echo "* user \"$USER\" can $MODE $FILE"
+        true
+    else
+        echo "* ERROR! user \"$USER\" can NOT $MODE $FILE"
+        echo "  $(ls -dl "$FILE")"
+        do_suggest_group "$MODE" "$USER" "$FILE"
+        echo
+        false
+    fi
+}
+
+do_test_permissions() {
+    local DEFAULT_SQLNET="LOG_DIRECTORY_CLIENT=/var/log/check_mk/oracle_clientDIAG_ADR_ENABLED=OFFSQLNET.WALLET_OVERRIDE=TRUEWALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/etc/check_mk/oracle_wallet)))"
+
+    echo
+    echo "---checking permissions-------------------------------------------------"
+    echo "see https://checkmk.atlassian.net/wiki/spaces/KB/pages/70582273/Troubleshooting+mk+oracle+for+Windows+and+Linux"
+    echo
+
+    local SQLPLUS="${ORACLE_HOME}/bin/sqlplus"
+    echo "* sqlplus binary: ${SQLPLUS}"
+    local BINARY_OWNER
+    BINARY_OWNER="$(get_binary_owner "$SQLPLUS")"
+    echo "* sqlplus binary owner: ${BINARY_OWNER}"
+    if ! needs_user_switch_before_executing "$SQLPLUS"; then
+        echo "* change user: false"
+        echo "------------------------------------------------------------------------"
+        return
+    fi
+    echo "* change user: true"
+
+    echo "* \$TNS_ADMIN: ${TNS_ADMIN}"
+    local PATH_SQLNET="$TNS_ADMIN/sqlnet.ora"
+    local PATH_TNSNAMES="$TNS_ADMIN/tnsnames.ora"
+    if ! do_test_file_permission "read" "$BINARY_OWNER" "$PATH_SQLNET"; then
+        echo "  If you use the AGENT BAKERY you have to use the rule 'sqlnet.ora premission group' to make this change permanently, otherwise it will be overwritten by an agent update."
+    fi
+    if [ -f "$PATH_TNSNAMES" ]; then
+        do_test_file_permission "read" "$BINARY_OWNER" "$PATH_TNSNAMES"
+    fi
+    echo
+
+    local GENERIC_ERROR_MESSAGE="
+  Could not login. In case you are using a wallet to connect, there might be a permission error.
+  Make sure that the wallet folder can be read and executed by user \"$BINARY_OWNER\" and
+  the files inside the wallet can be read by the user.
+  Consult your ora files for hints where the wallet is located:
+  $PATH_SQLNET
+  $PATH_TNSNAMES
+"
+
+    # let's go all in and see if the connection works:
+    if error=$(echo "" | mk_ora_sqlplus "do_testmode" "no" 2>&1); then
+        echo "* test login works"
+    else
+        echo "* test-login does not work!"
+        if echo "$error" | ${GREP} "ORA-12578" >/dev/null; then
+            echo "  ORA-12578 suggests, that there is an error reading the wallet."
+            if [ "$(sed '/^#/d' </etc/check_mk/sqlnet.ora | tr -d '\n' | sed -e 's/\s\+//g')" == "$DEFAULT_SQLNET" ]; then
+                echo "  Detected sqlnet.ora as suggested in the documentation."
+                local WALLET_PATH="/etc/check_mk/oracle_wallet"
+                if [ ! -d "$WALLET_PATH" ]; then
+                    echo
+                    echo "* '$WALLET_PATH' does not exist or is not a directory!"
+                else
+                    echo
+                    do_test_file_permission "read" "$BINARY_OWNER" "$WALLET_PATH"
+                    do_test_file_permission "execute" "$BINARY_OWNER" "$WALLET_PATH"
+                    for f in "$WALLET_PATH"/{c,e}wallet.*; do
+                        do_test_file_permission "read" "$BINARY_OWNER" "$f"
+                    done
+                fi
+            else
+                echo "$GENERIC_ERROR_MESSAGE"
+            fi
+        else
+            echo "$GENERIC_ERROR_MESSAGE"
+        fi
+    fi
+    echo "------------------------------------------------------------------------"
+}
+
+do_testmode() {
+    local sections=$1
+    local asections=$2
+
+    do_test_permissions
+
+    echo
+    echo "---login----------------------------------------------------------------"
+    echo "    Operating System:       ${OS_TYPE}"
+    echo "    ORACLE_HOME ${ORA_HOME_SOURCE}   ${ORACLE_HOME}"
+    echo "    Logincheck to Instance: ${MK_SID}"
+    echo "    Version:                ${ORACLE_VERSION}"
+    echo "select '    Login ok User:          ' || user || ' on ' || host_name ||' Instance ' || instance_name
+          from v\$instance;" | mk_ora_sqlplus "do_testmode"
+    echo "    SYNC_SECTIONS:          $sections"
+    echo "    ASYNC_SECTIONS:         $asections"
+    if [ "$IGNORE_DB_NAME" ]; then
+        echo "    IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
+    fi
+
+    if [ "$DISABLE_ORA_SESSION_SETTINGS" ]; then
+        echo "    Paramter DISABLE_ORA_SESSION_SETTINGS found!"
+    fi
+
+    if [ "$HINT_RMAN" ]; then
+        echo "    Using HINT_RMAN for this Instance!"
+    fi
+    echo "------------------------------------------------------------------------"
+    echo
+}
+
+do_testmode_custom_sql() {
+    echo "---custom SQL ----------------------------------------------------------"
+    echo "    section:                ${section}"
+    echo "    SQL:                    ${sql}"
+    echo "    MAX_CACHE_AGE:          ${max_cache_age}"
+    echo "------------------------------------------------------------------------"
+}
+
+fetch_custom_section_variable() {
+    local section_name=$1
+    local section_var=
+    local section_dummy=
+    local sid_upper=
+    local sid_lower=
+    # Disabling shellcheck because false-positive warning regarding
+    # single quotes. AWK needs these single quotes to work as inteded.
+    # shellcheck disable=SC2016
+    sid_upper=$(echo "$ORACLE_SID" | "$AWK" '{ print toupper($0) }')
+    # shellcheck disable=SC2016
+    sid_lower=$(echo "$ORACLE_SID" | "$AWK" '{ print tolower($0) }')
+
+    if declare -p "$1_${sid_upper}" >/dev/null 2>&1; then
+        section_dummy="$1_${sid_upper}"
+        section_var=${!section_dummy}
+    else
+        if declare -p "$1_${sid_lower}" >/dev/null 2>&1; then
+            section_dummy="$1_${sid_lower}"
+            section_var=${!section_dummy}
+        else
+            section_var="${!section_name}"
+        fi
+    fi
+
+    echo "$section_var"
+}
+
+do_checks() {
+    local sections=
+    local asections=
+
+    if [ "${ORACLE_SID:0:1}" = '+' ]; then
+        # ASM sections
+        sections="$SYNC_ASM_SECTIONS"
+        asections="$ASYNC_ASM_SECTIONS"
+
+    else
+        local SYNC_SECTIONS_SID=
+        local ASYNC_SECTIONS_SID=
+        local do_sync_sections=
+        local do_async_sections=
+
+        SYNC_SECTIONS_SID=$(fetch_custom_section_variable "SYNC_SECTIONS")
+        ASYNC_SECTIONS_SID=$(fetch_custom_section_variable "ASYNC_SECTIONS")
+
+        if [ "$SYNC_SECTIONS_SID" ] && [ "$MK_ORA_SECTIONS" ]; then
+            do_sync_sections=$(for section in $SYNC_SECTIONS_SID; do
+                if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
+                    echo "$section"
+                fi
+            done)
+        else
+            do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
+        fi
+
+        if [ "$ASYNC_SECTIONS_SID" ] && [ "$MK_ORA_SECTIONS" ]; then
+            do_async_sections=$(for section in $ASYNC_SECTIONS_SID; do
+                if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
+                    echo "$section"
+                fi
+            done)
+        else
+            do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
+        fi
+
+        local excluded=
+        excluded=$(eval "echo \$EXCLUDE_$ORACLE_SID")
+        if [ "$excluded" ]; then
+            sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
+            asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
+        else
+            sections="$do_sync_sections"
+            asections="$do_async_sections"
+        fi
+    fi
+
+    logging "[${ORACLE_SID}] [do_checks]" "Excluded: $excluded" \
+        "Sections: $sections" "Async sections: $asections"
+
+    if $MK_ORA_DEBUG_CONNECT; then
+        do_testmode "$sections" "$asections"
+        return
+    fi
+
+    if $MK_DEBUG_MODE; then
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do eval "sql_$section"; done)
+        MK_ASYNC_SECTIONS_QUERY=
+    else
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section"; done)
+        MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section"; done)
+    fi
+
+    export MK_ASYNC_SECTIONS_QUERY
+
+    if [ "$MK_SYNC_SECTIONS_QUERY" ]; then
+        do_sync_checks
+    fi
+
+    if [ "$MK_ASYNC_SECTIONS_QUERY" ]; then
+        run_cached "$CACHE_MAXAGE" do_async_checks
+    fi
+}
+
+execute_queries_for_sid() {
+    local sid="$1"
+    set_ora_env "$sid"
+    if [ $? -eq 2 ]; then
+        # we have to skip this SID due to missing/unknown ORACLE_HOME
+        return
+    fi
+
+    set_ora_version
+    logging "[${sid}] [local]" \
+        "ORACLE_SID      : ${ORACLE_SID}" \
+        "ORACLE_HOME     : ${ORACLE_HOME}" \
+        "TNS_ADMIN       : ${TNS_ADMIN}" \
+        "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})" \
+        "ORACLE_VERSION_FOUR_PARTS  : ${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
+
+    # MK_SID is feauture replacement for sid
+    export MK_SID=$sid
+    db_connect=$(mk_ora_db_connect "$MK_SID")
+    export MK_DB_CONNECT=$db_connect
+
+    do_checks
+
+    # MK_DB_CONNECT could be changed by do_custom_sqls!
+    do_custom_sqls
+}
+
+# .
+#   .--main----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Iterate over all instances and execute sync and async sections.     |
+#   '----------------------------------------------------------------------'
+
+# Make sure that the new shell that is being run by run_cached inherits
+# our functions
+export -f logging
+export -f mk_ora_sqlplus
+export -f ora_session_environment
+export -f do_async_checks
+export -f set_ora_env
+export -f unset_custom_sqls_vars
+export -f custom_sql_section
+export -f do_async_custom_sqls
+export -f handle_custom_sql_errors
+export -f get_binary_execution_mode
+export -f needs_user_switch_before_executing
+export -f get_binary_owner
+export -f only_root_can_modify
+
+set_up_tmpdirs() {
+    ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle_tmp_dir"
+    # why don't we use /tmp to make cleanup easier?
+    ORA_TASKS_TMPDIR="${ORA_TMPDIR}/tasks"
+    mkdir -p "$ORA_TASKS_TMPDIR"
+}
+
+main_queries() {
+    if $MK_ORA_LOGGING; then
+        # cleanup old leftovers
+        rm -f "${MK_VARDIR}"/log/mk_oracle_task_*.log
+        echo "Logging to file: ${MK_VARDIR}/log/mk_oracle.log" >&2
+    fi
+
+    logging "--------------------------------------------------------------------"
+
+    #   ---preliminaries--------------------------------------------------------
+
+    set_os_env
+
+    set_up_get_epoch
+
+    # Get list of all running databases. Do not work on ASM in this plugin.
+    # => Ignore a running ASM-Instance!
+    # shellcheck disable=SC2016
+    SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |
+        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_|^db_pmon_' |
+        cut -d"_" -f3- | sort)
+
+    # Load config AFTER we got the SIDS since we allow users to use this variable in their config
+    load_config
+
+    # Are there any remote configurations?
+    for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do
+        REMOTE_INSTANCES="${REMOTE_INSTANCES} ${remote_instance}"
+        # shellcheck disable=SC2005
+        PIGGYBACK_HOSTS="$(echo "$(eval "echo \${$remote_instance}")" | cut -d":" -f6) ${PIGGYBACK_HOSTS}"
+    done
+
+    PIGGYBACK_HOSTS="$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)"
+
+    logging "[preliminaries]" \
+        "SIDs                : ${SIDS//$'\n'/ }" \
+        "Remote instances    : ${REMOTE_INSTANCES}" \
+        "Piggyback hosts     : ${PIGGYBACK_HOSTS//$'\n'/ }" \
+        "OS                  : ${OS_TYPE}" \
+        "SYNC_SECTIONS       : ${SYNC_SECTIONS}" \
+        "ASYNC_SECTIONS      : ${ASYNC_SECTIONS}" \
+        "SYNC_ASM_SECTIONS   : ${SYNC_ASM_SECTIONS}" \
+        "ASYNC_ASM_SECTIONS  : ${ASYNC_ASM_SECTIONS}" \
+        "CACHE_MAXAGE        : ${CACHE_MAXAGE}" \
+        "ONLY_SIDS           : ${ONLY_SIDS}" \
+        "SKIP_SIDS           : ${SKIP_SIDS}" \
+        "Custom SQLs sections: $custom_sqls_sections"
+
+    # From now on we expect databases on this system (for ever)
+    if [ -n "$SIDS" ]; then
+        touch "$MK_VARDIR/mk_oracle.found"
+    fi
+
+    # If we do not have found any running database instance, then either
+    # no ORACLE is present on this system or it's just currently not running.
+    # In the later case we ouput empty agent sections so that Checkmk will be
+    # happy and execute the actual check functions.
+    if [ ! -e "$MK_VARDIR/mk_oracle.found" ] && [ -z "$REMOTE_INSTANCES" ]; then
+        logging -c -e "[preliminaries]" "\$MK_VARDIR/mk_oracle.found not found and no remote instances configured"
+        exit 1
+    fi
+
+    # Make sure that always all sections are present, even
+    # in case of an error. Note: the section <<<oracle_instance>>>
+    # section shows the general state of a database instance. If
+    # that section fails for an instance then all other sections
+    # do not contain valid data anyway.
+    do_dummy_sections
+
+    #   ---local----------------------------------------------------------------
+
+    if [ -n "$REMOTE" ]; then
+        _QUERY_PREFIX="${REMOTE}-$$"
+    else
+        _QUERY_PREFIX=$$
+    fi
+
+    logging "[local] setting up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"
+    mkdir -p "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}"
+
+    TASK_NR=0
+    for sid in $SIDS; do
+        if skip_sid "$sid"; then
+            logging "[${sid}] [local]" "Skipping this SID"
+            continue
+        fi
+        ((TASK_NR++))
+        logging "[${sid}] [local] starting background task '${TASK_NR}'"
+        SID_QUERY_FILE="${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID-$sid"
+
+        (execute_queries_for_sid "$sid" >"${SID_QUERY_FILE}") &
+        if [[ $(jobs -r -p | wc -l) -ge ${MAX_TASKS} ]]; then
+            logging "[${sid}] [local] max parallel task running, waiting for new slot"
+            if ((BASH_VERSINFO[0] > 4 || BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3)); then
+                wait -n
+            else
+                wait
+            fi
+        fi
+
+        if [ ! -f "${SID_QUERY_FILE}" ]; then
+            logging "[local] No intermediate query result file '${SID_QUERY_FILE}' exists"
+        fi
+    done
+
+    wait
+
+    cat "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*
+
+    cleanup_queries() {
+        logging "[local] cleaning up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"
+        rm -rf "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX:?}" >/dev/null 2>&1
+        logging "[local] cleaning up any old query result directories in '${ORA_TASKS_TMPDIR}'"
+        # in case process was previously stopped via kill -9 and could not clean up
+        find "${ORA_TASKS_TMPDIR}/*" -type d -mtime +1 -exec rm -r {} + >/dev/null 2>&1
+    }
+    trap cleanup_queries HUP INT QUIT ABRT ALRM TERM EXIT
+
+    #   ---remote---------------------------------------------------------------
+
+    for remote_instance in $REMOTE_INSTANCES; do
+        remote_instance_line=$(eval "echo \${$remote_instance}")
+
+        set_ora_env "$remote_instance"
+        set_ora_version "$(echo "$remote_instance_line" | cut -d":" -f8)"
+        logging "[${remote_instance}] [remote]" \
+            "ORACLE_SID      : ${ORACLE_SID}" \
+            "ORACLE_HOME     : ${ORACLE_HOME}" \
+            "TNS_ADMIN       : ${TNS_ADMIN}" \
+            "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
+
+        db_connect=$(mk_ora_db_connect "$remote_instance")
+        piggyback_host=$(echo "${remote_instance_line}" | cut -d":" -f6)
+        export MK_SID=$remote_instance
+        export MK_DB_CONNECT=$db_connect
+        export MK_PIGGYBACK_HOST=$piggyback_host
+
+        do_checks
+        do_custom_sqls
+    done
+
+    if ${MK_ORA_LOGGING}; then
+        cat "${MK_VARDIR}"/log/mk_oracle_task_*.log >>"${MK_VARDIR}"/log/mk_oracle.log
+        rm -f "${MK_VARDIR}"/log/mk_oracle_task_*.log
+    fi
+}
+
+main() {
+    # See werk 13732 for more details about this main function
+
+    parent_dir=$(basename "$(
+        cd "$(dirname "$0")" || {
+            echo "Can't access the parent directory" >&2
+            exit 1
+        }
+        pwd
+    )")
+
+    if $MK_ORA_NOSPOOL || [ "$parent_dir" = plugins ]; then
+        # Does not work properly (async sections) on distros
+        # where check_mk_agent.sync.service is a systemd service
+        main_mode() { main_queries; }
+
+    elif [[ "$parent_dir" =~ ^[1-9][0-9]* ]]; then
+        main_mode() {
+            if [ -n "$REMOTE" ]; then
+                TMPFILE="$ORA_TMPDIR/mk_oracle.out.${REMOTE}"
+            else
+                TMPFILE="$ORA_TMPDIR/mk_oracle.out"
+            fi
+            limit=$((parent_dir * 3))
+            main_queries >"$TMPFILE" && mv "$TMPFILE" "${MK_VARDIR}/spool/${limit}_mk_oracle.spool"
+        }
+
+    else
+        echo "Unhandled location" >&2
+        exit 1
+    fi
+
+    set_up_tmpdirs
+    main_mode
+}
+
+[ -z "${MK_SOURCE_ONLY}" ] && main

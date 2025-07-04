@@ -30,6 +30,7 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
+    pub const ASM_SECTIONS: &str = "asm_sections";
     pub const CACHE_AGE: &str = "cache_age";
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
@@ -81,25 +82,12 @@ pub mod defaults {
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
 
-    pub const INSTANCE_NAME: &str = "XE";
+    pub const INSTANCE_NAME: &str = "";
     pub const CONNECTION_PORT: u16 = 1521;
     pub const CONNECTION_TIMEOUT: u64 = 5;
     pub const SECTIONS_CACHE_AGE: u32 = 600;
-    pub const SECTIONS_ALWAYS: &[&str] = &[
-        "instance",
-        "databases",
-        "counters",
-        "blocked_sessions",
-        "transactionlogs",
-        "clusters",
-        "mirroring",
-        "availability_groups",
-        "connections",
-    ];
-    pub const SECTIONS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
-
     pub const DISCOVERY_DETECT: bool = true;
 
     pub const TRUST_SERVER_CERTIFICATE: bool = true;
-    pub const DEFAULT_SEP: char = ' ';
+    pub const DEFAULT_SEP: char = '|';
 }

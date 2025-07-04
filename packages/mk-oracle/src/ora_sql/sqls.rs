@@ -14,7 +14,7 @@ pub enum Id {
     Mirroring,
     Jobs,
     AvailabilityGroups,
-    InstanceProperties,
+    Instance,
     UtcEntry,
     ClusterActiveNodes,
     ClusterNodes,
@@ -380,7 +380,7 @@ IF OBJECT_ID('sys.dm_hadr_availability_group_states') IS NOT NULL
     FROM sys.dm_hadr_availability_group_states Groups
     INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
-    pub const INSTANCE_PROPERTIES: &str = r"SELECT
+    pub const INSTANCE: &str = r"SELECT
     CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR(MAX)) AS InstanceName,
     CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
     CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
@@ -414,7 +414,7 @@ lazy_static::lazy_static! {
         (Id::Mirroring, query::MIRRORING_NORMAL),
         (Id::Jobs, query::JOBS),
         (Id::AvailabilityGroups, query::AVAILABILITY_GROUP_NORMAL),
-        (Id::InstanceProperties, query::INSTANCE_PROPERTIES),
+        (Id::Instance, query::INSTANCE),
         (Id::UtcEntry, query::UTC_ENTRY),
         (Id::ClusterActiveNodes, query::CLUSTER_ACTIVE_NODES),
         (Id::ClusterNodes, query::CLUSTER_NODES_NORMAL),

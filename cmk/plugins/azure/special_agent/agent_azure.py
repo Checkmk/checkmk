@@ -233,6 +233,7 @@ class FetchedResource(Enum):
 
     virtual_machines = ("Microsoft.Compute/virtualMachines", "virtualmachines")
     vaults = ("Microsoft.RecoveryServices/vaults", "vaults")
+    app_gateways = ("Microsoft.Network/applicationGateways", "applicationgateways")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -249,6 +250,7 @@ class FetchedResource(Enum):
 
 BULK_QUERIED_RESOURCES = {
     FetchedResource.virtual_machines.type,
+    FetchedResource.app_gateways.type,
 }
 
 
@@ -883,10 +885,6 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         return ",".join(sorted(retry_names))
 
-    async def app_gateway_view(self, group, name):
-        url = "resourceGroups/{}/providers/Microsoft.Network/applicationGateways/{}"
-        return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
-
     async def load_balancer_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/loadBalancers/{}"
         return self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -1308,18 +1306,18 @@ async def get_frontend_ip_configs(
     return frontend_ip_configs
 
 
-def get_routing_rules(app_gateway: Mapping) -> list[Mapping]:
+def _get_routing_rules(request_routing_rules: Mapping) -> Sequence[Mapping]:
     routing_rule_keys = ("httpListener", "backendAddressPool", "backendHttpSettings")
     return [
         {
             "name": r["name"],
             **filter_keys(r["properties"], routing_rule_keys),
         }
-        for r in app_gateway["properties"]["requestRoutingRules"]
+        for r in request_routing_rules
     ]
 
 
-def get_http_listeners(app_gateway: Mapping) -> Mapping[str, Mapping]:
+def _get_http_listeners(http_listeners: Mapping) -> Mapping[str, Mapping]:
     listener_keys = (
         "port",
         "protocol",
@@ -1333,42 +1331,86 @@ def get_http_listeners(app_gateway: Mapping) -> Mapping[str, Mapping]:
             "name": l["name"],
             **filter_keys(l["properties"], listener_keys),
         }
-        for l in app_gateway["properties"]["httpListeners"]
+        for l in http_listeners
     }
 
 
-async def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
-    app_gateway = await mgmt_client.app_gateway_view(resource.info["group"], resource.info["name"])
-    frontend_ip_configs = await get_frontend_ip_configs(mgmt_client, app_gateway)
+async def _collect_app_gateways_resources(
+    mgmt_client: MgmtApiClient,
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Sequence[AzureResource]:
+    app_gateways = await mgmt_client.get_async(
+        "providers/Microsoft.Network/applicationGateways",
+        key="value",
+        params={"api-version": "2024-05-01"},
+    )
 
-    resource.info["properties"] = {}
-    resource.info["properties"]["operational_state"] = app_gateway["properties"]["operationalState"]
-    resource.info["properties"]["frontend_api_configs"] = frontend_ip_configs
-    resource.info["properties"]["routing_rules"] = get_routing_rules(app_gateway)
-    resource.info["properties"]["http_listeners"] = get_http_listeners(app_gateway)
+    applications_gateways: list[AzureResource] = []
+    for app_gateway in app_gateways:
+        try:
+            resource = monitored_resources_by_id[app_gateway["id"].lower()]
+        except KeyError:
+            raise ApiErrorMissingData(
+                f"App gateway not found in monitored resources: {app_gateway['id']}"
+            )
 
-    if (
-        waf_config := app_gateway["properties"].get("webApplicationFirewallConfiguration")
-    ) is not None:
-        resource.info["properties"]["waf_enabled"] = waf_config["enabled"]
+        resource.info["properties"] = {}
+        resource.info["properties"]["operational_state"] = app_gateway["properties"][
+            "operationalState"
+        ]
+        resource.info["properties"]["routing_rules"] = _get_routing_rules(
+            app_gateway["properties"]["requestRoutingRules"]
+        )
+        resource.info["properties"]["http_listeners"] = _get_http_listeners(
+            app_gateway["properties"]["httpListeners"]
+        )
 
-    frontend_ports = {
-        p["id"]: {"port": p["properties"]["port"]}
-        for p in app_gateway["properties"]["frontendPorts"]
-    }
-    resource.info["properties"]["frontend_ports"] = frontend_ports
+        if (
+            waf_config := app_gateway["properties"].get("webApplicationFirewallConfiguration")
+        ) is not None:
+            resource.info["properties"]["waf_enabled"] = waf_config["enabled"]
 
-    backend_settings = {
-        c["id"]: {
-            "name": c["name"],
-            **filter_keys(c["properties"], ("port", "protocol")),
+        frontend_ports = {
+            p["id"]: {"port": p["properties"]["port"]}
+            for p in app_gateway["properties"]["frontendPorts"]
         }
-        for c in app_gateway["properties"]["backendHttpSettingsCollection"]
-    }
-    resource.info["properties"]["backend_settings"] = backend_settings
+        resource.info["properties"]["frontend_ports"] = frontend_ports
 
-    backend_pools = {p["id"]: p for p in app_gateway["properties"]["backendAddressPools"]}
-    resource.info["properties"]["backend_address_pools"] = backend_pools
+        backend_settings = {
+            c["id"]: {
+                "name": c["name"],
+                **filter_keys(c["properties"], ("port", "protocol")),
+            }
+            for c in app_gateway["properties"]["backendHttpSettingsCollection"]
+        }
+        resource.info["properties"]["backend_settings"] = backend_settings
+
+        backend_pools = {p["id"]: p for p in app_gateway["properties"]["backendAddressPools"]}
+        resource.info["properties"]["backend_address_pools"] = backend_pools
+
+        frontend_ip_configs = await get_frontend_ip_configs(mgmt_client, app_gateway)
+        resource.info["properties"]["frontend_api_configs"] = frontend_ip_configs
+
+        applications_gateways.append(resource)
+
+    return applications_gateways
+
+
+async def process_app_gateways(
+    mgmt_client: MgmtApiClient,
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Sequence[AzureSection]:
+    applications_gateways = await _collect_app_gateways_resources(
+        mgmt_client, monitored_resources_by_id
+    )
+
+    sections = []
+    for resource in applications_gateways:
+        section = AzureSection(resource.section, resource.piggytargets)
+        section.add(resource.dumpinfo())
+        sections.append(section)
+
+    return sections
 
 
 def _get_standard_network_interface_config(
@@ -2166,6 +2208,8 @@ def get_bulk_tasks(
         yield asyncio.create_task(
             process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
         )
+    if FetchedResource.app_gateways.type in monitored_services:
+        yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources_by_id))
 
 
 async def process_single_resources(
@@ -2181,8 +2225,6 @@ async def process_single_resources(
             continue
 
         # TODO: convert to real async:
-        elif resource_type == "Microsoft.Network/applicationGateways":
-            await process_app_gateway(mgmt_client, resource)
         elif resource_type == "Microsoft.Network/virtualNetworkGateways":
             await process_virtual_net_gw(mgmt_client, resource)
         elif resource_type == "Microsoft.Network/loadBalancers":

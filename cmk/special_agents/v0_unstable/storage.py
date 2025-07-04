@@ -6,11 +6,12 @@ import os
 import string
 from pathlib import Path
 from typing import TypeVar
+from urllib.parse import quote as urlquote
 
 _DefaultReturnValue = TypeVar("_DefaultReturnValue")
 
 SERVER_SIDE_PROGRAM_STORAGE_PATH = "var/check_mk/server_side_program_storage"
-ALLOWED_KEY_CHARS = set(string.ascii_letters + string.digits + "_")
+ALLOWED_KEY_CHARS = set(string.ascii_letters + string.digits + "_-.")
 
 
 class Storage:
@@ -45,11 +46,10 @@ class Storage:
 
     @staticmethod
     def _sanitize_key(key: str) -> str:
-        if not key or any(c not in ALLOWED_KEY_CHARS for c in key):
-            raise ValueError("key must only contain ASCII letters, digits, or underscores.")
-        if len(key) > 255:
-            raise ValueError("key is too long. (max 255 characters)")
-        return key
+        skey = urlquote(key, safe="")
+        if len(skey) > 255:
+            raise ValueError(f"too long (max 255 characters after URL quoting): {skey!r}")
+        return skey
 
     def _get_path(self, key: str) -> Path:
         safe_key = self._sanitize_key(key)

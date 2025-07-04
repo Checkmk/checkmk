@@ -75,7 +75,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -2527,9 +2527,12 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return self.mode_url(user=self._user_id())
 
     def _user_id(self) -> UserId:
-        user_id = request.get_str_input("user")
-        assert user_id is not None, "User ID must not be None"
-        return UserId(user_id)
+        if (user_id := request.get_str_input("user")) is None:
+            raise MKUserError("user", _("User ID must not be None"))
+        try:
+            return UserId(user_id)
+        except ValueError as e:
+            raise MKUserError("user", str(e))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -2629,7 +2632,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         )
 
     def _user_id(self) -> UserId:
-        assert user.id is not None, "User ID must not be None"
+        if user.id is None:
+            raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
     def _add_change(self, *, action_name: str, text: str) -> None:
@@ -3266,39 +3270,32 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return _("Changed notification rule %d") % edit_nr
 
 
-class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
-    def _load_rules(self) -> list[EventRule]:
-        self._users = userdb.load_users(lock=transactions.is_transaction())
-        if self._user_id() not in self._users:
-            raise MKUserError(
-                None,
-                _("The user you are trying to edit notification rules for does not exist."),
-            )
-        user_id = self._user_id()
-        assert user_id is not None, "User ID must not be None"
-        user_spec = self._users[user_id]
-        return user_spec.setdefault("notification_rules", [])
-
-    def _save_rules(self, rules: list[EventRule]) -> None:
-        userdb.save_users(self._users, datetime.now())
-
-    def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
-        # Force selection of our user
-        user_id = self._user_id()
-        assert user_id is not None, "User ID must not be None"
-        rule["contact_users"] = [user_id]
-
-        # User rules are always allow_disable
-        rule["allow_disable"] = True
-        return rule
-
-    def _log_text(self, edit_nr: int) -> str:
-        if self._new:
-            return _("Created new notification rule for user %s") % self._user_id()
-        return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
+def _log_text(new: bool, user_id: UserId, edit_nr: int) -> str:
+    if new:
+        return _("Created new notification rule for user %s") % user_id
+    return _("Changed notification rule %d of user %s") % (edit_nr, user_id)
 
 
-class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
+def _set_event_rule_attrs(event_rule: EventRule, user_id: UserId) -> EventRule:
+    # Force selection of our user
+    event_rule["contact_users"] = [user_id]
+
+    # User rules are always allow_disable
+    event_rule["allow_disable"] = True
+    return event_rule
+
+
+def _load_rules_ensure_user(user_id: UserId, users: Users) -> list[EventRule]:
+    if user_id not in users:
+        raise MKUserError(
+            None,
+            _("The user you are trying to edit notification rules for does not exist."),
+        )
+    user_spec = users[user_id]
+    return user_spec.setdefault("notification_rules", [])
+
+
+class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
     """Edit notification rule of a given user"""
 
     @classmethod
@@ -3314,7 +3311,10 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return ModeUserNotifications
 
     def _user_id(self) -> UserId:
-        return UserId(request.get_str_input_mandatory("user"))
+        try:
+            return UserId(request.get_str_input_mandatory("user"))
+        except ValueError as e:
+            raise MKUserError("user", str(e))
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))
@@ -3327,8 +3327,21 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
             self._user_id(),
         )
 
+    def _load_rules(self) -> list[EventRule]:
+        self._users = userdb.load_users(lock=transactions.is_transaction())
+        return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
-class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
+    def _save_rules(self, rules: list[EventRule]) -> None:
+        userdb.save_users(self._users, datetime.now())
+
+    def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
+        return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
+
+    def _log_text(self, edit_nr: int) -> str:
+        return _log_text(self._new, self._user_id(), edit_nr)
+
+
+class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
     @classmethod
     def name(cls) -> str:
         return "notification_rule_p"
@@ -3345,7 +3358,9 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         super().__init__()
         user.need_permission("general.edit_notifications")
 
-    def _user_id(self) -> UserId | None:
+    def _user_id(self) -> UserId:
+        if user.id is None:
+            raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
     def _add_change(self, action_name: str, text: str) -> None:
@@ -3354,7 +3369,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
             _audit_log.log_audit(
                 action=action_name,
                 message=text,
-                user_id=user.id,
+                user_id=self._user_id(),
                 use_git=active_config.wato_use_git,
             )
         else:
@@ -3378,6 +3393,19 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         # default rule. Parameters are stored within the rule
         # (contacts.mk) so no need for a parameter ID here.
         return {}
+
+    def _load_rules(self) -> list[EventRule]:
+        self._users = userdb.load_users(lock=transactions.is_transaction())
+        return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
+
+    def _save_rules(self, rules: list[EventRule]) -> None:
+        userdb.save_users(self._users, datetime.now())
+
+    def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
+        return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
+
+    def _log_text(self, edit_nr: int) -> str:
+        return _log_text(self._new, self._user_id(), edit_nr)
 
 
 class ModeNotificationParametersOverview(WatoMode):

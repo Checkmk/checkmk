@@ -6,6 +6,54 @@ use super::defines::{defaults, keys, values};
 use super::yaml::{Get, Yaml};
 use anyhow::{anyhow, Result};
 use std::fmt;
+use std::str::FromStr;
+const SQL_DB_ENDPOINT_HOST: usize = 0;
+const SQL_DB_ENDPOINT_USER: usize = 1;
+const SQL_DB_ENDPOINT_PASSWORD: usize = 2;
+const SQL_DB_ENDPOINT_PORT: usize = 3;
+const SQL_DB_ENDPOINT_INSTANCE: usize = 4;
+const SQL_DB_ENDPOINT_ROLE: usize = 5;
+
+// See ticket CMK-23904 for details on the format of this environment variable.
+// CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
+#[allow(dead_code)]
+#[derive(Debug, PartialEq)]
+pub struct SqlDbEndpoint {
+    pub host: String,
+    pub user: String,
+    pub pwd: String,
+    pub port: u16,
+    pub instance: String,
+    pub role: Option<Role>,
+}
+
+impl SqlDbEndpoint {
+    pub fn from_env(endpoint_var: &str) -> Result<Self> {
+        let env_value =
+            std::env::var(endpoint_var).map_err(|e| anyhow::anyhow!("{e}: {endpoint_var}"))?;
+        Self::from_str(&env_value)
+    }
+}
+
+impl FromStr for SqlDbEndpoint {
+    type Err = anyhow::Error;
+    fn from_str(env_value: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = env_value.split(':').collect();
+        if parts.len() < 6 {
+            anyhow::bail!("Invalid format for {}", env_value);
+        }
+        Ok(Self {
+            host: parts[SQL_DB_ENDPOINT_HOST].to_string(),
+            user: parts[SQL_DB_ENDPOINT_USER].to_string(),
+            pwd: parts[SQL_DB_ENDPOINT_PASSWORD].to_string(),
+            port: parts[SQL_DB_ENDPOINT_PORT]
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Wrong/malformed port number in {}", env_value))?,
+            instance: parts[SQL_DB_ENDPOINT_INSTANCE].to_string(),
+            role: Role::new(parts[SQL_DB_ENDPOINT_ROLE]),
+        })
+    }
+}
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Role {
@@ -93,8 +141,13 @@ impl Authentication {
             })
         } else {
             Ok(Self {
-                username: auth.get_string(keys::USERNAME).unwrap_or_default(),
-                password: auth.get_string(keys::PASSWORD),
+                username: auth
+                    .get_string(keys::USERNAME)
+                    .map(_extract_username_if_env_var)
+                    .unwrap_or_default(),
+                password: auth
+                    .get_string(keys::PASSWORD)
+                    .map(_extract_password_if_env_var),
                 auth_type,
                 role,
             })
@@ -103,8 +156,8 @@ impl Authentication {
     pub fn username(&self) -> &str {
         &self.username
     }
-    pub fn password(&self) -> Option<&String> {
-        self.password.as_ref()
+    pub fn password(&self) -> Option<&str> {
+        self.password.as_deref()
     }
     pub fn auth_type(&self) -> &AuthType {
         &self.auth_type
@@ -113,6 +166,31 @@ impl Authentication {
     pub fn role(&self) -> Option<&Role> {
         self.role.as_ref()
     }
+}
+
+fn _extract_username_if_env_var<T: AsRef<str> + Sized>(value: T) -> String {
+    let v = value.as_ref();
+    _extract_endpoint_if_env_var(v)
+        .map(|ep| ep.user)
+        .unwrap_or_else(|| v.to_owned())
+}
+
+fn _extract_password_if_env_var<T: AsRef<str> + Sized>(value: T) -> String {
+    let v = value.as_ref();
+    _extract_endpoint_if_env_var(v)
+        .map(|ep| ep.pwd)
+        .unwrap_or_else(|| v.to_owned())
+}
+
+fn _extract_endpoint_if_env_var<T: AsRef<str> + Sized>(value: T) -> Option<SqlDbEndpoint> {
+    let v = value.as_ref();
+    if v.is_empty() {
+        return None;
+    }
+    if !v.starts_with('$') {
+        return None;
+    }
+    SqlDbEndpoint::from_env(&v[1..]).ok()
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -154,6 +232,21 @@ impl fmt::Display for AuthType {
 mod tests {
     use super::*;
     use crate::config::yaml::test_tools::create_yaml;
+
+    #[test]
+    fn test_endpoint() {
+        assert_eq!(
+            SqlDbEndpoint::from_str("host:user:password:13:xe:sysdba").unwrap(),
+            SqlDbEndpoint {
+                host: "host".to_string(),
+                user: "user".to_string(),
+                pwd: "password".to_string(),
+                port: 13,
+                instance: "xe".to_string(),
+                role: Role::new("sysdba"),
+            }
+        )
+    }
     mod data {
         pub const AUTHENTICATION_FULL: &str = r#"
 authentication:
@@ -180,7 +273,7 @@ authentication:
     fn test_authentication_from_yaml() {
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
         assert_eq!(a.username(), "foo");
-        assert_eq!(a.password(), Some(&"bar".to_owned()));
+        assert_eq!(a.password(), Some("bar"));
         assert_eq!(a.auth_type(), &AuthType::Standard);
         assert_eq!(a.role(), Some(&Role::SysDba));
     }
@@ -229,9 +322,9 @@ authentication:
     #[test]
     fn test_authentication_from_yaml_mini() {
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
-        assert_eq!(a.username(), "");
+        assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
-        assert_eq!(a.auth_type(), &AuthType::Os);
+        assert_eq!(a.auth_type(), &AuthType::Standard);
     }
 
     #[test]

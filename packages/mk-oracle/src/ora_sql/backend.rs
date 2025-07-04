@@ -36,7 +36,7 @@ impl OraDbEngine for StdEngine {
         if let Some(role) = target.auth.role() {
             let mut connector = Connector::new(
                 target.auth.username(),
-                target.auth.password().unwrap_or(&String::new()),
+                target.auth.password().unwrap_or(""),
                 target.make_connection_string(),
             );
             connector.privilege(_to_privilege(role));
@@ -44,7 +44,7 @@ impl OraDbEngine for StdEngine {
         } else {
             self.connection = Some(Connection::connect(
                 target.auth.username(),
-                target.auth.password().unwrap_or(&String::new()),
+                target.auth.password().unwrap_or(""),
                 target.make_connection_string(),
             )?);
         }
@@ -225,11 +225,7 @@ pub fn obtain_config_credentials(auth: &Authentication) -> Option<Credentials> {
     match auth.auth_type() {
         AuthType::Standard | AuthType::Wallet => Some(Credentials {
             user: auth.username().to_string(),
-            password: auth
-                .password()
-                .map(|s| s.as_str())
-                .unwrap_or("")
-                .to_string(),
+            password: auth.password().unwrap_or("").to_string(),
         }),
         AuthType::Os => None,
     }

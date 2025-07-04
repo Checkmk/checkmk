@@ -77,7 +77,7 @@ pub mod defaults {
     pub const MAX_CONNECTIONS: u32 = 6;
     pub const MAX_QUERIES: u32 = 64;
 
-    pub const AUTH_TYPE: &str = values::OS;
+    pub const AUTH_TYPE: &str = values::STANDARD;
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
 

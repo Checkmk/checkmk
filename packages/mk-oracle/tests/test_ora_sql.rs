@@ -7,13 +7,12 @@ extern crate common;
 #[cfg(not(feature = "build_system_bazel"))]
 mod common;
 
-use mk_oracle::config::authentication::{AuthType, Role};
+use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 
 use crate::common::tools::{
-    platform::add_runtime_to_path, SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_EXT,
-    ORA_ENDPOINT_ENV_VAR_LOCAL,
+    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::types::{Credentials, InstanceName};
 
@@ -77,9 +76,23 @@ oracle:
 }
 
 #[test]
-#[allow(clippy::const_is_empty)]
-fn test_endpoint() {
-    assert!(!ORA_ENDPOINT_ENV_VAR_LOCAL.is_empty());
+fn test_enpoint() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
+    assert!(r.is_ok());
+}
+
+#[test]
+fn test_authentication_from_env_var() {
+    use mk_oracle::config::yaml::test_tools::create_yaml;
+    pub const AUTHENTICATION_ENV_VAR: &str = r#"
+authentication:
+  username: "$CI_ORA2_DB_TEST"
+  password: "$CI_ORA2_DB_TEST"
+"#;
+    let a = Authentication::from_yaml(&create_yaml(AUTHENTICATION_ENV_VAR)).unwrap();
+    assert_ne!(a.username(), "$CI_ORA2_DB_TEST");
+    assert!(a.password().is_some());
+    assert_ne!(a.password(), Some("$CI_ORA2_DB_TEST"));
 }
 
 #[cfg(windows)]

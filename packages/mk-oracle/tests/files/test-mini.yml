@@ -2,4 +2,7 @@
 oracle:
   main: # mandatory, to be used if no specific config
     authentication: # mandatory
-      username: "f" # mandatory
+      username: $CI_ORA2_DB_TEST
+      password: $CI_ORA2_DB_TEST
+      type: standard
+      role: sysdba

@@ -160,7 +160,6 @@ fn to_bool(value: &str) -> Result<bool> {
     }
 }
 
-#[cfg(test)]
 pub mod test_tools {
     use yaml_rust2::{Yaml, YamlLoader};
     pub fn create_yaml<T: AsRef<str>>(source: T) -> Yaml {

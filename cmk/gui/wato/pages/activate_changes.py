@@ -11,6 +11,7 @@ import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator
+from typing import Literal
 
 from livestatus import SiteConfiguration
 
@@ -142,11 +143,11 @@ def _get_snapshots() -> list[str]:
     return snapshots
 
 
-def _get_last_wato_snapshot_file():
+def _get_last_wato_snapshot_file(*, debug: bool) -> None | str:
     for snapshot_file in _get_snapshots():
         status = backup_snapshots.get_snapshot_status(
             snapshot=snapshot_file,
-            debug=active_config.debug,
+            debug=debug,
         )
         if status["type"] == "automatic" and not status["broken"]:
             return snapshot_file
@@ -207,7 +208,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
-    def _may_discard_changes(self) -> bool:
+    def _may_discard_changes(self, *, debug: bool) -> bool:
         if not user.may("wato.activate"):
             return False
 
@@ -217,7 +218,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if read_only.is_enabled() and not read_only.may_override():
             return False
 
-        if not _get_last_wato_snapshot_file():
+        if not _get_last_wato_snapshot_file(debug=debug):
             return False
 
         return True
@@ -229,7 +230,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if not transactions.check_transaction():
             return None
 
-        if not self._may_discard_changes():
+        if not self._may_discard_changes(debug=config.debug):
             return None
 
         if not self.has_changes():
@@ -237,7 +238,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
 
         # Now remove all currently pending changes by simply restoring the last automatically
         # taken snapshot. Then activate the configuration. This should revert all pending changes.
-        file_to_restore = _get_last_wato_snapshot_file()
+        file_to_restore = _get_last_wato_snapshot_file(debug=config.debug)
 
         if not file_to_restore:
             raise MKUserError(None, _("There is no Setup snapshot to be restored."))
@@ -251,7 +252,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             user_id=user.id,
             domains=ABCConfigDomain.enabled_domains(),
             need_restart=True,
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
 
         _extract_snapshot(file_to_restore)
@@ -448,13 +449,13 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
 
     def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_discard_changes():
+        if not self._may_discard_changes(debug=active_config.debug):
             return
 
         enabled = False
         disabled_tooltip: str | None = None
         if self.has_changes():
-            if not _get_last_wato_snapshot_file():
+            if not _get_last_wato_snapshot_file(debug=active_config.debug):
                 enabled = False
                 disabled_tooltip = _("No snapshot to restore available.")
             elif self.discard_changes_forbidden():
@@ -501,7 +502,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             is_enabled=self.has_pending_changes(),
         )
 
-    def _may_discard_changes(self) -> bool:
+    def _may_discard_changes(self, *, debug: bool) -> bool:
         if not user.may("wato.discard"):
             return False
 
@@ -511,7 +512,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self._may_activate_changes():
             return False
 
-        if not _get_last_wato_snapshot_file():
+        if not _get_last_wato_snapshot_file(debug=debug):
             return False
 
         return True
@@ -546,7 +547,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def page(self, config: Config) -> None:
         self._quick_setup_activation_msg()
         self._activation_msg()
-        self._activation_form()
+        self._activation_form(comment_mode=config.wato_activate_changes_comment_mode)
 
         self._show_license_validity()
 
@@ -594,7 +595,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             return None
         return _("Activation has finished.")
 
-    def _activation_form(self):
+    def _activation_form(self, comment_mode: Literal["enforce", "optional", "disabled"]) -> None:
         if not user.may("wato.activate"):
             html.show_warning(_("You are not permitted to activate configuration changes."))
             return
@@ -606,7 +607,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 
-        valuespec = _vs_activation(self.title(), self.has_foreign_changes())
+        valuespec = _vs_activation(self.title(), comment_mode, self.has_foreign_changes())
 
         with html.form_context("activate", method="POST", action=""):
             html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
@@ -934,11 +935,13 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
     return None, object_ref.ident
 
 
-def _vs_activation(title: str, has_foreign_changes: bool) -> Dictionary | None:
+def _vs_activation(
+    title: str, comment_mode: Literal["enforce", "optional", "disabled"], has_foreign_changes: bool
+) -> Dictionary | None:
     elements: list[DictionaryEntry] = []
 
-    if active_config.wato_activate_changes_comment_mode != "disabled":
-        is_optional = active_config.wato_activate_changes_comment_mode != "enforce"
+    if comment_mode != "disabled":
+        is_optional = comment_mode != "enforce"
         elements.append(
             (
                 "comment",
@@ -1001,7 +1004,9 @@ class PageAjaxStartActivation(AjaxPage):
 
         activate_foreign = api_request.get("activate_foreign", "0") == "1"
 
-        valuespec = _vs_activation("", manager.has_foreign_changes())
+        valuespec = _vs_activation(
+            "", config.wato_activate_changes_comment_mode, manager.has_foreign_changes()
+        )
         if valuespec:
             valuespec.validate_value(
                 {
@@ -1020,7 +1025,7 @@ class PageAjaxStartActivation(AjaxPage):
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",
-            debug=active_config.debug,
+            debug=config.debug,
         )
 
         return {

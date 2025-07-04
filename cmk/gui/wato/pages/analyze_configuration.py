@@ -21,7 +21,7 @@ from cmk.ccc.site import SiteId
 import cmk.utils.paths
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -154,7 +154,7 @@ class ModeAnalyzeConfig(WatoMode):
                 request,
                 self._analyze_sites(),
                 categories=None,
-                debug=active_config.debug,
+                debug=config.debug,
             )
         ).items():
             for result in results:

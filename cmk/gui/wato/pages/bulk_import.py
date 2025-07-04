@@ -146,7 +146,7 @@ class ModeBulkImport(WatoMode):
             csv_reader = self._open_csv_file()
 
             if request.var("_do_import"):
-                return self._import(csv_reader, debug=active_config.debug)
+                return self._import(csv_reader, debug=config.debug)
         return None
 
     def _file_path(self, file_id: str | None = None) -> Path:

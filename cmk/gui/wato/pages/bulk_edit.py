@@ -12,7 +12,7 @@ from typing import override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -91,9 +91,7 @@ class ModeBulkEdit(WatoMode):
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
             host = self._folder.load_host(host_name)
-            host.update_attributes(
-                changed_attributes, pprint_value=active_config.wato_pprint_config
-            )
+            host.update_attributes(changed_attributes, pprint_value=config.wato_pprint_config)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
@@ -192,7 +190,7 @@ class ModeBulkCleanup(WatoMode):
             return None
 
         user.need_permission("wato.edit_hosts")
-        to_clean = self._bulk_collect_cleaned_attributes()
+        to_clean = self._bulk_collect_cleaned_attributes(config)
         if "contactgroups" in to_clean:
             self._folder.permissions.need_permission("write")
 
@@ -203,13 +201,13 @@ class ModeBulkCleanup(WatoMode):
             host.permissions.need_permission("write")
 
         for host in hosts:
-            host.clean_attributes(to_clean, pprint_value=active_config.wato_pprint_config)
+            host.clean_attributes(to_clean, pprint_value=config.wato_pprint_config)
 
         return redirect(self._folder.url())
 
-    def _bulk_collect_cleaned_attributes(self) -> list[str]:
+    def _bulk_collect_cleaned_attributes(self, config: Config) -> list[str]:
         to_clean = []
-        for attrname in all_host_attributes(active_config).keys():
+        for attrname in all_host_attributes(config).keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

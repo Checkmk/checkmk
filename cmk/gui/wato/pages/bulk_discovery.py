@@ -140,14 +140,14 @@ class ModeBulkDiscovery(WatoMode):
                     self._do_full_scan,
                     self._ignore_errors,
                     self._bulk_size,
-                    pprint_value=active_config.wato_pprint_config,
-                    debug=active_config.debug,
+                    pprint_value=config.wato_pprint_config,
+                    debug=config.debug,
                 )
             ).is_error():
                 raise result.error
 
         except Exception as e:
-            if active_config.debug:
+            if config.debug:
                 raise
             logger.exception("Failed to start bulk discovery")
             raise MKUserError(

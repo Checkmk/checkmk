@@ -490,7 +490,8 @@ def _get_ip_lookup_cache() -> IPLookupCache:
 def update_dns_cache(
     *,
     hosts: Iterable[HostName],
-    ip_lookup_config: IPLookupConfig,
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
+    lookup_ip_address: IPLookup,
 ) -> tuple[int, Sequence[HostName]]:
     failed = []
 
@@ -502,26 +503,10 @@ def update_dns_cache(
 
         console.verbose("Updating DNS cache...")
         # `_annotate_family()` handles DUAL_STACK and NO_IP
-        for host_name, family in _annotate_family(hosts, ip_lookup_config):
+        for host_name, family in _annotate_family(hosts, get_ip_stack_config):
             console.verbose_no_lf(f"{host_name} ({family})...")
             try:
-                ip = _lookup_ip_address(
-                    host_name=host_name,
-                    family=family,
-                    configured_ip_address=(
-                        ip_lookup_config.ipv4_addresses
-                        if family is socket.AF_INET
-                        else ip_lookup_config.ipv6_addresses
-                    ).get(host_name),
-                    simulation_mode=ip_lookup_config.simulation_mode,
-                    is_snmp_usewalk_host=(
-                        ip_lookup_config.is_use_walk_host(host_name)
-                        and ip_lookup_config.is_snmp_host(host_name)
-                    ),
-                    override_dns=ip_lookup_config.fake_dns,
-                    is_dyndns_host=ip_lookup_config.is_dyndns_host(host_name),
-                    force_file_cache_renewal=True,  # it's cleared anyway
-                )
+                ip = lookup_ip_address(host_name, family)
                 console.verbose(f"{ip}")
 
             except (MKTerminate, MKTimeout):
@@ -546,7 +531,7 @@ def update_dns_cache(
 
 def _annotate_family(
     hosts: Iterable[HostName],
-    ip_lookup_config: IPLookupConfig,
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
 ) -> Iterable[
     tuple[
         HostName,
@@ -554,7 +539,7 @@ def _annotate_family(
     ]
 ]:
     for host_name in hosts:
-        ip_stack_config = ip_lookup_config.ip_stack_config(host_name)
+        ip_stack_config = get_ip_stack_config(host_name)
         if IPStackConfig.IPv4 in ip_stack_config:
             yield host_name, socket.AddressFamily.AF_INET
         if IPStackConfig.IPv6 in ip_stack_config:

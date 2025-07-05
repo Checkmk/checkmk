@@ -3521,7 +3521,8 @@ class AutomationUpdateDNSCache(Automation):
                     if loading_result.config_cache.is_active(hn)
                     and loading_result.config_cache.is_online(hn)
                 ),
-                ip_lookup_config=ip_lookup_config,
+                get_ip_stack_config=ip_lookup_config.ip_stack_config,
+                lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
             )
         )
 

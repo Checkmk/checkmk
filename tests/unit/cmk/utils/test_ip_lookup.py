@@ -513,7 +513,8 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
             for hn in hosts_config.hosts
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
-        ip_lookup_config=ip_lookup_config,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
+        lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
     )
     assert ip_lookup_cache() == {
         ("blub", socket.AF_INET): HostAddress("127.0.0.13"),

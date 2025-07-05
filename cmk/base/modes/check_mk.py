@@ -179,6 +179,8 @@ def load_checks() -> AgentBasedPlugins:
 #   '----------------------------------------------------------------------'
 
 _verbosity = 0
+_fake_dns: HostAddress | None = None
+_enforce_localhost = False
 
 
 def print_(txt: str) -> None:
@@ -244,7 +246,8 @@ modes.register_general_option(
 
 
 def option_fake_dns(a: HostAddress) -> None:
-    ip_lookup.enforce_fake_dns(a)
+    global _fake_dns
+    _fake_dns = a
 
 
 modes.register_general_option(
@@ -256,6 +259,14 @@ modes.register_general_option(
         argument_descr="IP",
     )
 )
+
+
+def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
+    if _fake_dns is not None:
+        return lambda hn, family: _fake_dns
+    if _enforce_localhost:
+        return ip_lookup.local_ip_for
+    return None
 
 
 # .
@@ -301,7 +312,8 @@ def _handle_fetcher_options(
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()
-        ip_lookup.enforce_localhost()
+        global _enforce_localhost
+        _enforce_localhost = True
 
     return file_cache_options
 
@@ -623,13 +635,15 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_bare = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+        ip_lookup_config
+    )
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
@@ -797,11 +811,13 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     ip_lookup_config = config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+        ip_lookup_config
+    )
 
     all_hosts = {
         hn
@@ -933,7 +949,10 @@ def mode_update_dns_cache() -> None:
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        lookup_ip_address=(
+            _forced_ip_lookup()  # this makes little sense.
+            or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+        ),
     )
 
 
@@ -1125,7 +1144,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
 
     config_cache = config.load(discovery_rulesets=()).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -1208,7 +1227,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
 
     config_cache = config.load(discovery_rulesets=()).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:
@@ -1438,7 +1457,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -1507,7 +1526,7 @@ def mode_update() -> None:
     hosts_config = loading_result.config_cache.hosts_config
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1526,7 +1545,8 @@ def mode_update() -> None:
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+                ip_address_of_mgmt=_forced_ip_lookup()
+                or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.config_cache.host_tags.tag_list,
@@ -1585,11 +1605,13 @@ def mode_restart(args: Sequence[HostName]) -> None:
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+        ip_lookup_config
+    )
 
     cmk.base.core.do_restart(
         loading_result.config_cache,
@@ -1655,11 +1677,13 @@ def mode_reload(args: Sequence[HostName]) -> None:
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+        ip_lookup_config
+    )
 
     cmk.base.core.do_reload(
         loading_result.config_cache,
@@ -1972,7 +1996,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -1990,8 +2014,10 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=_forced_ip_lookup()
+        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=_forced_ip_lookup()
+        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
@@ -2271,7 +2297,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2318,8 +2344,10 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=_forced_ip_lookup()
+        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=_forced_ip_lookup()
+        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2489,7 +2517,7 @@ def run_checking(
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2515,8 +2543,10 @@ def run_checking(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=_forced_ip_lookup()
+        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=_forced_ip_lookup()
+        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2712,7 +2742,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2753,8 +2783,10 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=_forced_ip_lookup()
+        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=_forced_ip_lookup()
+        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2992,7 +3024,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -3015,8 +3047,10 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=_forced_ip_lookup()
+        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=_forced_ip_lookup()
+        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

@@ -33,9 +33,6 @@ from cmk.utils.log import console
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 
 
-_fake_dns: HostAddress | None = None
-_enforce_localhost = False
-
 _FALLBACK_V4 = HostAddress("0.0.0.0")
 _FALLBACK_V6 = HostAddress("::")
 
@@ -201,7 +198,8 @@ def is_fallback_ip(ip: HostAddress | str) -> bool:
     return HostAddress(ip) in (_FALLBACK_V4, _FALLBACK_V6)
 
 
-def _local_ip_for(
+def local_ip_for(
+    host_name: HostName,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
@@ -211,16 +209,6 @@ def _local_ip_for(
             return HostAddress("::1")
         case other:
             assert_never(other)
-
-
-def enforce_fake_dns(address: HostAddress) -> None:
-    global _fake_dns
-    _fake_dns = address
-
-
-def enforce_localhost() -> None:
-    global _enforce_localhost
-    _enforce_localhost = True
 
 
 # Determine the IP address of a host. It returns either an IP address or, when
@@ -238,16 +226,12 @@ def _lookup_ip_address(
     force_file_cache_renewal: bool,
 ) -> HostAddress:
     """This function *may* look up an IP address, or return a host name"""
-    # Quick hack, where all IP addresses are faked (--fake-dns)
-    if _fake_dns:
-        return _fake_dns
-
     if override_dns:
         return override_dns
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    if simulation_mode or _enforce_localhost or is_snmp_usewalk_host:
-        return _local_ip_for(family)
+    if simulation_mode or is_snmp_usewalk_host:
+        return local_ip_for(host_name, family)
 
     # check if IP address is hard coded by the user
     if configured_ip_address:

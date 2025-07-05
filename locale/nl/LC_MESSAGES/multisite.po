@@ -18410,7 +18410,9 @@ msgid ""
 "datapoint attributes</a> or the <a href='https://checkmk.com/werk/"
 "18249'>Open Telemetry metric name</a> and the <a href='https://checkmk.com/"
 "werk/18249'>Open Telemetry metric unit</a> This needs to be an exact match "
-"to the metric name in the service."
+"to the metric name in the service.<br><br>The autocomplete suggestions may "
+"be incomplete. A unknown metric name can be specified manually.<br><br>In "
+"certain cases the autocomplete feature may be unavailable. "
 msgstr ""
 
 msgid ""
@@ -21245,9 +21247,6 @@ msgstr "Inventarisatie statusgegevens"
 
 msgid "Do transfer context"
 msgstr "Draag context over"
-
-msgid "Do you really want to move the selected aggregations?"
-msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 
 #, fuzzy, python-format
 msgid ""
@@ -81289,6 +81288,10 @@ msgid "User ID for web login (if login required)"
 msgstr "Gebruikers-ID voor web login (indien login vereist is)"
 
 #, fuzzy
+msgid "User ID must not be None"
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
 msgid "User Label"
 msgstr "Naam gebruiker"
 
@@ -89943,6 +89946,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 
 #~ msgid "No pending changes"
 #~ msgstr "Geen hangende wijzigingen"

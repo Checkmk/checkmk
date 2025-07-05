@@ -21260,9 +21260,6 @@ msgstr "Hacer un inventario de datos de estado"
 msgid "Do transfer context"
 msgstr "Transfiera el contexto"
 
-msgid "Do you really want to move the selected aggregations?"
-msgstr "¿Realmente quiere mover las agregaciones seleccionadas?"
-
 #, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -90084,6 +90081,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "¿Realmente quiere mover las agregaciones seleccionadas?"
 
 #~ msgid "Do not query volume performance counters"
 #~ msgstr "No consultar los contadores de rendimiento del volumen"

@@ -21100,9 +21100,6 @@ msgstr "Inventarisatie statusgegevens"
 msgid "Do transfer context"
 msgstr "Draag context over"
 
-msgid "Do you really want to move the selected aggregations?"
-msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
-
 #, fuzzy, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -89371,6 +89368,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 
 #~ msgid "Do not query volume performance counters"
 #~ msgstr "Vraag niet naar volume prestatiecounters"

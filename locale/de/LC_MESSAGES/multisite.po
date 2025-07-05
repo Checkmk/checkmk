@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-07-03 23:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -2564,13 +2564,13 @@ msgid ""
 "only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource mib"
 msgstr ""
-"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet ("
-"möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur die "
-"Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration schlägt "
-"Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum einen "
-"Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- und "
-"Windows-Agenten sowie von Geräten unterstützt, die über die Host-Ressourcen-"
-"MIB überwacht werden"
+"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet "
+"(möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur "
+"die Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration "
+"schlägt Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum "
+"einen Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- "
+"und Windows-Agenten sowie von Geräten unterstützt, die über die Host-"
+"Ressourcen-MIB überwacht werden"
 
 #, python-format
 msgid ""
@@ -20679,9 +20679,6 @@ msgstr "Zustandsdaten-Inventur durchführen"
 
 msgid "Do transfer context"
 msgstr "Kontext übermitteln"
-
-msgid "Do you really want to move the selected aggregations?"
-msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"
 
 #, python-format
 msgid ""
@@ -87687,6 +87684,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"
 
 #~ msgid "Your free trial is active! "
 #~ msgstr "Ihre kostenlose Testversion ist aktiv! "

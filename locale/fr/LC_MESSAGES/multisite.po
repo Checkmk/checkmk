@@ -21280,9 +21280,6 @@ msgstr "Faire l'inventaire des données d'état"
 msgid "Do transfer context"
 msgstr "Transférer le contexte"
 
-msgid "Do you really want to move the selected aggregations?"
-msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
-
 #, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -90241,6 +90238,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
 
 #~ msgid "Do not query volume performance counters"
 #~ msgstr "Ne pas interroger les compteurs de performance des volumes"

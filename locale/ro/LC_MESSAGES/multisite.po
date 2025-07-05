@@ -21135,9 +21135,6 @@ msgstr "Efectuați inventarierea datelor de stare"
 msgid "Do transfer context"
 msgstr "Transferați contextul"
 
-msgid "Do you really want to move the selected aggregations?"
-msgstr "Chiar doriți să mutați agregările selectate?"
-
 #, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -89566,6 +89563,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Do you really want to move the selected aggregations?"
+#~ msgstr "Chiar doriți să mutați agregările selectate?"
 
 #~ msgid "Do not query volume performance counters"
 #~ msgstr "Nu interogați contoarele de performanță a volumului"

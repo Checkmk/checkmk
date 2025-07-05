@@ -90,6 +90,11 @@ class IPLookupConfig:
 def make_lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookupOptional:
+    if ip_config.fake_dns:
+        return lambda host_name, family: ip_config.fake_dns
+    if ip_config.simulation_mode:
+        return local_ip_for
+
     def lookup_mgmt_board_ip_address(
         host_name: HostName,
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
@@ -110,12 +115,10 @@ def make_lookup_mgmt_board_ip_address(
                 host_name=mgmt_address or host_name,
                 family=family,
                 configured_ip_address=mgmt_ipa,
-                simulation_mode=ip_config.simulation_mode,
                 is_snmp_usewalk_host=(
                     ip_config.is_use_walk_host(host_name)
                     and ip_config.is_snmp_management(host_name)
                 ),
-                override_dns=ip_config.fake_dns,
                 is_dyndns_host=ip_config.is_dyndns_host(host_name),
                 force_file_cache_renewal=not ip_config.use_dns_cache,
             )
@@ -128,6 +131,11 @@ def make_lookup_mgmt_board_ip_address(
 def make_lookup_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookup:
+    if ip_config.fake_dns:
+        return lambda host_name, family: ip_config.fake_dns
+    if ip_config.simulation_mode:
+        return local_ip_for
+
     def _wrapped_lookup(
         host_name: HostName,
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
@@ -140,11 +148,9 @@ def make_lookup_ip_address(
                 if family is socket.AddressFamily.AF_INET
                 else ip_config.ipv6_addresses
             ).get(host_name),
-            simulation_mode=ip_config.simulation_mode,
             is_snmp_usewalk_host=(
                 ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
             ),
-            override_dns=ip_config.fake_dns,
             is_dyndns_host=ip_config.is_dyndns_host(host_name),
             force_file_cache_renewal=not ip_config.use_dns_cache,
         )
@@ -219,18 +225,13 @@ def _lookup_ip_address(
     host_name: HostName | HostAddress,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     configured_ip_address: HostAddress | None,
-    simulation_mode: bool,
     is_snmp_usewalk_host: bool,
-    override_dns: HostAddress | None,
     is_dyndns_host: bool,
     force_file_cache_renewal: bool,
 ) -> HostAddress:
     """This function *may* look up an IP address, or return a host name"""
-    if override_dns:
-        return override_dns
-
-    # Honor simulation mode und usewalk hosts. Never contact the network.
-    if simulation_mode or is_snmp_usewalk_host:
+    # Honor usewalk hosts. Never contact the network.
+    if is_snmp_usewalk_host:
         return local_ip_for(host_name, family)
 
     # check if IP address is hard coded by the user

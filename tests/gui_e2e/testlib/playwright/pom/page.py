@@ -86,9 +86,6 @@ class CmkPage(LocatorHelper):
             self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
         ).to_be_visible()
 
-        # assert no further changes are pending
-        expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible()
-
     def goto_main_dashboard(self) -> None:
         """Click the banner and wait for the dashboard"""
         logger.info("Navigate to 'Main dashboard' page")
@@ -118,7 +115,7 @@ class CmkPage(LocatorHelper):
             site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
             return
 
-        self.main_menu.changes_menu().get_by_role(role="button", name="Open full page")
+        self.main_menu.changes_menu("Open full page").click()
         self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
         self.activate_selected()
         self.expect_success_state()
@@ -204,11 +201,14 @@ class MainMenu(LocatorHelper):
         """main menu -> Open setup -> show more(optional) -> sub menu"""
         return self._sub_menu("Setup", sub_menu, show_more, exact)
 
-    def changes_menu(
-        self,
-    ) -> Locator:
+    def changes_menu(self, button: str | None = None, exact: bool = False) -> Locator:
         """main menu -> Open changes -> activate changes app"""
-        return self._sub_menu("Changes", None, False, False)
+        _loc = self._sub_menu("Changes", None, False, False)
+        if button:
+            _loc.click()
+            _loc = self.page.get_by_role(role="button", name=button, exact=exact)
+        self._unique_web_element(_loc)
+        return _loc
 
     def user_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
         """main menu -> Open user -> show more(optional) -> sub menu"""

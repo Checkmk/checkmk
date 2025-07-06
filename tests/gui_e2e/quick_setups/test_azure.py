@@ -82,7 +82,7 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
-@pytest.mark.xfail(reason="CMK-23545; All quick-setup: CSP tests are failing.")
+@pytest.mark.xfail(reason="CMK-24568")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:

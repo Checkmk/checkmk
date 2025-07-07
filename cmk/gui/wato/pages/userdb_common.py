@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NewType
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import SiteId
 
@@ -216,7 +218,9 @@ def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId]) -> No
     )
 
 
-def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
+def get_affected_sites(
+    site_configs: SiteConfigurations, connection: ConfigurableUserConnectionSpec
+) -> list[SiteId]:
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         # TODO CMK-14203
         _customer_api = customer_api()
@@ -225,11 +229,15 @@ def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteI
             return list(active_config.sites.keys())
         assert customer is not None
         return list(_customer_api.get_sites_of_customer(customer).keys())
-    return get_login_sites()
+    return get_login_sites(site_configs)
 
 
 def _delete_connection(
-    index: int, connection_type: str, *, custom_config_dirs: Iterable[Path]
+    *,
+    index: int,
+    connection_type: str,
+    custom_config_dirs: Iterable[Path],
+    site_configs: SiteConfigurations,
 ) -> None:
     connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[index]
@@ -237,7 +245,7 @@ def _delete_connection(
     add_change(
         action_name=f"delete-{connection_type}-connection",
         text=_("Deleted connection %s") % (connection_id),
-        sites=get_affected_sites(connection),
+        sites=get_affected_sites(site_configs, connection),
     )
 
     for dir_ in custom_config_dirs:
@@ -254,13 +262,18 @@ def _remove_custom_files(cert_dir: Path) -> None:
     shutil.rmtree(cert_dir)
 
 
-def _move_connection(from_index: int, to_index: int, connection_type: str) -> None:
+def _move_connection(
+    from_index: int,
+    to_index: int,
+    connection_type: str,
+    site_configs: SiteConfigurations,
+) -> None:
     connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[from_index]
     add_change(
         action_name=f"move-{connection_type}-connection",
         text=_("Changed position of connection %s to %d") % (connection["id"], to_index),
-        sites=get_affected_sites(connection),
+        sites=get_affected_sites(site_configs, connection),
     )
     del connections[from_index]  # make to_pos now match!
     connections[to_index:to_index] = [connection]
@@ -281,7 +294,10 @@ def _gui_index_to_real_index(
 
 
 def connection_actions(
-    config_mode_url: str, connection_type: str, custom_config_dirs: Iterable[Path]
+    config_mode_url: str,
+    connection_type: str,
+    custom_config_dirs: Iterable[Path],
+    site_configs: SiteConfigurations,
 ) -> ActionResult:
     if not transactions.check_transaction():
         return redirect(config_mode_url)
@@ -291,6 +307,7 @@ def connection_actions(
             index=request.get_integer_input_mandatory("_delete"),
             connection_type=connection_type,
             custom_config_dirs=custom_config_dirs,
+            site_configs=site_configs,
         )
 
     elif request.has_var("_move"):
@@ -302,6 +319,7 @@ def connection_actions(
                 load_connection_config(lock=False),
             ),
             connection_type=connection_type,
+            site_configs=site_configs,
         )
 
     return redirect(config_mode_url)

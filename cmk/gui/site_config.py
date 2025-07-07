@@ -42,9 +42,9 @@ def _has_distributed_wato_file() -> bool:
     return path.exists() and path.stat().st_size != 0
 
 
-def get_login_sites() -> list[SiteId]:
+def get_login_sites(site_configs: SiteConfigurations) -> list[SiteId]:
     """Returns the Setup slave sites a user may login and the local site"""
-    return get_login_slave_sites(active_config.sites) + [omd_site()]
+    return get_login_slave_sites(site_configs) + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of

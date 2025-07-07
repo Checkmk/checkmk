@@ -125,7 +125,7 @@ class ModeRoles(WatoMode):
                 action_name="edit-roles",
                 text=_("Deleted role '%s'") % role_id,
                 user_id=user.id,
-                sites=get_login_sites(),
+                sites=get_login_sites(config.sites),
                 use_git=config.wato_use_git,
             )
 
@@ -136,7 +136,7 @@ class ModeRoles(WatoMode):
                 action_name="edit-roles",
                 text=_("Created new role '%s'") % role_id,
                 user_id=user.id,
-                sites=get_login_sites(),
+                sites=get_login_sites(config.sites),
                 use_git=config.wato_use_git,
             )
 
@@ -280,7 +280,7 @@ class ModeRoleTwoFactor(WatoMode):
             action_name="edit-roles",
             text=_("Modified user role '%s'") % self._role_id,
             user_id=user.id,
-            sites=get_login_sites(),
+            sites=get_login_sites(config.sites),
             use_git=config.wato_use_git,
         )
         return redirect(mode_url(ModeRoles.name()))
@@ -371,7 +371,7 @@ class ModeEditRole(WatoMode):
             action_name="edit-roles",
             text=_("Modified user role '%s'") % new_id,
             user_id=user.id,
-            sites=get_login_sites(),
+            sites=get_login_sites(config.sites),
             use_git=config.wato_use_git,
         )
         return url

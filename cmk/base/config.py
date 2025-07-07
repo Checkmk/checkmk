@@ -3972,120 +3972,58 @@ class FetcherFactory:
 
 
 class CEEConfigCache(ConfigCache):
-    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
-        self.__rrd_config: dict[HostName, RRDObjectConfig | None] = {}
-        self.__recuring_downtimes: dict[HostName, Sequence[RecurringDowntime]] = {}
-        self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
-        self.__log_long_output: dict[HostName, bool] = {}
-        self.__state_translation: dict[HostName, dict] = {}
-        self.__smartping_settings: dict[HostName, dict] = {}
-        self.__lnx_remote_alert_handlers: dict[HostName, Sequence[Mapping[str, str]]] = {}
-        self.__rtc_secret: dict[HostName, str | None] = {}
-        self.__agent_config: dict[HostName, Mapping[str, Any]] = {}
-        super().__init__(loaded_config)
-
-    def invalidate_host_config(self) -> None:
-        super().invalidate_host_config()
-        self.__rrd_config.clear()
-        self.__recuring_downtimes.clear()
-        self.__flap_settings.clear()
-        self.__log_long_output.clear()
-        self.__state_translation.clear()
-        self.__smartping_settings.clear()
-        self.__lnx_remote_alert_handlers.clear()
-        self.__rtc_secret.clear()
-        self.__agent_config.clear()
-
     def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
         return cmc_log_rrdcreation
 
     def rrd_config(self, host_name: HostName) -> RRDObjectConfig | None:
-        def _rrd_config() -> RRDObjectConfig | None:
-            entries = self.ruleset_matcher.get_host_values(
-                host_name, cmc_host_rrd_config, self.label_manager.labels_of_host
-            )
-            return entries[0] if entries else None
-
-        with contextlib.suppress(KeyError):
-            return self.__rrd_config[host_name]
-
-        return self.__rrd_config.setdefault(host_name, _rrd_config())
+        entries = self.ruleset_matcher.get_host_values(
+            host_name, cmc_host_rrd_config, self.label_manager.labels_of_host
+        )
+        return entries[0] if entries else None
 
     def recurring_downtimes(self, host_name: HostName) -> Sequence[RecurringDowntime]:
-        def _impl() -> Sequence[RecurringDowntime]:
-            return self.ruleset_matcher.get_host_values(
-                host_name,
-                host_recurring_downtimes,  # type: ignore[name-defined,unused-ignore]
-                self.label_manager.labels_of_host,
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__recuring_downtimes[host_name]
-
-        return self.__recuring_downtimes.setdefault(host_name, _impl())
+        return self.ruleset_matcher.get_host_values(
+            host_name,
+            host_recurring_downtimes,
+            self.label_manager.labels_of_host,
+        )
 
     def flap_settings(self, host_name: HostName) -> tuple[float, float, float]:
-        def _impl() -> tuple[float, float, float]:
-            values = self.ruleset_matcher.get_host_values(
-                host_name,
-                cmc_host_flap_settings,  # type: ignore[name-defined,unused-ignore]
-                self.label_manager.labels_of_host,
-            )
-            return (
-                values[0] if values else cmc_flap_settings  # type: ignore[name-defined,unused-ignore]
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__flap_settings[host_name]
-
-        return self.__flap_settings.setdefault(host_name, _impl())
+        values = self.ruleset_matcher.get_host_values(
+            host_name,
+            cmc_host_flap_settings,
+            self.label_manager.labels_of_host,
+        )
+        return values[0] if values else cmc_flap_settings
 
     def log_long_output(self, host_name: HostName) -> bool:
-        def _impl() -> bool:
-            entries = self.ruleset_matcher.get_host_values(
-                host_name,
-                cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined,unused-ignore]
-                self.label_manager.labels_of_host,
-            )
-            return entries[0] if entries else False
-
-        with contextlib.suppress(KeyError):
-            return self.__log_long_output[host_name]
-
-        return self.__log_long_output.setdefault(host_name, _impl())
+        entries = self.ruleset_matcher.get_host_values(
+            host_name,
+            cmc_host_long_output_in_monitoring_history,
+            self.label_manager.labels_of_host,
+        )
+        return entries[0] if entries else False
 
     def state_translation(self, host_name: HostName) -> dict:
-        def _impl() -> dict:
-            entries = self.ruleset_matcher.get_host_values(
-                host_name,
-                host_state_translation,  # type: ignore[name-defined,unused-ignore]
-                self.label_manager.labels_of_host,
-            )
+        entries = self.ruleset_matcher.get_host_values(
+            host_name,
+            host_state_translation,
+            self.label_manager.labels_of_host,
+        )
 
-            spec: dict[object, object] = {}
-            for entry in entries[::-1]:
-                spec |= entry
-            return spec
-
-        with contextlib.suppress(KeyError):
-            return self.__state_translation[host_name]
-
-        return self.__state_translation.setdefault(host_name, _impl())
+        spec: dict[object, object] = {}
+        for entry in entries[::-1]:
+            spec |= entry
+        return spec
 
     def smartping_settings(self, host_name: HostName) -> dict:
-        def _impl() -> dict:
-            settings = {"timeout": 2.5}
-            settings |= self.ruleset_matcher.get_host_merged_dict(
-                host_name,
-                cmc_smartping_settings,  # type: ignore[name-defined,unused-ignore]
-                self.label_manager.labels_of_host,
-            )
-            return settings
-
-        with contextlib.suppress(KeyError):
-            return self.__smartping_settings[host_name]
-
-        return self.__smartping_settings.setdefault(host_name, _impl())
+        settings = {"timeout": 2.5}
+        settings |= self.ruleset_matcher.get_host_merged_dict(
+            host_name,
+            cmc_smartping_settings,
+            self.label_manager.labels_of_host,
+        )
+        return settings
 
     def rrd_config_of_service(
         self, host_name: HostName, service_name: ServiceName
@@ -4106,7 +4044,7 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            service_recurring_downtimes,  # type: ignore[name-defined,unused-ignore]
+            service_recurring_downtimes,
             self.label_manager.labels_of_host,
         )
 
@@ -4117,10 +4055,10 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            cmc_service_flap_settings,  # type: ignore[name-defined,unused-ignore]
+            cmc_service_flap_settings,
             self.label_manager.labels_of_host,
         )
-        return out[0] if out else cmc_flap_settings  # type: ignore[name-defined,unused-ignore]
+        return out[0] if out else cmc_flap_settings
 
     def log_long_output_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
@@ -4129,7 +4067,7 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined,unused-ignore]
+            cmc_service_long_output_in_monitoring_history,
             self.label_manager.labels_of_host,
         )
         return out[0] if out else False
@@ -4141,7 +4079,7 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            service_state_translation,  # type: ignore[name-defined,unused-ignore]
+            service_state_translation,
             self.label_manager.labels_of_host,
         )
 
@@ -4158,10 +4096,10 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            cmc_service_check_timeout,  # type: ignore[name-defined,unused-ignore]
+            cmc_service_check_timeout,
             self.label_manager.labels_of_host,
         )
-        return out[0] if out else cmc_check_timeout  # type: ignore[name-defined,unused-ignore]
+        return out[0] if out else cmc_check_timeout
 
     def graphite_metrics_of_host(
         self,
@@ -4169,7 +4107,7 @@ class CEEConfigCache(ConfigCache):
     ) -> Sequence[str] | None:
         out = self.ruleset_matcher.get_host_values(
             host_name,
-            cmc_graphite_host_metrics,  # type: ignore[name-defined,unused-ignore]
+            cmc_graphite_host_metrics,
             self.label_manager.labels_of_host,
         )
         return out[0] if out else None
@@ -4184,7 +4122,7 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            cmc_graphite_service_metrics,  # type: ignore[name-defined,unused-ignore]
+            cmc_graphite_service_metrics,
             self.label_manager.labels_of_host,
         )
         return out[0] if out else None
@@ -4199,7 +4137,7 @@ class CEEConfigCache(ConfigCache):
             host_name,
             service_name,
             service_labels,
-            cmc_influxdb_service_metrics,  # type: ignore[name-defined,unused-ignore]
+            cmc_influxdb_service_metrics,
             self.label_manager.labels_of_host,
         )
         return out[0] if out else None

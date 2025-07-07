@@ -18,7 +18,7 @@ import livestatus
 
 import cmk.ccc.crash_reporting
 import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import CrashInfo
+from cmk.ccc.crash_reporting import CrashInfo, SENSITIVE_KEYWORDS
 from cmk.ccc.site import SiteId
 
 from cmk.gui import forms, userdb
@@ -154,6 +154,7 @@ class PageCrash(ABCCrashReportPage):
                 )
             )
 
+        self._warn_about_sensitive_information(crash_info)
         self._warn_about_local_files(crash_info)
         self._show_report_form(crash_info, details)
         self._show_crash_report(crash_info)
@@ -348,6 +349,25 @@ class PageCrash(ABCCrashReportPage):
             )
         )
         html.show_warning(warn_text)
+
+    def _warn_about_sensitive_information(self, crash_info: CrashInfo) -> None:
+        if not (vars_ := crash_info.get("details", {}).get("vars")):
+            return
+
+        if any(
+            sensitive_keyword in key.lower()
+            for sensitive_keyword in SENSITIVE_KEYWORDS
+            for key in vars_
+        ):
+            html.show_warning(
+                HTML.with_escaping(
+                    _(
+                        "Checkmk has identified and attempted to redact sensitive information in the crash "
+                        "report. It is advised that you manually review the content of this report and "
+                        "ensure any additional sensitive data is removed before sharing the crash report."
+                    )
+                )
+            )
 
     def _show_report_form(self, crash_info: CrashInfo, details: ReportSubmitDetails) -> None:
         if crash_info["crash_type"] == "gui":

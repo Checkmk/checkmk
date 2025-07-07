@@ -22,10 +22,14 @@ from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, Generic, NotRequired, TypedDict, TypeVar
+from typing import Any, Final, Generic, Mapping, NotRequired, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
+
+SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
+
+REDACTED_STRING: Final = "redacted"
 
 
 class BaseDetails(TypedDict):
@@ -238,7 +242,7 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
 def _get_generic_crash_info(
     type_name: str,
     version_info: VersionInfo,
-    details: T,
+    details: T | None,
 ) -> CrashInfo:
     """Produces the crash info data structure.
 
@@ -252,6 +256,14 @@ def _get_generic_crash_info(
         )
     )
 
+    modified_details: dict | T | None = details
+    if isinstance(details, Mapping) and "vars" in details:
+        modified_details = (
+            {k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()}
+            if details
+            else {}
+        )
+
     return CrashInfo(
         id=str(uuid.uuid1()),
         crash_type=type_name,
@@ -259,7 +271,7 @@ def _get_generic_crash_info(
         exc_value=str(exc_value),
         exc_traceback=[tuple(e) for e in tb_list],
         local_vars=_get_local_vars_of_last_exception(),
-        details=details,
+        details=modified_details,
         core=version_info["core"],
         python_version=version_info["python_version"],
         edition=version_info["edition"],
@@ -271,18 +283,24 @@ def _get_generic_crash_info(
 
 
 def _get_local_vars_of_last_exception() -> str:
-    local_vars = {}
-
     # Suppressing to handle case where sys.exc_info has no crash information
     # (https://docs.python.org/2/library/sys.html#sys.exc_info)
     with suppress(IndexError):
-        for key, val in inspect.trace()[-1][0].f_locals.items():
-            local_vars[key] = _format_var_for_export(val)
+        local_vars = _sanitize_variables(inspect.trace()[-1][0].f_locals)
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
         _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024)
     ).decode()
+
+
+def _sanitize_variables(unsanitized_variables: dict) -> dict:
+    return {
+        key: REDACTED_STRING
+        if any(sensitive_keyword in key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS)
+        else _format_var_for_export(value)
+        for key, value in unsanitized_variables.items()
+    }
 
 
 def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:

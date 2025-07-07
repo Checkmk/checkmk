@@ -19,11 +19,12 @@ from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
+    REDACTED_STRING,
     VersionInfo,
 )
 
 
-class UnitTestCrashReport(ABCCrashReport[VersionInfo]):
+class UnitTestCrashReport(ABCCrashReport):
     @classmethod
     def type(cls):
         return "test"
@@ -51,12 +52,23 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
                     time=0.0,
                     os="Foobuntu",
                 ),
+                {"vars": {"my_secret": "1234", "not_import": "1234", "auth_token": "1234"}},
             ),
         )
 
 
 def test_crash_report_type(crash: ABCCrashReport) -> None:
     assert crash.type() == "test"
+
+
+def test_crash_report_sanitization(crash: ABCCrashReport) -> None:
+    assert crash.crash_info["details"] == {
+        "vars": {
+            "my_secret": REDACTED_STRING,
+            "not_import": "1234",
+            "auth_token": REDACTED_STRING,
+        }
+    }
 
 
 def test_crash_report_ident(crash: ABCCrashReport) -> None:

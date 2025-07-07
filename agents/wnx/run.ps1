@@ -302,13 +302,14 @@ function Set-MSI-Version {
     Write-Host "Success setting version MSI" -foreground Green
 }
 
+# TODO investigate what kind of tests we execute here, agree on proper consistent naming CMK-24353
 function Start-UnitTests {
     if ($argTest -ne $true) {
         Write-Host "Skipping unit testing..." -ForegroundColor Yellow
         return
     }
     Write-Host "Running unit tests..." -ForegroundColor White
-    & ./run_tests.ps1 --unit # TODO fix it, currently no tests are executed as --unit parameter is obsolete and not used in run_tests.ps1
+    & ./run_tests.ps1 --plugins
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
     }

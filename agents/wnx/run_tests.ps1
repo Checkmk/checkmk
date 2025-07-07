@@ -37,7 +37,7 @@ else {
             { $("-C", "--component") -contains $_ } { $testComponent = $true }
             { $("-E", "--ext") -contains $_ } { $testExt = $true }
             { $("-S", "--simulation") -contains $_ } { $testSimulation = $true }
-            { $("-P", "--plugins") -contains $_ } { $testPlugins = $true }
+            { $("-P", "--plugins") -contains $_ } { $testPlugins = $true } # TODO investigate what kind of tests we execute here, agree on proper consistent naming CMK-24353
             { $("-I", "--integration") -contains $_ } { $testIntegration = $true }
             { $("-R", "--regression") -contains $_ } { $testRegression = $true }
         }
@@ -83,7 +83,6 @@ function Write-Help() {
     Write-Host "  -R, --regression        regression testing"
     Write-Host "  -I, --integration       integration testing"
     Write-Host "  -P, --plugins           plugins testing"
-    Write-Host "  -U, --unit              unit testing" # TODO remove, obsolete
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""

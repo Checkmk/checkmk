@@ -287,9 +287,7 @@ def _aggregate_check_table_services(
         else:
             yield from (
                 s
-                for s in configure_autochecks(
-                    host_name, config_cache.autochecks_memoizer.read(host_name)
-                )
+                for s in configure_autochecks(host_name, get_autochecks(host_name))
                 if sfilter.keep(s)
             )
 

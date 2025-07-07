@@ -30,6 +30,10 @@ export class UnifiedSearchResult {
   public get(provider: string): SearchProviderResult<unknown> | null {
     return this.results[this.results.findIndex((s) => s.provider === provider)] || null
   }
+
+  public getAll(): SearchProviderResult<unknown>[] {
+    return this.results
+  }
 }
 
 export abstract class SearchProvider {

@@ -12,7 +12,7 @@ import operator
 import time
 import typing
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
@@ -21,9 +21,11 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 
+from cmk.utils.tags import TagGroup
+
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -38,7 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
@@ -146,7 +148,11 @@ class ModeBulkImport(WatoMode):
             csv_reader = self._open_csv_file()
 
             if request.var("_do_import"):
-                return self._import(csv_reader, debug=config.debug)
+                return self._import(
+                    csv_reader,
+                    debug=config.debug,
+                    pprint_value=config.wato_pprint_config,
+                )
         return None
 
     def _file_path(self, file_id: str | None = None) -> Path:
@@ -227,7 +233,7 @@ class ModeBulkImport(WatoMode):
 
         return csv.reader(csv_file, csv_dialect)
 
-    def _import(self, csv_reader: CSVReader, *, debug: bool) -> ActionResult:
+    def _import(self, csv_reader: CSVReader, *, debug: bool, pprint_value: bool) -> ActionResult:
         def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
                 try:
@@ -343,6 +349,7 @@ class ModeBulkImport(WatoMode):
             host_attribute_tuples,
             folder=folder,
             batch_size=100,
+            pprint_value=pprint_value,
         )
 
         bakery.try_bake_agents_for_hosts(imported_hosts, debug=debug)
@@ -391,6 +398,7 @@ class ModeBulkImport(WatoMode):
         *,
         folder: Folder,
         batch_size: int = 100,
+        pprint_value: bool,
     ) -> tuple[list[HostName], list[HostName], list[str]]:
         imported_hosts: list[HostName] = []
         failed_hosts: list[HostName] = []
@@ -403,7 +411,7 @@ class ModeBulkImport(WatoMode):
                 # NOTE
                 # Folder.create_hosts will either import all of them, or no host at all. The
                 # caught exceptions below will only trigger during the verification phase.
-                folder.create_hosts(batch, pprint_value=active_config.wato_pprint_config)
+                folder.create_hosts(batch, pprint_value=pprint_value)
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
@@ -411,7 +419,7 @@ class ModeBulkImport(WatoMode):
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:
-                        folder.create_hosts([entry], pprint_value=active_config.wato_pprint_config)
+                        folder.create_hosts([entry], pprint_value=pprint_value)
                         index += 1
                         imported_hosts.append(entry[0])
                     except (MKAuthException, MKUserError, MKGeneralException) as exc:
@@ -429,7 +437,7 @@ class ModeBulkImport(WatoMode):
         if not request.has_var("file_id"):
             self._upload_form()
         else:
-            self._preview()
+            self._preview(config.tags.tag_groups)
 
     def _upload_form(self) -> None:
         with html.form_context("upload", method="POST"):
@@ -469,11 +477,11 @@ class ModeBulkImport(WatoMode):
             optional_keys=[],
         )
 
-    def _preview(self) -> None:
+    def _preview(self, tag_groups: Sequence[TagGroup]) -> None:
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
-            attributes = self._attribute_choices()
+            attributes = self._attribute_choices(tag_groups)
 
             # first line could be missing in situation of import error
             csv_reader = self._open_csv_file()
@@ -559,7 +567,7 @@ class ModeBulkImport(WatoMode):
         self._vs_parse_params().render_input("_preview", params)
         html.hidden_fields()
 
-    def _vs_parse_params(self):
+    def _vs_parse_params(self) -> Dictionary:
         return Dictionary(
             elements=[
                 (
@@ -585,7 +593,7 @@ class ModeBulkImport(WatoMode):
             default_keys=["has_title_line"],
         )
 
-    def _attribute_choices(self):
+    def _attribute_choices(self, tag_groups: Sequence[TagGroup]) -> Choices:
         attributes = [
             (None, _("(please select)")),
             ("-", _("Don't import")),
@@ -598,7 +606,7 @@ class ModeBulkImport(WatoMode):
         ]
 
         # Add tag groups
-        for tag_group in active_config.tags.tag_groups:
+        for tag_group in tag_groups:
             attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
 
         # Add custom attributes

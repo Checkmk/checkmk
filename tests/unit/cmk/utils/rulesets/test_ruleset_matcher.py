@@ -19,6 +19,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
     RulesetMatcher,
     RuleSpec,
+    SingleHostRulesetMatcher,
     TagCondition,
 )
 from cmk.utils.servicename import ServiceName
@@ -871,3 +872,47 @@ def test_ruleset_matcher_get_host_values_changed_labels() -> None:
     # until we clear the caches
     matcher.clear_caches()
     assert matcher.get_host_values(HostName("host1"), rules, those_labels) == ["value_that"]
+
+
+class TestSingleRulesetMatcher:
+    @staticmethod
+    def _make_matcher() -> RulesetMatcher:
+        return RulesetMatcher(
+            host_tags={HostName("testhost1"): {}, HostName("testhost2"): {}},
+            host_paths={},
+            all_configured_hosts=frozenset((HostName("testhost1"), HostName("testhost2"))),
+            clusters_of={},
+            nodes_of={},
+        )
+
+    @staticmethod
+    def _ruleset() -> Sequence[RuleSpec[str]]:
+        return [
+            {
+                "id": "23",
+                "condition": {"host_name": [HostName("testhost2")]},
+                "value": "lala",
+            },
+            {
+                "id": "24",
+                "condition": {"host_name": [HostName("testhost2")]},
+                "value": "lulu",
+            },
+        ]
+
+    def test_miss(self) -> None:
+        assert (
+            SingleHostRulesetMatcher(
+                matcher=self._make_matcher(),
+                host_ruleset=self._ruleset(),
+                labels_of_host=lambda x: {},
+            )(HostName("testhost1"))
+            == []
+        )
+
+    def test_match(self) -> None:
+        assert SingleHostRulesetMatcher(
+            matcher=self._make_matcher(),
+            host_ruleset=self._ruleset(),
+            labels_of_host=lambda x: {},
+        )(HostName("testhost2")) == ["lala", "lulu"]

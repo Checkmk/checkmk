@@ -4087,20 +4087,6 @@ class CEEConfigCache(ConfigCache):
 
         return self.__smartping_settings.setdefault(host_name, _impl())
 
-    def lnx_remote_alert_handlers(self, host_name: HostName) -> Sequence[Mapping[str, str]]:
-        def _impl() -> Sequence[Mapping[str, str]]:
-            default: Sequence[RuleSpec[Mapping[str, str]]] = []
-            return self.ruleset_matcher.get_host_values(
-                host_name,
-                agent_config.get("lnx_remote_alert_handlers", default),
-                self.label_manager.labels_of_host,
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__lnx_remote_alert_handlers[host_name]
-
-        return self.__lnx_remote_alert_handlers.setdefault(host_name, _impl())
-
     def rrd_config_of_service(
         self, host_name: HostName, service_name: ServiceName
     ) -> RRDObjectConfig | None:

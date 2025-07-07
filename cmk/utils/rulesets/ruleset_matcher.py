@@ -6,6 +6,7 @@
 
 import contextlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from re import Pattern
 from typing import (
     Any,
@@ -959,3 +960,13 @@ def matches_tag_condition(
         taggroup_id,
         tag_condition,
     ) in hosttags
+
+
+@dataclass(frozen=True)
+class SingleHostRulesetMatcher[TRuleValue]:
+    matcher: RulesetMatcher
+    host_ruleset: Sequence[RuleSpec[TRuleValue]]
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(self, host_name: HostName) -> Sequence[TRuleValue]:
+        return self.matcher.get_host_values(host_name, self.host_ruleset, self.labels_of_host)

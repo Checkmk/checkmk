@@ -14,7 +14,7 @@ import cmk.utils.paths
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupName, GroupSpec, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -157,9 +157,7 @@ class ModeGroups(WatoMode, abc.ABC):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            groups.delete_group(
-                delname, self.type_name, pprint_value=active_config.wato_pprint_config
-            )
+            groups.delete_group(delname, self.type_name, pprint_value=config.wato_pprint_config)
             self._groups = self._load_groups()
 
         if request.var("mode") == "edit_host_group":
@@ -275,7 +273,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self._name,
                 self.type_name,
                 self.group,
-                pprint_value=active_config.wato_pprint_config,
+                pprint_value=config.wato_pprint_config,
             )
         else:
             assert self._name is not None
@@ -283,7 +281,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self._name,
                 self.type_name,
                 self.group,
-                pprint_value=active_config.wato_pprint_config,
+                pprint_value=config.wato_pprint_config,
             )
 
         return redirect(mode_url("%s_groups" % self.type_name))

@@ -26,7 +26,9 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     LabelsSection,
     MgmtApiClient,
     process_app_registrations,
+    process_organization,
     process_usage_details,
+    process_users,
     ResourceHealth,
     Section,
     TagsImportPatternOption,
@@ -987,3 +989,51 @@ async def test_process_app_registrations_missing_fields(
 
     with pytest.raises(KeyError):
         await process_app_registrations(mock_graph_api_client)
+
+
+@pytest.mark.asyncio
+async def test_process_users(
+    mock_graph_api_client: AsyncMock,
+) -> None:
+    mock_graph_api_client.request_async.return_value = 100
+
+    result_section = await process_users(mock_graph_api_client)
+
+    expected_section = MockAzureSection(
+        "ad",
+        content=["users_count|100\n"],
+    )
+
+    assert result_section == expected_section, "Section not as expected"
+
+
+@pytest.mark.asyncio
+async def test_process_organization(
+    mock_graph_api_client: AsyncMock,
+) -> None:
+    mock_graph_api_client.get_async.return_value = [
+        {
+            "id": "id",
+            "deletedDateTime": None,
+            "assignedPlans": [
+                {
+                    "capabilityStatus": "Deleted",
+                    "service": "SCO",
+                    "servicePlanId": "plan_id",
+                }
+            ],
+            "onPremisesSyncStatus": [],
+        }
+    ]
+
+    result_section = await process_organization(mock_graph_api_client)
+
+    expected_section = MockAzureSection(
+        "ad",
+        content=[
+            'ad_connect|[{"assignedPlans": [{"capabilityStatus": "Deleted", \
+"service": "SCO", "servicePlanId": "plan_id"}], "deletedDateTime": null, "id": "id", "onPremisesSyncStatus": []}]\n'
+        ],
+    )
+
+    assert result_section == expected_section, "Section not as expected"

@@ -1782,7 +1782,7 @@ async def process_users(graph_api_client: BaseAsyncApiClient) -> AzureSection:
 async def process_organization(graph_api_client: BaseAsyncApiClient) -> AzureSection:
     orgs = await graph_api_client.get_async("organization", key="value")
     section = AzureSection("ad")
-    section.add(["ad_connect", json.dumps(orgs)])
+    section.add(["ad_connect", json.dumps(orgs, sort_keys=True)])
 
     return section
 

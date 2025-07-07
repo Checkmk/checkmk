@@ -94,7 +94,7 @@ py_binary(
     out = "lib/libcrypto.so.3." + edition,
     intermediate_out = "lib/libcrypto.so.3.replaced",
     new_value = "/omd/versions/{version}.%s/" % edition,
-    reg_ex = "/home/.*?/openssl.build_tmpdir/openssl/",
+    reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
     tool = ":binreplace_binary",
     value = "//bazel/cmk/version",
 ) for edition in [

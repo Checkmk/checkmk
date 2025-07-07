@@ -22,7 +22,7 @@ from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInpu
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -491,8 +491,8 @@ class ModeEditHost(ABCHostMode):
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
             update_dns_cache_result = update_dns_cache(
-                automation_config=make_automation_config(active_config.sites[self._host.site_id()]),
-                debug=active_config.debug,
+                automation_config=make_automation_config(config.sites[self._host.site_id()]),
+                debug=config.debug,
             )
             infotext = (
                 _("Successfully updated IP addresses of %d hosts.")
@@ -509,8 +509,8 @@ class ModeEditHost(ABCHostMode):
             folder.delete_hosts(
                 [self._host.name()],
                 automation=delete_hosts,
-                pprint_value=active_config.wato_pprint_config,
-                debug=active_config.debug,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
             )
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -518,11 +518,11 @@ class ModeEditHost(ABCHostMode):
             remove_tls_registration(
                 [
                     (
-                        make_automation_config(active_config.sites[self._host.site_id()]),
+                        make_automation_config(config.sites[self._host.site_id()]),
                         [self._host.name()],
                     )
                 ],
-                debug=active_config.debug,
+                debug=config.debug,
             )
             return None
 
@@ -532,9 +532,7 @@ class ModeEditHost(ABCHostMode):
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
-        host.edit(
-            attributes, self._get_cluster_nodes(), pprint_value=active_config.wato_pprint_config
-        )
+        host.edit(attributes, self._get_cluster_nodes(), pprint_value=config.wato_pprint_config)
         self._host = folder.load_host(self._host.name())
 
         if request.var("_save"):
@@ -798,11 +796,11 @@ class CreateHostMode(ABCHostMode):
         if transactions.check_transaction():
             folder.create_hosts(
                 [(hostname, attributes, cluster_nodes)],
-                pprint_value=active_config.wato_pprint_config,
+                pprint_value=config.wato_pprint_config,
             )
 
         self._host = folder.load_host(hostname)
-        bakery.try_bake_agents_for_hosts([hostname], debug=active_config.debug)
+        bakery.try_bake_agents_for_hosts([hostname], debug=config.debug)
 
         inventory_url = folder_preserving_link(
             [

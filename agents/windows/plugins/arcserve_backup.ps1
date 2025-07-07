@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0p7"
+$CMK_VERSION = "2.4.0p8"
 ####
 ## ArcServe.ps1
 ####

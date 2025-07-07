@@ -142,7 +142,8 @@ def test_locked_user(
     login_page = LoginPage(new_page, test_site.internal_url)
     logger.info("As '%s': login", user_data.user_id)
     login_page.login(new_user_credentials)
-    problem_dashboard_page = ProblemDashboard(login_page.page, navigate_to_page=False)
+    # TODO: add test validating non-admin user's default dashboard.
+    problem_dashboard_page = ProblemDashboard(login_page.page)
 
     logger.info("As cmkadmin: lock the user '%s'", user_data.user_id)
     edit_user_page = EditUser(dashboard_page.page, user_data.user_id)

@@ -121,7 +121,6 @@ class ProblemDashboard(CmkPage):
     """Represent the page `Problem dashboard`.
 
     `Problem dashboard` is a default dashboard page for cmk monitoring user.
-    #TODO: create a common base class for 'Main dashboard' and 'Problem dashboard', see CMK-19521
     """
 
     page_title: str = "Problem dashboard"
@@ -129,8 +128,9 @@ class ProblemDashboard(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
-        self.main_menu.main_page.click()
-        self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
+        self.main_menu.monitor_menu(self.page_title).click()
+        url = quote_plus("dashboard.py?name=problems")
+        self.page.wait_for_url(url=re.compile(url), wait_until="load")
         self.validate_page()
 
     @override
@@ -149,3 +149,6 @@ class ProblemDashboard(CmkPage):
             f'div[class*="dashlet "]:has(text:text-is("{dashlet_name}")), '
             f'div[class*="dashlet "]:has(a:text-is("{dashlet_name}"))'
         )
+
+
+# TODO: create Default dashboard POM for admin and non-admin users, see CMK-19521.

@@ -225,8 +225,9 @@ def _perftest_dist(
     yield PerformanceTest([central_site, remote_site, remote_site_2], config=pytestconfig)
 
 
-@pytest.mark.usefixtures("track_resources")
-def test_performance_hosts(perftest_dist: PerformanceTest, benchmark: BenchmarkFixture) -> None:
+def test_performance_hosts(
+    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+) -> None:
     """Bulk host creation"""
     benchmark.pedantic(
         perftest_dist.scenario_create_and_delete_hosts,
@@ -250,8 +251,9 @@ def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: Benchma
     version_from_env() < CMKVersion("2.4.0"),
     reason="Not supported on Checkmk versions below 2.4.0!",
 )
-@pytest.mark.usefixtures("track_resources")
-def test_performance_services(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
+def test_performance_services(
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+) -> None:
     """Bulk service discovery"""
     benchmark.pedantic(
         perftest.scenario_performance_services,
@@ -261,8 +263,9 @@ def test_performance_services(perftest: PerformanceTest, benchmark: BenchmarkFix
     )
 
 
-@pytest.mark.usefixtures("track_resources")
-def test_performance_piggyback(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
+def test_performance_piggyback(
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+) -> None:
     benchmark.pedantic(
         perftest.scenario_performance_dcd_piggyback,
         args=[],

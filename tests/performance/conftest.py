@@ -67,8 +67,7 @@ def _track_resources(request: pytest.FixtureRequest) -> Iterator[None]:
 
 
 @pytest.fixture(name="central_site", scope="session")
-@pytest.mark.usefixtures("ensure_cron")
-def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
+def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     setup_stop_event = threading.Event()
     cleanup_start_event = threading.Event()
     with (
@@ -133,14 +132,16 @@ def _make_connected_remote_site(
 
 
 @pytest.fixture(name="remote_site", scope="session")
-@pytest.mark.usefixtures("ensure_cron")
-def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
+def _remote_site(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote", central_site, request.node.name)
 
 
 @pytest.fixture(name="remote_site_2", scope="session")
-@pytest.mark.usefixtures("ensure_cron")
-def _remote_site_2(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
+def _remote_site_2(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote2", central_site, request.node.name)
 
 

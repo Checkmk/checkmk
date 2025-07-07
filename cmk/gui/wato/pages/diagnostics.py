@@ -53,7 +53,7 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
@@ -195,7 +195,11 @@ class ModeDiagnostics(WatoMode):
             result := self._job.start(
                 JobTarget(
                     callable=diagnostics_dump_entry_point,
-                    args=DiagnosticsDumpArgs(params=params),
+                    args=DiagnosticsDumpArgs(
+                        params=params,
+                        automation_config=make_automation_config(config.sites[params["site"]]),
+                        debug=config.debug,
+                    ),
                 ),
                 InitialStatusArgs(
                     title=self._job.gui_title(),
@@ -686,12 +690,16 @@ class ModeDiagnostics(WatoMode):
 
 class DiagnosticsDumpArgs(BaseModel, frozen=True):
     params: DiagnosticsParameters
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    debug: bool
 
 
 def diagnostics_dump_entry_point(
     job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
 ) -> None:
-    DiagnosticsDumpBackgroundJob().do_execute(args.params, job_interface)
+    DiagnosticsDumpBackgroundJob().do_execute(
+        args.params, job_interface, automation_config=args.automation_config, debug=args.debug
+    )
 
 
 class DiagnosticsDumpBackgroundJob(BackgroundJob):
@@ -711,15 +719,16 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         self,
         diagnostics_parameters: DiagnosticsParameters,
         job_interface: BackgroundProcessInterface,
+        *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+        debug: bool,
     ) -> None:
         with job_interface.gui_context():
             self._do_execute(
                 diagnostics_parameters,
                 job_interface,
-                automation_config=make_automation_config(
-                    active_config.sites[diagnostics_parameters["site"]]
-                ),
-                debug=active_config.debug,
+                automation_config=automation_config,
+                debug=debug,
             )
 
     def _do_execute(

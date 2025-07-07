@@ -1049,6 +1049,19 @@ async fn test_check_config_exec_local() {
     assert!(res.is_err());
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_check_config_exec_integrated() {
+    let file = tools::create_integrated_config();
+    let res = CheckConfig::load_file(file.path());
+    #[cfg(windows)]
+    assert_eq!(
+        String::from(res.unwrap().ms_sql().unwrap().conn().hostname()),
+        "berlin.de".to_owned()
+    );
+    #[cfg(unix)]
+    assert!(res.is_err());
+}
+
 #[test]
 fn test_no_ms_sql() {
     const EXPECTED_ERROR: &str = "ERROR: Failed to gather SQL server instances";

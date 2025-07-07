@@ -152,6 +152,22 @@ mssql:
     l
 }
 
+pub fn create_integrated_config() -> NamedTempFile {
+    let mut l = NamedTempFile::new().unwrap();
+    let config = r#"
+---
+mssql:
+  main:
+    authentication:
+       username: ""
+       type: "integrated"
+    connection:
+       hostname: "berlin.de"
+"#;
+    l.write_all(config.as_bytes()).unwrap();
+    l
+}
+
 pub fn create_config_with_wrong_host() -> NamedTempFile {
     let mut l = NamedTempFile::new().unwrap();
     let config = r#"

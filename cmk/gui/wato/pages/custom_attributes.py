@@ -13,7 +13,7 @@ from typing import Generic, TypeVar
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -115,7 +115,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(self) -> None:
+    def _update_config(self, *, pprint_value: bool) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -198,14 +198,14 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 action_name="edit-%sattr" % self._type,
                 text=_("Create new %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=config.wato_use_git,
             )
         else:
             _changes.add_change(
                 action_name="edit-%sattr" % self._type,
                 text=_("Modified %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=config.wato_use_git,
             )
             self._attr["title"] = title
             self._attr["topic"] = topic
@@ -216,7 +216,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         self._add_extra_attrs_from_html_vars()
 
         save_custom_attrs_to_mk_file(self._all_attrs)
-        self._update_config()
+        self._update_config(pprint_value=config.wato_pprint_config)
 
         return redirect(mode_url(self._type + "_attrs"))
 
@@ -328,7 +328,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     def _macro_label(self) -> str:
         return _("Make this variable available in notifications")
 
-    def _update_config(self) -> None:
+    def _update_config(self, *, pprint_value: bool) -> None:
         update_user_custom_attrs(datetime.now())
 
     def _show_in_table_option(self) -> None:
@@ -414,8 +414,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
             "Make this custom attribute available to check commands, notifications and the status GUI"
         )
 
-    def _update_config(self) -> None:
-        update_host_custom_attrs(pprint_value=active_config.wato_pprint_config)
+    def _update_config(self, *, pprint_value: bool) -> None:
+        update_host_custom_attrs(pprint_value=pprint_value)
 
     def _show_in_table_option(self) -> None:
         self._render_table_option(
@@ -456,7 +456,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(self):
+    def _update_config(self, *, pprint_value: bool) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -518,12 +518,12 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
         remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
-        self._update_config()
+        self._update_config(pprint_value=config.wato_pprint_config)
         _changes.add_change(
             action_name="edit-%sattrs" % self._type,
             text=_("Deleted attribute %s") % (delname),
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
         return redirect(self.mode_url())
 
@@ -573,7 +573,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     def _attrs(self) -> list[CustomUserAttrSpec]:
         return self._all_attrs["user"]
 
-    def _update_config(self) -> None:
+    def _update_config(self, *, pprint_value: bool) -> None:
         update_user_custom_attrs(datetime.now())
 
     def title(self) -> str:
@@ -610,8 +610,8 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     def _attrs(self) -> list[CustomHostAttrSpec]:
         return self._all_attrs["host"]
 
-    def _update_config(self) -> None:
-        update_host_custom_attrs(pprint_value=active_config.wato_pprint_config)
+    def _update_config(self, *, pprint_value: bool) -> None:
+        update_host_custom_attrs(pprint_value=pprint_value)
 
     def title(self) -> str:
         return _("Custom host attributes")

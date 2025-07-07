@@ -2345,9 +2345,10 @@ fn determine_reconnect(
                     if Some(&customization.endpoint()) != instance_builder.get_endpoint() =>
                 {
                     log::info!(
-                        "Instance {} to be reconnected with {}",
+                        "Instance {} to be reconnected with `{}` from `{}`",
                         instance_builder.get_name(),
-                        customization.endpoint().dump_compact()
+                        customization.endpoint().dump_compact(),
+                        instance_builder.get_endpoint().unwrap().dump_compact()
                     );
                     (instance_builder, Some(customization.endpoint()))
                 }

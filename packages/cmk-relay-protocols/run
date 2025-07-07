@@ -17,6 +17,7 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
+    echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
     echo "  -a, --all               shortcut for -u -F -l all"
@@ -28,6 +29,7 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
+    RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
     RUN_RUFF=no
@@ -36,7 +38,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'uFl:afDj:h' --long 'check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'uFl:afDj:h' --long 'unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -45,6 +47,10 @@ parse_options() {
 
     while true; do
         case "$1" in
+            '-u' | '--unit-tests')
+                RUN_UNIT_TESTS=yes
+                shift
+                ;;
             '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
@@ -63,6 +69,7 @@ parse_options() {
                 shift 2
                 ;;
             '-a' | '--all')
+                RUN_UNIT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
                 RUN_RUFF=yes
@@ -95,7 +102,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 setup_venv() {
@@ -106,6 +113,10 @@ setup_venv() {
     # shellcheck source=/dev/null
     source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
+}
+
+run_unit_tests() {
+    bazel test :all
 }
 
 run_check_format() {
@@ -151,7 +162,7 @@ run_semgrep() {
         --oss-only \
         --use-git-ignore \
         --disable-version-check \
-        cmk
+        cmk tests
 }
 
 run_format() {
@@ -176,6 +187,7 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
+    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
     test ${RUN_RUFF} = yes && run_ruff

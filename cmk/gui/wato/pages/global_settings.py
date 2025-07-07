@@ -396,7 +396,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 )
             )
 
-        self._save()
+        self._save(pprint_value=config.wato_pprint_config, use_git=config.wato_use_git)
         if new_value and self._varname == "trusted_certificate_authorities":
             ConfigDomainCACertificates.log_changes(current, new_value)
 
@@ -411,7 +411,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             domain_settings={
                 domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
             },
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
 
         return redirect(self._back_url())
@@ -440,7 +440,7 @@ class ABCEditGlobalSettingMode(WatoMode):
     def _back_url(self) -> str:
         raise NotImplementedError()
 
-    def _save(self):
+    def _save(self, *, pprint_value: bool, use_git: bool) -> None:
         save_global_settings(self._current_settings)
 
     @abc.abstractmethod

@@ -38,7 +38,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -276,7 +276,9 @@ class ModeEditSite(WatoMode):
 
         return site_spec
 
-    def save_site_changes(self, site_spec: SiteConfiguration) -> ActionResult:
+    def save_site_changes(
+        self, site_spec: SiteConfiguration, *, pprint_value: bool
+    ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
 
@@ -304,7 +306,7 @@ class ModeEditSite(WatoMode):
         self._site_mgmt.save_sites(
             configured_sites,
             activate=True,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
         )
 
         msg = add_changes_after_editing_site_connection(
@@ -319,7 +321,7 @@ class ModeEditSite(WatoMode):
 
     def action(self, config: Config) -> ActionResult:
         site_spec = self._site_from_valuespec()
-        return self.save_site_changes(site_spec)
+        return self.save_site_changes(site_spec, pprint_value=config.wato_pprint_config)
 
     def page(self, config: Config) -> None:
         with html.form_context("site"):
@@ -718,7 +720,7 @@ class ModeEditBrokerConnection(WatoMode):
             raw_site_spec["unique_id"],
             connection,
             is_new=self._is_new,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=config.wato_pprint_config,
         )
         msg = add_changes_after_editing_broker_connection(
             connection_id=raw_site_spec["unique_id"],
@@ -876,7 +878,11 @@ class ModeDistributedMonitoring(WatoMode):
 
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
-            return self._action_delete(SiteId(delete_id))
+            return self._action_delete(
+                SiteId(delete_id),
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+            )
 
         delete_folders_id = request.get_ascii_input("_delete_folders")
         if delete_folders_id and transactions.check_transaction():
@@ -884,20 +890,29 @@ class ModeDistributedMonitoring(WatoMode):
 
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
-            return self._action_delete_broker_connection(ConnectionId(delete_connection_id))
+            return self._action_delete_broker_connection(
+                ConnectionId(delete_connection_id), pprint_value=config.wato_pprint_config
+            )
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
-            return self._action_logout(SiteId(logout_id))
+            return self._action_logout(
+                SiteId(logout_id),
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+            )
 
         login_id = request.get_ascii_input("_login")
         if login_id:
-            return self._action_login(SiteId(login_id), debug=active_config.debug)
+            return self._action_login(
+                SiteId(login_id),
+                debug=config.debug,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+            )
 
         if trigger_certs_site_id := request.get_ascii_input("_trigger_certs_creation"):
-            return self._action_trigger_certs(
-                SiteId(trigger_certs_site_id), debug=active_config.debug
-            )
+            return self._action_trigger_certs(SiteId(trigger_certs_site_id), debug=config.debug)
 
         return None
 
@@ -908,7 +923,9 @@ class ModeDistributedMonitoring(WatoMode):
         flash(_("Remote broker certificates created for site %s.") % trigger_certs_site_id)
         return redirect(mode_url("sites"))
 
-    def _action_delete(self, delete_id: SiteId) -> ActionResult:
+    def _action_delete(
+        self, delete_id: SiteId, *, pprint_value: bool, use_git: bool
+    ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -981,8 +998,8 @@ class ModeDistributedMonitoring(WatoMode):
 
         self._site_mgmt.delete_site(
             delete_id,
-            pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pprint_value=pprint_value,
+            use_git=use_git,
         )
         return redirect(mode_url("sites"))
 
@@ -1000,9 +1017,11 @@ class ModeDistributedMonitoring(WatoMode):
 
         return redirect(mode_url("sites"))
 
-    def _action_delete_broker_connection(self, delete_connection_id: ConnectionId) -> ActionResult:
+    def _action_delete_broker_connection(
+        self, delete_connection_id: ConnectionId, *, pprint_value: bool
+    ) -> ActionResult:
         source_site, dest_site = self._site_mgmt.delete_broker_connection(
-            delete_connection_id, pprint_value=active_config.wato_pprint_config
+            delete_connection_id, pprint_value=pprint_value
         )
         add_changes_after_editing_broker_connection(
             connection_id=delete_connection_id,
@@ -1011,7 +1030,9 @@ class ModeDistributedMonitoring(WatoMode):
         )
         return redirect(mode_url("sites"))
 
-    def _action_logout(self, logout_id: SiteId) -> ActionResult:
+    def _action_logout(
+        self, logout_id: SiteId, *, pprint_value: bool, use_git: bool
+    ) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
         if "secret" in site:
@@ -1019,7 +1040,7 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.save_sites(
             configured_sites,
             activate=True,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
         )
         _changes.add_change(
             action_name="edit-site",
@@ -1027,12 +1048,14 @@ class ModeDistributedMonitoring(WatoMode):
             user_id=user.id,
             domains=[ConfigDomainGUI()],
             sites=[omd_site()],
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
 
-    def _action_login(self, login_id: SiteId, *, debug: bool) -> ActionResult:
+    def _action_login(
+        self, login_id: SiteId, *, debug: bool, pprint_value: bool, use_git: bool
+    ) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
@@ -1062,7 +1085,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._site_mgmt.save_sites(
                     configured_sites,
                     activate=True,
-                    pprint_value=active_config.wato_pprint_config,
+                    pprint_value=pprint_value,
                 )
                 message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
@@ -1073,7 +1096,7 @@ class ModeDistributedMonitoring(WatoMode):
                     action="edit-site",
                     message=message,
                     user_id=user.id,
-                    use_git=active_config.wato_use_git,
+                    use_git=use_git,
                 )
                 flash(message)
                 return redirect(mode_url("sites"))
@@ -1587,7 +1610,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         if varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
             site_specific_settings = {
                 site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in active_config.sites.items()
+                for site_id, site_conf in config.sites.items()
             }
             site_specific_settings[self._site_id][varname] = new_value
 
@@ -1608,7 +1631,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._site_mgmt.save_sites(
             self._configured_sites,
             activate=False,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=config.wato_pprint_config,
         )
 
         if self._site_id == omd_site():
@@ -1621,7 +1644,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             sites=[self._site_id],
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
 
         if action == "_reset":
@@ -1655,7 +1678,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 return
 
             if not is_replication_enabled(self._site) and not site_is_local(
-                active_config.sites[self._site_id]
+                config.sites[self._site_id]
             ):
                 html.show_error(
                     _(
@@ -1700,11 +1723,11 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def _affected_sites(self):
         return [self._site_id]
 
-    def _save(self) -> None:
+    def _save(self, *, pprint_value: bool, use_git: bool) -> None:
         site_management_registry["site_management"].save_sites(
             self._configured_sites,
             activate=False,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
         )
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
@@ -1803,7 +1826,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             user_id=user.id,
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
         save_global_settings(
             {

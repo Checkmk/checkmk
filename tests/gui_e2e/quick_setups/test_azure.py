@@ -36,7 +36,7 @@ def fixture_fake_azure_dump(test_site: Site) -> Iterator[None]:
     Faking the Azure agent bypasses such validations, which are 'out-of-scope' of UI tests.
     """
     fake_agent_azure = Path(__file__).parent / "fake_agent_azure.py"
-    azure_agent = test_site.path("lib/python3/cmk/plugins/azure/special_agents/agent_azure.py")
+    azure_agent = test_site.path("lib/python3/cmk/plugins/azure/special_agent/agent_azure.py")
     backup_agent = str(azure_agent).replace(".py", ".py.bck")
     run(["cp", str(azure_agent), backup_agent], sudo=True)
     run(["cp", str(fake_agent_azure), str(azure_agent)], sudo=True)

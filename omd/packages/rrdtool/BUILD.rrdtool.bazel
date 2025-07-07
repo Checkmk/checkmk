@@ -88,8 +88,8 @@ configure_make(
         # expect them.  So let's copy them here.
         LPLP="lib/perl5/lib/perl5"
         cp -R ${INSTALLDIR}${EXT_BUILD_DEPS}/$LPLP/* ${INSTALLDIR}/$LPLP
-        # remove unnecessary folders
-        rm -rf ${INSTALLDIR}/{home,usr}
+        # remove unnecessary folders: since bazel 8, we also need to remove "root" under alma9
+        rm -rf ${INSTALLDIR}/{home,usr,root}
     """,
     targets = [
         "-C po all",

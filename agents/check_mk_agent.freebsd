@@ -794,12 +794,16 @@ HERE
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-
-        CACHEFILE_NEW="${CACHEFILE}.new"
-        _cleanup_leftover_files "${CACHEFILE_NEW}" "${CREATION_TIMEOUT}" "${NOW}"
+        # This does the right thing, regardless whether the pattern matches!
+        _cfile_in_use() {
+            for cfile in "${CACHEFILE}.new."*; do
+                printf "%s\n" "${cfile}"
+                break
+            done
+        }
 
         # Time to refresh cache file and new job not yet running?
-        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE_NEW}" ]; then
+        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
 
             # Start it.
             # We're running two parallel blocks, implementing a timeout. Roughly:
@@ -807,20 +811,20 @@ HERE
             # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
             cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
              {
-                trap 'rm -f "${CACHEFILE_NEW}"' INT HUP TERM KILL
                 eval '${MK_DEFINE_LOG_SECTION_TIME}'
-                exec > "${CACHEFILE_NEW}" || exit 1
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
                 $* \
-                && mv -f "${CACHEFILE_NEW}" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}"
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
                 kill $(_nohup_kill_id)
              } &
              {
-                trap 'rm -f "${CACHEFILE_NEW}"' INT HUP TERM KILL
                 sleep ${CREATION_TIMEOUT}
                 {
                       printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
                       printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
                 } >"${FAIL_REPORT_FILE}" 2>&1
+                rm -f "${CACHEFILE}.new.\$\$"
                 kill -9 $(_nohup_kill_id)
              } &
 HERE
@@ -828,25 +832,7 @@ HERE
 
     fi
 
-    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE CACHEFILE_NEW NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
-}
-
-_cleanup_leftover_files() {
-    file="${1}"
-    creation_timeout="${2}"
-    now="${3}"
-
-    # No file: nothig to do
-    [ -e "${file}" ] || return
-
-    # young enough file: all good, we're working on it
-    [ $((NOW - "$(get_file_mtime "${file}")")) -le "${creation_timeout}" ] && return
-
-    # `file` is surprisingly old. This should have been prevented by the `trap`.
-    # Creation seems to have been interrupted somehow.
-    # Just clean up.
-    rm -rf "${file}"
-    unset file creation_timeout now
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
 }
 
 run_local_checks() {

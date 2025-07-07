@@ -1,0 +1,76 @@
+---
+system:
+  logging:
+    level: "warn" # optional, default: "info"
+    max_size: 1000000
+    max_count: 5
+oracle:
+  main: # mandatory, defines main SQL check to be executed
+    options: # optional
+      max_connections: 6 # optional, default: absent, 6
+      max_queries: 16 # optional, for the future use
+    authentication: # mandatory
+      username: "foo" # optional, examples: "mydbuser", "c##multitenantuser"
+      password: "bar" # optional
+      role: "sysdba" # optional, default: empty, values: sysdba, sysasm, ...
+      type: "sql_server" # mandatory, default: "sql_server", values: sql_server, wallet
+    connection: # optional
+      hostname: "localhost" # optional, default: "localhost"
+      port: 1521 # optional, default: 1521
+      timeout: 5 # optional, default 5
+      tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
+      oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
+    sections: # optional, if absent will use default as defined below
+    - instance: # special section
+    - instance: # special section for ASM
+      is_asm: yes
+    - sessions:
+    - logswitches:
+    - undostat:
+    - recovery_area:
+    - recovery_status:
+    - processes:
+    - processes:
+      is_asm: yes
+    - longactivesessions:
+    - dataguard_stats:
+    - performance:
+    - locks:
+    - systemparameter:
+    - asm_diskgroup:
+      is_async: yes
+      is_asm: yes
+    - jobs:
+      is_async: yes
+    - iostats:
+      is_async: yes
+    - resumable:
+      is_async: yes
+    - rman:
+      is_async: yes
+    - tablespaces:
+      is_async: yes
+    cache_age: 600 # optional, default: 600
+    piggyback_host: "mypiggybackhost" # optional
+    discovery: # optional, defines instances to be monitored
+      detect: yes # optional
+      include: ["foo", "bar", "inst1"] # optional
+      exclude: ["baz"] # optional
+    instances: # optional
+      - sid: "INST1" # mandatory
+        authentication: # optional, if absent will use main
+        connection: # optional, is absent will use main
+        alias: myservicename # optional, default: empty. Is used as TNS alias to overwrite sid and connection config
+        piggyback: # optional
+          hostname: "mypiggybackhost" # mandatory
+          sections: # optional, if absent will use main
+    mode: "port" # optional, default: "port", values: "port", "special"
+  configs:
+    - main:
+      options:
+      authentication:
+      connection:
+      instances:
+
+
+

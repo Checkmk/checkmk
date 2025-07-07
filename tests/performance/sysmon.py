@@ -114,16 +114,7 @@ def get_net_io_counters() -> perf_dict:
         "dropin": net_io_counters.dropin,
         "dropout": net_io_counters.dropout,
     }
-    return _named_section("io_counters", data)
-
-
-def get_network_info() -> perf_dict:
-    net_io_counters = psutil.net_io_counters()
-    data: perf_dict = {
-        "bytes_sent": net_io_counters.bytes_sent,
-        "bytes_recv": net_io_counters.bytes_recv,
-    }
-    return _named_section("disk_info", data)
+    return _named_section("net_io_counters", data)
 
 
 def get_process_info() -> perf_dict:
@@ -166,7 +157,6 @@ def get_statistics(timestamp: str, all: bool = False) -> perf_dict:
         statistics
         | get_kernel_info()
         | get_disk_info()
-        | get_network_info()
         | get_process_info()
         | get_load_average()
         | get_net_io_counters()

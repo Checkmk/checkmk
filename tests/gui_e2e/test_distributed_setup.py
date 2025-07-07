@@ -92,7 +92,6 @@ def fixture_remote_site(
         yield from site_factory.get_test_site(name="remote")
 
 
-@pytest.mark.skip("New and flaky test. Investigate with CMK-24264")
 def test_remote_host_configuring(
     dashboard_page: Dashboard, test_site: Site, credentials: CmkCredentials, remote_site: Site
 ) -> None:

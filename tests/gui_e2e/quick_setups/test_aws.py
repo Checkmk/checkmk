@@ -80,7 +80,7 @@ def fixture_aws_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
-@pytest.mark.xfail(reason="CMK-24568")
+@pytest.mark.xfail(reason="Bug CMK-24545", strict=True, raises=AssertionError)
 def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_site: Site) -> None:
     """Validate setup of an AWS configuration using 'Quick setup: AWS'"""
     config_name = aws_qs_config_page.configuration_name

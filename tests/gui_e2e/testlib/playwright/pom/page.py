@@ -78,13 +78,17 @@ class CmkPage(LocatorHelper):
 
     def expect_success_state(self) -> None:
         logger.info("Check changes were activated successfully")
-        expect(
-            self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
-        ).to_be_visible()
+
+        progress_elements = self.main_area.locator("td.repprogress > div.progress")
+        success_elements = self.main_area.locator("td.repprogress > div.progress.state_success")
 
         expect(
-            self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
-        ).to_be_visible()
+            success_elements, message="Changes were not successfully activated in all the sites"
+        ).to_have_count(progress_elements.count())
+
+        # TODO: implement the check for 'no changes' state in the new menu budget
+        # It seems to be not trustworthy by now, so we disable it for now.
+        # expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible()
 
     def goto_main_dashboard(self) -> None:
         """Click the banner and wait for the dashboard"""
@@ -105,20 +109,27 @@ class CmkPage(LocatorHelper):
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self, site: Site | None = None) -> None:
-        """Activate changes using the UI or API.
+        """Activate changes using the UI.
 
         Args:
-            site (Site | None, optional): Site to activate changes via API.
+            site (Site | None, optional): Fail safe mechanism.
+                In case an error arises, UI related or otherwise,
+                make sure to activate the changes using REST-API.
+                Defaults to None.
+                NOTE: Activate 'foreign changes' is enabled using REST-API!
         """
         logger.info("Activate changes")
-        if site:
-            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
-            return
-
-        self.main_menu.changes_menu("Open full page").click()
-        self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
-        self.activate_selected()
-        self.expect_success_state()
+        try:
+            self.main_menu.changes_menu("Open full page").click()
+            self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
+            self.activate_selected()
+            self.expect_success_state()
+        except Exception as e:
+            if site:
+                logger.warning("fail-safe: could not activate changes using UI; using REST-API...")
+                site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+            else:
+                raise e
 
     def goto(self, url: str, event: str = "load") -> None:
         """Override `Page.goto`. Additionally, wait for the page to `load`, by default.

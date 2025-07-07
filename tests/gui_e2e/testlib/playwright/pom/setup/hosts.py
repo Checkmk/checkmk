@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-import time
 from typing import override
 from urllib.parse import quote_plus
 
@@ -38,8 +37,8 @@ class SetupHost(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Setup hosts' page")
-        expect(self.get_link("Add host")).to_be_visible()
-        expect(self.get_link("Add folder")).to_be_visible()
+        expect(self.add_host).to_be_visible()
+        expect(self.add_folder).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -131,6 +130,14 @@ class SetupHost(CmkPage):
         buttons.hover()
         buttons.get_by_role("link", name="Delete this folder").click()
         self.main_area.locator().get_by_role("button", name="Delete").click()
+
+    def check_host_not_present(self, host_name: str) -> None:
+        """Check that a host is not present in the list of hosts."""
+        logger.info("Check that host '%s' is not present", host_name)
+        expect(
+            self._host_row(host_name),
+            message=f"Host '{host_name}' is still present in the list after deletion.",
+        ).not_to_be_visible()
 
 
 class AddHost(CmkPage):
@@ -344,11 +351,6 @@ class HostProperties(CmkPage):
         logger.info("Delete host: %s", self.details.name)
         self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
-        # TODO - validate something meaningful
-        # Force serialization of pages being navigated to by introducing a delay.
-        # self.page.wait_for_url(
-        #     url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
-        # )
-        time.sleep(0.5)
+        SetupHost(self.page, navigate_to_page=False).check_host_not_present(self.details.name)
         self.activate_changes(test_site)
         self._exists = False

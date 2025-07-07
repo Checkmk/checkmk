@@ -77,9 +77,9 @@ configure_make(
     out_static_libs = [
     ],
     postfix_script = """
-        patchelf --force-rpath --set-rpath "\\$ORIGIN/../../../../../../lib" \
-            $$INSTALLDIR$${place_holder}/lib/erlang/lib/crypto-5.4.2.3/priv/lib/crypto.so \
-            $$INSTALLDIR$${place_holder}/lib/erlang/lib/crypto-5.4.2.3/priv/lib/otp_test_engine.so \
+        patchelf --force-rpath --set-rpath "\\$$ORIGIN/../../../../../../lib" \
+            $$INSTALLDIR{place_holder}/lib/erlang/lib/crypto-5.4.2.3/priv/lib/crypto.so \
+            $$INSTALLDIR{place_holder}/lib/erlang/lib/crypto-5.4.2.3/priv/lib/otp_test_engine.so \
     """.format(place_holder = PLACE_HOLDER),
     deps = ["@openssl"],
 )

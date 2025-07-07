@@ -73,23 +73,17 @@ configure_make(
         "-lpangocairo-1.0",
         "-lpng",
     ],
-    out_binaries = [
-    ],
     out_data_dirs = [
         "lib/perl5/lib/perl5/",
     ],
     out_headers_only = True,
-    out_shared_libs = [
-    ],
-    out_static_libs = [
-    ],
     postfix_script = """
         # The install step doesn't put the perl bindings where we
         # expect them.  So let's copy them here.
         LPLP="lib/perl5/lib/perl5"
-        cp -R ${INSTALLDIR}${EXT_BUILD_DEPS}/$LPLP/* ${INSTALLDIR}/$LPLP
+        cp -R $${INSTALLDIR}$${EXT_BUILD_DEPS}/$$LPLP/* $${INSTALLDIR}/$$LPLP
         # remove unnecessary folders: since bazel 8, we also need to remove "root" under alma9
-        rm -rf ${INSTALLDIR}/{home,usr,root}
+        rm -rf $${INSTALLDIR}/{home,usr,root}
     """,
     targets = [
         "-C po all",

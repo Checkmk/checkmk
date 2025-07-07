@@ -49,11 +49,11 @@ configure_make(
     ],
     out_headers_only = True,
     postfix_script = """
-        mkdir -p $INSTALLDIR/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/README  $INSTALLDIR/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/COPYING $INSTALLDIR/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/AUTHORS $INSTALLDIR/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/THANKS  $INSTALLDIR/doc/pnp4nagios
+        mkdir -p $$INSTALLDIR/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/README  $$INSTALLDIR/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/COPYING $$INSTALLDIR/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/AUTHORS $$INSTALLDIR/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/THANKS  $$INSTALLDIR/doc/pnp4nagios
     """,
     targets = [
         "all",

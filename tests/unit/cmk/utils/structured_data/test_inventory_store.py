@@ -13,6 +13,7 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import (
     deserialize_tree,
+    HistoryStore,
     InventoryStore,
     load_history,
     make_meta,
@@ -209,9 +210,8 @@ def test_load_history(tmp_path: Path) -> None:
     cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree)
     cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
 
-    inv_store = InventoryStore(tmp_path)
     history = load_history(
-        inv_store,
+        HistoryStore(tmp_path),
         host_name,
         filter_history_paths=lambda ps: ps,
         filter_tree=None,

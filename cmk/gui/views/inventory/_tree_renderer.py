@@ -16,13 +16,13 @@ from cmk.ccc.site import SiteId
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.utils.structured_data import (
+    HistoryStore,
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
-    InventoryStore,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
@@ -333,7 +333,7 @@ def ajax_inv_render_tree(config: Config) -> None:
     tree: ImmutableTree | ImmutableDeltaTree
     if tree_id := request.get_ascii_input_mandatory("tree_id", ""):
         tree, corrupted_history_files = inventory.load_delta_tree(
-            InventoryStore(cmk.utils.paths.omd_root),
+            HistoryStore(cmk.utils.paths.omd_root),
             host_name,
             int(tree_id),
         )

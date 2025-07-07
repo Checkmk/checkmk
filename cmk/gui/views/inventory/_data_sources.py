@@ -11,7 +11,7 @@ from livestatus import LivestatusResponse, OnlySites
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.structured_data import InventoryStore, RetentionInterval, SDValue
+from cmk.utils.structured_data import HistoryStore, RetentionInterval, SDValue
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -156,7 +156,7 @@ class RowTableInventoryHistory(ABCRowTable):
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
         history, corrupted_history_files = get_history(
-            InventoryStore(cmk.utils.paths.omd_root),
+            HistoryStore(cmk.utils.paths.omd_root),
             hostname,
         )
         if corrupted_history_files:

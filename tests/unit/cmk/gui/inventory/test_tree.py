@@ -15,8 +15,8 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import (
     deserialize_tree,
+    HistoryStore,
     ImmutableTree,
-    InventoryStore,
     SDFilterChoice,
     SDKey,
     SDNodeName,
@@ -350,7 +350,7 @@ def test_load_tree(
 
 def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
     history, corrupted_history_files = get_history(
-        InventoryStore(tmp_path),
+        HistoryStore(tmp_path),
         HostName("inv-host"),
     )
     assert len(history) == 0
@@ -358,7 +358,7 @@ def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
 
 
 def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: None) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -367,14 +367,14 @@ def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: No
         {"inv": "attr-0"},
     )
 
-    history, corrupted_history_files = get_history(inv_store, hostname)
+    history, corrupted_history_files = get_history(history_store, hostname)
 
     assert len(history) == 1
     assert len(corrupted_history_files) == 0
 
 
 def test_get_history(tmp_path: Path, request_context: None) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -409,7 +409,7 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         (0, 1, 0),
     ]
 
-    history, corrupted_history_files = get_history(inv_store, hostname)
+    history, corrupted_history_files = get_history(history_store, hostname)
 
     assert len(history) == 5
 
@@ -443,13 +443,13 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
 
 
 def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
     archive_dir = tmp_path / "var/check_mk/inventory_archive" / hostname
     archive_dir.mkdir(parents=True, exist_ok=True)
     (archive_dir / "foo").touch()
 
-    history, corrupted_history_files = get_history(inv_store, hostname)
+    history, corrupted_history_files = get_history(history_store, hostname)
     assert not history
     assert corrupted_history_files == ["inventory_archive/inv-host/foo"]
 
@@ -469,7 +469,7 @@ def test_load_delta_tree(
     expected_raw_delta_tree: dict,
     request_context: None,
 ) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -496,7 +496,7 @@ def test_load_delta_tree(
     )
 
     delta_tree, corrupted_history_files = load_delta_tree(
-        inv_store,
+        history_store,
         hostname,
         search_timestamp,
     )
@@ -506,7 +506,7 @@ def test_load_delta_tree(
 
 
 def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -533,12 +533,12 @@ def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None
     )
 
     with pytest.raises(MKGeneralException) as e:
-        load_delta_tree(inv_store, hostname, -1)
+        load_delta_tree(history_store, hostname, -1)
     assert "Found no history entry at the time of '-1' for the host 'inv-host'" == str(e.value)
 
 
 def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -566,17 +566,17 @@ def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
 
     search_timestamp = int((tmp_path / "var/check_mk/inventory" / hostname).stat().st_mtime)
 
-    delta_tree, corrupted_history_files = load_delta_tree(inv_store, hostname, search_timestamp)
+    delta_tree, corrupted_history_files = load_delta_tree(history_store, hostname, search_timestamp)
 
     assert delta_tree is not None
     assert len(corrupted_history_files) == 0
-    assert load_latest_delta_tree(inv_store, hostname) is not None
+    assert load_latest_delta_tree(history_store, hostname) is not None
 
 
 def test_load_latest_delta_tree_no_archive_and_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # current tree
@@ -585,13 +585,13 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree(
         {"inv": "attr"},
     )
 
-    assert not load_latest_delta_tree(inv_store, hostname)
+    assert not load_latest_delta_tree(history_store, hostname)
 
 
 def test_load_latest_delta_tree_one_archive_and_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -606,7 +606,7 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree(
         {"inv": "attr"},
     )
 
-    delta_tree = load_latest_delta_tree(inv_store, hostname)
+    delta_tree = load_latest_delta_tree(history_store, hostname)
 
     assert delta_tree is not None
 
@@ -614,7 +614,7 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree(
 def test_load_latest_delta_tree_one_archive_and_no_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    inv_store = InventoryStore(tmp_path)
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
@@ -623,6 +623,6 @@ def test_load_latest_delta_tree_one_archive_and_no_inv_tree(
         {"inv": "attr-0"},
     )
 
-    delta_tree = load_latest_delta_tree(inv_store, hostname)
+    delta_tree = load_latest_delta_tree(history_store, hostname)
 
     assert delta_tree is not None

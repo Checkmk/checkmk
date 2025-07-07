@@ -1990,7 +1990,6 @@ class HistoryEntry:
 class InventoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
-        self._lookup: dict[tuple[Path, Path], ImmutableTree] = {}
 
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
         return _load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name))
@@ -2056,6 +2055,12 @@ class InventoryStore:
 
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         _archive_inventory_tree(self.inv_paths, host_name)
+
+
+class HistoryStore:
+    def __init__(self, omd_root: Path) -> None:
+        self.inv_paths = InventoryPaths(omd_root)
+        self._lookup: dict[tuple[Path, Path], ImmutableTree] = {}
 
     def collect_archive_files(self, *, host_name: HostName) -> HistoryPaths:
         try:
@@ -2171,7 +2176,7 @@ class History:
 
 
 def load_history(
-    inv_store: InventoryStore,
+    history_store: HistoryStore,
     host_name: HostName,
     *,
     filter_history_paths: Callable[
@@ -2179,11 +2184,11 @@ def load_history(
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
-    files = inv_store.collect_archive_files(host_name=host_name)
+    files = history_store.collect_archive_files(host_name=host_name)
     entries: list[HistoryEntry] = []
     for previous, current in filter_history_paths(_get_pairs(files.paths)):
         if (
-            entry := inv_store.load_history_entry(
+            entry := history_store.load_history_entry(
                 host_name=host_name,
                 previous_timestamp=previous.timestamp,
                 current_timestamp=current.timestamp,
@@ -2192,13 +2197,13 @@ def load_history(
             entries.append(entry)
             continue
 
-        previous_tree = inv_store.lookup_tree(previous.tree_path)
-        current_tree = inv_store.lookup_tree(current.tree_path)
+        previous_tree = history_store.lookup_tree(previous.tree_path)
+        current_tree = history_store.lookup_tree(current.tree_path)
         entry = HistoryEntry.from_delta_tree(
             current.timestamp, current_tree.difference(previous_tree)
         )
         if entry.new or entry.changed or entry.removed:
-            inv_store.save_history_entry(
+            history_store.save_history_entry(
                 host_name=host_name,
                 previous_timestamp=previous.timestamp,
                 current_timestamp=current.timestamp,

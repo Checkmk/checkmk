@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -19,11 +19,13 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     Args,
     AzureResource,
     AzureSection,
+    BaseAsyncApiClient,
     get_group_labels,
     get_vm_labels_section,
     GroupLabels,
     LabelsSection,
     MgmtApiClient,
+    process_app_registrations,
     process_usage_details,
     ResourceHealth,
     Section,
@@ -81,6 +83,23 @@ class MockMgmtApiClient(MgmtApiClient):
             raise self.resource_health_exception
 
         return self.resource_health
+
+
+@pytest.fixture
+def mock_graph_api_client() -> AsyncMock:
+    return AsyncMock(spec=BaseAsyncApiClient)
+
+
+class MockAzureSection(AzureSection):
+    def __init__(
+        self,
+        name: str,
+        content: list[Any] = [],
+        piggytargets: Iterable[str] = ("",),
+        separator: int = 124,
+    ) -> None:
+        super().__init__(name, piggytargets, separator)
+        self._cont = content
 
 
 @pytest.mark.parametrize(
@@ -857,3 +876,114 @@ def test_write_remaining_reads(
 
     captured = capsys.readouterr()
     assert captured.out == expected_output
+
+
+@pytest.mark.parametrize(
+    "api_client_mock_return, expected_section",
+    [
+        pytest.param(
+            # content of "value" field of the response
+            [
+                {
+                    "not_used_field_1": "not_used_value_1",
+                    "not_used_field_2": "not_used_value_2",
+                    "appId": "app_id_1",
+                    "id": "id_1",
+                    "displayName": "test_app_1",
+                    "passwordCredentials": [
+                        {
+                            "customKeyIdentifier": None,
+                            "hint": "B4j",
+                            "secretText": None,
+                        }
+                    ],
+                },
+                {
+                    "not_used_field_1": "not_used_value_1",
+                    "not_used_field_2": "not_used_value_2",
+                    "appId": "app_id_2",
+                    "id": "id_2",
+                    "displayName": "test_app_2",
+                    "passwordCredentials": [
+                        {
+                            "customKeyIdentifier": None,
+                        }
+                    ],
+                },
+            ],
+            MockAzureSection(
+                "app_registration",
+                content=[
+                    '{"appId": "app_id_1", "displayName": "test_app_1", "id": "id_1", \
+"passwordCredentials": [{"customKeyIdentifier": null, "hint": "B4j", "secretText": null}]}\n',
+                    '{"appId": "app_id_2", "displayName": "test_app_2", "id": "id_2", \
+"passwordCredentials": [{"customKeyIdentifier": null}]}\n',
+                ],
+                separator=0,
+            ),
+            id="2 apps registered",
+        ),
+        pytest.param(
+            # content of "value" field of the response
+            [
+                {
+                    "not_used_field_1": "not_used_value_1",
+                    "not_used_field_2": "not_used_value_2",
+                    "appId": "app_id_1",
+                    "id": "id_1",
+                    "displayName": "test_app_1",
+                    "passwordCredentials": [],
+                },
+                {
+                    "not_used_field_1": "not_used_value_1",
+                    "not_used_field_2": "not_used_value_2",
+                    "appId": "app_id_2",
+                    "id": "id_2",
+                    "displayName": "test_app_2",
+                    "passwordCredentials": [
+                        {
+                            "customKeyIdentifier": None,
+                        }
+                    ],
+                },
+            ],
+            MockAzureSection(
+                "app_registration",
+                content=[
+                    '{"appId": "app_id_2", "displayName": "test_app_2", "id": "id_2", \
+"passwordCredentials": [{"customKeyIdentifier": null}]}\n',
+                ],
+                separator=0,
+            ),
+            id="2 apps registered, only 1 with filled password credentials",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_process_app_registrations_ok(
+    api_client_mock_return: Sequence[Mapping],
+    expected_section: MockAzureSection,
+    mock_graph_api_client: AsyncMock,
+) -> None:
+    mock_graph_api_client.get_async.return_value = api_client_mock_return
+
+    result_section = await process_app_registrations(mock_graph_api_client)
+
+    assert result_section == expected_section, "Section not as expected"
+
+
+@pytest.mark.asyncio
+async def test_process_app_registrations_missing_fields(
+    mock_graph_api_client: AsyncMock,
+) -> None:
+    mock_graph_api_client.get_async.return_value = [  # content of "value" field of the response
+        {
+            "appId": "app_id",
+            "id": "id",
+            "displayName": "testsecret",
+            # "passwordCredentials" missing field
+        },
+    ]
+
+    with pytest.raises(KeyError):
+        await process_app_registrations(mock_graph_api_client)

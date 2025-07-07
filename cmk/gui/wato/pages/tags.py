@@ -16,7 +16,7 @@ from cmk.utils.tags import TagGroupID, TagID
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -178,17 +178,27 @@ class ModeTags(ABCTagMode):
             return redirect(makeuri(request, []))
 
         if request.has_var("_delete"):
-            return self._delete_tag_group()
+            return self._delete_tag_group(
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+                debug=config.debug,
+            )
 
         if request.has_var("_del_aux"):
-            return self._delete_aux_tag()
+            return self._delete_aux_tag(
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+                debug=config.debug,
+            )
 
         if request.var("_move"):
-            return self._move_tag_group()
+            return self._move_tag_group(
+                pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
+            )
 
         return redirect(makeuri(request, []))
 
-    def _delete_tag_group(self) -> ActionResult:
+    def _delete_tag_group(self, *, pprint_value: bool, use_git: bool, debug: bool) -> ActionResult:
         del_id = TagGroupID(
             request.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
         )
@@ -199,7 +209,10 @@ class ModeTags(ABCTagMode):
             message: bool | str = _('Transformed the user tag group "%s" to built-in.') % del_id
         else:
             message = _rename_tags_after_confirmation(
-                self.breadcrumb(), OperationRemoveTagGroup(del_id)
+                self.breadcrumb(),
+                OperationRemoveTagGroup(del_id),
+                pprint_value=pprint_value,
+                debug=debug,
             )
             if message is False:
                 return FinalizeRequest(code=200)
@@ -210,12 +223,12 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
+            update_tag_config(self._tag_config, pprint_value=pprint_value)
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed tag group %s (%s)") % (message, del_id),
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
             if isinstance(message, str):
                 flash(message)
@@ -246,7 +259,7 @@ class ModeTags(ABCTagMode):
         # simply allow removal without confirm
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
-    def _delete_aux_tag(self) -> ActionResult:
+    def _delete_aux_tag(self, *, pprint_value: bool, use_git: bool, debug: bool) -> ActionResult:
         del_id = TagID(
             request.get_item_input("_del_aux", dict(self._tag_config.aux_tag_list.get_choices()))[1]
         )
@@ -265,7 +278,10 @@ class ModeTags(ABCTagMode):
                     )
 
         message = _rename_tags_after_confirmation(
-            self.breadcrumb(), OperationRemoveAuxTag(TagGroupID(del_id))
+            self.breadcrumb(),
+            OperationRemoveAuxTag(TagGroupID(del_id)),
+            pprint_value=pprint_value,
+            debug=debug,
         )
         if message is False:
             return FinalizeRequest(code=200)
@@ -276,19 +292,19 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
+            update_tag_config(self._tag_config, pprint_value=pprint_value)
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_del_aux"]))
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _move_tag_group(self) -> ActionResult:
+    def _move_tag_group(self, *, pprint_value: bool, use_git: bool) -> ActionResult:
         move_nr = request.get_integer_input_mandatory("_move")
         move_to = request.get_integer_input_mandatory("_index")
 
@@ -299,13 +315,13 @@ class ModeTags(ABCTagMode):
             self._tag_config.validate_config()
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
-        update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
+        update_tag_config(self._tag_config, pprint_value=pprint_value)
         self._load_effective_config()
         _changes.add_change(
             action_name="edit-tags",
             text=_("Changed order of tag groups"),
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         return None
 
@@ -549,17 +565,25 @@ class ModeTagUsage(ABCTagMode):
         return _("Tag usage")
 
     def page(self, config: Config) -> None:
-        self._show_tag_list()
-        self._show_aux_tag_list()
+        self._show_tag_list(pprint_value=config.wato_pprint_config, debug=config.debug)
+        self._show_aux_tag_list(pprint_value=config.wato_pprint_config, debug=config.debug)
 
-    def _show_tag_list(self) -> None:
+    def _show_tag_list(self, *, pprint_value: bool, debug: bool) -> None:
         with table_element("tag_usage", _("Tags")) as table:
             for tag_group in self._effective_config.tag_groups:
                 for tag in tag_group.tags:
-                    self._show_tag_row(table, tag_group, tag)
+                    self._show_tag_row(
+                        table, tag_group, tag, pprint_value=pprint_value, debug=debug
+                    )
 
     def _show_tag_row(
-        self, table: Table, tag_group: cmk.utils.tags.TagGroup, tag: cmk.utils.tags.GroupedTag
+        self,
+        table: Table,
+        tag_group: cmk.utils.tags.TagGroup,
+        tag: cmk.utils.tags.GroupedTag,
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         table.row()
 
@@ -578,8 +602,8 @@ class ModeTagUsage(ABCTagMode):
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
             operation,
             TagCleanupMode.CHECK,
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -608,12 +632,14 @@ class ModeTagUsage(ABCTagMode):
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
-    def _show_aux_tag_list(self) -> None:
+    def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool) -> None:
         with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
-                self._show_aux_tag_row(table, aux_tag)
+                self._show_aux_tag_row(table, aux_tag, pprint_value=pprint_value, debug=debug)
 
-    def _show_aux_tag_row(self, table: Table, aux_tag: cmk.utils.tags.AuxTag) -> None:
+    def _show_aux_tag_row(
+        self, table: Table, aux_tag: cmk.utils.tags.AuxTag, *, pprint_value: bool, debug: bool
+    ) -> None:
         table.row()
 
         table.cell(_("Actions"), css=["buttons"])
@@ -630,8 +656,8 @@ class ModeTagUsage(ABCTagMode):
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
             operation,
             TagCleanupMode.CHECK,
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -712,7 +738,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
 
-        update_tag_config(changed_hosttags_config, pprint_value=active_config.wato_pprint_config)
+        update_tag_config(changed_hosttags_config, pprint_value=config.wato_pprint_config)
 
         return redirect(mode_url("tags"))
 
@@ -801,14 +827,12 @@ class ModeEditTagGroup(ABCEditTagMode):
                 changed_hosttags_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(
-                changed_hosttags_config, pprint_value=active_config.wato_pprint_config
-            )
+            update_tag_config(changed_hosttags_config, pprint_value=config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-hosttags",
                 text=_("Created new host tag group '%s'") % changed_tag_group.id,
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=config.wato_use_git,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -829,16 +853,18 @@ class ModeEditTagGroup(ABCEditTagMode):
         operation = OperationReplaceGroupedTags(tg_id, remove_tag_ids, replace_tag_ids)
 
         # Now check, if any folders, hosts or rules are affected
-        message = _rename_tags_after_confirmation(self.breadcrumb(), operation)
+        message = _rename_tags_after_confirmation(
+            self.breadcrumb(), operation, pprint_value=config.wato_pprint_config, debug=config.debug
+        )
         if message is False:
             return FinalizeRequest(code=200)
 
-        update_tag_config(changed_hosttags_config, pprint_value=active_config.wato_pprint_config)
+        update_tag_config(changed_hosttags_config, pprint_value=config.wato_pprint_config)
         _changes.add_change(
             action_name="edit-hosttags",
             text=_("Edited host tag group %s (%s)") % (message, self._id),
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
         if isinstance(message, str):
             flash(message)
@@ -932,7 +958,11 @@ class ModeEditTagGroup(ABCEditTagMode):
 
 
 def _rename_tags_after_confirmation(
-    breadcrumb: Breadcrumb, operation: ABCTagGroupOperation | OperationReplaceGroupedTags
+    breadcrumb: Breadcrumb,
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> bool | str:
     """Handle renaming and deletion of tags
 
@@ -957,8 +987,8 @@ def _rename_tags_after_confirmation(
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
             operation,
             mode,
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
         return _("Modified folders: %d, modified hosts: %d, modified rule sets: %d") % (
@@ -971,8 +1001,8 @@ def _rename_tags_after_confirmation(
     affected_folders, affected_hosts, affected_rulesets = change_host_tags(
         operation,
         TagCleanupMode.CHECK,
-        pprint_value=active_config.wato_pprint_config,
-        debug=active_config.debug,
+        pprint_value=pprint_value,
+        debug=debug,
     )
 
     if affected_folders:

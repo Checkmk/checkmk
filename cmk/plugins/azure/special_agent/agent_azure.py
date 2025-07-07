@@ -1098,7 +1098,7 @@ class Section:
         section_options = ":".join(["sep(%d)" % separator, *options])
         self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
-    def formatline(self, tokens):
+    def _formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + "\n"
 
     def add(self, info):
@@ -1106,9 +1106,9 @@ class Section:
             return
         if isinstance(info[0], list | tuple):  # we got a list of lines
             for row in info:
-                self._cont.append(self.formatline(row))
+                self._cont.append(self._formatline(row))
         else:  # assume one single line
-            self._cont.append(self.formatline(info))
+            self._cont.append(self._formatline(info))
 
     def write(self, write_empty: bool = False) -> None:
         if not (write_empty or self._cont):
@@ -1120,6 +1120,26 @@ class Section:
                 sys.stdout.writelines(self._cont)
             sys.stdout.write("<<<<>>>>\n")
             sys.stdout.flush()
+
+    def __repr__(self) -> str:
+        return (
+            f"Section(\n"
+            f"    title={self._title},\n"
+            f"    piggytargets={self._piggytargets},\n"
+            f"    separator={self._sep},\n"
+            f"    content={self._cont}"
+            f")"
+        )
+
+    def __eq__(self, value):
+        if not isinstance(value, Section):
+            return False
+        return (
+            self._title == value._title
+            and self._piggytargets == value._piggytargets
+            and self._sep == value._sep
+            and self._cont == value._cont
+        )
 
 
 class AzureSection(Section):
@@ -1777,7 +1797,7 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 
     section = AzureSection("app_registration", separator=0)
     for app_reg in apps:
-        section.add([json.dumps(app_reg)])
+        section.add([json.dumps(app_reg, sort_keys=True)])
 
     return section
 

@@ -1,11 +1,3 @@
-# https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
-try-import %workspace%/user.bazelrc
-
-# The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
-# Jenkins job (or a user) in the form of:
-# common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
-try-import %workspace%/remote.bazelrc
-
 # Use local registry to add local download mirrors
 common:linux --registry="file://%workspace%/bazel/registry"
 common:windows --registry="file:///%workspace%/bazel/registry"
@@ -160,5 +152,19 @@ build:linux --host_action_env=PATH="/usr/bin:/bin"
 build:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 build:windows --host_action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 
-# Must be last
+# The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
+# Jenkins job (or a user) in the form of:
+# common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
+try-import %workspace%/remote.bazelrc
+
+# ci.bazelrc can override all of the above (except explicit user-defined stuff)
 try-import /etc/ci.bazelrc
+
+# Import a (non-tracked) `user.bazelrc` if available - put worktree specific
+# options here you don't want to accidentally submit
+try-import %workspace%/user.bazelrc
+
+# Note: unfortunately there is no way to `try-import %home%/user.bazelrc`,
+# in order to set user specific options in a worktree-independent way, but
+# you can create ~/.bazelrc and put your global stuff there.
+

@@ -766,15 +766,20 @@ class SetFolderPathAbstract:
         # TODO: Cleanup this somehow to work nicer with mypy
         super().__init__(the_object)  # type: ignore[call-arg]
         self._current_path: str | None = None
+        self._collected_host_paths: dict[HostName, str] = {}
 
     def set_current_path(self, current_path: str | None) -> None:
         self._current_path = current_path
+
+    @property
+    def collected_host_paths(self) -> Mapping[HostName, str]:
+        return self._collected_host_paths
 
     def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
         if self._current_path is None:
             return
         for hostname in strip_tags(new_hosts):
-            host_paths[hostname] = self._current_path
+            self._collected_host_paths[hostname] = self._current_path
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
@@ -865,11 +870,13 @@ def _load_config(with_conf_d: bool) -> set[str]:
                 raise MKGeneralException(
                     "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
                 )
+            host_paths.update(all_hosts.collected_host_paths)
 
             if not isinstance(clusters, SetFolderPathDict):
                 raise MKGeneralException(
                     "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
                 )
+            host_paths.update(clusters.collected_host_paths)
 
         except Exception as e:
             if cmk.ccc.debug.enabled():

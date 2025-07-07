@@ -38,6 +38,8 @@ edition_deps = {
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//non-free/packages/cmk-relay-core:pkg_tar",
+        "//packages/cmk-relay-protocols:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
@@ -53,14 +55,18 @@ edition_deps = {
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//non-free/packages/cmk-relay-core:pkg_tar",
+        "//packages/cmk-relay-protocols:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "cse": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-relay-core:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//packages/cmk-relay-protocols:pkg_tar",
     ],
 }
 

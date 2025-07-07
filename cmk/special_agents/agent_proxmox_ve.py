@@ -102,6 +102,7 @@ class BackupTask:
         self.__dict__.update(task)
 
         if dump_logs:
+            LogCacheFilePath.mkdir(parents=True, exist_ok=True)
             with (LogCacheFilePath / (f"{task['upid']}.log")).open("w") as file:
                 LOGGER.debug("wrote log to: %s", file.name)
                 file.write("\n".join(line["t"] for line in logs))
@@ -123,6 +124,7 @@ class BackupTask:
             self.backup_data, errors = {}, [(exc.line, str(exc))]
 
         if errors and dump_erroneous_logs:
+            LogCacheFilePath.mkdir(parents=True, exist_ok=True)
             with (LogCacheFilePath / (f"erroneous-{task['upid']}.log")).open("w") as file:
                 LOGGER.error(
                     "Parsing the log for UPID=%r resulted in a error(s) - "

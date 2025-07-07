@@ -24,7 +24,7 @@ from cmk.utils.regex import regex
 from cmk.gui import forms
 from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -181,10 +181,10 @@ class ModeBulkRenameHost(WatoMode):
                         callable=rename_hosts_job_entry_point,
                         args=RenameHostsJobArgs(
                             renamings=_renamings_to_job_args(renamings),
-                            site_configs=active_config.sites,
-                            pprint_value=active_config.wato_pprint_config,
-                            use_git=active_config.wato_use_git,
-                            debug=active_config.debug,
+                            site_configs=config.sites,
+                            pprint_value=config.wato_pprint_config,
+                            use_git=config.wato_use_git,
+                            debug=config.debug,
                         ),
                     ),
                     InitialStatusArgs(
@@ -586,10 +586,10 @@ class ModeRenameHost(WatoMode):
                     callable=rename_hosts_job_entry_point,
                     args=RenameHostsJobArgs(
                         renamings=_renamings_to_job_args(renamings),
-                        site_configs=active_config.sites,
-                        pprint_value=active_config.wato_pprint_config,
-                        use_git=active_config.wato_use_git,
-                        debug=active_config.debug,
+                        site_configs=config.sites,
+                        pprint_value=config.wato_pprint_config,
+                        use_git=config.wato_use_git,
+                        debug=config.debug,
                     ),
                 ),
                 InitialStatusArgs(

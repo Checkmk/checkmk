@@ -14,7 +14,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
 
 import cmk.utils.paths
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID
 
@@ -30,8 +30,6 @@ __all__ = [
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
 ]
-
-_GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 
 
 class AutocheckServiceWithNodes(NamedTuple):

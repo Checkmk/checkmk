@@ -628,7 +628,7 @@ class ModeFolder(WatoMode):
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
                 self._folder.move_subfolder_to(
-                    what_folder, target_folder, pprint_value=active_config.wato_pprint_config
+                    what_folder, target_folder, pprint_value=config.wato_pprint_config
                 )
             return redirect(folder_url)
 
@@ -639,12 +639,12 @@ class ModeFolder(WatoMode):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(
                 [
-                    (make_automation_config(active_config.sites[site_id]), hosts)
+                    (make_automation_config(config.sites[site_id]), hosts)
                     for site_id, hosts in self._folder.get_hosts_by_site(
                         list(self._folder.hosts())
                     ).items()
                 ],
-                debug=active_config.debug,
+                debug=config.debug,
             )
             return None
 
@@ -659,8 +659,8 @@ class ModeFolder(WatoMode):
             self._folder.delete_hosts(
                 [delname],
                 automation=delete_hosts,
-                pprint_value=active_config.wato_pprint_config,
-                debug=active_config.debug,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
             )
             return redirect(folder_url)
 
@@ -671,7 +671,7 @@ class ModeFolder(WatoMode):
                 self._folder.move_hosts(
                     [hostname],
                     folder_tree().folder(target_folder_str),
-                    pprint_value=active_config.wato_pprint_config,
+                    pprint_value=config.wato_pprint_config,
                 )
                 return redirect(folder_url)
 
@@ -697,14 +697,16 @@ class ModeFolder(WatoMode):
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = folder_tree().folder(target_folder_path)
             self._folder.move_hosts(
-                selected_host_names, target_folder, pprint_value=active_config.wato_pprint_config
+                selected_host_names, target_folder, pprint_value=config.wato_pprint_config
             )
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
 
         # Deletion
         if request.var("_bulk_delete"):
-            return self._delete_hosts(selected_host_names)
+            return self._delete_hosts(
+                selected_host_names, pprint_value=config.wato_pprint_config, debug=config.debug
+            )
 
         search_text = request.get_str_input_mandatory("search", "")
         for request_var, mode_name in [
@@ -729,12 +731,12 @@ class ModeFolder(WatoMode):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(
                 [
-                    (make_automation_config(active_config.sites[site_id]), hosts)
+                    (make_automation_config(config.sites[site_id]), hosts)
                     for site_id, hosts in self._folder.get_hosts_by_site(
                         selected_host_names
                     ).items()
                 ],
-                debug=active_config.debug,
+                debug=config.debug,
             )
 
         return None
@@ -750,9 +752,9 @@ class ModeFolder(WatoMode):
                 )
 
         self._folder.show_locking_information()
-        self._show_subfolders_of()
+        self._show_subfolders_of(show_file_names=not config.wato_hide_filenames)
         if self._folder.permissions.may("read"):
-            self._show_hosts()
+            self._show_hosts(config)
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
@@ -811,7 +813,7 @@ class ModeFolder(WatoMode):
 
         TileMenuRenderer(menu_items).show()
 
-    def _show_subfolders_of(self) -> None:
+    def _show_subfolders_of(self, *, show_file_names: bool) -> None:
         if self._folder.has_subfolders():
             assert isinstance(self._folder, Folder)
             html.open_div(
@@ -840,7 +842,7 @@ class ModeFolder(WatoMode):
                         continue
                     search_results += 1
 
-                self._show_subfolder(subfolder)
+                self._show_subfolder(subfolder, show_file_names=show_file_names)
 
             if searched_folder is not None:
                 set_inpage_search_result_info(search_results)
@@ -854,18 +856,18 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.div("", class_="folder_foot")
 
-    def _show_subfolder(self, subfolder: Folder) -> None:
+    def _show_subfolder(self, subfolder: Folder, *, show_file_names: bool) -> None:
         html.open_div(
             class_=["floatfolder", "unlocked" if subfolder.permissions.may("read") else "locked"],
             id_="folder_%s" % subfolder.name(),
             onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
         )
-        self._show_subfolder_hoverarea(subfolder)
+        self._show_subfolder_hoverarea(subfolder, show_file_names=show_file_names)
         self._show_subfolder_infos(subfolder)
-        self._show_subfolder_title(subfolder)
+        self._show_subfolder_title(subfolder, show_file_names=show_file_names)
         html.close_div()  # floatfolder
 
-    def _show_subfolder_hoverarea(self, subfolder: Folder) -> None:
+    def _show_subfolder_hoverarea(self, subfolder: Folder, *, show_file_names: bool) -> None:
         # Only make folder openable when permitted to edit
         if subfolder.permissions.may("read"):
             html.open_div(
@@ -873,7 +875,7 @@ class ModeFolder(WatoMode):
                 onmouseover="cmk.wato.toggle_folder(event, this, true);",
                 onmouseout="cmk.wato.toggle_folder(event, this, false);",
             )
-            self._show_subfolder_buttons(subfolder)
+            self._show_subfolder_buttons(subfolder, show_file_names=show_file_names)
             html.close_div()  # hoverarea
         else:
             html.icon(
@@ -881,9 +883,9 @@ class ModeFolder(WatoMode):
             )
             html.div("", class_="hoverarea")
 
-    def _show_subfolder_title(self, subfolder: Folder) -> None:
+    def _show_subfolder_title(self, subfolder: Folder, *, show_file_names: bool) -> None:
         title = subfolder.title()
-        if not active_config.wato_hide_filenames:
+        if show_file_names:
             title += " (%s)" % subfolder.name()
 
         html.open_div(class_="title", title=title)
@@ -893,13 +895,13 @@ class ModeFolder(WatoMode):
             html.write_text_permissive(subfolder.title())
         html.close_div()
 
-    def _show_subfolder_buttons(self, subfolder: Folder) -> None:
+    def _show_subfolder_buttons(self, subfolder: Folder, *, show_file_names: bool) -> None:
         self._show_subfolder_edit_button(subfolder)
 
         if not subfolder.locked_subfolders() and not subfolder.locked():
             if subfolder.permissions.may("write") and user.may("wato.manage_folders"):
                 self._show_move_to_folder_action(subfolder)
-                self._show_subfolder_delete_button(subfolder)
+                self._show_subfolder_delete_button(subfolder, show_file_names=show_file_names)
 
     def _show_subfolder_edit_button(self, subfolder: Folder) -> None:
         html.icon_button(
@@ -911,7 +913,7 @@ class ModeFolder(WatoMode):
             style="display:none",
         )
 
-    def _show_subfolder_delete_button(self, subfolder: Folder) -> None:
+    def _show_subfolder_delete_button(self, subfolder: Folder, *, show_file_names: bool) -> None:
         confirm_message: str = ""
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
@@ -920,7 +922,7 @@ class ModeFolder(WatoMode):
                 % num_hosts
             )
 
-        if not active_config.wato_hide_filenames:
+        if show_file_names:
             if num_hosts:
                 confirm_message += _("<br><br>")
             confirm_message += _("Directory: <tt>%s</tt>.") % subfolder.filesystem_path()
@@ -997,7 +999,7 @@ class ModeFolder(WatoMode):
             style=style,
         )
 
-    def _show_hosts(self) -> None:
+    def _show_hosts(self, config: Config) -> None:
         if not self._folder.has_hosts():
             return
 
@@ -1010,7 +1012,7 @@ class ModeFolder(WatoMode):
             with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
-                for attr in all_host_attributes(active_config).values():
+                for attr in all_host_attributes(config).values():
                     if attr.show_in_table():
                         colspan += 1
                 if (
@@ -1280,12 +1282,14 @@ class ModeFolder(WatoMode):
                 MethodAjax(endpoint="host_action_menu", url_vars=url_vars),
             )
 
-    def _delete_hosts(self, host_names: Sequence[HostName]) -> ActionResult:
+    def _delete_hosts(
+        self, host_names: Sequence[HostName], pprint_value: bool, debug: bool
+    ) -> ActionResult:
         self._folder.delete_hosts(
             host_names,
             automation=delete_hosts,
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
+            pprint_value=pprint_value,
+            debug=debug,
         )
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
@@ -1382,7 +1386,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
         return folder_tree().root_folder()
 
     @abc.abstractmethod
-    def _save(self, title: str, attributes: HostAttributes) -> None:
+    def _save(
+        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+    ) -> None:
         raise NotImplementedError()
 
     @override
@@ -1427,7 +1433,12 @@ class ABCFolderMode(WatoMode, abc.ABC):
         TextInput(allow_empty=False).validate_value(title, "title")
 
         attributes = collect_attributes("folder", new=self._is_new)
-        self._save(title, attributes)
+        self._save(
+            title,
+            attributes,
+            pprint_value=config.wato_pprint_config,
+            show_file_names=not config.wato_hide_filenames,
+        )
 
         return redirect(mode_url("folder", folder=folder.path()))
 
@@ -1449,7 +1460,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             html.set_focus("title")
 
             # folder name (omit this for editing root folder)
-            if not active_config.wato_hide_filenames:
+            if not config.wato_hide_filenames:
                 folder_name_title = _("Internal directory name")
                 folder_name_help = _(
                     "This is the name of subdirectory where the files and "
@@ -1515,8 +1526,10 @@ class ModeEditFolder(ABCFolderMode):
         return _("Folder properties")
 
     @override
-    def _save(self, title: str, attributes: HostAttributes) -> None:
-        self._folder.edit(title, attributes, pprint_value=active_config.wato_pprint_config)
+    def _save(
+        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+    ) -> None:
+        self._folder.edit(title, attributes, pprint_value=pprint_value)
 
 
 class ModeCreateFolder(ABCFolderMode):
@@ -1542,17 +1555,17 @@ class ModeCreateFolder(ABCFolderMode):
         return _("Add folder")
 
     @override
-    def _save(self, title: str, attributes: HostAttributes) -> None:
+    def _save(
+        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+    ) -> None:
         parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        if not active_config.wato_hide_filenames:
+        if show_file_names:
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)
         else:
             name = find_available_folder_name(title, parent_folder)
 
-        parent_folder.create_subfolder(
-            name, title, attributes, pprint_value=active_config.wato_pprint_config
-        )
+        parent_folder.create_subfolder(name, title, attributes, pprint_value=pprint_value)
 
 
 class PageAjaxSetFoldertree(AjaxPage):

@@ -349,6 +349,5 @@ aggr_summary_hostname = "%s-s"
 
 status_data_inventory: list[RuleSpec[object]] = []
 logwatch_rules: list[RuleSpec[object]] = []
-config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []

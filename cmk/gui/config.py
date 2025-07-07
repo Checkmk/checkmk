@@ -17,6 +17,7 @@ import cmk.ccc.version as cmk_version
 
 import cmk.utils.tags
 from cmk.utils import paths
+from cmk.utils.experimental_config import load_experimental_config
 
 from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
@@ -164,9 +165,7 @@ def load_config() -> None:
     raw_config = get_default_config()
 
     # Load assorted experimental parameters if any
-    experimental_config = cmk.utils.paths.make_experimental_config_file()
-    if experimental_config.exists():
-        _load_config_file_to(str(experimental_config), raw_config)
+    raw_config.update(load_experimental_config(cmk.utils.paths.default_config_dir))
 
     # First load main file
     _load_config_file_to(str(cmk.utils.paths.default_config_dir / "multisite.mk"), raw_config)

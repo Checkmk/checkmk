@@ -160,13 +160,4 @@ r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
 
-def make_experimental_config_file() -> Path:
-    """Returns file with experimental settings to be used.
-    Used to enable features which is "in development" and not good enough to be enabled by default.
-    Example of experimental.mk:
-    config_storage_format = "raw"
-    """
-    return default_config_dir / "experimental.mk"
-
-
 cse_config_dir = Path("/etc/cse")

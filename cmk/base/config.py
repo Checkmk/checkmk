@@ -49,6 +49,7 @@ from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     FolderAttributesForBase,
@@ -793,11 +794,11 @@ def _load_config(with_conf_d: bool) -> set[str]:
     global_dict |= helper_vars
 
     # Load assorted experimental parameters if any
-    experimental_config = cmk.utils.paths.make_experimental_config_file()
-    if experimental_config.exists():
-        _load_config_file(experimental_config, global_dict)
+    experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
 
-    host_storage_loaders = get_host_storage_loaders(config_storage_format)
+    host_storage_loaders = get_host_storage_loaders(
+        experimental_config.get("config_storage_format")
+    )
     for path in get_config_file_paths(with_conf_d):
         try:
             # Make the config path available as a global variable to be used

@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+"""Helpers for retrieving system performance metrics."""
+
 import datetime
 import json
 import os
@@ -26,6 +29,7 @@ def _named_section(name: str, data: perf_dict) -> perf_dict:
 
 
 def get_cpu_info(count_cores: bool = False) -> perf_dict:
+    """Get CPU metrics."""
     data: perf_dict = {
         "cpu_freq": psutil.cpu_freq().current,
         "cpu_percent": psutil.cpu_percent(interval=0.1),
@@ -44,6 +48,7 @@ def get_cpu_info(count_cores: bool = False) -> perf_dict:
 
 
 def get_disk_info() -> perf_dict:
+    """Get disk metrics."""
     partitions = psutil.disk_partitions()
     data: perf_dict = {}
     for partition in partitions:
@@ -60,6 +65,7 @@ def get_disk_info() -> perf_dict:
 
 
 def get_disk_io_counters() -> perf_dict:
+    """Get disk IO metrics."""
     io_counters = psutil.disk_io_counters()
     data: perf_dict = {
         "read_count": io_counters.read_count if io_counters else 0,
@@ -73,6 +79,7 @@ def get_disk_io_counters() -> perf_dict:
 
 
 def get_kernel_info() -> perf_dict:
+    """Get kernel metrics."""
     data: perf_dict = {
         "kernel_version": os.uname().release,
         "system_name": os.uname().sysname,
@@ -83,6 +90,7 @@ def get_kernel_info() -> perf_dict:
 
 
 def get_load_average() -> perf_dict:
+    """Get average load metrics."""
     load_avg_1, load_avg_5, load_avg_15 = psutil.getloadavg()
     data: perf_dict = {
         "load_average_1": load_avg_1,
@@ -93,6 +101,7 @@ def get_load_average() -> perf_dict:
 
 
 def get_memory_info() -> perf_dict:
+    """Get memory metrics."""
     data: perf_dict = {
         "virtual_memory_total": psutil.virtual_memory().total / (1024.0**3),
         "virtual_memory_available": psutil.virtual_memory().available / (1024.0**3),
@@ -216,6 +225,17 @@ def track_resources(
     start_event: threading.Event | None = None,
     stop_event: threading.Event | None = None,
 ) -> Iterator[None]:
+    """Monitor and track the resource usage of the host while executing a task context.
+
+    By default, the resource tracking is started when the context manager is entered
+    and stopped when the context manager is exited. More fine-grained, event-based control
+    is possible by passing a start_event and a stop_event.
+
+    Args:
+        task_name: The name of the task (used for naming the resources file).
+        start_event: Controls the actual start of the resource tracking (optional).
+        stop_event: Controls the actual end of the resource tracking (optional).
+    """
     file_path = _init_resources_file(task_name)
     if start_event is None:
         start_event = threading.Event()

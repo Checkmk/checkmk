@@ -62,12 +62,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture(name="track_resources", scope="function")
 def _track_resources(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Track the resource usage of an entire test case."""
     with track_resources(request.node.name):
         yield
 
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    """Provide a default, central monitoring site."""
     setup_stop_event = threading.Event()
     cleanup_start_event = threading.Event()
     with (
@@ -119,6 +121,13 @@ def _make_connected_remote_site(
     central_site: Site,
     site_description: str,
 ) -> Iterator[Site]:
+    """Connect a given remote site to a central site.
+
+    Args:
+        site_name: The name of the remote_site to connect.
+        central_site: The central site to connect to.
+        site_description: A description to be used for the connection.
+    """
     with (
         site_factory.get_test_site_ctx(
             site_name,
@@ -135,6 +144,7 @@ def _make_connected_remote_site(
 def _remote_site(
     central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
 ) -> Iterator[Site]:
+    """Provide a default, remote monitoring site."""
     yield from _make_connected_remote_site("remote", central_site, request.node.name)
 
 
@@ -142,6 +152,7 @@ def _remote_site(
 def _remote_site_2(
     central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
 ) -> Iterator[Site]:
+    """Provide a second default, central monitoring site."""
     yield from _make_connected_remote_site("remote2", central_site, request.node.name)
 
 

@@ -3,6 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""To run this test with all reporting enabled, use the following command:
+
+$ pytest tests/performance --html=performance.htm --self-contained-html --ignore-running-procs
+  --benchmark-json="benchmark.json" --benchmark-save-data --benchmark-name=long --benchmark-verbose
+  --log-cli-level=INFO
+
+For more details, see pytest --help the documentation of pytest-benchmark.
+"""
+
 import logging
 from collections.abc import Iterator
 from time import time
@@ -215,6 +224,7 @@ class PerformanceTest:
 
 @pytest.fixture(name="perftest", scope="session")
 def _perftest(central_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
+    """Single-site performance test"""
     yield PerformanceTest([central_site], config=pytestconfig)
 
 
@@ -222,6 +232,7 @@ def _perftest(central_site: Site, pytestconfig: pytest.Config) -> Iterator[Perfo
 def _perftest_dist(
     central_site: Site, remote_site: Site, remote_site_2: Site, pytestconfig: pytest.Config
 ) -> Iterator[PerformanceTest]:
+    """Distributed performance test with 2 remote sites"""
     yield PerformanceTest([central_site, remote_site, remote_site_2], config=pytestconfig)
 
 

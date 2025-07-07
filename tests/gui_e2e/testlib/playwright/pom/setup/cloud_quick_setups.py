@@ -269,7 +269,9 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
             password: The password to fill in.
         """
         self.password_type_dropdown.select_option(PasswordType.EXPLICIT)
-        self.main_area.locator().get_by_role("textbox", name="explicit password").fill(password)
+        pw_input = self.main_area.locator().get_by_role("textbox", name="explicit password")
+        pw_input.click()
+        pw_input.fill(password)
 
 
 class AWSConfigurationList(BaseQuickSetupConfigurationList):
@@ -475,6 +477,14 @@ class Authority(DropdownOptions):
     CHINA = "China"
 
 
+class SubscriptionOptions(DropdownOptions):
+    """"""
+
+    DO_NOT_MONITOR = "Do not monitor subscriptions"
+    EXPLICIT = "Explicit list of subscription IDs"
+    ALL = "Monitor all subscriptions"
+
+
 class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
     """Represent the page 'Add Microsoft Azure configuration' to add a GCP
     configuration.
@@ -516,6 +526,17 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
             dropdown_list=self.quick_setup_area.get_by_role("listbox"),
         )
 
+    @property
+    def subscription_dropdown(self) -> DropdownHelper[SubscriptionOptions]:
+        """Represents the subscription dropdown for Azure configuration."""
+        return DropdownHelper[SubscriptionOptions](
+            dropdown_name="Subscriptions to monitor",
+            dropdown_box=self.quick_setup_area.get_by_role(
+                "combobox", name="Subscriptions to monitor"
+            ),
+            dropdown_list=self.quick_setup_area.get_by_role("listbox"),
+        )
+
     def check_service_to_monitor(self, service: str, check: bool) -> None:
         service_checkbox = self._checkbox_service_in_row("Azure services to monitor", service)
         if service_checkbox.is_checked() != check:
@@ -527,7 +548,12 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         logger.info("Initialize stage-1 details.")
         main_area = self.main_area.locator()
         main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
-        main_area.get_by_role("textbox", name="Subscription ID").fill(subscription_id)
+        self.subscription_dropdown.select_option(SubscriptionOptions.EXPLICIT)
+        subscription_area = main_area.get_by_role(
+            "group", name="Explicitly specify subscription IDs"
+        )
+        subscription_area.get_by_role("button", name="Add new entry").click()
+        subscription_area.locator("input").fill(subscription_id)
         main_area.get_by_role("textbox", name="Tenant ID / Directory ID").fill(tenant_id)
         main_area.get_by_role("textbox", name="Client ID / Application ID").fill(client_id)
 

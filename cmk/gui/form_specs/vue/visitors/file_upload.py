@@ -116,7 +116,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
                 file_content_encrypted=self.encrypt_content(raw_value.value[2]),
             )
 
-        # Handle DataOrigin.FRONTEND
+        # Handle RawFrontendData
         value = raw_value.value
         if not isinstance(value, dict):
             return InvalidValue(reason=_("Invalid data format"), fallback_value=FileUploadModel())

@@ -21,7 +21,7 @@ class TransformDataForLegacyFormatOrRecomposeFunction(FormSpec[object]):
 
     This form spec is used to transform a value from one format to another.
     It does -not- add any extra logic, layout or title
-    The value is only transformed on DataOrigin.DISK
+    The value is only transformed for RawDiskData
     """
 
     wrapped_form_spec: FormSpec[Any]

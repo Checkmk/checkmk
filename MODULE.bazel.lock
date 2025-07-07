@@ -2956,7 +2956,7 @@
         "usagesDigest": "UsAbZtsuJhK3Kxg9vNEXCEajqDalceN4cGga41mztN0=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "da2e2d8384e7e5840363f0d005dec01a63636a3210e70aaaaef88a1692aea7d0",
+          "@@//requirements_all_lock.txt": "a5cb5b487dcf1ef9b2b8379baff3a7f4ca7523b9f4e2defa7ebea9c362b9a8b9",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -8423,6 +8423,23 @@
               "requirement": "opentelemetry-sdk==1.29.0     --hash=sha256:173be3b5d3f8f7d671f20ea37056710217959e774e2749d984355d1f9391a30a     --hash=sha256:b0787ce6aade6ab84315302e72bd7a7f2f014b0fb1b7c3295b88afe014ed0643"
             }
           },
+          "cmk_requirements_312_prometheus_client": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "prometheus-client==0.22.1     --hash=sha256:190f1331e783cf21eb60bca559354e0a4d4378facecf78f5428c39b675d20d28     --hash=sha256:cca895342e308174341b2cbf99a56bef291fbc0ef7b9e5412a0f26d653ba7094"
+            }
+          },
           "cmk_requirements_312_python_lsp_server": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
@@ -10543,6 +10560,7 @@
                 "lazy_object_proxy": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_lazy_object_proxy\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "opentelemetry_api": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_opentelemetry_api\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "opentelemetry_sdk": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_opentelemetry_sdk\",\"target_platforms\":null,\"version\":\"3.12\"}]",
+                "prometheus_client": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_prometheus_client\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "python_lsp_server": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_python_lsp_server\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "requests_oauthlib": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_requests_oauthlib\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "requests_toolbelt": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_requests_toolbelt\",\"target_platforms\":null,\"version\":\"3.12\"}]",

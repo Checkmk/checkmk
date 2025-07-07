@@ -34,6 +34,7 @@ pipfile==0.0.2 # for generating import names during int tests
 playwright==1.49.1 # used for in-browser testing
 polyfactory==2.18.1 # used for generating mock data for unit tests
 pre-commit==4.0.1 # used to fix / find issues before committing changes
+prometheus-client==0.22.1 # used for testing otel integration
 py-import-cycles==0.3.1 # used in tests/Makefile
 pylint==3.3.2 # used by test/Makefile's test-pylint target
 pylint-pydantic==0.3.4

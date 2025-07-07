@@ -7,18 +7,26 @@
 import { SearchProvider, type SearchProviderResult } from '../unified-search'
 import type { HistoryEntry, SearchHistoryService } from '../searchHistory'
 
-export type SearchHistorySearchResult = SearchProviderResult<HistoryEntry[]>
+export type SearchHistorySearchResult = SearchProviderResult<{
+  entries: HistoryEntry[]
+  queries: string[]
+}>
 
 export class SearchHistorySearchProvider extends SearchProvider {
-  constructor(private searchHistory: SearchHistoryService) {
+  constructor(
+    private searchHistory: SearchHistoryService,
+    public override title?: string,
+    public override sort: number = 0,
+    public override minInputlength: number = 0
+  ) {
     super('search-history')
   }
 
-  public async search(input: string): Promise<HistoryEntry[]> {
+  public async search(input: string): Promise<{ entries: HistoryEntry[]; queries: string[] }> {
     return new Promise((resolve) => {
-      resolve(
-        this.searchHistory
-          .get()
+      resolve({
+        entries: this.searchHistory
+          .getEntries()
           .filter((hist) => {
             return (
               hist.query.indexOf(input) >= 0 ||
@@ -27,8 +35,11 @@ export class SearchHistorySearchProvider extends SearchProvider {
               hist.element.url.indexOf(input) >= 0
             )
           })
-          .sort((a, b) => b.date - a.date)
-      )
+          .sort((a, b) => b.date - a.date),
+        queries: this.searchHistory.getQueries().filter((hist) => {
+          return hist.indexOf(input) >= 0
+        })
+      })
     })
   }
 }

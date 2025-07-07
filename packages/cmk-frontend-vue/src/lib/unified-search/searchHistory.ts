@@ -21,6 +21,7 @@ export class HistoryEntry {
 
 export class SearchHistoryService {
   private entries: Ref<HistoryEntry[]>
+  private queries: Ref<string[]>
 
   constructor(public searchId: string) {
     this.entries = usePersistentRef<HistoryEntry[]>(
@@ -28,8 +29,10 @@ export class SearchHistoryService {
       [],
       'local'
     )
+
+    this.queries = usePersistentRef<string[]>('search-queries-'.concat(this.searchId), [], 'local')
   }
-  public get(
+  public getEntries(
     provider: string | null = null,
     by: 'date' | 'hitCount' = 'date',
     limit?: number
@@ -40,10 +43,14 @@ export class SearchHistoryService {
       .slice(0, limit ? limit - 1 : limit)
   }
 
+  public getQueries(limit?: number): string[] {
+    return this.queries.value.slice(0, limit ? limit - 1 : limit)
+  }
+
   public add(historyEntry: HistoryEntry): void {
     let found = false
 
-    const entries = this.getEntriesCopy()
+    const [entries, queries] = this.getCopy()
 
     entries.forEach((hist) => {
       if (historyEntry.element.title === hist.element.title) {
@@ -57,13 +64,15 @@ export class SearchHistoryService {
       entries.push(historyEntry)
     }
 
+    queries.push(historyEntry.query)
+    this.queries.value = queries
     this.entries.value = entries
   }
 
   public remove(historyEntry: HistoryEntry): void {
     let idx = -1
 
-    const entries = this.getEntriesCopy()
+    const [entries, queries] = this.getCopy()
     entries.forEach((hist, i) => {
       if (historyEntry.element.title === hist.element.title) {
         idx = i
@@ -74,11 +83,26 @@ export class SearchHistoryService {
       delete entries[idx]
     }
 
+    idx = queries.indexOf(historyEntry.query)
+    if (idx !== -1) {
+      queries.splice(idx, 1)
+    }
+
+    this.queries.value = queries
     this.entries.value = entries
   }
 
-  private getEntriesCopy(): HistoryEntry[] {
+  public resetEntries(): void {
+    this.entries.value = []
+  }
+
+  public resetQueries(): void {
+    this.queries.value = []
+  }
+
+  private getCopy(): [HistoryEntry[], string[]] {
     const entries: HistoryEntry[] = []
-    return entries.concat(this.entries.value)
+    const queries: string[] = []
+    return [entries.concat(this.entries.value), queries.concat(this.queries.value)]
   }
 }

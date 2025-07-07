@@ -25,7 +25,7 @@ test('Add hist entry on search history service', async () => {
     'testTopic'
   )
   searchHistory.add(histE)
-  expect(searchHistory.get()[0]).toMatchObject(histE)
+  expect(searchHistory.getEntries()[0]).toMatchObject(histE)
 })
 
 test('Add hist entry twice on search history service', async () => {
@@ -43,7 +43,7 @@ test('Add hist entry twice on search history service', async () => {
   )
   searchHistory.add(histE)
   searchHistory.add(histE)
-  expect(searchHistory.get()[0]?.hitCount).toBe(2)
+  expect(searchHistory.getEntries()[0]?.hitCount).toBe(2)
 })
 
 test('Test SearchHistorySearchProvider', async () => {
@@ -62,7 +62,7 @@ test('Test SearchHistorySearchProvider', async () => {
   )
 
   const histE2 = new HistoryEntry(
-    'test',
+    'abc',
     'abcProvider',
     {
       title: 'abcTitle',
@@ -74,7 +74,8 @@ test('Test SearchHistorySearchProvider', async () => {
   searchHistory.add(histE1)
   searchHistory.add(histE2)
 
-  const res = await histSearch.search('abc')
+  const { entries, queries } = await histSearch.search('abc')
 
-  expect(res).toMatchObject([histE2])
+  expect(entries).toMatchObject([histE2])
+  expect(queries).toMatchObject([histE2.query])
 })

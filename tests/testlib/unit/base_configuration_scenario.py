@@ -11,7 +11,7 @@ ensuring a controlled environment for testing.
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
-from typing import Any
+from typing import Any, override
 
 from pytest import MonkeyPatch
 
@@ -26,19 +26,20 @@ import cmk.utils.tags
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.discovery import AutochecksManager
+from cmk.checkengine.discovery import AutochecksMemoizer
 from cmk.checkengine.plugins import AutocheckEntry
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
 
 
-class _AutochecksMocker(AutochecksManager):
+class _AutochecksMocker(AutochecksMemoizer):
     def __init__(self) -> None:
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def get_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
+    @override
+    def read(self, hostname: HostName) -> Sequence[AutocheckEntry]:
         return self.raw_autochecks.get(hostname, [])
 
 
@@ -211,7 +212,7 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "autochecks_manager",
+                "autochecks_memoizer",
                 self._autochecks_mocker,
                 raising=False,
             )

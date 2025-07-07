@@ -103,7 +103,7 @@ from cmk.checkengine.checking import (
 )
 from cmk.checkengine.checking.cluster_mode import ClusterMode
 from cmk.checkengine.discovery import (
-    AutochecksManager,
+    AutochecksMemoizer,
     CheckPreviewEntry,
     DiscoveryCheckParameters,
     merge_cluster_autochecks,
@@ -288,7 +288,7 @@ def _aggregate_check_table_services(
             yield from (
                 s
                 for s in configure_autochecks(
-                    host_name, config_cache.autochecks_manager.get_autochecks(host_name)
+                    host_name, config_cache.autochecks_memoizer.read(host_name)
                 )
                 if sfilter.keep(s)
             )
@@ -1557,7 +1557,7 @@ class ConfigCache:
         # TODO: remove this from the config cache. It is a completely
         # self-contained object that should be passed around (if it really
         # has to exist at all).
-        self.autochecks_manager = AutochecksManager()
+        self.autochecks_memoizer = AutochecksMemoizer()
         self._effective_host_cache: dict[
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
             HostName,
@@ -1881,7 +1881,7 @@ class ConfigCache:
                 service_name_config=service_name_config,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
-                get_autochecks=self.autochecks_manager.get_autochecks,
+                get_autochecks=self.autochecks_memoizer.read,
                 configure_autochecks=service_configurer.configure_autochecks,
                 plugins=plugins,
             )

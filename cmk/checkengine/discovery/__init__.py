@@ -6,7 +6,7 @@
 from ._active_check import execute_check_discovery
 from ._autochecks import (
     AutocheckServiceWithNodes,
-    AutochecksManager,
+    AutochecksMemoizer,
     AutochecksStore,
     merge_cluster_autochecks,
     remove_autochecks_of_host,
@@ -39,7 +39,7 @@ __all__ = [
     "analyse_cluster_labels",
     "analyse_services",
     "AutocheckServiceWithNodes",
-    "AutochecksManager",
+    "AutochecksMemoizer",
     "AutochecksStore",
     "autodiscovery",
     "automation_discovery",

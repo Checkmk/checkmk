@@ -1667,7 +1667,7 @@ class AutomationGetServicesLabels(Automation):
             plugins.check_plugins, loading_result.config_cache.make_passive_service_name_config()
         )
         discovered_services = service_configurer.configure_autochecks(
-            host_name, loading_result.config_cache.autochecks_manager.get_autochecks(host_name)
+            host_name, loading_result.config_cache.autochecks_memoizer.read(host_name)
         )
         discovered_labels = {s.description: s.labels for s in discovered_services}
 
@@ -1896,14 +1896,14 @@ class AutomationAnalyseServices(Automation):
                 service
                 for node in config_cache.nodes(host_name)
                 for service in service_configurer.configure_autochecks(
-                    node, config_cache.autochecks_manager.get_autochecks(node)
+                    node, config_cache.autochecks_memoizer.read(node)
                 )
                 if host_name
                 == config_cache.effective_host(node, service.description, service.labels)
             ]
             if host_name in config_cache.hosts_config.clusters
             else service_configurer.configure_autochecks(
-                host_name, config_cache.autochecks_manager.get_autochecks(host_name)
+                host_name, config_cache.autochecks_memoizer.read(host_name)
             )
         )
 

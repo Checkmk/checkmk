@@ -23,7 +23,7 @@ from ._utils import DiscoveredItem
 __all__ = [
     "AutocheckServiceWithNodes",
     "AutochecksStore",
-    "AutochecksManager",
+    "AutochecksMemoizer",
     "AutochecksConfig",
     "remove_autochecks_of_host",
     "set_autochecks_for_effective_host",
@@ -107,11 +107,13 @@ def merge_cluster_autochecks(
     ]
 
 
-class AutochecksManager:
+# As far as I can tell, this is only needed when computing the check table.
+# Once they are isolated from base/config, see if we can move it there.
+class AutochecksMemoizer:
     """Read autochecks from the configuration
 
     Autochecks of a host are once read and cached for the whole lifetime of the
-    AutochecksManager.
+    AutochecksMemoizer.
 
     When trying to remove this cache (which we should consider), make sure to keep
     the case of overlapping clusters in mind. Autochecks of a node might be read
@@ -122,7 +124,7 @@ class AutochecksManager:
         super().__init__()
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def get_autochecks(
+    def read(
         self,
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:

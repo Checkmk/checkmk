@@ -91,7 +91,7 @@ class TestAutochecksStore:
         ),
     ],
 )
-def test_manager_get_autochecks_of(
+def test_memoizer_get_autochecks_of(
     autochecks_content: str,
     expected_result: Sequence[AutocheckEntry],
     monkeypatch: pytest.MonkeyPatch,
@@ -103,9 +103,9 @@ def test_manager_get_autochecks_of(
     ts.add_host(HostName("host"))
     config_cache = ts.apply(monkeypatch)
 
-    manager = config_cache.autochecks_manager
+    memoizer = config_cache.autochecks_memoizer
 
-    result = manager.get_autochecks(HostName("host"))
+    result = memoizer.read(HostName("host"))
     assert result == expected_result
 
 

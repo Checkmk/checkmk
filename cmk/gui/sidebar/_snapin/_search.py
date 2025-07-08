@@ -12,7 +12,7 @@ import traceback
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Final, Literal, TypeVar
+from typing import cast, Final, get_args, Literal, override, TypeVar
 
 import livestatus
 
@@ -38,11 +38,15 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import (
     HTTPVariables,
     Icon,
+    Provider,
     Row,
     Rows,
     SearchQuery,
     SearchResult,
     SearchResultsByTopic,
+    UnifiedSearchResult,
+    UnifiedSearchResultCounts,
+    UnifiedSearchResultItem,
     ViewName,
 )
 from cmk.gui.utils.labels import (
@@ -1717,3 +1721,89 @@ class PageSearchSetup(AjaxPage):
                     show_crash_link=getattr(g, "may_see_crash_reports", False),
                 )
                 return output_funnel.drain()
+
+
+# TODO: currently searching with legacy providers and then transforming the results into the desired
+# unified search output. This is far from efficient, but is necessary to unblock the frontend
+# development.
+class UnifiedSearch:
+    def __init__(self) -> None:
+        self._setup_search = IndexSearcher(get_redis_client(), PermissionsHandler())
+        self._monitoring_search = QuicksearchManager(raise_too_many_rows_error=False)
+
+    def search(
+        self, query: SearchQuery, provider: Provider | None, config: Config
+    ) -> UnifiedSearchResult:
+        setup_results_by_topic: SearchResultsByTopic = []
+        monitoring_results_by_topic: SearchResultsByTopic = []
+
+        match provider:
+            case "setup":
+                setup_results_by_topic = self._setup_search.search(query, config)
+            case "monitoring":
+                monitoring_results_by_topic = self._monitoring_search.generate_results(query)
+            case _:
+                setup_results_by_topic = self._setup_search.search(query, config)
+                monitoring_results_by_topic = self._monitoring_search.generate_results(query)
+
+        setup_results = list(
+            itertools.chain.from_iterable(
+                self.transform_results(results, topic, provider="setup")
+                for topic, results in setup_results_by_topic
+            )
+        )
+        monitoring_results = list(
+            itertools.chain.from_iterable(
+                self.transform_results(results, topic, provider="monitoring")
+                for topic, results in monitoring_results_by_topic
+            )
+        )
+        search_results = sorted(itertools.chain(setup_results, monitoring_results))
+
+        result_counts = UnifiedSearchResultCounts(
+            total=len(search_results),
+            setup=len(setup_results),
+            monitoring=len(monitoring_results),
+        )
+
+        return UnifiedSearchResult(results=search_results, counts=result_counts)
+
+    @staticmethod
+    def transform_results(
+        results: Iterable[SearchResult], topic: str, *, provider: Provider
+    ) -> Iterable[UnifiedSearchResultItem]:
+        return (
+            UnifiedSearchResultItem(
+                title=result.title,
+                url=result.url,
+                topic=topic,
+                provider=provider,
+                context=result.context,
+            )
+            for result in results
+        )
+
+
+class PageUnifiedSearch(AjaxPage):
+    @override
+    def handle_page(self, config: Config) -> None:
+        super().handle_page(config)
+
+    def page(self, config: Config) -> PageResult:
+        query = request.get_str_input_mandatory("q")
+        provider = self._parse_provider_query_param()
+
+        response = UnifiedSearch().search(query, provider, config)
+
+        return {
+            "url": request.url,
+            "query": query,
+            "counts": response.counts.serialize(),
+            "results": [result.serialize() for result in response.results],
+        }
+
+    def _parse_provider_query_param(self) -> Provider | None:
+        if (provider := request.get_str_input("provider")) is None:
+            return None
+
+        return cast(Provider, provider) if provider in get_args(Provider) else None

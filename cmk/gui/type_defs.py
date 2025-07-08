@@ -681,6 +681,62 @@ class SearchResult:
 
 SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
+
+type Provider = Literal["setup", "monitoring"]
+
+
+class UnifiedSearchResultItemSerialized(TypedDict):
+    title: str
+    url: str
+    topic: str
+    provider: Provider
+    context: str
+
+
+@dataclass(frozen=True, kw_only=True, order=True)
+class UnifiedSearchResultItem:
+    title: str
+    url: str
+    topic: str
+    provider: Provider
+    context: str = ""
+
+    def serialize(self) -> UnifiedSearchResultItemSerialized:
+        return {
+            "title": self.title,
+            "url": self.url,
+            "topic": self.topic,
+            "provider": self.provider,
+            "context": self.context,
+        }
+
+
+class UnifiedSearchResultCountsSerialized(TypedDict):
+    total: int
+    setup: int
+    monitoring: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class UnifiedSearchResultCounts:
+    total: int
+    setup: int
+    monitoring: int
+
+    def serialize(self) -> UnifiedSearchResultCountsSerialized:
+        return {
+            "total": self.total,
+            "setup": self.setup,
+            "monitoring": self.monitoring,
+        }
+
+
+@dataclass(frozen=True, kw_only=True)
+class UnifiedSearchResult:
+    results: Iterable[UnifiedSearchResultItem]
+    counts: UnifiedSearchResultCounts
+
+
 # Metric & graph specific
 
 

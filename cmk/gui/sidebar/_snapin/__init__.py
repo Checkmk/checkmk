@@ -38,7 +38,7 @@ from ._registry import all_snapins as all_snapins
 from ._registry import CustomSnapins as CustomSnapins
 from ._registry import snapin_registry as snapin_registry
 from ._registry import SnapinRegistry as SnapinRegistry
-from ._search import PageSearchMonitoring, PageSearchSetup, QuicksearchSnapin
+from ._search import PageSearchMonitoring, PageSearchSetup, PageUnifiedSearch, QuicksearchSnapin
 from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
@@ -67,3 +67,4 @@ def register(
     _views.register(page_registry, snapin_registry_, main_menu_registry, view_menu_topics)
     page_registry.register(PageEndpoint("ajax_search_monitoring", PageSearchMonitoring))
     page_registry.register(PageEndpoint("ajax_search_setup", PageSearchSetup))
+    page_registry.register(PageEndpoint("ajax_search", PageUnifiedSearch))

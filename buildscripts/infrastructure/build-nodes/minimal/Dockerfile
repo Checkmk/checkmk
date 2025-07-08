@@ -1,4 +1,5 @@
 # docker build \
+# --build-arg IMAGE_BASE=$(buildscripts/docker_image_aliases/resolve.py IMAGE_UBUNTU_24_04) \
 # --tag minimal-ubuntu-checkmk-master \
 # -f buildscripts/infrastructure/build-nodes/minimal/Dockerfile .
 #
@@ -11,19 +12,23 @@
 # minimal-ubuntu-checkmk-master:latest bash
 #
 
-FROM artifacts.lan.tribe29.com:4000/ubuntu@sha256:b431bf19907e9765825e80c7912ef6f5f52e4d45297a68a8e811e9ab096ae7b2
-# 1490MB
+ARG IMAGE_BASE
+FROM ${IMAGE_BASE}
+# above image is ubuntu-24.04:master-latest
+# docker inspect -f "{{ .Size }}" minimal-ubuntu-checkmk-master:latest
+# 1440MB (1443999154)
 # bash is required to be used in Jenkins with image.inside(), requires +0MB
 # curl is required to download artifacts, requires +15MB
 # git is required to use tests, requires +83MB
 # lsb-release is required to use installation scripts, requires +4MB
 # gpg is required to use installation scripts, requires +13MB
 # make is required by tests, requires +47MB
+# rsync is required to upload artifacts, requires +1MB
 # python3 is required by tests, requires +19MB
 # vim-tiny is required for convenience, requires +20MB
 # wget is required to download artifacts, requires +1MB
 RUN apt-get update && \
-    apt-get install -y bash curl git gpg lsb-release make python3 vim-tiny wget && \
+    apt-get install -y bash curl git gpg lsb-release make python3 rsync vim-tiny wget && \
     rm -rf /var/cache/apt/*
 
 # bazelisk and bazel are basic tools for running tests, requires +77MB

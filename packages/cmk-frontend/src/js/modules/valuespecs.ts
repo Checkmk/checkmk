@@ -545,7 +545,7 @@ export function listof_add(
 
     // Make sure the new entry we're creating does not already exist. We cannot rely on the count
     // value here -> increment the count until the according id does not exist
-    while (document.querySelector(`[id^=${varprefix}][id$="${str_count}"]`)) {
+    while (document.querySelector(`[id=${varprefix}_entry_${str_count}]`)) {
         str_count = "" + (parseInt(str_count) + 1);
     }
     count_field.value = str_count;

@@ -25,7 +25,7 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
 </script>
 
 <template>
-  <CmkAccordionItem :value="value">
+  <CmkAccordionItem :value="value" :disabled="disabled">
     <template #header>
       <CmkBadge
         size="small"

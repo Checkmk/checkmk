@@ -214,7 +214,7 @@ def test_load_history(tmp_path: Path) -> None:
         HistoryStore(tmp_path),
         host_name,
         filter_history_paths=lambda ps: ps,
-        filter_tree=None,
+        filter_delta_tree=None,
     )
     assert len(history.entries) == 6
     assert not history.corrupted

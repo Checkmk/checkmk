@@ -2182,7 +2182,7 @@ def load_history(
     filter_history_paths: Callable[
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
-    filter_tree: Sequence[SDFilterChoice] | None,
+    filter_delta_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
     files = history_store.collect_archive_files(host_name=host_name)
     entries: list[HistoryEntry] = []
@@ -2211,14 +2211,14 @@ def load_history(
             )
             entries.append(entry)
 
-    if filter_tree is None:
+    if filter_delta_tree is None:
         return History(entries=entries, corrupted=files.corrupted)
 
     return History(
         entries=[
             HistoryEntry.from_delta_tree(e.timestamp, d)
             for e in entries
-            if (d := e.delta_tree.filter(filter_tree))
+            if (d := e.delta_tree.filter(filter_delta_tree))
         ],
         corrupted=files.corrupted,
     )

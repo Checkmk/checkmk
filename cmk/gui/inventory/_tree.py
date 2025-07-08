@@ -297,7 +297,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     if "/" in hostname:
         return ImmutableDeltaTree()
 
-    filter_tree = (
+    filter_delta_tree = (
         _make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
         else None
@@ -306,7 +306,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
         history_store,
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
-        filter_tree=filter_tree,
+        filter_delta_tree=filter_delta_tree,
     )
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
@@ -339,7 +339,7 @@ def load_delta_tree(
             % (timestamp, hostname)
         )
 
-    filter_tree = (
+    filter_delta_tree = (
         _make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
         else None
@@ -348,7 +348,7 @@ def load_delta_tree(
         history_store,
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
-        filter_tree=filter_tree,
+        filter_delta_tree=filter_delta_tree,
     )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
@@ -362,7 +362,7 @@ def get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    filter_tree = (
+    filter_delta_tree = (
         _make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
         else None
@@ -371,7 +371,7 @@ def get_history(
         history_store,
         hostname,
         filter_history_paths=lambda pairs: pairs,
-        filter_tree=filter_tree,
+        filter_delta_tree=filter_delta_tree,
     )
     return history.entries, _sort_corrupted_history_files(
         history_store.inv_paths.archive_dir, history.corrupted

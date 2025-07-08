@@ -93,6 +93,7 @@ from cmk.gui.valuespec import (
     NetworkPort,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
@@ -265,8 +266,8 @@ class ModeEditSite(WatoMode):
             )
         return menu
 
-    def _site_from_valuespec(self) -> SiteConfiguration:
-        vs = self._valuespec()
+    def _site_from_valuespec(self, config: Config) -> SiteConfiguration:
+        vs = self._valuespec(config)
         raw_site_spec = vs.from_html_vars("site")
         vs.validate_value(raw_site_spec, "site")
 
@@ -321,18 +322,18 @@ class ModeEditSite(WatoMode):
         return redirect(mode_url("sites"))
 
     def action(self, config: Config) -> ActionResult:
-        site_spec = self._site_from_valuespec()
+        site_spec = self._site_from_valuespec(config)
         return self.save_site_changes(site_spec, pprint_value=config.wato_pprint_config)
 
     def page(self, config: Config) -> None:
         with html.form_context("site"):
-            self._valuespec().render_input("site", dict(self._site))
+            self._valuespec(config).render_input("site", dict(self._site))
 
             forms.end()
             html.hidden_fields()
 
-    def _valuespec(self) -> Dictionary:
-        basic_elements = self._basic_elements()
+    def _valuespec(self, config: Config) -> Dictionary:
+        basic_elements = self._basic_elements(config)
         livestatus_elements = self._livestatus_elements()
         replication_elements = self._replication_elements()
 
@@ -348,7 +349,7 @@ class ModeEditSite(WatoMode):
             optional_keys=[],
         )
 
-    def _basic_elements(self):
+    def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
         if self._new:
             vs_site_id: TextInput | FixedValue = ID(
                 title=_("Site ID"),
@@ -698,7 +699,7 @@ class ModeEditBrokerConnection(WatoMode):
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
 
-        vs = self._valuespec()
+        vs = self._valuespec(config)
         raw_site_spec = vs.from_html_vars("broker_connection")
         vs.validate_value(raw_site_spec, "broker_connection")
 
@@ -744,12 +745,12 @@ class ModeEditBrokerConnection(WatoMode):
                 else {}
             )
 
-            self._valuespec().render_input("broker_connection", connection_vs)
+            self._valuespec(config).render_input("broker_connection", connection_vs)
             forms.end()
             html.hidden_fields()
 
-    def _valuespec(self) -> Dictionary:
-        basic_elements = self._basic_elements()
+    def _valuespec(self, config: Config) -> Dictionary:
+        basic_elements = self._basic_elements(config)
 
         return Dictionary(
             elements=basic_elements,
@@ -771,9 +772,9 @@ class ModeEditBrokerConnection(WatoMode):
             ),
         )
 
-    def _basic_elements(self):
+    def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
         replicated_sites_choices = [
-            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites(active_config.sites).items()
+            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites(config.sites).items()
         ]
 
         return [

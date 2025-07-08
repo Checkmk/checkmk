@@ -895,9 +895,6 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     if FetchedResource.vs_status.value in fetched_resources:
         write_section("vs_status", fetch_vs_status(connection), logger)
 
-    if FetchedResource.ports.value in fetched_resources:
-        write_section("ports", fetch_ports(connection), logger)
-
     if FetchedResource.interfaces.value in fetched_resources:
         interfaces = list(fetch_interfaces(connection))
         write_section("if", interfaces, logger)
@@ -927,6 +924,12 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     if FetchedResource.fc_interfaces.value in fetched_resources:
         write_section("fc_ports", fetch_fc_ports(connection), logger)
         write_section("fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger)
+
+    try:
+        if FetchedResource.ports.value in fetched_resources:
+            write_section("ports", fetch_ports(connection), logger)
+    except NetAppRestError:
+        raise CannotRecover("Fetch ports failed. Cluster could be in a degraded state.")
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

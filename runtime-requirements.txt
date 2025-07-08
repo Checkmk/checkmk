@@ -523,7 +523,7 @@ diskcache==5.6.3 \
     --hash=sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
 dnspython==2.7.0 \
     --hash=sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86 \
     --hash=sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1
@@ -889,7 +889,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 icalendar==6.3.1 \
     --hash=sha256:7ea1d1b212df685353f74cdc6ec9646bf42fa557d1746ea645ce8779fdfbecdd \
@@ -1877,7 +1877,7 @@ psutil==7.0.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
 psycopg2-binary==2.9.10 \
     --hash=sha256:04392983d0bb89a8717772a193cfaac58871321e3ec69514e1c4e0d4957b5aff \
     --hash=sha256:056470c3dc57904bbf63d6f534988bafc4e970ffd50f6271fc4ee7daad9498a5 \
@@ -1984,7 +1984,7 @@ pydantic==2.10.6 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -2257,7 +2257,7 @@ pytest==8.3.5 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-mknotifyd/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   meraki
@@ -2269,7 +2269,7 @@ pytest-asyncio==1.0.0 \
     --hash=sha256:d15463d13f4456e1ead2594520216b225a16f781e144f8fdf6c5bb4667c48b3f
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
 pytest-mock==3.14.1 \
     --hash=sha256:159e9edac4c451ce77a5cdb9fc5d1100708d2dd4ba3c3df572f14097351af80e \
     --hash=sha256:178aefcd11307d874b4cd3100344e7e2d888d9791a6a1d9bfe90fbc1b74fd1d0
@@ -2282,7 +2282,7 @@ pytest-xdist==3.8.0 \
     --hash=sha256:7e578125ec9bc6050861aa93f2d59f1d8d085595d6551c2c90b6f4fad8d3a9f1
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \
@@ -2980,7 +2980,7 @@ tenacity==9.1.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-relay-core/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   opsgenie-sdk
 time-machine==2.16.0 \
     --hash=sha256:01bc257e9418980a4922de94775be42a966e1a082fb01a1635917f9afc7b84ca \

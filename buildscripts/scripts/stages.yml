@@ -196,7 +196,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"
 
     - NAME: CHANGED_PROBE_CORE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-relay-core/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-relay-engine/' || true"
 
 STAGES:
     - NAME: "Python Typing lib cmk"
@@ -717,13 +717,13 @@ STAGES:
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
 
-    - NAME: "Package cmk-relay-core"
+    - NAME: "Package cmk-relay-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_PROBE_CORE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "non-free/packages/cmk-relay-core"
-      COMMAND: "./run --all &> ${RESULTS}/cmk-relay-core.txt"
+      DIR: "non-free/packages/cmk-relay-engine"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-relay-engine.txt"
       BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-relay-core files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-core.txt"
+      TEXT_ON_SKIP: "No cmk-relay-engine files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-engine.txt"
 
     - NAME: "Enforced package build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE

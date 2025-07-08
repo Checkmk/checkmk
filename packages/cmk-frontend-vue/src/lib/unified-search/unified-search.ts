@@ -125,13 +125,17 @@ export class UnifiedSearch {
   }
 
   public onInput(e: Event) {
-    this.lastSearchInput = Date.now()
     const input = e.target as HTMLInputElement
+    this.initSearch(input.value)
+  }
+
+  public initSearch(query: string) {
+    this.lastSearchInput = Date.now()
     setTimeout(() => {
       const now = Date.now()
       if (now - this.lastSearchInput > 200) {
         if (this.onSearchCallback) {
-          this.onSearchCallback(this.search(input.value)) as void
+          this.onSearchCallback(this.search(query)) as void
         }
       } else {
         if (this.onSearchCallback) {

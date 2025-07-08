@@ -453,3 +453,28 @@ def test_check_logwatch_generic_missing() -> None:
         Result(state=State.UNKNOWN, summary="log not present anymore"),
     ]
     assert not logwatch._logmsg_file_path(item, "test-host").exists()
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_reclassify_overwrites_state_to_ok_not_delete_summary() -> None:
+    # Create reclassify parameters to reclassify Critical to OK
+    reclassify_parameters = logwatch_.ReclassifyParameters(
+        patterns=[],
+        states={"c_to": "O"},
+    )
+
+    assert list(
+        logwatch.check_logwatch_generic(
+            item="item",
+            reclassify_parameters=reclassify_parameters,
+            loglines=[
+                "C One critical error occurred",
+                "C Second critical error",
+            ],
+            found=True,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
+        )
+    ) == [
+        Result(state=State.OK, summary='2 OK messages (Last worst: "Second critical error")'),
+    ]

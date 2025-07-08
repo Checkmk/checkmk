@@ -1,0 +1,14 @@
+Title: Secure cookie flag not being set when using HTTPS
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1751558141
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+Previously the secure cookie flag was not set if the application was behind a https proxy.
+
+With this Werk if the system apache was configured as described
+<a href="https://docs.checkmk.com/latest/en/omd_https.html">here</a> the secure cookie flag is properly set
+for the session cookie.

@@ -32,6 +32,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     session_info = dict_property[SessionInfo]()
     exc = dict_property[MKException | None](default=None)
     is_gui_session = dict_property[bool](default=True)
+    is_secure = dict_property[bool](default=False)
 
     def update_cookie(self) -> None:
         # Cookies only get set when the session is new, so we make ourselves new again.
@@ -102,12 +103,14 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         cls,
         user_name: UserId,
         auth_type: AuthType,
+        secure_flag: bool,
     ) -> CheckmkFileBasedSession:
         sess = cls()
         sess.initialize(
             user_name,
             auth_type,
         )
+        sess.is_secure = secure_flag
         return sess
 
     @classmethod
@@ -148,9 +151,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess["_flashes"] = info.flashes
         return sess
 
-    def login(self, user_obj: LoggedInUser) -> None:
+    def login(self, user_obj: LoggedInUser, secure_flag: bool) -> None:
         userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
         self.user = user_obj
+        self.is_secure = secure_flag
 
     def persist(self) -> None:
         """Save the session as "session_info" custom user attribute"""
@@ -243,7 +247,7 @@ class FileBasedSession(SessionInterface):
 
         user_name, auth_type = check_auth()
         userdb.session.on_succeeded_login(user_name, datetime.now())
-        return self.session_class.create_session(user_name, auth_type)
+        return self.session_class.create_session(user_name, auth_type, request.is_secure)
 
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
@@ -271,7 +275,7 @@ class FileBasedSession(SessionInterface):
         cookie_name = self.get_cookie_name(app)
         domain = self.get_cookie_domain(app)
         path = self.get_cookie_path(app)
-        secure = self.get_cookie_secure(app)
+        secure = session.is_secure
         expires = self.get_expiration_time(app, session)
 
         if not self.should_set_cookie(app, session):

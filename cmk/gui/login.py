@@ -191,7 +191,7 @@ class LoginPage(Page):
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.login(LoggedInUser(username))
+                session.login(LoggedInUser(username), request.is_secure)
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...

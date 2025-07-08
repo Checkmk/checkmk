@@ -736,14 +736,14 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site: SiteConfiguration) -> bool:
+def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
     if is_wato_slave_site():
         return True
 
     # Local site: Don't enable site specific locals when no remote sites configured
-    if not has_wato_slave_sites():
+    if not has_wato_slave_sites(all_sites):
         return False
 
     return is_replication_enabled(site) or site_is_local(site)

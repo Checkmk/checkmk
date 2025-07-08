@@ -1136,7 +1136,9 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
     def is_relevant(self) -> bool:
-        return has_wato_slave_sites() and self._replicates_mkps(active_config.sites)
+        return has_wato_slave_sites(active_config.sites) and self._replicates_mkps(
+            active_config.sites
+        )
 
     def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
         return any(site.get("replicate_mkps") for site in wato_slave_sites(site_configs).values())

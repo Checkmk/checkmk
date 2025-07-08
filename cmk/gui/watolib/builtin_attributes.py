@@ -16,6 +16,7 @@ from cmk.utils.tags import TagGroupID
 
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.generators.host_address import create_host_address
@@ -1165,7 +1166,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self) -> bool:
-        return not (has_wato_slave_sites() or is_wato_slave_site())
+        return not (has_wato_slave_sites(active_config.sites) or is_wato_slave_site())
 
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS

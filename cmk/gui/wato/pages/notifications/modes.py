@@ -2637,7 +2637,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return user.id
 
     def _add_change(self, *, action_name: str, text: str) -> None:
-        if has_wato_slave_sites():
+        if has_wato_slave_sites(active_config.sites):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
@@ -3364,7 +3364,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         return user.id
 
     def _add_change(self, action_name: str, text: str) -> None:
-        if has_wato_slave_sites():
+        if has_wato_slave_sites(active_config.sites):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
@@ -3379,7 +3379,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             )
 
     def _back_mode(self) -> ActionResult:
-        if has_wato_slave_sites():
+        if has_wato_slave_sites(active_config.sites):
             return None
         return redirect(mode_url("user_notifications_p"))
 

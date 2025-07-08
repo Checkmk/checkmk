@@ -199,11 +199,11 @@ class ModeEditSite(WatoMode):
         if is_free() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_free_message())
 
-        configured_sites = self._site_mgmt.load_sites()
+        self._configured_sites = self._site_mgmt.load_sites()
 
         if self._clone_id:
             try:
-                self._site = configured_sites[self._clone_id]
+                self._site = self._configured_sites[self._clone_id]
             except KeyError:
                 raise MKUserError(None, _("The requested site does not exist"))
 
@@ -243,7 +243,7 @@ class ModeEditSite(WatoMode):
         else:
             assert self._site_id is not None
             try:
-                self._site = configured_sites[self._site_id]
+                self._site = self._configured_sites[self._site_id]
             except KeyError:
                 raise MKUserError(None, _("The requested site does not exist"))
 
@@ -262,7 +262,10 @@ class ModeEditSite(WatoMode):
         )
         if not self._new and isinstance(self._site_id, str):
             menu.dropdowns.insert(
-                1, _page_menu_dropdown_site_details(self._site_id, self._site, self.name())
+                1,
+                _page_menu_dropdown_site_details(
+                    self._site_id, self._site, self._configured_sites, self.name()
+                ),
             )
         return menu
 
@@ -278,12 +281,14 @@ class ModeEditSite(WatoMode):
         return site_spec
 
     def save_site_changes(
-        self, site_spec: SiteConfiguration, *, pprint_value: bool
+        self,
+        site_spec: SiteConfiguration,
+        configured_sites: SiteConfigurations,
+        *,
+        pprint_value: bool,
     ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
-
-        configured_sites = self._site_mgmt.load_sites()
 
         # Take over all unknown elements from existing site specs, like for
         # example, the replication secret
@@ -323,7 +328,9 @@ class ModeEditSite(WatoMode):
 
     def action(self, config: Config) -> ActionResult:
         site_spec = self._site_from_valuespec(config)
-        return self.save_site_changes(site_spec, pprint_value=config.wato_pprint_config)
+        return self.save_site_changes(
+            site_spec, self._configured_sites, pprint_value=config.wato_pprint_config
+        )
 
     def page(self, config: Config) -> None:
         with html.form_context("site"):
@@ -1156,7 +1163,7 @@ class ModeDistributedMonitoring(WatoMode):
         return FinalizeRequest(code=200)
 
     def page(self, config: Config) -> None:
-        sites = sort_sites(self._site_mgmt.load_sites())
+        sites = sort_sites(site_configs := self._site_mgmt.load_sites())
 
         if is_free():
             html.show_message(get_free_message(format_html=True))
@@ -1175,7 +1182,7 @@ class ModeDistributedMonitoring(WatoMode):
             for site_id, site in sites:
                 table.row()
 
-                self._show_buttons(table, site_id, site)
+                self._show_buttons(table, site_id, site, site_configs)
                 self._show_basic_settings(table, site_id, site)
                 self._show_status_connection_config(table, site_id, site)
                 self._show_status_connection_status(table, site_id, site)
@@ -1228,7 +1235,13 @@ class ModeDistributedMonitoring(WatoMode):
         )
         html.icon_button(delete_url, _("Delete"), "delete")
 
-    def _show_buttons(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
+    def _show_buttons(
+        self,
+        table: Table,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        site_configs: SiteConfigurations,
+    ) -> None:
         table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -1251,7 +1264,7 @@ class ModeDistributedMonitoring(WatoMode):
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
-        if site_globals_editable(site):
+        if site_globals_editable(site_configs, site):
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
 
             has_site_globals = bool(site.get("globals"))
@@ -1579,7 +1592,9 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
-                _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
+                _page_menu_dropdown_site_details(
+                    self._site_id, self._site, self._configured_sites, self.name()
+                ),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -1670,7 +1685,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         )
 
         if not is_wato_slave_site():
-            if not has_wato_slave_sites():
+            if not has_wato_slave_sites(config.sites):
                 html.show_error(
                     _(
                         "You can not configure site specific global settings "
@@ -1773,7 +1788,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
-                _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
+                _page_menu_dropdown_site_details(
+                    self._site_id, self._site, self._configured_sites, self.name()
+                ),
             ],
             breadcrumb=breadcrumb,
         )
@@ -1939,7 +1956,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
 
 def _page_menu_dropdown_site_details(
-    site_id: str, site: SiteConfiguration, current_mode: str
+    site_id: str, site: SiteConfiguration, site_configs: SiteConfigurations, current_mode: str
 ) -> PageMenuDropdown:
     return PageMenuDropdown(
         name="connections",
@@ -1947,16 +1964,18 @@ def _page_menu_dropdown_site_details(
         topics=[
             PageMenuTopic(
                 title=_("This connection"),
-                entries=list(_page_menu_entries_site_details(site_id, site, current_mode)),
+                entries=list(
+                    _page_menu_entries_site_details(site_id, site, site_configs, current_mode)
+                ),
             ),
         ],
     )
 
 
 def _page_menu_entries_site_details(
-    site_id: str, site: SiteConfiguration, current_mode: str
+    site_id: str, site: SiteConfiguration, site_configs: SiteConfigurations, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(site):
+    if current_mode != "edit_site_globals" and site_globals_editable(site_configs, site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name="configuration",

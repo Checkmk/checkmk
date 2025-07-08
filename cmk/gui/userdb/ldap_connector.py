@@ -384,7 +384,7 @@ def _identify_user_modifications(
 
     if pw_changed:
         sync_user_result.has_changed_passwords = True
-        if not edited and has_wato_slave_sites():
+        if not edited and has_wato_slave_sites(active_config.sites):
             sync_user_result.profiles_to_synchronize[checkmk_user_id] = modified_user
 
     if added := modified_user_keys - common_keys:

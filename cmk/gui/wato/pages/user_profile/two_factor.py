@@ -28,6 +28,8 @@ from fido2.webauthn import (
     UserVerificationRequirement,
 )
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
@@ -37,7 +39,7 @@ from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -176,7 +178,9 @@ def _sec_notification_event_from_2fa_event(
             assert_never()
 
 
-def _handle_revoke_all_backup_codes(user: LoggedInUser, credentials: TwoFactorCredentials) -> None:
+def _handle_revoke_all_backup_codes(
+    user: LoggedInUser, credentials: TwoFactorCredentials, site_configs: SiteConfigurations
+) -> None:
     credentials["backup_codes"] = []
     flash(_("All backup codes have been deleted"))
     _save_credentials_all_sites(
@@ -184,6 +188,7 @@ def _handle_revoke_all_backup_codes(user: LoggedInUser, credentials: TwoFactorCr
         "user_two_factor_overview.py",
         credentials,
         TwoFactorEventType.backup_remove,
+        site_configs,
     )
 
 
@@ -192,6 +197,7 @@ def _save_credentials_all_sites(
     origtarget: str,
     credentials: TwoFactorCredentials,
     log_event: TwoFactorEventType | Literal["alias_changed"],
+    site_configs: SiteConfigurations,
 ) -> None:
     if (user_id := user.id) is None:
         return
@@ -200,7 +206,7 @@ def _save_credentials_all_sites(
     if log_event != "alias_changed":
         _log_event_usermanagement(log_event)
         send_security_message(user_id, _sec_notification_event_from_2fa_event(log_event))
-    if has_wato_slave_sites():
+    if has_wato_slave_sites(site_configs):
         raise redirect(
             makeuri_contextless(
                 request, [("back", origtarget)], filename="user_profile_replicate.py"
@@ -245,6 +251,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     "user_two_factor_overview.py",
                     credentials,
                     TwoFactorEventType.webauthn_remove,
+                    active_config.sites,
                 )
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
@@ -254,16 +261,17 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     "user_two_factor_overview.py",
                     credentials,
                     TwoFactorEventType.totp_remove,
+                    active_config.sites,
                 )
             else:
                 return
             if not is_two_factor_login_enabled(user.id):
                 session.session_info.two_factor_completed = False
                 if credentials["backup_codes"]:
-                    _handle_revoke_all_backup_codes(user, credentials)
+                    _handle_revoke_all_backup_codes(user, credentials, active_config.sites)
 
         if request.has_var("_delete_codes"):
-            _handle_revoke_all_backup_codes(user, credentials)
+            _handle_revoke_all_backup_codes(user, credentials, active_config.sites)
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
@@ -274,6 +282,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                 "user_two_factor_overview.py",
                 credentials,
                 TwoFactorEventType.backup_add,
+                active_config.sites,
             )
 
     def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
@@ -732,6 +741,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 origtarget,
                 credentials,
                 TwoFactorEventType.totp_add,
+                active_config.sites,
             )
 
             raise redirect(origtarget)
@@ -854,7 +864,11 @@ class EditCredentialAlias(ABCUserProfilePage):
 
         flash(_("Successfully changed the credential."))
         _save_credentials_all_sites(
-            user, "user_two_factor_overview.py", credentials, "alias_changed"
+            user,
+            "user_two_factor_overview.py",
+            credentials,
+            "alias_changed",
+            active_config.sites,
         )
 
         raise redirect("user_two_factor_overview.py")
@@ -1029,7 +1043,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         navigation_json = {"status": "OK", "redirect": False, "replicate": False}
-        if has_wato_slave_sites():
+        if has_wato_slave_sites(active_config.sites):
             navigation_json["replicate"] = True
         if session.session_info.two_factor_required:
             session.session_info.two_factor_required = False
@@ -1173,7 +1187,10 @@ class UserLoginTwoFactor(Page):
 
     @classmethod
     def _check_totp_and_backup(
-        cls, available_methods: set[str], credentials: TwoFactorCredentials
+        cls,
+        available_methods: set[str],
+        credentials: TwoFactorCredentials,
+        site_configs: SiteConfigurations,
     ) -> None:
         assert user.id is not None
         if "totp_credentials" in available_methods:
@@ -1197,7 +1214,7 @@ class UserLoginTwoFactor(Page):
                     _log_event_usermanagement(TwoFactorEventType.backup_used)
                     send_security_message(user.id, SecurityNotificationEvent.backup_used)
                     _handle_success_auth(user.id)
-                    if has_wato_slave_sites():
+                    if has_wato_slave_sites(site_configs):
                         raise redirect(
                             makeuri_contextless(
                                 request,
@@ -1255,7 +1272,7 @@ class UserLoginTwoFactor(Page):
         elif "backup_codes" in available_methods and (mode == "backup" or not mode):
             self._render_backup(available_methods)
 
-        self._check_totp_and_backup(available_methods, credentials)
+        self._check_totp_and_backup(available_methods, credentials, active_config.sites)
 
         if user_errors:
             html.open_div(id_="login_error")

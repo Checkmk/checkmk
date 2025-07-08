@@ -29,12 +29,12 @@ def enabled_sites() -> SiteConfigurations:
     )
 
 
-def has_wato_slave_sites() -> bool:
-    return bool(wato_slave_sites(active_config.sites))
+def has_wato_slave_sites(site_configs: SiteConfigurations) -> bool:
+    return bool(wato_slave_sites(site_configs))
 
 
 def is_wato_slave_site() -> bool:
-    return _has_distributed_wato_file() and not has_wato_slave_sites()
+    return _has_distributed_wato_file() and not has_wato_slave_sites(active_config.sites)
 
 
 def _has_distributed_wato_file() -> bool:

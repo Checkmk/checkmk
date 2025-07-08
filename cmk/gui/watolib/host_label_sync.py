@@ -32,7 +32,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.site_config import has_wato_slave_sites, wato_slave_sites
+from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -142,12 +142,10 @@ def execute_host_label_sync(
 def execute_host_label_sync_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
-    if not has_wato_slave_sites():
+    if not (remote_sites := wato_slave_sites(config.sites)):
         return
 
-    DiscoveredHostLabelSyncJob().do_sync(
-        remote_sites=wato_slave_sites(config.sites), debug=config.debug
-    )
+    DiscoveredHostLabelSyncJob().do_sync(remote_sites=remote_sites, debug=config.debug)
 
     now = time.time()
     if (

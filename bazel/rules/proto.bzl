@@ -24,7 +24,7 @@ def proto_library_as(name, proto, as_proto, **kwargs):
 
     """
     name_cp = name + "_cp"
-    _copy_file(name = name_cp, src = proto, out = as_proto)
+    _copy_file(name = name_cp, src = proto, out = as_proto, allow_symlink = True)
     _proto_library(name = name, srcs = [as_proto], **kwargs)
 
 py_proto_compile = rule(

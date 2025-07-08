@@ -138,6 +138,7 @@ copy_file(
     name = "j2py_init",
     src = "header_py.txt",
     out = "cmk/shared_typing/__init__.py",
+    allow_symlink = True,
 )
 
 py_library(

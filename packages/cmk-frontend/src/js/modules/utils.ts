@@ -902,9 +902,11 @@ export function update_pending_changes(
     // Update container div CSS class and tooltip
     const page_state_div = document.getElementsByClassName(
         "page_state",
-    )[0] as HTMLElement;
-    change_class(page_state_div, "no_changes", "pending_changes");
-    page_state_div.title = changes_tooltip;
+    )[0] as HTMLElement | null;
+    if (page_state_div) {
+        change_class(page_state_div, "no_changes", "pending_changes");
+        page_state_div.title = changes_tooltip;
+    }
 
     // Update text (changes number and string)
     const [changes_number, changes_str] = changes_info.split(" ", 2);

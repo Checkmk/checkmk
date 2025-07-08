@@ -225,7 +225,6 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
     expect(agent_test_button_default_tag).not_to_be_disabled()
 
 
-@pytest.mark.xfail(reason="CMK-24558")
 def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
     """Validate agent download slideout when creating a host."""
     setup_host = SetupHost(dashboard_page.page)

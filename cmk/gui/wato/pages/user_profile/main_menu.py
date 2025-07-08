@@ -214,17 +214,23 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 
 
 class ModeAjaxSetStartURL(AjaxPage):
-    """AJAX handler to set the start URL of a user to a dashboard"""
+    """AJAX handler to set the start URL of a user"""
 
     def page(self, config: Config) -> PageResult:
         try:
             check_csrf_token()
-            name = request.get_str_input_mandatory("name")
-            url = makeuri_contextless(request, [("name", name)], "dashboard.py")
-            validate_start_url(url, "")
-            _set_user_attribute("start_url", repr(url))
-        except Exception:
-            raise MKUserError(None, _("Failed to set start URL"))
+            if request.var("name"):
+                name = request.get_str_input_mandatory("name")
+                if name == "welcome.py":
+                    _set_user_attribute("start_url", repr(name))
+                else:
+                    url = makeuri_contextless(request, [("name", name)], "dashboard.py")
+                    validate_start_url(url, "")
+                    _set_user_attribute("start_url", repr(url))
+            else:
+                _set_user_attribute("start_url", None)
+        except Exception as e:
+            raise MKUserError(None, _("Failed to set start URL: %s") % e)
         return {}
 
 

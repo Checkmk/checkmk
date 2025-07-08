@@ -404,7 +404,7 @@ def test_dependencies_are_declared() -> None:
         "ibm_db_dbi",  # active_checks/check_sql
         "sqlanydb",  # active_checks/check_sql
         "libcst",  # doc/treasures/migration_helpers
-        "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/registry.py
+        "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/_registry.py
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

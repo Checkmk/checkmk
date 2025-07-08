@@ -7,14 +7,15 @@ from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import compute_validators, get_title_and_help
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._base import FormSpecVisitor
-from ._registry import get_visitor
-from ._type_defs import (
+from .._registry import get_visitor
+from .._type_defs import (
     DEFAULT_VALUE,
     DefaultValue,
     IncomingData,
@@ -22,7 +23,6 @@ from ._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
-from ._utils import compute_validators, get_title_and_help
 
 T = TypeVar("T")
 

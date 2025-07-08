@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.gui.form_specs.private import ListOfStrings
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
 
 from cmk.rulesets.v1.form_specs import String
 

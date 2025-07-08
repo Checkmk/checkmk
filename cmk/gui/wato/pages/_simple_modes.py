@@ -30,16 +30,11 @@ from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, IncomingData, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_data_from_frontend,
     render_form_spec,
     RenderMode,
-)
-from cmk.gui.form_specs.vue.visitors import (
-    DEFAULT_VALUE,
-    IncomingData,
-    RawDiskData,
-    RawFrontendData,
 )
 from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
 from cmk.gui.htmllib.html import html

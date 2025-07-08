@@ -56,7 +56,6 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -181,6 +180,7 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec
 
+from ...form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from ._rule_conditions import DictHostTagCondition
 
 _DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"

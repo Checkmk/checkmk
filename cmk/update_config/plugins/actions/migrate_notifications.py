@@ -19,11 +19,8 @@ from cmk.utils.notify_types import (
 from cmk.utils.paths import check_mk_config_dir, omd_root
 
 from cmk.gui.config import active_config
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
-from cmk.gui.form_specs.vue.visitors import (
-    get_visitor,
-    RawDiskData,
-)
 from cmk.gui.watolib import sample_config
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (

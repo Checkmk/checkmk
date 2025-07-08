@@ -42,6 +42,7 @@ from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -74,6 +75,7 @@ from .hosts_and_folders import (
 )
 from .objref import ObjectRef, ObjectRefType
 from .rulespecs import (
+    FormSpecNotImplementedError,
     MatchType,
     Rulespec,
     rulespec_group_registry,
@@ -1274,6 +1276,11 @@ class Rule:
 
     def value_masked(self) -> RuleValue:
         """Return a copy of the value with all secrets masked"""
+        try:
+            return get_visitor(self.ruleset.rulespec.form_spec).mask(RawDiskData(self.value))
+        except FormSpecNotImplementedError:
+            pass
+
         return self.ruleset.valuespec().mask(self.value)
 
     def diff_to(self, other: Rule) -> str:
@@ -1316,10 +1323,9 @@ class Rule:
     def to_log(self) -> RuleSpec:
         """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
         vs = self.ruleset.valuespec()
-        return self._to_config(
-            use_host_folder=UseHostFolder.NONE,
-            transform_value=lambda value: vs.value_to_json(vs.mask(self.value)),
-        )
+        masked_value_fn = lambda value: vs.value_to_json(vs.mask(self.value))
+
+        return self._to_config(use_host_folder=UseHostFolder.NONE, transform_value=masked_value_fn)
 
     def _to_config(
         self,

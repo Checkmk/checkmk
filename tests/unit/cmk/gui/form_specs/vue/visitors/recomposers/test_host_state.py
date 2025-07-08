@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, SingleChoiceVisitor
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 
 from cmk.rulesets.v1.form_specs import HostState
 

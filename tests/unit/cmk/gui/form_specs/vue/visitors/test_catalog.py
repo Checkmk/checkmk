@@ -5,7 +5,7 @@
 from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String

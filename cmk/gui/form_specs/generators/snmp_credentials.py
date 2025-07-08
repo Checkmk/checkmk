@@ -18,7 +18,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
+from cmk.gui.form_specs.vue import DefaultValue as VueDefaultValue
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (

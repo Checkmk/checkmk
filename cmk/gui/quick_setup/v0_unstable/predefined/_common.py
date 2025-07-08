@@ -13,11 +13,11 @@ from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgent
 
 from cmk.checkengine.discovery import CheckPreviewEntry
 
+from cmk.gui.form_specs.vue import DiskModel, RawFrontendData
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
 )
-from cmk.gui.form_specs.vue.visitors._type_defs import DiskModel, RawFrontendData
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest

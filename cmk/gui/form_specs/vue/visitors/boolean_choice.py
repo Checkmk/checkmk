@@ -4,19 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.i18n import _
 
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
+    compute_validators,
+    get_title_and_help,
+    localize,
+)
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import BooleanChoice
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, IncomingData, InvalidValue
-from ._utils import (
-    compute_validators,
-    get_title_and_help,
-    localize,
-)
+from .._type_defs import DefaultValue, IncomingData, InvalidValue
 
 type _ParsedValueModel = bool
 type _FallbackModel = bool

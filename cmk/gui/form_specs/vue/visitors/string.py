@@ -5,21 +5,21 @@
 # ruff: noqa: A005
 
 from cmk.gui.form_specs.private import StringAutocompleter
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import _
-
-from cmk.rulesets.v1.form_specs import FieldSize
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
-from ._utils import (
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
     base_i18n_form_spec,
     compute_input_hint,
     compute_label,
     get_prefill_default,
     get_title_and_help,
 )
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
+
+from cmk.rulesets.v1.form_specs import FieldSize
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 
 _ParsedValueModel = str
 _FallbackModel = str

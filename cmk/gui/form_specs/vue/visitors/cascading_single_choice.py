@@ -5,22 +5,8 @@
 
 
 from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import _, translate_to_current_language
-
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from ._base import FormSpecVisitor
-from ._registry import get_visitor
-from ._type_defs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    IncomingData,
-    InvalidValue,
-    RawDiskData,
-    RawFrontendData,
-)
-from ._utils import (
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
     base_i18n_form_spec,
     compute_label,
     compute_title_input_hint,
@@ -28,6 +14,20 @@ from ._utils import (
     get_prefill_default,
     get_title_and_help,
     localize,
+)
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _, translate_to_current_language
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .._registry import get_visitor
+from .._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    RawFrontendData,
 )
 
 _ParsedValueModel = tuple[str, IncomingData]

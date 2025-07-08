@@ -12,7 +12,7 @@ from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.private import OptionalChoice
-from cmk.gui.form_specs.vue.visitors import DefaultValue as FrontendDefaultValue
+from cmk.gui.form_specs.vue._type_defs import DefaultValue as FrontendDefaultValue
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -424,4 +424,5 @@ def recompose(form_spec: FormSpec[Any]) -> TransformDataForLegacyFormatOrRecompo
         ),
         from_disk=_transform_from_disk,
         to_disk=_wrapped_transform_to_disk(form_spec),
+        migrate=form_spec.migrate,
     )

@@ -9,8 +9,8 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
 
+from cmk.gui.form_specs.vue import RawDiskData
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
-from cmk.gui.form_specs.vue.visitors import RawDiskData
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     build_formspec_map_from_stages,

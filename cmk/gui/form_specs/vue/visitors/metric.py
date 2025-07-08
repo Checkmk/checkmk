@@ -4,16 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue.visitors._type_defs import InvalidValue
-from cmk.gui.form_specs.vue.visitors._utils import (
+from cmk.gui.form_specs.vue._type_defs import InvalidValue
+from cmk.gui.form_specs.vue._utils import (
     create_validation_error,
 )
-from cmk.gui.form_specs.vue.visitors.string import StringVisitor
 from cmk.gui.graphing import registered_metric_ids_and_titles
 from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.i18n import _
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .string import StringVisitor
 
 
 class MetricVisitor(StringVisitor):

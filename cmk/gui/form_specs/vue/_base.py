@@ -8,13 +8,8 @@ from typing import Any, final, Generic, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue.visitors._type_defs import (
-    DiskModel,
-    IncomingData,
-    InvalidValue,
-    RawDiskData,
-)
-from cmk.gui.form_specs.vue.visitors._utils import (
+from cmk.gui.form_specs.vue._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData
+from cmk.gui.form_specs.vue._utils import (
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -55,7 +50,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         # Stage 3: Execute validators of the element itself
         return compute_validation_errors(
             self._validators(),
-            self._to_vue(parsed_value)[1],
+            lambda: self._to_vue(parsed_value)[1],
             self._to_disk(parsed_value),
         )
 

@@ -8,7 +8,7 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import OptionalChoice
-from cmk.gui.form_specs.vue.visitors import (
+from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
     get_visitor,
     IncomingData,

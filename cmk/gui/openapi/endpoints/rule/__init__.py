@@ -20,6 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
@@ -58,6 +59,7 @@ from cmk.gui.watolib.rulesets import (
     visible_ruleset,
     visible_rulesets,
 )
+from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 
 
 class FieldValidationException(Exception):
@@ -217,7 +219,6 @@ def create_rule(param):
 
     try:
         _validate_value(ruleset, value)
-
     except FieldValidationException as exc:
         return problem(
             status=400,
@@ -425,6 +426,18 @@ def edit_rule(param):
 
 
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
+    # FormSpec validation
+    try:
+        if problems := get_visitor(ruleset.rulespec.form_spec).validate(RawDiskData(value)):
+            exception = FieldValidationException()
+            exception.title = f"Problem in field {'.'.join(problems[0].location)}"
+            exception.detail = problems[0].message
+            raise exception
+        return
+    except FormSpecNotImplementedError:
+        pass
+
+    # Legacy valuespec validation
     try:
         valuespec = ruleset.valuespec()
         valuespec.validate_datatype(value, "")
@@ -494,6 +507,11 @@ def _create_rule(
     value: Any,
     rule_id: str = gen_id(),
 ) -> Rule:
+    try:
+        transformed_value = get_visitor(ruleset.rulespec.form_spec).to_disk(RawDiskData(value))
+    except FormSpecNotImplementedError:
+        transformed_value = ruleset.valuespec().transform_value(value)
+
     rule = Rule(
         rule_id,
         folder,
@@ -517,7 +535,7 @@ def _create_rule(
             ),
         ),
         RuleOptions.from_config(properties),
-        ruleset.valuespec().transform_value(value),
+        transformed_value,
     )
 
     return rule
@@ -540,6 +558,13 @@ def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> R
     return ruleset
 
 
+def _get_masked_rule_value(rule: Rule) -> object:
+    try:
+        return repr(get_visitor(rule.ruleset.rulespec.form_spec).mask(RawDiskData(rule.value)))
+    except FormSpecNotImplementedError:
+        return repr(rule.ruleset.valuespec().mask(rule.value))
+
+
 def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
     rule = rule_entry.rule
     return constructors.domain_object(
@@ -552,7 +577,7 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
             "folder": "/" + rule_entry.folder.path(),
             "folder_index": rule_entry.index_nr,
             "properties": rule.rule_options.to_config(),
-            "value_raw": repr(rule.ruleset.valuespec().mask(rule.value)),
+            "value_raw": _get_masked_rule_value(rule),
             "conditions": denilled(
                 {
                     "host_name": rule.conditions.host_name,

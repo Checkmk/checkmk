@@ -10,7 +10,7 @@ from cmk.gui.logged_in import user
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._type_defs import InvalidValue
+from .._type_defs import InvalidValue
 
 
 class CommentTextAreaVisitor(MultilineTextVisitor):

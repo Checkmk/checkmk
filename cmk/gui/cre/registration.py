@@ -26,7 +26,6 @@ from cmk.gui.dashboard import (
 )
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose_dictionary_spec
 from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
@@ -48,6 +47,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
+from cmk.gui.utils.rule_specs.legacy_converter import recompose_dictionary_spec
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
 from cmk.gui.views.builtin_views import (

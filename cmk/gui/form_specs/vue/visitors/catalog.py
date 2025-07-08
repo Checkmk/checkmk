@@ -9,6 +9,13 @@ from typing import Any, Self
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement, TopicGroup
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
+    base_i18n_form_spec,
+    create_validation_error,
+    get_title_and_help,
+    localize,
+)
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
@@ -16,21 +23,14 @@ from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._base import FormSpecVisitor
-from ._registry import get_visitor
-from ._type_defs import (
+from .._registry import get_visitor
+from .._type_defs import (
     DEFAULT_VALUE,
     DefaultValue,
     IncomingData,
     InvalidValue,
     RawDiskData,
     RawFrontendData,
-)
-from ._utils import (
-    base_i18n_form_spec,
-    create_validation_error,
-    get_title_and_help,
-    localize,
 )
 
 ModelTopic = str

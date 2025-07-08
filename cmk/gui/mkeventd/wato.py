@@ -57,9 +57,6 @@ from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import (
-    recompose_dictionary_spec,
-)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -85,6 +82,7 @@ from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.rule_specs.legacy_converter import recompose_dictionary_spec
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,

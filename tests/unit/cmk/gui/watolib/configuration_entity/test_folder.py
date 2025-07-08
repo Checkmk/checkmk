@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,

@@ -7,7 +7,7 @@ from typing import Any, Literal, TypeVar
 
 import pytest
 
-from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (

@@ -7,7 +7,7 @@ from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -15,7 +15,6 @@ RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_spec_visitor_registry: dict[
     type[FormSpec[Any]], type[FormSpecVisitor[FormSpec[Any], Any, Any]]
 ] = {}
-
 form_spec_recomposer_registry: dict[type[FormSpec[Any]], RecomposerFunction] = {}
 
 

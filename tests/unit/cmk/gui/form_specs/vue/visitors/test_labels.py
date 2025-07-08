@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private import Labels, World
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
 
 labels = {"cmk/check_mk_server": "yes"}
 

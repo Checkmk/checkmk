@@ -7,11 +7,8 @@ import pytest
 
 from cmk.gui.form_specs.private import ListUniqueSelection, SingleChoiceElementExtended
 from cmk.gui.form_specs.private.list_unique_selection import UniqueSingleChoiceElement
+from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.visitors import (
-    get_visitor,
-    IncomingData,
-    RawDiskData,
-    RawFrontendData,
     SingleChoiceVisitor,
 )
 

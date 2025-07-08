@@ -9,7 +9,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Literal, Self, TypeVar
+from typing import Any, assert_never, cast, Literal, Self, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -31,11 +31,13 @@ from cmk.gui.form_specs.private import (
     StringAutocompleter,
     UserSelection,
 )
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.wato._check_mk_configuration import RulespecGroupAgent
 from cmk.gui.watolib import config_domains as legacy_config_domains
@@ -2541,4 +2543,15 @@ def _convert_to_legacy_autocompleter(
         autocompleter=AutocompleterConfig(ident=to_convert.autocompleter.data.ident)
         if to_convert.autocompleter
         else None,
+    )
+
+
+T = TypeVar("T")
+
+
+def recompose_dictionary_spec(
+    form_spec: Callable[[], ruleset_api_v1.form_specs.Dictionary | DictionaryExtended],
+) -> ValueSpecDictionary:
+    return cast(
+        ValueSpecDictionary, convert_to_legacy_valuespec(form_spec(), translate_to_current_language)
     )

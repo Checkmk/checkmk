@@ -6,18 +6,8 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.form_specs.vue.visitors import IncomingData
-from cmk.gui.i18n import _
-
-from cmk.rulesets.v1 import Message
-from cmk.rulesets.v1.form_specs.validators import ValidationError
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-from cmk.shared_typing.configuration_entity import ConfigEntityType
-
-from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, InvalidValue
-from ._utils import (
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
     base_i18n_form_spec,
     compute_title_input_hint,
     compute_validators,
@@ -25,6 +15,15 @@ from ._utils import (
     get_title_and_help,
     localize,
 )
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
+
+from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from cmk.shared_typing.configuration_entity import ConfigEntityType
+
+from .._type_defs import DefaultValue, IncomingData, InvalidValue
 
 _ParsedValueModel = str | None
 _FallbackModel = str | None

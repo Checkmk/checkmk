@@ -2,8 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from ._registry import get_visitor, register_recomposer_function, register_visitor_class
-from ._type_defs import DEFAULT_VALUE, DefaultValue, IncomingData, RawDiskData, RawFrontendData
 from .boolean_choice import BooleanChoiceVisitor
 from .cascading_single_choice import CascadingSingleChoiceVisitor
 from .catalog import CatalogVisitor
@@ -36,14 +34,6 @@ from .tuple import TupleVisitor
 from .two_column_dictionary import TwoColumnDictionaryVisitor
 
 __all__ = [
-    "DefaultValue",
-    "DEFAULT_VALUE",
-    "RawFrontendData",
-    "RawDiskData",
-    "IncomingData",
-    "register_visitor_class",
-    "register_recomposer_function",
-    "get_visitor",
     "BooleanChoiceVisitor",
     "CascadingSingleChoiceVisitor",
     "CatalogVisitor",

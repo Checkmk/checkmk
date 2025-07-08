@@ -10,7 +10,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FrontendDefaultValue
 from cmk.gui.watolib import config_domains
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -27,6 +26,8 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
+
+from ..._type_defs import DefaultValue as FrontendDefaultValue
 
 
 def _validate_proxy_scheme(allowed_schemes: frozenset[ProxySchema], value: str) -> None:

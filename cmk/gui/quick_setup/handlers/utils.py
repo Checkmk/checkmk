@@ -10,11 +10,11 @@ from typing import Any, cast
 from pydantic import BaseModel
 
 from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
 )
-from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget

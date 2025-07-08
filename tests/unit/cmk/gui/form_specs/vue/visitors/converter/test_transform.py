@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.vue.visitors import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
 
 from cmk.rulesets.v1.form_specs import Integer
 

@@ -6,6 +6,13 @@ import ast
 from collections.abc import Mapping, Sequence
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
+from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._utils import (
+    base_i18n_form_spec,
+    compute_validators,
+    get_title_and_help,
+    localize,
+)
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
@@ -13,21 +20,14 @@ from cmk.rulesets.v1.form_specs._composed import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
-from ._base import FormSpecVisitor
-from ._registry import get_visitor
-from ._type_defs import (
+from .._registry import get_visitor
+from .._type_defs import (
     DEFAULT_VALUE,
     DefaultValue,
     IncomingData,
     InvalidValue,
     RawDiskData,
     RawFrontendData,
-)
-from ._utils import (
-    base_i18n_form_spec,
-    compute_validators,
-    get_title_and_help,
-    localize,
 )
 
 _ParsedValueModel = Mapping[str, IncomingData]

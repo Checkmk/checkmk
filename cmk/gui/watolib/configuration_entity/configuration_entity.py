@@ -8,8 +8,7 @@ from typing import assert_never, NamedTuple, NewType
 
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
-from cmk.gui.form_specs.vue.visitors import get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, RawFrontendData
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawFrontendData
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,

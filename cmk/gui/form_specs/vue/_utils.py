@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypeVar
 
-from cmk.gui.form_specs.vue.visitors._type_defs import InvalidValue
+from cmk.gui.form_specs.vue._type_defs import InvalidValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
@@ -64,12 +64,12 @@ def create_validation_error(
 
 def compute_validation_errors(
     validators: Sequence[Callable[[ModelT], object]],
-    replacement_value: Any,
+    replacement_value: Callable[[], object],
     raw_value: Any,
 ) -> list[shared_type_defs.ValidationMessage]:
     return [
         shared_type_defs.ValidationMessage(
-            location=[], message=x, replacement_value=replacement_value
+            location=[], message=x, replacement_value=replacement_value()
         )
         for x in optional_validation(validators, raw_value)
         if x is not None

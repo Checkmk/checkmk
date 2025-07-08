@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue.visitors.dictionary import (
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .._type_defs import InvalidValue
+from .dictionary import (
     _FallbackModel,
     _ParsedValueModel,
     DictionaryVisitor,
 )
-
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from ._type_defs import InvalidValue
 
 
 class TwoColumnDictionaryVisitor(DictionaryVisitor):

@@ -50,9 +50,8 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
-from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE, RawDiskData, RawFrontendData
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -3611,7 +3610,9 @@ class ABCNotificationParameterMode(WatoMode):
                 self._method() == script_name
                 for script_name, _title in notification_script_choices()
             ):
-                return recompose(notification_parameter_registry.parameter_called()).valuespec
+                return convert_to_legacy_valuespec(
+                    notification_parameter_registry.parameter_called(), _
+                )
             raise MKUserError(
                 None,
                 _("No notification parameters for method '%s' found") % self._method(),

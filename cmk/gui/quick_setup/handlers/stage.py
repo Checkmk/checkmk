@@ -29,10 +29,10 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.form_specs.vue import RawFrontendData
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
 )
-from cmk.gui.form_specs.vue.visitors import RawFrontendData
 from cmk.gui.http import request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user

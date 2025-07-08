@@ -10,7 +10,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
-from cmk.gui.form_specs.vue.visitors import RawFrontendData
+from cmk.gui.form_specs.vue import RawFrontendData
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,

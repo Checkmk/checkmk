@@ -7,12 +7,14 @@ from typing import Any
 import pytest
 
 from cmk.gui.form_specs.private import ListExtended
-from cmk.gui.form_specs.vue.visitors import (
+from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
     get_visitor,
     IncomingData,
     RawDiskData,
     RawFrontendData,
+)
+from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
 

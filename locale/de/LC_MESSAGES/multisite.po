@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-03 23:35+0000\n"
+"PO-Revision-Date: 2025-07-08 00:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -27970,7 +27970,7 @@ msgid ""
 "Here you can specify host labels that are automatically created when one of "
 "the systemd services is discovered."
 msgstr ""
-"Hier können Sie Host-Labels festlegen, die beim Erkennen eines Systemd-"
+"Hier können Sie Host-Labels festlegen, die beim Erkennen eines systemd-"
 "Services automatisch erstellt werden."
 
 msgid ""
@@ -38844,7 +38844,7 @@ msgid "Map states"
 msgstr "Zustände übersetzen"
 
 msgid "Map systemd states to monitoring states"
-msgstr "Systemd Zustände auf Monitoring-Zustände abbilden"
+msgstr "Systemd-Zustände auf Monitoring-Zustände abbilden"
 
 msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
 msgstr ""
@@ -52773,10 +52773,10 @@ msgid "Restrict the length of the lines"
 msgstr "Länge der Zeilen begrenzen"
 
 msgid "Restrict the systemd services by description."
-msgstr "systemd-Services nach Beschreibung einschränken."
+msgstr "Systemd-Services nach Beschreibung einschränken."
 
 msgid "Restrict the systemd services by unit name."
-msgstr "systemd-Services nach Unit-Namen einschränken."
+msgstr "Systemd-Services nach Unit-Namen einschränken."
 
 msgid "Restrict the systemd units by description."
 msgstr "Die systemd-Dienste nach Beschreibung einschränken."
@@ -61110,37 +61110,37 @@ msgid "System: Storage Array Configuration"
 msgstr "System: Speicher-Array-Konfiguration"
 
 msgid "Systemd Timesyncd time synchronisation"
-msgstr "Systemd Timesyncd Zeitsynchronisation"
+msgstr "Systemd timesyncd Zeitsynchronisation"
 
 msgid "Systemd services"
 msgstr "Systemd-Services"
 
 msgid "Systemd services summary"
-msgstr "Zusammenfassung der Systemd-Services"
+msgstr "Zusammenfassung der systemd-Services"
 
 msgid "Systemd single service"
 msgstr "Systemd Einzel-Service"
 
 msgid "Systemd single service discovery"
-msgstr "Erkennung Systemd Einzel-Service"
+msgstr "Erkennung systemd Einzel-Service"
 
 msgid "Systemd single services"
 msgstr "Systemd einzelne Dienste"
 
 msgid "Systemd single services discovery"
-msgstr "Erkennung einzelner Systemd Services"
+msgstr "Erkennung einzelner Systemd-Services"
 
 msgid "Systemd single socket"
 msgstr "Systemd Einzel-Buchse"
 
 msgid "Systemd single socket discovery"
-msgstr "Erkennung Systemd Einzel-Buchse"
+msgstr "Erkennung systemd Einzel-Buchse"
 
 msgid "Systemd single unit discovery"
-msgstr "Erkennung Systemd Einzel-Buchse"
+msgstr "Erkennung systemd Einzel-Buchse"
 
 msgid "Systemd sockets summary"
-msgstr "Zusammenfassung der Systemd-Buchsen"
+msgstr "Zusammenfassung der systemd-Buchsen"
 
 msgid "Systems larger than"
 msgstr "Systeme größer als"
@@ -71208,21 +71208,21 @@ msgid ""
 "This ruleset only applies to the summary Systemd service and not the "
 "individual one."
 msgstr ""
-"Dieser Regelsatz gilt nur für den zusammengefassten Systemd-Dienst und nicht "
+"Dieser Regelsatz gilt nur für den zusammengefassten systemd-Dienst und nicht "
 "für die einzelnen Dienste."
 
 msgid ""
 "This ruleset only applies when individual Systemd services are discovered. "
 "The user needs to configure this option in the discovery section."
 msgstr ""
-"Dieser Regelsatz gilt nur, wenn einzelne Systemd-Services erkannt werden. "
+"Dieser Regelsatz gilt nur, wenn einzelne systemd-Services erkannt werden. "
 "Der Benutzer muss diese Option im Abschnitt \"Erkennung\" konfigurieren."
 
 msgid ""
 "This ruleset only applies when individual Systemd units are discovered. The "
 "user needs to configure this option in the discovery section."
 msgstr ""
-"Dieser Regelsatz gilt nur, wenn einzelne Systemd-Einheiten erkannt werden. "
+"Dieser Regelsatz gilt nur, wenn einzelne systemd-Einheiten erkannt werden. "
 "Der Benutzer muss diese Option im Abschnitt \"Erkennung\" konfigurieren."
 
 msgid ""

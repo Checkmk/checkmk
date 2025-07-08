@@ -3518,7 +3518,7 @@ def activation_attributes_for_rest_api_response(
                 phase=status_dict["_phase"],
                 state=status_dict["_state"],
                 status_text=status_dict["_status_text"],
-                status_details=status_dict["_status_details"],
+                status_details=re.sub(r"<.*?>", "", unescape(status_dict["_status_details"])),
                 start_time=status_dict["_time_started"],
                 end_time=status_dict["_time_ended"],
             )

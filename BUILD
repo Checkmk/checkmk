@@ -1,8 +1,8 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+load("@protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
@@ -228,8 +228,8 @@ proto_library_as(
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
-        "@com_google_protobuf//:duration_proto",
-        "@com_google_protobuf//:timestamp_proto",
+        "@protobuf//:duration_proto",
+        "@protobuf//:timestamp_proto",
     ],
 )
 
@@ -240,8 +240,8 @@ proto_library_as(
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
-        "@com_google_protobuf//:duration_proto",
-        "@com_google_protobuf//:timestamp_proto",
+        "@protobuf//:duration_proto",
+        "@protobuf//:timestamp_proto",
     ],
 )
 

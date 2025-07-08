@@ -3,7 +3,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
     name = "protobuf_bin",
-    srcs = ["@com_google_protobuf//:protoc"],
+    srcs = ["@protobuf//:protoc"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -12,9 +12,7 @@ pkg_files(
 
 pkg_files(
     name = "protobuf_lib",
-    srcs = [
-        "@com_google_protobuf//:protoc_lib",
-    ],
+    srcs = ["@protobuf//:protoc_lib"],
     excludes = ["libprotoc_lib.a"],
 )
 
@@ -27,9 +25,7 @@ pkg_mklink(
 
 pkg_files(
     name = "well_known_proto_files",
-    srcs = [
-        "@com_google_protobuf//:well_known_type_protos",
-    ],
+    srcs = ["@protobuf//:well_known_type_protos"],
 )
 
 pkg_filegroup(
@@ -61,9 +57,7 @@ pkg_filegroup(
 
 pkg_tar(
     name = "protobuf_tar",
-    srcs = [
-        ":protobuf",
-    ],
+    srcs = [":protobuf"],
     package_file_name = "protobuf.tar",
     visibility = ["//omd:__pkg__"],
 )

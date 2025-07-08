@@ -62,6 +62,7 @@ def main() {
         upload_to_testbuilds
         && (! currentBuild.fullProjectName.contains("/cv/"))
         && (! params.SKIP_DEPLOY_TO_WEBSITE)
+        && (! params.DISABLE_CACHE)
     );
 
     print(

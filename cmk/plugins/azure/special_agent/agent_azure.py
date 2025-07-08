@@ -887,7 +887,7 @@ class MgmtApiClient(BaseAsyncApiClient):
 
     async def load_balancer_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/loadBalancers/{}"
-        return self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
+        return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
 
     def nic_ip_conf_view(self, group, nic_name, ip_conf_name):
         url = (

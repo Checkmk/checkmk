@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="var-annotated"
-
-from typing import Any
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -15,11 +14,24 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 
-def parse_aix_hacmp_nodes(string_table):
-    parsed = {}
+@dataclass(frozen=True, kw_only=True)
+class NetworkInterface:
+    name: str
+    attribute: str
+    ip_address: str
+
+
+type Section = Mapping[str, Mapping[str, Sequence[NetworkInterface]]]
+
+
+def parse_aix_hacmp_nodes(
+    string_table: StringTable,
+) -> Section:
+    parsed: dict[str, dict[str, list[NetworkInterface]]] = {}
     for line in string_table:
         if len(line) == 1:
             parsed[line[0]] = {}
@@ -37,25 +49,29 @@ def parse_aix_hacmp_nodes(string_table):
 
         elif "Communication" in line[0] and get_details:
             parsed[node_name][network_name].append(
-                (line[3].replace(",", ""), line[5].replace(",", ""), line[8].replace(",", ""))
+                NetworkInterface(
+                    name=line[3].replace(",", ""),
+                    attribute=line[5].replace(",", ""),
+                    ip_address=line[8].replace(",", ""),
+                )
             )
 
     return parsed
 
 
-def inventory_aix_hacmp_nodes(section: Any) -> DiscoveryResult:
+def discover_aix_hacmp_nodes(section: Section) -> DiscoveryResult:
     yield from [Service(item=key) for key in section]
 
 
-def check_aix_hacmp_nodes(item: str, section: Any) -> CheckResult:
+def check_aix_hacmp_nodes(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
         return
 
     for network_name in data:
         infotext = "Network: %s" % network_name
 
-        for if_name, attribute, ip_adr in data[network_name]:
-            infotext += f", interface: {if_name}, attribute: {attribute}, IP: {ip_adr}"
+        for interface in data[network_name]:
+            infotext += f", interface: {interface.name}, attribute: {interface.attribute}, IP: {interface.ip_address}"
 
         yield Result(state=State.OK, summary=infotext)
 
@@ -66,6 +82,6 @@ agent_section_aix_hacmp_nodes = AgentSection(
 check_plugin_aix_hacmp_nodes = CheckPlugin(
     name="aix_hacmp_nodes",
     service_name="HACMP Node %s",
-    discovery_function=inventory_aix_hacmp_nodes,
+    discovery_function=discover_aix_hacmp_nodes,
     check_function=check_aix_hacmp_nodes,
 )

@@ -8,7 +8,7 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.aix_hacmp_nodes import (
     check_aix_hacmp_nodes,
-    inventory_aix_hacmp_nodes,
+    discover_aix_hacmp_nodes,
     parse_aix_hacmp_nodes,
 )
 
@@ -331,11 +331,11 @@ _STRING_TABLE_3 = [
         (_STRING_TABLE_3, [Service(item="smaprok01tst"), Service(item="trgprok02tst")]),
     ],
 )
-def test_inventory_aix_hacmp_nodes(
+def test_discover_aix_hacmp_nodes(
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert list(inventory_aix_hacmp_nodes(parse_aix_hacmp_nodes(string_table))) == expected_result
+    assert list(discover_aix_hacmp_nodes(parse_aix_hacmp_nodes(string_table))) == expected_result
 
 
 @pytest.mark.parametrize(

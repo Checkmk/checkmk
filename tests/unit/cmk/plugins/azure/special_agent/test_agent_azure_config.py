@@ -262,7 +262,14 @@ def test_tag_based_config_is_configured(
 
 
 def test_selector() -> None:
-    selector = Selector(ARGS)
+    selector = Selector(
+        Args(
+            require_tag=["tag1"],
+            require_tag_value=[["tag2", "value2"]],
+            explicit_config=["group=test-group", "resources=Resource1,Resource2"],
+            tag_key_pattern=TagsImportPatternOption.import_all,
+        )
+    )
     assert str(selector) == (
         "Explicit configuration:\n"
         "  [test-group]\n"
@@ -278,7 +285,12 @@ def test_selector() -> None:
     "args,resource,is_monitored",
     [
         pytest.param(
-            ARGS,
+            Args(
+                require_tag=["tag1"],
+                require_tag_value=[["tag2", "value2"]],
+                explicit_config=["group=test-group", "resources=Resource1,Resource2"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             AzureResource(
                 {
                     "id": "id1",
@@ -294,7 +306,12 @@ def test_selector() -> None:
             id="both explicit config and tag match",
         ),
         pytest.param(
-            ARGS,
+            Args(
+                require_tag=["tag1"],
+                require_tag_value=[],
+                explicit_config=[],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             AzureResource(
                 {
                     "id": "id2",
@@ -310,7 +327,12 @@ def test_selector() -> None:
             id="tag doesn't match",
         ),
         pytest.param(
-            ARGS,
+            Args(
+                require_tag=["tag1"],
+                require_tag_value=[],
+                explicit_config=["group=test-group", "resources=Resource1,Resource2"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             AzureResource(
                 {
                     "id": "id3",
@@ -326,7 +348,54 @@ def test_selector() -> None:
             id="explicit config doesn't match, unknown resource",
         ),
         pytest.param(
-            ARGS,
+            Args(
+                require_tag=["tag1"],
+                require_tag_value=[],
+                explicit_config=["group=test-group"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            AzureResource(
+                {
+                    "id": "id3",
+                    "name": "Resource3",
+                    "type": "Microsoft.Compute/virtualMachines",
+                    "location": "westeurope",
+                    "tags": {"tag1": "value1", "tag2": "value2"},
+                    "group": "test-group",
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            True,
+            id="explicit config match for group and tag",
+        ),
+        pytest.param(
+            Args(
+                require_tag=["tag_not_present"],
+                require_tag_value=[],
+                explicit_config=["group=test-group"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            AzureResource(
+                {
+                    "id": "id3",
+                    "name": "Resource3",
+                    "type": "Microsoft.Compute/virtualMachines",
+                    "location": "westeurope",
+                    "tags": {"tag1": "value1", "tag2": "value2"},
+                    "group": "test-group",
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            False,
+            id="explicit config match for group but not tag",
+        ),
+        pytest.param(
+            Args(
+                require_tag=[],
+                require_tag_value=[],
+                explicit_config=["group=test-group"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             AzureResource(
                 {
                     "id": "id1",
@@ -334,12 +403,12 @@ def test_selector() -> None:
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
-                    "group": "test-group",
+                    "group": "test-GROUP",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             True,
-            id="group name in different case",
+            id="case-insensitive group match",
         ),
     ],
 )

@@ -234,6 +234,7 @@ class FetchedResource(Enum):
     virtual_machines = ("Microsoft.Compute/virtualMachines", "virtualmachines")
     vaults = ("Microsoft.RecoveryServices/vaults", "vaults")
     app_gateways = ("Microsoft.Network/applicationGateways", "applicationgateways")
+    load_balancers = ("Microsoft.Network/loadBalancers", "loadbalancers")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -251,6 +252,7 @@ class FetchedResource(Enum):
 BULK_QUERIED_RESOURCES = {
     FetchedResource.virtual_machines.type,
     FetchedResource.app_gateways.type,
+    FetchedResource.load_balancers.type,
 }
 
 
@@ -885,30 +887,6 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         return ",".join(sorted(retry_names))
 
-    async def load_balancer_view(self, group, name):
-        url = "resourceGroups/{}/providers/Microsoft.Network/loadBalancers/{}"
-        return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
-
-    def nic_ip_conf_view(self, group, nic_name, ip_conf_name):
-        url = (
-            "resourceGroups/{}/providers/Microsoft.Network/networkInterfaces/{}/ipConfigurations/{}"
-        )
-        return self._get(
-            url.format(group, nic_name, ip_conf_name),
-            params={"api-version": "2022-01-01"},
-        )
-
-    def nic_vmss_ip_conf_view(self, group, vmss, virtual_machine_index, nic_name, ip_conf_name):
-        return self._get(
-            f"resourceGroups/{group}/providers/microsoft.Compute/virtualMachineScaleSets/"
-            f"{vmss}/virtualMachines/{virtual_machine_index}/networkInterfaces/{nic_name}/ipConfigurations/{ip_conf_name}",
-            params={"api-version": "2024-07-01"},
-        )
-
-    async def public_ip_view(self, group, name):
-        url = "resourceGroups/{}/providers/Microsoft.Network/publicIPAddresses/{}"
-        return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
-
     async def vnet_gateway_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
         return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -1275,6 +1253,14 @@ def get_params_from_azure_id(
 async def get_frontend_ip_configs(
     mgmt_client: MgmtApiClient, resource: Mapping
 ) -> dict[str, dict[str, object]]:
+    async def _get_public_ip_addresses(
+        mgmt_client: MgmtApiClient, group: str, name: str
+    ) -> Mapping[str, Any]:
+        return await mgmt_client.get_async(
+            f"resourceGroups/{group}/providers/Microsoft.Network/publicIPAddresses/{name}",
+            params={"api-version": "2024-05-01"},
+        )
+
     frontend_ip_configs: dict[str, dict[str, object]] = {}
 
     for ip_config in resource["properties"]["frontendIPConfigurations"]:
@@ -1291,7 +1277,7 @@ async def get_frontend_ip_configs(
             _, group, ip_name = get_params_from_azure_id(
                 public_ip_id, resource_types=["publicIPAddresses"]
             )
-            public_ip: Mapping = await mgmt_client.public_ip_view(group, ip_name)
+            public_ip = await _get_public_ip_addresses(mgmt_client, group, ip_name)
             dns_settings = public_ip["properties"].get("dnsSettings")
 
             public_ip_keys = ("ipAddress", "publicIPAllocationMethod")
@@ -1413,18 +1399,90 @@ async def process_app_gateways(
     return sections
 
 
-def _get_standard_network_interface_config(
+async def _collect_load_balancers_resources(
+    mgmt_client: MgmtApiClient,
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Sequence[AzureResource]:
+    load_balancers_response = await mgmt_client.get_async(
+        "providers/Microsoft.Network/loadBalancers",
+        key="value",
+        params={"api-version": "2024-05-01"},
+    )
+
+    load_balancers_resources: list[AzureResource] = []
+    for load_balancer in load_balancers_response:
+        try:
+            resource = monitored_resources_by_id[load_balancer["id"].lower()]
+        except KeyError:
+            raise ApiErrorMissingData(
+                f"Load balancer not found in monitored resources: {load_balancer['id']}"
+            )
+
+        try:
+            frontend_ip_configs, inbound_nat_rules, backend_pools = await asyncio.gather(
+                get_frontend_ip_configs(mgmt_client, load_balancer),
+                get_inbound_nat_rules(mgmt_client, load_balancer),
+                get_backend_address_pools(mgmt_client, load_balancer),
+            )
+        except Exception:
+            raise ApiErrorMissingData(
+                f"Failed to collect data for load balancer: {load_balancer['id']}"
+            )
+
+        resource.info["properties"] = {}
+        resource.info["properties"]["frontend_ip_configs"] = frontend_ip_configs
+        resource.info["properties"]["inbound_nat_rules"] = inbound_nat_rules
+        resource.info["properties"]["backend_pools"] = {p["id"]: p for p in backend_pools}
+
+        outbound_rule_keys = ("protocol", "idleTimeoutInMinutes", "backendAddressPool")
+        outbound_rules = [
+            {"name": r["name"], **filter_keys(r["properties"], outbound_rule_keys)}
+            for r in load_balancer["properties"].get("outboundRules", [])
+        ]
+        resource.info["properties"]["outbound_rules"] = outbound_rules
+
+        load_balancers_resources.append(resource)
+
+    return load_balancers_resources
+
+
+async def process_load_balancers(
+    mgmt_client: MgmtApiClient,
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Sequence[AzureSection]:
+    load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources_by_id)
+
+    sections = []
+    for resource in load_balancers:
+        section = AzureSection(resource.section, resource.piggytargets)
+        section.add(resource.dumpinfo())
+        sections.append(section)
+
+    return sections
+
+
+async def _get_standard_network_interface_config(
     mgmt_client: MgmtApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
     _, group, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
     )
-    return mgmt_client.nic_ip_conf_view(group, nic_name, ip_conf_name)
+    return await mgmt_client.get_async(
+        f"resourceGroups/{group}/providers/Microsoft.Network/networkInterfaces/{nic_name}/ipConfigurations/{ip_conf_name}",
+        params={"api-version": "2022-01-01"},
+    )
 
 
-def _get_vmss_network_interface_config(
+async def _get_vmss_network_interface_config(
     mgmt_client: MgmtApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
+    async def _nic_vmss_ip_conf_view(group, vmss, virtual_machine_index, nic_name, ip_conf_name):
+        return await mgmt_client.get_async(
+            f"resourceGroups/{group}/providers/microsoft.Compute/virtualMachineScaleSets/"
+            f"{vmss}/virtualMachines/{virtual_machine_index}/networkInterfaces/{nic_name}/ipConfigurations/{ip_conf_name}",
+            params={"api-version": "2024-07-01"},
+        )
+
     _, group, vmss, vm_index, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id,
         resource_types=[
@@ -1434,14 +1492,16 @@ def _get_vmss_network_interface_config(
             "ipConfigurations",
         ],
     )
-    return mgmt_client.nic_vmss_ip_conf_view(group, vmss, vm_index, nic_name, ip_conf_name)
+    return await _nic_vmss_ip_conf_view(group, vmss, vm_index, nic_name, ip_conf_name)
 
 
-def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+async def get_network_interface_config(
+    mgmt_client: MgmtApiClient, nic_id: str
+) -> Mapping[str, Mapping]:
     if "virtualMachineScaleSets" in nic_id:
-        return _get_vmss_network_interface_config(mgmt_client, nic_id)
+        return await _get_vmss_network_interface_config(mgmt_client, nic_id)
 
-    return _get_standard_network_interface_config(mgmt_client, nic_id)
+    return await _get_standard_network_interface_config(mgmt_client, nic_id)
 
 
 async def get_inbound_nat_rules(
@@ -1459,7 +1519,7 @@ async def get_inbound_nat_rules(
 
         if "backendIPConfiguration" in inbound_nat_rule.get("properties"):
             ip_config_id = inbound_nat_rule["properties"]["backendIPConfiguration"]["id"]
-            nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+            nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
 
             if "name" in nic_config and "properties" in nic_config:
                 nat_rule_data["backend_ip_config"] = {
@@ -1485,7 +1545,7 @@ async def get_backend_address_pools(
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
-                nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+                nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
 
                 if "name" in nic_config and "properties" in nic_config:
                     backend_address_data = {
@@ -1503,27 +1563,6 @@ async def get_backend_address_pools(
         )
 
     return backend_pools
-
-
-async def process_load_balancer(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
-    load_balancer = await mgmt_client.load_balancer_view(
-        resource.info["group"], resource.info["name"]
-    )
-    frontend_ip_configs = await get_frontend_ip_configs(mgmt_client, load_balancer)
-    inbound_nat_rules = await get_inbound_nat_rules(mgmt_client, load_balancer)
-    backend_pools = await get_backend_address_pools(mgmt_client, load_balancer)
-
-    resource.info["properties"] = {}
-    resource.info["properties"]["frontend_ip_configs"] = frontend_ip_configs
-    resource.info["properties"]["inbound_nat_rules"] = inbound_nat_rules
-    resource.info["properties"]["backend_pools"] = {p["id"]: p for p in backend_pools}
-
-    outbound_rule_keys = ("protocol", "idleTimeoutInMinutes", "backendAddressPool")
-    outbound_rules = [
-        {"name": r["name"], **filter_keys(r["properties"], outbound_rule_keys)}
-        for r in load_balancer["properties"].get("outboundRules", [])
-    ]
-    resource.info["properties"]["outbound_rules"] = outbound_rules
 
 
 async def get_remote_peerings(
@@ -2227,6 +2266,8 @@ def get_bulk_tasks(
         )
     if FetchedResource.app_gateways.type in monitored_services:
         yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources_by_id))
+    if FetchedResource.load_balancers.type in monitored_services:
+        yield asyncio.create_task(process_load_balancers(mgmt_client, monitored_resources_by_id))
 
 
 async def process_single_resources(
@@ -2244,8 +2285,6 @@ async def process_single_resources(
         # TODO: convert to real async:
         elif resource_type == "Microsoft.Network/virtualNetworkGateways":
             await process_virtual_net_gw(mgmt_client, resource)
-        elif resource_type == "Microsoft.Network/loadBalancers":
-            await process_load_balancer(mgmt_client, resource)
         # ----
 
         if resource_type == FetchedResource.vaults.type:

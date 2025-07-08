@@ -2197,10 +2197,11 @@ def load_history(
             entries.append(entry)
             continue
 
-        previous_tree = history_store.lookup_tree(previous.tree_path)
-        current_tree = history_store.lookup_tree(current.tree_path)
         entry = HistoryEntry.from_delta_tree(
-            current.timestamp, current_tree.difference(previous_tree)
+            current.timestamp,
+            history_store.lookup_tree(current.tree_path).difference(
+                history_store.lookup_tree(previous.tree_path)
+            ),
         )
         if entry.new or entry.changed or entry.removed:
             history_store.save_history_entry(

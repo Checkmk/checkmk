@@ -202,8 +202,6 @@ common:ci --action_env=RUSTUP_HOME=${RUSTUP_HOME}
 common:ci --host_action_env=DISTRO=${DISTRO}
 common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
-# In the CI we have bazel-remote and the disk cache will be thrown away after the build
-common:linux --disk_cache=
 EOF
 
 ARG VERS_TAG

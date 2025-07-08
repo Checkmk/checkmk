@@ -3,38 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<aix_hacmp_nodes>>>
-# pasv0449
-# pasv0450
-#
-# NODE pasv0449:
-#     Interfaces to network prod_net
-#         Communication Interface: Name pasv0449, Attribute public, IP address 172.22.237.14
-#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
-#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
-#
-# NODE pasv1111:
-#     Interfaces to network TEST_net
-#         Communication Interface: Name pasv0449, Attribute public, IP address 172.22.237.14
-#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
-#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
-#
-# NODE pasv0450:
-#     Interfaces to network prod_net
-#         Communication Interface: Name pasv0450, Attribute public, IP address 172.22.237.15
-#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
-#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
-
-# parsed =
-# {u'pasv0449': {u'prod_net': [(u'pasv0449', u'public', u'172.22.237.14'),
-#                              (u'pasc0159', u'public', u'172.22.237.17'),
-#                              (u'pasc0158', u'public', u'172.22.237.16')]},
-#  u'pasv0450': {u'prod_net': [(u'pasv0450', u'public', u'172.22.237.15'),
-#                              (u'pasc0159', u'public', u'172.22.237.17'),
-#                              (u'pasc0158', u'public', u'172.22.237.16')]}
-# }
-
-
 # mypy: disable-error-code="var-annotated"
 
 from typing import Any

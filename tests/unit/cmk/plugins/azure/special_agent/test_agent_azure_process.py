@@ -5,14 +5,16 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from cmk.utils.http_proxy_config import NoProxyConfig
 
 from cmk.plugins.azure.special_agent.agent_azure import (
+    _collect_resources,
     _get_resource_health_sections,
     Args,
     AzureResource,
@@ -20,13 +22,12 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     get_group_labels,
     get_vm_labels_section,
     GroupLabels,
-    LabelsSection,
     process_app_registrations,
     process_organization,
     process_usage_details,
     process_users,
     ResourceHealth,
-    Section,
+    Selector,
     TagsImportPatternOption,
     write_group_info,
     write_remaining_reads,
@@ -280,186 +281,6 @@ def test_get_vm_labels_section(
 
     assert labels_section._cont == expected_result[0]
     assert labels_section._piggytargets == expected_result[1]
-
-
-@pytest.mark.parametrize(
-    "mgmt_client, resource_info, group_tags, args, expected_result",
-    [
-        pytest.param(
-            MockMgmtApiClient(
-                [],
-                {
-                    "burningman": {
-                        "MyVM": {
-                            "statuses": [
-                                {
-                                    "code": "ProvisioningState/succeeded",
-                                    "level": "Info",
-                                    "displayStatus": "Provisioning succeeded",
-                                    "time": "2019-11-25T07:38:14.6999403+00:00",
-                                }
-                            ]
-                        }
-                    }
-                },
-                2.0,
-            ),
-            {
-                "id": "myid",
-                "name": "MyVM",
-                "type": "Microsoft.Compute/virtualMachines",
-                "location": "westeurope",
-                "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                "group": "BurningMan",
-            },
-            {
-                "burningman": {
-                    "my-resource-tag": "my-resource-value",
-                    "resource_group": "burningman",
-                }
-            },
-            Args(
-                piggyback_vms="self",
-                debug=False,
-                services=["Microsoft.Compute/virtualMachines"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
-            [
-                (
-                    LabelsSection,
-                    ["MyVM"],
-                    [
-                        '{"group_name": "burningman", "vm_instance": true}\n',
-                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
-                    ],
-                ),
-                (
-                    AzureSection,
-                    ["MyVM"],
-                    [
-                        "Resource\n",
-                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
-                    ],
-                ),
-            ],
-            id="vm_with_labels",
-            marks=pytest.mark.skip("Used different API to fetch VMs info"),
-        ),
-        pytest.param(
-            MockMgmtApiClient(
-                [],
-                {
-                    "burningman": {
-                        "MyVM": {
-                            "statuses": [
-                                {
-                                    "code": "ProvisioningState/succeeded",
-                                    "level": "Info",
-                                    "displayStatus": "Provisioning succeeded",
-                                    "time": "2019-11-25T07:38:14.6999403+00:00",
-                                }
-                            ]
-                        }
-                    }
-                },
-                2.0,
-            ),
-            {
-                "id": "myid",
-                "name": "MyVM",
-                "type": "Microsoft.Compute/virtualMachines",
-                "location": "westeurope",
-                "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                "group": "BurningMan",
-            },
-            {
-                "BurningMan": {
-                    "my-resource-tag": "my-resource-value",
-                    "cmk/azure/resource_group": "BurningMan",
-                }
-            },
-            Args(
-                piggyback_vms="grouphost",
-                debug=False,
-                services=["Microsoft.Compute/virtualMachines"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
-            [
-                (
-                    AzureSection,
-                    ["burningman"],
-                    [
-                        "Resource\n",
-                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
-                    ],
-                ),
-            ],
-            id="vm",
-            marks=pytest.mark.skip("Used different API to fetch VMs info"),
-        ),
-        pytest.param(
-            MockMgmtApiClient(
-                [],
-                {
-                    "burningman": {
-                        "myvm": {
-                            "statuses": [
-                                {
-                                    "code": "ProvisioningState/succeeded",
-                                    "level": "Info",
-                                    "displayStatus": "Provisioning succeeded",
-                                    "time": "2019-11-25T07:38:14.6999403+00:00",
-                                }
-                            ]
-                        }
-                    }
-                },
-                2.0,
-            ),
-            {
-                "id": "myid",
-                "name": "MyVM",
-                "type": "Microsoft.Compute/virtualMachines",
-                "location": "westeurope",
-                "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                "group": "BurningMan",
-            },
-            {
-                "BurningMan": {
-                    "my-resource-tag": "my-resource-value",
-                    "cmk/azure/resource_group": "BurningMan",
-                }
-            },
-            Args(
-                piggyback_vms="grouphost",
-                debug=False,
-                services=[""],
-                tag_key_pattern=TagsImportPatternOption.ignore_all,
-            ),
-            [],
-            id="vm_disabled_service",
-        ),
-    ],
-)
-@patch("cmk.plugins.azure.special_agent.agent_azure._gather_metrics", return_value=None)
-@pytest.mark.asyncio
-@pytest.mark.skip("To be rewritten")
-async def test_process_resource(
-    mock_gather_metrics: MagicMock,
-    mgmt_client: MgmtApiClient,
-    resource_info: Mapping[str, Any],
-    group_tags: GroupLabels,
-    args: Args,
-    expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
-) -> None:
-    ...
-    # resource = AzureResource(resource_info, args.tag_key_pattern)
-    # sections = await process_resources_async(mgmt_client, resource, args)
-    # assert len(sections) == len(expected_result)
-    # for section, expected_section in zip(sections, expected_result):
-    #     assert isinstance(section, expected_section[0])
-    #     assert section._piggytargets == expected_section[1]
-    #     assert section._cont == expected_section[2]
 
 
 @pytest.mark.parametrize(
@@ -1036,3 +857,189 @@ async def test_process_organization(
     )
 
     assert result_section == expected_section, "Section not as expected"
+
+
+@dataclass
+class AzureResourceInfo:
+    section: str
+    info_group: str
+    piggytargets: Sequence[str]
+    tags: dict[str, str]
+
+
+RESOURCES_API_RESPONSE = [
+    {
+        "id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/providers/Microsoft.Network/virtualNetworks/virtual_network_1",
+        "name": "virtual_network_1",
+        "type": "Microsoft.Network/virtualNetworks",
+        "location": "region_name",
+    },
+    {
+        "id": "/subscriptions/subscription_id/resourceGroups/resource_group_2/providers/Microsoft.Network/virtualNetworks/virtual_network_2",
+        "name": "virtual_network_2",
+        "type": "Microsoft.Network/virtualNetworks",
+        "location": "region_name",
+        "tags": {},
+    },
+    {
+        "id": "/subscriptions/subscription_id/resourceGroups/resource_group_3/providers/Microsoft.Compute/virtualMachines/virtual_machine_1",
+        "name": "virtual_machine_1",
+        "type": "Microsoft.Compute/virtualMachines",
+        "location": "region_name",
+        "zones": ["1"],
+        "plan": {
+            "name": "checkmk_cloud_edition_22",
+            "product": "checkmk003-preview",
+            "publisher": "tribe29gmbh1665582614827",
+        },
+    },
+    {
+        "id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/providers/Microsoft.Storage/storageAccounts/storage_account_1",
+        "name": "storage_account_1",
+        "type": "Microsoft.Storage/storageAccounts",
+        "sku": {"name": "Standard_LRS", "tier": "Standard"},
+        "kind": "StorageV2",
+        "location": "westeurope",
+        "tags": {"ms-resource-usage": "azure-cloud-shell"},
+    },
+]
+
+
+@pytest.mark.parametrize(
+    "api_client_mock_return, args, expected_resources, expected_monitored_groups",
+    [
+        pytest.param(
+            RESOURCES_API_RESPONSE,
+            Args(
+                explicit_config=[],
+                require_tag=[],
+                require_tag_value=[],
+                debug=False,
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            [
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_2",
+                    piggytargets=["resource_group_2"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualmachines",
+                    info_group="resource_group_3",
+                    piggytargets=["resource_group_3"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="storageaccounts",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={"ms-resource-usage": "azure-cloud-shell"},
+                ),
+            ],
+            [
+                "resource_group_1",
+                "resource_group_2",
+                "resource_group_3",
+            ],
+            id="Multiple Resources and groups all tags",
+        ),
+        pytest.param(
+            RESOURCES_API_RESPONSE,
+            Args(
+                explicit_config=[],
+                require_tag=[],
+                require_tag_value=[],
+                debug=False,
+                tag_key_pattern=TagsImportPatternOption.ignore_all,
+            ),
+            [
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_2",
+                    piggytargets=["resource_group_2"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualmachines",
+                    info_group="resource_group_3",
+                    piggytargets=["resource_group_3"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="storageaccounts",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
+                ),
+            ],
+            [
+                "resource_group_1",
+                "resource_group_2",
+                "resource_group_3",
+            ],
+            id="Multiple Resources and groups ignore tags",
+        ),
+        pytest.param(
+            RESOURCES_API_RESPONSE,
+            Args(
+                explicit_config=["group=resource_group_1"],
+                require_tag=[],
+                require_tag_value=[],
+                debug=False,
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
+            [
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="storageaccounts",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={"ms-resource-usage": "azure-cloud-shell"},
+                ),
+            ],
+            ["resource_group_1"],
+            id="Resources selected on explicit config group",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_collect_resources(
+    api_client_mock_return: Sequence[Mapping],
+    args: Args,
+    expected_resources: Sequence[AzureResourceInfo],
+    expected_monitored_groups: set[str],
+    mock_graph_api_client: AsyncMock,
+) -> None:
+    mock_graph_api_client.get_async.return_value = api_client_mock_return
+
+    selector = Selector(args)
+    result_resources, result_groups = await _collect_resources(
+        mock_graph_api_client, args, selector
+    )
+
+    assert len(result_resources) == len(expected_resources), "Resource count mismatch"
+    for resource, expected in zip(result_resources, expected_resources):
+        assert resource.section == expected.section, "Section mismatch"
+        assert resource.info["group"] == expected.info_group, "Info group mismatch"
+        assert resource.piggytargets == expected.piggytargets, "Piggy targets mismatch"
+        assert resource.tags == expected.tags, "Tags mismatch"
+
+    assert set(result_groups) == set(expected_monitored_groups), "Monitored groups mismatch"

@@ -1956,7 +1956,7 @@ class HistoryPaths:
     corrupted: Sequence[Path]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HistoryEntry:
     timestamp: int
     new: int
@@ -1968,22 +1968,22 @@ class HistoryEntry:
     def from_raw(cls, timestamp: int, raw: tuple[int, int, int, SDRawDeltaTree]) -> HistoryEntry:
         new, changed, removed, raw_delta_tree = raw
         return cls(
-            timestamp,
-            new,
-            changed,
-            removed,
-            deserialize_delta_tree(raw_delta_tree),
+            timestamp=timestamp,
+            new=new,
+            changed=changed,
+            removed=removed,
+            delta_tree=deserialize_delta_tree(raw_delta_tree),
         )
 
     @classmethod
     def from_delta_tree(cls, timestamp: int, delta_tree: ImmutableDeltaTree) -> HistoryEntry:
         delta_stats = delta_tree.get_stats()
         return cls(
-            timestamp,
-            delta_stats["new"],
-            delta_stats["changed"],
-            delta_stats["removed"],
-            delta_tree,
+            timestamp=timestamp,
+            new=delta_stats["new"],
+            changed=delta_stats["changed"],
+            removed=delta_stats["removed"],
+            delta_tree=delta_tree,
         )
 
 

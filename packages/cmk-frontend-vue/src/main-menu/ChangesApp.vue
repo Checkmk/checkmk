@@ -33,7 +33,6 @@ const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
 const activationStartAndEndTimes = ref<string>('')
-const sitesRecentlyActivated = ref<Array<string>>([])
 const alreadyMadeAjaxCall = ref<boolean>(false)
 const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
   const mapping: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
@@ -49,12 +48,55 @@ const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'defaul
   return mapping[status] ?? 'warning'
 }
 
-interface Sites {
+interface StatusPerSiteResponse {
+  site: string
+  phase: 'initialized' | 'queued' | 'started' | 'sync' | 'activate' | 'finishing' | 'done'
+  state: 'warning' | 'success' | 'error'
+  status_text: string
+  status_details: string
+  start_time: string
+  end_time: string
+}
+
+// We only really care about the status_per_site & is_running. The rest is not used in the UI
+interface ActivationExtensionsResponse {
+  sites: Array<string>
+  is_running: boolean
+  force_foreign_changes: boolean
+  time_started: string
+  changes: Array<object>
+  status_per_site: Array<StatusPerSiteResponse>
+}
+
+// We only really care about the extensions. The rest is not used in the UI
+interface ActivationStatusResponse {
+  links: Array<object>
+  domainType: string
+  id: string
+  title: string
+  members: object
+  extensions: ActivationExtensionsResponse
+}
+
+// We only really care about the id. The rest is not used in the UI
+interface ActivatePendingChangesResponse {
+  links: Array<object>
+  domainType: string
+  id: string
+  title: string
+  members: object
+  extensions: object
+}
+
+// Site information as returned by the ajax call
+// The activationStatus is only added when activating changes
+interface Site {
   siteId: string
   siteName: string
   onlineStatus: string
   changes: number
   version: string
+  activationStatus: StatusPerSiteResponse | undefined
 }
 
 interface PendingChanges {
@@ -67,7 +109,7 @@ interface PendingChanges {
 }
 
 interface SitesAndChanges {
-  sites: Array<Sites>
+  sites: Array<Site>
   pendingChanges: Array<PendingChanges>
 }
 
@@ -81,15 +123,35 @@ declare const cmk: any
 
 function activateChangesComplete(starttime: number): void {
   activateChangesInProgress.value = false
-  sitesRecentlyActivated.value = sitesAndChanges.value.sites
-    .filter((site) => site.changes > 0 && site.onlineStatus === 'online')
-    .map((site) => site.siteId)
+  // Fetches the pending changes again to update the UI but leaves the activation status intact
+  void fetchPendingChangesAjax(true)
 
-  void fetchPendingChangesAjax()
+  // We are currently using the time from the actiavtion status response but
+  // This doesn't take into account the browser time zone.
   const starttimeFormatted = new Date(starttime).toLocaleTimeString('en-GB', {
     hour12: false
   })
   activationStartAndEndTimes.value = `Start: ${starttimeFormatted} | End: ${new Date().toLocaleTimeString('en-GB', { hour12: false })}`
+}
+
+async function getActivationStatus(activationId: string) {
+  const response = (await restAPI.get(
+    `objects/activation_run/${activationId}`
+  )) as ActivationStatusResponse
+
+  const statusPerSite = response.extensions.status_per_site
+  sitesAndChanges.value.sites.forEach((site) => {
+    const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
+    if (siteStatus) {
+      site.activationStatus = siteStatus
+    }
+  })
+
+  if (response.extensions.is_running) {
+    setTimeout(() => {
+      void getActivationStatus(activationId)
+    }, 100)
+  }
 }
 
 async function activateAllChanges() {
@@ -102,18 +164,18 @@ async function activateAllChanges() {
   activateChangesInProgress.value = true
   const starttime = Date.now()
   try {
-    await restAPI.post(
+    const activateChangesResponse = (await restAPI.post(
       `domain-types/activation_run/actions/activate-changes/invoke`,
       {
-        redirect: true,
+        redirect: false,
         sites: sitesAndChanges.value.sites
           .filter((site) => site.changes > 0 && site.onlineStatus === 'online')
           .map((site) => site.siteId),
         force_foreign_changes: true
       },
       { headers: [['If-Match', '*']] }
-    )
-
+    )) as ActivatePendingChangesResponse
+    void getActivationStatus(activateChangesResponse.id)
     return
   } catch (error) {
     throw new Error(`Activation failed: ${error}`)
@@ -127,7 +189,7 @@ async function activateAllChanges() {
   }
 }
 
-async function fetchPendingChangesAjax(): Promise<void> {
+async function fetchPendingChangesAjax(preserveActivationStatus: boolean): Promise<void> {
   try {
     const dataAsJson = (await ajaxCall.get(
       'ajax_sidebar_get_sites_and_changes.py'
@@ -140,7 +202,25 @@ async function fetchPendingChangesAjax(): Promise<void> {
       }))
     }
 
-    sitesAndChanges.value = dataAsJson
+    if (preserveActivationStatus) {
+      // Preserve the current activationStatus for each site
+      const currentSites = sitesAndChanges.value.sites
+      sitesAndChanges.value = {
+        ...dataAsJson,
+        sites: dataAsJson.sites.map((newSite) => {
+          const oldSite = currentSites.find((s) => s.siteId === newSite.siteId)
+          return oldSite && oldSite.activationStatus
+            ? { ...newSite, activationStatus: oldSite.activationStatus }
+            : newSite
+        })
+      }
+    } else {
+      // Reset the activationStatus for each site
+      sitesAndChanges.value = {
+        ...dataAsJson,
+        sites: dataAsJson.sites.map((site) => ({ ...site, activationStatus: undefined }))
+      }
+    }
   } catch (error) {
     throw new Error(`fetchPendingChangsAjax failed: ${error}`)
   }
@@ -154,9 +234,8 @@ function openActivateChangesPage() {
 async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
-      await fetchPendingChangesAjax()
+      await fetchPendingChangesAjax(false)
       alreadyMadeAjaxCall.value = true
-      sitesRecentlyActivated.value = []
     }
   } else {
     alreadyMadeAjaxCall.value = false
@@ -177,6 +256,14 @@ const activateChangesButtonDisabled = computed((): boolean => {
   return !sitesAndChanges.value.sites.some(
     (site) => site.onlineStatus === 'online' && site.changes > 0
   )
+})
+
+const sitesRecentlyActivated = computed((): boolean => {
+  return sitesAndChanges.value.sites.some((site) => site.activationStatus !== undefined)
+})
+
+const weHavePendingChanges = computed((): boolean => {
+  return sitesAndChanges.value.pendingChanges.length > 0
 })
 
 onMounted(() => {
@@ -231,18 +318,60 @@ onMounted(() => {
     >
       <CmkCollapsible :open="activationStatusCollapsible">
         <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
-          <CmkIndent v-if="sitesRecentlyActivated.includes(site.siteId)" class="sites_status">
-            <div class="site-activate-success">
-              <span class="site-name-activate-success">{{ site.siteName }}</span>
-              <span :class="[`status-${site.onlineStatus}`]">{{ site.onlineStatus }}</span>
+          <CmkIndent v-if="site.activationStatus !== undefined" class="sites_status">
+            <div class="site-name-status-version">
+              <span class="site-name">{{ site.siteName }}</span>
+              <CmkChip
+                :content="site.onlineStatus"
+                :color="statusColor(site.onlineStatus)"
+                size="small"
+              ></CmkChip>
               <span class="site-version-activate-success grey-text">{{ site.version }}</span>
             </div>
-            <CmkIcon variant="inline" name="save" />
-            <span>{{ t('changes-successfully-activated', 'Changes successfully activated') }}</span>
-            <br />
-            <span class="grey-text start-end-time">{{ activationStartAndEndTimes }}</span>
+
+            <template v-if="site.activationStatus.phase === 'done'">
+              <div v-if="site.activationStatus.state === 'success'" class="site-activate-success">
+                <CmkIcon variant="inline" name="save" />
+                <div>
+                  <span v-if="site.activationStatus.state === 'success'">{{
+                    t('changes-activated-successfully', 'Changes successfully activated')
+                  }}</span>
+                  <br />
+                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                </div>
+              </div>
+              <div v-if="site.activationStatus.state === 'warning'" class="site-activate-warning">
+                <CmkIcon variant="inline" name="validation-error" />
+                <div>
+                  <span v-if="site.activationStatus?.state === 'warning'">{{
+                    t('changes-activated-with-warning', 'Warning')
+                  }}</span>
+                  <br />
+                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                </div>
+              </div>
+              <div v-if="site.activationStatus.state === 'error'" class="site-activate-error">
+                <CmkIcon variant="inline" name="alert_crit" />
+                <div>
+                  <span v-if="site.activationStatus.state === 'error'">{{
+                    t('changes-failed-to-activate', 'Error')
+                  }}</span>
+                  <br />
+                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="progress-bar">
+                <span>{{
+                  site.activationStatus.phase.charAt(0).toUpperCase() +
+                  site.activationStatus.phase.slice(1)
+                }}</span>
+                <CmkProgressbar max="unknown"></CmkProgressbar>
+              </div>
+            </template>
           </CmkIndent>
-          <CmkIndent v-if="!sitesRecentlyActivated.includes(site.siteId)" :key="site.siteId">
+          <CmkIndent v-else>
             <div class="site-name-status-version">
               <span class="site-name">{{ site.siteName }}</span>
               <CmkChip
@@ -254,17 +383,9 @@ onMounted(() => {
             </div>
             <div>
               <div v-if="site.changes > 0">
-                <div
-                  v-if="activateChangesInProgress && site.onlineStatus === 'online'"
-                  class="progress-bar"
-                >
-                  <CmkProgressbar max="unknown"></CmkProgressbar>
-                </div>
-                <div v-else>
-                  <span class="grey-text">{{ t('changes', 'Changes:') }} {{ site.changes }}</span
-                  ><br />
-                  <span>{{ t('activation-needed', 'Activation needed') }}</span>
-                </div>
+                <span class="grey-text">{{ t('changes', 'Changes:') }} {{ site.changes }}</span
+                ><br />
+                <span>{{ t('activation-needed', 'Activation needed') }}</span>
               </div>
               <div v-else class="no-pending-changes">
                 <CmkIcon variant="inline" name="save" />
@@ -277,7 +398,7 @@ onMounted(() => {
     </CmkScrollContainer>
 
     <CmkCollapsibleTitle
-      v-if="sitesAndChanges.pendingChanges.length > 0 || sitesRecentlyActivated.length > 0"
+      v-if="weHavePendingChanges || sitesRecentlyActivated"
       :title="`Pending changes`"
       class="collapsible-title"
       :open="pendingChangesCollapsible"
@@ -285,10 +406,7 @@ onMounted(() => {
     />
     <CmkScrollContainer class="container-pending-changes" height="auto">
       <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
-        <CmkIndent
-          v-if="sitesAndChanges.pendingChanges.length === 0 && sitesRecentlyActivated.length > 0"
-          class="pending-changes"
-        >
+        <CmkIndent v-if="!weHavePendingChanges && sitesRecentlyActivated" class="pending-changes">
           <div class="pending-changes-activate-success">
             <span>
               <CmkIcon variant="plain" size="xxlarge" name="save" />
@@ -330,23 +448,38 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-activate-success,
+.site-activate-warning,
+.site-activate-error {
+  display: flex;
+  padding: 2px 8px;
+  justify-content: left;
+  align-items: center;
+  gap: 4px;
+  align-self: stretch;
+  border-radius: 4px;
+}
+
+.site-activate-error {
+  background: rgba(234, 57, 8, 0.15); /* TODO: Which colour should be used? */
+}
+.site-activate-warning {
+  background: rgba(255, 202, 40, 0.15); /* TODO: add var */
+}
+
 .no-pending-changes {
   display: flex;
   align-items: center;
 }
 
-.site-activate-success {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 6px;
-}
 .start-end-time {
   margin-left: 20px;
-}
-.site-name-activate-success {
-  font-weight: bold;
-  margin-right: 8px;
 }
 .site-version-activate-success {
   margin-left: auto;

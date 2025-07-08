@@ -84,7 +84,12 @@ export class Api {
       return null
     }
 
-    return (await res.json()).result
+    const json = await res.json()
+    if (!('result' in json)) {
+      return json
+    } else {
+      return json.result // only ajax call have this result field
+    }
   }
 
   private prepareOptions(options: ApiOptions, defaults: RequestInit = {}): RequestInit {

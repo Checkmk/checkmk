@@ -64,6 +64,7 @@ def fetch_package(Map args) {
                 CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
                 EDITION: args.edition,
                 DISTRO: args.distro,
+                DISABLE_CACHE: args.disable_cache ?: false,
             ],
             build_params_no_check: [
                 CIPARAM_OVERRIDE_BUILD_NODE: build_node,

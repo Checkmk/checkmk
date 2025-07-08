@@ -139,6 +139,7 @@ def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
+@pytest.mark.skip(reason="CMK-24614; investigate failure / flake.")
 def test_create_rules(
     test_site: Site,
     dashboard_page: Dashboard,

@@ -1,0 +1,1 @@
+FROM artifacts.lan.tribe29.com:4000/alpine@sha256:e9e9d51e25e4343f56b64d5ef1717234ec62241d93bf59734c53b4108b5c19ca

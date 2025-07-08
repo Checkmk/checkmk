@@ -29,7 +29,6 @@ from cmk.gui.wato._omd_configuration import (
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.search import (
@@ -46,6 +45,7 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.search import (
     match_item_generator_registry as real_match_item_generator_registry,
 )
+from cmk.gui.watolib.search.engines import setup as search
 
 
 @pytest.fixture(scope="function")

@@ -96,7 +96,7 @@ def perform_gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
     # deactivate_search_index_building_at_requenst_end.
-    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
+    mocker.patch("cmk.gui.watolib.search.engines.setup.updates_requested", return_value=False)
     yield
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
     # clear event after each request.

@@ -5,7 +5,7 @@
 
 from collections.abc import Collection, Iterable, Mapping
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -104,8 +104,10 @@ def _validate_piggyback_hub_config(
         )
 
 
-def validate_piggyback_hub_config(settings_per_site: Mapping[SiteId, GlobalSettings]) -> None:
-    if is_wato_slave_site():
+def validate_piggyback_hub_config(
+    site_configs: SiteConfigurations, settings_per_site: Mapping[SiteId, GlobalSettings]
+) -> None:
+    if is_wato_slave_site(site_configs):
         return
 
     _validate_piggyback_hub_config(settings_per_site, omd_site())

@@ -28,6 +28,7 @@ from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.sites
 from cmk.gui import log
+from cmk.gui.config import active_config
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
@@ -210,7 +211,7 @@ class ACTest:
     def _get_effective_global_setting(self, varname: str) -> Any:
         return get_effective_global_setting(
             omd_site(),
-            is_wato_slave_site(),
+            is_wato_slave_site(active_config.sites),
             varname,
         )
 

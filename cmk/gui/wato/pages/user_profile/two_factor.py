@@ -480,7 +480,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
     def _show_form(self) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site():
+        if is_wato_slave_site(active_config.sites):
             html.user_error(
                 MKUserError(
                     None,
@@ -641,7 +641,7 @@ class UserTwoFactorEnforce(ABCUserProfilePage):
     def _show_form(self) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site():
+        if is_wato_slave_site(active_config.sites):
             html.user_error(
                 MKUserError(
                     None,

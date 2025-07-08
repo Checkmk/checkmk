@@ -12,6 +12,8 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from copy import deepcopy
 from typing import Any, Final
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.gui.watolib.changes as _changes
@@ -367,7 +369,9 @@ class ABCEditGlobalSettingMode(WatoMode):
             if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
                 default_settings = ABCConfigDomain.get_all_default_globals()
                 self._validate_update_piggyback_hub_config(
-                    default_settings[self._varname], default_settings
+                    default_settings[self._varname],
+                    default_settings,
+                    config.sites,
                 )
 
             try:
@@ -384,7 +388,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
             if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
                 self._validate_update_piggyback_hub_config(
-                    new_value, ABCConfigDomain.get_all_default_globals()
+                    new_value, ABCConfigDomain.get_all_default_globals(), config.sites
                 )
 
             self._current_settings[self._varname] = new_value
@@ -417,11 +421,11 @@ class ABCEditGlobalSettingMode(WatoMode):
         return redirect(self._back_url())
 
     def _validate_update_piggyback_hub_config(
-        self, new_value: bool, default_settings: GlobalSettings
+        self, new_value: bool, default_settings: GlobalSettings, site_configs: SiteConfigurations
     ) -> None:
         site_specific_settings = {
             site_id: deepcopy(site_conf.get("globals", {}))
-            for site_id, site_conf in active_config.sites.items()
+            for site_id, site_conf in site_configs.items()
         }
         global_settings = dict(deepcopy(self._global_settings))
         if (sites := self._affected_sites()) is not None:
@@ -431,9 +435,10 @@ class ABCEditGlobalSettingMode(WatoMode):
             global_settings[self._varname] = new_value
 
         validate_piggyback_hub_config(
+            site_configs,
             finalize_all_settings_per_site(
                 default_settings, global_settings, site_specific_settings
-            )
+            ),
         )
 
     @abc.abstractmethod
@@ -477,7 +482,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             title = self._valuespec.title()
             assert isinstance(title, str)
             forms.header(title)
-            if not active_config.wato_hide_varnames:
+            if not config.wato_hide_varnames:
                 forms.section(_("Configuration variable:"))
                 html.tt(self._varname)
 
@@ -609,7 +614,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             domain_settings={
                 domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
             },
-            use_git=active_config.wato_use_git,
+            use_git=config.wato_use_git,
         )
 
         if action == "_reset":

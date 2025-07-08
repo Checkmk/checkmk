@@ -54,7 +54,7 @@ def execute_network_scan_job(config: Config) -> None:
     """Executed by the multisite cron job once a minute. Is only executed in the
     central site. Finds the next folder to scan and starts it via WATO
     automation. The result is written to the folder in the master site."""
-    if is_wato_slave_site():
+    if is_wato_slave_site(config.sites):
         return  # Don't execute this job on slaves.
 
     folder = _find_folder_to_scan()

@@ -1885,7 +1885,7 @@ class Folder(FolderProtocol):
             parent = self.parent()
             assert parent is not None
             return parent.site_id()
-        if not is_wato_slave_site():
+        if not is_wato_slave_site(active_config.sites):
             return omd_site()
 
         # Placeholder for "central site". This is only relevant when using Setup on a remote site

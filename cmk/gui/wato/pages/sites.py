@@ -1578,7 +1578,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         # 3. Site specific global settings
 
-        if is_wato_slave_site():
+        if is_wato_slave_site(self._configured_sites):
             self._current_settings = dict(load_site_global_settings())
         else:
             self._current_settings = self._site.get("globals", {})
@@ -1632,9 +1632,10 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             site_specific_settings[self._site_id][varname] = new_value
 
             validate_piggyback_hub_config(
+                config.sites,
                 finalize_all_settings_per_site(
                     self._default_values, self._global_settings, site_specific_settings
-                )
+                ),
             )
 
         self._current_settings[varname] = new_value
@@ -1684,8 +1685,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             )
         )
 
-        if not is_wato_slave_site():
-            if not has_wato_slave_sites(config.sites):
+        if not is_wato_slave_site(self._configured_sites):
+            if not has_wato_slave_sites(self._configured_sites):
                 html.show_error(
                     _(
                         "You can not configure site specific global settings "
@@ -1695,7 +1696,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 return
 
             if not is_replication_enabled(self._site) and not site_is_local(
-                config.sites[self._site_id]
+                self._configured_sites[self._site_id]
             ):
                 html.show_error(
                     _(

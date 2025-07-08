@@ -82,7 +82,7 @@ class FilterWatoFolder(Filter):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
-        return active_config.wato_enabled or site_config.is_wato_slave_site()
+        return active_config.wato_enabled or site_config.is_wato_slave_site(active_config.sites)
 
     def load_wato_data(self) -> None:
         self.tree = folder_tree().root_folder()

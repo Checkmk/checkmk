@@ -8589,7 +8589,7 @@ class SetupSiteChoice(DropdownChoice):
         )
 
     def _site_default_value(self):
-        if site_config.is_wato_slave_site():
+        if site_config.is_wato_slave_site(active_config.sites):
             # Placeholder for "central site". This is only relevant when using Setup on a remote site
             # and a host / folder has no site set.
             return ""

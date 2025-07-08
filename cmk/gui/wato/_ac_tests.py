@@ -184,9 +184,11 @@ class ACTestLiveproxyd(ACTest):
         return len(active_config.sites) > 1
 
     def execute(self) -> Iterator[ACSingleResult]:
-        yield from (self._check_site(site_id) for site_id in active_config.sites)
+        yield from (
+            self._check_site(site_id, active_config.sites) for site_id in active_config.sites
+        )
 
-    def _check_site(self, site_id: SiteId) -> ACSingleResult:
+    def _check_site(self, site_id: SiteId, site_configs: SiteConfigurations) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):
             return ACSingleResult(
                 state=ACResultState.OK,
@@ -194,7 +196,7 @@ class ACTestLiveproxyd(ACTest):
                 site_id=site_id,
             )
 
-        if not is_wato_slave_site():
+        if not is_wato_slave_site(site_configs):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(

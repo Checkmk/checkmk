@@ -1166,7 +1166,9 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self) -> bool:
-        return not (has_wato_slave_sites(active_config.sites) or is_wato_slave_site())
+        return not (
+            has_wato_slave_sites(active_config.sites) or is_wato_slave_site(active_config.sites)
+        )
 
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS

@@ -13,8 +13,6 @@ from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 
-from cmk.gui.config import active_config
-
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
@@ -33,8 +31,8 @@ def has_wato_slave_sites(site_configs: SiteConfigurations) -> bool:
     return bool(wato_slave_sites(site_configs))
 
 
-def is_wato_slave_site() -> bool:
-    return _has_distributed_wato_file() and not has_wato_slave_sites(active_config.sites)
+def is_wato_slave_site(site_configs: SiteConfigurations) -> bool:
+    return _has_distributed_wato_file() and not has_wato_slave_sites(site_configs)
 
 
 def _has_distributed_wato_file() -> bool:

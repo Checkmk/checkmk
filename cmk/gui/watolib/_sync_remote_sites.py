@@ -320,7 +320,7 @@ class SyncRemoteSitesJob:
 
 
 def _execute_sync_remote_sites(config: Config) -> None:
-    if is_wato_slave_site():
+    if is_wato_slave_site(config.sites):
         return
 
     if not (

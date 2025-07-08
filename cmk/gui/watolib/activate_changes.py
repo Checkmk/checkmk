@@ -2675,7 +2675,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     # Only the remote sites are dealt with here, since the central site is dealt with separately.
     # The rabbitmq definition of the central site has to be updated anytime the definition of a
     # remote site is activated, not only when the central site is activated.
-    if is_wato_slave_site():
+    if is_wato_slave_site(active_config.sites):
         _activate_local_rabbitmq_changes()
 
     return results

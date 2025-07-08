@@ -183,7 +183,7 @@ def handle_ldap_sync_finished(
 ) -> None:
     _synchronize_profiles_to_sites(logger, profiles_to_synchronize, debug=debug)
 
-    if changes and active_config.wato_enabled and not is_wato_slave_site():
+    if changes and active_config.wato_enabled and not is_wato_slave_site(active_config.sites):
         add_change(
             action_name="edit-users",
             text="<br>".join(changes),

@@ -11,6 +11,8 @@ from dataclasses import asdict
 from typing import Final, overload
 from urllib.parse import unquote
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -22,7 +24,7 @@ from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInpu
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -475,7 +477,11 @@ class ModeEditHost(ABCHostMode):
                         ),
                         PageMenuTopic(
                             title=_("For all hosts on site %s") % self._host.site_id(),
-                            entries=list(page_menu_all_hosts_entries(self._should_use_dns_cache())),
+                            entries=list(
+                                page_menu_all_hosts_entries(
+                                    self._should_use_dns_cache(active_config.sites)
+                                )
+                            ),
                         ),
                     ],
                 ),
@@ -488,7 +494,7 @@ class ModeEditHost(ABCHostMode):
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
-        if request.var("_update_dns_cache") and self._should_use_dns_cache():
+        if request.var("_update_dns_cache") and self._should_use_dns_cache(config.sites):
             user.need_permission("wato.update_dns_cache")
             update_dns_cache_result = update_dns_cache(
                 automation_config=make_automation_config(config.sites[self._host.site_id()]),
@@ -545,11 +551,11 @@ class ModeEditHost(ABCHostMode):
             )
         return redirect(mode_url("folder", folder=folder.path()))
 
-    def _should_use_dns_cache(self) -> bool:
+    def _should_use_dns_cache(self, site_configs: SiteConfigurations) -> bool:
         site = self._host.effective_attributes()["site"]
         return watolib_sites.get_effective_global_setting(
             site,
-            is_wato_slave_site(),
+            is_wato_slave_site(site_configs),
             "use_dns_cache",
         )
 

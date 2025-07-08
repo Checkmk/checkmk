@@ -63,7 +63,7 @@ def _update_installation_wide_global_settings(logger: Logger) -> None:
 
 def _update_site_specific_global_settings(logger: Logger) -> None:
     """Update the sitespecific.mk of the local site (which is a remote site)"""
-    if not is_wato_slave_site():
+    if not is_wato_slave_site(active_config.sites):
         return
     save_site_global_settings(
         update_global_config(

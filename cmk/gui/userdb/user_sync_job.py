@@ -10,6 +10,8 @@ from logging import Logger
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfigurations
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -35,7 +37,7 @@ def execute_userdb_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    if not _userdb_sync_job_enabled():
+    if not _userdb_sync_job_enabled(config.sites):
         return
 
     job = UserSyncBackgroundJob()
@@ -71,13 +73,13 @@ def sync_entry_point(job_interface: BackgroundProcessInterface, args: UserSyncAr
     )
 
 
-def _userdb_sync_job_enabled() -> bool:
+def _userdb_sync_job_enabled(site_configs: SiteConfigurations) -> bool:
     cfg = user_sync_config()
 
     if cfg is None:
         return False  # not enabled at all
 
-    if cfg == "master" and is_wato_slave_site():
+    if cfg == "master" and is_wato_slave_site(site_configs):
         return False
 
     return True

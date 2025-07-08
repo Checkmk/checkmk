@@ -44,7 +44,7 @@ _LOGGER_BACKGROUND_JOB = _LOGGER.getChild("background_job")
 
 
 def execute_host_removal_job(config: Config) -> None:
-    if is_wato_slave_site():
+    if is_wato_slave_site(config.sites):
         return
 
     if not _load_automatic_host_removal_ruleset():

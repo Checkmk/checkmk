@@ -11,6 +11,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils.log import console
 
+from cmk.gui.config import active_config
 from cmk.gui.site_config import is_wato_slave_site
 
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
@@ -22,7 +23,7 @@ def warn_about_renamed_remote_site(
     """Warn user about central site that needs to be updated manually
 
     Detect whether or not this is a remote site and issue a warning to let the user known"""
-    if not is_wato_slave_site():
+    if not is_wato_slave_site(active_config.sites):
         return
 
     logger.info("")

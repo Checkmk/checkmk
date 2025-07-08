@@ -30,7 +30,7 @@ class ChangesMenuItem(MainMenuData):
 def _hide_menu() -> bool:
     if not user.may("wato.activate"):
         return True
-    return site_config.is_wato_slave_site() and not active_config.wato_enabled
+    return site_config.is_wato_slave_site(active_config.sites) and not active_config.wato_enabled
 
 
 def _data(request: Request) -> ChangesMenuItem:

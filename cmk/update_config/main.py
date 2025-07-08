@@ -36,6 +36,7 @@ from cmk.utils.redis import disable_redis
 from cmk.base import config as base_config
 
 from cmk.gui import main_modules
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
@@ -268,7 +269,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
                 if not action.continue_on_failure or debug.enabled():
                     raise
 
-        if not has_errors and not is_wato_slave_site():
+        if not has_errors and not is_wato_slave_site(active_config.sites):
             # Force synchronization of the config after a successful configuration update
             add_change(
                 action_name="cmk-update-config",

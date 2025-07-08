@@ -676,9 +676,10 @@ class ConfigDomainOMD(ABCConfigDomain):
                 global_settings = settings
 
             validate_piggyback_hub_config(
+                active_config.sites,
                 finalize_all_settings_per_site(
                     self.get_all_default_globals(), global_settings, site_specific_settings
-                )
+                ),
             )
 
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
@@ -715,7 +716,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         # On a central site, the waiting for the end of the restart is already
         # taken into account by the activate changes background job within
         # async_progress.js. Just execute the omd config change command
-        if is_wato_slave_site():
+        if is_wato_slave_site(active_config.sites):
             job = OMDConfigChangeBackgroundJob()
             if (
                 result := job.start(

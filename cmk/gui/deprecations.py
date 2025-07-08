@@ -448,7 +448,7 @@ def _find_problems_to_send(
 
 
 def execute_deprecation_tests_and_notify_users(config: Config) -> None:
-    if is_wato_slave_site():
+    if is_wato_slave_site(config.sites):
         return
 
     marker_file_store = _MarkerFileStore(paths.var_dir / "deprecations")

@@ -31,7 +31,7 @@ def user_sync_config() -> UserSyncConfig:
 def user_sync_default_config(site_config: SiteConfiguration, site_id: SiteId) -> UserSyncConfig:
     global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
     if global_user_sync == "master":
-        if site_is_local(site_config) and not is_wato_slave_site():
+        if site_is_local(site_config) and not is_wato_slave_site(active_config.sites):
             user_sync_default: UserSyncConfig = "all"
         else:
             user_sync_default = None

@@ -701,13 +701,16 @@ def _encode_socket_for_nagvis(site_id: SiteId, site: SiteConfiguration) -> str:
     return cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
 
 
-# Makes sure, that in distributed mode we monitor only
-# the hosts that are directly assigned to our (the local)
-# site.
-def _update_distributed_wato_file(sites):
-    # Note: we cannot access config.sites here, since we
-    # are currently in the process of saving the new
-    # site configuration.
+def _update_distributed_wato_file(sites: SiteConfigurations) -> None:
+    """Update the the distributed_wato.mk in the site where the site configuration is saved
+
+    Makes sure, that in distributed mode we monitor only the hosts that are directly assigned
+    to our (the local) site.
+
+    Note:
+        We cannot access active_config.sites here, because we are currently in the process of
+        saving the new site configuration.
+    """
     distributed = False
     for siteid, site in sites.items():
         if is_replication_enabled(site):
@@ -719,10 +722,7 @@ def _update_distributed_wato_file(sites):
                 is_remote=False,
             )
 
-    # Remove the distributed wato file
-    # a) If there is no distributed Setup setup
-    # b) If the local site could not be gathered
-    if not distributed:  # or not found_local:
+    if not distributed:
         _delete_distributed_wato_file()
 
 
@@ -739,7 +739,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
 def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
-    if is_wato_slave_site():
+    if is_wato_slave_site(all_sites):
         return True
 
     # Local site: Don't enable site specific locals when no remote sites configured

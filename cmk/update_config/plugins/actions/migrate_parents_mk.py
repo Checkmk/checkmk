@@ -67,7 +67,7 @@ class MigrateParentsMK(UpdateAction):
         if not any(result.parents for result in results.values()):
             return
 
-        if is_wato_slave_site():
+        if is_wato_slave_site(active_config.sites):
             unconfigured_children = {
                 child_host for result in results.values() for child_host in result.parents
             }

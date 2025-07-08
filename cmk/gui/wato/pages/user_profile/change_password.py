@@ -9,19 +9,24 @@ from datetime import datetime
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
-from cmk.gui.config import active_config
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
-from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.security_log_events import UserManagementEvent
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import (
@@ -31,19 +36,17 @@ from cmk.gui.watolib.users import (
 
 from cmk.crypto.password import Password
 
-from .abstract_page import ABCUserProfilePage
+from .page_menu import user_profile_page_menu
+from .verify_requirements import verify_requirements
 
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage))
 
 
-class UserChangePasswordPage(ABCUserProfilePage):
+class UserChangePasswordPage(Page):
     def _page_title(self) -> str:
         return _("Change password")
-
-    def __init__(self) -> None:
-        super().__init__("general.change_password")
 
     def _action(self) -> None:
         assert user.id is not None
@@ -120,6 +123,25 @@ class UserChangePasswordPage(ABCUserProfilePage):
                 )
             )
         raise redirect(origtarget)
+
+    def page(self, config: Config) -> None:
+        verify_requirements("general.change_password", config.wato_enabled)
+        title = self._page_title()
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
+        make_header(html, title, breadcrumb, user_profile_page_menu(breadcrumb))
+
+        if transactions.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                user_errors.add(e)
+
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
+        html.show_user_errors()
+
+        self._show_form()
 
     def _show_form(self) -> None:
         assert user.id is not None

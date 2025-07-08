@@ -79,7 +79,7 @@ from cmk.gui.userdb import (
     user_locked,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
-from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
@@ -99,8 +99,8 @@ from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.totp import TOTP
 
-from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
+from .verify_requirements import verify_requirements
 
 # NOTE: In fido2 >= 2.0.0, this feature has been removed and is enabled per default, see
 # https://github.com/Yubico/python-fido2/blob/main/doc/Migration_1-2.adoc#removal-of-featureswebauthn_json_mapping
@@ -231,12 +231,9 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("user_totp_register", RegisterTotpSecret))
 
 
-class UserTwoFactorOverview(ABCUserProfilePage):
+class UserTwoFactorOverview(Page):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
-
-    def __init__(self) -> None:
-        super().__init__("general.manage_2fa")
 
     def _action(self) -> None:
         assert user.id is not None
@@ -517,6 +514,25 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         html.close_div()
         html.footer()
 
+    def page(self, config: Config) -> None:
+        verify_requirements("general.manage_2fa", config.wato_enabled)
+        title = self._page_title()
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+
+        if transactions.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                user_errors.add(e)
+
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
+        html.show_user_errors()
+
+        self._show_form()
+
     @classmethod
     def _show_registered_credentials(
         cls,
@@ -563,12 +579,9 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
 
 
-class UserTwoFactorEnforce(ABCUserProfilePage):
+class UserTwoFactorEnforce(Page):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
-
-    def __init__(self) -> None:
-        super().__init__("general.manage_2fa")
 
     def _action(self) -> None:
         assert user.id is not None
@@ -672,14 +685,33 @@ class UserTwoFactorEnforce(ABCUserProfilePage):
         html.close_div()
         html.footer()
 
+    def page(self, config: Config) -> None:
+        verify_requirements("general.manage_2fa", config.wato_enabled)
+        title = self._page_title()
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
-class RegisterTotpSecret(ABCUserProfilePage):
+        if transactions.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                user_errors.add(e)
+
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
+        html.show_user_errors()
+
+        self._show_form()
+
+
+class RegisterTotpSecret(Page):
     def _page_title(self) -> str:
         return _("Register authenticator app")
 
-    def __init__(self, secret: bytes | None = None) -> None:
-        super().__init__("general.manage_2fa")
-        self.secret = secret
+    def __init__(self) -> None:
+        super().__init__()
+        self.secret: bytes | None = None
 
     def _breadcrumb(self) -> Breadcrumb:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
@@ -813,13 +845,29 @@ class RegisterTotpSecret(ABCUserProfilePage):
             html.hidden_fields()
         html.footer()
 
+    def page(self, config: Config) -> None:
+        verify_requirements("general.manage_2fa", config.wato_enabled)
+        title = self._page_title()
+        breadcrumb = self._breadcrumb()
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
-class EditCredentialAlias(ABCUserProfilePage):
+        if transactions.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                user_errors.add(e)
+
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
+        html.show_user_errors()
+
+        self._show_form()
+
+
+class EditCredentialAlias(Page):
     def _page_title(self) -> str:
         return _("Edit credential")
-
-    def __init__(self) -> None:
-        super().__init__("general.manage_2fa")
 
     def _breadcrumb(self) -> Breadcrumb:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
@@ -904,6 +952,25 @@ class EditCredentialAlias(ABCUserProfilePage):
             html.hidden_field("_edit", credential_id)
             html.hidden_fields()
         html.footer()
+
+    def page(self, config: Config) -> None:
+        verify_requirements("general.manage_2fa", config.wato_enabled)
+        title = self._page_title()
+        breadcrumb = self._breadcrumb()
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+
+        if transactions.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                user_errors.add(e)
+
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
+        html.show_user_errors()
+
+        self._show_form()
 
     def _display_time(self, epoch_time: int) -> str:
         return time.strftime(

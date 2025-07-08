@@ -9,10 +9,27 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
+from cmk.gui.utils.urls import requested_file_name
+
+
+def user_profile_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    menu = make_simple_form_page_menu(
+        _("Profile"), breadcrumb, form_name="profile", button_name="_save"
+    )
+    menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
+    return menu
 
 
 def page_menu_dropdown_user_related(

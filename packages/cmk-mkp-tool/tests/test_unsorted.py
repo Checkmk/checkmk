@@ -409,3 +409,25 @@ def test_get_optional_manifests_none(package_store: PackageStore) -> None:
     stored = get_stored_manifests(package_store)
     assert not stored.local
     assert not stored.shipped
+
+
+def test_create_package_with_folder_fails(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
+    folder = "invalid_mkp"
+    path_config.agent_based_plugins_dir.joinpath(folder).mkdir()
+
+    with pytest.raises(PackageError, match="is not a file"):
+        create(
+            installer,
+            mkp.manifest_template(
+                name=PackageName("my_mkp"),
+                version_packaged="3.14.0p15",
+                version_required="3.14.0p1",
+                files={PackagePart.AGENT_BASED: [Path(folder)]},
+            ),
+            path_config,
+            package_store,
+            persisting_function=lambda _a, _b: 0,
+            version_packaged="3.14.0p15",
+        )

@@ -226,7 +226,7 @@ def create(
     if installer.is_installed(manifest.name):
         raise PackageError("Package already exists.")
 
-    _raise_for_nonexisting_files(manifest, path_config)
+    _raise_for_invalid_files_entries(manifest, path_config)
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(
@@ -256,7 +256,7 @@ def edit(
         if installer.is_installed(new_manifest.name):
             raise PackageError("Cannot rename package: a package with that name already exists.")
 
-    _raise_for_nonexisting_files(new_manifest, path_config)
+    _raise_for_invalid_files_entries(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)
 
     _create_enabled_mkp_from_installed_package(
@@ -270,11 +270,13 @@ def edit(
     installer.add_installed_manifest(new_manifest)
 
 
-def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) -> None:
+def _raise_for_invalid_files_entries(manifest: Manifest, path_config: PathConfig) -> None:
     for part, rel_path in manifest.files.items():
         for rp in rel_path:
-            if not (fp := (path_config.get_path(part) / rp).exists()):
+            if not (fp := (path_config.get_path(part) / rp)).exists():
                 raise PackageError(f"File {fp} does not exist.")
+            if not fp.is_file():
+                raise PackageError(f"{fp} is not a file.")
 
 
 def _create_enabled_mkp_from_installed_package(

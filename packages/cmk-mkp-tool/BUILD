@@ -65,7 +65,7 @@ py_wheel(
     distribution = "cmk-mkp-tool",
     strip_path_prefixes = ["packages/cmk-mkp-tool"],
     # TODO: Duplicated from pyproject.toml
-    version = "2.0.1",
+    version = "3.0.0",
     deps = [":cmk-mkp-tool"],
 )
 

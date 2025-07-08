@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.0.1"
+# keep in sync with `BUILD`.`
+__version__ = "3.0.0"
 # FIXME (TBC): switch back to the importlib mechanism
 # __version__ = importlib.metadata.version("cmk.mkp_tool")

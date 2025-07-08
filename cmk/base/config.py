@@ -4004,17 +4004,12 @@ class CEEConfigCache(ConfigCache):
         )
         return entries[0] if entries else False
 
-    def state_translation(self, host_name: HostName) -> dict:
-        entries = self.ruleset_matcher.get_host_values_all(
+    def state_translation(self, host_name: HostName) -> Mapping:
+        return self.ruleset_matcher.get_host_values_merged(
             host_name,
             host_state_translation,
             self.label_manager.labels_of_host,
         )
-
-        spec: dict[object, object] = {}
-        for entry in entries[::-1]:
-            spec |= entry
-        return spec
 
     def smartping_settings(self, host_name: HostName) -> dict:
         settings = {"timeout": 2.5}
@@ -4077,19 +4072,14 @@ class CEEConfigCache(ConfigCache):
 
     def state_translation_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> dict:
-        entries = self.ruleset_matcher.get_service_values_all(
+    ) -> Mapping:
+        return self.ruleset_matcher.get_service_values_merged(
             host_name,
             service_name,
             service_labels,
             service_state_translation,
             self.label_manager.labels_of_host,
         )
-
-        spec: dict = {}
-        for entry in entries[::-1]:
-            spec |= entry
-        return spec
 
     def check_timeout_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels

@@ -153,8 +153,8 @@ shadow_hosts: dict[HostName, dict[str, Any]] = {}
 cmc_store_params_in_config = False
 cmc_service_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = []
 cmc_host_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = []
-service_state_translation: Sequence[RuleSpec[Mapping[object, object]]] = []
-host_state_translation: Sequence[RuleSpec[Mapping[object, object]]] = []
+service_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = []
+host_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = []
 
 # Features of CEE that do not (only) belong to the core
 cmc_real_time_checks: RealTimeChecks | None = None

@@ -6,8 +6,6 @@
 import itertools
 from collections.abc import Iterable
 
-from cmk.utils.redis import get_redis_client
-
 from cmk.gui.config import Config
 from cmk.gui.type_defs import (
     Provider,
@@ -19,17 +17,21 @@ from cmk.gui.type_defs import (
     UnifiedSearchResultItem,
 )
 
-from .engines.monitoring import QuicksearchManager
-from .engines.setup import IndexSearcher, PermissionsHandler
+from .engines.monitoring import SupportsMonitoringSearchEngine
+from .engines.setup import SupportsSetupSearchEngine
 
 
 # TODO: currently searching with legacy providers and then transforming the results into the desired
 # unified search output. This is far from efficient, but is necessary to unblock the frontend
 # development.
 class UnifiedSearch:
-    def __init__(self) -> None:
-        self._setup_search = IndexSearcher(get_redis_client(), PermissionsHandler())
-        self._monitoring_search = QuicksearchManager(raise_too_many_rows_error=False)
+    def __init__(
+        self,
+        setup_engine: SupportsSetupSearchEngine,
+        monitoring_engine: SupportsMonitoringSearchEngine,
+    ) -> None:
+        self._setup_engine = setup_engine
+        self._monitoring_engine = monitoring_engine
 
     def search(
         self, query: SearchQuery, provider: Provider | None, config: Config
@@ -39,12 +41,12 @@ class UnifiedSearch:
 
         match provider:
             case "setup":
-                setup_results_by_topic = self._setup_search.search(query, config)
+                setup_results_by_topic = self._setup_engine.search(query, config)
             case "monitoring":
-                monitoring_results_by_topic = self._monitoring_search.generate_results(query)
+                monitoring_results_by_topic = self._monitoring_engine.search(query)
             case _:
-                setup_results_by_topic = self._setup_search.search(query, config)
-                monitoring_results_by_topic = self._monitoring_search.generate_results(query)
+                setup_results_by_topic = self._setup_engine.search(query, config)
+                monitoring_results_by_topic = self._monitoring_engine.search(query)
 
         setup_results = list(
             itertools.chain.from_iterable(

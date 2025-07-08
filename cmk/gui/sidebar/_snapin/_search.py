@@ -43,8 +43,10 @@ from cmk.gui.watolib.search import (
     IncorrectLabelInputError,
     IndexNotFoundException,
     IndexSearcher,
+    MonitoringSearchEngine,
     PermissionsHandler,
     QuicksearchManager,
+    SetupSearchEngine,
     TooManyRowsError,
     UnifiedSearch,
 )
@@ -445,7 +447,11 @@ class PageUnifiedSearch(AjaxPage):
         query = request.get_str_input_mandatory("q")
         provider = self._parse_provider_query_param()
 
-        response = UnifiedSearch().search(query, provider, config)
+        setup_engine = SetupSearchEngine()
+        monitoring_engine = MonitoringSearchEngine()
+        unified_search_engine = UnifiedSearch(setup_engine, monitoring_engine)
+
+        response = unified_search_engine.search(query, provider, config)
 
         return {
             "url": request.url,

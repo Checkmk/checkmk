@@ -8,7 +8,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import override
+from typing import override, Protocol
 
 import livestatus
 
@@ -1360,3 +1360,17 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
 
 
 match_plugin_registry.register(MonitorMenuMatchPlugin())
+
+
+class SupportsMonitoringSearchEngine(Protocol):
+    def search(self, query: str) -> SearchResultsByTopic: ...
+
+
+# TODO: rework monitoring search façade to return correct payload for unified search.
+class MonitoringSearchEngine(QuicksearchManager):
+    @override
+    def __init__(self) -> None:
+        super().__init__(raise_too_many_rows_error=False)
+
+    def search(self, query: str) -> SearchResultsByTopic:
+        return super().generate_results(query)

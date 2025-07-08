@@ -6,7 +6,9 @@
 from .engines.monitoring import (
     ABCQuicksearchConductor,
     IncorrectLabelInputError,
+    MonitoringSearchEngine,
     QuicksearchManager,
+    SupportsMonitoringSearchEngine,
     TooManyRowsError,
 )
 from .engines.setup import (
@@ -22,6 +24,8 @@ from .engines.setup import (
     may_see_url,
     PermissionsHandler,
     SearchIndexBackgroundJob,
+    SetupSearchEngine,
+    SupportsSetupSearchEngine,
 )
 from .unified import UnifiedSearch
 
@@ -35,9 +39,13 @@ __all__ = [
     "MatchItem",
     "MatchItemGeneratorRegistry",
     "MatchItems",
+    "MonitoringSearchEngine",
     "PermissionsHandler",
     "QuicksearchManager",
     "SearchIndexBackgroundJob",
+    "SetupSearchEngine",
+    "SupportsMonitoringSearchEngine",
+    "SupportsSetupSearchEngine",
     "TooManyRowsError",
     "UnifiedSearch",
     "launch_requests_processing_background",

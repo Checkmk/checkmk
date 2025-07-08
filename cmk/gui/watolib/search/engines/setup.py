@@ -10,7 +10,7 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Final, override
+from typing import Final, override, Protocol
 
 import redis
 from redis import ConnectionError as RedisConnectionError
@@ -643,3 +643,24 @@ class SearchIndexBackgroundJob(BackgroundJob):
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
+
+
+class SupportsSetupSearchEngine(Protocol):
+    def search(self, query: str, config: Config) -> SearchResultsByTopic: ...
+
+
+# TODO: rework setup search façade to return correct payload for unified search.
+class SetupSearchEngine(IndexSearcher):
+    @override
+    def __init__(
+        self,
+        redis_client: redis.Redis[str] | None = None,
+        permissions_handler: PermissionsHandler | None = None,
+    ) -> None:
+        rc = redis_client or get_redis_client()
+        ph = permissions_handler or PermissionsHandler()
+        super().__init__(redis_client=rc, permissions_handler=ph)
+
+    @override
+    def search(self, query: str, config: Config) -> SearchResultsByTopic:
+        return super().search(query, config)

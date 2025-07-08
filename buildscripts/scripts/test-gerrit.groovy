@@ -251,7 +251,15 @@ def main() {
 }
 
 def update_result_table(static_description, table_data) {
-    currentBuild.description = "<br><h3>${GERRIT_CHANGE_SUBJECT}</h3>" + render_description(table_data) + "<br>" + static_description;
+    currentBuild.description = ("""
+    <p>
+    <b style='font-style: italic; color: darkblue;'>${GERRIT_CHANGE_SUBJECT}</b>
+    <br><a href='${GERRIT_CHANGE_URL}'>change ${GERRIT_CHANGE_NUMBER}</a>
+    <br>(${GERRIT_PATCHSET_UPLOADER_USERNAME})
+    </p>
+    """ +
+        render_description(table_data) +
+        "<br>" + static_description);
 }
 
 def render_description(job_results) {
@@ -286,8 +294,8 @@ def job_result_row(Map args) {
     }
 
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;
-    def logSec = ((totalSeconds > 0) ? Math.log(totalSeconds) : 0 / Math.log(3)).toInteger();
-    def dur_str = "${totalSeconds.intdiv(60)}m:${totalSeconds % 60}s ${"•" * Math.min(10, logSec)}${" " * (10 - Math.min(10, logSec))}";
+    def dur_dot_count = 1 + ((totalSeconds > 120) ? (3 + Math.log(totalSeconds-120) * 0.7).toInteger() : totalSeconds.intdiv(30));
+    def dur_str = "${String.format('%02d', totalSeconds.intdiv(60))}m:${String.format('%02d', totalSeconds % 60)}s ${"•" * Math.min(10, dur_dot_count)}${" " * (10 - Math.min(10, dur_dot_count))}";
     return """<tr>
     <td>${triggered_build}</td>
     <td style='font-family: monospace; white-space: pre; text-align: right;'>${dur_str}</td>

@@ -10,6 +10,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri
 
@@ -146,7 +147,8 @@ def _welcome_page(config: Config) -> None:
                         addvars=[],
                         filename="edit_dashboards.py",
                     ),
-                )
+                ),
+                is_start_url=user.start_url == "welcome.py",
             )
         ),
     )

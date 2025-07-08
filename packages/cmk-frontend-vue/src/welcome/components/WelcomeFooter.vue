@@ -11,9 +11,12 @@ import usei18n from '@/lib/i18n'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkBodyText from '@/components/typography/CmkBodyText.vue'
 
-const { t } = usei18n('welcome-footer')
+const props = defineProps<{
+  is_start_url: boolean
+}>()
 
-const showWelcomeOnStart = ref(true)
+const { t } = usei18n('welcome-footer')
+const showWelcomeOnStart = ref(props.is_start_url)
 const welcomeString = ref('welcome.py')
 
 watch(showWelcomeOnStart, async (newValue) => {

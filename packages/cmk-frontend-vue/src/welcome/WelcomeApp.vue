@@ -12,7 +12,10 @@ import NextSteps from '@/welcome/components/NextSteps.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 
-defineProps<{ urls: WelcomeUrls }>()
+defineProps<{
+  urls: WelcomeUrls
+  is_start_url: boolean
+}>()
 
 const completedSteps = 5
 const totalSteps = 5
@@ -30,7 +33,7 @@ const totalSteps = 5
         <ResourceLinksPanel :urls="urls" />
       </div>
     </div>
-    <WelcomeFooter class="welcome-app__footer" />
+    <WelcomeFooter class="welcome-app__footer" :is_start_url="is_start_url" />
   </div>
 </template>
 

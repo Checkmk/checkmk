@@ -6,9 +6,12 @@
         "urls": {
             "type": "object",
             "$ref": "#/$defs/welcome_urls"
+        },
+        "is_start_url": {
+            "type": "boolean"
         }
     },
-    "required": ["urls"],
+    "required": ["urls", "is_start_url"],
     "$defs": {
         "welcome_urls": {
             "type": "object",

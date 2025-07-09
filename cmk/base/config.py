@@ -4026,12 +4026,15 @@ class CEEConfigCache(ConfigCache):
         return settings
 
     def rrd_config_of_service(
-        self, host_name: HostName, service_name: ServiceName
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
     ) -> RRDObjectConfig | None:
         out = self.ruleset_matcher.service_extra_conf(
             host_name,
             service_name,
-            self.label_manager.labels_of_service(host_name, service_name, {}),
+            service_labels,
             cmc_service_rrd_config,
             self.label_manager.labels_of_host,
         )

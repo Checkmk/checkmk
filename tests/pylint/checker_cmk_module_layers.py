@@ -130,6 +130,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.trace")),
             imported.in_component(Component("cmk.events")),
             imported.in_component(Component("cmk.otel_collector")),
+            imported.in_component(Component("cmk.inventory.config")),
         )
     )
 
@@ -746,6 +747,7 @@ _COMPONENTS = (
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
     (Component("cmk.diskspace"), _is_allowed_for_diskspace),
     (Component("cmk.rrd"), _is_allowed_for_rrd),
+    (Component("cmk.inventory"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

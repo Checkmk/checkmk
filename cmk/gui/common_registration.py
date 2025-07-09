@@ -176,6 +176,7 @@ def register(
         row_post_processor_registry,
     )
     inventory.register(
+        config_variable_registry,
         page_registry,
         visual_info_registry,
         filter_registry,

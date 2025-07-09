@@ -28,6 +28,8 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
+from cmk.inventory.config import InvCleanupParams
+
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
 # Links for everyone
@@ -136,6 +138,14 @@ class CREConfig:
     multisite_hostgroups: dict = field(default_factory=dict)
     multisite_servicegroups: dict = field(default_factory=dict)
     multisite_contactgroups: dict = field(default_factory=dict)
+
+    inventory_cleanup: InvCleanupParams = field(
+        default_factory=lambda: InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=30 * 86400,
+        )
+    )
 
     #    ____  _     _      _
     #   / ___|(_) __| | ___| |__   __ _ _ __

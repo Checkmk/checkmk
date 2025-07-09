@@ -251,22 +251,14 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
 
-    cleaned_up = (
-        _cleanup_host_directories(
-            retention_time,
-            all_hosts,
-            "%s/inventory_archive" % var_dir,
-        )
-        | _cleanup_host_directories(
-            retention_time,
-            local_site_hosts,
-            "%s/var/pnp4nagios/perfdata" % omd_root,
-        )
-        | _cleanup_host_directories(
-            retention_time,
-            local_site_hosts,
-            "%s/rrd" % var_dir,
-        )
+    cleaned_up = _cleanup_host_directories(
+        retention_time,
+        local_site_hosts,
+        "%s/var/pnp4nagios/perfdata" % omd_root,
+    ) | _cleanup_host_directories(
+        retention_time,
+        local_site_hosts,
+        "%s/rrd" % var_dir,
     )
 
     # Now call Check_MK to clean up other files for the hosts which we have
@@ -278,22 +270,14 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
 
 
 def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> None:
-    cleaned_up_non_local_hosts = (
-        _cleanup_host_directories(
-            retention_time,
-            local_site_hosts,
-            "%s/inventory_archive" % var_dir,
-        )
-        | _cleanup_host_directories(
-            retention_time,
-            local_site_hosts,
-            "%s/var/pnp4nagios/perfdata" % omd_root,
-        )
-        | _cleanup_host_directories(
-            retention_time,
-            local_site_hosts,
-            "%s/rrd" % var_dir,
-        )
+    cleaned_up_non_local_hosts = _cleanup_host_directories(
+        retention_time,
+        local_site_hosts,
+        "%s/var/pnp4nagios/perfdata" % omd_root,
+    ) | _cleanup_host_directories(
+        retention_time,
+        local_site_hosts,
+        "%s/rrd" % var_dir,
     )
 
     # Now call Check_MK to clean up other files for the hosts which we have

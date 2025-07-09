@@ -45,6 +45,11 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
+from cmk.inventory.config import (
+    InvCleanupParams,
+    InvCleanupParamsDefaultCombined,
+)
+
 from ._abc import SampleConfigGeneratorABCGroups
 from ._constants import SHIPPED_RULES, USE_NEW_DESCRIPTIONS_FOR_SETTING
 
@@ -197,6 +202,15 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     or []
                 ),
             },
+            "inventory_cleanup": InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=400 * 86400,
+                    number_of_history_entries=100,
+                ),
+                abandoned_file_age=30 * 86400,
+            ),
         }
 
         return settings

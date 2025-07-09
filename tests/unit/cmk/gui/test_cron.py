@@ -12,7 +12,7 @@ from cmk.gui import cron
 
 def test_registered_jobs() -> None:
     expected = [
-        "execute_inventory_housekeeping_job",
+        "execute_inventory_cleanup_job",
         "execute_housekeeping_job",
         "rebuild_folder_lookup_cache",
         "execute_userdb_job",

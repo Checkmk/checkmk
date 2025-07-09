@@ -6,10 +6,8 @@
 from __future__ import annotations
 
 import json
-import shutil
 from collections.abc import Mapping
 from datetime import timedelta
-from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import livestatus
@@ -34,9 +32,11 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec, _xml
+from ._cleanup import ConfigVariableInventoryCleanup, InventoryCleanup
 from ._history import (
     FilteredInventoryHistoryPaths,
     FilterInventoryHistoryPathsError,
@@ -81,6 +81,7 @@ __all__ = [
 
 
 def register(
+    config_variable_registry: ConfigVariableRegistry,
     page_registry: PageRegistry,
     visual_info_registry: VisualInfoRegistry,
     filter_registry: FilterRegistry,
@@ -89,12 +90,13 @@ def register(
     icon_and_action_registry: IconRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
+    config_variable_registry.register(ConfigVariableInventoryCleanup)
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
     cron_job_registry.register(
         CronJob(
-            name="execute_inventory_housekeeping_job",
-            callable=execute_inventory_housekeeping_job,
-            interval=timedelta(hours=12),
+            name="execute_inventory_cleanup_job",
+            callable=InventoryCleanup(cmk.utils.paths.omd_root),
+            interval=timedelta(hours=24),
         )
     )
     visual_info_registry.register(VisualInfoInventoryHistory)
@@ -239,67 +241,6 @@ def page_host_inv_api() -> None:
         _write_xml(resp)
     else:
         _write_python(resp)
-
-
-class InventoryHousekeeping:
-    def __init__(self) -> None:
-        super().__init__()
-        self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
-        self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
-        self._inventory_delta_cache_path = Path(cmk.utils.paths.inventory_delta_cache_dir)
-
-    def run(self):
-        if (
-            not self._inventory_delta_cache_path.exists()
-            or not self._inventory_archive_path.exists()
-        ):
-            return
-
-        inventory_archive_hosts = {
-            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
-        }
-        inventory_delta_cache_hosts = {
-            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()
-        }
-
-        folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
-        for foldername in folders_to_delete:
-            shutil.rmtree(str(self._inventory_delta_cache_path / foldername))
-
-        inventory_delta_cache_hosts -= folders_to_delete
-        for hostname in inventory_delta_cache_hosts:
-            available_timestamps = self._get_timestamps_for_host(hostname)
-            for filename in [
-                x.name
-                for x in (self._inventory_delta_cache_path / hostname).iterdir()
-                if not x.is_dir()
-            ]:
-                delete = False
-                try:
-                    first, second = filename.split("_")
-                    if first not in available_timestamps or second not in available_timestamps:
-                        delete = True
-                except ValueError:
-                    delete = True
-                if delete:
-                    (self._inventory_delta_cache_path / hostname / filename).unlink()
-
-    def _get_timestamps_for_host(self, hostname):
-        timestamps = {"None"}  # 'None' refers to the histories start
-        try:
-            timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
-        except OSError:
-            pass
-
-        for filename in [
-            x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()
-        ]:
-            timestamps.add(filename.name)
-        return timestamps
-
-
-def execute_inventory_housekeeping_job() -> None:
-    cmk.gui.inventory.InventoryHousekeeping().run()
 
 
 class VisualInfoInventoryHistory(VisualInfo):

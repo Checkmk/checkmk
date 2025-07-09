@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-08 00:35+0000\n"
+"PO-Revision-Date: 2025-07-08 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -414,7 +414,7 @@ msgstr "%d Aktionen"
 msgid "%d changed label"
 msgid_plural "%d changed labels"
 msgstr[0] "%d geändertes Label"
-msgstr[1] "%d geänderte Label"
+msgstr[1] "%d geänderte Labels"
 
 #, python-format
 msgid "%d changes"
@@ -463,8 +463,8 @@ msgstr[1] "%d geänderte Erkennungsparameter"
 #, python-format
 msgid "%d discovery parameter removed"
 msgid_plural "%d discovery parameters removed"
-msgstr[0] "%d entfernter Erkennungsparameter"
-msgstr[1] "%d entfernte Erkennungsparameter"
+msgstr[0] "%d Erkennungsparameter entfernt"
+msgstr[1] "%d Erkennungsparameter entfernt"
 
 #, python-format
 msgid "%d errors occurred:"
@@ -510,7 +510,7 @@ msgstr "%d gesperrte Instanzen"
 msgid "%d new label"
 msgid_plural "%d new labels"
 msgstr[0] "%d neues Label"
-msgstr[1] "%d neue Label"
+msgstr[1] "%d neue Labels"
 
 #, python-format
 msgid "%d notification rule(s) "
@@ -536,7 +536,7 @@ msgstr "%d offene inkompatible Werks"
 msgid "%d removed label"
 msgid_plural "%d removed labels"
 msgstr[0] "%d entferntes Label"
-msgstr[1] "%d entfernte Label"
+msgstr[1] "%d entfernte Labels"
 
 #, python-format
 msgid "%d rows"
@@ -8014,7 +8014,7 @@ msgid "Average response time"
 msgstr "Durchschnittliche Antwortzeit"
 
 msgid "Average round-trip response time to this node"
-msgstr "Durchschnittliche Paketumlaufzeit zu diesem Knoten"
+msgstr "Durchschnittliche Antwortzeit für den Paketumlauf zu diesem Knoten"
 
 msgid "Average roundtrip time in ms"
 msgstr "Durchschnittliche Paketumlaufzeit in Millisekunden"
@@ -17828,7 +17828,6 @@ msgstr ""
 "sich der Benutzer erneut authentifizieren. Die Sitzungen bleiben beim "
 "Beenden des Browsers nicht bestehen."
 
-#, fuzzy
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
@@ -17845,6 +17844,10 @@ msgstr ""
 "checkmk.com/werk/18249'>OpenTelemetry-Metriknamen</a> und der <a "
 "href='https://checkmk.com/werk/18249'>OpenTelemetry-Metrikeinheit</a> "
 "berechnet. Dies muss ein exakter Match mit dem Metriknamen im Service sein."
+"<br><br>Die Vorschläge der Autovervollständigung können unvollständig sein. "
+"Ein unbekannter metrischer Name kann manuell angegeben werden.<br><br>In "
+"bestimmten Fällen kann die Funktion zur automatischen Vervollständigung "
+"nicht verfügbar sein. "
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -20399,9 +20402,8 @@ msgstr "Platzhalter-VMs nicht überwachen"
 msgid "Do not monitor service"
 msgstr "Service nicht überwachen"
 
-#, fuzzy
 msgid "Do not monitor subscriptions"
-msgstr "Grenzwerte nicht überwachen"
+msgstr "Subskriptionen nicht überwachen"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Aktion nicht als Befehl für offene Ereignisse anbieten"
@@ -23680,9 +23682,8 @@ msgstr "Explizite Labels"
 msgid "Explicit list of IP addresses"
 msgstr "Explizite Liste von IP-Adressen"
 
-#, fuzzy
 msgid "Explicit list of subscription IDs"
-msgstr "Explizite Liste von IP-Adressen"
+msgstr "Explizite Liste der Subskriptions-IDs"
 
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Explizite Zuordnung von Job-Exit-Codes zu Zuständen"
@@ -23739,9 +23740,8 @@ msgstr "Explizit spezifizierte Gruppen"
 msgid "Explicitly specify resources"
 msgstr "Ressourcen explizit auflisten"
 
-#, fuzzy
 msgid "Explicitly specify subscription IDs"
-msgstr "Ressourcen explizit auflisten"
+msgstr "Subskriptions-IDs explizit spezifizieren"
 
 msgid "Export"
 msgstr "Exportieren"
@@ -24256,6 +24256,10 @@ msgstr ""
 
 msgid "Failed to set start URL"
 msgstr "Start-URL konnte nicht gesetzt werden"
+
+#, python-format
+msgid "Failed to sign the agents: %s"
+msgstr "Signierung der Agenten fehlgeschlagen: %s"
 
 msgid "Failed to spare ratio"
 msgstr "Verhältnis von Failed zu Spare"
@@ -28247,16 +28251,16 @@ msgid "Hop 1 response time"
 msgstr "Hop 1 Antwortzeit"
 
 msgid "Hop 1 round trip average"
-msgstr "Hop 1 durchschnittliche Umlaufzeit"
+msgstr "Hop 1 durchschnittlicher Paketumlauf"
 
 msgid "Hop 1 round trip maximum"
-msgstr "Hop 1 maximale Umlaufzeit"
+msgstr "Hop 1 maximaler Paketumlauf"
 
 msgid "Hop 1 round trip minimum"
-msgstr "Hop 1 minimale Umlaufzeit"
+msgstr "Hop 1 minimaler Paketumlauf"
 
 msgid "Hop 1 round trip standard devation"
-msgstr "Hop 1 Standardabweichung der Umlaufzeit"
+msgstr "Hop 1 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 10 packet loss"
 msgstr "Hop 10 Paketverlust"
@@ -28265,16 +28269,16 @@ msgid "Hop 10 response time"
 msgstr "Hop 10 Antwortzeit"
 
 msgid "Hop 10 round trip average"
-msgstr "Hop 10 durchschnittliche Umlaufzeit"
+msgstr "Hop 10 durchschnittlicher Paketumlauf"
 
 msgid "Hop 10 round trip maximum"
-msgstr "Hop 10 maximale Umlaufzeit"
+msgstr "Hop 10 maximaler Paketumlauf"
 
 msgid "Hop 10 round trip minimum"
-msgstr "Hop 10 minimale Umlaufzeit"
+msgstr "Hop 10 minimaler Paketumlauf"
 
 msgid "Hop 10 round trip standard devation"
-msgstr "Hop 10 Standardabweichung der Umlaufzeit"
+msgstr "Hop 10 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 11 packet loss"
 msgstr "Hop 11 Paketverlust"
@@ -28283,16 +28287,16 @@ msgid "Hop 11 response time"
 msgstr "Hop 11 Antwortzeit"
 
 msgid "Hop 11 round trip average"
-msgstr "Hop 11 durchschnittliche Umlaufzeit"
+msgstr "Hop 11 durchschnittlicher Paketumlauf"
 
 msgid "Hop 11 round trip maximum"
-msgstr "Hop 11 maximale Umlaufzeit"
+msgstr "Hop 11 maximaler Paketumlauf"
 
 msgid "Hop 11 round trip minimum"
-msgstr "Hop 11 minimale Umlaufzeit"
+msgstr "Hop 11 minimaler Paketumlauf"
 
 msgid "Hop 11 round trip standard devation"
-msgstr "Hop 11 Standardabweichung der Umlaufzeit"
+msgstr "Hop 11 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 12 packet loss"
 msgstr "Hop 12 Paketverlust"
@@ -28301,16 +28305,16 @@ msgid "Hop 12 response time"
 msgstr "Hop 12 Antwortzeit"
 
 msgid "Hop 12 round trip average"
-msgstr "Hop 12 durchschnittliche Umlaufzeit"
+msgstr "Hop 12 durchschnittlicher Paketumlauf"
 
 msgid "Hop 12 round trip maximum"
-msgstr "Hop 12 maximale Umlaufzeit"
+msgstr "Hop 12 maximaler Paketumlauf"
 
 msgid "Hop 12 round trip minimum"
-msgstr "Hop 12 minimale Umlaufzeit"
+msgstr "Hop 12 minimaler Paketumlauf"
 
 msgid "Hop 12 round trip standard devation"
-msgstr "Hop 12 Standardabweichung der Umlaufzeit"
+msgstr "Hop 12 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 13 packet loss"
 msgstr "Hop 13 Paketverlust"
@@ -28319,16 +28323,16 @@ msgid "Hop 13 response time"
 msgstr "Hop 13 Antwortzeit"
 
 msgid "Hop 13 round trip average"
-msgstr "Hop 13 durchschnittliche Umlaufzeit"
+msgstr "Hop 13 durchschnittlicher Paketumlauf"
 
 msgid "Hop 13 round trip maximum"
-msgstr "Hop 13 maximale Umlaufzeit"
+msgstr "Hop 13 maximaler Paketumlauf"
 
 msgid "Hop 13 round trip minimum"
-msgstr "Hop 13 minimale Umlaufzeit"
+msgstr "Hop 13 minimaler Paketumlauf"
 
 msgid "Hop 13 round trip standard devation"
-msgstr "Hop 13 Standardabweichung der Umlaufzeit"
+msgstr "Hop 13 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 14 packet loss"
 msgstr "Hop 14 Paketverlust"
@@ -28337,16 +28341,16 @@ msgid "Hop 14 response time"
 msgstr "Hop 14 Antwortzeit"
 
 msgid "Hop 14 round trip average"
-msgstr "Hop 14 durchschnittliche Umlaufzeit"
+msgstr "Hop 14 durchschnittlicher Paketumlauf"
 
 msgid "Hop 14 round trip maximum"
-msgstr "Hop 14 maximale Umlaufzeit"
+msgstr "Hop 14 maximaler Paketumlauf"
 
 msgid "Hop 14 round trip minimum"
-msgstr "Hop 14 minimale Umlaufzeit"
+msgstr "Hop 14 minimaler Paketumlauf"
 
 msgid "Hop 14 round trip standard devation"
-msgstr "Hop 14 Standardabweichung der Umlaufzeit"
+msgstr "Hop 14 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 15 packet loss"
 msgstr "Hop 15 Paketverlust"
@@ -28355,16 +28359,16 @@ msgid "Hop 15 response time"
 msgstr "Hop 15 Antwortzeit"
 
 msgid "Hop 15 round trip average"
-msgstr "Hop 15 durchschnittliche Umlaufzeit"
+msgstr "Hop 15 durchschnittlicher Paketumlauf"
 
 msgid "Hop 15 round trip maximum"
-msgstr "Hop 15 maximale Umlaufzeit"
+msgstr "Hop 15 maximaler Paketumlauf"
 
 msgid "Hop 15 round trip minimum"
-msgstr "Hop 15 minimale Umlaufzeit"
+msgstr "Hop 15 minimaler Paketumlauf"
 
 msgid "Hop 15 round trip standard devation"
-msgstr "Hop 15 Standardabweichung der Umlaufzeit"
+msgstr "Hop 15 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 16 packet loss"
 msgstr "Hop 16 Paketverlust"
@@ -28373,16 +28377,16 @@ msgid "Hop 16 response time"
 msgstr "Hop 16 Antwortzeit"
 
 msgid "Hop 16 round trip average"
-msgstr "Hop 16 durchschnittliche Umlaufzeit"
+msgstr "Hop 16 durchschnittlicher Paketumlauf"
 
 msgid "Hop 16 round trip maximum"
-msgstr "Hop 16 maximale Umlaufzeit"
+msgstr "Hop 16 maximaler Paketumlauf"
 
 msgid "Hop 16 round trip minimum"
-msgstr "Hop 16 minimale Umlaufzeit"
+msgstr "Hop 16 minimaler Paketumlauf"
 
 msgid "Hop 16 round trip standard devation"
-msgstr "Hop 16 Standardabweichung der Umlaufzeit"
+msgstr "Hop 16 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 17 packet loss"
 msgstr "Hop 17 Paketverlust"
@@ -28391,16 +28395,16 @@ msgid "Hop 17 response time"
 msgstr "Hop 17 Antwortzeit"
 
 msgid "Hop 17 round trip average"
-msgstr "Hop 17 durchschnittliche Umlaufzeit"
+msgstr "Hop 17 durchschnittlicher Paketumlauf"
 
 msgid "Hop 17 round trip maximum"
-msgstr "Hop 17 maximale Umlaufzeit"
+msgstr "Hop 17 maximaler Paketumlauf"
 
 msgid "Hop 17 round trip minimum"
-msgstr "Hop 17 minimale Umlaufzeit"
+msgstr "Hop 17 minimaler Paketumlauf"
 
 msgid "Hop 17 round trip standard devation"
-msgstr "Hop 17 Standardabweichung der Umlaufzeit"
+msgstr "Hop 17 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 18 packet loss"
 msgstr "Hop 18 Paketverlust"
@@ -28409,16 +28413,16 @@ msgid "Hop 18 response time"
 msgstr "Hop 18 Antwortzeit"
 
 msgid "Hop 18 round trip average"
-msgstr "Hop 18 durchschnittlicher Umlauf"
+msgstr "Hop 18 durchschnittlicher Paketumlauf"
 
 msgid "Hop 18 round trip maximum"
-msgstr "Hop 18 maximaler Umlauf"
+msgstr "Hop 18 maximaler Paketumlauf"
 
 msgid "Hop 18 round trip minimum"
-msgstr "Hop 18 minimaler Umlauf"
+msgstr "Hop 18 minimaler Paketumlauf"
 
 msgid "Hop 18 round trip standard devation"
-msgstr "Hop 18 Umlauf-Standardabweichung"
+msgstr "Hop 18 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 19 packet loss"
 msgstr "Hop 19 Paketverlust"
@@ -28427,16 +28431,16 @@ msgid "Hop 19 response time"
 msgstr "Hop 19 Antwortzeit"
 
 msgid "Hop 19 round trip average"
-msgstr "Hop 19 durchschnittlicher Umlauf"
+msgstr "Hop 19 durchschnittlicher Paketumlauf"
 
 msgid "Hop 19 round trip maximum"
-msgstr "Hop 19 maximaler Umlauf"
+msgstr "Hop 19 maximaler Paketumlauf"
 
 msgid "Hop 19 round trip minimum"
-msgstr "Hop 19 minimaler Umlauf"
+msgstr "Hop 19 minimaler Paketumlauf"
 
 msgid "Hop 19 round trip standard devation"
-msgstr "Hop 19 Umlauf-Standardabweichung"
+msgstr "Hop 19 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 2 packet loss"
 msgstr "Hop 2 Paketverlust"
@@ -28445,16 +28449,16 @@ msgid "Hop 2 response time"
 msgstr "Hop 2 Antwortzeit"
 
 msgid "Hop 2 round trip average"
-msgstr "Hop 2 durchschnittlicher Umlauf"
+msgstr "Hop 2 durchschnittlicher Paketumlauf"
 
 msgid "Hop 2 round trip maximum"
-msgstr "Hop 2 maximaler Umlauf"
+msgstr "Hop 2 maximaler Paketumlauf"
 
 msgid "Hop 2 round trip minimum"
-msgstr "Hop 2 minimaler Umlauf"
+msgstr "Hop 2 minimaler Paketumlauf"
 
 msgid "Hop 2 round trip standard devation"
-msgstr "Hop 2 Umlauf-Standardabweichung"
+msgstr "Hop 2 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 20 packet loss"
 msgstr "Hop 20 Paketverlust"
@@ -28463,16 +28467,16 @@ msgid "Hop 20 response time"
 msgstr "Hop 20 Antwortzeit"
 
 msgid "Hop 20 round trip average"
-msgstr "Hop 20 durchschnittlicher Umlauf"
+msgstr "Hop 20 durchschnittlicher Paketumlauf"
 
 msgid "Hop 20 round trip maximum"
-msgstr "Hop 20 maximaler Umlauf"
+msgstr "Hop 20 maximaler Paketumlauf"
 
 msgid "Hop 20 round trip minimum"
-msgstr "Hop 20 minimaler Umlauf"
+msgstr "Hop 20 minimaler Paketumlauf"
 
 msgid "Hop 20 round trip standard devation"
-msgstr "Hop 20 Umlauf-Standardabweichung"
+msgstr "Hop 20 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 21 packet loss"
 msgstr "Hop 21 Paketverlust"
@@ -28481,16 +28485,16 @@ msgid "Hop 21 response time"
 msgstr "Hop 21 Antwortzeit"
 
 msgid "Hop 21 round trip average"
-msgstr "Hop 21 durchschnittlicher Umlauf"
+msgstr "Hop 21 durchschnittlicher Paketumlauf"
 
 msgid "Hop 21 round trip maximum"
-msgstr "Hop 21 maximaler Umlauf"
+msgstr "Hop 21 maximaler Paketumlauf"
 
 msgid "Hop 21 round trip minimum"
-msgstr "Hop 21 minimaler Umlauf"
+msgstr "Hop 21 minimaler Paketumlauf"
 
 msgid "Hop 21 round trip standard devation"
-msgstr "Hop 21 Umlauf-Standardabweichung"
+msgstr "Hop 21 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 22 packet loss"
 msgstr "Hop 22 Paketverlust"
@@ -28499,16 +28503,16 @@ msgid "Hop 22 response time"
 msgstr "Hop 22 Antwortzeit"
 
 msgid "Hop 22 round trip average"
-msgstr "Hop 22 durchschnittlicher Umlauf"
+msgstr "Hop 22 durchschnittlicher Paketumlauf"
 
 msgid "Hop 22 round trip maximum"
-msgstr "Hop 22 maximaler Umlauf"
+msgstr "Hop 22 maximaler Paketumlauf"
 
 msgid "Hop 22 round trip minimum"
-msgstr "Hop 22 minimaler Umlauf"
+msgstr "Hop 22 minimaler Paketumlauf"
 
 msgid "Hop 22 round trip standard devation"
-msgstr "Hop 22 Umlauf-Standardabweichung"
+msgstr "Hop 22 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 23 packet loss"
 msgstr "Hop 23 Paketverlust"
@@ -28517,16 +28521,16 @@ msgid "Hop 23 response time"
 msgstr "Hop 23 Antwortzeit"
 
 msgid "Hop 23 round trip average"
-msgstr "Hop 23 durchschnittlicher Umlauf"
+msgstr "Hop 23 durchschnittlicher Paketumlauf"
 
 msgid "Hop 23 round trip maximum"
-msgstr "Hop 23 maximaler Umlauf"
+msgstr "Hop 23 maximaler Paketumlauf"
 
 msgid "Hop 23 round trip minimum"
-msgstr "Hop 23 minimaler Umlauf"
+msgstr "Hop 23 minimaler Paketumlauf"
 
 msgid "Hop 23 round trip standard devation"
-msgstr "Hop 23 Umlauf-Standardabweichung"
+msgstr "Hop 23 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 24 packet loss"
 msgstr "Hop 24 Paketverlust"
@@ -28535,16 +28539,16 @@ msgid "Hop 24 response time"
 msgstr "Hop 24 Antwortzeit"
 
 msgid "Hop 24 round trip average"
-msgstr "Hop 24 durchschnittlicher Umlauf"
+msgstr "Hop 24 durchschnittlicher Paketumlauf"
 
 msgid "Hop 24 round trip maximum"
-msgstr "Hop 24 maximaler Umlauf"
+msgstr "Hop 24 maximaler Paketumlauf"
 
 msgid "Hop 24 round trip minimum"
-msgstr "Hop 24 minimaler Umlauf"
+msgstr "Hop 24 minimaler Paketumlauf"
 
 msgid "Hop 24 round trip standard devation"
-msgstr "Hop 24 Umlauf-Standardabweichung"
+msgstr "Hop 24 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 25 packet loss"
 msgstr "Hop 25 Paketverlust"
@@ -28553,16 +28557,16 @@ msgid "Hop 25 response time"
 msgstr "Hop 25 Antwortzeit"
 
 msgid "Hop 25 round trip average"
-msgstr "Hop 25 durchschnittlicher Umlauf"
+msgstr "Hop 25 durchschnittlicher Paketumlauf"
 
 msgid "Hop 25 round trip maximum"
-msgstr "Hop 25 maximaler Umlauf"
+msgstr "Hop 25 maximaler Paketumlauf"
 
 msgid "Hop 25 round trip minimum"
-msgstr "Hop 25 minimaler Umlauf"
+msgstr "Hop 25 minimaler Paketumlauf"
 
 msgid "Hop 25 round trip standard devation"
-msgstr "Hop 25 Umlauf-Standardabweichung"
+msgstr "Hop 25 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 26 packet loss"
 msgstr "Hop 26 Paketverlust"
@@ -28571,16 +28575,16 @@ msgid "Hop 26 response time"
 msgstr "Hop 26 Antwortzeit"
 
 msgid "Hop 26 round trip average"
-msgstr "Hop 26 durchschnittlicher Umlauf"
+msgstr "Hop 26 durchschnittlicher Paketumlauf"
 
 msgid "Hop 26 round trip maximum"
-msgstr "Hop 26 maximaler Umlauf"
+msgstr "Hop 26 maximaler Paketumlauf"
 
 msgid "Hop 26 round trip minimum"
-msgstr "Hop 26 minimaler Umlauf"
+msgstr "Hop 26 minimaler Paketumlauf"
 
 msgid "Hop 26 round trip standard devation"
-msgstr "Hop 26 Umlauf-Standardabweichung"
+msgstr "Hop 26 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 27 packet loss"
 msgstr "Hop 27 Paketverlust"
@@ -28589,16 +28593,16 @@ msgid "Hop 27 response time"
 msgstr "Hop 27 Antwortzeit"
 
 msgid "Hop 27 round trip average"
-msgstr "Hop 27 durchschnittlicher Umlauf"
+msgstr "Hop 27 durchschnittlicher Paketumlauf"
 
 msgid "Hop 27 round trip maximum"
-msgstr "Hop 27 maximaler Umlauf"
+msgstr "Hop 27 maximaler Paketumlauf"
 
 msgid "Hop 27 round trip minimum"
-msgstr "Hop 27 minimaler Umlauf"
+msgstr "Hop 27 minimaler Paketumlauf"
 
 msgid "Hop 27 round trip standard devation"
-msgstr "Hop 27 Umlauf-Standardabweichung"
+msgstr "Hop 27 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 28 packet loss"
 msgstr "Hop 28 Paketverlust"
@@ -28607,16 +28611,16 @@ msgid "Hop 28 response time"
 msgstr "Hop 28 Antwortzeit"
 
 msgid "Hop 28 round trip average"
-msgstr "Hop 28 durchschnittlicher Umlauf"
+msgstr "Hop 28 durchschnittlicher Paketumlauf"
 
 msgid "Hop 28 round trip maximum"
-msgstr "Hop 28 maximaler Umlauf"
+msgstr "Hop 28 maximaler Paketumlauf"
 
 msgid "Hop 28 round trip minimum"
-msgstr "Hop 28 minimaler Umlauf"
+msgstr "Hop 28 minimaler Paketumlauf"
 
 msgid "Hop 28 round trip standard devation"
-msgstr "Hop 28 Umlauf-Standardabweichung"
+msgstr "Hop 28 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 29 packet loss"
 msgstr "Hop 29 Paketverlust"
@@ -28625,16 +28629,16 @@ msgid "Hop 29 response time"
 msgstr "Hop 29 Antwortzeit"
 
 msgid "Hop 29 round trip average"
-msgstr "Hop 29 durchschnittlicher Umlauf"
+msgstr "Hop 29 durchschnittlicher Paketumlauf"
 
 msgid "Hop 29 round trip maximum"
-msgstr "Hop 29 maximaler Umlauf"
+msgstr "Hop 29 maximaler Paketumlauf"
 
 msgid "Hop 29 round trip minimum"
-msgstr "Hop 29 minimaler Umlauf"
+msgstr "Hop 29 minimaler Paketumlauf"
 
 msgid "Hop 29 round trip standard devation"
-msgstr "Hop 29 Umlauf-Standardabweichung"
+msgstr "Hop 29 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 3 packet loss"
 msgstr "Hop 3 Paketverlust"
@@ -28643,16 +28647,16 @@ msgid "Hop 3 response time"
 msgstr "Hop 3 Antwortzeit"
 
 msgid "Hop 3 round trip average"
-msgstr "Hop 3 durchschnittlicher Umlauf"
+msgstr "Hop 3 durchschnittlicher Paketumlauf"
 
 msgid "Hop 3 round trip maximum"
-msgstr "Hop 3 maximaler Umlauf"
+msgstr "Hop 3 maximaler Paketumlauf"
 
 msgid "Hop 3 round trip minimum"
-msgstr "Hop 3 minimaler Umlauf"
+msgstr "Hop 3 minimaler Paketumlauf"
 
 msgid "Hop 3 round trip standard devation"
-msgstr "Hop 3 Umlauf-Standardabweichung"
+msgstr "Hop 3 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 30 packet loss"
 msgstr "Hop 30 Paketverlust"
@@ -28661,16 +28665,16 @@ msgid "Hop 30 response time"
 msgstr "Hop 30 Antwortzeit"
 
 msgid "Hop 30 round trip average"
-msgstr "Hop 30 durchschnittlicher Umlauf"
+msgstr "Hop 30 durchschnittlicher Paketumlauf"
 
 msgid "Hop 30 round trip maximum"
-msgstr "Hop 30 maximaler Umlauf"
+msgstr "Hop 30 maximaler Paketumlauf"
 
 msgid "Hop 30 round trip minimum"
-msgstr "Hop 30 minimaler Umlauf"
+msgstr "Hop 30 minimaler Paketumlauf"
 
 msgid "Hop 30 round trip standard devation"
-msgstr "Hop 30 Umlauf-Standardabweichung"
+msgstr "Hop 30 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 31 packet loss"
 msgstr "Hop 31 Paketverlust"
@@ -28679,16 +28683,16 @@ msgid "Hop 31 response time"
 msgstr "Hop 31 Antwortzeit"
 
 msgid "Hop 31 round trip average"
-msgstr "Hop 31 durchschnittlicher Umlauf"
+msgstr "Hop 31 durchschnittlicher Paketumlauf"
 
 msgid "Hop 31 round trip maximum"
-msgstr "Hop 31 maximaler Umlauf"
+msgstr "Hop 31 maximaler Paketumlauf"
 
 msgid "Hop 31 round trip minimum"
-msgstr "Hop 31 minimaler Umlauf"
+msgstr "Hop 31 minimaler Paketumlauf"
 
 msgid "Hop 31 round trip standard devation"
-msgstr "Hop 31 Umlauf-Standardabweichung"
+msgstr "Hop 31 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 32 packet loss"
 msgstr "Hop 32 Paketverlust"
@@ -28697,16 +28701,16 @@ msgid "Hop 32 response time"
 msgstr "Hop 32 Antwortzeit"
 
 msgid "Hop 32 round trip average"
-msgstr "Hop 32 durchschnittlicher Umlauf"
+msgstr "Hop 32 durchschnittlicher Paketumlauf"
 
 msgid "Hop 32 round trip maximum"
-msgstr "Hop 32 maximaler Umlauf"
+msgstr "Hop 32 maximaler Paketumlauf"
 
 msgid "Hop 32 round trip minimum"
-msgstr "Hop 32 minimaler Umlauf"
+msgstr "Hop 32 minimaler Paketumlauf"
 
 msgid "Hop 32 round trip standard devation"
-msgstr "Hop 32 Umlauf-Standardabweichung"
+msgstr "Hop 32 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 33 packet loss"
 msgstr "Hop 33 Paketverlust"
@@ -28715,16 +28719,16 @@ msgid "Hop 33 response time"
 msgstr "Hop 33 Antwortzeit"
 
 msgid "Hop 33 round trip average"
-msgstr "Hop 33 durchschnittlicher Umlauf"
+msgstr "Hop 33 durchschnittlicher Paketumlauf"
 
 msgid "Hop 33 round trip maximum"
-msgstr "Hop 33 maximaler Umlauf"
+msgstr "Hop 33 maximaler Paketumlauf"
 
 msgid "Hop 33 round trip minimum"
-msgstr "Hop 33 minimaler Umlauf"
+msgstr "Hop 33 minimaler Paketumlauf"
 
 msgid "Hop 33 round trip standard devation"
-msgstr "Hop 33 Umlauf-Standardabweichung"
+msgstr "Hop 33 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 34 packet loss"
 msgstr "Hop 34 Paketverlust"
@@ -28733,16 +28737,16 @@ msgid "Hop 34 response time"
 msgstr "Hop 34 Antwortzeit"
 
 msgid "Hop 34 round trip average"
-msgstr "Hop 34 durchschnittlicher Umlauf"
+msgstr "Hop 34 durchschnittlicher Paketumlauf"
 
 msgid "Hop 34 round trip maximum"
-msgstr "Hop 34 maximaler Umlauf"
+msgstr "Hop 34 maximaler Paketumlauf"
 
 msgid "Hop 34 round trip minimum"
-msgstr "Hop 34 minimaler Umlauf"
+msgstr "Hop 34 minimaler Paketumlauf"
 
 msgid "Hop 34 round trip standard devation"
-msgstr "Hop 34 Umlauf-Standardabweichung"
+msgstr "Hop 34 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 35 packet loss"
 msgstr "Hop 35 Paketverlust"
@@ -28751,16 +28755,16 @@ msgid "Hop 35 response time"
 msgstr "Hop 35 Antwortzeit"
 
 msgid "Hop 35 round trip average"
-msgstr "Hop 35 durchschnittlicher Umlauf"
+msgstr "Hop 35 durchschnittlicher Paketumlauf"
 
 msgid "Hop 35 round trip maximum"
-msgstr "Hop 35 maximaler Umlauf"
+msgstr "Hop 35 maximaler Paketumlauf"
 
 msgid "Hop 35 round trip minimum"
-msgstr "Hop 35 minimaler Umlauf"
+msgstr "Hop 35 minimaler Paketumlauf"
 
 msgid "Hop 35 round trip standard devation"
-msgstr "Hop 35 Umlauf-Standardabweichung"
+msgstr "Hop 35 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 36 packet loss"
 msgstr "Hop 36 Paketverlust"
@@ -28769,16 +28773,16 @@ msgid "Hop 36 response time"
 msgstr "Hop 36 Antwortzeit"
 
 msgid "Hop 36 round trip average"
-msgstr "Hop 36 durchschnittlicher Umlauf"
+msgstr "Hop 36 durchschnittlicher Paketumlauf"
 
 msgid "Hop 36 round trip maximum"
-msgstr "Hop 36 maximaler Umlauf"
+msgstr "Hop 36 maximaler Paketumlauf"
 
 msgid "Hop 36 round trip minimum"
-msgstr "Hop 36 minimaler Umlauf"
+msgstr "Hop 36 minimaler Paketumlauf"
 
 msgid "Hop 36 round trip standard devation"
-msgstr "Hop 36 Umlauf-Standardabweichung"
+msgstr "Hop 36 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 37 packet loss"
 msgstr "Hop 37 Paketverlust"
@@ -28787,16 +28791,16 @@ msgid "Hop 37 response time"
 msgstr "Hop 37 Antwortzeit"
 
 msgid "Hop 37 round trip average"
-msgstr "Hop 37 durchschnittlicher Umlauf"
+msgstr "Hop 37 durchschnittlicher Paketumlauf"
 
 msgid "Hop 37 round trip maximum"
-msgstr "Hop 37 maximaler Umlauf"
+msgstr "Hop 37 maximaler Paketumlauf"
 
 msgid "Hop 37 round trip minimum"
-msgstr "Hop 37 minimaler Umlauf"
+msgstr "Hop 37 minimaler Paketumlauf"
 
 msgid "Hop 37 round trip standard devation"
-msgstr "Hop 37 Umlauf-Standardabweichung"
+msgstr "Hop 37 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 38 packet loss"
 msgstr "Hop 38 Paketverlust"
@@ -28805,16 +28809,16 @@ msgid "Hop 38 response time"
 msgstr "Hop 38 Antwortzeit"
 
 msgid "Hop 38 round trip average"
-msgstr "Hop 38 durchschnittlicher Umlauf"
+msgstr "Hop 38 durchschnittlicher Paketumlauf"
 
 msgid "Hop 38 round trip maximum"
-msgstr "Hop 38 maximaler Umlauf"
+msgstr "Hop 38 maximaler Paketumlauf"
 
 msgid "Hop 38 round trip minimum"
-msgstr "Hop 38 minimaler Umlauf"
+msgstr "Hop 38 minimaler Paketumlauf"
 
 msgid "Hop 38 round trip standard devation"
-msgstr "Hop 38 Umlauf-Standardabweichung"
+msgstr "Hop 38 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 39 packet loss"
 msgstr "Hop 39 Paketverlust"
@@ -28823,16 +28827,16 @@ msgid "Hop 39 response time"
 msgstr "Hop 39 Antwortzeit"
 
 msgid "Hop 39 round trip average"
-msgstr "Hop 39 durchschnittlicher Umlauf"
+msgstr "Hop 39 durchschnittlicher Paketumlauf"
 
 msgid "Hop 39 round trip maximum"
-msgstr "Hop 39 maximaler Umlauf"
+msgstr "Hop 39 maximaler Paketumlauf"
 
 msgid "Hop 39 round trip minimum"
-msgstr "Hop 39 minimaler Umlauf"
+msgstr "Hop 39 minimaler Paketumlauf"
 
 msgid "Hop 39 round trip standard devation"
-msgstr "Hop 39 Umlauf-Standardabweichung"
+msgstr "Hop 39 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 4 packet loss"
 msgstr "Hop 4 Paketverlust"
@@ -28841,16 +28845,16 @@ msgid "Hop 4 response time"
 msgstr "Hop 4 Antwortzeit"
 
 msgid "Hop 4 round trip average"
-msgstr "Hop 4 durchschnittlicher Umlauf"
+msgstr "Hop 4 durchschnittlicher Paketumlauf"
 
 msgid "Hop 4 round trip maximum"
-msgstr "Hop 4 maximaler Umlauf"
+msgstr "Hop 4 maximaler Paketumlauf"
 
 msgid "Hop 4 round trip minimum"
-msgstr "Hop 4 minimaler Umlauf"
+msgstr "Hop 4 minimaler Paketumlauf"
 
 msgid "Hop 4 round trip standard devation"
-msgstr "Hop 4 Umlauf-Standardabweichung"
+msgstr "Hop 4 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 40 packet loss"
 msgstr "Hop 40 Paketverlust"
@@ -28859,16 +28863,16 @@ msgid "Hop 40 response time"
 msgstr "Hop 40 Antwortzeit"
 
 msgid "Hop 40 round trip average"
-msgstr "Hop 40 durchschnittlicher Umlauf"
+msgstr "Hop 40 durchschnittlicher Paketumlauf"
 
 msgid "Hop 40 round trip maximum"
-msgstr "Hop 40 maximaler Umlauf"
+msgstr "Hop 40 maximaler Paketumlauf"
 
 msgid "Hop 40 round trip minimum"
-msgstr "Hop 40 minimaler Umlauf"
+msgstr "Hop 40 minimaler Paketumlauf"
 
 msgid "Hop 40 round trip standard devation"
-msgstr "Hop 40 Umlauf-Standardabweichung"
+msgstr "Hop 40 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 41 packet loss"
 msgstr "Hop 41 Paketverlust"
@@ -28877,16 +28881,16 @@ msgid "Hop 41 response time"
 msgstr "Hop 41 Antwortzeit"
 
 msgid "Hop 41 round trip average"
-msgstr "Hop 41 durchschnittlicher Umlauf"
+msgstr "Hop 41 durchschnittlicher Paketumlauf"
 
 msgid "Hop 41 round trip maximum"
-msgstr "Hop 41 maximaler Umlauf"
+msgstr "Hop 41 maximaler Paketumlauf"
 
 msgid "Hop 41 round trip minimum"
-msgstr "Hop 41 minimaler Umlauf"
+msgstr "Hop 41 minimaler Paketumlauf"
 
 msgid "Hop 41 round trip standard devation"
-msgstr "Hop 41 Umlauf-Standardabweichung"
+msgstr "Hop 41 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 42 packet loss"
 msgstr "Hop 42 Paketverlust"
@@ -28895,16 +28899,16 @@ msgid "Hop 42 response time"
 msgstr "Hop 42 Antwortzeit"
 
 msgid "Hop 42 round trip average"
-msgstr "Hop 42 durchschnittlicher Umlauf"
+msgstr "Hop 42 durchschnittlicher Paketumlauf"
 
 msgid "Hop 42 round trip maximum"
-msgstr "Hop 42 maximaler Umlauf"
+msgstr "Hop 42 maximaler Paketumlauf"
 
 msgid "Hop 42 round trip minimum"
-msgstr "Hop 42 minimaler Umlauf"
+msgstr "Hop 42 minimaler Paketumlauf"
 
 msgid "Hop 42 round trip standard devation"
-msgstr "Hop 42 Umlauf-Standardabweichung"
+msgstr "Hop 42 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 43 packet loss"
 msgstr "Hop 43 Paketverlust"
@@ -28913,16 +28917,16 @@ msgid "Hop 43 response time"
 msgstr "Hop 43 Antwortzeit"
 
 msgid "Hop 43 round trip average"
-msgstr "Hop 43 durchschnittlicher Umlauf"
+msgstr "Hop 43 durchschnittlicher Paketumlauf"
 
 msgid "Hop 43 round trip maximum"
-msgstr "Hop 43 maximaler Umlauf"
+msgstr "Hop 43 maximaler Paketumlauf"
 
 msgid "Hop 43 round trip minimum"
-msgstr "Hop 43 minimaler Umlauf"
+msgstr "Hop 43 minimaler Paketumlauf"
 
 msgid "Hop 43 round trip standard devation"
-msgstr "Hop 43 Umlauf-Standardabweichung"
+msgstr "Hop 43 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 44 packet loss"
 msgstr "Hop 44 Paketverlust"
@@ -28931,16 +28935,16 @@ msgid "Hop 44 response time"
 msgstr "Hop 44 Antwortzeit"
 
 msgid "Hop 44 round trip average"
-msgstr "Hop 44 durchschnittlicher Umlauf"
+msgstr "Hop 44 durchschnittlicher Paketumlauf"
 
 msgid "Hop 44 round trip maximum"
-msgstr "Hop 44 maximaler Umlauf"
+msgstr "Hop 44 maximaler Paketumlauf"
 
 msgid "Hop 44 round trip minimum"
-msgstr "Hop 44 minimaler Umlauf"
+msgstr "Hop 44 minimaler Paketumlauf"
 
 msgid "Hop 44 round trip standard devation"
-msgstr "Hop 44 Umlauf-Standardabweichung"
+msgstr "Hop 44 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 5 packet loss"
 msgstr "Hop 5 Paketverlust"
@@ -28949,16 +28953,16 @@ msgid "Hop 5 response time"
 msgstr "Hop 5 Antwortzeit"
 
 msgid "Hop 5 round trip average"
-msgstr "Hop 5 durchschnittlicher Umlauf"
+msgstr "Hop 5 durchschnittlicher Paketumlauf"
 
 msgid "Hop 5 round trip maximum"
-msgstr "Hop 5 maximaler Umlauf"
+msgstr "Hop 5 maximaler Paketumlauf"
 
 msgid "Hop 5 round trip minimum"
-msgstr "Hop 5 minimaler Umlauf"
+msgstr "Hop 5 minimaler Paketumlauf"
 
 msgid "Hop 5 round trip standard devation"
-msgstr "Hop 5 Umlauf-Standardabweichung"
+msgstr "Hop 5 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 6 packet loss"
 msgstr "Hop 6 Paketverlust"
@@ -28967,16 +28971,16 @@ msgid "Hop 6 response time"
 msgstr "Hop 6 Antwortzeit"
 
 msgid "Hop 6 round trip average"
-msgstr "Hop 6 durchschnittlicher Umlauf"
+msgstr "Hop 6 durchschnittlicher Paketumlauf"
 
 msgid "Hop 6 round trip maximum"
-msgstr "Hop 6 maximaler Umlauf"
+msgstr "Hop 6 maximaler Paketumlauf"
 
 msgid "Hop 6 round trip minimum"
-msgstr "Hop 6 minimaler Umlauf"
+msgstr "Hop 6 minimaler Paketumlauf"
 
 msgid "Hop 6 round trip standard devation"
-msgstr "Hop 6 Umlauf-Standardabweichung"
+msgstr "Hop 6 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 7 packet loss"
 msgstr "Hop 7 Paketverlust"
@@ -28985,16 +28989,16 @@ msgid "Hop 7 response time"
 msgstr "Hop 7 Antwortzeit"
 
 msgid "Hop 7 round trip average"
-msgstr "Hop 7 durchschnittlicher Umlauf"
+msgstr "Hop 7 durchschnittlicher Paketumlauf"
 
 msgid "Hop 7 round trip maximum"
-msgstr "Hop 7 maximaler Umlauf"
+msgstr "Hop 7 maximaler Paketumlauf"
 
 msgid "Hop 7 round trip minimum"
-msgstr "Hop 7 minimaler Umlauf"
+msgstr "Hop 7 minimaler Paketumlauf"
 
 msgid "Hop 7 round trip standard devation"
-msgstr "Hop 7 Umlauf-Standardabweichung"
+msgstr "Hop 7 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 8 packet loss"
 msgstr "Hop 8 Paketverlust"
@@ -29003,16 +29007,16 @@ msgid "Hop 8 response time"
 msgstr "Hop 8 Antwortzeit"
 
 msgid "Hop 8 round trip average"
-msgstr "Hop 8 durchschnittlicher Umlauf"
+msgstr "Hop 8 durchschnittlicher Paketumlauf"
 
 msgid "Hop 8 round trip maximum"
-msgstr "Hop 8 maximaler Umlauf"
+msgstr "Hop 8 maximaler Paketumlauf"
 
 msgid "Hop 8 round trip minimum"
-msgstr "Hop 8 minimaler Umlauf"
+msgstr "Hop 8 minimaler Paketumlauf"
 
 msgid "Hop 8 round trip standard devation"
-msgstr "Hop 8 Umlauf-Standardabweichung"
+msgstr "Hop 8 Standardabweichung des Paketumlaufs"
 
 msgid "Hop 9 packet loss"
 msgstr "Hop 9 Paketverlust"
@@ -29021,16 +29025,16 @@ msgid "Hop 9 response time"
 msgstr "Hop 9 Antwortzeit"
 
 msgid "Hop 9 round trip average"
-msgstr "Hop 9 durchschnittlicher Umlauf"
+msgstr "Hop 9 durchschnittlicher Paketumlauf"
 
 msgid "Hop 9 round trip maximum"
-msgstr "Hop 9 maximaler Umlauf"
+msgstr "Hop 9 maximaler Paketumlauf"
 
 msgid "Hop 9 round trip minimum"
-msgstr "Hop 9 minimaler Umlauf"
+msgstr "Hop 9 minimaler Paketumlauf"
 
 msgid "Hop 9 round trip standard devation"
-msgstr "Hop 9 Umlauf-Standardabweichung"
+msgstr "Hop 9 Standardabweichung des Paketumlaufs"
 
 msgid "Hop response time"
 msgstr "Antwortzeit des Hops"
@@ -33024,9 +33028,8 @@ msgstr ""
 "sind. Mit dieser Einstellungen können Sie eine Interpretation einer "
 "bestimmten Einheit erzwingen. "
 
-#, fuzzy
 msgid "In termination"
-msgstr "Unterbrechung"
+msgstr "Wird beendet"
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -40688,9 +40691,8 @@ msgstr "Alle gefundenen und manuell hinzugefügten Instanzen überwachen"
 msgid "Monitor all instances found"
 msgstr "Alle gefundenen Instanzen überwachen"
 
-#, fuzzy
 msgid "Monitor all subscriptions"
-msgstr "Ereignis-Subskriptionen"
+msgstr "Überwache alle Subskriptionen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
@@ -53110,16 +53112,16 @@ msgid "Round"
 msgstr "Rund"
 
 msgid "Round trip average"
-msgstr "Round Trip Zeit (Durchschnitt)"
+msgstr "Paketumlaufzeit (Durchschnitt)"
 
 msgid "Round trip maximum"
-msgstr "maximale Umlaufzeit"
+msgstr "maximaler Paketumlauf"
 
 msgid "Round trip minimum"
-msgstr "minimale Umlaufzeit"
+msgstr "minimaler Paketumlauf"
 
 msgid "Round trip time"
-msgstr "Umlaufzeit"
+msgstr "Paketumlaufzeit"
 
 msgid "Rounding mode"
 msgstr "Rundungsmodus"
@@ -55023,7 +55025,7 @@ msgstr ""
 "der Auswahl werden z.B. Attributnamen in LDAP Anfragen geändert."
 
 msgid "Select the subscriptions you want to monitor."
-msgstr ""
+msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
 
 msgid "Select the type of content element"
 msgstr "Wählen Sie den Typ des Berichtelements"
@@ -60624,9 +60626,8 @@ msgstr "Subskription"
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
 
-#, fuzzy
 msgid "Subscriptions to monitor"
-msgstr "Zu überwachende Regionen"
+msgstr "Zu überwachende Subskriptionen"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -71097,7 +71098,7 @@ msgid ""
 "crit levels for packet loss, average roundtrip and standard deviation."
 msgstr ""
 "Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Levels von MTR "
-"(Matt's Traceroute) für Paketverluste, durchschnittlichen Umlauf und "
+"(Matt's Traceroute) für Paketverluste, durchschnittlicher Paketumlauf und "
 "Standardabweichung zu ändern."
 
 msgid ""
@@ -78270,9 +78271,8 @@ msgstr "Benutzer-ID für Web-Login"
 msgid "User ID for web login (if login required)"
 msgstr "Benutzer-ID für das Web-Login (falls Login erforderlich)"
 
-#, fuzzy
 msgid "User ID must not be None"
-msgstr "Instanz-ID muss gesetzt sein"
+msgstr "User-ID darf nicht Keiner sein"
 
 msgid "User Label"
 msgstr "Benutzerlabel"
@@ -79721,7 +79721,7 @@ msgid "Volume Groups (LVM)"
 msgstr "Volume Gruppen (LVM)"
 
 msgid "Volume Performance Counters (requires Volumes)"
-msgstr ""
+msgstr "Volume Performance Counters (erfordert 'Volumes')"
 
 msgid "Volume group name"
 msgstr "Name der Volumengruppe"
@@ -83819,6 +83819,9 @@ msgstr "Sie haben manche oder alle Pakete signiert"
 msgid "You have to provide a role ID."
 msgstr "Sie müssen eine Rollen-ID angeben."
 
+msgid "You have to select a valid host name computation method."
+msgstr "Sie müssen eine gültige Methode zur Host-Namen-Verarbeitung auswählen."
+
 msgid "You have to select at least one element."
 msgstr "Sie müssen mindestens ein Element auswählen."
 
@@ -85880,8 +85883,8 @@ msgstr "Zustellung."
 
 msgid "notification has been triggered"
 msgid_plural "notifications have been triggered"
-msgstr[0] "Benachrichtigung wurde ausgelöst"
-msgstr[1] "Benachrichtigungen wurden ausgelöst"
+msgstr[0] "Benachrichtigung wurde angestoßen"
+msgstr[1] "Benachrichtigungen wurden angestoßen"
 
 msgid "notification rule"
 msgstr "Benachrichtigungsregel"
@@ -85896,11 +85899,11 @@ msgid_plural ""
 "notifications would have been sent based on your notification rules (see "
 "table: 'Predicted notifications')"
 msgstr[0] ""
-"die Benachrichtigung wäre auf der Grundlage Ihrer Benachrichtigungsregeln "
-"gesendet worden (siehe Tabelle: ' Vorhergesagte Benachrichtigungen')"
+"Benachrichtigung wäre aufgrund Ihrer Benachrichtigungsregeln verschickt "
+"worden (siehe Tabelle: 'Vorhergesagte Benachrichtigungen')"
 msgstr[1] ""
-"die Benachrichtigungen wären auf der Grundlage Ihrer Benachrichtigungsregeln "
-"gesendet worden (siehe Tabelle: ' Vorhergesagte Benachrichtigungen')"
+"Benachrichtigungen wären aufgrund Ihrer Benachrichtigungsregeln verschickt "
+"worden (siehe Tabelle: 'Vorhergesagte Benachrichtigungen')"
 
 msgid "notifications within last"
 msgstr "Benachrichtigungen innerhalb der letzten"

@@ -25261,6 +25261,10 @@ msgstr ""
 msgid "Failed to set start URL"
 msgstr "Échec de la définition de l'URL de départ"
 
+#, fuzzy, python-format
+msgid "Failed to sign the agents: %s"
+msgstr "Échec de la cuisson des agents : %s"
+
 msgid "Failed to spare ratio"
 msgstr "Ratio d'échec à l'épuisement"
 
@@ -87817,6 +87821,10 @@ msgstr "Vous avez signé une partie ou la totalité des paquets d'agents"
 
 msgid "You have to provide a role ID."
 msgstr "Vous devez fournir un identifiant de rôle."
+
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Vous devez sélectionner au moins un élément."
 
 msgid "You have to select at least one element."
 msgstr "Vous devez sélectionner au moins un élément."

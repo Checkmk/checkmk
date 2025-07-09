@@ -25137,6 +25137,10 @@ msgstr ""
 msgid "Failed to set start URL"
 msgstr "Nu a reușit să seteze URL-ul de pornire"
 
+#, fuzzy, python-format
+msgid "Failed to sign the agents: %s"
+msgstr "Nu a reușit să coacă agenții: %s."
+
 msgid "Failed to spare ratio"
 msgstr "Raport eșecuri la rezervă"
 
@@ -87207,6 +87211,10 @@ msgstr "Ați semnat o parte sau toate pachetele de agenți"
 
 msgid "You have to provide a role ID."
 msgstr "Trebuie să furnizați un ID de rol."
+
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Trebuie să selectați cel puțin un element."
 
 msgid "You have to select at least one element."
 msgstr "Trebuie să selectați cel puțin un element."

@@ -25065,6 +25065,10 @@ msgstr ""
 msgid "Failed to set start URL"
 msgstr "Mislukt om start URL in te stellen"
 
+#, fuzzy, python-format
+msgid "Failed to sign the agents: %s"
+msgstr "Mislukt om de agenten te bakken: %s"
+
 msgid "Failed to spare ratio"
 msgstr "Verhouding mislukt tot reserve"
 
@@ -87007,6 +87011,10 @@ msgstr "U hebt enkele of alle agentpakketten ondertekend"
 
 msgid "You have to provide a role ID."
 msgstr "Je moet een rol ID opgeven."
+
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Je moet minstens één element selecteren."
 
 msgid "You have to select at least one element."
 msgstr "Je moet minstens één element selecteren."

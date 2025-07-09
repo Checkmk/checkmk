@@ -10,8 +10,10 @@ from typing import Any, cast
 from pydantic import BaseModel
 
 from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
-from cmk.gui.form_specs.vue.form_spec_visitor import (
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    RawDiskData,
+    RawFrontendData,
     serialize_data_for_frontend,
     transform_to_disk_model,
 )

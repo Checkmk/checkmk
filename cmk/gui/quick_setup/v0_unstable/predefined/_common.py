@@ -13,8 +13,9 @@ from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgent
 
 from cmk.checkengine.discovery import CheckPreviewEntry
 
-from cmk.gui.form_specs.vue import DiskModel, RawFrontendData
-from cmk.gui.form_specs.vue.form_spec_visitor import (
+from cmk.gui.form_specs.vue import (
+    DiskModel,
+    RawFrontendData,
     serialize_data_for_frontend,
     transform_to_disk_model,
 )

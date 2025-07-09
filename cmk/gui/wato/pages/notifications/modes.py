@@ -50,8 +50,13 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
-from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    parse_data_from_frontend,
+    RawDiskData,
+    RawFrontendData,
+    render_form_spec,
+)
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

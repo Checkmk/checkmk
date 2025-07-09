@@ -50,7 +50,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private import LegacyValueSpec
-from cmk.gui.form_specs.vue.form_spec_visitor import (
+from cmk.gui.form_specs.vue import (
     DisplayMode,
     parse_data_from_frontend,
     render_form_spec,

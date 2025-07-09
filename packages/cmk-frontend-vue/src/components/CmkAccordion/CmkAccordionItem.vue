@@ -48,7 +48,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   margin-bottom: 8px;
 
   &[data-state='open'] {
-    border: 1px solid var(--success);
+    border: 1px solid var(--color-digital-green-50);
     background: var(--ux-theme-5);
   }
 

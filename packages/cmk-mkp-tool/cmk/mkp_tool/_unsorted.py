@@ -38,6 +38,22 @@ from ._type_defs import PackageError, PackageID, PackageName
 _logger = logging.getLogger(__name__)
 
 
+class VersionMismatch(PackageError):
+    """Indicating that a version requirement was not met"""
+
+    def __init__(self, requirement: str, msg: str):
+        super().__init__(msg)
+        self.requirement: Final = requirement
+
+
+class VersionTooLow(VersionMismatch):
+    """Indicating that the sites version is too low compared to the requirement."""
+
+
+class VersionTooHigh(VersionMismatch):
+    """Indicating that the sites version is too high compared to the requirement."""
+
+
 class ComparableVersion(Protocol):
     def __ge__(self, other: Self) -> bool: ...
 
@@ -540,9 +556,10 @@ def _raise_for_too_old_cmk_version(
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    raise PackageError(
+    raise VersionTooLow(
+        min_version,
         f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
-        " To enable it anyway, use the `--force-install` flag to skip all version checks."
+        " To enable it anyway, use the `--force-install` flag to skip all version checks.",
     )
 
 
@@ -565,9 +582,10 @@ def _raise_for_too_new_cmk_version(
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    raise PackageError(
+    raise VersionTooHigh(
+        until_version,
         f"Package requires a Checkmk version below {until_version} (this is {site_version})."
-        " To enable it anyway, use the `--force-install` flag to skip all version checks."
+        " To enable it anyway, use the `--force-install` flag to skip all version checks.",
     )
 
 

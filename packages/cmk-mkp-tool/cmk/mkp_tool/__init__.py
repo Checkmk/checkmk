@@ -28,6 +28,9 @@ from ._unsorted import (
     PackageStore,
     release,
     update_active_packages,
+    VersionMismatch,
+    VersionTooHigh,
+    VersionTooLow,
 )
 
 __all__ = [
@@ -58,4 +61,7 @@ __all__ = [
     "reload_services_affected_by_mkp_changes",
     "ui_title",
     "update_active_packages",
+    "VersionMismatch",
+    "VersionTooHigh",
+    "VersionTooLow",
 ]

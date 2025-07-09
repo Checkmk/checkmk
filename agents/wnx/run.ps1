@@ -70,7 +70,7 @@ function Write-Help() {
     Write-Host "  -M, --msi               build msi"
     Write-Host "  -O, --ohm               build ohm"
     Write-Host "  -E, --extensions        build extensions"
-    Write-Host "  -T, --test              run agent component tests using binary in repo_root/artefacts"
+    Write-Host "  -T, --test              run some agent tests"
     Write-Host "  -S, --skip-mk-sql-test  skip sql test to be able to build msi in case sql is not configured"
     Write-Host "  --detach                detach USB before running"
     Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"

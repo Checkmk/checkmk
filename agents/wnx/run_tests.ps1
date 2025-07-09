@@ -20,6 +20,7 @@ $testPlugins = $false
 $testBuild = $false
 $testBuildCtl = $false
 $testAll = $false
+$testUnit = $false
 $repo_root = (get-item $pwd).parent.parent.FullName
 $cur_dir = $pwd
 $env:repo_root = $repo_root
@@ -69,11 +70,12 @@ else {
             { $("-P", "--plugins") -contains $_ } { $testPlugins = $true }
             { $("-I", "--integration") -contains $_ } { $testIntegration = $true }
             { $("-R", "--regression") -contains $_ } { $testRegression = $true }
+            { $("-U", "--unit") -contains $_ } { $testUnit = $true }
         }
     }
 }
 
-if ($testExt -or $testIntegration -or $testComponent) {
+if ($testExt -or $testIntegration -or $testComponent -or $testUnit) {
     $testBuild = $true
 }
 
@@ -131,8 +133,8 @@ function Create_UnitTestDir([String]$prefix) {
         Write-Error "Failed to create temporary directory" -ErrorAction Stop
     }
     Copy-Item -Path ".\build\watest\Win32\Release\watest32.exe" -Destination "$wnx_test_dir\watest32.exe" -Force
-    $root = "$wnx_test_dir\root"
-    $data = "$wnx_test_dir\data"
+    $root = "$wnx_test_dir\test\root"
+    $data = "$wnx_test_dir\test\data"
     $user_dir = $data
     New-Item -ItemType Directory -Path "$root\plugins" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$user_dir\bin" -ErrorAction Stop > nul
@@ -405,6 +407,7 @@ try {
         }
     }
 
+    Invoke-UnitTest -run $testUnit -name "unit" -cmdline "-*_Simulation:*Component:*ComponentExt:*Flaky"
     Invoke-UnitTest -run $testComponent -name "component" -cmdline "*Component"
     Invoke-UnitTest -run $testExt -name "ext" -cmdline "*ComponentExt"
     Invoke-UnitTest -run $testSimulation -name "simulation" -cmdline "*_Simulation"

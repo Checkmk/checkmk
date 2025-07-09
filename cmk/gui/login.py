@@ -21,7 +21,7 @@ from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 import cmk.gui.mobile
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -222,7 +222,7 @@ class LoginPage(Page):
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.login(LoggedInUser(username))
+                session.login(LoggedInUser(username), request.is_secure)
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...

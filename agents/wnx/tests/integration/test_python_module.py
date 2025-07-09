@@ -63,5 +63,5 @@ def test_python_module(
         data_dir=data_dir,
     )
     assert exe_output.ret_code == 0
-    assert exe_output.stderr.startswith("Missing config file")
+    assert exe_output.stderr.startswith("Missing agent info file")
     assert exe_output.stdout.startswith("<<<cmk_update_agent_status:sep(0)>>>")

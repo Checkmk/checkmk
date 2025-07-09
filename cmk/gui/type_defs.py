@@ -682,7 +682,7 @@ class SearchResult:
 SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 
-type Provider = Literal["setup", "monitoring"]
+Provider = Literal["setup", "monitoring"]
 
 
 class UnifiedSearchResultItemSerialized(TypedDict):

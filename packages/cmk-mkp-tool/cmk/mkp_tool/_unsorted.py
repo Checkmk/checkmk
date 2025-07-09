@@ -542,7 +542,7 @@ def _raise_for_too_old_cmk_version(
 
     raise PackageError(
         f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
-        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+        " To enable it anyway, use the `--force-install` flag to skip all version checks."
     )
 
 
@@ -567,7 +567,7 @@ def _raise_for_too_new_cmk_version(
 
     raise PackageError(
         f"Package requires a Checkmk version below {until_version} (this is {site_version})."
-        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+        " To enable it anyway, use the `--force-install` flag to skip all version checks."
     )
 
 

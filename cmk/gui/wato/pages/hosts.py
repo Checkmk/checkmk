@@ -320,7 +320,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         dialog_message=_(
                             "Already installed the agent? If so, please check your firewall settings"
                         ),
-                        slide_in_title=_("Checkmk agent connection failed"),
+                        slide_in_title=_("Install Checkmk agent"),
                         msg_start=_("Test Checkmk agent connection"),
                         msg_success=_("Agent connection successful"),
                         msg_loading=_("Agent connection test running"),
@@ -349,7 +349,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                         for site_id, _site_name in user_sites.get_activation_site_choices()
                     ],
-                    url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),
+                    url=folder_preserving_link([("mode", "agents")]),
                     host_name=self._host.name(),
                 )
             ),

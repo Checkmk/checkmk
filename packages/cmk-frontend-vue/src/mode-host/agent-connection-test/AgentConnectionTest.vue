@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 import { type I18NAgentConnection, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
@@ -32,7 +33,6 @@ interface Props {
 const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
-const externalContent = ref('')
 
 const showTest = ref(true)
 const switchVisibility = () => {
@@ -306,12 +306,11 @@ const warnContainerValues = computed<ContainerValues>(() => {
     </div>
 
     <SlideIn
-      :open="slideInOpen"
       :header="{ title: i18n.slide_in_title, closeButton: true }"
+      :open="slideInOpen"
       @close="slideInOpen = false"
     >
-      <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-html="externalContent"></div>
+      <AgentInstallSlideOutContent :url="url" @close="((slideInOpen = false), (isError = false))" />
     </SlideIn>
   </Teleport>
 </template>

@@ -171,7 +171,7 @@ class RowTableInventoryHistory(ABCRowTable):
             )
         for history_entry in history:
             yield {
-                "invhist_time": history_entry.timestamp,
+                "invhist_time": history_entry.current_timestamp,
                 "invhist_delta": history_entry.delta_tree,
                 "invhist_removed": history_entry.removed,
                 "invhist_new": history_entry.new,

@@ -1956,17 +1956,25 @@ class HistoryPaths:
 
 @dataclass(frozen=True, kw_only=True)
 class HistoryEntry:
-    timestamp: int
+    previous_timestamp: int
+    current_timestamp: int
     new: int
     changed: int
     removed: int
     delta_tree: ImmutableDeltaTree
 
     @classmethod
-    def from_raw(cls, timestamp: int, raw: tuple[int, int, int, SDRawDeltaTree]) -> HistoryEntry:
+    def from_raw(
+        cls,
+        *,
+        previous_timestamp: int,
+        current_timestamp: int,
+        raw: tuple[int, int, int, SDRawDeltaTree],
+    ) -> HistoryEntry:
         new, changed, removed, raw_delta_tree = raw
         return cls(
-            timestamp=timestamp,
+            previous_timestamp=previous_timestamp,
+            current_timestamp=current_timestamp,
             new=new,
             changed=changed,
             removed=removed,
@@ -1974,10 +1982,17 @@ class HistoryEntry:
         )
 
     @classmethod
-    def from_delta_tree(cls, timestamp: int, delta_tree: ImmutableDeltaTree) -> HistoryEntry:
+    def from_delta_tree(
+        cls,
+        *,
+        previous_timestamp: int,
+        current_timestamp: int,
+        delta_tree: ImmutableDeltaTree,
+    ) -> HistoryEntry:
         delta_stats = delta_tree.get_stats()
         return cls(
-            timestamp=timestamp,
+            previous_timestamp=previous_timestamp,
+            current_timestamp=current_timestamp,
             new=delta_stats["new"],
             changed=delta_stats["changed"],
             removed=delta_stats["removed"],
@@ -2118,7 +2133,15 @@ class HistoryStore:
         except MKGeneralException:
             return None
 
-        return None if raw is None else HistoryEntry.from_raw(current_timestamp, raw)
+        return (
+            None
+            if raw is None
+            else HistoryEntry.from_raw(
+                previous_timestamp=previous_timestamp,
+                current_timestamp=current_timestamp,
+                raw=raw,
+            )
+        )
 
     def lookup_tree(self, tree_path: TreePath) -> ImmutableTree:
         if tree_path.path == Path() or tree_path.legacy == Path():
@@ -2196,8 +2219,9 @@ def load_history(
             continue
 
         entry = HistoryEntry.from_delta_tree(
-            current.timestamp,
-            history_store.lookup_tree(current.tree_path).difference(
+            previous_timestamp=previous.timestamp,
+            current_timestamp=current.timestamp,
+            delta_tree=history_store.lookup_tree(current.tree_path).difference(
                 history_store.lookup_tree(previous.tree_path)
             ),
         )
@@ -2215,7 +2239,11 @@ def load_history(
 
     return History(
         entries=[
-            HistoryEntry.from_delta_tree(e.timestamp, d)
+            HistoryEntry.from_delta_tree(
+                previous_timestamp=e.previous_timestamp,
+                current_timestamp=e.current_timestamp,
+                delta_tree=d,
+            )
             for e in entries
             if (d := e.delta_tree.filter(filter_delta_tree))
         ],

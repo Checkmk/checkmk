@@ -415,7 +415,7 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
 
     for entry, expected_result in zip(history, expected_results):
         e_new, e_changed, e_removed = expected_result
-        assert isinstance(entry.timestamp, int)
+        assert isinstance(entry.current_timestamp, int)
         assert entry.new == e_new
         assert entry.changed == e_changed
         assert entry.removed == e_removed

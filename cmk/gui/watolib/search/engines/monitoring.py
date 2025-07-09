@@ -8,11 +8,14 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
+from typing import override
 
 import livestatus
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
+
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -76,7 +79,7 @@ class FilterBehaviour(Enum):
     FINISHED = "finished"
 
 
-def _to_regex(s):
+def _to_regex(s: str) -> str:
     """Ensures the provided search string is a regex, does some basic conversion
     and then tries to verify it is a regex"""
     s = s.replace("*", ".*")
@@ -161,6 +164,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         super().__init__(used_filters, filter_behaviour)
         self._results: list[SearchResult] = []
 
+    @override
     def do_query(self) -> None:
         """Execute the lookup of the data using the given query"""
         assert len(self._used_filters) == 1, "Only supporting single filter lookups"
@@ -172,22 +176,27 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         assert len(queries) == 1, "Only supporting single query lookups"
         self._results = plugin.get_results(queries[0])
 
+    @override
     def num_rows(self) -> int:
         """Returns the number of matching results"""
         return len(self._results)
 
+    @override
     def remove_rows_from_end(self, num: int) -> None:
         """Strips off some rows from the end of the results"""
         self._results = self._results[:-num]
 
+    @override
     def row_limit_exceeded(self) -> bool:
         """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
         return len(self._results) > active_config.quicksearch_dropdown_limit
 
+    @override
     def get_search_url_params(self) -> HTTPVariables:
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError()  # TODO: Implement this
 
+    @override
     def create_results(self) -> list[SearchResult]:
         return self._results[: active_config.quicksearch_dropdown_limit]
 
@@ -221,15 +230,19 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             raise RuntimeError("Livestatus table not computed yet")
         return self._livestatus_table
 
+    @override
     def do_query(self) -> None:
         self._execute_livestatus_command()
 
+    @override
     def num_rows(self) -> int:
         return len(self._rows)
 
+    @override
     def remove_rows_from_end(self, num: int) -> None:
         self._rows = self._rows[:-num]
 
+    @override
     def row_limit_exceeded(self) -> bool:
         return self._too_much_rows
 
@@ -341,6 +354,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "servicegroups": ["name"],
         }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
+    @override
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
         target_view = self._get_target_view(exact_match=exact_match)
@@ -366,6 +380,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         return url_params
 
+    @override
     def create_results(self) -> list[SearchResult]:
         elements: list[LivestatusResult] = []
 
@@ -770,6 +785,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
 
 
 class MatchPluginRegistry(cmk.ccc.plugin_registry.Registry[ABCMatchPlugin]):
+    @override
     def plugin_name(self, instance: ABCMatchPlugin) -> str:
         return instance.name
 
@@ -789,19 +805,23 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         )
         self._group_type = group_type
 
+    @override
     def is_group_match(self) -> bool:
         return True
 
+    @override
     def get_match_topic(self) -> str:
         if self._group_type == "host":
             return _("Host group")
         return _("Service group")
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         if livestatus_table == "%sgroups" % self._group_type:
             return ["name"]
         return ["%s_groups" % self._group_type]
 
+    @override
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
@@ -820,6 +840,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -881,12 +902,15 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self) -> None:
         super().__init__(["services"], "services", "s")
 
+    @override
     def get_match_topic(self) -> str:
         return _("Service description")
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["service_description"]
 
+    @override
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
@@ -899,6 +923,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -939,12 +964,15 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
     def _get_service_state_from_filter(self, value: str) -> str:
         return self._state_mapping.get(value.lower(), "")
 
+    @override
     def get_match_topic(self) -> str:
         return _("Service states")
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["state"]
 
+    @override
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
@@ -961,6 +989,7 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -992,6 +1021,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
+    @override
     def get_match_topic(self) -> str:
         if self._livestatus_field == "name":
             return _("Host name")
@@ -1004,9 +1034,11 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return [self._get_real_fieldname(livestatus_table), "host_name"]
 
+    @override
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
@@ -1019,6 +1051,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -1094,25 +1127,28 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self) -> None:
         super().__init__(["hosts", "services"], "hosts", "tg")
 
-    def _get_hosttag_dict(self):
+    def _get_hosttag_dict(self) -> dict[TagID | None, TagGroupID]:
         lookup_dict = {}
         for tag_group in active_config.tags.tag_groups:
             for grouped_tag in tag_group.tags:
                 lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
-    def _get_auxtag_dict(self):
+    def _get_auxtag_dict(self) -> dict[TagID, TagID]:
         lookup_dict = {}
         for tag_id in active_config.tags.aux_tag_list.get_tag_ids():
             lookup_dict[tag_id] = tag_id
         return lookup_dict
 
+    @override
     def get_match_topic(self) -> str:
         return _("Hosttag")
 
-    def get_livestatus_columns(self, livestatus_table):
+    @override
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["host_tags"]
 
+    @override
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
@@ -1139,6 +1175,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -1164,7 +1201,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
             assert hostname is not None  # TODO: Why is this the case? Needed for correct typing.
             return hostname, [(filter_name, hostname)]
 
-        url_infos = []
+        url_infos: HTTPVariables = []
         hosttag_to_group_dict = self._get_hosttag_dict()
         auxtag_to_group_dict = self._get_auxtag_dict()
 
@@ -1173,13 +1210,13 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
                 if entry in hosttag_to_group_dict:
-                    tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                    tag_key, tag_value = hosttag_to_group_dict[TagID(entry)], entry
                 elif entry in auxtag_to_group_dict:
-                    tag_key, tag_value = auxtag_to_group_dict[entry], entry
+                    tag_key, tag_value = auxtag_to_group_dict[TagID(entry)], entry  # type: ignore[assignment]
                 else:
                     continue
             else:
-                tag_key, tag_value = entry.split(":", 1)
+                tag_key, tag_value = entry.split(":", 1)  # type: ignore[assignment]
 
             # here we check which *_to_group_dict containes the tag_value
             # we do not care about the actual data
@@ -1210,6 +1247,7 @@ class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
         yield from (self._input_to_key_value(inpt) for inpt in user_inputs)
 
+    @override
     def get_livestatus_filters(
         self,
         livestatus_table: LivestatusTable,
@@ -1227,12 +1265,15 @@ class HostLabelMatchPlugin(ABCLabelMatchPlugin):
         super().__init__(["hosts", "services"], "hosts", "hl")
         self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["labels"] if livestatus_table == "hosts" else ["host_labels"]
 
+    @override
     def get_match_topic(self) -> str:
         return _("Host labels")
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -1255,12 +1296,15 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
         super().__init__(["services"], "services", "sl")
         self._supported_views = {"allservices", "searchsvc"}
 
+    @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["labels"]
 
+    @override
     def get_match_topic(self) -> str:
         return _("Service labels")
 
+    @override
     def get_matches(
         self,
         for_view: ViewName,
@@ -1288,9 +1332,11 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
     def __init__(self) -> None:
         super().__init__("menu")
 
+    @override
     def get_match_topic(self) -> str:
         return _("Monitor")
 
+    @override
     def get_results(self, query: str) -> list[SearchResult]:
         return [
             SearchResult(

@@ -10,7 +10,7 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Final
+from typing import Final, override
 
 import redis
 from redis import ConnectionError as RedisConnectionError
@@ -80,6 +80,7 @@ class ABCMatchItemGenerator(ABC):
     def __init__(self, name: str) -> None:
         self.name: Final[str] = name
 
+    @override
     def __hash__(self) -> int:
         return hash(self.name)
 
@@ -96,6 +97,7 @@ class ABCMatchItemGenerator(ABC):
 
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
+    @override
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
         return instance.name
 
@@ -634,6 +636,7 @@ def _process_update_requests(
 class SearchIndexBackgroundJob(BackgroundJob):
     job_prefix = "search_index"
 
+    @override
     @classmethod
     def gui_title(cls) -> str:
         return _("Search index")

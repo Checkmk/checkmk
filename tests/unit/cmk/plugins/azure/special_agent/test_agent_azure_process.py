@@ -533,13 +533,6 @@ def test_write_group_info(
     "args, usage_data, exception, expected_result",
     [
         pytest.param(
-            Args(debug=False, services=[], tag_key_pattern=TagsImportPatternOption.import_all),
-            None,
-            None,
-            "",
-            id="usage section not enabled",
-        ),
-        pytest.param(
             Args(
                 debug=False,
                 services=["usage_details"],

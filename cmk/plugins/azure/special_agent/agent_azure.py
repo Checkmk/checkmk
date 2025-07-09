@@ -598,27 +598,6 @@ class BaseApiClient(abc.ABC):
             next_page_key=next_page_key,
         )
 
-    # TODO: delete this in the future, substitute with _query_async
-    def _query(self, uri_end, body, params=None):
-        json_data = self._request_json_from_url(
-            "POST", self._base_url + uri_end, body=body, params=params
-        )
-
-        data = self._lookup(json_data, "properties")
-        columns = self._lookup(data, "columns")
-        rows = self._lookup(data, "rows")
-
-        next_link = data.get("nextLink")
-        while next_link:
-            new_json_data = self._request_json_from_url("POST", next_link, body=body)
-            data = self._lookup(new_json_data, "properties")
-            rows += self._lookup(data, "rows")
-            next_link = data.get("nextLink")
-
-        common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
-        processed_query = self._process_query(columns, rows, common_metadata)
-        return processed_query
-
     def _process_query(self, columns, rows, common_metadata):
         processed_query = []
         column_names = [c["name"] for c in columns]
@@ -2067,9 +2046,6 @@ def write_usage_section(
 async def process_usage_details(
     mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args
 ) -> None:
-    if "usage_details" not in args.services:
-        return
-
     try:
         usage_section = await get_usage_data(mgmt_client, args)
         if not usage_section:

@@ -110,10 +110,9 @@ def _welcome_page(config: Config) -> None:
                         addvars=[("mode", "newhost")],
                         filename="wato.py",
                     ),
-                    # TODO: prefill options
                     network_devices=makeuri(
                         request,
-                        addvars=[("mode", "newhost")],
+                        addvars=[("mode", "newhost"), ("prefill", "snmp")],
                         filename="wato.py",
                     ),
                     aws_quick_setup=makeuri(

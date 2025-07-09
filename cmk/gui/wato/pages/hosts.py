@@ -8,7 +8,7 @@ import abc
 import copy
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
-from typing import Final, overload
+from typing import Final, Literal, overload
 from urllib.parse import unquote
 
 from livestatus import SiteConfigurations
@@ -107,7 +107,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
     def __init__(self) -> None:
         self._host = self._init_host()
-        self._mode = "edit"
+        self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
         super().__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -751,6 +751,8 @@ class CreateHostMode(ABCHostMode):
     def _from_vars(self) -> None:
         if request.var("clone"):
             self._mode = "clone"
+        elif request.var("prefill"):
+            self._mode = "prefill"
         else:
             self._mode = "new"
 
@@ -870,6 +872,19 @@ class ModeCreateHost(CreateHostMode):
             )
         except MKUserError:
             host_name = HostName("")
+        if prefill := request.get_ascii_input("prefill"):
+            match prefill:
+                case "snmp":
+                    return Host(
+                        folder=folder_from_request(request.var("folder"), host_name),
+                        host_name=host_name,
+                        attributes=HostAttributes(
+                            tag_snmp_ds="snmp-v2",
+                            tag_agent="no-agent",
+                            snmp_community="",
+                        ),
+                        cluster_nodes=None,
+                    )
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,

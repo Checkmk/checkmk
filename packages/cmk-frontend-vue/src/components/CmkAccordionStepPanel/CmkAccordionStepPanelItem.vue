@@ -39,7 +39,7 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
       >
       <b class="cmk-step-panel-item-title">
         {{ title }}
-        <CmkAccordionItemStateIndicator :value="value"></CmkAccordionItemStateIndicator>
+        <CmkAccordionItemStateIndicator v-if="!disabled" :value="value" />
       </b>
       <CmkChip
         v-if="props.info"

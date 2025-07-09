@@ -26,6 +26,7 @@ defineProps<CmkTabProps>()
   flex-direction: row;
   background: var(--ux-theme-0);
   padding: 10px 16px 8px 16px;
+  border: 1px solid transparent;
 
   &:hover {
     cursor: pointer;
@@ -34,8 +35,8 @@ defineProps<CmkTabProps>()
 
   &:focus,
   &:active {
-    outline-width: 1px;
-    outline-color: var(--success);
+    outline: none;
+    border: 1px solid var(--success);
   }
 
   &[data-state='active'] {

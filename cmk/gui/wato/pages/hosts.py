@@ -77,7 +77,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.shared_typing.mode_host import (
-    I18nAgentConnection,
     I18nPingHost,
     ModeHost,
     ModeHostFormKeys,
@@ -315,20 +314,6 @@ class ABCHostMode(WatoMode, abc.ABC):
                             "network issues, or firewall restrictions."
                         ),
                         success_ip_pingable=_("Successfully pinged IP address"),
-                    ),
-                    i18n_agent_connection=I18nAgentConnection(
-                        dialog_message=_(
-                            "Already installed the agent? If so, please check your firewall settings"
-                        ),
-                        slide_in_title=_("Install Checkmk agent"),
-                        msg_start=_("Test Checkmk agent connection"),
-                        msg_success=_("Agent connection successful"),
-                        msg_loading=_("Agent connection test running"),
-                        msg_missing=_("Please enter a hostname to test Checkmk agent connection"),
-                        msg_error=_(
-                            "Connection failed, enter new hostname to check again "
-                            "or download and install the Checkmk agent."
-                        ),
                     ),
                     form_keys=ModeHostFormKeys(
                         form=form_name,

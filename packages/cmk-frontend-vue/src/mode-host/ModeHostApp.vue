@@ -8,8 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type ModeHostFormKeys,
   type ModeHostSite,
-  type I18NPingHost,
-  type I18NAgentConnection
+  type I18NPingHost
 } from 'cmk-shared-typing/typescript/mode_host'
 import PingHost from '@/mode-host/ping-host/PingHost.vue'
 import { onMounted, ref, type Ref } from 'vue'
@@ -17,7 +16,6 @@ import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnecti
 
 const props = defineProps<{
   i18n_ping_host: I18NPingHost
-  i18n_agent_connection: I18NAgentConnection
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
   url: string
@@ -135,7 +133,6 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-element="ipv6InputElement"
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
-    :i18n="i18n_agent_connection"
     :sites="sites"
     :url="url"
   ></AgentConnectionTest>

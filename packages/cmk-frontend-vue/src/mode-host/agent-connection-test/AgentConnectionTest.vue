@@ -11,7 +11,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
-import { type I18NAgentConnection, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
+import { type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
 
@@ -25,7 +25,6 @@ interface Props {
   ipv6InputElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
   ipAddressFamilySelectElement: HTMLSelectElement
-  i18n: I18NAgentConnection
   sites: Array<ModeHostSite>
   url: string
 }
@@ -87,18 +86,24 @@ const isError = ref(false)
 const errorDetails = ref('')
 const tooltipText = computed(() => {
   if (isLoading.value) {
-    return props.i18n.msg_loading
+    return t('agent_connection_test_loading_msg', 'Agent connection test running')
   }
   if (isSuccess.value) {
-    return props.i18n.msg_success
+    return t('agent_connection_test_success_msg', 'Agent connection successful')
   }
   if (isError.value) {
-    return props.i18n.msg_error
+    return t(
+      'agent_connection_test_error_msg',
+      'Connection failed, enter new hostname to check again or download and install the Checkmk agent.'
+    )
   }
   if (!hostname.value) {
-    return props.i18n.msg_missing
+    return t(
+      'agent_connection_test_missing_msg',
+      'Please enter a hostname to test Checkmk agent connection'
+    )
   }
-  return props.i18n.msg_start
+  return t('agent_connection_test_start_msg', 'Test Checkmk agent connection')
 })
 
 type AutomationResponse = {
@@ -306,7 +311,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     </div>
 
     <SlideIn
-      :header="{ title: i18n.slide_in_title, closeButton: true }"
+      :header="{
+        title: t('agent_connection_test_slidein_title', 'Install Checkmk agent'),
+        closeButton: true
+      }"
       :open="slideInOpen"
       @close="slideInOpen = false"
     >

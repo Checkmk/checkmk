@@ -702,7 +702,7 @@ async def test_usage_details(
     ],
 )
 @pytest.mark.asyncio
-async def test_write_resource_health_section(
+async def test_get_resource_health_sections(
     capsys: pytest.CaptureFixture[str],
     monitored_resources: Mapping[str, AzureResource],
     resource_health: list[ResourceHealth],

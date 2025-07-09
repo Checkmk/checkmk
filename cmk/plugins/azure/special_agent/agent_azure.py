@@ -11,7 +11,6 @@ https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/freque
 
 from __future__ import annotations
 
-import abc
 import argparse
 import asyncio
 import datetime
@@ -519,7 +518,7 @@ def _get_mgmt_authority_urls(
     raise ValueError("Unknown authority %r" % authority)
 
 
-class BaseApiClient(abc.ABC):
+class BaseApiClient:
     def __init__(
         self,
         authority_urls: _AuthorityURLs,
@@ -583,6 +582,7 @@ class BaseApiClient(abc.ABC):
 
         return response
 
+    # TODO: remove when no more used
     def _get(
         self,
         uri_end,
@@ -590,7 +590,7 @@ class BaseApiClient(abc.ABC):
         params=None,
         next_page_key="nextLink",
     ):
-        return self._request(
+        return self.request(
             method="GET",
             uri_end=uri_end,
             key=key,
@@ -611,43 +611,7 @@ class BaseApiClient(abc.ABC):
             processed_query.append(processed_row)
         return processed_query
 
-    def _get_paginated_data(
-        self,
-        next_link,
-        next_page_key,
-        method,
-        body,
-        key,
-    ):
-        data = []
-        while next_link:
-            new_json_data = self._request_json_from_url(method, next_link, body=body)
-            data += self._lookup(new_json_data, key)
-            next_link = new_json_data.get(next_page_key)
-
-        return data
-
     def request(
-        self,
-        method,
-        uri_end=None,
-        full_uri=None,
-        body=None,
-        key=None,
-        params=None,
-        next_page_key="nextLink",
-    ):
-        return self._request(
-            method=method,
-            uri_end=uri_end,
-            full_uri=full_uri,
-            body=body,
-            key=key,
-            params=params,
-            next_page_key=next_page_key,
-        )
-
-    def _request(
         self,
         method,
         uri_end=None,
@@ -666,21 +630,14 @@ class BaseApiClient(abc.ABC):
         if (error := json_data.get("error")) is not None:
             raise _make_exception(error)
 
-        if key is None:
+        if key is None:  # we do not paginate without a key
             return json_data
 
         data = self._lookup(json_data, key)
 
-        # The API will not send more than 1000 recources at once.
-        # See if we must fetch another page:
-        if next_link := json_data.get(next_page_key):
-            return data + self._get_paginated_data(
-                next_link=next_link,
-                next_page_key=next_page_key,
-                method=method,
-                body=body,
-                key=key,
-            )
+        while next_link := json_data.get(next_page_key):
+            json_data = self._request_json_from_url(method, next_link, body=body)
+            data += self._lookup(json_data, key)
 
         return data
 
@@ -718,10 +675,6 @@ class BaseAsyncApiClient(BaseApiClient):
         self._secret = secret
 
     async def __aenter__(self):
-        """
-        Called when entering the 'async with' context.
-        Initializes the aiohttp ClientSession.
-        """
         self.login(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(headers=self._headers)
@@ -729,14 +682,11 @@ class BaseAsyncApiClient(BaseApiClient):
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """
-        Called when exiting the 'async with' context.
-        Closes the aiohttp ClientSession.
-        """
         if self._session and not self._session.closed:
             await self._session.close()
         self._session = None
 
+    # TODO: only used in usage_details
     async def _query_async(self, uri_end, body, params=None):
         if self._session is None or self._session.closed:
             raise RuntimeError(
@@ -756,13 +706,11 @@ class BaseAsyncApiClient(BaseApiClient):
             columns = self._lookup(data, "columns")
             rows = self._lookup(data, "rows")
 
-            next_link = data.get("nextLink")
-            while next_link:
+            while next_link := data.get("nextLink"):
                 async with self._session.post(next_link, json=body) as new_response:
                     new_json_data = await new_response.json()
                     data = self._lookup(new_json_data, "properties")
                     rows += self._lookup(data, "rows")
-                    next_link = data.get("nextLink")
 
             common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
             processed_query = self._process_query(columns, rows, common_metadata)
@@ -830,30 +778,9 @@ class BaseAsyncApiClient(BaseApiClient):
 
         data = self._lookup(json_data, key)
 
-        if next_link := json_data.get(next_page_key):
-            return data + await self._get_paginated_data_async(
-                next_link=next_link,
-                next_page_key=next_page_key,
-                method=method,
-                body=body,
-                key=key,
-            )
-
-        return data
-
-    async def _get_paginated_data_async(
-        self,
-        next_link: str,
-        next_page_key: str,
-        method: str,
-        body: dict,
-        key: str,
-    ) -> list:
-        data = []
-        while next_link:
-            new_json_data = await self.request_async(method, full_uri=next_link, body=body)
-            data += self._lookup(new_json_data, key)
-            next_link = new_json_data.get(next_page_key)
+        while next_link := json_data.get(next_page_key):
+            json_data = await self.request_async(method, full_uri=next_link, body=body)
+            data += self._lookup(json_data, key)
 
         return data
 
@@ -2480,6 +2407,7 @@ def _get_subscriptions(args: Args) -> set[str]:
             deserialize_http_proxy_config(args.proxy),
         )
         api_client.login(args.tenant, args.client, args.secret)
+        # TODO: should we keep the sync client only for this call?
         response = api_client.request(
             method="GET",
             full_uri="https://management.azure.com/subscriptions",

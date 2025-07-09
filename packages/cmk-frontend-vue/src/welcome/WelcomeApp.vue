@@ -24,7 +24,11 @@ const totalSteps = props.stage_information.total
 
 <template>
   <div class="welcome-app">
-    <WelcomeBanner :completed-steps="completedSteps" :total-steps="totalSteps" />
+    <WelcomeBanner
+      class="welcome-app__banner"
+      :completed-steps="completedSteps"
+      :total-steps="totalSteps"
+    />
     <div class="welcome-app__panels">
       <div class="welcome-app__panel-left">
         <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
@@ -47,6 +51,9 @@ const totalSteps = props.stage_information.total
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 20px);
+}
+.welcome-app__banner {
+  margin-top: 32px;
 }
 .welcome-app__panels {
   display: flex;

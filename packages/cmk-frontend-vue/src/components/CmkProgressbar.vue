@@ -95,7 +95,7 @@ const cmkProgressbaId = useId()
 .cmk-progressbar {
   position: relative;
   overflow: hidden;
-  background: var(--ux-theme-1);
+  background: var(--ux-theme-6);
   border-radius: 99999px;
   width: 100%;
   height: 100%;

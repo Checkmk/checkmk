@@ -38,11 +38,7 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
   justify-content: flex-start;
   padding: 40px 32px;
   border-radius: var(--border-radius);
-  background: linear-gradient(
-    90deg,
-    var(--default-bg-color) 0%,
-    var(--color-corporate-green-60) 100%
-  );
+  background: var(--default-table-th-color);
   height: 100%;
 }
 

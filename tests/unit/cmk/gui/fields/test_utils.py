@@ -9,6 +9,13 @@ from marshmallow.exceptions import ValidationError
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes
 
 
+@pytest.fixture(autouse=True)
+def attr_openapi_schema_clear_cache():
+    attr_openapi_schema.cache_clear()
+    yield
+    attr_openapi_schema.cache_clear()
+
+
 @pytest.mark.usefixtures("load_config")
 def test_collect_attributes_host_create() -> None:
     attrs = collect_attributes("host", "create")
@@ -76,7 +83,7 @@ def test_schema_load_accepts_known_attributes_cluster_create() -> None:
 def test_schema_load_unknown_attributes_raise_exception() -> None:
     schema_obj = attr_openapi_schema("host", "create")()
     with pytest.raises(ValidationError, match="Unknown field"):
-        schema_obj.load({"foo": "bar"})
+        schema_obj.load({"unknown_key": "unknown_value"})
 
 
 @pytest.mark.usefixtures("load_config")

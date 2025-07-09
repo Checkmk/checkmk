@@ -1508,7 +1508,6 @@ async def get_inbound_nat_rules(
     mgmt_client: MgmtApiClient, load_balancer: Mapping
 ) -> list[dict[str, object]]:
     nat_rule_keys = ("frontendPort", "backendPort", "frontendIPConfiguration")
-    nic_config_keys = ("privateIPAddress", "privateIPAllocationMethod")
 
     inbound_nat_rules: list[dict[str, object]] = []
     for inbound_nat_rule in load_balancer["properties"]["inboundNatRules"]:
@@ -1519,23 +1518,35 @@ async def get_inbound_nat_rules(
 
         if "backendIPConfiguration" in inbound_nat_rule.get("properties"):
             ip_config_id = inbound_nat_rule["properties"]["backendIPConfiguration"]["id"]
-            nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
 
-            if "name" in nic_config and "properties" in nic_config:
-                nat_rule_data["backend_ip_config"] = {
-                    "name": nic_config["name"],
-                    **filter_keys(nic_config["properties"], nic_config_keys),
-                }
+            if (
+                backend_address_data := await get_backend_address_data(mgmt_client, ip_config_id)
+            ) is not None:
+                nat_rule_data["backend_ip_config"] = backend_address_data
 
         inbound_nat_rules.append(nat_rule_data)
 
     return inbound_nat_rules
 
 
+async def get_backend_address_data(
+    mgmt_client: MgmtApiClient, ip_config_id: str
+) -> Mapping[str, object] | None:
+    backend_address_keys = ("privateIPAddress", "privateIPAllocationMethod", "primary")
+    nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
+
+    if "name" in nic_config and "properties" in nic_config:
+        backend_address_data = {
+            "name": nic_config["name"],
+            **filter_keys(nic_config["properties"], backend_address_keys),
+        }
+        return backend_address_data
+    return None
+
+
 async def get_backend_address_pools(
     mgmt_client: MgmtApiClient, load_balancer: Mapping
 ) -> list[dict[str, object]]:
-    backend_address_keys = ("privateIPAddress", "privateIPAllocationMethod", "primary")
     backend_pools: list[dict[str, object]] = []
 
     for backend_pool in load_balancer["properties"]["backendAddressPools"]:
@@ -1545,14 +1556,14 @@ async def get_backend_address_pools(
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
-                nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
 
-                if "name" in nic_config and "properties" in nic_config:
-                    backend_address_data = {
-                        "name": nic_config["name"],
-                        **filter_keys(nic_config["properties"], backend_address_keys),
-                    }
-                    backend_addresses.append(backend_address_data)
+                if (
+                    backend_address_data := await get_backend_address_data(
+                        mgmt_client, ip_config_id
+                    )
+                ) is None:
+                    continue
+                backend_addresses.append(backend_address_data)
 
         backend_pools.append(
             {

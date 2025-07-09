@@ -32,9 +32,8 @@ defineProps<{
     width: 5px;
     height: 5px;
     position: relative;
-    transform: rotate(-45deg);
-    vertical-align: center;
-    top: 0;
+    transform: rotate(45deg);
+    top: -3px;
     transition:
       transform 0.3s ease-in-out,
       top 0.3s ease-in-out;
@@ -43,7 +42,7 @@ defineProps<{
 
 .open {
   &:after {
-    transform: rotate(-225deg);
+    transform: rotate(135deg);
     top: -3px;
     transition:
       transform 0.3s ease-in-out,

@@ -29,6 +29,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     ResourceHealth,
     Selector,
     TagsImportPatternOption,
+    TagsOption,
     write_group_info,
     write_remaining_reads,
 )
@@ -1043,3 +1044,68 @@ async def test_collect_resources(
         assert resource.tags == expected.tags, "Tags mismatch"
 
     assert set(result_groups) == set(expected_monitored_groups), "Monitored groups mismatch"
+
+
+RESOURCE_DATA = {
+    "id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/...normal_data_has_something_here...",
+    "name": "storage_account_1",
+    "type": "Microsoft.Storage/storageAccounts",
+    "sku": {"name": "Standard_LRS", "tier": "Standard"},
+    "kind": "StorageV2",
+    "location": "westeurope",
+    "tags": {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+}
+
+
+@pytest.mark.parametrize(
+    "resource_data, tags_pattern, expected_resource",
+    [
+        pytest.param(
+            RESOURCE_DATA,
+            TagsImportPatternOption.import_all,
+            AzureResourceInfo(
+                section="storageaccounts",
+                info_group="resource_group_1",
+                piggytargets=["resource_group_1"],
+                tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            ),
+            id="Resource with imported tags",
+        ),
+        pytest.param(
+            RESOURCE_DATA,
+            TagsImportPatternOption.ignore_all,
+            AzureResourceInfo(
+                section="storageaccounts",
+                info_group="resource_group_1",
+                piggytargets=["resource_group_1"],
+                tags={},
+            ),
+            id="Resource without imported tags",
+        ),
+        pytest.param(
+            RESOURCE_DATA,
+            "key_2",
+            AzureResourceInfo(
+                section="storageaccounts",
+                info_group="resource_group_1",
+                piggytargets=["resource_group_1"],
+                tags={"tag_key_2": "tag_value_2"},
+            ),
+            id="Resource with filtered tags",
+        ),
+    ],
+)
+def test_azure_resource(
+    resource_data: Mapping,
+    expected_resource: AzureResourceInfo,
+    tags_pattern: TagsOption,
+) -> None:
+    resource = AzureResource(
+        resource_data,
+        tags_pattern,
+    )
+
+    assert resource.section == expected_resource.section, "Section mismatch"
+    assert resource.info["group"] == expected_resource.info_group, "Info group mismatch"
+    assert resource.piggytargets == expected_resource.piggytargets, "Piggy targets mismatch"
+    assert resource.tags == expected_resource.tags, "Tags mismatch"

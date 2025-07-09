@@ -11,7 +11,7 @@ import CmkBodyText from '@/components/typography/CmkBodyText.vue'
 import usei18n from '@/lib/i18n.ts'
 import FlexRow from '@/welcome/components/steps/FlexRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-const { t } = usei18n('step-4')
+const { t } = usei18n('welcome-step-4')
 
 defineProps<{
   urls: WelcomeUrls

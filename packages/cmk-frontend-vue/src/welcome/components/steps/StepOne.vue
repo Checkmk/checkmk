@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n.ts'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 
-const { t } = usei18n('step-1')
+const { t } = usei18n('welcome-step-1')
 </script>
 
 <template>

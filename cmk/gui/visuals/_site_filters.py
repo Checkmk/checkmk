@@ -24,7 +24,7 @@ from .filter import Filter, FilterRegistry
 def register(
     filter_registry: FilterRegistry,
     autocompleter_registry: AutocompleterRegistry,
-    site_choices: Callable[[], list[tuple[str, str]]],
+    site_choices: Callable[[Config], list[tuple[str, str]]],
     site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
 ) -> None:
     filter_registry.register(
@@ -118,7 +118,7 @@ def default_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
 class MultipleSitesFilter(SiteFilter):
     def __init__(
         self,
-        site_choices: Callable[[], list[tuple[str, str]]],
+        site_choices: Callable[[Config], list[tuple[str, str]]],
         heading_info: Callable[[FilterHTTPVariables], str | None],
     ) -> None:
         super().__init__(
@@ -134,18 +134,21 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def display(self, value: FilterHTTPVariables) -> None:
-        sites_vs = DualListChoice(choices=self._site_choices(), rows=4)
+        sites_vs = DualListChoice(choices=self._site_choices(active_config), rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
 def sites_autocompleter(
-    config: Config, value: str, params: dict, sites_options: Callable[[], list[tuple[str, str]]]
+    config: Config,
+    value: str,
+    params: dict,
+    sites_options: Callable[[Config], list[tuple[str, str]]],
 ) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
 
-    choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
+    choices: Choices = [v for v in sites_options(config) if _matches_id_or_title(value, v)]
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):

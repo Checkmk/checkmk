@@ -32,7 +32,7 @@ from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
 
 from cmk.gui import site_config
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.flask_app import current_app
 from cmk.gui.groups import GroupType
@@ -586,10 +586,10 @@ def _map_site_state(state: str) -> str:
     return "error"
 
 
-def site_choices() -> list[tuple[str, str]]:
+def site_choices(config: Config) -> list[tuple[str, str]]:
     return sorted(
         [
-            (sitename, active_config.sites[sitename]["alias"])
+            (sitename, config.sites[sitename]["alias"])
             for sitename, state in states().items()
             if state["state"] == "online"
         ],

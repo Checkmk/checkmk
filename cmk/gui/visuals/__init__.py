@@ -10,6 +10,7 @@ from cmk.ccc import store
 from cmk.utils import paths
 
 from cmk.gui import hooks, utils
+from cmk.gui.config import Config
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.gui.valuespec import AutocompleterRegistry
@@ -96,7 +97,7 @@ def register(
     _visual_info_registry: VisualInfoRegistry,
     _filter_registry: FilterRegistry,
     autocompleter_registry: AutocompleterRegistry,
-    site_choices: Callable[[], list[tuple[str, str]]],
+    site_choices: Callable[[Config], list[tuple[str, str]]],
     site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
 ) -> None:
     page_registry.register(

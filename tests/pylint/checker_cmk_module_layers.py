@@ -127,6 +127,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.trace")),
             imported.in_component(Component("cmk.events")),
             imported.in_component(Component("cmk.otel_collector")),
+            imported.in_component(Component("cmk.inventory.config")),
         )
     )
 

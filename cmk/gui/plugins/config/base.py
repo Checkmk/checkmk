@@ -24,6 +24,7 @@ from cmk.gui.type_defs import (
     VirtualHostTreeSpec,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.inventory.config import InvHousekeepingParams, InvHousekeepingParamsFallback
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
@@ -128,6 +129,13 @@ class CREConfig:
     multisite_hostgroups: dict = field(default_factory=dict)
     multisite_servicegroups: dict = field(default_factory=dict)
     multisite_contactgroups: dict = field(default_factory=dict)
+
+    inventory_housekeeping: InvHousekeepingParams = field(
+        default_factory=lambda: InvHousekeepingParams(
+            of_hosts=[],
+            fallback=InvHousekeepingParamsFallback(number_of_history_entries=50),
+        )
+    )
 
     #    ____  _     _      _
     #   / ___|(_) __| | ___| |__   __ _ _ __

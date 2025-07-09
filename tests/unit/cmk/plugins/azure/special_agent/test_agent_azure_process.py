@@ -95,7 +95,7 @@ class MockMgmtApiClient(MgmtApiClient):
 
 
 @pytest.fixture
-def mock_graph_api_client() -> AsyncMock:
+def mock_api_client() -> AsyncMock:
     return AsyncMock(spec=BaseAsyncApiClient)
 
 
@@ -284,26 +284,69 @@ def test_get_vm_labels_section(
     assert labels_section._piggytargets == expected_result[1]
 
 
+RESOURCE_GROUPS_RESPONSE = [
+    {
+        "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
+        "name": "resource_group_1",
+        "type": "Microsoft.Resources/resourceGroups",
+        "location": "eastus",
+        "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
+        "properties": {"provisioningState": "Succeeded"},
+        "tags": {"group_tag_key_1": "group_tag_value_1"},
+    },
+    {
+        "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2",
+        "name": "resource_group_2",
+        "type": "Microsoft.Resources/resourceGroups",
+        "location": "westeurope",
+        "properties": {"provisioningState": "Succeeded"},
+        "tags": {"group_tag_key_2": "group_tag_value_2"},
+    },
+]
+
+
 @pytest.mark.parametrize(
-    "mgmt_client, monitored_groups, expected_result",
+    "monitored_groups, tag_key_pattern, expected_result",
     [
-        (
-            MockMgmtApiClient(
-                [{"name": "BurningMan", "tags": {"my-resource-tag": "my-resource-value"}}], {}, 2.0
-            ),
-            ["burningman"],
-            {"burningman": {"my-resource-tag": "my-resource-value"}},
-        )
+        pytest.param(
+            ["resource_group_non_existent"],
+            TagsImportPatternOption.import_all,
+            {},
+            id="No labels monitored",
+        ),
+        pytest.param(
+            ["resource_group_1"],
+            TagsImportPatternOption.import_all,
+            {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
+            id="Labels monitored, import all tags",
+        ),
+        pytest.param(
+            ["resource_group_1", "resource_group_2"],
+            TagsImportPatternOption.ignore_all,
+            {"resource_group_1": {}, "resource_group_2": {}},
+            id="Labels monitored, ignore tags",
+        ),
+        pytest.param(
+            ["resource_group_1", "resource_group_2"],
+            "group_tag",
+            {
+                "resource_group_1": {"group_tag_key_1": "group_tag_value_1"},
+                "resource_group_2": {"group_tag_key_2": "group_tag_value_2"},
+            },
+            id="Labels monitored with pattern for tags",
+        ),
     ],
 )
 @pytest.mark.asyncio
-@pytest.mark.skip("To be rewritten")
 async def test_get_group_labels(
-    mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
+    monitored_groups: Sequence[str],
+    tag_key_pattern: TagsOption,
+    expected_result: GroupLabels,
+    mock_api_client: AsyncMock,
 ) -> None:
-    group_tags = await get_group_labels(
-        mgmt_client, monitored_groups, TagsImportPatternOption.import_all
-    )
+    mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
+
+    group_tags = await get_group_labels(mock_api_client, monitored_groups, tag_key_pattern)
     assert group_tags == expected_result
 
 
@@ -786,20 +829,20 @@ def test_write_remaining_reads(
 async def test_process_app_registrations_ok(
     api_client_mock_return: Sequence[Mapping],
     expected_section: MockAzureSection,
-    mock_graph_api_client: AsyncMock,
+    mock_api_client: AsyncMock,
 ) -> None:
-    mock_graph_api_client.get_async.return_value = api_client_mock_return
+    mock_api_client.get_async.return_value = api_client_mock_return
 
-    result_section = await process_app_registrations(mock_graph_api_client)
+    result_section = await process_app_registrations(mock_api_client)
 
     assert result_section == expected_section, "Section not as expected"
 
 
 @pytest.mark.asyncio
 async def test_process_app_registrations_missing_fields(
-    mock_graph_api_client: AsyncMock,
+    mock_api_client: AsyncMock,
 ) -> None:
-    mock_graph_api_client.get_async.return_value = [  # content of "value" field of the response
+    mock_api_client.get_async.return_value = [  # content of "value" field of the response
         {
             "appId": "app_id",
             "id": "id",
@@ -809,16 +852,16 @@ async def test_process_app_registrations_missing_fields(
     ]
 
     with pytest.raises(KeyError):
-        await process_app_registrations(mock_graph_api_client)
+        await process_app_registrations(mock_api_client)
 
 
 @pytest.mark.asyncio
 async def test_process_users(
-    mock_graph_api_client: AsyncMock,
+    mock_api_client: AsyncMock,
 ) -> None:
-    mock_graph_api_client.request_async.return_value = 100
+    mock_api_client.request_async.return_value = 100
 
-    result_section = await process_users(mock_graph_api_client)
+    result_section = await process_users(mock_api_client)
 
     expected_section = MockAzureSection(
         "ad",
@@ -830,9 +873,9 @@ async def test_process_users(
 
 @pytest.mark.asyncio
 async def test_process_organization(
-    mock_graph_api_client: AsyncMock,
+    mock_api_client: AsyncMock,
 ) -> None:
-    mock_graph_api_client.get_async.return_value = [
+    mock_api_client.get_async.return_value = [
         {
             "id": "id",
             "deletedDateTime": None,
@@ -847,7 +890,7 @@ async def test_process_organization(
         }
     ]
 
-    result_section = await process_organization(mock_graph_api_client)
+    result_section = await process_organization(mock_api_client)
 
     expected_section = MockAzureSection(
         "ad",
@@ -1027,14 +1070,12 @@ async def test_collect_resources(
     args: Args,
     expected_resources: Sequence[AzureResourceInfo],
     expected_monitored_groups: set[str],
-    mock_graph_api_client: AsyncMock,
+    mock_api_client: AsyncMock,
 ) -> None:
-    mock_graph_api_client.get_async.return_value = api_client_mock_return
+    mock_api_client.get_async.return_value = api_client_mock_return
 
     selector = Selector(args)
-    result_resources, result_groups = await _collect_resources(
-        mock_graph_api_client, args, selector
-    )
+    result_resources, result_groups = await _collect_resources(mock_api_client, args, selector)
 
     assert len(result_resources) == len(expected_resources), "Resource count mismatch"
     for resource, expected in zip(result_resources, expected_resources):

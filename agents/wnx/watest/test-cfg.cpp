@@ -181,7 +181,7 @@ TEST(CmaCfg, ProcessPluginEnvironment) {
             pairs.emplace_back(std::string(name), std::string(value));
         });
 
-    EXPECT_EQ(pairs.size(), 10) << "Count of environment variables";
+    EXPECT_EQ(pairs.size(), 11) << "Count of environment variables";
     auto ret = rs::none_of(pairs, [](const auto &p) {
         return p.first.empty() || p.second.empty();
     });

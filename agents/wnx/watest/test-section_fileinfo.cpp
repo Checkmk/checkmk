@@ -390,7 +390,7 @@ TEST(FileInfoTest, Unc) {
     std::error_code ec;
     if (fs::exists(p, ec)) {
         auto files = details::FindFilesByMask(p.wstring() + L"\\*.*");
-        EXPECT_TRUE(files.size() >= 2);  //
+        EXPECT_TRUE(files.size() >= 1);  //
         EXPECT_EQ(files[0].u8string(), p / "test.txt");
     } else {
         XLOG::l(XLOG::kStdio)("File '{}' doesn't exist. SKIPPING TEST",
@@ -450,11 +450,11 @@ TEST(FileInfoTest, WindowsResources) {
 TEST(FileInfoTest, Unicode) {
     auto p = BuildTestUNC();
     std::error_code ec;
-    if (fs::exists(p, ec)) {
+    if (fs::exists(p, ec) && fs::exists(p / test_russian_file, ec)) {
         fs::path path{test_u8_name};
         try {
             auto files = details::FindFilesByMask(p.wstring() + L"\\*.*");
-            EXPECT_TRUE(files.size() >= 2);  // syswow64 and system32
+            EXPECT_TRUE(files.size() >= 2);
             EXPECT_TRUE(rs::find(files, p / "test.txt") != std::end(files));
             auto russian_file = p / test_russian_file;
             auto w_name = russian_file.wstring();

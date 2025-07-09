@@ -5,7 +5,7 @@
  */
 import type { Ref } from 'vue'
 import usePersistentRef from '../usePersistentRef'
-import type { UnifiedSearchResultElement } from './providers/unified-search-result'
+import type { UnifiedSearchResultElement } from './providers/unified'
 
 export class HistoryEntry {
   public hitCount = 1
@@ -13,9 +13,7 @@ export class HistoryEntry {
 
   constructor(
     public query: string,
-    public provider: string,
-    public element: UnifiedSearchResultElement,
-    public topic: string
+    public element: UnifiedSearchResultElement
   ) {}
 }
 
@@ -38,13 +36,17 @@ export class SearchHistoryService {
     limit?: number
   ): HistoryEntry[] {
     return this.entries.value
-      .filter((e) => e.provider === provider || provider === null)
+      .filter((e) => e.element.provider === provider || provider === null)
       .sort((a, b) => b[by] - a[by])
       .slice(0, limit ? limit - 1 : limit)
   }
 
   public getQueries(limit?: number): string[] {
-    return this.queries.value.slice(0, limit ? limit - 1 : limit)
+    return this.queries.value
+      .filter((value, index, array) => {
+        return array.indexOf(value) === index
+      })
+      .slice(0, limit ? limit - 1 : limit)
   }
 
   public add(historyEntry: HistoryEntry): void {

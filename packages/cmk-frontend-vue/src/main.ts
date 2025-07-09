@@ -15,6 +15,7 @@ import WelcomeApp from './welcome/WelcomeApp.vue'
 import ChangesApp from './main-menu/ChangesApp.vue'
 
 import '@/assets/variables.css'
+import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
@@ -23,5 +24,6 @@ defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)
 defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
+defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)

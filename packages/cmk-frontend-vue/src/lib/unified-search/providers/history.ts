@@ -30,7 +30,7 @@ export class SearchHistorySearchProvider extends SearchProvider {
           .filter((hist) => {
             return (
               hist.query.indexOf(input) >= 0 ||
-              hist.topic.indexOf(input) >= 0 ||
+              hist.element.topic.indexOf(input) >= 0 ||
               hist.element.title.indexOf(input) >= 0 ||
               hist.element.url.indexOf(input) >= 0
             )

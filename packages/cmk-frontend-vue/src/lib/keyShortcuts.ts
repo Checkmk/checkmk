@@ -7,6 +7,7 @@
 export type KeyShortcutHandlerCallback = (shortcut: KeyShortcut) => void
 
 export interface KeyShortcutEnsured extends KeyShortcut {
+  id: string
   key: string[]
   ctrl: boolean
   shift: boolean
@@ -44,11 +45,25 @@ export class KeyShortcutService {
     this.window.addEventListener('keyup', this.handleKeyUp.bind(this))
   }
 
-  public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): void {
+  public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): string {
     shortcut = this.ensureShortcut(shortcut)
     ;(shortcut as KeyShortcutHandler).callback = callback
 
     this.handlers.push(shortcut as KeyShortcutHandler)
+
+    return (shortcut as KeyShortcutHandler).id
+  }
+
+  public remove(ids: string[]): void {
+    this.handlers = this.handlers
+      .map((handler) => {
+        if (ids.indexOf(handler.id) >= 0) {
+          return null
+        } else {
+          return handler
+        }
+      })
+      .filter((handler) => handler !== null)
   }
 
   public setPropagateTo(propagateTo: HTMLCollectionOf<HTMLIFrameElement>): void {
@@ -71,6 +86,8 @@ export class KeyShortcutService {
     if (!shortcut.propagate) {
       shortcut.propagate = false
     }
+
+    ;(shortcut as KeyShortcutEnsured).id = crypto.randomUUID()
 
     return shortcut as KeyShortcutEnsured
   }

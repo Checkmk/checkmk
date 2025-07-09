@@ -62,7 +62,10 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-pending-task: url('~cmk-frontend/src/themes/facelift/images/icon_pending_task.svg');
-
+  --icon-sparkle: url('~cmk-frontend/src/themes/facelift/images/icon_sparkle.svg');
+  --icon-history: url('~cmk-frontend/src/themes/facelift/images/icon_topic_history.png');
+  --icon-main-setup-active: url('~cmk-frontend/src/themes/facelift/images/icon_main_setup_active.svg');
+  --icon-main-monitoring-active: url('~cmk-frontend/src/themes/facelift/images/icon_main_monitoring_active.svg');
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
   --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');

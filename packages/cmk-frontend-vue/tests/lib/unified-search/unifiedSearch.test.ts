@@ -5,9 +5,7 @@
  */
 
 import { Api } from '@/lib/api-client'
-import { CustomizeSearchProvider } from '@/lib/unified-search/providers/customize'
-import { MonitoringSearchProvider } from '@/lib/unified-search/providers/monitoring'
-import { SetupSearchProvider } from '@/lib/unified-search/providers/setup'
+import { UnifiedSearchProvider } from '@/lib/unified-search/providers/unified'
 import { UnifiedSearch } from '@/lib/unified-search/unified-search'
 
 const api = new Api()
@@ -26,17 +24,13 @@ beforeEach(() => {
 })
 
 test('Unified search instance with setup & monitoring search provider, returns proper unified search result', async () => {
-  const monSP = new MonitoringSearchProvider()
-  const setupSP = new SetupSearchProvider()
-  const custSP = new CustomizeSearchProvider()
-  const search = new UnifiedSearch('test-search', api, [monSP, setupSP])
+  const sp = new UnifiedSearchProvider(['monitoring', 'setup'])
+  const search = new UnifiedSearch('test-search', api, [sp])
 
   const result = search.search('test')
 
   expect(result).toBeDefined()
-  expect(result?.get(monSP.id)).toBeDefined()
-  expect(result?.get(setupSP.id)).toBeDefined()
-  expect(result?.get(custSP.id)).toBeNull()
+  expect(result?.get(sp.id)).toBeDefined()
 })
 
 test('Unified search instance with setup & monitoring search provider, returns proper unified search result', async () => {
@@ -48,18 +42,14 @@ test('Unified search instance with setup & monitoring search provider, returns p
     })
   )
 
-  const monSP = new MonitoringSearchProvider()
-  const setupSP = new SetupSearchProvider()
-  const search = new UnifiedSearch('test-search', api, [monSP, setupSP])
+  const sp = new UnifiedSearchProvider(['monitoring', 'setup'])
+  const search = new UnifiedSearch('test-search', api, [sp])
 
   const result = search.search('test')
 
   expect(result).toBeDefined()
 
-  const monRes = (await result?.get(monSP.id)?.result) as string
-  const setupRes = (await result?.get(setupSP.id)?.result) as string
+  const uRes = (await result?.get(sp.id)?.result) as string
 
-  expect(monRes).toBe('any type of response string')
-  expect(monRes).not.toBe('any other type of response string')
-  expect(setupRes).toBe('any type of response string')
+  expect(uRes).toBe('any type of response string')
 })

@@ -9,7 +9,7 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, assert_never, Literal, NotRequired, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -53,13 +53,18 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
 )
 
-MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
+type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
+type MessageDestination = (
+    tuple[Literal["all_users"], None]
+    | tuple[Literal["online"], None]
+    | tuple[Literal["list"], Sequence[UserId]]
+)
 
 
 class MessageV0(TypedDict):
     text: str
-    dest: tuple[str, list[UserId]]
-    methods: list[MessageMethod]
+    dest: MessageDestination
+    methods: Sequence[MessageMethod]
     valid_till: int | None
     id: str
     time: int
@@ -69,8 +74,8 @@ class MessageV0(TypedDict):
 
 class MessageFromVS(TypedDict):
     text: str
-    dest: tuple[str, list[UserId]]
-    methods: list[MessageMethod]
+    dest: MessageDestination
+    methods: Sequence[MessageMethod]
     valid_till: int | None
 
 
@@ -81,8 +86,8 @@ class MessageText(TypedDict):
 
 class Message(TypedDict):
     text: MessageText
-    dest: tuple[str, list[UserId]]
-    methods: list[MessageMethod]
+    dest: MessageDestination
+    methods: Sequence[MessageMethod]
     valid_till: int | None
     # Later added by _process_message
     id: str
@@ -444,37 +449,28 @@ def _process_message(
 
 def send_message(
     msg: Message,
-    all_user_ids: Sequence[UserId],
-) -> tuple[list[UserId], dict[str, int], dict[MessageMethod, list[tuple]]]:
-    if isinstance(msg["dest"], str):
-        dest_what = msg["dest"]
-    else:
-        dest_what = msg["dest"][0]
-
-    if dest_what == "all_users":
-        recipients = list(all_user_ids)
-    elif dest_what == "online":
-        recipients = userdb.get_online_user_ids(datetime.now())
-    elif dest_what == "list":
-        recipients = list(map(UserId, msg["dest"][1]))
-    else:
-        recipients = []
-
-    num_success: dict[str, int] = {}
-    for method in msg["methods"]:
-        num_success[method] = 0
-
-    # Now loop all messaging methods to send the messages
-    errors: dict[MessageMethod, list[tuple]] = {}
+    all_user_ids: Sequence[UserId],  # NOTE: Slighty weird typing, only used for the "all_users" tag
+) -> tuple[
+    list[UserId], dict[MessageMethod, int], dict[MessageMethod, list[tuple[UserId, Exception]]]
+]:
+    match msg["dest"][0]:
+        case "all_users":
+            recipients = list(all_user_ids)
+        case "online":
+            recipients = userdb.get_online_user_ids(datetime.now())
+        case "list":
+            recipients = [UserId(u) for u in msg["dest"][1]]
+        case other:
+            assert_never(other)
+    num_success = {method: 0 for method in msg["methods"]}
+    errors = dict[MessageMethod, list[tuple[UserId, Exception]]]()
     for user_id in recipients:
         for method in msg["methods"]:
             try:
-                handler = _messaging_methods()[method]["handler"]
-                handler(user_id, msg)
-                num_success[method] = num_success[method] + 1
+                _messaging_methods()[method]["handler"](user_id, msg)
+                num_success[method] += 1
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
-
     return recipients, num_success, errors
 
 

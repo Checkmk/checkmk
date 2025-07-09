@@ -16,7 +16,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
         pytest.param(
             MessageV0(
                 text="Text",
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -24,7 +24,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             ),
             Message(
                 text=MessageText(content_type="text", content="Text"),
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -37,7 +37,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
         pytest.param(
             MessageV0(
                 text="Text",
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -47,7 +47,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             ),
             Message(
                 text=MessageText(content_type="text", content="Text"),
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -60,7 +60,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
         pytest.param(
             MessageV0(
                 text="Text",
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -70,7 +70,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             ),
             Message(
                 text=MessageText(content_type="text", content="Text"),
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -83,7 +83,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
         pytest.param(
             Message(
                 text=MessageText(content_type="html", content="<h>Text</h>"),
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",
@@ -93,7 +93,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             ),
             Message(
                 text=MessageText(content_type="html", content="<h>Text</h>"),
-                dest=("foo", [UserId("bar")]),
+                dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
                 id="ID",

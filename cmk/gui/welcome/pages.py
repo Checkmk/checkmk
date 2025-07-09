@@ -90,13 +90,15 @@ def _welcome_page(config: Config) -> None:
                         ],
                         filename="wato.py",
                     ),
-                    opentelemetry=makeuri(
-                        request,
-                        addvars=[
-                            ("mode", "otel_collectors"),
-                        ],
-                        filename="wato.py",
-                    ),
+                    opentelemetry="",
+                    # TODO: add again with CMK-24147, currently is breaks the GUI crawler
+                    # makeuri(
+                    #     request,
+                    #     addvars=[
+                    #         ("mode", "otel_collectors"),
+                    #     ],
+                    #     filename="wato.py",
+                    # ),
                     all_hosts=makeuri(
                         request,
                         addvars=[("view_name", "allhosts")],

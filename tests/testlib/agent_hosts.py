@@ -148,7 +148,6 @@ def piggyback_host_from_dummy_generator(
     ):
         with dummy_agent_dump_generator(
             site,
-            host_name,
             service_count=0,
             payload_lines=0,
             pb_host_count=pb_host_count,

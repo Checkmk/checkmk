@@ -32,6 +32,9 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
             * ups
             * wlc
 
+        cmk/device_model:
+            This label is set to the model extracted from the device sent via SNMP.
+
     """
     for device_type in SNMPDeviceType:
         if device_type.name in section.description.upper():
@@ -42,6 +45,9 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
             else:
                 yield HostLabel("cmk/device_type", device_type.name.lower())
             return
+        
+    if model := getattr(section, "model"):
+        yield HostLabel("cmk/device_model", model)
 
 
 # TODO: replace this by HostLabel instances.

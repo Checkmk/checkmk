@@ -5,8 +5,10 @@
 
 import json
 import logging
+import os
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
+from pathlib import Path
 
 import pytest
 from faker import Faker
@@ -122,24 +124,24 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
 
 @pytest.fixture(name="restore_site_state")
 def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
-    """In context of a site, backup '~/var' and restore it's state after a test-run.
+    """Backup site configuration and rules and restore them."""
+    # set up a host group
+    host_group_name = "test-rules"
+    test_site.openapi.host_groups.create(host_group_name, host_group_name)
+    if os.getenv("CLEANUP", "1") == "1":
+        with test_site.backup_and_restore_files(
+            files=[
+                Path("etc/check_mk/multisite.d/wato/global.mk"),
+                Path("etc/check_mk/conf.d/wato/rules.mk"),
+            ],
+        ):
+            yield
+        test_site.openapi.host_groups.delete(host_group_name)
+        test_site.openapi.changes.activate_and_wait_for_completion()
+    else:
+        yield
 
-    TODO: The fixture needs to be made more specific, in terms of what is being restored!
-    """
-    var = (test_site.root / "var").resolve().as_posix()
-    backup_var = f"{var}.bak"
-    logger.debug("Backup site directory '%s'.", var)
-    cmd = ["cp", "-a", "-R", var, backup_var]
-    test_site.run(cmd)
-    yield
-    logger.debug("Restore site directory '%s'", var)
-    test_site.run(["cd", test_site.root.resolve().as_posix()])
-    test_site.run(["rm", "-rf", var])
-    test_site.run(["mv", backup_var, var])
-    test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
-
-@pytest.mark.skip(reason="CMK-24614; investigate failure / flake.")
 def test_create_rules(
     test_site: Site,
     dashboard_page: Dashboard,
@@ -151,10 +153,6 @@ def test_create_rules(
         if pytestconfig.getoption("--update-rules")
         else nullcontext()
     ):
-        # set up a host group
-        host_group_name = "test-rules"
-        test_site.openapi.host_groups.create(host_group_name, host_group_name)
-
         # set up "Custom icons and actions"
         dashboard_page.main_menu.setup_searchbar.fill("Custom icons and actions")
         dashboard_page.click_and_wait(
@@ -197,7 +195,7 @@ def test_create_rules(
                 logger.info('Rules created for page "%s": %s', page, rule_names)
         finally:
             logger.info("Activate all changes...")
-            test_site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+            test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
         logger.info("Verify all rules...")
         total_rules = {

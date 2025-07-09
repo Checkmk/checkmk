@@ -1781,6 +1781,25 @@ class Site:
 
         self.write_site_specific_settings(relative_path, current_settings)
 
+    @contextmanager
+    def backup_and_restore_files(self, files: list[Path]) -> Iterator[None]:
+        """Backup file(s) when entering the context and restore them when exiting.
+
+        Args:
+            files: List of files to be backed up.
+                Files are assumed to be relative to the site's root directory.
+        """
+        list_of_files = ", ".join(map(str, files))
+        logger.info("Backup files: '%s'", list_of_files)
+        backup = {file: self.read_file(file) for file in files}
+        try:
+            yield
+        finally:
+            logger.info("Restore files: '%s'", list_of_files)
+            for file, content in backup.items():
+                self.write_file(rel_path=file, content=content)
+            self.openapi.changes.activate_and_wait_for_completion()
+
 
 @dataclass(frozen=True)
 class GlobalSettingsUpdate:

@@ -63,6 +63,7 @@ from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.type_defs import MainMenuTopicEntries
 from cmk.gui.userdb import register_config_file as user_connections_config
@@ -104,7 +105,6 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistr
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
-from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 

@@ -29,6 +29,12 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
@@ -48,12 +54,6 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItemGeneratorRegistry,
-    MatchItems,
-)
 from cmk.gui.watolib.utils import mk_repr
 
 

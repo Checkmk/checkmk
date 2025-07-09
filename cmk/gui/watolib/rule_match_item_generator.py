@@ -6,12 +6,12 @@
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
 from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 
 from .rulespecs import get_rulespec_allow_list, Rulespec, RulespecGroupRegistry, RulespecRegistry
-from .search import ABCMatchItemGenerator, MatchItem, MatchItems
 
 
 class MatchItemGeneratorRules(ABCMatchItemGenerator):

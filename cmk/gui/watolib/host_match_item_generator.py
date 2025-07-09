@@ -8,14 +8,10 @@ from collections.abc import Callable, Iterable, Mapping
 from cmk.ccc.hostaddress import HostName
 
 from cmk.gui.i18n import _
+from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
 
 from .host_attributes import HostAttributes
 from .hosts_and_folders import CollectedHostAttributes
-from .search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-)
 
 
 class MatchItemGeneratorHosts(ABCMatchItemGenerator):

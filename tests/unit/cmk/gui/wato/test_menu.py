@@ -10,9 +10,9 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 
+from cmk.gui.search import MatchItem
 from cmk.gui.type_defs import MainMenuItem, MainMenuTopic
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
-from cmk.gui.watolib.search import MatchItem
 
 
 def expected_items() -> dict[str, list[str]]:

@@ -77,6 +77,12 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
+from cmk.gui.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
@@ -164,12 +170,6 @@ from cmk.gui.watolib.sample_config import (
     get_default_notification_rule,
     new_notification_parameter_id,
     new_notification_rule_id,
-)
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItemGeneratorRegistry,
-    MatchItems,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts

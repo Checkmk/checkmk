@@ -80,6 +80,12 @@ from cmk.gui.quick_setup.html import (
     quick_setup_render_link,
     quick_setup_source_cell,
 )
+from cmk.gui.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, RenderMode
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -167,12 +173,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     RulespecGroup,
     RulespecSubGroup,
-)
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItemGeneratorRegistry,
-    MatchItems,
 )
 from cmk.gui.watolib.utils import mk_eval, mk_repr
 

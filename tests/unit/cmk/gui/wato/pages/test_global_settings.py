@@ -8,11 +8,11 @@ from collections.abc import Iterable
 from pytest import MonkeyPatch
 
 from cmk.gui.i18n import _l
+from cmk.gui.search import MatchItem
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.search import MatchItem
 
 
 def test_match_item_generator_settings(

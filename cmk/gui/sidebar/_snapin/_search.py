@@ -29,16 +29,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import (
-    Icon,
-    Provider,
-    SearchQuery,
-    SearchResult,
-    SearchResultsByTopic,
-)
-from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.watolib.main_menu import main_module_registry
-from cmk.gui.watolib.search import (
+from cmk.gui.search import (
     ABCQuicksearchConductor,
     IncorrectLabelInputError,
     IndexNotFoundException,
@@ -50,6 +41,15 @@ from cmk.gui.watolib.search import (
     TooManyRowsError,
     UnifiedSearch,
 )
+from cmk.gui.type_defs import (
+    Icon,
+    Provider,
+    SearchQuery,
+    SearchResult,
+    SearchResultsByTopic,
+)
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.watolib.main_menu import main_module_registry
 
 from ._base import PageHandlers, SidebarSnapin
 

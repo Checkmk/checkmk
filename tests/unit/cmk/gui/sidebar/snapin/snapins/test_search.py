@@ -7,12 +7,12 @@
 import pytest
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.labels import Label
-from cmk.gui.watolib.search.engines.monitoring import (
+from cmk.gui.search.engines.monitoring import (
     ABCLabelMatchPlugin,
     HostLabelMatchPlugin,
     ServiceLabelMatchPlugin,
 )
+from cmk.gui.utils.labels import Label
 
 
 class TestLabelMatchPlugin:

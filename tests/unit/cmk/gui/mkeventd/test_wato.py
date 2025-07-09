@@ -15,7 +15,7 @@ from cmk.ccc.site import SiteId
 import cmk.ec.export as ec
 
 from cmk.gui.mkeventd import wato as mkeventd_wato
-from cmk.gui.watolib.search import MatchItem
+from cmk.gui.search import MatchItem
 
 
 def test_match_item_generator_ec_rule_packs_and_rules() -> None:

@@ -9,6 +9,7 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.search import match_item_generator_registry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.command import CommandRegistry
@@ -27,7 +28,6 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
-from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import _filters, views, wato

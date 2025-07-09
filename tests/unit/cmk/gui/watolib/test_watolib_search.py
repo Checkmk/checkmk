@@ -22,16 +22,7 @@ from cmk.automations.results import GetConfigurationResult
 from cmk.gui.config import Config
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.session import _UserContext
-from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
-from cmk.gui.wato._omd_configuration import (
-    ConfigDomainApache,
-    ConfigDomainDiskspace,
-    ConfigDomainRRDCached,
-)
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.search import (
+from cmk.gui.search import (
     ABCMatchItemGenerator,
     IndexBuilder,
     IndexNotFoundException,
@@ -42,10 +33,19 @@ from cmk.gui.watolib.search import (
     may_see_url,
     PermissionsHandler,
 )
-from cmk.gui.watolib.search import (
+from cmk.gui.search import (
     match_item_generator_registry as real_match_item_generator_registry,
 )
-from cmk.gui.watolib.search.engines import setup as search
+from cmk.gui.search.engines import setup as search
+from cmk.gui.session import _UserContext
+from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
+from cmk.gui.wato._omd_configuration import (
+    ConfigDomainApache,
+    ConfigDomainDiskspace,
+    ConfigDomainRRDCached,
+)
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 
 @pytest.fixture(scope="function")

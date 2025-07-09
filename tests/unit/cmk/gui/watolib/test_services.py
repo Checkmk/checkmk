@@ -595,7 +595,7 @@ def test_perform_discovery_single_update(
         ),
     )
     mock_discovery_preview.assert_called_with(
-        sample_host_name, prevent_fetching=False, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [
         entry.check_source
@@ -809,7 +809,7 @@ def test_perform_discovery_action_update_services(
         ),
     )
     mock_discovery_preview.assert_called_with(
-        sample_host_name, prevent_fetching=False, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [entry.check_source for entry in discovery_result.check_table] == ["unchanged"]
 
@@ -908,7 +908,7 @@ def test_perform_discovery_action_update_host_labels(
     )
     mock_set_autochecks.assert_not_called()
     mock_discovery_preview.assert_called_with(
-        sample_host_name, prevent_fetching=False, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert "cmk/check_mk_server" not in discovery_result.host_labels
 

@@ -64,6 +64,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.search import MatchItemGeneratorRegistry
+from cmk.gui.search import registration as search_registration
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.type_defs import MainMenuTopicEntries
 from cmk.gui.userdb import register_config_file as user_connections_config
@@ -316,3 +317,4 @@ def register(
     deprecations.register(cron_job_registry)
     rulespec.register(rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry)
+    search_registration.register(page_registry)

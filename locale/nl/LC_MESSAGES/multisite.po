@@ -86403,6 +86403,10 @@ msgstr "U hebt enkele of alle agentpakketten ondertekend"
 msgid "You have to provide a role ID."
 msgstr "Je moet een rol ID opgeven."
 
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Je moet minstens één element selecteren."
+
 msgid "You have to select at least one element."
 msgstr "Je moet minstens één element selecteren."
 

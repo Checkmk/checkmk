@@ -86577,6 +86577,10 @@ msgstr "Ați semnat o parte sau toate pachetele de agenți"
 msgid "You have to provide a role ID."
 msgstr "Trebuie să furnizați un ID de rol."
 
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Trebuie să selectați cel puțin un element."
+
 msgid "You have to select at least one element."
 msgstr "Trebuie să selectați cel puțin un element."
 

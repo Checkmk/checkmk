@@ -85670,6 +85670,10 @@ msgstr "Avete firmato alcuni o tutti i pacchetti di agenti"
 msgid "You have to provide a role ID."
 msgstr "È necessario fornire un ID di ruolo."
 
+#, fuzzy
+msgid "You have to select a valid host name computation method."
+msgstr "Devi selezionare almeno un elemento."
+
 msgid "You have to select at least one element."
 msgstr "Devi selezionare almeno un elemento."
 

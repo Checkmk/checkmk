@@ -470,21 +470,30 @@ class SpecialAgentSource(Source[AgentRawData]):
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
+        if self._agent_name != "otel":
+            return AgentFileCache(
+                path_template=os.path.join(
+                    self._file_cache_path, self.source_info().ident, str(self.host_name)
+                ),
+                max_age=self._max_age,
+                simulation=simulation,
+                use_only_cache=file_cache_options.use_only_cache,
+                file_cache_mode=file_cache_options.file_cache_mode(),
+            )
+
+        # Overriding the cache mode like this is extremely hackish. The alternative would have
+        # been to modify the agent API to pass down this via configuration.
+        # We want to disable caching to prevent data duplication in tmpfs. Because this is a
+        # temp fix until a metrics backend becomes available, we didn't go for a cleaner
+        # approach.
         return AgentFileCache(
             path_template=os.path.join(
                 self._file_cache_path, self.source_info().ident, str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
-            use_only_cache=file_cache_options.use_only_cache,
-            # Overriding the cache mode like this is extremely hackish. The alternative would have
-            # been to modify the agent API to pass down this via configuration.
-            # We want to disable caching to prevent data duplication in tmpfs. Because this is a
-            # temp fix until a metrics backend becomes available, we didn't go for a cleaner
-            # approach.
-            file_cache_mode=FileCacheMode.DISABLED
-            if self._agent_name == "otel"
-            else file_cache_options.file_cache_mode(),
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
 

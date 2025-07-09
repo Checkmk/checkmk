@@ -470,6 +470,9 @@ class AutomationDiscoveryPreview(Automation):
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
+            # and tabula rasa)
+            max_cachefile_age=MaxAge.zero(),
         )
         ip_address_of = config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure

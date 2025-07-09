@@ -48,6 +48,9 @@ def test_get_available_metrics_from_exception(
     client = MgmtApiClient(
         _AuthorityURLs("login-url", "resource-url", "base-url"),
         EnvironmentProxyConfig(),
+        "tenant",
+        "client_id",
+        "client_secret",
         "subscription",
     )
 
@@ -80,6 +83,9 @@ def test_get_available_metrics_from_exception_error(
     client = MgmtApiClient(
         _AuthorityURLs("login-url", "resource-url", "base-url"),
         ExplicitProxyConfig("http://my-proxy:1234"),
+        "tenant",
+        "client_id",
+        "secret",
         "subscription",
     )
 

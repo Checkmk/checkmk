@@ -709,36 +709,75 @@ class BaseApiClient(abc.ABC):
 
 
 class BaseAsyncApiClient(BaseApiClient):
+    # TODO: type
+    def __init__(self, authority_urls, http_proxy_config, tenant, client, secret):
+        super().__init__(authority_urls, http_proxy_config)
+        self._session = None
+        self._tenant = tenant
+        self._client = client
+        self._secret = secret
+
+    async def __aenter__(self):
+        """
+        Called when entering the 'async with' context.
+        Initializes the aiohttp ClientSession.
+        """
+        self.login(tenant=self._tenant, client=self._client, secret=self._secret)
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(headers=self._headers)
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Called when exiting the 'async with' context.
+        Closes the aiohttp ClientSession.
+        """
+        if self._session and not self._session.closed:
+            await self._session.close()
+        self._session = None
+
     async def _query_async(self, uri_end, body, params=None):
-        async with aiohttp.ClientSession(headers=self._headers) as session:
-            async with session.request(
-                "POST",
-                self._base_url + uri_end,
-                json=body,
-                params=params,
-                timeout=aiohttp.ClientTimeout(total=30),
-                proxy=self._http_proxy_config.to_requests_proxies(),
-            ) as response:
-                json_data = await response.json()
-                data = self._lookup(json_data, "properties")
-                columns = self._lookup(data, "columns")
-                rows = self._lookup(data, "rows")
+        if self._session is None or self._session.closed:
+            raise RuntimeError(
+                "Session is not active. Use 'async with BaseAsyncApiClient(...) as client: ...'"
+            )
 
-                next_link = data.get("nextLink")
-                while next_link:
-                    async with session.post(next_link, json=body) as new_response:
-                        new_json_data = await new_response.json()
-                        data = self._lookup(new_json_data, "properties")
-                        rows += self._lookup(data, "rows")
-                        next_link = data.get("nextLink")
+        async with self._session.request(
+            "POST",
+            self._base_url + uri_end,
+            json=body,
+            params=params,
+            timeout=aiohttp.ClientTimeout(total=30),
+            proxy=self._http_proxy_config.to_requests_proxies(),
+        ) as response:
+            json_data = await response.json()
+            data = self._lookup(json_data, "properties")
+            columns = self._lookup(data, "columns")
+            rows = self._lookup(data, "rows")
 
-                common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
-                processed_query = self._process_query(columns, rows, common_metadata)
-                return processed_query
+            next_link = data.get("nextLink")
+            while next_link:
+                async with self._session.post(next_link, json=body) as new_response:
+                    new_json_data = await new_response.json()
+                    data = self._lookup(new_json_data, "properties")
+                    rows += self._lookup(data, "rows")
+                    next_link = data.get("nextLink")
 
-    async def _handle_ratelimit_async(self, session, method, url, **kwargs):
+            common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
+            processed_query = self._process_query(columns, rows, common_metadata)
+            return processed_query
+
+    async def _handle_ratelimit_async(self, method, url, custom_headers=None, **kwargs):
         async def get_response():
-            async with session.request(method, url, **kwargs) as response:
+            if self._session is None or self._session.closed:
+                raise RuntimeError(
+                    "Session is not active. Use 'async with BaseAsyncApiClient(...) as client: ...'"
+                )
+
+            async with self._session.request(
+                method, url, headers=custom_headers, **kwargs
+            ) as response:
                 await response.json()
                 return response
 
@@ -765,44 +804,42 @@ class BaseAsyncApiClient(BaseApiClient):
         key=None,
         params=None,
         next_page_key="nextLink",
-        headers_expansion={},
+        custom_headers={},
     ):
         uri = full_uri or self._base_url + uri_end
         if not uri:
             raise ValueError("No URI provided")
 
-        # TODO: share session between requests!
-        async with aiohttp.ClientSession(headers={**self._headers, **headers_expansion}) as session:
-            response = await self._handle_ratelimit_async(
-                session,
-                method,
-                uri,
-                json=body,
-                params=params,
-                timeout=30,
-                proxy=self._http_proxy_config.to_requests_proxies(),
+        response = await self._handle_ratelimit_async(
+            method,
+            uri,
+            custom_headers=custom_headers,
+            json=body,
+            params=params,
+            timeout=30,
+            proxy=self._http_proxy_config.to_requests_proxies(),
+        )
+        json_data = await response.json()
+        LOGGER.debug("response: %r", json_data)
+
+        if (error := json_data.get("error")) is not None:
+            raise _make_exception(error)
+
+        if key is None:
+            return json_data
+
+        data = self._lookup(json_data, key)
+
+        if next_link := json_data.get(next_page_key):
+            return data + await self._get_paginated_data_async(
+                next_link=next_link,
+                next_page_key=next_page_key,
+                method=method,
+                body=body,
+                key=key,
             )
-            json_data = await response.json()
-            LOGGER.debug("response: %r", json_data)
 
-            if (error := json_data.get("error")) is not None:
-                raise _make_exception(error)
-
-            if key is None:
-                return json_data
-
-            data = self._lookup(json_data, key)
-
-            if next_link := json_data.get(next_page_key):
-                return data + await self._get_paginated_data_async(
-                    next_link=next_link,
-                    next_page_key=next_page_key,
-                    method=method,
-                    body=body,
-                    key=key,
-                )
-
-            return data
+        return data
 
     async def _get_paginated_data_async(
         self,
@@ -841,10 +878,13 @@ class MgmtApiClient(BaseAsyncApiClient):
         self,
         authority_urls: _AuthorityURLs,
         http_proxy_config: HTTPProxyConfig,
+        tenant: str,
+        client: str,
+        secret: str,
         subscription: str,
     ):
+        super().__init__(authority_urls, http_proxy_config, tenant, client, secret)
         self.subscription = subscription
-        super().__init__(authority_urls, http_proxy_config)
 
     @staticmethod
     def _get_available_metrics_from_exception(
@@ -1592,6 +1632,7 @@ async def get_remote_peerings(
             ],
         )
         # skip vNet peerings that belong to another Azure subscription
+        # TODO: can we remove client.subscription?
         if subscription != mgmt_client.subscription:
             continue
 
@@ -1750,7 +1791,7 @@ async def process_users(graph_api_client: BaseAsyncApiClient) -> AzureSection:
         uri_end="users",
         params={"$top": 1, "$count": "true"},
         key="@odata.count",
-        headers_expansion={"ConsistencyLevel": "eventual"},
+        custom_headers={"ConsistencyLevel": "eventual"},
     )
     section = AzureSection("ad")
     section.add(["users_count", users_count])
@@ -1972,30 +2013,32 @@ async def main_graph_client(args: Args, monitored_services: set[str]) -> None:
         else:
             write_exception_to_agent_info_section(exc, "Graph client (async)")
 
-    graph_client = BaseAsyncApiClient(
-        _get_graph_authority_urls(args.authority),
-        deserialize_http_proxy_config(args.proxy),
-    )
-
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        async with BaseAsyncApiClient(
+            _get_graph_authority_urls(args.authority),
+            deserialize_http_proxy_config(args.proxy),
+            tenant=args.tenant,
+            client=args.client,
+            secret=args.secret,
+        ) as graph_client:
+            tasks = {
+                task_call(graph_client)
+                for service, task_call in tasks_map.items()
+                if service in monitored_services
+            }
+
+            for coroutine in asyncio.as_completed(tasks):
+                try:
+                    section = await coroutine
+                    section.write()
+                except Exception as exc:
+                    _handle_graph_client_exception(exc, args.debug)
+
     except Exception as exc:
         _handle_graph_client_exception(exc, args.debug)
 
-    tasks = {
-        task_call(graph_client)
-        for service, task_call in tasks_map.items()
-        if service in monitored_services
-    }
 
-    for coroutine in asyncio.as_completed(tasks):
-        try:
-            section = await coroutine
-            section.write()
-        except Exception as exc:
-            _handle_graph_client_exception(exc, args.debug)
-
-
+# TODO: do not call usage data inside the client
 async def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
@@ -2236,19 +2279,25 @@ def _get_resource_health_sections(
     return sections
 
 
-def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
+async def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     """We test the connection only via the Management API client, not via the Graph API client.
     The Graph API client is used for three specific services, which are disabled in the default
     setup when configured via the UI.
     The Management API client is used for all other services, so we assume here that this is the
     connection that's essential for the vast majority of setups."""
-    mgmt_client = MgmtApiClient(
-        _get_mgmt_authority_urls(args.authority, subscription),
-        deserialize_http_proxy_config(args.proxy),
-        subscription,
-    )
+
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        async with MgmtApiClient(
+            _get_mgmt_authority_urls(args.authority, subscription),
+            deserialize_http_proxy_config(args.proxy),
+            tenant=args.tenant,
+            client=args.client,
+            secret=args.secret,
+            subscription=subscription,
+        ):
+            # we just need to authenticate
+            ...
+
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
@@ -2377,44 +2426,48 @@ async def _collect_resources(
 async def main_subscription(
     args: Args, selector: Selector, subscription: str, monitored_services: set[str]
 ) -> None:
-    mgmt_client = MgmtApiClient(
-        _get_mgmt_authority_urls(args.authority, subscription),
-        deserialize_http_proxy_config(args.proxy),
-        subscription,
-    )
-
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
-        selected_resources, monitored_groups = await _collect_resources(mgmt_client, args, selector)
+        async with MgmtApiClient(
+            _get_mgmt_authority_urls(args.authority, subscription),
+            deserialize_http_proxy_config(args.proxy),
+            tenant=args.tenant,
+            client=args.client,
+            secret=args.secret,
+            subscription=subscription,
+        ) as mgmt_client:
+            selected_resources, monitored_groups = await _collect_resources(
+                mgmt_client, args, selector
+            )
+
+            group_labels = await get_group_labels(
+                mgmt_client, monitored_groups, args.tag_key_pattern
+            )
+            write_group_info(monitored_groups, selected_resources, group_labels)
+
+            await process_metrics(mgmt_client, selected_resources, args)
+
+            tasks = {
+                process_usage_details(mgmt_client, monitored_groups, args)
+                if "usage_details" in monitored_services
+                else None,
+                process_resources(
+                    mgmt_client,
+                    args,
+                    group_labels,
+                    selected_resources,
+                    monitored_services,
+                    monitored_groups,
+                ),
+            }
+            tasks.discard(None)
+            await asyncio.gather(*tasks)  # type: ignore[arg-type]
+
+            write_remaining_reads(mgmt_client.ratelimit)
 
     except Exception as exc:
         if args.debug:
             raise
         write_exception_to_agent_info_section(exc, "Management client")
-        return
-
-    group_labels = await get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
-    write_group_info(monitored_groups, selected_resources, group_labels)
-
-    await process_metrics(mgmt_client, selected_resources, args)
-
-    tasks = {
-        process_usage_details(mgmt_client, monitored_groups, args)
-        if "usage_details" in monitored_services
-        else None,
-        process_resources(
-            mgmt_client,
-            args,
-            group_labels,
-            selected_resources,
-            monitored_services,
-            monitored_groups,
-        ),
-    }
-    tasks.discard(None)
-    await asyncio.gather(*tasks)  # type: ignore[arg-type]
-
-    write_remaining_reads(mgmt_client.ratelimit)
 
 
 def _get_subscriptions(args: Args) -> set[str]:
@@ -2437,13 +2490,18 @@ def _get_subscriptions(args: Args) -> set[str]:
     return set()  # no subscriptions
 
 
-def test_connections(args: Args, subscriptions: set[str]) -> int:
-    for subscription in subscriptions:
-        if (test_result := _test_connection(args, subscription)) != 0:
+async def test_connections(args: Args, subscriptions: set[str]) -> int:
+    # TODO: make login async, this is just in preparation for that
+    tasks = {_test_connection(args, subscription) for subscription in subscriptions}
+
+    for coroutine in asyncio.as_completed(tasks):
+        test_result = await coroutine
+        if test_result != 0:
             if isinstance(test_result, tuple):
                 sys.stderr.write(test_result[1])
                 return test_result[0]
             return test_result
+
     return 0
 
 
@@ -2474,7 +2532,7 @@ def main(argv=None):
     # * fix connection test in case of no subscriptions
     # * make connection test async?
     if args.connection_test:
-        return test_connections(args, subscriptions)
+        return asyncio.run(test_connections(args, subscriptions))
 
     asyncio.run(collect_info(args, selector, subscriptions))
     LOGGER.debug("%s", selector)

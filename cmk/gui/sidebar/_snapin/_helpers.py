@@ -18,7 +18,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
-from cmk.gui.sites import filter_available_site_choices
+from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Choices, Icon, MainMenuItem, MainMenuTopic, Visual
 from cmk.gui.utils.html import HTML
 from cmk.gui.visuals import visual_title
@@ -95,7 +95,7 @@ def footnotelinks(links: list[tuple[str, str]]) -> None:
 
 def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[SiteId] | None:
     sites = user.load_file("sidebar_sites", {})
-    available_site_choices = filter_available_site_choices(choices)
+    available_site_choices = _filter_available_site_choices(choices)
     site = sites.get(ident, "")
     if site == "":
         only_sites = None
@@ -114,6 +114,19 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
 
     return only_sites
+
+
+def _filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tuple[SiteId, str]]:
+    """Filter sites by site status"""
+    all_site_states = states()
+    sites_enabled = []
+    for entry in choices:
+        site_id, _desc = entry
+        site_state = all_site_states.get(site_id, SiteStatus({})).get("state")
+        if site_state is None:
+            continue
+        sites_enabled.append(entry)
+    return sites_enabled
 
 
 def make_main_menu(

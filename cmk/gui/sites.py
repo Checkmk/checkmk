@@ -586,19 +586,6 @@ def _map_site_state(state: str) -> str:
     return "error"
 
 
-def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tuple[SiteId, str]]:
-    # Only add enabled sites to choices
-    all_site_states = states()
-    sites_enabled = []
-    for entry in choices:
-        site_id, _desc = entry
-        site_state = all_site_states.get(site_id, SiteStatus({})).get("state")
-        if site_state is None:
-            continue
-        sites_enabled.append(entry)
-    return sites_enabled
-
-
 def site_choices() -> list[tuple[str, str]]:
     return sorted(
         [

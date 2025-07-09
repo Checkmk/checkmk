@@ -548,6 +548,9 @@ class AutomationDiscoveryPreview(Automation):
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
+            # and tabula rasa)
+            max_cachefile_age=MaxAge.zero(),
         )
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
         ip_family = ip_lookup_config.default_address_family(host_name)

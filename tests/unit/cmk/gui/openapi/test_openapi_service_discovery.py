@@ -1042,7 +1042,7 @@ def test_openapi_discovery_tabula_rasa(
     ]
     assert mock_discovery_preview.mock_calls == [
         call("example.com", prevent_fetching=False, raise_errors=False, debug=False),
-        call("example.com", prevent_fetching=False, raise_errors=False, debug=False),
+        call("example.com", prevent_fetching=True, raise_errors=False, debug=False),
     ]
 
 

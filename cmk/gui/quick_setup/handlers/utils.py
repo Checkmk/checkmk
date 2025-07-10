@@ -12,10 +12,10 @@ from pydantic import BaseModel
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
+    get_visitor,
     RawDiskData,
     RawFrontendData,
     serialize_data_for_frontend,
-    transform_to_disk_model,
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
@@ -169,8 +169,8 @@ def form_spec_parse(
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> ParsedFormData:
     return {
-        form_spec_id: transform_to_disk_model(
-            expected_formspecs_map[form_spec_id], RawFrontendData(form_data)
+        form_spec_id: get_visitor(expected_formspecs_map[form_spec_id]).to_disk(
+            RawFrontendData(form_data)
         )
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()

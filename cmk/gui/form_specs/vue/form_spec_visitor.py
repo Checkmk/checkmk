@@ -120,11 +120,6 @@ def validate_value_from_frontend(
     return visitor.validate(value)
 
 
-def transform_to_disk_model(form_spec: FormSpec[T], value: IncomingData = DEFAULT_VALUE) -> object:
-    visitor = get_visitor(form_spec)
-    return visitor.to_disk(value)
-
-
 def serialize_data_for_frontend(
     form_spec: FormSpec[T],
     field_id: str,

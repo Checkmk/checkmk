@@ -304,7 +304,7 @@ onMounted(() => {
       </CmkAlertBox>
     </div>
     <CmkCollapsibleTitle
-      :title="'Activation status'"
+      :title="'Sites'"
       class="collapsible-title"
       :open="activationStatusCollapsible"
       @toggle-open="activationStatusCollapsible = !activationStatusCollapsible"
@@ -399,7 +399,7 @@ onMounted(() => {
 
     <CmkCollapsibleTitle
       v-if="weHavePendingChanges || sitesRecentlyActivated"
-      :title="`Pending changes`"
+      :title="`Changes`"
       class="collapsible-title"
       :open="pendingChangesCollapsible"
       @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"

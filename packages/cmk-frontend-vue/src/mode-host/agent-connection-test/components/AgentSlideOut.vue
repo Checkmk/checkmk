@@ -13,10 +13,16 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import type { AgentInstallTabs } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
+
+export interface AgentSlideOutTabs {
+  id: string
+  title: string
+  install_msg?: string
+  registration_msg: string
+}
 
 defineProps<{
-  tabs: AgentInstallTabs[]
+  tabs: AgentSlideOutTabs[]
   url: string
 }>()
 
@@ -69,8 +75,8 @@ const openAllAgentsPage = (url: string) => {
     </template>
     <template #tab-contents>
       <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
-        <p>{{ tab.install_msg }}</p>
-        <div class="code_container">
+        <p v-if="tab.install_msg">{{ tab.install_msg }}</p>
+        <div v-if="tab.install_msg" class="code_container">
           <code>
             {{ t('ags_placeholder', 'Placeholder for code component') }}
           </code>

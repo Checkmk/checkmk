@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
+import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
 defineProps<{
   url: string
@@ -18,14 +19,7 @@ const close = () => {
   emit('close')
 }
 
-export interface AgentInstallTabs {
-  id: string
-  title: string
-  install_msg: string
-  registration_msg: string
-}
-
-const tabs: AgentInstallTabs[] = [
+const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
     title: t('agent_windows', 'Windows'),

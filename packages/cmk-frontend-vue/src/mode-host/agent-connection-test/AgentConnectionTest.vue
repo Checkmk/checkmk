@@ -11,6 +11,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
+import AgentRegisterSlideOutContent from '@/mode-host/agent-connection-test/components/AgentRegisterSlideOutContent.vue'
 import { type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
@@ -104,6 +105,19 @@ const tooltipText = computed(() => {
     )
   }
   return t('agent_connection_test_start_msg', 'Test Checkmk agent connection')
+})
+const isNotRegistered = computed(() => {
+  if (errorDetails.value.includes('controller not registered')) {
+    return true
+  }
+  return false
+})
+
+const slideOutTitle = computed(() => {
+  if (isNotRegistered.value) {
+    return t('agent_connection_test_title_register', 'Register agent')
+  }
+  return t('agent_connection_test_title_install', 'Install Checkmk agent')
 })
 
 type AutomationResponse = {
@@ -218,7 +232,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
     buttonTwoButton = reTestAgentButton
     buttonTwoClick = reTestAgentClick
   }
-  if (errorDetails.value.includes('controller not registered')) {
+  if (isNotRegistered.value) {
     header = t('test-agent-not-registered-header', 'Agent not registered')
     txt = t(
       'test-agent-not-registered-msg',
@@ -312,13 +326,22 @@ const warnContainerValues = computed<ContainerValues>(() => {
 
     <SlideIn
       :header="{
-        title: t('agent_connection_test_slidein_title', 'Install Checkmk agent'),
+        title: slideOutTitle,
         closeButton: true
       }"
       :open="slideInOpen"
       @close="slideInOpen = false"
     >
-      <AgentInstallSlideOutContent :url="url" @close="((slideInOpen = false), (isError = false))" />
+      <AgentRegisterSlideOutContent
+        v-if="isNotRegistered"
+        :url="url"
+        @close="((slideInOpen = false), (isError = false))"
+      />
+      <AgentInstallSlideOutContent
+        v-else
+        :url="url"
+        @close="((slideInOpen = false), (isError = false))"
+      />
     </SlideIn>
   </Teleport>
 </template>

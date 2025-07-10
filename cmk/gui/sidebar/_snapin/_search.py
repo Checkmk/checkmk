@@ -439,10 +439,6 @@ class PageSearchSetup(AjaxPage):
 
 class PageUnifiedSearch(AjaxPage):
     @override
-    def handle_page(self, config: Config) -> None:
-        super().handle_page(config)
-
-    @override
     def page(self, config: Config) -> PageResult:
         query = request.get_str_input_mandatory("q")
         provider = self._parse_provider_query_param()

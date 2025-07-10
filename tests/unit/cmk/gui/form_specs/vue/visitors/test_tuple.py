@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -12,7 +13,7 @@ from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -23,7 +24,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.rulesets.v1.form_specs.validators import NumberInRange, ValidationError
 
 
 @pytest.fixture(scope="module", name="spec")
@@ -152,3 +153,31 @@ def test_tuple_visitor_invalid_value(
 ) -> None:
     visitor = get_visitor(spec)
     assert len(visitor.validate(invalid_value)) == expected_errors
+
+
+def test_tuple_validator() -> None:
+    def _i_dont_like(unliked_value: object) -> Callable[[object], object]:
+        def _validate(value: object) -> object:
+            if value == unliked_value:
+                raise ValidationError(Message("I don't like this value"))
+            return value
+
+        return _validate
+
+    spec = Tuple(
+        elements=[
+            Integer(
+                custom_validate=[_i_dont_like(5)],
+            ),
+        ],
+        custom_validate=[_i_dont_like((1,))],
+    )
+
+    visitor = get_visitor(spec)
+
+    assert len(visitor.validate(RawDiskData((0,)))) == 0
+    assert len(visitor.validate(RawDiskData((1,)))) == 1
+    assert len(visitor.validate(RawDiskData((5,)))) == 1
+    assert len(visitor.validate(RawFrontendData([0]))) == 0
+    assert len(visitor.validate(RawFrontendData([1]))) == 1
+    assert len(visitor.validate(RawFrontendData([5]))) == 1

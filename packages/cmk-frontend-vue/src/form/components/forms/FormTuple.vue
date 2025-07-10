@@ -51,90 +51,83 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table
-    v-if="spec.layout === 'horizontal' || spec.layout === 'horizontal_titles_top'"
-    class="valuespec_tuple horizontal"
-  >
-    <tbody>
-      <tr>
-        <template v-for="(element, index) in spec.elements" :key="index">
-          <td class="form-tuple__td">
-            <FormLabel v-if="spec.show_titles && element.title" class="title">{{
-              capitalizeFirstLetter(element.title)
-            }}</FormLabel>
-            <CmkSpace
-              v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
-              size="small"
-            />
-            <br
-              v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'"
-            />
-            <FormEditDispatcher
-              v-model:data="data[index]"
-              :spec="element"
-              :backend-validation="elementValidation[index]!"
-            />
-            <HelpText :help="element.help" />
-          </td>
-        </template>
-      </tr>
-    </tbody>
-  </table>
-
-  <table v-if="spec.layout === 'vertical'" class="valuespec_tuple vertical">
-    <tbody>
-      <tr v-for="(element, index) in spec.elements" :key="index">
-        <td v-if="spec.show_titles" class="form-tuple__td tuple_left">
-          <FormLabel v-if="element.title">{{ capitalizeFirstLetter(element.title) }}</FormLabel>
-          <CmkSpace v-if="spec.show_titles && element.title" size="small" />
-        </td>
-        <td class="form-tuple__td tuple_right" :class="{ has_title: element.title }">
-          <FormEditDispatcher
-            v-model:data="data[index]"
-            :spec="element"
-            :backend-validation="elementValidation[index]!"
-          />
-          <HelpText :help="element.help" />
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <template v-if="spec.layout === 'float'">
-    <template v-for="(element, index) in spec.elements" :key="index">
-      <FormEditDispatcher
-        v-model:data="data[index]"
-        :spec="element"
-        :backend-validation="elementValidation[index]!"
-      />
-      <HelpText :help="element.help" />
-    </template>
-  </template>
+  <div class="form-tuple" :class="spec.layout">
+    <div v-for="(element, index) in spec.elements" :key="index" class="form-tuple_item">
+      <div v-if="spec.show_titles" class="form-tuple_label">
+        <FormLabel v-if="element.title">{{ capitalizeFirstLetter(element.title) }}</FormLabel>
+        <CmkSpace
+          v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
+          size="small"
+        />
+        <br v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'" />
+      </div>
+      <div class="form-tuple_content">
+        <FormEditDispatcher
+          v-model:data="data[index]"
+          :spec="element"
+          :backend-validation="elementValidation[index]!"
+        />
+        <HelpText :help="element.help" />
+      </div>
+    </div>
+  </div>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
-.valuespec_tuple.horizontal {
-  td.form-tuple__td:first-child {
-    padding-left: 0;
-  }
-
-  td.form-tuple__td {
-    padding-left: var(--spacing);
-    margin-bottom: var(--spacing-half);
-  }
+.form-tuple {
+  display: flex;
 }
 
-.valuespec_tuple.vertical {
-  td.form-tuple__td {
-    padding-left: 0;
-    padding-bottom: var(--spacing-half);
-  }
+/* Horizontal layouts */
+.form-tuple.horizontal,
+.form-tuple.horizontal_titles_top {
+  flex-wrap: wrap;
+}
 
-  tr:last-child {
-    td.form-tuple__td {
-      padding-bottom: 0;
-    }
-  }
+.form-tuple.horizontal .form-tuple_item:not(:first-child),
+.form-tuple.horizontal_titles_top .form-tuple_item:not(:first-child) {
+  margin-left: var(--spacing);
+}
+
+/* Horizontal layout - titles beside content */
+.form-tuple.horizontal .form-tuple_item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.form-tuple.horizontal .form-tuple_label {
+  flex-shrink: 0;
+}
+
+/* Vertical layout */
+.form-tuple.vertical {
+  flex-direction: column;
+}
+
+.form-tuple.vertical .form-tuple_item {
+  display: flex;
+  margin-bottom: var(--spacing-half);
+}
+
+.form-tuple.vertical .form-tuple_item:last-child {
+  margin-bottom: 0;
+}
+
+.form-tuple.vertical .form-tuple_label {
+  flex-shrink: 0;
+}
+
+.form-tuple.vertical .form-tuple_content {
+  flex: 1;
+}
+
+/* Float layout */
+.form-tuple.float {
+  flex-direction: row;
+}
+
+.form-tuple.float .form-tuple_label {
+  display: none;
 }
 </style>

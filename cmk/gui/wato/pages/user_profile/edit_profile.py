@@ -10,7 +10,7 @@ from typing import Any
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -47,7 +47,7 @@ class UserProfile(Page):
     def _page_title(self) -> str:
         return _("Edit profile")
 
-    def _action(self) -> None:
+    def _action(self, config: Config) -> None:
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -90,7 +90,7 @@ class UserProfile(Page):
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
-        if get_enabled_remote_sites_for_logged_in_user(user, active_config.sites):
+        if get_enabled_remote_sites_for_logged_in_user(user, config.sites):
             back_url = "user_profile_replicate.py?back=user_profile.py"
         else:
             back_url = "user_profile.py"
@@ -109,7 +109,7 @@ class UserProfile(Page):
 
         if transactions.check_transaction():
             try:
-                self._action()
+                self._action(config)
             except MKUserError as e:
                 user_errors.add(e)
 

@@ -10,7 +10,7 @@ from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -48,7 +48,7 @@ class UserChangePasswordPage(Page):
     def _page_title(self) -> str:
         return _("Change password")
 
-    def _action(self) -> None:
+    def _action(self, config: Config) -> None:
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -116,7 +116,7 @@ class UserChangePasswordPage(Page):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         origtarget = request.get_str_input_mandatory("_origtarget", "user_change_pw.py")
-        if get_enabled_remote_sites_for_logged_in_user(user, active_config.sites):
+        if get_enabled_remote_sites_for_logged_in_user(user, config.sites):
             raise redirect(
                 makeuri_contextless(
                     request, [("back", origtarget)], filename="user_profile_replicate.py"
@@ -132,7 +132,7 @@ class UserChangePasswordPage(Page):
 
         if transactions.check_transaction():
             try:
-                self._action()
+                self._action(config)
             except MKUserError as e:
                 user_errors.add(e)
 

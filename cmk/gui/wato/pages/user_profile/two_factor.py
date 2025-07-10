@@ -39,7 +39,7 @@ from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -235,7 +235,7 @@ class UserTwoFactorOverview(Page):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
 
-    def _action(self) -> None:
+    def _action(self, config: Config) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
 
@@ -248,7 +248,7 @@ class UserTwoFactorOverview(Page):
                     "user_two_factor_overview.py",
                     credentials,
                     TwoFactorEventType.webauthn_remove,
-                    active_config.sites,
+                    config.sites,
                 )
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
@@ -258,17 +258,17 @@ class UserTwoFactorOverview(Page):
                     "user_two_factor_overview.py",
                     credentials,
                     TwoFactorEventType.totp_remove,
-                    active_config.sites,
+                    config.sites,
                 )
             else:
                 return
             if not is_two_factor_login_enabled(user.id):
                 session.session_info.two_factor_completed = False
                 if credentials["backup_codes"]:
-                    _handle_revoke_all_backup_codes(user, credentials, active_config.sites)
+                    _handle_revoke_all_backup_codes(user, credentials, config.sites)
 
         if request.has_var("_delete_codes"):
-            _handle_revoke_all_backup_codes(user, credentials, active_config.sites)
+            _handle_revoke_all_backup_codes(user, credentials, config.sites)
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
@@ -279,7 +279,7 @@ class UserTwoFactorOverview(Page):
                 "user_two_factor_overview.py",
                 credentials,
                 TwoFactorEventType.backup_add,
-                active_config.sites,
+                config.sites,
             )
 
     def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
@@ -474,10 +474,10 @@ class UserTwoFactorOverview(Page):
             + (invalidate_codes_button if backup_codes else ""),
         )
 
-    def _show_form(self) -> None:
+    def _show_form(self, config: Config) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site(active_config.sites):
+        if is_wato_slave_site(config.sites):
             html.user_error(
                 MKUserError(
                     None,
@@ -522,7 +522,7 @@ class UserTwoFactorOverview(Page):
 
         if transactions.check_transaction():
             try:
-                self._action()
+                self._action(config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -531,7 +531,7 @@ class UserTwoFactorOverview(Page):
 
         html.show_user_errors()
 
-        self._show_form()
+        self._show_form(config)
 
     @classmethod
     def _show_registered_credentials(
@@ -651,10 +651,10 @@ class UserTwoFactorEnforce(Page):
             colspan=2,
         )
 
-    def _show_form(self) -> None:
+    def _show_form(self, config: Config) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site(active_config.sites):
+        if is_wato_slave_site(config.sites):
             html.user_error(
                 MKUserError(
                     None,
@@ -702,7 +702,7 @@ class UserTwoFactorEnforce(Page):
 
         html.show_user_errors()
 
-        self._show_form()
+        self._show_form(config)
 
 
 class RegisterTotpSecret(Page):
@@ -734,7 +734,7 @@ class RegisterTotpSecret(Page):
         )
         return menu
 
-    def _action(self) -> None:
+    def _action(self, config: Config) -> None:
         auth_code_vs = TextInput(allow_empty=False)
         auth_code = auth_code_vs.from_html_vars("auth_code")
         auth_code_vs.validate_value(auth_code, "auth_code")
@@ -773,7 +773,7 @@ class RegisterTotpSecret(Page):
                 origtarget,
                 credentials,
                 TwoFactorEventType.totp_add,
-                active_config.sites,
+                config.sites,
             )
 
             raise redirect(origtarget)
@@ -853,7 +853,7 @@ class RegisterTotpSecret(Page):
 
         if transactions.check_transaction():
             try:
-                self._action()
+                self._action(config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -890,7 +890,7 @@ class EditCredentialAlias(Page):
         )
         return menu
 
-    def _action(self) -> None:
+    def _action(self, config: Config) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id, lock=True)
 
@@ -916,7 +916,7 @@ class EditCredentialAlias(Page):
             "user_two_factor_overview.py",
             credentials,
             "alias_changed",
-            active_config.sites,
+            config.sites,
         )
 
         raise redirect("user_two_factor_overview.py")
@@ -961,7 +961,7 @@ class EditCredentialAlias(Page):
 
         if transactions.check_transaction():
             try:
-                self._action()
+                self._action(config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -1110,7 +1110,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         navigation_json = {"status": "OK", "redirect": False, "replicate": False}
-        if has_wato_slave_sites(active_config.sites):
+        if has_wato_slave_sites(config.sites):
             navigation_json["replicate"] = True
         if session.session_info.two_factor_required:
             session.session_info.two_factor_required = False
@@ -1339,7 +1339,7 @@ class UserLoginTwoFactor(Page):
         elif "backup_codes" in available_methods and (mode == "backup" or not mode):
             self._render_backup(available_methods)
 
-        self._check_totp_and_backup(available_methods, credentials, active_config.sites)
+        self._check_totp_and_backup(available_methods, credentials, config.sites)
 
         if user_errors:
             html.open_div(id_="login_error")

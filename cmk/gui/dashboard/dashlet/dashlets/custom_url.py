@@ -11,7 +11,6 @@ from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 class URLDashletConfig(DashletConfig):
     url: str
-    show_in_iframe: bool
 
 
 class URLDashlet(IFrameDashlet[URLDashletConfig]):

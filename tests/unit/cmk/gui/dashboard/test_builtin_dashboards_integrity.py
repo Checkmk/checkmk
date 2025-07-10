@@ -18,8 +18,10 @@ def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
     for dashboard_config in builtin_dashboards.values():
         for dashlet_config in dashboard_config["dashlets"]:
             if dashlet_config["type"] == TemplateGraphDashlet.type_name():
+                source = cast(TemplateGraphDashletConfig, dashlet_config)["source"]
+                assert isinstance(source, str), "Graph source must be string identifier"
                 get_graph_template_from_id(
-                    cast(TemplateGraphDashletConfig, dashlet_config)["source"],
+                    source,
                     metrics_from_api,
                     graphs_from_api,
                 )

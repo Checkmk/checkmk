@@ -3456,7 +3456,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         vs_service.render_input(varprefix + "_service_hint", "")
 
 
-MonitoringStateValue = Literal[0, 1, 2, 3]
+type MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
@@ -3511,7 +3511,7 @@ def MonitoringState(
     )
 
 
-HostStateValue = Literal[0, 1, 2]
+type HostStateValue = Literal[0, 1, 2]
 
 
 class HostState(DropdownChoice):

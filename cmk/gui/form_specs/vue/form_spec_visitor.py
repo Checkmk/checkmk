@@ -8,7 +8,7 @@ import pprint
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -167,8 +167,8 @@ class RenderMode(Enum):
 class VueAppConfig:
     id: str
     spec: shared_type_defs.FormSpec
-    data: Any
-    validation: Any
+    data: object
+    validation: list[shared_type_defs.ValidationMessage]
     display_mode: str
 
 
@@ -294,7 +294,7 @@ def render_form_spec(
     html.vue_component(component_name="cmk-form-spec", data=asdict(vue_app_config))
 
 
-def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
+def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> object:
     """Computes/validates the value from a vue formular field"""
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")

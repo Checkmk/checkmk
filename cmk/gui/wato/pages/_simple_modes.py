@@ -691,6 +691,8 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             self._vue_field_id(),
         )
 
+        assert isinstance(config, dict)
+
         # The form spec was rendered via a Catalog form spec, which introduced needless topics
         # We need to convert the config back to a flat dictionary
         config = self._get_catalog_converter().convert_catalog_to_flat_config(config)

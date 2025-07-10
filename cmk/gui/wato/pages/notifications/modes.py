@@ -3988,7 +3988,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             self._vue_field_id(),
         )
 
-        self._parameter = value
+        self._parameter = cast(NotificationParameterItem, value)
 
         if self._new and self._clone_id:
             self._parameters[self._method()][new_notification_parameter_id()] = self._parameter

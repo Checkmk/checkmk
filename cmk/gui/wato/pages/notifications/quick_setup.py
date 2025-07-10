@@ -81,9 +81,7 @@ from cmk.gui.wato.pages.notifications.migrate import (
     service_event_mapper,
 )
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
-    HostIntState,
     NotificationQuickSetupSpec,
-    ServiceIntState,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.groups_io import (
@@ -188,14 +186,22 @@ def _service_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
     ]
 
 
-def _validate_host_state_change(state_change: tuple[HostIntState, HostIntState]) -> None:
-    if host_event_mapper(state_change) not in list(get_args(get_args(HostEventType)[0])):
+def _validate_host_state_change(
+    state_change: object,
+) -> object:
+    if not isinstance(state_change, tuple) or host_event_mapper(state_change) not in list(
+        get_args(get_args(HostEventType)[0])
+    ):
         raise ValidationError(Message("Invalid state change for host"))
+    return state_change
 
 
-def _validate_service_state_change(state_change: tuple[ServiceIntState, ServiceIntState]) -> None:
-    if service_event_mapper(state_change) not in list(get_args(get_args(ServiceEventType)[0])):
+def _validate_service_state_change(state_change: object) -> object:
+    if not isinstance(state_change, tuple) or service_event_mapper(state_change) not in list(
+        get_args(get_args(ServiceEventType)[0])
+    ):
         raise ValidationError(Message("Invalid state change for service"))
+    return state_change
 
 
 def _event_choices(
@@ -226,7 +232,7 @@ def _event_choices(
                         ),
                     ],
                     custom_validate=[
-                        _validate_host_state_change  # type: ignore[list-item]
+                        _validate_host_state_change
                         if what == "host"
                         else _validate_service_state_change,
                     ],

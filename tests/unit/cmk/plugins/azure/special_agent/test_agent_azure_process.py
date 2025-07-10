@@ -13,18 +13,14 @@ import pytest
 from cmk.utils.http_proxy_config import NoProxyConfig
 
 from cmk.plugins.azure.special_agent.agent_azure import (
-    _AuthorityURLs,
     _get_resource_health_sections,
-    ApiError,
     Args,
     AzureResource,
     AzureSection,
-    BaseAsyncApiClient,
     get_group_labels,
     get_vm_labels_section,
     GroupLabels,
     LabelsSection,
-    MgmtApiClient,
     process_app_registrations,
     process_organization,
     process_usage_details,
@@ -34,6 +30,12 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagsImportPatternOption,
     write_group_info,
     write_remaining_reads,
+)
+from cmk.plugins.azure.special_agent.azure_api_client import (
+    _AuthorityURLs,
+    ApiError,
+    BaseAsyncApiClient,
+    MgmtApiClient,
 )
 
 pytestmark = pytest.mark.checks

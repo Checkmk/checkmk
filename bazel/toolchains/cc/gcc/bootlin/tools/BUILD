@@ -20,112 +20,61 @@ cc_tool_map(
 
 cc_tool(
     name = "gcc",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-gcc.br_real",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-gcc.br_real",
     data = [
-        ":exec_platform_builtin_headers",
-        ":exec_platform_multicall_support_files",
+        "@gcc-linux-x86_64//:builtin_headers",
         "@gcc-linux-x86_64//:linker_buildroot",
+        "@gcc-linux-x86_64//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "g++",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
     data = [
-        ":exec_platform_builtin_headers",
-        ":exec_platform_multicall_support_files",
+        "@gcc-linux-x86_64//:builtin_headers",
+        "@gcc-linux-x86_64//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "ld",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
     data = [
-        ":exec_platform_linker_builtins",
-        ":exec_platform_multicall_support_files",
+        "@gcc-linux-x86_64//:linker_builtins",
+        "@gcc-linux-x86_64//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "ar",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-ar",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-ar",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "objcopy",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-objcopy",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-objcopy",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "objdump",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-objdump",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-objdump",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "gcov",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-gcov",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-gcov",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "strip",
-    src = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:bin/x86_64-linux-strip",
-    }),
+    src = "@gcc-linux-x86_64//:bin/x86_64-linux-strip",
     tags = ["manual"],
-)
-
-#################################
-#   Platform-specific aliases   #
-#################################
-
-# These aliases are used to reduce duplication of `select` statements throughout
-# this build file. The select statements in these aliases are evaluated under
-# the exec configuration.
-
-alias(
-    name = "exec_platform_builtin_headers",
-    actual = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:builtin_headers",
-    }),
-    tags = ["manual"],
-    visibility = ["//visibility:private"],
-)
-
-alias(
-    name = "exec_platform_multicall_support_files",
-    actual = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:multicall_support_files",
-    }),
-    tags = ["manual"],
-    visibility = ["//visibility:private"],
-)
-
-alias(
-    name = "exec_platform_linker_builtins",
-    actual = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:linker_builtins",
-    }),
-    tags = ["manual"],
-    visibility = ["//visibility:private"],
 )

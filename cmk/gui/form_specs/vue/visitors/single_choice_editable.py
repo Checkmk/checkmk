@@ -35,8 +35,6 @@ class SingleChoiceEditableVisitor(
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
-        if raw_value is None:
-            return None
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = None
             if isinstance(
@@ -47,6 +45,9 @@ class SingleChoiceEditableVisitor(
             value: object = prefill_default
         else:
             value = raw_value.value
+
+        if value is None:
+            return None
 
         if not isinstance(value, str):
             return InvalidValue[_FallbackModel](

@@ -11,12 +11,25 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 def test_single_choice_editable() -> None:
-    dictionary = SingleChoiceEditable(
+    spec = SingleChoiceEditable(
         entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="mail",
     )
 
-    visitor = get_visitor(dictionary)
+    visitor = get_visitor(spec)
 
     assert visitor.validate(RawFrontendData("foo")) == []
     assert visitor.to_vue(RawFrontendData("foo"))[1] == "foo"
+
+
+def test_single_choice_editable_none_complains_nicely() -> None:
+    spec = SingleChoiceEditable(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_type_specifier="mail",
+    )
+    visitor = get_visitor(spec)
+
+    validation = visitor.validate(RawFrontendData(None))
+
+    assert len(validation) == 1
+    assert validation[0].message.startswith("Please choose parameters")

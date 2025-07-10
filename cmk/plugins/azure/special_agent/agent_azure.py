@@ -880,6 +880,7 @@ async def _collect_app_gateways_resources(
     return applications_gateways
 
 
+# TODO: test
 async def process_app_gateways(
     mgmt_client: MgmtApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
@@ -944,6 +945,7 @@ async def _collect_load_balancers_resources(
     return load_balancers_resources
 
 
+# TODO: test
 async def process_load_balancers(
     mgmt_client: MgmtApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
@@ -1294,6 +1296,7 @@ async def process_metrics(
     agent_info_section.write()
 
 
+# TODO: to test
 async def _gather_metrics(
     mgmt_client: MgmtApiClient, all_resources: Sequence[AzureResource], args: Args
 ) -> IssueCollector:
@@ -1663,6 +1666,7 @@ async def process_resource_health(
     return _get_resource_health_sections(health_values, monitored_resources_by_id)
 
 
+# TODO: test
 async def process_virtual_machines(
     api_client: MgmtApiClient,
     args: Args,
@@ -1711,6 +1715,7 @@ async def process_virtual_machines(
     return sections
 
 
+# TODO: test
 async def process_vault(
     api_client: MgmtApiClient,
     resource: AzureResource,
@@ -1761,7 +1766,7 @@ class ResourceHealth(TypedDict, total=False):
 
 
 def _get_resource_health_sections(
-    resource_health_view: list[ResourceHealth],
+    resource_health_view: Sequence[ResourceHealth],
     resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
@@ -1845,6 +1850,7 @@ def get_bulk_tasks(
         yield asyncio.create_task(process_load_balancers(mgmt_client, monitored_resources_by_id))
 
 
+# TODO: test
 async def process_single_resources(
     mgmt_client: MgmtApiClient,
     args: Args,

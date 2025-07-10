@@ -5170,14 +5170,6 @@ msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
 msgid "Agent certificates"
 msgstr "Agent Certificaten"
 
-#, fuzzy
-msgid "Agent connection successful"
-msgstr "Agent %s succesvol"
-
-#, fuzzy
-msgid "Agent connection test running"
-msgstr "Time-out verbinding instellen"
-
 msgid "Agent controller"
 msgstr "Agent controller"
 
@@ -6401,9 +6393,6 @@ msgstr ""
 #, fuzzy
 msgid "Already installed the agent?"
 msgstr "Installeer Python altijd met agent"
-
-msgid "Already installed the agent? If so, please check your firewall settings"
-msgstr ""
 
 msgid "Also bulk outside of time period"
 msgstr "Ook bulk buiten de periode"
@@ -12630,10 +12619,6 @@ msgstr "Checkmk agent"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agent / API integraties"
 
-#, fuzzy
-msgid "Checkmk agent connection failed"
-msgstr "Checkmk agent verbindingsmodus"
-
 msgid "Checkmk agent connection mode"
 msgstr "Checkmk agent verbindingsmodus"
 
@@ -15172,11 +15157,6 @@ msgstr "Duur van de verbinding"
 
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Verbinding gemaakt. De verbindingsinstellingen lijken in orde te zijn."
-
-msgid ""
-"Connection failed, enter new hostname to check again or download and install "
-"the Checkmk agent."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
@@ -25062,7 +25042,8 @@ msgstr ""
 "Het is niet gelukt om het crashrapport te versturen. Download het "
 "alstublieft handmatig en stuur het naar <a href=\"%s\">%s</a>"
 
-msgid "Failed to set start URL"
+#, fuzzy, python-format
+msgid "Failed to set start URL: %s"
 msgstr "Mislukt om start URL in te stellen"
 
 #, fuzzy, python-format
@@ -50699,11 +50680,6 @@ msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
 
 #, fuzzy
-msgid "Please enter a hostname to test Checkmk agent connection"
-msgstr ""
-"Gelieve een hostnaam in te stellen voor de herclassificatie van de hoststatus"
-
-#, fuzzy
 msgid "Please enter a name."
 msgstr "Voer een bestandsnaam in."
 
@@ -64330,10 +64306,6 @@ msgstr "Terse"
 
 msgid "Test"
 msgstr "Test"
-
-#, fuzzy
-msgid "Test Checkmk agent connection"
-msgstr "Checkmk agent verbindingsmodus"
 
 #, fuzzy
 msgid "Test a self defined notification against your ruleset."
@@ -89954,6 +89926,28 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Agent connection successful"
+#~ msgstr "Agent %s succesvol"
+
+#, fuzzy
+#~ msgid "Agent connection test running"
+#~ msgstr "Time-out verbinding instellen"
+
+#, fuzzy
+#~ msgid "Checkmk agent connection failed"
+#~ msgstr "Checkmk agent verbindingsmodus"
+
+#, fuzzy
+#~ msgid "Please enter a hostname to test Checkmk agent connection"
+#~ msgstr ""
+#~ "Gelieve een hostnaam in te stellen voor de herclassificatie van de "
+#~ "hoststatus"
+
+#, fuzzy
+#~ msgid "Test Checkmk agent connection"
+#~ msgstr "Checkmk agent verbindingsmodus"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"

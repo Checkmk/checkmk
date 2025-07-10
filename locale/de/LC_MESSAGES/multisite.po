@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-08 19:35+0000\n"
+"PO-Revision-Date: 2025-07-09 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1026,7 +1026,7 @@ msgid "(set by message text)"
 msgstr "(bestimmt durch den Text der Meldung)"
 
 msgid "(set by syslog)"
-msgstr "(durch syslog gesetzt)"
+msgstr "(durch Syslog gesetzt)"
 
 msgid "(syslog)"
 msgstr "(Syslog)"
@@ -5047,12 +5047,6 @@ msgstr "Agenten-basierte Plugins (veraltet, ignoriert)"
 msgid "Agent certificates"
 msgstr "Agenten-Zertifikate"
 
-msgid "Agent connection successful"
-msgstr "Agentenverbindung erfolgreich"
-
-msgid "Agent connection test running"
-msgstr "Test der Agentenverbindung läuft"
-
 msgid "Agent controller"
 msgstr "Agent Controller"
 
@@ -5987,7 +5981,7 @@ msgid "Allocated SNAT ports"
 msgstr "Zugewiesene SNAT-Ports"
 
 msgid "Allocated for document storage"
-msgstr "Zugewiesen für Dokumnetenspeicher"
+msgstr "Zugewiesen für Dokumentenspeicher"
 
 msgid "Allocated pod resources"
 msgstr "Zugewiesene Pod-Ressourcen"
@@ -6244,11 +6238,6 @@ msgstr ""
 
 msgid "Already installed the agent?"
 msgstr "Ist der Agent bereits installiert?"
-
-msgid "Already installed the agent? If so, please check your firewall settings"
-msgstr ""
-"Ist der Agent bereits installiert? Wenn ja, überprüfen Sie bitte Ihre "
-"Firewall-Einstellungen"
 
 msgid "Also bulk outside of time period"
 msgstr "Auch außerhalb der Zeitperiode Bulks bilden"
@@ -12187,9 +12176,6 @@ msgstr "Checkmk-Agent"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk-Agent / API-Integrationen"
 
-msgid "Checkmk agent connection failed"
-msgstr "Checkmk-Agentenverbindung fehlgeschlagen"
-
 msgid "Checkmk agent connection mode"
 msgstr "Verbindungsmodus des Checkmk-Agenten"
 
@@ -14679,14 +14665,6 @@ msgstr "Dauer der Verbindungen"
 msgid "Connection established. The connection settings seem to be ok."
 msgstr ""
 "Verbindung ist aufgebaut. Die Verbindungseigenschaften scheinen OK zu sein."
-
-msgid ""
-"Connection failed, enter new hostname to check again or download and install "
-"the Checkmk agent."
-msgstr ""
-"Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um erneut "
-"zu prüfen, oder laden Sie den Checkmk-Agenten herunter und installieren Sie "
-"ihn."
 
 #, python-format
 msgid "Connection id %s already exists."
@@ -24254,7 +24232,8 @@ msgstr ""
 "herunter und senden Sie ihn an <a href=\"%s\">%s</a> oder versuchen Sie es "
 "später erneut."
 
-msgid "Failed to set start URL"
+#, fuzzy, python-format
+msgid "Failed to set start URL: %s"
 msgstr "Start-URL konnte nicht gesetzt werden"
 
 #, python-format
@@ -48597,11 +48576,6 @@ msgstr "Bitte geben Sie einen Kommentar ein, nach dem Sie filtern möchten."
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
 
-msgid "Please enter a hostname to test Checkmk agent connection"
-msgstr ""
-"Bitte geben Sie einen Host-Namen ein, um die Verbindung zum Checkmk-Agenten "
-"zu testen"
-
 msgid "Please enter a name."
 msgstr "Bitte geben Sie einen Namen ein."
 
@@ -61729,9 +61703,6 @@ msgstr "Knapp"
 
 msgid "Test"
 msgstr "Test"
-
-msgid "Test Checkmk agent connection"
-msgstr "Test der Verbindung zum Checkmk-Agenten"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr ""
@@ -76020,7 +75991,7 @@ msgid "Unhandled host problems"
 msgstr "Unbehandelte Hostprobleme"
 
 msgid "Unhandled p."
-msgstr "unbehandelte p."
+msgstr "unbehandelte P."
 
 msgid "Unhandled service problems"
 msgstr "Unbehandelte Serviceprobleme"
@@ -86746,6 +86717,37 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Agent connection successful"
+#~ msgstr "Agentenverbindung erfolgreich"
+
+#~ msgid "Agent connection test running"
+#~ msgstr "Test der Agentenverbindung läuft"
+
+#~ msgid ""
+#~ "Already installed the agent? If so, please check your firewall settings"
+#~ msgstr ""
+#~ "Ist der Agent bereits installiert? Wenn ja, überprüfen Sie bitte Ihre "
+#~ "Firewall-Einstellungen"
+
+#~ msgid "Checkmk agent connection failed"
+#~ msgstr "Checkmk-Agentenverbindung fehlgeschlagen"
+
+#~ msgid ""
+#~ "Connection failed, enter new hostname to check again or download and "
+#~ "install the Checkmk agent."
+#~ msgstr ""
+#~ "Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um "
+#~ "erneut zu prüfen, oder laden Sie den Checkmk-Agenten herunter und "
+#~ "installieren Sie ihn."
+
+#~ msgid "Please enter a hostname to test Checkmk agent connection"
+#~ msgstr ""
+#~ "Bitte geben Sie einen Host-Namen ein, um die Verbindung zum Checkmk-"
+#~ "Agenten zu testen"
+
+#~ msgid "Test Checkmk agent connection"
+#~ msgstr "Test der Verbindung zum Checkmk-Agenten"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"

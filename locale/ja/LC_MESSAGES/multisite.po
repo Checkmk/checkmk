@@ -4903,14 +4903,6 @@ msgstr "エージェントベースのプラグイン（廃止、無視）"
 msgid "Agent certificates"
 msgstr "エージェント証明書"
 
-#, fuzzy
-msgid "Agent connection successful"
-msgstr "エージェント%sが成功しました"
-
-#, fuzzy
-msgid "Agent connection test running"
-msgstr "接続タイムアウトを設定する"
-
 msgid "Agent controller"
 msgstr "エージェントコントローラー"
 
@@ -6064,9 +6056,6 @@ msgstr ""
 
 msgid "Already installed the agent?"
 msgstr "すでにエージェントはインストール済？"
-
-msgid "Already installed the agent? If so, please check your firewall settings"
-msgstr ""
 
 msgid "Also bulk outside of time period"
 msgstr "また 期間外のバルク"
@@ -11973,10 +11962,6 @@ msgstr "Checkmkエージェント"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmkエージェント/API統合"
 
-#, fuzzy
-msgid "Checkmk agent connection failed"
-msgstr "Checkmkエージェント接続モード"
-
 msgid "Checkmk agent connection mode"
 msgstr "Checkmkエージェント接続モード"
 
@@ -14386,11 +14371,6 @@ msgstr "接続時間"
 
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "接続が確立されました。接続設定は問題ないようです。"
-
-msgid ""
-"Connection failed, enter new hostname to check again or download and install "
-"the Checkmk agent."
-msgstr ""
 
 #, python-format
 msgid "Connection id %s already exists."
@@ -23890,7 +23870,8 @@ msgstr ""
 "クラッシュレポートの送信に失敗しました。手動でダウンロードし、<a "
 "href=\"%s\">%s</a>まで送信してください"
 
-msgid "Failed to set start URL"
+#, fuzzy, python-format
+msgid "Failed to set start URL: %s"
 msgstr "開始URLの設定に失敗しました"
 
 #, fuzzy, python-format
@@ -48488,10 +48469,6 @@ msgid "Please enter a filename."
 msgstr "ファイル名を入力してください。"
 
 #, fuzzy
-msgid "Please enter a hostname to test Checkmk agent connection"
-msgstr "ホスト状態を再分類するためのホスト名を設定してください"
-
-#, fuzzy
 msgid "Please enter a name."
 msgstr "ファイル名を入力してください。"
 
@@ -61574,10 +61551,6 @@ msgstr "簡潔"
 
 msgid "Test"
 msgstr "テスト"
-
-#, fuzzy
-msgid "Test Checkmk agent connection"
-msgstr "Checkmkエージェント接続モード"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr "ルールセットに対して自分で定義した通知をテストする。"
@@ -85661,6 +85634,26 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, fuzzy
+#~ msgid "Agent connection successful"
+#~ msgstr "エージェント%sが成功しました"
+
+#, fuzzy
+#~ msgid "Agent connection test running"
+#~ msgstr "接続タイムアウトを設定する"
+
+#, fuzzy
+#~ msgid "Checkmk agent connection failed"
+#~ msgstr "Checkmkエージェント接続モード"
+
+#, fuzzy
+#~ msgid "Please enter a hostname to test Checkmk agent connection"
+#~ msgstr "ホスト状態を再分類するためのホスト名を設定してください"
+
+#, fuzzy
+#~ msgid "Test Checkmk agent connection"
+#~ msgstr "Checkmkエージェント接続モード"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "選択した集計を本当に移動しますか？"

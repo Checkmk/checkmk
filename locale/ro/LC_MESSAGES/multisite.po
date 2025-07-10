@@ -5179,14 +5179,6 @@ msgstr "Plugin-uri bazate pe agent (depreciat)"
 msgid "Agent certificates"
 msgstr "Certificate de agent"
 
-#, fuzzy
-msgid "Agent connection successful"
-msgstr "Agent %s a reușit"
-
-#, fuzzy
-msgid "Agent connection test running"
-msgstr "Setați timeout-ul conexiunii"
-
 msgid "Agent controller"
 msgstr "Controlor agent"
 
@@ -6411,9 +6403,6 @@ msgstr ""
 #, fuzzy
 msgid "Already installed the agent?"
 msgstr "Instalați întotdeauna Python cu agentul"
-
-msgid "Already installed the agent? If so, please check your firewall settings"
-msgstr ""
 
 msgid "Also bulk outside of time period"
 msgstr "De asemenea, vrac în afara perioadei de timp"
@@ -12645,10 +12634,6 @@ msgstr "Agent Checkmk"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agent / integrări API"
 
-#, fuzzy
-msgid "Checkmk agent connection failed"
-msgstr "Modul de conectare a agentului Checkmk"
-
 msgid "Checkmk agent connection mode"
 msgstr "Modul de conectare a agentului Checkmk"
 
@@ -15185,11 +15170,6 @@ msgstr "Duratele de conectare"
 
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Conexiune stabilită. Setările de conectare par a fi în regulă."
-
-msgid ""
-"Connection failed, enter new hostname to check again or download and install "
-"the Checkmk agent."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
@@ -25134,7 +25114,8 @@ msgstr ""
 "Nu s-a reușit trimiterea raportului de accident. Vă rugăm să îl descărcați "
 "manual și să îl trimiteți la <a href=\"%s\">%s</a>."
 
-msgid "Failed to set start URL"
+#, fuzzy, python-format
+msgid "Failed to set start URL: %s"
 msgstr "Nu a reușit să seteze URL-ul de pornire"
 
 #, fuzzy, python-format
@@ -50773,11 +50754,6 @@ msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
 
 #, fuzzy
-msgid "Please enter a hostname to test Checkmk agent connection"
-msgstr ""
-"Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de gazdă"
-
-#, fuzzy
 msgid "Please enter a name."
 msgstr "Vă rugăm să introduceți un nume de fișier."
 
@@ -64500,10 +64476,6 @@ msgstr "Tern"
 
 msgid "Test"
 msgstr "Test"
-
-#, fuzzy
-msgid "Test Checkmk agent connection"
-msgstr "Modul de conectare a agentului Checkmk"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr ""
@@ -90175,6 +90147,28 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Agent connection successful"
+#~ msgstr "Agent %s a reușit"
+
+#, fuzzy
+#~ msgid "Agent connection test running"
+#~ msgstr "Setați timeout-ul conexiunii"
+
+#, fuzzy
+#~ msgid "Checkmk agent connection failed"
+#~ msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
+#~ msgid "Please enter a hostname to test Checkmk agent connection"
+#~ msgstr ""
+#~ "Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de "
+#~ "gazdă"
+
+#, fuzzy
+#~ msgid "Test Checkmk agent connection"
+#~ msgstr "Modul de conectare a agentului Checkmk"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Chiar doriți să mutați agregările selectate?"

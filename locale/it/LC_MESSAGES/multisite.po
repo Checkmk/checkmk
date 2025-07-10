@@ -5133,14 +5133,6 @@ msgstr "Plugin basati su agenti (deprecati)"
 msgid "Agent certificates"
 msgstr "Certificati di agente"
 
-#, fuzzy
-msgid "Agent connection successful"
-msgstr "Agente %s riuscito"
-
-#, fuzzy
-msgid "Agent connection test running"
-msgstr "Impostare il timeout della connessione"
-
 msgid "Agent controller"
 msgstr "Agente controllore"
 
@@ -6360,9 +6352,6 @@ msgstr ""
 #, fuzzy
 msgid "Already installed the agent?"
 msgstr "Installare sempre Python con l'agente"
-
-msgid "Already installed the agent? If so, please check your firewall settings"
-msgstr ""
 
 msgid "Also bulk outside of time period"
 msgstr "Anche la massa al di fuori del periodo di tempo"
@@ -12511,10 +12500,6 @@ msgstr "Agente Checkmk"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agente / integrazioni API"
 
-#, fuzzy
-msgid "Checkmk agent connection failed"
-msgstr "Modalità di connessione dell'agente Checkmk"
-
 msgid "Checkmk agent connection mode"
 msgstr "Modalità di connessione dell'agente Checkmk"
 
@@ -15038,11 +15023,6 @@ msgstr "Durata della connessione"
 msgid "Connection established. The connection settings seem to be ok."
 msgstr ""
 "Connessione stabilita. Le impostazioni di connessione sembrano essere ok."
-
-msgid ""
-"Connection failed, enter new hostname to check again or download and install "
-"the Checkmk agent."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
@@ -24860,7 +24840,8 @@ msgstr ""
 "Impossibile inviare il rapporto di crash. Per favore scaricalo manualmente e "
 "invialo a <a href=\"%s\">%s</a>"
 
-msgid "Failed to set start URL"
+#, fuzzy, python-format
+msgid "Failed to set start URL: %s"
 msgstr "Impossibile impostare l'URL iniziale"
 
 #, fuzzy, python-format
@@ -50275,10 +50256,6 @@ msgid "Please enter a filename."
 msgstr "Inserisci un nome di file."
 
 #, fuzzy
-msgid "Please enter a hostname to test Checkmk agent connection"
-msgstr "Impostare un nome host per la riclassificazione dello stato dell'host"
-
-#, fuzzy
 msgid "Please enter a name."
 msgstr "Inserisci un nome di file."
 
@@ -63808,10 +63785,6 @@ msgstr "Terso"
 
 msgid "Test"
 msgstr "Test"
-
-#, fuzzy
-msgid "Test Checkmk agent connection"
-msgstr "Modalità di connessione dell'agente Checkmk"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr "Testate una notifica autodefinita rispetto al vostro set di regole."
@@ -89191,6 +89164,27 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Agent connection successful"
+#~ msgstr "Agente %s riuscito"
+
+#, fuzzy
+#~ msgid "Agent connection test running"
+#~ msgstr "Impostare il timeout della connessione"
+
+#, fuzzy
+#~ msgid "Checkmk agent connection failed"
+#~ msgstr "Modalità di connessione dell'agente Checkmk"
+
+#, fuzzy
+#~ msgid "Please enter a hostname to test Checkmk agent connection"
+#~ msgstr ""
+#~ "Impostare un nome host per la riclassificazione dello stato dell'host"
+
+#, fuzzy
+#~ msgid "Test Checkmk agent connection"
+#~ msgstr "Modalità di connessione dell'agente Checkmk"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Vuoi davvero spostare le aggregazioni selezionate?"

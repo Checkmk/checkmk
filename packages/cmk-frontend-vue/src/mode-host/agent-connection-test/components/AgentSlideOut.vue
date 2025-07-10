@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
@@ -13,12 +13,19 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 
 export interface AgentSlideOutTabs {
   id: string
   title: string
   install_msg?: string
+  install_cmd?: string
+  install_deb_cmd?: string
+  install_rpm_cmd?: string
+  install_tgz_cmd?: string
   registration_msg: string
+  toggle_button_options?: PackageOptions
 }
 
 defineProps<{
@@ -39,6 +46,15 @@ const openedTab = ref<string | number>('linux')
 const openAllAgentsPage = (url: string) => {
   window.open(url, '_blank')
 }
+
+const packageFormatRpm = 'rpm'
+const packageFormatDeb = 'deb'
+const packageFormatTgz = 'tgz'
+
+const model = ref(packageFormatDeb)
+watch(model, (newValue) => {
+  model.value = newValue
+})
 </script>
 
 <template>
@@ -68,10 +84,24 @@ const openAllAgentsPage = (url: string) => {
     </template>
     <template #tab-contents>
       <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
+        <ToggleButtonGroup
+          v-if="tab.toggle_button_options"
+          v-model="model"
+          :options="tab.toggle_button_options"
+        />
         <p v-if="tab.install_msg">{{ tab.install_msg }}</p>
         <div v-if="tab.install_msg" class="code_container">
-          <code>
-            {{ t('ags-placeholder', 'Placeholder for code component') }}
+          <code v-if="tab.install_deb_cmd && model === packageFormatDeb">
+            {{ tab.install_deb_cmd }}
+          </code>
+          <code v-if="tab.install_rpm_cmd && model === packageFormatRpm">
+            {{ tab.install_rpm_cmd }}
+          </code>
+          <code v-if="tab.install_tgz_cmd && model === packageFormatTgz">
+            {{ tab.install_tgz_cmd }}
+          </code>
+          <code v-if="tab.install_cmd">
+            {{ tab.install_cmd }}
           </code>
         </div>
         <p>{{ tab.registration_msg }}</p>

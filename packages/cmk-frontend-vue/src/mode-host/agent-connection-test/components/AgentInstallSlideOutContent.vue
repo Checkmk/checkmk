@@ -14,6 +14,17 @@ defineProps<{
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
+
+export type PackageOption = {
+  label: 'RPM' | 'DEB' | 'TGZ'
+  value: 'rpm' | 'deb' | 'tgz'
+}
+export type PackageOptions = PackageOption[]
+const toggleButtonOptions: PackageOptions = [
+  { label: 'RPM', value: 'rpm' },
+  { label: 'DEB', value: 'deb' },
+  { label: 'TGZ', value: 'tgz' }
+]
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
@@ -27,6 +38,7 @@ const tabs: AgentSlideOutTabs[] = [
       'agent_windows_install_msg',
       'Run this command on your Windows host to download and install the Checkmk agent.'
     ),
+    install_cmd: t('ags-placeholder', 'Placeholder for code component'),
     registration_msg: t(
       'agent-windows-registration-msg',
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller.'
@@ -39,10 +51,14 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-linux-install-msg',
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
+    install_deb_cmd: t('agent-connection-test-install-deb', 'Placeholder for DPKG command'),
+    install_rpm_cmd: t('agent-connection-test-install-rpm', 'Placeholder for RPM command'),
+    install_tgz_cmd: t('agent-connection-test-install-tgz', 'Placeholder for TGZ command'),
     registration_msg: t(
       'agent-linux-registration-msg',
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
-    )
+    ),
+    toggle_button_options: toggleButtonOptions
   },
   {
     id: 'solaris',
@@ -51,6 +67,7 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-solaris-install-msg',
       'Run this command on your Solaris host to download the Checkmk agent.'
     ),
+    install_cmd: t('ags-placeholder', 'Placeholder for code component'),
     registration_msg: t(
       'agent-solaris-registration-msg',
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
@@ -63,6 +80,7 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-aix-install-msg',
       'Run this command on your AIX host to download and install the Checkmk agent.'
     ),
+    install_cmd: t('ags-placeholder', 'Placeholder for code component'),
     registration_msg: t(
       'agent-aix-registration-msg',
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'

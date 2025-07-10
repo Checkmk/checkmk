@@ -22,25 +22,25 @@ const close = () => {
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
-    title: t('agent_windows', 'Windows'),
+    title: t('agent-windows', 'Windows'),
     install_msg: t(
       'agent_windows_install_msg',
       'Run this command on your Windows host to download and install the Checkmk agent.'
     ),
     registration_msg: t(
-      'agent_windows_registration_msg',
+      'agent-windows-registration-msg',
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller.'
     )
   },
   {
     id: 'linux',
-    title: t('agent_linux', 'Linux'),
+    title: t('agent-linux', 'Linux'),
     install_msg: t(
-      'agent_linux_install_msg',
+      'agent-linux-install-msg',
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
     registration_msg: t(
-      'agent_linux_registration_msg',
+      'agent-linux-registration-msg',
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
     )
   },
@@ -48,11 +48,11 @@ const tabs: AgentSlideOutTabs[] = [
     id: 'solaris',
     title: t('agent_solaris', 'Solaris'),
     install_msg: t(
-      'agent_solaris_install_msg',
+      'agent-solaris-install-msg',
       'Run this command on your Solaris host to download the Checkmk agent.'
     ),
     registration_msg: t(
-      'agent_solaris_registration_msg',
+      'agent-solaris-registration-msg',
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
     )
   },
@@ -60,11 +60,11 @@ const tabs: AgentSlideOutTabs[] = [
     id: 'aix',
     title: t('agent_solaris', 'AIX'),
     install_msg: t(
-      'agent_aix_install_msg',
+      'agent-aix-install-msg',
       'Run this command on your AIX host to download and install the Checkmk agent.'
     ),
     registration_msg: t(
-      'agent_aix_registration_msg',
+      'agent-aix-registration-msg',
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'
     )
   }

@@ -19,38 +19,31 @@ const close = () => {
   emit('close')
 }
 
+const registrationMessage = t(
+  'agent-windows-register-msg',
+  'Run this command to register the Checkmk agent controller'
+)
+
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
-    title: t('agent_windows', 'Windows'),
-    registration_msg: t(
-      'agent_windows_register_msg',
-      'Run this command to register the Checkmk agent controller'
-    )
+    title: t('agent-windows', 'Windows'),
+    registration_msg: registrationMessage
   },
   {
     id: 'linux',
-    title: t('agent_linux', 'Linux'),
-    registration_msg: t(
-      'agent_windows_register_msg',
-      'Run this command to register the Checkmk agent controller'
-    )
+    title: t('agent-linux', 'Linux'),
+    registration_msg: registrationMessage
   },
   {
     id: 'solaris',
-    title: t('agent_solaris', 'Solaris'),
-    registration_msg: t(
-      'agent_windows_register_msg',
-      'Run this command to register the Checkmk agent controller'
-    )
+    title: t('agent-solaris', 'Solaris'),
+    registration_msg: registrationMessage
   },
   {
     id: 'aix',
-    title: t('agent_solaris', 'AIX'),
-    registration_msg: t(
-      'agent_windows_register_msg',
-      'Run this command to register the Checkmk agent controller'
-    )
+    title: t('agent-solaris', 'AIX'),
+    registration_msg: registrationMessage
   }
 ]
 </script>

@@ -42,30 +42,30 @@ const openAllAgentsPage = (url: string) => {
 
 <template>
   <CmkButton
-    :title="t('ads_close_and_test', 'Close & test agent connection')"
+    :title="t('ads-close-and-test', 'Close & test agent connection')"
     class="close_and_test"
     @click="close"
   >
-    {{ t('ads_close_and_test', 'Close & test agent connection') }}
+    {{ t('ads-close-and-test', 'Close & test agent connection') }}
   </CmkButton>
   <CmkButton
-    :title="t('ads_all_agents', 'View all agents')"
+    :title="t('ads-all-agents', 'View all agents')"
     class="all_agents"
     @click="() => openAllAgentsPage(url)"
   >
-    {{ t('ads_all_agents', 'View all agents') }}
+    {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
   <CmkDialog
     :message="
       t(
-        'ads_dialog_msg',
+        'ads-dialog-msg',
         'To monitor systems like Linux or Windows with Checkmk, you need to install an agent on these systems. This agent acts as a small program that collects data about the systems state, such as how much storage is used or the CPU load'
       )
     "
     :dismissal_button="{ title: 'Do not show again', key: 'key' }"
   />
   <CmkHeading2 class="heading">
-    {{ t('ads_heading2', 'Select the type of system you want to monitor') }}
+    {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
   </CmkHeading2>
   <CmkTabs v-model="openedTab">
     <template #tabs>
@@ -78,19 +78,19 @@ const openAllAgentsPage = (url: string) => {
         <p v-if="tab.install_msg">{{ tab.install_msg }}</p>
         <div v-if="tab.install_msg" class="code_container">
           <code>
-            {{ t('ags_placeholder', 'Placeholder for code component') }}
+            {{ t('ags-placeholder', 'Placeholder for code component') }}
           </code>
         </div>
         <p>{{ tab.registration_msg }}</p>
         <div class="code_container">
           <code>
-            {{ t('ags_placeholder', 'Placeholder for code component') }}
+            {{ t('ags-placeholder', 'Placeholder for code component') }}
           </code>
         </div>
         <p>
           {{
             t(
-              'agent_download_finish_msg',
+              'agent-download-finish-msg',
               'After installing, you can close the slideout and test the agent connection.'
             )
           }}

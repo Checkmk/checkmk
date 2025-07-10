@@ -87,24 +87,24 @@ const isError = ref(false)
 const errorDetails = ref('')
 const tooltipText = computed(() => {
   if (isLoading.value) {
-    return t('agent_connection_test_loading_msg', 'Agent connection test running')
+    return t('agent-connection-test-loading-msg', 'Agent connection test running')
   }
   if (isSuccess.value) {
-    return t('agent_connection_test_success_msg', 'Agent connection successful')
+    return t('agent-connection-test-success-msg', 'Agent connection successful')
   }
   if (isError.value) {
     return t(
-      'agent_connection_test_error_msg',
+      'agent-connection-test-error-msg',
       'Connection failed, enter new hostname to check again or download and install the Checkmk agent.'
     )
   }
   if (!hostname.value) {
     return t(
-      'agent_connection_test_missing_msg',
+      'agent-connection-test-missing-msg',
       'Please enter a hostname to test Checkmk agent connection'
     )
   }
-  return t('agent_connection_test_start_msg', 'Test Checkmk agent connection')
+  return t('agent-connection-test-start-msg', 'Test Checkmk agent connection')
 })
 const isNotRegistered = computed(() => {
   if (errorDetails.value.includes('controller not registered')) {
@@ -115,9 +115,9 @@ const isNotRegistered = computed(() => {
 
 const slideOutTitle = computed(() => {
   if (isNotRegistered.value) {
-    return t('agent_connection_test_title_register', 'Register agent')
+    return t('agent-connection-test-title-register', 'Register agent')
   }
-  return t('agent_connection_test_title_install', 'Install Checkmk agent')
+  return t('agent-connection-test-title-install', 'Install Checkmk agent')
 })
 
 type AutomationResponse = {

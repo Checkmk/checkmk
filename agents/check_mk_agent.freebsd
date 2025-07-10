@@ -657,6 +657,11 @@ run_purely_synchronous_sections() {
         ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     fi
 
+    if inpath chronyc; then
+        echo '<<<chrony>>>'
+        chronyc -n tracking | cat || true
+    fi
+
     # Number of TCP connections in the various states
     echo '<<<tcp_conn_stats>>>'
     netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'

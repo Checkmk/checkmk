@@ -1282,7 +1282,7 @@ class Site:
     def is_running(self) -> bool:
         return self.omd("status").returncode == 0
 
-    def get_omd_service_names_and_statuses(site: Site, service: str = "") -> dict[str, int]:
+    def get_omd_service_names_and_statuses(self, service: str = "") -> dict[str, int]:
         """
         Return all service names and their statuses for the given site.
         """
@@ -1290,7 +1290,7 @@ class Site:
         cmd = ["status", "--bare"]
         if service:
             cmd.append(service)
-        p = site.omd(*cmd, check=False)
+        p = self.omd(*cmd, check=False)
         services = {}
         for line in p.stdout.strip().splitlines():
             parts = line.split()
@@ -1302,7 +1302,10 @@ class Site:
                         f"Expected status code to be an integer for service {parts[0]}"
                     ) from e
         if not services:
-            raise RuntimeError("No services found in 'omd status --bare' output:\n" + p.stdout)
+            raise RuntimeError(
+                f"No status found for '{' '.join(cmd)}'!\nSTDOUT:\n{p.stdout}\n",
+                f"STDERR:\n{p.stderr}\n",
+            )
         return services
 
     def is_stopped(self) -> bool:

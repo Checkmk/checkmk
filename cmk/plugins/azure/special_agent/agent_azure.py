@@ -569,7 +569,6 @@ class BaseApiClient:
 
     def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
         response = get_response()
-        self._update_ratelimit(response)
 
         for cool_off_interval in (5, 10):
             if response.status_code != 429:
@@ -578,38 +577,9 @@ class BaseApiClient:
             LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
             time.sleep(cool_off_interval)
             response = get_response()
-            self._update_ratelimit(response)
+        self._update_ratelimit(response)
 
         return response
-
-    # TODO: remove when no more used
-    def _get(
-        self,
-        uri_end,
-        key=None,
-        params=None,
-        next_page_key="nextLink",
-    ):
-        return self.request(
-            method="GET",
-            uri_end=uri_end,
-            key=key,
-            params=params,
-            next_page_key=next_page_key,
-        )
-
-    def _process_query(self, columns, rows, common_metadata):
-        processed_query = []
-        column_names = [c["name"] for c in columns]
-        for index, row in enumerate(rows):
-            processed_row = common_metadata.copy()
-            # each entry should have a different name because the agent expects this value to be
-            # different for each resource but in case of a query the "name" is the id of the
-            # query so we replace it with a different name for each query result
-            processed_row["name"] = f"{processed_row['name']}-{index}"
-            processed_row["properties"] = dict(zip(column_names, row))
-            processed_query.append(processed_row)
-        return processed_query
 
     def request(
         self,
@@ -633,11 +603,11 @@ class BaseApiClient:
         if key is None:  # we do not paginate without a key
             return json_data
 
-        data = self._lookup(json_data, key)
+        data = self.lookup_json_data(json_data, key)
 
         while next_link := json_data.get(next_page_key):
             json_data = self._request_json_from_url(method, next_link, body=body)
-            data += self._lookup(json_data, key)
+            data += self.lookup_json_data(json_data, key)
 
         return data
 
@@ -658,7 +628,7 @@ class BaseApiClient:
         return json_data
 
     @staticmethod
-    def _lookup(json_data, key):
+    def lookup_json_data(json_data, key):
         try:
             return json_data[key]
         except KeyError:
@@ -677,6 +647,7 @@ class BaseAsyncApiClient(BaseApiClient):
     async def __aenter__(self):
         self.login(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
+            # TODO: can the proxy be passed here?
             self._session = aiohttp.ClientSession(headers=self._headers)
 
         return self
@@ -685,36 +656,6 @@ class BaseAsyncApiClient(BaseApiClient):
         if self._session and not self._session.closed:
             await self._session.close()
         self._session = None
-
-    # TODO: only used in usage_details
-    async def _query_async(self, uri_end, body, params=None):
-        if self._session is None or self._session.closed:
-            raise RuntimeError(
-                "Session is not active. Use 'async with BaseAsyncApiClient(...) as client: ...'"
-            )
-
-        async with self._session.request(
-            "POST",
-            self._base_url + uri_end,
-            json=body,
-            params=params,
-            timeout=aiohttp.ClientTimeout(total=30),
-            proxy=self._http_proxy_config.to_requests_proxies(),
-        ) as response:
-            json_data = await response.json()
-            data = self._lookup(json_data, "properties")
-            columns = self._lookup(data, "columns")
-            rows = self._lookup(data, "rows")
-
-            while next_link := data.get("nextLink"):
-                async with self._session.post(next_link, json=body) as new_response:
-                    new_json_data = await new_response.json()
-                    data = self._lookup(new_json_data, "properties")
-                    rows += self._lookup(data, "rows")
-
-            common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
-            processed_query = self._process_query(columns, rows, common_metadata)
-            return processed_query
 
     async def _handle_ratelimit_async(self, method, url, custom_headers=None, **kwargs):
         async def get_response():
@@ -730,8 +671,6 @@ class BaseAsyncApiClient(BaseApiClient):
                 return response
 
         response = await get_response()
-        self._update_ratelimit(response)
-
         for cool_off_interval in (5, 10):
             if response.status != 429:
                 break
@@ -739,7 +678,7 @@ class BaseAsyncApiClient(BaseApiClient):
             LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
             await asyncio.sleep(cool_off_interval)
             response = await get_response()
-            self._update_ratelimit(response)
+        self._update_ratelimit(response)
 
         return response
 
@@ -773,14 +712,14 @@ class BaseAsyncApiClient(BaseApiClient):
         if (error := json_data.get("error")) is not None:
             raise _make_exception(error)
 
-        if key is None:
+        if key is None:  # we do not paginate here without a key
             return json_data
 
-        data = self._lookup(json_data, key)
+        data = self.lookup_json_data(json_data, key)
 
         while next_link := json_data.get(next_page_key):
             json_data = await self.request_async(method, full_uri=next_link, body=body)
-            data += self._lookup(json_data, key)
+            data += self.lookup_json_data(json_data, key)
 
         return data
 
@@ -851,37 +790,6 @@ class MgmtApiClient(BaseAsyncApiClient):
         )
         return await self.get_async(
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
-        )
-
-    async def usagedetails(self):
-        yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        body = {
-            "type": "ActualCost",
-            "dataSet": {
-                "granularity": "None",
-                "aggregation": {
-                    "totalCost": {"name": "Cost", "function": "Sum"},
-                    "totalCostUSD": {"name": "CostUSD", "function": "Sum"},
-                },
-                "grouping": [
-                    {"type": "Dimension", "name": "ResourceType"},
-                    {"type": "Dimension", "name": "ResourceGroupName"},
-                ],
-                "include": ["Tags"],
-            },
-            "timeframe": "Custom",
-            "timePeriod": {
-                "from": f"{yesterday}T00:00:00+00:00",
-                "to": f"{yesterday}T23:59:59+00:00",
-            },
-        }
-        return await self._query_async(
-            "/providers/Microsoft.CostManagement/query",
-            body=body,
-            # here 10000 might be too high,
-            # but I haven't found any useful documentation.
-            # No "$top" means 1000
-            params={"api-version": "2021-10-01", "$top": "10000"},
         )
 
     async def metrics(self, region, resource_ids, params):
@@ -1965,8 +1873,68 @@ async def main_graph_client(args: Args, monitored_services: set[str]) -> None:
         _handle_graph_client_exception(exc, args.debug)
 
 
+def _process_query_id(columns, rows, common_metadata):
+    processed_query = []
+    column_names = [c["name"] for c in columns]
+    for index, row in enumerate(rows):
+        processed_row = common_metadata.copy()
+        # each entry should have a different name because the agent expects this value to be
+        # different for each resource but in case of a query the "name" is the id of the
+        # query so we replace it with a different name for each query result
+        processed_row["name"] = f"{processed_row['name']}-{index}"
+        processed_row["properties"] = dict(zip(column_names, row))
+        processed_query.append(processed_row)
+    return processed_query
+
+
+async def _collect_usage_data(mgmt_client: MgmtApiClient) -> Sequence[dict[str, Any]]:
+    yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    body = {
+        "type": "ActualCost",
+        "dataSet": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {"name": "Cost", "function": "Sum"},
+                "totalCostUSD": {"name": "CostUSD", "function": "Sum"},
+            },
+            "grouping": [
+                {"type": "Dimension", "name": "ResourceType"},
+                {"type": "Dimension", "name": "ResourceGroupName"},
+            ],
+            "include": ["Tags"],
+        },
+        "timeframe": "Custom",
+        "timePeriod": {
+            "from": f"{yesterday}T00:00:00+00:00",
+            "to": f"{yesterday}T23:59:59+00:00",
+        },
+    }
+    json_data = await mgmt_client.request_async(
+        "POST",
+        "/providers/Microsoft.CostManagement/query",
+        body=body,
+        params={"api-version": "2025-03-01"},
+    )
+
+    # since data is nested in "properties" and "columns" we need to
+    # paginate here in a specific way
+
+    data = mgmt_client.lookup_json_data(json_data, "properties")
+    columns = mgmt_client.lookup_json_data(data, "columns")
+    rows = mgmt_client.lookup_json_data(data, "rows")
+
+    while next_link := data.get("nextLink"):
+        new_json_data = await mgmt_client.request_async("POST", full_uri=next_link, body=body)
+        data = mgmt_client.lookup_json_data(new_json_data, "properties")
+        rows += mgmt_client.lookup_json_data(data, "rows")
+
+    common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
+    processed_query = _process_query_id(columns, rows, common_metadata)
+    return processed_query
+
+
 # TODO: do not call usage data inside the client
-async def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
+async def get_usage_data(client: MgmtApiClient) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",
@@ -1981,23 +1949,19 @@ async def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[
     LOGGER.debug("get usage details")
 
     try:
-        usage_data = await client.usagedetails()
+        usage_data = await _collect_usage_data(client)
     except ApiError as exc:
         if any(s in exc.args[0] for s in NO_CONSUMPTION_API):
             raise NoConsumptionAPIError
         raise
 
+    # TODO: usage details are related to yesterday! Can we cache them?
     LOGGER.debug("yesterdays usage details: %d", len(usage_data))
-
-    for usage in usage_data:
-        usage["type"] = "Microsoft.Consumption/usageDetails"
-        usage["group"] = usage["properties"]["ResourceGroupName"]
-
     return usage_data
 
 
 def write_usage_section(
-    usage_data: Sequence[Mapping[str, Any]],
+    usage_data: Sequence[dict[str, Any]],
     monitored_groups: list[str],
     tag_key_pattern: TagsOption,
 ) -> None:
@@ -2005,6 +1969,10 @@ def write_usage_section(
         AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
 
     for usage in usage_data:
+        # fill "resource" mandatory information
+        usage["type"] = "Microsoft.Consumption/usageDetails"
+        usage["group"] = usage["properties"]["ResourceGroupName"]
+
         usage_resource = AzureResource(usage, tag_key_pattern)
         piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
 
@@ -2017,7 +1985,7 @@ async def process_usage_details(
     mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args
 ) -> None:
     try:
-        usage_section = await get_usage_data(mgmt_client, args)
+        usage_section = await get_usage_data(mgmt_client)
         if not usage_section:
             write_to_agent_info_section(
                 "Azure API did not return any usage details", "Usage client", 0

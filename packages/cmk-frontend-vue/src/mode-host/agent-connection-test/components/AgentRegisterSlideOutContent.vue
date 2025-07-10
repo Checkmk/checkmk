@@ -49,5 +49,15 @@ const tabs: AgentSlideOutTabs[] = [
 </script>
 
 <template>
-  <AgentSlideOut :url="url" :tabs="tabs" @close="close" />
+  <AgentSlideOut
+    :dialog_msg="
+      t(
+        'ads-dialog-register-msg',
+        'Agent registration configures TLS encryption to ensure secure communication, thereby guaranteeing that data transmitted between the agent and the server is secure and trustworthy.'
+      )
+    "
+    :tabs="tabs"
+    :url="url"
+    @close="close"
+  />
 </template>

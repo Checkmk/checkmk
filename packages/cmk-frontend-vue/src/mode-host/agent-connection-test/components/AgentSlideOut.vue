@@ -22,6 +22,7 @@ export interface AgentSlideOutTabs {
 }
 
 defineProps<{
+  dialog_msg: string
   tabs: AgentSlideOutTabs[]
   url: string
 }>()
@@ -55,15 +56,7 @@ const openAllAgentsPage = (url: string) => {
   >
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
-  <CmkDialog
-    :message="
-      t(
-        'ads-dialog-msg',
-        'To monitor systems like Linux or Windows with Checkmk, you need to install an agent on these systems. This agent acts as a small program that collects data about the systems state, such as how much storage is used or the CPU load'
-      )
-    "
-    :dismissal_button="{ title: 'Do not show again', key: 'key' }"
-  />
+  <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
   <CmkHeading2 class="heading">
     {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
   </CmkHeading2>

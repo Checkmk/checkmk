@@ -72,5 +72,15 @@ const tabs: AgentSlideOutTabs[] = [
 </script>
 
 <template>
-  <AgentSlideOut :url="url" :tabs="tabs" @close="close" />
+  <AgentSlideOut
+    :dialog_msg="
+      t(
+        'ads-dialog-install-msg',
+        'To monitor systems like Linux or Windows with Checkmk, you need to install an agent on these systems. This agent acts as a small program that collects data about the systems state, such as how much storage is used or the CPU load'
+      )
+    "
+    :tabs="tabs"
+    :url="url"
+    @close="close"
+  />
 </template>

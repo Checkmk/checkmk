@@ -286,10 +286,6 @@ const activateChangesButtonDisabled = computed((): boolean => {
   )
 })
 
-const sitesRecentlyActivated = computed((): boolean => {
-  return sitesAndChanges.value.sites.some((site) => site.recentlyActivated === true)
-})
-
 const weHavePendingChanges = computed((): boolean => {
   return sitesAndChanges.value.pendingChanges.length > 0
 })
@@ -432,47 +428,31 @@ onMounted(() => {
     </CmkScrollContainer>
 
     <CmkCollapsibleTitle
-      v-if="weHavePendingChanges || sitesRecentlyActivated"
+      v-if="weHavePendingChanges"
       :title="`Changes`"
       class="collapsible-title"
       :open="pendingChangesCollapsible"
       @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
     />
-    <CmkScrollContainer class="container-pending-changes" height="auto">
+    <CmkScrollContainer v-if="weHavePendingChanges" class="scroll-container-changes" height="auto">
       <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
-        <CmkIndent v-if="!weHavePendingChanges && sitesRecentlyActivated" class="pending-changes">
-          <div class="pending-changes-activate-success">
-            <span>
-              <CmkIcon variant="plain" size="xxlarge" name="save" />
-            </span>
-            <br />
-            <span class="no-pending-changes-text">{{
-              t('no-pending-changes', 'No pending changes')
-            }}</span>
-            <br />
-            <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
-          </div>
-        </CmkIndent>
         <CmkIndent
           v-for="change in sitesAndChanges.pendingChanges"
-          v-else
           :key="change.changeId"
-          class="pending-changes"
+          class="pending-change-container"
           :class="{ 'red-text': change.user !== user_name && change.user !== null }"
         >
-          <span class="pending-changes-change-text">
-            {{ change.changeText }}
-          </span>
-          <br />
-          <span class="pending-changes-which-sites">
-            {{ change.whichSites }}
-          </span>
-          <br />
+          <span class="change-text">{{ change.changeText }}</span>
+
           <div
-            class="pending-change-user"
+            class="change-user-sites-timestamp"
             :class="{ 'grey-text': change.user === user_name || change.user === null }"
           >
-            <span>{{ change.user }} </span>
+            <div class="user-sites-timestamp">
+              <span>{{ change.user }}</span>
+              <span>|</span>
+              <span>{{ change.whichSites }}</span>
+            </div>
             <span>{{ change.timestring }}</span>
           </div>
         </CmkIndent>
@@ -560,16 +540,25 @@ onMounted(() => {
   flex: 2;
 }
 
-.container-pending-changes {
-  flex: 5;
-}
-
 .cmk-button-submit {
   margin-right: 10px;
 }
 
 .collapsible-title {
   margin-top: 20px;
+}
+
+.scroll-container-sites {
+  width: inherit;
+}
+
+.scroll-container-changes {
+  width: inherit;
+  flex: 5;
+}
+
+.cmk-collapsible {
+  width: 100%;
 }
 
 .cmk-indent {
@@ -583,10 +572,33 @@ onMounted(() => {
   }
 }
 
-.pending-changes span {
-  margin-bottom: 3px;
-  margin-right: 5px;
-  display: inline-block;
+.change-user-sites-timestamp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  color: rgba(255, 255, 255, 0.5);
+  /* font-family: Roboto; */
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.36px;
+}
+
+.user-sites-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pending-change-container {
+  display: flex;
+  /* width: inherit; */
+  padding: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 .pending-changes-activate-success {
   display: flex;
@@ -598,8 +610,18 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.pending-changes-change-text {
-  font-weight: bold;
+.change-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  align-self: stretch;
+  color: #fff;
+  /* font-family: Roboto; */
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: 0.36px;
 }
 
 .pending-changes-which-sites {

@@ -12,3 +12,14 @@ cc_args(
         "-fno-canonical-system-headers",  # gcc-only
     ],
 )
+
+cc_args(
+    name = "link_libs",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-lstdc++",
+        "-lm",
+    ],
+)

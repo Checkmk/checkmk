@@ -89,14 +89,15 @@ interface ActivatePendingChangesResponse {
 }
 
 // Site information as returned by the ajax call
-// The activationStatus is only added when activating changes
+// The lastActivationStatus is added when activating changes
 interface Site {
   siteId: string
   siteName: string
   onlineStatus: string
   changes: number
   version: string
-  activationStatus: StatusPerSiteResponse | undefined
+  lastActivationStatus: StatusPerSiteResponse | undefined
+  recentlyActivated: boolean
 }
 
 interface PendingChanges {
@@ -121,17 +122,45 @@ const sitesAndChanges = ref<SitesAndChanges>({
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
+function storeLastActivationStatus() {
+  sitesAndChanges.value.sites.forEach((site) => {
+    if (site.lastActivationStatus) {
+      localStorage.setItem(
+        `lastActivationStatus-${site.siteId}`,
+        JSON.stringify(site.lastActivationStatus)
+      )
+    }
+  })
+}
+
+function loadLastActivationStatus(sites: Array<Site>): Array<Site> {
+  return sites.map((site: Site) => {
+    const lastActivationStatus = localStorage.getItem(`lastActivationStatus-${site.siteId}`)
+    if (lastActivationStatus) {
+      return {
+        ...site,
+        lastActivationStatus: JSON.parse(lastActivationStatus)
+      }
+    }
+    return {
+      ...site,
+      lastActivationStatus: undefined // No activation status available
+    }
+  })
+}
+
 function activateChangesComplete(starttime: number): void {
   activateChangesInProgress.value = false
-  // Fetches the pending changes again to update the UI but leaves the activation status intact
+  // Fetches pending changes & preserve the current activation status
   void fetchPendingChangesAjax(true)
 
-  // We are currently using the time from the actiavtion status response but
+  // We are currently using the time from the activation status response but
   // This doesn't take into account the browser time zone.
   const starttimeFormatted = new Date(starttime).toLocaleTimeString('en-GB', {
     hour12: false
   })
   activationStartAndEndTimes.value = `Start: ${starttimeFormatted} | End: ${new Date().toLocaleTimeString('en-GB', { hour12: false })}`
+  storeLastActivationStatus()
 }
 
 async function getActivationStatus(activationId: string) {
@@ -143,7 +172,8 @@ async function getActivationStatus(activationId: string) {
   sitesAndChanges.value.sites.forEach((site) => {
     const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
     if (siteStatus) {
-      site.activationStatus = siteStatus
+      site.lastActivationStatus = siteStatus
+      site.recentlyActivated = true
     }
   })
 
@@ -189,7 +219,7 @@ async function activateAllChanges() {
   }
 }
 
-async function fetchPendingChangesAjax(preserveActivationStatus: boolean): Promise<void> {
+async function fetchPendingChangesAjax(recentlyActivated: boolean): Promise<void> {
   try {
     const dataAsJson = (await ajaxCall.get(
       'ajax_sidebar_get_sites_and_changes.py'
@@ -202,24 +232,22 @@ async function fetchPendingChangesAjax(preserveActivationStatus: boolean): Promi
       }))
     }
 
-    if (preserveActivationStatus) {
-      // Preserve the current activationStatus for each site
-      const currentSites = sitesAndChanges.value.sites
-      sitesAndChanges.value = {
-        ...dataAsJson,
-        sites: dataAsJson.sites.map((newSite) => {
-          const oldSite = currentSites.find((s) => s.siteId === newSite.siteId)
-          return oldSite && oldSite.activationStatus
-            ? { ...newSite, activationStatus: oldSite.activationStatus }
-            : newSite
-        })
-      }
-    } else {
-      // Reset the activationStatus for each site
-      sitesAndChanges.value = {
-        ...dataAsJson,
-        sites: dataAsJson.sites.map((site) => ({ ...site, activationStatus: undefined }))
-      }
+    dataAsJson.sites = loadLastActivationStatus(dataAsJson.sites)
+
+    // Preserve the current activationStatus for each site
+    const currentSites = sitesAndChanges.value.sites
+    sitesAndChanges.value = {
+      ...dataAsJson,
+      sites: dataAsJson.sites.map((newSite) => {
+        const oldSite = currentSites.find((s) => s.siteId === newSite.siteId)
+        return oldSite && oldSite.lastActivationStatus
+          ? {
+              ...newSite,
+              lastActivationStatus: oldSite.lastActivationStatus,
+              recentlyActivated: recentlyActivated
+            }
+          : newSite
+      })
     }
   } catch (error) {
     throw new Error(`fetchPendingChangsAjax failed: ${error}`)
@@ -259,7 +287,7 @@ const activateChangesButtonDisabled = computed((): boolean => {
 })
 
 const sitesRecentlyActivated = computed((): boolean => {
-  return sitesAndChanges.value.sites.some((site) => site.activationStatus !== undefined)
+  return sitesAndChanges.value.sites.some((site) => site.recentlyActivated === true)
 })
 
 const weHavePendingChanges = computed((): boolean => {
@@ -318,7 +346,7 @@ onMounted(() => {
     >
       <CmkCollapsible :open="activationStatusCollapsible">
         <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
-          <CmkIndent v-if="site.activationStatus !== undefined" class="sites_status">
+          <CmkIndent v-if="site.lastActivationStatus !== undefined" class="sites_status">
             <div class="site-name-status-version">
               <span class="site-name">{{ site.siteName }}</span>
               <CmkChip
@@ -329,43 +357,49 @@ onMounted(() => {
               <span class="site-version-activate-success grey-text">{{ site.version }}</span>
             </div>
 
-            <template v-if="site.activationStatus.phase === 'done'">
-              <div v-if="site.activationStatus.state === 'success'" class="site-activate-success">
+            <template v-if="site.lastActivationStatus.phase === 'done'">
+              <div
+                v-if="site.lastActivationStatus.state === 'success'"
+                class="site-activate-success"
+              >
                 <CmkIcon variant="inline" name="save" />
                 <div>
-                  <span v-if="site.activationStatus.state === 'success'">{{
+                  <span v-if="site.lastActivationStatus.state === 'success'">{{
                     t('changes-activated-successfully', 'Changes successfully activated')
                   }}</span>
                   <br />
-                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                  <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
                 </div>
               </div>
-              <div v-if="site.activationStatus.state === 'warning'" class="site-activate-warning">
+              <div
+                v-if="site.lastActivationStatus.state === 'warning'"
+                class="site-activate-warning"
+              >
                 <CmkIcon variant="inline" name="validation-error" />
                 <div>
-                  <span v-if="site.activationStatus?.state === 'warning'">{{
+                  <span v-if="site.lastActivationStatus?.state === 'warning'">{{
                     t('changes-activated-with-warning', 'Warning')
                   }}</span>
                   <br />
-                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                  <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
                 </div>
               </div>
-              <div v-if="site.activationStatus.state === 'error'" class="site-activate-error">
+              <div v-if="site.lastActivationStatus.state === 'error'" class="site-activate-error">
                 <CmkIcon variant="inline" name="alert_crit" />
                 <div>
-                  <span v-if="site.activationStatus.state === 'error'">{{
+                  <span v-if="site.lastActivationStatus.state === 'error'">{{
                     t('changes-failed-to-activate', 'Error')
                   }}</span>
                   <br />
-                  <span class="grey-text">{{ site.activationStatus.status_details }}</span>
+                  <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
                 </div>
               </div>
             </template>
             <template v-else>
               <div class="progress-bar">
                 <span>{{
-                  site.activationStatus.phase.charAt(0).toUpperCase() +
-                  site.activationStatus.phase.slice(1)
+                  site.lastActivationStatus.phase.charAt(0).toUpperCase() +
+                  site.lastActivationStatus.phase.slice(1)
                 }}</span>
                 <CmkProgressbar max="unknown"></CmkProgressbar>
               </div>

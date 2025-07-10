@@ -10,6 +10,7 @@ import DemoEmpty from './DemoEmpty.vue'
 import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
+import DemoCmkCode from './DemoCmkCode.vue'
 import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
@@ -121,6 +122,11 @@ const routes: Route[] = [
     path: '/cmkspace',
     name: 'CmkSpace',
     component: DemoCmkSpace
+  },
+  {
+    path: '/cmkcode',
+    name: 'CmkCode',
+    component: DemoCmkCode
   },
   {
     path: '/cmkicon',

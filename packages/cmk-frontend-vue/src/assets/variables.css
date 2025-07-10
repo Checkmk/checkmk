@@ -94,6 +94,7 @@
   --icon-notifications: url('~cmk-frontend/src/themes/facelift/images/icon_notifications.svg');
   --icon-analysis: url('~cmk-frontend/src/themes/facelift/images/icon_analysis.svg');
   --icon-new: url('~cmk-frontend/src/themes/facelift/images/icon_new.svg');
+  --icon-copied: url('~cmk-frontend/src/themes/facelift/images/icon_copied.svg');
 }
 
 @layer theme {

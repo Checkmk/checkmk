@@ -19,6 +19,7 @@ import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkChip from '@/components/CmkChip.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -27,6 +28,8 @@ const props = defineProps<{
   user_name: string
 }>()
 
+const selectedSites = ref<Array<string>>([])
+const recentlyActivatedSites = ref<Array<string>>([])
 const activationStatusCollapsible = ref<boolean>(true)
 const pendingChangesCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
@@ -97,7 +100,6 @@ interface Site {
   changes: number
   version: string
   lastActivationStatus: StatusPerSiteResponse | undefined
-  recentlyActivated: boolean
 }
 
 interface PendingChanges {
@@ -152,7 +154,7 @@ function loadLastActivationStatus(sites: Array<Site>): Array<Site> {
 function activateChangesComplete(starttime: number): void {
   activateChangesInProgress.value = false
   // Fetches pending changes & preserve the current activation status
-  void fetchPendingChangesAjax(true)
+  void fetchPendingChangesAjax()
 
   // We are currently using the time from the activation status response but
   // This doesn't take into account the browser time zone.
@@ -173,7 +175,7 @@ async function getActivationStatus(activationId: string) {
     const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
     if (siteStatus) {
       site.lastActivationStatus = siteStatus
-      site.recentlyActivated = true
+      recentlyActivatedSites.value.push(site.siteId)
     }
   })
 
@@ -192,6 +194,8 @@ async function activateAllChanges() {
   }
 
   activateChangesInProgress.value = true
+  recentlyActivatedSites.value = []
+
   const starttime = Date.now()
   try {
     const activateChangesResponse = (await restAPI.post(
@@ -199,7 +203,12 @@ async function activateAllChanges() {
       {
         redirect: false,
         sites: sitesAndChanges.value.sites
-          .filter((site) => site.changes > 0 && site.onlineStatus === 'online')
+          .filter(
+            (site) =>
+              site.changes > 0 &&
+              site.onlineStatus === 'online' &&
+              selectedSites.value.includes(site.siteId)
+          )
           .map((site) => site.siteId),
         force_foreign_changes: true
       },
@@ -219,7 +228,18 @@ async function activateAllChanges() {
   }
 }
 
-async function fetchPendingChangesAjax(recentlyActivated: boolean): Promise<void> {
+function setSelectedSites() {
+  /**
+   * selectedSites determines whether or not the site checkbox is checked.
+   * If the site has changes after the ajax call, it will be added to the
+   * selectedSites array.
+   */
+  selectedSites.value = sitesAndChanges.value.sites
+    .filter((site: Site) => site.changes > 0)
+    .map((site: Site) => site.siteId)
+}
+
+async function fetchPendingChangesAjax(): Promise<void> {
   try {
     const dataAsJson = (await ajaxCall.get(
       'ajax_sidebar_get_sites_and_changes.py'
@@ -234,7 +254,6 @@ async function fetchPendingChangesAjax(recentlyActivated: boolean): Promise<void
 
     dataAsJson.sites = loadLastActivationStatus(dataAsJson.sites)
 
-    // Preserve the current activationStatus for each site
     const currentSites = sitesAndChanges.value.sites
     sitesAndChanges.value = {
       ...dataAsJson,
@@ -243,14 +262,15 @@ async function fetchPendingChangesAjax(recentlyActivated: boolean): Promise<void
         return oldSite && oldSite.lastActivationStatus
           ? {
               ...newSite,
-              lastActivationStatus: oldSite.lastActivationStatus,
-              recentlyActivated: recentlyActivated
+              lastActivationStatus: oldSite.lastActivationStatus
             }
           : newSite
       })
     }
+
+    setSelectedSites()
   } catch (error) {
-    throw new Error(`fetchPendingChangsAjax failed: ${error}`)
+    throw new Error(`fetchPendingChangesAjax failed: ${error}`)
   }
 }
 
@@ -262,8 +282,9 @@ function openActivateChangesPage() {
 async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
-      await fetchPendingChangesAjax(false)
+      await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
+      recentlyActivatedSites.value = []
     }
   } else {
     alreadyMadeAjaxCall.value = false
@@ -279,6 +300,9 @@ const activateChangesButtonDisabled = computed((): boolean => {
     return true
   }
   if (activateChangesInProgress.value) {
+    return true
+  }
+  if (selectedSites.value.length === 0) {
     return true
   }
   return !sitesAndChanges.value.sites.some(
@@ -308,6 +332,23 @@ const noPendingChangesOrWarningsOrErrors = computed((): boolean => {
   )
 })
 
+function siteRequiresAttention(site: Site): boolean {
+  return (
+    site.changes > 0 ||
+    !!(site.lastActivationStatus && site.lastActivationStatus.state !== 'success') ||
+    site.onlineStatus !== 'online' ||
+    recentlyActivatedSites.value.includes(site.siteId)
+  )
+}
+
+function toggleSelectedSite(siteId: string) {
+  if (selectedSites.value.includes(siteId)) {
+    selectedSites.value.splice(selectedSites.value.indexOf(siteId), 1)
+  } else {
+    selectedSites.value.push(siteId)
+  }
+}
+
 onMounted(() => {
   void checkIfMenuActive()
 })
@@ -325,7 +366,7 @@ onMounted(() => {
           :disabled="activateChangesButtonDisabled"
           @click="() => activateAllChanges()"
         >
-          {{ t('activate-changes-on-all-sites', 'Activate changes (on all sites)') }}
+          {{ t('activate-changes-on-all-sites', 'Activate pending changes') }}
         </CmkButtonSubmit>
         <CmkButton
           variant="secondary"
@@ -376,7 +417,11 @@ onMounted(() => {
         </div>
       </template>
 
-      <template v-if="sitesWithWarningsOrErrors || weHavePendingChanges">
+      <template
+        v-if="
+          recentlyActivatedSites.length > 0 || sitesWithWarningsOrErrors || weHavePendingChanges
+        "
+      >
         <template v-if="sitesWithWarningsOrErrors && !activateChangesInProgress">
           <div class="activation-result-container">
             <div class="activation-result">
@@ -403,130 +448,152 @@ onMounted(() => {
             { 'display-none': !activationStatusCollapsible },
             { 'add-flex': sitesAndChanges.sites.length > 2 }
           ]"
+          class="scroll-container-sites"
         >
           <CmkCollapsible :open="activationStatusCollapsible">
             <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
-              <CmkIndent v-if="site.lastActivationStatus !== undefined" class="sites_status">
-                <div class="site-name-status-version">
-                  <span class="site-name">{{ site.siteName }}</span>
-                  <CmkChip
-                    :content="site.onlineStatus"
-                    :color="statusColor(site.onlineStatus)"
-                    size="small"
-                  ></CmkChip>
-                  <span class="site-version-activate-success grey-text">{{ site.version }}</span>
-                </div>
-
-                <template v-if="site.lastActivationStatus.phase === 'done'">
-                  <div
-                    v-if="site.lastActivationStatus.state === 'success'"
-                    class="site-activate-success"
-                  >
-                    <CmkIcon variant="inline" name="save" />
-                    <div>
-                      <span v-if="site.lastActivationStatus.state === 'success'">{{
-                        t('changes-activated-successfully', 'Changes successfully activated')
-                      }}</span>
-                      <br />
-                      <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
+              <template v-if="siteRequiresAttention(site)">
+                <CmkIndent>
+                  <div class="site-status-container">
+                    <div class="site-status-top-line">
+                      <div class="checkbox-site-status">
+                        <CmkCheckbox
+                          :model-value="selectedSites.includes(site.siteId)"
+                          @update:model-value="toggleSelectedSite(site.siteId)"
+                        />
+                        <div class="site-online-status">
+                          <CmkChip
+                            :content="site.onlineStatus"
+                            :color="statusColor(site.onlineStatus)"
+                            size="small"
+                          />
+                          <span class="site-name">{{ site.siteName }}</span>
+                        </div>
+                      </div>
+                      <div
+                        v-if="!recentlyActivatedSites.includes(site.siteId)"
+                        class="site-status-changes"
+                      >
+                        <template v-if="site.changes > 0">
+                          <span class="changes-text">{{ t('changes', 'Changes:') }}</span>
+                          <span class="changes-number">{{ site.changes }}</span>
+                        </template>
+                        <span v-else class="changes-text">{{ t('no-changes', 'No Changes') }}</span>
+                      </div>
+                      <div
+                        v-if="
+                          recentlyActivatedSites.includes(site.siteId) &&
+                          site.lastActivationStatus !== undefined
+                        "
+                        class="site-status-changes"
+                      >
+                        <div v-if="activateChangesInProgress">
+                          {{ site.lastActivationStatus.status_text }}
+                          <!-- TODO: progress bar doesn't show if we don't also show the status_text -->
+                          <CmkProgressbar max="unknown"></CmkProgressbar>
+                        </div>
+                        <div v-else>
+                          {{ site.lastActivationStatus.status_text }}
+                        </div>
+                      </div>
+                    </div>
+                    <!---------------------------------------------------------------- Warning --->
+                    <div
+                      v-if="site.lastActivationStatus?.state === 'warning'"
+                      class="site-activate-warning"
+                    >
+                      <CmkIcon variant="inline" name="validation-error" />
+                      <div class="warning-or-error-message-text">
+                        <span v-if="site.lastActivationStatus?.state === 'warning'">{{
+                          t('changes-activated-with-warning', 'Warning')
+                        }}</span>
+                        <span class="grey-text">{{
+                          site.lastActivationStatus.status_details
+                        }}</span>
+                      </div>
+                    </div>
+                    <!---------------------------------------------------------------- Error ----->
+                    <div
+                      v-if="site.lastActivationStatus?.state === 'error'"
+                      class="site-activate-error"
+                    >
+                      <CmkIcon variant="inline" name="alert_crit" />
+                      <div class="warning-or-error-message-text">
+                        <span v-if="site.lastActivationStatus.state === 'error'">{{
+                          t('changes-failed-to-activate', 'Error')
+                        }}</span>
+                        <span class="grey-text">{{
+                          site.lastActivationStatus.status_details
+                        }}</span>
+                      </div>
                     </div>
                   </div>
-                  <div
-                    v-if="site.lastActivationStatus.state === 'warning'"
-                    class="site-activate-warning"
-                  >
-                    <CmkIcon variant="inline" name="validation-error" />
-                    <div>
-                      <span v-if="site.lastActivationStatus?.state === 'warning'">{{
-                        t('changes-activated-with-warning', 'Warning')
-                      }}</span>
-                      <br />
-                      <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
-                    </div>
-                  </div>
-                  <div
-                    v-if="site.lastActivationStatus.state === 'error'"
-                    class="site-activate-error"
-                  >
-                    <CmkIcon variant="inline" name="alert_crit" />
-                    <div>
-                      <span v-if="site.lastActivationStatus.state === 'error'">{{
-                        t('changes-failed-to-activate', 'Error')
-                      }}</span>
-                      <br />
-                      <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="progress-bar">
-                    <span>{{
-                      site.lastActivationStatus.phase.charAt(0).toUpperCase() +
-                      site.lastActivationStatus.phase.slice(1)
-                    }}</span>
-                    <CmkProgressbar max="unknown"></CmkProgressbar>
-                  </div>
-                </template>
-              </CmkIndent>
-              <CmkIndent v-else>
-                <div class="site-name-status-version">
-                  <span class="site-name">{{ site.siteName }}</span>
-                  <CmkChip
-                    :content="site.onlineStatus"
-                    :color="statusColor(site.onlineStatus)"
-                    size="small"
-                  ></CmkChip>
-                  <span class="site-version grey-text">{{ site.version }}</span>
-                </div>
-                <div>
-                  <div v-if="site.changes > 0">
-                    <span class="grey-text">{{ t('changes', 'Changes:') }} {{ site.changes }}</span
-                    ><br />
-                    <span>{{ t('activation-needed', 'Activation needed') }}</span>
-                  </div>
-                  <div v-else class="no-pending-changes">
-                    <CmkIcon variant="inline" name="save" />
-                    <span>{{ t('no-pending-changes', 'No pending changes') }}</span>
-                  </div>
-                </div>
-              </CmkIndent>
+                </CmkIndent>
+              </template>
             </template>
           </CmkCollapsible>
         </CmkScrollContainer>
 
         <CmkCollapsibleTitle
-          v-if="weHavePendingChanges"
+          v-if="weHavePendingChanges && recentlyActivatedSites.length === 0"
           :title="`Changes`"
           class="collapsible-title"
           :open="pendingChangesCollapsible"
           @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
         />
+
+        <CmkCollapsible
+          v-if="
+            selectedSites.length === 0 &&
+            weHavePendingChanges &&
+            recentlyActivatedSites.length === 0
+          "
+          :open="pendingChangesCollapsible"
+        >
+          <CmkIndent class="no-sites-selected-container">
+            <div class="no-sites-selected">
+              {{ t(`no-sites-selected`, `You haven't selected any sites`) }}
+            </div>
+          </CmkIndent>
+        </CmkCollapsible>
+
         <CmkScrollContainer
-          v-if="weHavePendingChanges"
+          v-else-if="weHavePendingChanges && recentlyActivatedSites.length === 0"
           class="scroll-container-changes"
           height="auto"
         >
-          <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
-            <CmkIndent
+          <CmkCollapsible
+            v-if="recentlyActivatedSites.length === 0"
+            :open="pendingChangesCollapsible"
+            class="cmk-collapsible"
+          >
+            <div
               v-for="change in sitesAndChanges.pendingChanges"
               :key="change.changeId"
-              class="pending-change-container"
-              :class="{ 'red-text': change.user !== user_name && change.user !== null }"
+              class="pending-change-or-message-container"
             >
-              <span class="change-text">{{ change.changeText }}</span>
-
-              <div
-                class="change-user-sites-timestamp"
-                :class="{ 'grey-text': change.user === user_name || change.user === null }"
+              <CmkIndent
+                v-if="
+                  change.whichSites === 'All sites' || selectedSites.includes(change.whichSites)
+                "
+                class="pending-change-container"
+                :class="{ 'red-text': change.user !== user_name && change.user !== null }"
               >
-                <div class="user-sites-timestamp">
-                  <span>{{ change.user }}</span>
-                  <span>|</span>
-                  <span>{{ change.whichSites }}</span>
+                <span class="change-text">{{ change.changeText }}</span>
+
+                <div
+                  class="change-user-sites-timestamp"
+                  :class="{ 'grey-text': change.user === user_name || change.user === null }"
+                >
+                  <div class="user-sites-timestamp">
+                    <span>{{ change.user }}</span>
+                    <span>|</span>
+                    <span>{{ change.whichSites }}</span>
+                  </div>
+                  <span>{{ change.timestring }}</span>
                 </div>
-                <span>{{ change.timestring }}</span>
-              </div>
-            </CmkIndent>
+              </CmkIndent>
+            </div>
           </CmkCollapsible>
         </CmkScrollContainer>
       </template>
@@ -551,7 +618,7 @@ onMounted(() => {
   height: 943px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -576,6 +643,7 @@ onMounted(() => {
   height: 76px;
   align-self: stretch;
   background-color: var(--ux-theme-4);
+  margin-top: 20px;
 }
 
 .activation-result {
@@ -610,6 +678,13 @@ onMounted(() => {
   border-radius: 4px;
 }
 
+.warning-or-error-message-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0px 4px 0px;
+}
+
 .site-activate-error {
   background: rgba(234, 57, 8, 0.15); /* TODO: Which colour should be used? */
 }
@@ -628,16 +703,78 @@ onMounted(() => {
 .site-version-activate-success {
   margin-left: auto;
 }
-.site-name-status-version {
+
+.site-status-container {
+  display: flex;
+  width: inherit;
+  padding: 3px 16px 3px 3px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.site-status-top-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+
+.checkbox-site-status {
   display: flex;
   align-items: center;
-  width: 100%;
-  margin-bottom: 6px;
+  gap: 4px;
 }
+
+.site-online-status {
+  display: flex;
+  padding: 1px 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-status-changes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.changes-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-family: Roboto;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.36px;
+}
+.changes-number {
+  display: flex;
+  padding: 1px 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 80px;
+  background: #ffc31c;
+  color: #000;
+  font-family: Roboto;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: 0.3px;
+}
+
 .site-name {
-  font-weight: bold;
-  margin-right: 8px;
+  color: #fff;
+  font-family: Roboto;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: 0.36px;
 }
+
 .site-status {
   margin-right: 8px;
 }
@@ -674,7 +811,6 @@ onMounted(() => {
 }
 
 .cmk-indent {
-  padding: 8px 6px 8px 6px !important;
   background-color: var(--ux-theme-4);
   margin: 0px !important;
   border-left: 0px !important;
@@ -704,10 +840,42 @@ onMounted(() => {
   gap: 4px;
 }
 
+.no-sites-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: Roboto;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.36px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.pending-change-or-message-container {
+  display: flex;
+  width: 100%;
+  padding: 0px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.no-sites-selected-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
 .pending-change-container {
   display: flex;
-  /* width: inherit; */
-  padding: 8px;
+  width: 95%;
+  padding: 8px !important;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;

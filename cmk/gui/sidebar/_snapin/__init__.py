@@ -67,4 +67,4 @@ def register(
     _views.register(page_registry, snapin_registry_, main_menu_registry, view_menu_topics)
     page_registry.register(PageEndpoint("ajax_search_monitoring", PageSearchMonitoring))
     page_registry.register(PageEndpoint("ajax_search_setup", PageSearchSetup))
-    page_registry.register(PageEndpoint("ajax_search", PageUnifiedSearch))
+    page_registry.register(PageEndpoint("ajax_unified_search", PageUnifiedSearch))

@@ -67,6 +67,7 @@ def test_registered_pages() -> None:
         "ajax_fetch_topology",
         "ajax_sidebar_get_number_of_pending_changes",
         "ajax_sidebar_get_sites_and_changes",
+        "ajax_unified_search",
         "automation_login",
         "bi_map",
         "bi_render_tree",

@@ -42,6 +42,7 @@ from cmk.gui.openapi.endpoints import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
 from .api_endpoints.host_config import registration as api_host_config
+from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
@@ -100,4 +101,9 @@ def register(
 
     api_host_config.register(
         versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
+    )
+    api_user_role.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
     )

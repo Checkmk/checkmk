@@ -111,10 +111,6 @@ run_format() {
 }
 
 run_check_format() {
-    bazel run \
-        --ui_event_filters=-info,-stderr \
-        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
-        format --check --diff Cargo.toml
     bazel run //:format.check "$PWD"
 }
 

@@ -120,17 +120,13 @@ run_unit_tests() {
 }
 
 run_check_format() {
-    bazel run \
-        --ui_event_filters=-info,-stderr \
-        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
-        format --check --diff pyproject.toml
     bazel lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
         --quiet \
         :all
-    bazel run //:format.check "$(realpath cmk)" "$(realpath tests)"
+    bazel run //:format.check "$PWD"
 }
 
 run_mypy() {
@@ -166,16 +162,12 @@ run_semgrep() {
 }
 
 run_format() {
-    bazel run \
-        --ui_event_filters=-info,-stderr \
-        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
-        format pyproject.toml
     bazel lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --fix \
         :all
-    bazel run //:format "$(realpath cmk)" "$(realpath tests)"
+    bazel run //:format "$PWD"
 }
 
 run_documentation() {

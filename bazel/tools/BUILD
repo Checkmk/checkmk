@@ -21,7 +21,7 @@ format_multirun(
     cc = "@clang-linux-x86_64//:bin/clang-format",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
-    toml = ":taplo_wrapper",
+    toml = ":taplo_quiet",
     visibility = ["//visibility:public"],
 )
 
@@ -73,23 +73,29 @@ sh_binary(
 )
 
 genrule(
-    name = "taplo_bin",
+    name = "taplo",
     srcs = ["@taplo.gz//file"],
-    outs = ["taplo"],
+    outs = ["taplo_bin"],
     cmd = "gunzip -c $< > $@",
     executable = True,
 )
 
 expand_template(
-    name = "taplo_wrapper",
+    name = "taplo_quiet_tp",
     out = "taplo_wrapper.sh",
     data = [":taplo_bin"],
-    is_executable = True,
     substitutions = {"{taplo_bin}": "$(execpath :taplo_bin)"},
     template = [
         "#!/bin/sh",
-        'exec env RUST_LOG=warn "./{taplo_bin}" "$@"',
+        'exec env RUST_LOG=warn "$BUILD_WORKSPACE_DIRECTORY/{taplo_bin}" "$@"',
+        "",
     ],
+)
+
+sh_binary(
+    name = "taplo_quiet",
+    srcs = [":taplo_quiet_tp"],
+    data = [":taplo"],
 )
 
 # TODO: Should we use buildifier more in the way aspect does?

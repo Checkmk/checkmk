@@ -348,7 +348,7 @@ def _sort_host_name(
 
 
 SorterHostName = Sorter(
-    ident="host",
+    ident="host_name",
     title=_l("Host name"),
     columns=["host_name"],
     sort_function=_sort_host_name,

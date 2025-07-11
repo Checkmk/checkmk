@@ -47,7 +47,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
-from cmk.gui.utils.rule_specs.legacy_converter import recompose_dictionary_spec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
 from cmk.gui.views.builtin_views import (
@@ -261,7 +261,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
     notification_parameter_registry.register(
         NotificationParameter(
             ident="mail",
-            spec=lambda: recompose_dictionary_spec(mail.form_spec_mail),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(mail.form_spec_mail),
             form_spec=mail.form_spec_mail,
         )
     )

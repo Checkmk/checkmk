@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.utils.rule_specs.legacy_converter import recompose_dictionary_spec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.watolib.notification_parameter import (
     NotificationParameter,
     NotificationParameterRegistry,
@@ -29,98 +29,98 @@ def register(notification_parameter_registry: NotificationParameterRegistry) -> 
     notification_parameter_registry.register(
         NotificationParameter(
             ident="slack",
-            spec=lambda: recompose_dictionary_spec(slack.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(slack.form_spec),
             form_spec=slack.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="cisco_webex_teams",
-            spec=lambda: recompose_dictionary_spec(cisco_webex_teams.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(cisco_webex_teams.form_spec),
             form_spec=cisco_webex_teams.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="victorops",
-            spec=lambda: recompose_dictionary_spec(victorops.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(victorops.form_spec),
             form_spec=victorops.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="pagerduty",
-            spec=lambda: recompose_dictionary_spec(pagerduty.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(pagerduty.form_spec),
             form_spec=pagerduty.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="signl4",
-            spec=lambda: recompose_dictionary_spec(signl4.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(signl4.form_spec),
             form_spec=signl4.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="asciimail",
-            spec=lambda: recompose_dictionary_spec(mail.form_spec_asciimail),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(mail.form_spec_asciimail),
             form_spec=mail.form_spec_asciimail,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="ilert",
-            spec=lambda: recompose_dictionary_spec(ilert.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(ilert.form_spec),
             form_spec=ilert.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="jira_issues",
-            spec=lambda: recompose_dictionary_spec(jira_issues.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(jira_issues.form_spec),
             form_spec=jira_issues.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="servicenow",
-            spec=lambda: recompose_dictionary_spec(servicenow.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(servicenow.form_spec),
             form_spec=servicenow.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="opsgenie_issues",
-            spec=lambda: recompose_dictionary_spec(opsgenie_issues.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(opsgenie_issues.form_spec),
             form_spec=opsgenie_issues.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="spectrum",
-            spec=lambda: recompose_dictionary_spec(spectrum.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(spectrum.form_spec),
             form_spec=spectrum.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="pushover",
-            spec=lambda: recompose_dictionary_spec(pushover.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(pushover.form_spec),
             form_spec=pushover.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="sms_api",
-            spec=lambda: recompose_dictionary_spec(sms_api.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(sms_api.form_spec),
             form_spec=sms_api.form_spec,
         )
     )
     notification_parameter_registry.register(
         NotificationParameter(
             ident="msteams",
-            spec=lambda: recompose_dictionary_spec(ms_teams.form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(ms_teams.form_spec),
             form_spec=ms_teams.form_spec,
         )
     )

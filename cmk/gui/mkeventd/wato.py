@@ -82,7 +82,7 @@ from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.rule_specs.legacy_converter import recompose_dictionary_spec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -288,7 +288,7 @@ def register(
     notification_parameter_registry.register(
         NotificationParameter(
             ident="mkeventd",
-            spec=lambda: recompose_dictionary_spec(form_spec),
+            spec=lambda: convert_dictionary_formspec_to_valuespec(form_spec),
             form_spec=form_spec,
         )
     )

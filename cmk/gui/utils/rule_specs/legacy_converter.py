@@ -2549,7 +2549,7 @@ def _convert_to_legacy_autocompleter(
 T = TypeVar("T")
 
 
-def recompose_dictionary_spec(
+def convert_dictionary_formspec_to_valuespec(
     form_spec: Callable[[], ruleset_api_v1.form_specs.Dictionary | DictionaryExtended],
 ) -> ValueSpecDictionary:
     return cast(

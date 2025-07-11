@@ -9,7 +9,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 from cmk.gui import utils
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
@@ -148,7 +149,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("host_group_memberlist", cmp_string_list)
     declare_1to1_sorter("host_contacts", cmp_string_list)
     declare_1to1_sorter("host_contact_groups", cmp_string_list)
-    declare_1to1_sorter("host_docker_node", cmp_num_split)
+    declare_1to1_sorter("host_docker_node", cmp_docker_nodes)
 
     # Host group
     declare_1to1_sorter("hg_num_services", cmp_simple_number)
@@ -717,6 +718,23 @@ def _get_docker_nodes(row: Row) -> str:
     return output.split()[-1]
 
 
+def cmp_docker_nodes(column, r1, r2):
+    return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
+
+
+def _sort_docker_nodes_(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config | None,
+    request: Request | None,
+) -> int:
+    val1 = _get_docker_nodes(row=r1)
+    val2 = _get_docker_nodes(row=r2)
+    return cmp_insensitive_string(val1, val2)
+
+
 class SorterHostDockerNode(Sorter):
     @property
     def ident(self) -> str:
@@ -731,6 +749,4 @@ class SorterHostDockerNode(Sorter):
         return ["host_labels", "host_label_sources"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        val1 = _get_docker_nodes(row=r1)
-        val2 = _get_docker_nodes(row=r2)
-        return cmp_insensitive_string(val1, val2)
+        return _sort_docker_nodes_(r1, r2, parameters=parameters, config=None, request=None)

@@ -7,6 +7,10 @@ from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
 from cmk.gui.i18n import _
+from cmk.gui.watolib.configuration_entity.configuration_entity import (
+    get_list_of_configuration_entities,
+    get_readable_entity_selection,
+)
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -69,12 +73,6 @@ class SingleChoiceEditableVisitor(
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.SingleChoiceEditable, object]:
-        # This one here requires a local import to avoid circular dependencies at import time
-        from cmk.gui.watolib.configuration_entity.configuration_entity import (
-            get_list_of_configuration_entities,
-            get_readable_entity_selection,
-        )
-
         title, help_text = get_title_and_help(self.form_spec)
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)
         entity_selection = self.form_spec.entity_type_specifier

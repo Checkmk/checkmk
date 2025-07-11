@@ -422,7 +422,7 @@ test-cycles:
 		    $$($(UVENV) scripts/find_cmk_namespace_package_paths.py) \
 		    $$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
-		--threshold 12 \
+		--threshold 0 \
 		--verbose
 
 test-unit-omdlib:

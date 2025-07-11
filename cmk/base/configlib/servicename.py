@@ -67,7 +67,7 @@ class FinalServiceNameConfig:
         with contextlib.suppress(KeyError):
             return translations_cache[hostname]
 
-        rules = self.matcher.get_host_values(hostname, self.translations, labels_of_host)
+        rules = self.matcher.get_host_values_all(hostname, self.translations, labels_of_host)
         translations: TranslationOptions = {}
         for rule in rules[::-1]:
             if "case" in rule:

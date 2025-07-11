@@ -55,7 +55,7 @@ class CheckingConfig(ABCCheckingConfig):
 
         try:
             if item is None and ruleset_name not in self._service_rule_names:
-                return self._matcher.get_host_values(host_name, rules, self._labels_of_host)
+                return self._matcher.get_host_values_all(host_name, rules, self._labels_of_host)
 
             # checks with an item need service-specific rules
             return self._matcher.get_checkgroup_ruleset_values(
@@ -78,7 +78,7 @@ class DiscoveryConfig(ABCDiscoveryConfig):
     ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
         rule = self.rules.get(rule_set_name, [])
         if rule_set_type == "merged":
-            return self.matcher.get_host_merged_dict(host_name, rule, self.labels_of_host)
+            return self.matcher.get_host_values_merged(host_name, rule, self.labels_of_host)
         if rule_set_type == "all":
-            return self.matcher.get_host_values(host_name, rule, self.labels_of_host)
+            return self.matcher.get_host_values_all(host_name, rule, self.labels_of_host)
         assert_never(rule_set_type)

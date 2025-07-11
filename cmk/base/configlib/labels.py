@@ -24,7 +24,7 @@ class LabelConfig(ABCLabelConfig):
 
     def host_labels(self, host_name: HostName, /) -> Labels:
         """Returns the configured labels for a host"""
-        return self.matcher.get_host_merged_dict(
+        return self.matcher.get_host_values_merged(
             host_name,
             self.host_label_rules,
             # these cannot match on host labels, for obvious reasons
@@ -39,7 +39,7 @@ class LabelConfig(ABCLabelConfig):
         /,
     ) -> Labels:
         """Returns the configured labels for a service"""
-        return self.matcher.get_service_merged_dict(
+        return self.matcher.get_service_values_merged(
             host_name,
             service_name,
             # these do not match on service labels

@@ -189,7 +189,7 @@ class RulesetAccess:
     def logwatch_ec_all(host_name: str) -> Sequence[ParameterLogwatchEc]:
         """Isolate the remaining API violation w.r.t. parameters"""
         cc = cmk.base.config.access_globally_cached_config_cache()
-        return cc.ruleset_matcher.get_host_values(
+        return cc.ruleset_matcher.get_host_values_all(
             HostName(host_name),
             cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
             cc.label_manager.labels_of_host,

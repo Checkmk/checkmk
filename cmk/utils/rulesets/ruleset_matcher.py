@@ -142,7 +142,17 @@ class RulesetMatcher:
 
     There is some duplicate logic for host / service rulesets. This has been
     kept for performance reasons. Especially the service rulset matching is
-    done very often in large setups. Be careful when working here.
+    done very often in large setups.
+
+    Be careful when working here.
+
+    Currently the caller decides on the "merge" behavior of the rulesets.
+    For host rulesets for example they choose to call `get_host_merged_dict()`
+    or `get_host_values()` (and, if it existed, `get_host_first_value()`).
+    That is not right. The ruleset as defined in WATO claims to be the source of truth
+    for the merge behavior. This information is shown to the user, and is highly relevant.
+    The matcher should derive that from the ruleset.
+    The consumer of the ruleset must not be able to change the merge behavior.
     """
 
     def __init__(
@@ -188,7 +198,7 @@ class RulesetMatcher:
         Depending on the value the outcome is negated or not.
 
         """
-        for value in self.get_host_values(hostname, ruleset, labels_of_host):
+        for value in self.get_host_values_all(hostname, ruleset, labels_of_host):
             # Next line may be controlled by `is_binary` in which case we
             # should overload the function instead of asserting to check
             # during typing instead of runtime.
@@ -196,7 +206,7 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
-    def get_host_merged_dict(
+    def get_host_values_merged(
         self,
         hostname: HostName,
         ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]],
@@ -206,9 +216,11 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
-        return merge_parameters(self.get_host_values(hostname, ruleset, labels_of_host), default={})
+        return merge_parameters(
+            self.get_host_values_all(hostname, ruleset, labels_of_host), default={}
+        )
 
-    def get_host_values(
+    def get_host_values_all(
         self,
         hostname: HostName | HostAddress,
         ruleset: Sequence[RuleSpec[TRuleValue]],
@@ -240,7 +252,7 @@ class RulesetMatcher:
             return value
         return False
 
-    def get_service_merged_dict(
+    def get_service_values_merged(
         self,
         hostname: HostName,
         service_name: ServiceName,
@@ -261,7 +273,7 @@ class RulesetMatcher:
             default={},
         )
 
-    def service_extra_conf(
+    def get_service_values_all(
         self,
         hostname: HostName,
         service_name: ServiceName,
@@ -969,4 +981,4 @@ class SingleHostRulesetMatcher[TRuleValue]:
     labels_of_host: Callable[[HostName], Labels]
 
     def __call__(self, host_name: HostName) -> Sequence[TRuleValue]:
-        return self.matcher.get_host_values(host_name, self.host_ruleset, self.labels_of_host)
+        return self.matcher.get_host_values_all(host_name, self.host_ruleset, self.labels_of_host)

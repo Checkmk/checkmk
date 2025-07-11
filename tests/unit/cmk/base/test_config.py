@@ -2637,33 +2637,33 @@ def test_load_config_folder_paths(folder_path_test_config: config.LoadedConfigFr
     assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
 
     ruleset_matcher = config_cache.ruleset_matcher
-    assert ruleset_matcher.get_host_values(
+    assert ruleset_matcher.get_host_values_all(
         HostName("main-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(
+    assert ruleset_matcher.get_host_values_all(
         HostName("lvl0-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(
+    assert ruleset_matcher.get_host_values_all(
         HostName("lvl1-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(
+    assert ruleset_matcher.get_host_values_all(
         HostName("lvl1aaa-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(
+    assert ruleset_matcher.get_host_values_all(
         HostName("lvl2-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL2",

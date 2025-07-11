@@ -2037,7 +2037,7 @@ class AutomationAnalyzeHostRuleMatches(Automation):
         return AnalyzeHostRuleMatchesResult(
             {
                 rules[0]["id"]: list(
-                    ruleset_matcher.get_host_values(
+                    ruleset_matcher.get_host_values_all(
                         host_name, rules, loading_result.config_cache.label_manager.labels_of_host
                     )
                 )
@@ -2137,7 +2137,7 @@ class AutomationAnalyzeHostRuleEffectiveness(Automation):
                 rules[0]["id"]: any(
                     True
                     for host_name in host_names
-                    for _ in ruleset_matcher.get_host_values(host_name, rules, labels_of_host)
+                    for _ in ruleset_matcher.get_host_values_all(host_name, rules, labels_of_host)
                 )
                 # The caller needs to get one result per rule. For this reason we can not just use
                 # the list of rules with the ruleset matching functions but have to execute rule

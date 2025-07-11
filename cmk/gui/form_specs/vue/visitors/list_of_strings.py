@@ -8,11 +8,11 @@ from collections.abc import Sequence
 from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private import ListOfStrings
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     compute_validators,
     get_title_and_help,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

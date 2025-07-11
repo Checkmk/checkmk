@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import compute_validators, get_title_and_help
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 

@@ -6,8 +6,8 @@ from collections.abc import Sequence
 from typing import assert_never
 
 from cmk.gui.form_specs.converter import Tuple
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import compute_validators, get_title_and_help
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 

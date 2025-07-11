@@ -8,8 +8,8 @@ from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import LegacyValueSpec
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import get_title_and_help
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors

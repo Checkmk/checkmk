@@ -7,7 +7,6 @@ from collections.abc import Callable, Sequence
 from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     compute_input_hint,
     compute_validators,
@@ -15,6 +14,7 @@ from cmk.gui.form_specs.vue._utils import (
     get_title_and_help,
     localize,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude

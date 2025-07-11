@@ -11,11 +11,11 @@ from werkzeug.datastructures import FileStorage
 
 from cmk.utils.render import filesize
 
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     compute_validators,
     get_title_and_help,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request

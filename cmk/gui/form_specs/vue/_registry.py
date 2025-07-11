@@ -7,7 +7,7 @@ from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 
 from cmk.rulesets.v1.form_specs import FormSpec
 

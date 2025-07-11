@@ -5,7 +5,6 @@
 # ruff: noqa: A005
 
 from cmk.gui.form_specs.private import StringAutocompleter
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -13,6 +12,7 @@ from cmk.gui.form_specs.vue._utils import (
     get_prefill_default,
     get_title_and_help,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 

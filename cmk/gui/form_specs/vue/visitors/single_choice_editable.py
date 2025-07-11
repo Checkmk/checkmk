@@ -6,7 +6,6 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     base_i18n_form_spec,
     compute_title_input_hint,
@@ -15,6 +14,7 @@ from cmk.gui.form_specs.vue._utils import (
     get_title_and_help,
     localize,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 

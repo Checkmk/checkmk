@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 
 from cmk.gui.form_specs.private.labels import Labels
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import get_title_and_help
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 

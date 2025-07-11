@@ -8,12 +8,12 @@ from typing import Any
 
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     compute_validators,
     get_title_and_help,
     optional_validation,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter

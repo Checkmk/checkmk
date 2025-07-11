@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.i18n import _
 
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
 from cmk.gui.form_specs.vue._utils import (
     compute_validators,
     get_title_and_help,
     localize,
 )
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Label

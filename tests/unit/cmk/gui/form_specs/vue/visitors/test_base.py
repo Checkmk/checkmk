@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.vue import DefaultValue, IncomingData, InvalidValue, RawDiskData
-from cmk.gui.form_specs.vue._base import FormSpecVisitor
+from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 
 import cmk.shared_typing.vue_formspec_components as VueTypes
 from cmk.rulesets.v1 import Message

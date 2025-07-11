@@ -14,6 +14,7 @@ import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkCode from '@/components/CmkCode.vue'
 import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 
 export interface AgentSlideOutTabs {
@@ -89,35 +90,39 @@ watch(model, (newValue) => {
           v-model="model"
           :options="tab.toggle_button_options"
         />
-        <p v-if="tab.install_msg">{{ tab.install_msg }}</p>
-        <div v-if="tab.install_msg" class="code_container">
-          <code v-if="tab.install_deb_cmd && model === packageFormatDeb">
-            {{ tab.install_deb_cmd }}
-          </code>
-          <code v-if="tab.install_rpm_cmd && model === packageFormatRpm">
-            {{ tab.install_rpm_cmd }}
-          </code>
-          <code v-if="tab.install_tgz_cmd && model === packageFormatTgz">
-            {{ tab.install_tgz_cmd }}
-          </code>
-          <code v-if="tab.install_cmd">
-            {{ tab.install_cmd }}
-          </code>
-        </div>
-        <p>{{ tab.registration_msg }}</p>
-        <div class="code_container">
-          <code>
-            {{ t('ags-placeholder', 'Placeholder for code component') }}
-          </code>
-        </div>
-        <p>
+        <CmkCode
+          v-if="tab.install_msg && tab.install_cmd"
+          :title="tab.install_msg"
+          :code_txt="tab.install_cmd"
+        />
+        <CmkCode
+          v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
+          :title="tab.install_msg"
+          :code_txt="tab.install_deb_cmd"
+        />
+        <CmkCode
+          v-if="tab.install_msg && tab.install_rpm_cmd && model === packageFormatRpm"
+          :title="tab.install_msg"
+          :code_txt="tab.install_rpm_cmd"
+        />
+        <CmkCode
+          v-if="tab.install_msg && tab.install_tgz_cmd && model === packageFormatTgz"
+          :title="tab.install_msg"
+          :code_txt="tab.install_tgz_cmd"
+        />
+        <CmkCode
+          v-if="tab.registration_msg"
+          :title="tab.registration_msg"
+          :code_txt="t('ags-placeholder', 'Placeholder for code component')"
+        />
+        <CmkHeading2>
           {{
             t(
               'agent-download-finish-msg',
               'After installing, you can close the slideout and test the agent connection.'
             )
           }}
-        </p>
+        </CmkHeading2>
       </CmkTabContent>
     </template>
   </CmkTabs>
@@ -143,13 +148,5 @@ button.all_agents {
   > .cmk-icon {
     margin-right: 16px;
   }
-}
-
-/*TODO Can be removed if component is implemented*/
-.code_container {
-  padding: var(--spacing);
-  background: var(--grey-4);
-  color: #abb2bf;
-  border-radius: var(--spacing);
 }
 </style>

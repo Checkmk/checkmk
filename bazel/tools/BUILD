@@ -17,15 +17,12 @@ mypy_cli(
 # TODO: Collect here all formatters we're currently using
 format_multirun(
     name = "format",
+    c = "@clang-linux-x86_64//:bin/clang-format",
+    cc = "@clang-linux-x86_64//:bin/clang-format",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     toml = ":taplo_wrapper",
     visibility = ["//visibility:public"],
-)
-
-native_binary(
-    name = "clang-format",
-    src = "@clang-linux-x86_64//:bin/clang-format",
 )
 
 native_binary(

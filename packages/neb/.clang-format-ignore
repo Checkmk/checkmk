@@ -1,0 +1,3 @@
+# https://clang.llvm.org/docs/ClangFormat.html#clang-format-ignore
+third_party/include/nagios/*
+third_party/include/nagios4/*

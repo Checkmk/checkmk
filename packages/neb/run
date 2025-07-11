@@ -6,7 +6,6 @@
 set -e
 
 JOBS=6
-readonly CLANG_VERSION=${CLANG_VERSION:-19}
 readonly ALL_LINTERS=iwyu,clang-tidy
 
 failure() {
@@ -111,14 +110,6 @@ parse_options() {
     readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
 }
 
-run_clang_format() {
-    # NOTE: FILES_TO_USE contains no headers, so we format everything when FILES
-    # is not given. This is fast enough while maintaining correctness.
-    # shellcheck disable=SC2046,SC2068 # Yes, we want splitting for FILES.
-    find $(realpath ${FILES[@]:-src test include}) -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
-        xargs --no-run-if-empty --null bazel run //bazel/tools:clang-format -- -style=file "$@"
-}
-
 run_build() {
     bazel build :all
 }
@@ -131,7 +122,8 @@ run_unit_tests() {
 }
 
 run_check_format() {
-    run_clang_format --dry-run -Werror
+    # shellcheck disable=SC2046,SC2068 # Yes, we want splitting for FILES.
+    bazel run //:format.check $(realpath ${FILES[@]:-.})
     bazel run -- //bazel/tools:buildifier -mode=check -lint=warn "$(realpath BUILD)"
 }
 
@@ -144,7 +136,8 @@ run_clang_tidy() {
 }
 
 run_format() {
-    run_clang_format -i
+    # shellcheck disable=SC2046,SC2068 # Yes, we want splitting for FILES.
+    bazel run //:format $(realpath ${FILES[@]:-.})
     bazel run -- //bazel/tools:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
 }
 

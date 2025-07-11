@@ -1042,7 +1042,7 @@ ConfigVariableRescheduleTimeout = ConfigVariable(
     valuespec=lambda: Float(
         title=_("Timeout for rescheduling checks in Multisite"),
         help=_(
-            "When you reschedule a check by clicking on the &quot;arrow&quot;-icon "
+            'When you reschedule a check by clicking on the "arrow"-icon '
             "then Multisite will use this number of seconds as a timeout. If the "
             "monitoring core has not executed the check within this time, an error "
             "will be displayed and the page not reloaded."
@@ -4425,7 +4425,7 @@ def _valuespec_clustered_services_mapping():
         label=_("Assign services to the following cluster:"),
         help=_(
             "It's possible to have clusters that share nodes. You could say that "
-            "such clusters &quot;overlap&quot;. In such a case using the ruleset "
+            'such clusters "overlap". In such a case using the ruleset '
             "<i>Clustered services</i> is not sufficient since it would not be clear "
             "to which of the several possible clusters a service found on such a shared "
             "node should be assigned to. With this ruleset you can assign services and "
@@ -5610,11 +5610,11 @@ def _valuespec_piggyback_translation():
         title=_("Host name translation for piggybacked hosts"),
         help=_(
             "Some agents or agent plug-ins send data not only for the queried host but also "
-            "for other hosts &quot;piggyback&quot; with their own data. This is the case "
+            'for other hosts "piggyback" with their own data. This is the case '
             "for the vSphere special agent and the SAP R/3 plugin, for example. The host names "
             "that these agents send must match your host names in your monitoring configuration. "
             "If that is not the case, then with this rule you can define a host name translation. "
-            "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
+            'Note: This rule must be configured for the "pig" - i.e. the host that the '
             "agent is running on. It is not applied to the translated piggybacked hosts."
         ),
     )

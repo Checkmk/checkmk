@@ -144,7 +144,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("host_group_memberlist", cmp_string_list)
     declare_1to1_sorter("host_contacts", cmp_string_list)
     declare_1to1_sorter("host_contact_groups", cmp_string_list)
-    declare_1to1_sorter("host_docker_node", cmp_num_split)
+    declare_1to1_sorter("host_docker_node", cmp_docker_nodes)
 
     # Host group
     declare_1to1_sorter("hg_num_services", cmp_simple_number)
@@ -670,13 +670,17 @@ def _get_docker_nodes(row: Row) -> str:
     return output.split()[-1]
 
 
+def cmp_docker_nodes(column, r1, r2):
+    return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
+
+
 def _sort_docker_nodes_(
     r1: Row,
     r2: Row,
     *,
     parameters: Mapping[str, Any] | None,
-    config: Config,
-    request: Request,
+    config: Config | None,
+    request: Request | None,
 ) -> int:
     val1 = _get_docker_nodes(row=r1)
     val2 = _get_docker_nodes(row=r2)

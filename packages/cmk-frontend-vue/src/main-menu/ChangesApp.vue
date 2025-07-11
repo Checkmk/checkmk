@@ -335,6 +335,12 @@ const noPendingChangesOrWarningsOrErrors = computed((): boolean => {
   )
 })
 
+const numberOfForeignChanges = computed((): number => {
+  // Count the number of pending changes that are foreign (not by the current user)
+  return sitesAndChanges.value.pendingChanges.filter((change) => change.user !== props.user_name)
+    .length
+})
+
 function siteRequiresAttention(site: Site): boolean {
   return (
     site.changes > 0 ||
@@ -567,6 +573,20 @@ onMounted(() => {
         />
 
         <CmkCollapsible
+          v-if="recentlyActivatedSites.length === 0"
+          :open="pendingChangesCollapsible"
+        >
+          <CmkIndent class="foreign-changes-container">
+            <div class="foreign-changes-text">
+              {{ t(`foreign-changes`, `Foreign changes: `) }}
+            </div>
+            <div class="foreign-changes-text">
+              {{ numberOfForeignChanges }}
+            </div>
+          </CmkIndent>
+        </CmkCollapsible>
+
+        <CmkCollapsible
           v-if="
             selectedSites.length === 0 &&
             weHavePendingChanges &&
@@ -714,6 +734,13 @@ onMounted(() => {
 }
 .site-activate-warning {
   background: rgba(255, 202, 40, 0.15); /* TODO: add var */
+}
+
+.foreign-changes-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .no-pending-changes {

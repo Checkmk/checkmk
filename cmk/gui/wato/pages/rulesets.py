@@ -54,7 +54,6 @@ from cmk.gui.form_specs.vue import (
     DisplayMode,
     parse_data_from_frontend,
     render_form_spec,
-    RenderMode,
 )
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
@@ -82,7 +81,7 @@ from cmk.gui.quick_setup.html import (
     quick_setup_source_cell,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, RenderMode
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash

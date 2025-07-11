@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import (
     Annotated,
     Any,
@@ -875,3 +876,9 @@ class VirtualHostTreeSpec(TypedDict):
     title: str
     exclude_empty_tag_choices: bool
     tree_spec: Sequence[str]
+
+
+class RenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"

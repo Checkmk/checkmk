@@ -37,7 +37,6 @@ from cmk.gui.form_specs.vue import (
     RawDiskData,
     RawFrontendData,
     render_form_spec,
-    RenderMode,
 )
 from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
 from cmk.gui.htmllib.html import html
@@ -54,7 +53,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions

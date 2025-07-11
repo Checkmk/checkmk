@@ -34,12 +34,6 @@ class DisplayMode(Enum):
     BOTH = "both"
 
 
-class RenderMode(Enum):
-    BACKEND = "backend"
-    FRONTEND = "frontend"
-    BACKEND_AND_FRONTEND = "backend_and_frontend"
-
-
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str

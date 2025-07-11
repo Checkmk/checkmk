@@ -22,7 +22,6 @@ from .form_spec_visitor import (
     parse_data_from_frontend,
     process_validation_messages,
     render_form_spec,
-    RenderMode,
     serialize_data_for_frontend,
 )
 
@@ -33,7 +32,6 @@ __all__ = [
     "DiskModel",
     "IncomingData",
     "InvalidValue",
-    "RenderMode",
     "DisplayMode",
     "RawDiskData",
     "RawFrontendData",

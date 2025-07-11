@@ -7,6 +7,8 @@ import abc
 from collections.abc import Callable, Sequence
 from typing import Generic, Literal, TypeVar
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -321,7 +323,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         ]
 
     @abc.abstractmethod
-    def _add_change(self, *, action_name: str, text: str) -> None: ...
+    def _add_change(
+        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+    ) -> None: ...
 
     def _generic_rule_list_actions(
         self,
@@ -329,6 +333,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         what: Literal["alert_handler", "notification"],
         what_title: str,
         save_rules: Callable[[list[_T_EventSpec]], None],
+        *,
+        use_git: bool,
+        site_configs: SiteConfigurations,
     ) -> None:
         edit_rules = list(rules)
         if request.has_var("_delete"):
@@ -336,6 +343,8 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
             self._add_change(
                 action_name=what + "-delete-rule",
                 text=_("Deleted %s %d") % (what_title, nr),
+                use_git=use_git,
+                site_configs=site_configs,
             )
             del edit_rules[nr]
             save_rules(edit_rules)
@@ -351,6 +360,8 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                 self._add_change(
                     action_name=what + "-move-rule",
                     text=_("Changed position of %s %d") % (what_title, from_pos),
+                    use_git=use_git,
+                    site_configs=site_configs,
                 )
 
 

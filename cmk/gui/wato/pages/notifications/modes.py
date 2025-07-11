@@ -558,13 +558,15 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         except IndexError:
             return _("Plain email")
 
-    def _add_change(self, *, action_name: str, text: str) -> None:
+    def _add_change(
+        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+    ) -> None:
         _changes.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,
             need_restart=False,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _vs_notification_bulkby(self) -> ListChoice:
@@ -894,8 +896,10 @@ class ModeNotifications(ABCNotificationsMode):
                 "notification",
                 _("notification rule"),
                 lambda c: NotificationRuleConfigFile().save(
-                    c, pprint_value=active_config.wato_pprint_config
+                    c, pprint_value=config.wato_pprint_config
                 ),
+                use_git=config.wato_use_git,
+                site_configs=config.sites,
             )
 
         if back_mode := request.var("back_mode"):
@@ -954,14 +958,16 @@ class ModeNotifications(ABCNotificationsMode):
         table.cell(_("Host"), context.get("HOSTNAME", ""))
         table.cell(_("Service"), context.get("SERVICEDESC", ""))
 
-    def _add_plugin_output_cells(self, table: Table, context: NotificationContext) -> None:
+    def _add_plugin_output_cells(
+        self, table: Table, context: NotificationContext, *, escape_plugin_output: bool
+    ) -> None:
         output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT", ""))
         table.cell(
             _("Plug-in output"),
             cmk.gui.view_utils.format_plugin_output(
                 output,
                 request=request,
-                shall_escape=active_config.escape_plugin_output,
+                shall_escape=escape_plugin_output,
             ),
         )
 
@@ -1353,9 +1359,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
         )
 
     def page(self, config: Config) -> None:
-        result = self._get_result_from_request(debug=active_config.debug)
-        self._show_bulk_notifications(debug=active_config.debug)
-        self._show_notification_backlog()
+        result = self._get_result_from_request(debug=config.debug)
+        self._show_bulk_notifications(debug=config.debug)
+        self._show_notification_backlog(escape_plugin_output=config.escape_plugin_output)
         if request.var("analyse") and result:
             self._show_resulting_notifications(result=result)
         self._show_rules(result)
@@ -1406,7 +1412,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     )
         return True
 
-    def _show_notification_backlog(self) -> None:
+    def _show_notification_backlog(self, escape_plugin_output: bool) -> None:
         """Show recent notifications. We can use them for rule analysis"""
         backlog = store.load_object_from_file(
             cmk.utils.paths.var_dir / "notify/backlog.mk",
@@ -1473,7 +1479,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     table=table,
                     context=context,
                 )
-                self._add_plugin_output_cells(table=table, context=context)
+                self._add_plugin_output_cells(
+                    table=table, context=context, escape_plugin_output=escape_plugin_output
+                )
 
                 self._add_toggable_notification_context(
                     table=table,
@@ -1500,7 +1508,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         if request.has_var("_replay"):
             if transactions.check_transaction():
                 replay_nr = request.get_integer_input_mandatory("_replay")
-                notification_replay(replay_nr, debug=active_config.debug)
+                notification_replay(replay_nr, debug=config.debug)
                 flash(_("Replayed notification number %d") % (replay_nr + 1))
                 return None
 
@@ -1716,10 +1724,12 @@ class ModeTestNotifications(ModeNotifications):
         analyse = None
         if not user_errors:
             context, analyse = self._result_from_request(
-                site_configs=active_config.sites, debug=active_config.debug
+                site_configs=config.sites, debug=config.debug
             )
             self._show_notification_test_overview(context, analyse)
-            self._show_notification_test_details(context, analyse)
+            self._show_notification_test_details(
+                context, analyse, escape_plugin_output=config.escape_plugin_output
+            )
             if request.var("test_notification") and analyse:
                 self._show_resulting_notifications(result=analyse)
         self._show_rules(analyse)
@@ -1861,6 +1871,8 @@ class ModeTestNotifications(ModeNotifications):
         self,
         context: NotificationContext | None,
         analyse: NotifyAnalysisInfo | None,
+        *,
+        escape_plugin_output: bool,
     ) -> None:
         if not context:
             return
@@ -1933,7 +1945,9 @@ class ModeTestNotifications(ModeNotifications):
                 table=table,
                 context=context,
             )
-            self._add_plugin_output_cells(table=table, context=context)
+            self._add_plugin_output_cells(
+                table=table, context=context, escape_plugin_output=escape_plugin_output
+            )
 
             self._add_toggable_notification_context(
                 table=table,
@@ -2460,6 +2474,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             self._add_change(
                 action_name="notification-delete-user-rule",
                 text=_("Deleted notification rule %d of user %s") % (nr, self._user_id()),
+                use_git=config.wato_use_git,
+                site_configs=config.sites,
             )
 
         elif request.has_var("_move"):
@@ -2474,6 +2490,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 action_name="notification-move-user-rule",
                 text=_("Changed position of notification rule %d of user %s")
                 % (from_pos, self._user_id()),
+                use_git=config.wato_use_git,
+                site_configs=config.sites,
             )
 
         return redirect(self.mode_url(user=self._user_id()))
@@ -2481,7 +2499,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def page(self, config: Config) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites(active_config.sites),
+                sites=_get_notification_sync_sites(config.sites),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
             html.h3(_("Notification Rules"))
@@ -2640,19 +2658,28 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
             raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
-    def _add_change(self, *, action_name: str, text: str) -> None:
-        if has_wato_slave_sites(active_config.sites):
+    def _add_change(
+        self,
+        *,
+        action_name: str,
+        text: str,
+        use_git: bool,
+        site_configs: SiteConfigurations,
+    ) -> None:
+        if has_wato_slave_sites(site_configs):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
                 message=text,
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
         else:
             super()._add_change(
                 action_name=action_name,
                 text=text,
+                use_git=use_git,
+                site_configs=site_configs,
             )
 
     def title(self) -> str:
@@ -2669,7 +2696,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _save_rules(self, rules: list[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -3198,12 +3225,14 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        self._save_rules(self._rules)
+        self._save_rules(self._rules, config.wato_pprint_config)
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(
             action_name=log_what,
             text=self._log_text(self._edit_nr),
+            use_git=config.wato_use_git,
+            site_configs=config.sites,
         )
         flash(
             (
@@ -3254,8 +3283,8 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
             return NotificationRuleConfigFile().load_for_modification()
         return NotificationRuleConfigFile().load_for_reading()
 
-    def _save_rules(self, rules: list[EventRule]) -> None:
-        NotificationRuleConfigFile().save(rules, pprint_value=active_config.wato_pprint_config)
+    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
+        NotificationRuleConfigFile().save(rules, pprint_value=pprint_value)
 
     def _user_id(self) -> None:
         return None
@@ -3335,7 +3364,7 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
-    def _save_rules(self, rules: list[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
         userdb.save_users(self._users, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
@@ -3367,19 +3396,27 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
-    def _add_change(self, action_name: str, text: str) -> None:
-        if has_wato_slave_sites(active_config.sites):
+    def _add_change(
+        self,
+        action_name: str,
+        text: str,
+        use_git: bool,
+        site_configs: SiteConfigurations,
+    ) -> None:
+        if has_wato_slave_sites(site_configs):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
                 message=text,
                 user_id=self._user_id(),
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
         else:
             super()._add_change(
                 action_name=action_name,
                 text=text,
+                use_git=use_git,
+                site_configs=site_configs,
             )
 
     def _back_mode(self) -> ActionResult:
@@ -3402,7 +3439,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
-    def _save_rules(self, rules: list[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
         userdb.save_users(self._users, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
@@ -3548,18 +3585,19 @@ class ABCNotificationParameterMode(WatoMode):
     def _save_parameters(
         self,
         parameters: NotificationParameterSpecs,
+        pprint_value: bool,
     ) -> None:
-        NotificationParameterConfigFile().save(
-            parameters, pprint_value=active_config.wato_pprint_config
-        )
+        NotificationParameterConfigFile().save(parameters, pprint_value=pprint_value)
 
-    def _add_change(self, *, action_name: str, text: str) -> None:
+    def _add_change(
+        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+    ) -> None:
         _changes.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,
             need_restart=False,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _log_text(self, edit_nr: int) -> str:
@@ -3660,7 +3698,7 @@ class ABCNotificationParameterMode(WatoMode):
 
             method_parameters.pop(parameter_id, None)
             self._parameters[self._method()] = method_parameters
-            self._save_parameters(self._parameters)
+            self._save_parameters(self._parameters, config.wato_pprint_config)
 
             parameter_number = next(
                 i for i, v in enumerate(method_parameter_list) if v[0] == parameter_id
@@ -3668,6 +3706,8 @@ class ABCNotificationParameterMode(WatoMode):
             self._add_change(
                 action_name="notification-delete-notification-parameter",
                 text=_("Deleted notification parameter %d") % parameter_number,
+                use_git=config.wato_use_git,
+                site_configs=config.sites,
             )
 
         elif request.has_var("_move"):
@@ -3679,11 +3719,13 @@ class ABCNotificationParameterMode(WatoMode):
             method_parameter_list[to_pos:to_pos] = [parameter]
             method_parameter_dict = dict(method_parameter_list)
             self._parameters[self._method()] = method_parameter_dict
-            self._save_parameters(self._parameters)
+            self._save_parameters(self._parameters, config.wato_pprint_config)
 
             self._add_change(
                 action_name="notification-move-notification-parameter",
                 text=_("Changed position of notification parameter %d") % from_pos,
+                use_git=config.wato_use_git,
+                site_configs=config.sites,
             )
 
         if back_mode := request.var("back_mode"):
@@ -3880,13 +3922,15 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                         spec.value_to_html(parameter["parameter_properties"])
                     )
 
-    def _add_change(self, *, action_name: str, text: str) -> None:
+    def _add_change(
+        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+    ) -> None:
         _changes.add_change(
             action_name=action_name,
             user_id=user.id,
             text=text,
             need_restart=False,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _parameter_links(
@@ -4006,12 +4050,14 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
                 self._parameter
             )
 
-        self._save_parameters(self._parameters)
+        self._save_parameters(self._parameters, config.wato_pprint_config)
 
         log_what = "new-notification-parameter" if self._new else "edit-notification-parameter"
         self._add_change(
             action_name=log_what,
             text=self._log_text(self._edit_nr),
+            use_git=config.wato_use_git,
+            site_configs=config.sites,
         )
 
         if back_mode := request.var("back_mode"):

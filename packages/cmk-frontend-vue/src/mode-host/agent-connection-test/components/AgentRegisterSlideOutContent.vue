@@ -24,26 +24,35 @@ const registrationMessage = t(
   'Run this command to register the Checkmk agent controller'
 )
 
+const registrationCommand = t(
+  'agent-windows-register-cmd',
+  'some --placeholder --agent --registration command'
+)
+
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
     title: t('agent-windows', 'Windows'),
-    registration_msg: registrationMessage
+    registration_msg: registrationMessage,
+    registration_cmd: registrationCommand
   },
   {
     id: 'linux',
     title: t('agent-linux', 'Linux'),
-    registration_msg: registrationMessage
+    registration_msg: registrationMessage,
+    registration_cmd: registrationCommand
   },
   {
     id: 'solaris',
     title: t('agent-solaris', 'Solaris'),
-    registration_msg: registrationMessage
+    registration_msg: registrationMessage,
+    registration_cmd: registrationCommand
   },
   {
     id: 'aix',
     title: t('agent-solaris', 'AIX'),
-    registration_msg: registrationMessage
+    registration_msg: registrationMessage,
+    registration_cmd: registrationCommand
   }
 ]
 </script>

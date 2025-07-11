@@ -25,7 +25,8 @@ export interface AgentSlideOutTabs {
   install_deb_cmd?: string
   install_rpm_cmd?: string
   install_tgz_cmd?: string
-  registration_msg: string
+  registration_msg?: string
+  registration_cmd?: string
   toggle_button_options?: PackageOptions
 }
 
@@ -111,9 +112,9 @@ watch(model, (newValue) => {
           :code_txt="tab.install_tgz_cmd"
         />
         <CmkCode
-          v-if="tab.registration_msg"
+          v-if="tab.registration_msg && tab.registration_cmd"
           :title="tab.registration_msg"
-          :code_txt="t('ags-placeholder', 'Placeholder for code component')"
+          :code_txt="tab.registration_cmd"
         />
         <CmkHeading2>
           {{

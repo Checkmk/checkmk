@@ -11,13 +11,6 @@ from cmk.gui.form_specs.private.multiple_choice import (
     MultipleChoiceExtended,
     MultipleChoiceExtendedLayout,
 )
-from cmk.gui.form_specs.vue._utils import (
-    compute_validators,
-    get_prefill_default,
-    get_title_and_help,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.valuespec import autocompleter_registry
 
@@ -30,6 +23,13 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import (
+    compute_validators,
+    get_prefill_default,
+    get_title_and_help,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 
 class TransportFormat(TypedDict):

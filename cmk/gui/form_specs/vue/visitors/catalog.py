@@ -9,13 +9,6 @@ from typing import Any, Self
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement, TopicGroup
-from cmk.gui.form_specs.vue._utils import (
-    base_i18n_form_spec,
-    create_validation_error,
-    get_title_and_help,
-    localize,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
@@ -32,6 +25,13 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import (
+    base_i18n_form_spec,
+    create_validation_error,
+    get_title_and_help,
+    localize,
+)
+from .._visitor_base import FormSpecVisitor
 
 ModelTopic = str
 ModelTopicElement = str

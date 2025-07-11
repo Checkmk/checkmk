@@ -12,7 +12,6 @@ from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.private import OptionalChoice
-from cmk.gui.form_specs.vue._type_defs import DefaultValue as FrontendDefaultValue
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -40,6 +39,8 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
+
+from ..._type_defs import DefaultValue as FrontendDefaultValue
 
 _NumberT = TypeVar("_NumberT", int, float)
 

@@ -10,20 +10,20 @@ from cmk.gui.form_specs.private.condition_choices import (
     ConditionGroupID,
     Conditions,
 )
-from cmk.gui.form_specs.vue._utils import (
+from cmk.gui.i18n import _
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
+from .._utils import (
     base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     get_title_and_help,
     localize,
 )
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import _
-
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 _UNSUPPORTED_VALUE_FROM_FRONTEND = Literal["Unsupported value received from frontend"]
 _FallbackModel = list[shared_type_defs.ConditionChoicesValue]

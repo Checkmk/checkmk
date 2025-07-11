@@ -8,9 +8,6 @@ from typing import Any, TypedDict, TypeGuard
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
-from cmk.gui.form_specs.vue._utils import compute_validators, get_title_and_help
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Help, Title
@@ -26,6 +23,9 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import compute_validators, get_title_and_help
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 _default_value_key = shared_type_defs.TimeSpecific.default_value_key
 _ts_values_key = shared_type_defs.TimeSpecific.time_specific_values_key

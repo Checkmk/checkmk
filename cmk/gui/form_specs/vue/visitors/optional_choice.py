@@ -7,13 +7,6 @@ from typing import Never
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.optional_choice import OptionalChoice
-from cmk.gui.form_specs.vue._utils import (
-    compute_validators,
-    get_title_and_help,
-    localize,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Label
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -27,6 +20,13 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import (
+    compute_validators,
+    get_title_and_help,
+    localize,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 _ParsedValueModel = RawDiskData | RawFrontendData
 _FallbackModel = Never

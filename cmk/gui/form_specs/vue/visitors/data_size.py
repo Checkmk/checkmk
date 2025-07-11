@@ -7,20 +7,20 @@ from collections.abc import Callable, Sequence
 from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue._utils import (
+
+from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
+from .._utils import (
     compute_input_hint,
     compute_validators,
     get_prefill_default,
     get_title_and_help,
     localize,
 )
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-
-from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
     SIMagnitude.BYTE: ("B", 1),

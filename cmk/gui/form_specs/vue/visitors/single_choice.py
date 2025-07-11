@@ -7,18 +7,6 @@ from dataclasses import dataclass
 from typing import Generic, TypeAlias, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
-from cmk.gui.form_specs.vue._utils import (
-    base_i18n_form_spec,
-    compute_title_input_hint,
-    compute_validators,
-    create_validation_error,
-    get_prefill_default,
-    get_title_and_help,
-    localize,
-    option_id,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.rulesets.v1 import Message
@@ -33,6 +21,18 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import (
+    base_i18n_form_spec,
+    compute_title_input_hint,
+    compute_validators,
+    create_validation_error,
+    get_prefill_default,
+    get_title_and_help,
+    localize,
+    option_id,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 T = TypeVar("T")
 

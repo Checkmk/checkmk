@@ -7,15 +7,6 @@ from typing import Literal
 
 from cmk.utils.password_store import ad_hoc_password_id
 
-from cmk.gui.form_specs.vue._utils import (
-    base_i18n_form_spec,
-    compute_validators,
-    create_validation_error,
-    get_title_and_help,
-    optional_validation,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.watolib.password_store import passwordstore_choices
@@ -25,6 +16,15 @@ from cmk.rulesets.v1.form_specs import Password
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData
+from .._utils import (
+    base_i18n_form_spec,
+    compute_validators,
+    create_validation_error,
+    get_title_and_help,
+    optional_validation,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 PasswordId = str
 ParsedPassword = tuple[

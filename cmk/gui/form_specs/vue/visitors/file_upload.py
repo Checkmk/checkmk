@@ -11,12 +11,6 @@ from werkzeug.datastructures import FileStorage
 
 from cmk.utils.render import filesize
 
-from cmk.gui.form_specs.vue._utils import (
-    compute_validators,
-    get_title_and_help,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, translate_to_current_language
@@ -28,6 +22,12 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData
+from .._utils import (
+    compute_validators,
+    get_title_and_help,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 FileName = str
 FileType = str

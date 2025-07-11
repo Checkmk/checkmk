@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.gui.i18n import _
 
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from .._registry import get_visitor
 from .._type_defs import IncomingData, InvalidValue, RawDiskData
+from .._visitor_base import FormSpecVisitor
 
 _ParsedValueModel = IncomingData
 _FallbackModel = object

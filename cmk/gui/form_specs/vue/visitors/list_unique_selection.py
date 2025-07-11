@@ -11,9 +11,6 @@ from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
-from cmk.gui.form_specs.vue._utils import compute_validators, get_title_and_help, option_id
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec, SingleChoice
@@ -28,6 +25,9 @@ from .._type_defs import (
     RawDiskData,
     RawFrontendData,
 )
+from .._utils import compute_validators, get_title_and_help, option_id
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 T = TypeVar("T")
 

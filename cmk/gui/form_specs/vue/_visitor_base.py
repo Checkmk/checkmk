@@ -8,15 +8,15 @@ from typing import Any, final, Generic, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData
-from cmk.gui.form_specs.vue._utils import (
+from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from ._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData
+from ._utils import (
     compute_validation_errors,
     compute_validators,
     create_validation_error,
 )
-
-from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 

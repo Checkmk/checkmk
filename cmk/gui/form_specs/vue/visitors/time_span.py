@@ -10,15 +10,6 @@ from cmk.ccc.i18n import _
 from cmk.utils.render import SecondsRenderer
 
 from cmk.gui.form_specs.private.validators import IsFloat
-from cmk.gui.form_specs.vue._utils import (
-    compute_input_hint,
-    compute_validators,
-    get_prefill_default,
-    get_title_and_help,
-    localize,
-)
-from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Label, Message
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
@@ -26,6 +17,15 @@ from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue
+from .._utils import (
+    compute_input_hint,
+    compute_validators,
+    get_prefill_default,
+    get_title_and_help,
+    localize,
+)
+from .._visitor_base import FormSpecVisitor
+from ..validators import build_vue_validators
 
 
 def magnitude_translator(magnitude: TimeMagnitude) -> shared_type_defs.TimeSpanTimeMagnitude:

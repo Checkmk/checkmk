@@ -43,7 +43,7 @@ async function copyToClipboard() {
     </div>
     <div class="icon_container" @click="copyToClipboard">
       <div class="clone_icon_container">
-        <CmkIconButton name="copied" variant="inline" size="xlarge" class="clone_icon" />
+        <CmkIconButton name="copied" variant="inline" size="medium" class="clone_icon" />
       </div>
       <span v-if="showMessage" class="message">
         <CmkIcon name="checkmark" variant="inline" size="medium" />
@@ -66,6 +66,7 @@ async function copyToClipboard() {
 .code_wrapper {
   display: flex;
   align-items: center;
+  margin-bottom: var(--spacing);
 
   .code_container {
     padding: var(--spacing);

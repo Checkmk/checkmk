@@ -2228,7 +2228,8 @@ class HistoryStore:
                 )
 
                 if entry.new or entry.changed or entry.removed:
-                    self.save_history_entry(host_name=host_name, history_entry=entry)
+                    if path.current.tree_path != self.inv_paths.inventory_tree(host_name):
+                        self.save_history_entry(host_name=host_name, history_entry=entry)
                     return OK(entry)
 
                 return Error(

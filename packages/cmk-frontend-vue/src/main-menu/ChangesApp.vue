@@ -28,6 +28,7 @@ const props = defineProps<{
   user_name: string
 }>()
 
+const numberOfChangesLastActivation = ref<number>(0)
 const selectedSites = ref<Array<string>>([])
 const recentlyActivatedSites = ref<Array<string>>([])
 const activationStatusCollapsible = ref<boolean>(true)
@@ -183,6 +184,8 @@ async function getActivationStatus(activationId: string) {
     setTimeout(() => {
       void getActivationStatus(activationId)
     }, 100)
+  } else {
+    numberOfChangesLastActivation.value = response.extensions.changes.length
   }
 }
 
@@ -405,7 +408,28 @@ onMounted(() => {
         </div>
       </template>
 
-      <template v-if="noPendingChangesOrWarningsOrErrors && !activateChangesInProgress">
+      <template v-if="!activateChangesInProgress && recentlyActivatedSites.length > 0">
+        <div class="activation-result-container">
+          <div class="activation-result">
+            <CmkIcon variant="plain" size="xxlarge" name="save" />
+            <span class="activation-result-text">{{
+              t(
+                'successfully-activated-changes',
+                `Successfully activated ${numberOfChangesLastActivation} changes`
+              )
+            }}</span>
+            <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
+          </div>
+        </div>
+      </template>
+
+      <template
+        v-if="
+          noPendingChangesOrWarningsOrErrors &&
+          !activateChangesInProgress &&
+          recentlyActivatedSites.length === 0
+        "
+      >
         <div class="activation-result-container">
           <div class="activation-result">
             <CmkIcon variant="plain" size="xxlarge" name="save" />

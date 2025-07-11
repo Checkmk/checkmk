@@ -62,12 +62,15 @@ InventoryIcon = Icon(
 def _has_inventory_history(host_name: HostName) -> bool:
     if not host_name:
         return False
-    try:
-        return bool(
-            list(InventoryPaths(cmk.utils.paths.omd_root).archive_host(host_name).iterdir())
-        )
-    except FileNotFoundError:
-        return False
+    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
+    for directory in [inv_paths.archive_host(host_name), inv_paths.delta_cache_host(host_name)]:
+        try:
+            is_empty = any(directory.iterdir())
+        except FileNotFoundError:
+            is_empty = True
+        if not is_empty:
+            return True
+    return False
 
 
 def _render_inventory_history_icon(

@@ -19,8 +19,9 @@ from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
+    HistoryArchivePath,
+    HistoryDeltaPath,
     HistoryEntry,
-    HistoryPath,
     HistoryStore,
     ImmutableDeltaTree,
     ImmutableTree,
@@ -305,7 +306,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
+        filter_history_paths=lambda paths: [paths[-1]] if paths else [],
         filter_delta_tree=filter_delta_tree,
     )
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
@@ -329,11 +330,11 @@ def load_delta_tree(
     # computation.
 
     def _search_timestamps(
-        pairs: Sequence[tuple[HistoryPath, HistoryPath]], timestamp: int
-    ) -> Sequence[tuple[HistoryPath, HistoryPath]]:
-        for previous, current in pairs:
-            if current.timestamp == timestamp:
-                return [(previous, current)]
+        paths: Sequence[HistoryDeltaPath | HistoryArchivePath], timestamp: int
+    ) -> Sequence[HistoryDeltaPath | HistoryArchivePath]:
+        for path in paths:
+            if path.current_timestamp == timestamp:
+                return [path]
         raise MKGeneralException(
             _("Found no history entry at the time of '%s' for the host '%s'")
             % (timestamp, hostname)
@@ -347,7 +348,7 @@ def load_delta_tree(
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
+        filter_history_paths=lambda paths: _search_timestamps(paths, timestamp),
         filter_delta_tree=filter_delta_tree,
     )
     return (
@@ -370,7 +371,7 @@ def get_history(
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda pairs: pairs,
+        filter_history_paths=lambda paths: paths,
         filter_delta_tree=filter_delta_tree,
     )
     return history.entries, _sort_corrupted_history_files(

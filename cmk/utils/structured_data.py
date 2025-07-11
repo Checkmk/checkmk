@@ -16,7 +16,7 @@ import json
 import os
 import pprint
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
@@ -24,6 +24,7 @@ from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.resulttype import Error, OK, Result
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
@@ -1943,15 +1944,26 @@ class RawInventoryStore:
 
 
 @dataclass(frozen=True)
+class HistoryDeltaPath:
+    file_path: Path
+    previous_timestamp: int
+    current_timestamp: int
+
+
+@dataclass(frozen=True)
 class HistoryPath:
     tree_path: TreePath
     timestamp: int
 
 
-@dataclass(frozen=True)
-class HistoryPaths:
-    paths: Sequence[HistoryPath]
-    corrupted: Sequence[Path]
+@dataclass(frozen=True, kw_only=True)
+class HistoryArchivePath:
+    previous: HistoryPath
+    current: HistoryPath
+
+    @property
+    def current_timestamp(self) -> int:
+        return self.current.timestamp
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -2075,28 +2087,54 @@ class HistoryStore:
         self.inv_paths = InventoryPaths(omd_root)
         self._lookup: dict[tuple[Path, Path], ImmutableTree] = {}
 
-    def collect_archive_files(self, *, host_name: HostName) -> HistoryPaths:
+    def _collect_paths_from_delta_cache(
+        self, host_name: HostName
+    ) -> Iterator[Result[HistoryDeltaPath, Path]]:
         try:
-            archive_host_file_paths = list(self.inv_paths.archive_host(host_name).iterdir())
+            file_paths = list(self.inv_paths.delta_cache_host(host_name).iterdir())
         except FileNotFoundError:
-            return HistoryPaths(paths=[], corrupted=[])
+            return
 
-        paths = []
-        corrupted = []
-        for file_path in archive_host_file_paths:
+        for file_path in file_paths:
             try:
-                paths.append(
+                previous_name, current_name = file_path.with_suffix("").name.split("_")
+                previous_timestamp = -1 if previous_name == "None" else int(previous_name)
+                current_timestamp = int(current_name)
+            except ValueError:
+                yield Error(file_path)
+                continue
+
+            yield OK(
+                HistoryDeltaPath(
+                    file_path=file_path,
+                    previous_timestamp=previous_timestamp,
+                    current_timestamp=current_timestamp,
+                )
+            )
+
+    def _collect_paths_from_archive(
+        self, host_name: HostName
+    ) -> Iterator[Result[HistoryPath, Path]]:
+        try:
+            file_paths = list(self.inv_paths.archive_host(host_name).iterdir())
+        except FileNotFoundError:
+            return
+
+        yield OK(HistoryPath(TreePath(path=Path(), legacy=Path()), -1))
+        for file_path in file_paths:
+            try:
+                yield OK(
                     HistoryPath(
                         tree_path=TreePath.from_archive_or_delta_cache_file_path(file_path),
                         timestamp=int(file_path.with_suffix("").name),
                     )
                 )
             except ValueError:
-                corrupted.append(file_path)
+                yield Error(file_path)
 
         tree_path = self.inv_paths.inventory_tree(host_name)
         try:
-            paths.append(
+            yield OK(
                 HistoryPath(
                     tree_path=tree_path,
                     timestamp=int(tree_path.stat().st_mtime),
@@ -2105,7 +2143,7 @@ class HistoryStore:
         except FileNotFoundError:
             # TODO CMK-23408
             try:
-                paths.append(
+                yield OK(
                     HistoryPath(
                         tree_path=tree_path,
                         timestamp=int(tree_path.legacy.stat().st_mtime),
@@ -2114,36 +2152,38 @@ class HistoryStore:
             except FileNotFoundError:
                 pass
 
-        return HistoryPaths(paths=sorted(paths, key=lambda hp: hp.timestamp), corrupted=corrupted)
+    def collect_history_paths(
+        self, *, host_name: HostName
+    ) -> Iterator[Result[HistoryDeltaPath | HistoryArchivePath, Path]]:
+        known_paths: dict[tuple[HostName, int, int], HistoryDeltaPath | HistoryArchivePath] = {}
+        for result_from_delta_cache in self._collect_paths_from_delta_cache(host_name):
+            if result_from_delta_cache.is_ok():
+                known_paths[
+                    (
+                        host_name,
+                        result_from_delta_cache.ok.previous_timestamp,
+                        result_from_delta_cache.ok.current_timestamp,
+                    )
+                ] = result_from_delta_cache.ok
+            else:
+                yield result_from_delta_cache
 
-    def load_history_entry(
-        self, *, host_name: HostName, previous_timestamp: int, current_timestamp: int
-    ) -> HistoryEntry | None:
-        delta_cache_tree = self.inv_paths.delta_cache_tree(
-            host_name,
-            previous_timestamp,
-            current_timestamp,
+        results_from_archive = list(self._collect_paths_from_archive(host_name))
+        sorted_paths_from_archive = sorted(
+            [r.ok for r in results_from_archive if r.is_ok()], key=lambda p: p.timestamp
         )
-        try:
-            try:
-                raw = json.loads(store.load_text_from_file(delta_cache_tree.path))
-            except json.JSONDecodeError:
-                # TODO CMK-23408
-                raw = store.load_object_from_file(delta_cache_tree.legacy, default=None)
-        except MKGeneralException:
-            return None
+        for previous, current in zip(sorted_paths_from_archive, sorted_paths_from_archive[1:]):
+            if (key := (host_name, previous.timestamp, current.timestamp)) not in known_paths:
+                known_paths[key] = HistoryArchivePath(previous=previous, current=current)
 
-        return (
-            None
-            if raw is None
-            else HistoryEntry.from_raw(
-                previous_timestamp=previous_timestamp,
-                current_timestamp=current_timestamp,
-                raw=raw,
-            )
-        )
+        for key in sorted(known_paths, key=lambda k: k[-1]):
+            yield OK(known_paths[key])
 
-    def lookup_tree(self, tree_path: TreePath) -> ImmutableTree:
+        for result_from_archive in results_from_archive:
+            if result_from_archive.is_error():
+                yield Error(result_from_archive.error)
+
+    def _lookup_tree(self, tree_path: TreePath) -> ImmutableTree:
         if tree_path.path == Path() or tree_path.legacy == Path():
             return ImmutableTree()
 
@@ -2153,41 +2193,72 @@ class HistoryStore:
 
         return self._lookup.setdefault(key, _load_tree_from_tree_path(tree_path))
 
-    def save_history_entry(
-        self,
-        *,
-        host_name: HostName,
-        previous_timestamp: int,
-        current_timestamp: int,
-        entry: HistoryEntry,
-    ) -> None:
+    def load_history_entry(
+        self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
+    ) -> Result[HistoryEntry, Sequence[Path]]:
+        match path:
+            case HistoryDeltaPath():
+                try:
+                    raw = (
+                        json.loads(store.load_text_from_file(path.file_path))
+                        if path.file_path.suffix == ".json"
+                        else store.load_object_from_file(path.file_path, default=None)
+                    )
+                except MKGeneralException:
+                    return Error([path.file_path])
+
+                if raw is None:
+                    return Error([path.file_path])
+
+                return OK(
+                    HistoryEntry.from_raw(
+                        previous_timestamp=path.previous_timestamp,
+                        current_timestamp=path.current_timestamp,
+                        raw=raw,
+                    )
+                )
+
+            case HistoryArchivePath():
+                entry = HistoryEntry.from_delta_tree(
+                    previous_timestamp=path.previous.timestamp,
+                    current_timestamp=path.current.timestamp,
+                    delta_tree=self._lookup_tree(path.current.tree_path).difference(
+                        self._lookup_tree(path.previous.tree_path)
+                    ),
+                )
+
+                if entry.new or entry.changed or entry.removed:
+                    self.save_history_entry(host_name=host_name, history_entry=entry)
+                    return OK(entry)
+
+                return Error(
+                    [
+                        path.current.tree_path.path,
+                        path.current.tree_path.legacy,
+                        path.current.tree_path.path,
+                        path.current.tree_path.legacy,
+                    ]
+                )
+
+    def save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(
             host_name,
-            previous_timestamp,
-            current_timestamp,
+            history_entry.previous_timestamp,
+            history_entry.current_timestamp,
         )
         delta_cache_tree.parent.mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
             delta_cache_tree.path,
             json.dumps(
                 (
-                    entry.new,
-                    entry.changed,
-                    entry.removed,
-                    serialize_delta_tree(entry.delta_tree),
+                    history_entry.new,
+                    history_entry.changed,
+                    history_entry.removed,
+                    serialize_delta_tree(history_entry.delta_tree),
                 )
             ),
         )
         delta_cache_tree.legacy.unlink(missing_ok=True)
-
-
-def _get_pairs(
-    history_file_paths: Sequence[HistoryPath],
-) -> Sequence[tuple[HistoryPath, HistoryPath]]:
-    if not history_file_paths:
-        return []
-    paths = [HistoryPath(TreePath(path=Path(), legacy=Path()), -1)] + list(history_file_paths)
-    return list(zip(paths, paths[1:]))
 
 
 @dataclass(frozen=True)
@@ -2201,41 +2272,30 @@ def load_history(
     host_name: HostName,
     *,
     filter_history_paths: Callable[
-        [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
+        [Sequence[HistoryDeltaPath | HistoryArchivePath]],
+        Sequence[HistoryDeltaPath | HistoryArchivePath],
     ],
     filter_delta_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
-    files = history_store.collect_archive_files(host_name=host_name)
-    entries: list[HistoryEntry] = []
-    for previous, current in filter_history_paths(_get_pairs(files.paths)):
-        if (
-            entry := history_store.load_history_entry(
-                host_name=host_name,
-                previous_timestamp=previous.timestamp,
-                current_timestamp=current.timestamp,
-            )
-        ) is not None:
-            entries.append(entry)
-            continue
+    paths = []
+    corrupted: set[Path] = set()
+    for path_result in history_store.collect_history_paths(host_name=host_name):
+        if path_result.is_ok():
+            paths.append(path_result.ok)
+        else:
+            corrupted.add(path_result.error)
 
-        entry = HistoryEntry.from_delta_tree(
-            previous_timestamp=previous.timestamp,
-            current_timestamp=current.timestamp,
-            delta_tree=history_store.lookup_tree(current.tree_path).difference(
-                history_store.lookup_tree(previous.tree_path)
-            ),
-        )
-        if entry.new or entry.changed or entry.removed:
-            history_store.save_history_entry(
-                host_name=host_name,
-                previous_timestamp=previous.timestamp,
-                current_timestamp=current.timestamp,
-                entry=entry,
-            )
-            entries.append(entry)
+    entries = []
+    for path in filter_history_paths(paths):
+        if (
+            entry_result := history_store.load_history_entry(host_name=host_name, path=path)
+        ).is_ok():
+            entries.append(entry_result.ok)
+        else:
+            corrupted.update(entry_result.error)
 
     if filter_delta_tree is None:
-        return History(entries=entries, corrupted=files.corrupted)
+        return History(entries=entries, corrupted=list(corrupted))
 
     return History(
         entries=[
@@ -2247,5 +2307,5 @@ def load_history(
             for e in entries
             if (d := e.delta_tree.filter(filter_delta_tree))
         ],
-        corrupted=files.corrupted,
+        corrupted=list(corrupted),
     )

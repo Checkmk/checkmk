@@ -213,7 +213,7 @@ def test_load_history(tmp_path: Path) -> None:
     history = load_history(
         HistoryStore(tmp_path),
         host_name,
-        filter_history_paths=lambda ps: ps,
+        filter_history_paths=lambda paths: paths,
         filter_delta_tree=None,
     )
     assert len(history.entries) == 6

@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
 load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@cmk_types//:types.bzl", "types")
@@ -28,4 +29,11 @@ mypy_aspect = mypy(
 ruff = lint_ruff_aspect(
     binary = Label("@multitool//tools/ruff"),
     configs = [Label("@//:pyproject.toml")],
+)
+
+clang_tidy = lint_clang_tidy_aspect(
+    binary = Label("//bazel/tools:clang_tidy"),
+    global_config = [Label("//:.clang-tidy")],
+    gcc_install_dir = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
+    deps = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
 )

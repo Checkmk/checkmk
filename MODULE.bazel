@@ -32,7 +32,6 @@ bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
 
-bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
 bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(
     name = "llvm_linux_x86_64",
@@ -64,15 +63,6 @@ bazel_dep(
 )
 
 git_override(
-    module_name = "bazel_clang_tidy",
-    # No tags, no releases.  Live on head.
-    commit = "a965fb4cb5286812643e205a5f0db8927107b120",
-    patch_strip = 1,
-    patches = ["//bazel/patches:bazel_clang_tidy-gcc_install_dir.patch"],
-    remote = "https://github.com/erenon/bazel_clang_tidy.git",
-)
-
-git_override(
     module_name = "bazel_iwyu",
     # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
     # even if using master doesn't solve the issue.
@@ -98,6 +88,16 @@ git_override(
         "//bazel/patches:rules_rust-ignore_incomplete_workspace_env.patch",
     ],
     remote = "https://github.com/Synss/rules_rust",
+)
+
+single_version_override(
+    module_name = "aspect_rules_lint",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_lint-clang_tidy-gcc_install_dir.patch",
+        "//bazel/patches:rules_lint-clang_tidy-deps.patch",
+        "//bazel/patches:rules_lint-clang_tidy-quotation.patch",
+    ],
 )
 
 single_version_override(

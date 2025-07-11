@@ -26,7 +26,7 @@ format_multirun(
 )
 
 native_binary(
-    name = "clangtidy_bin",
+    name = "clang_tidy",
     src = "@clang-linux-x86_64//:bin/clang-tidy",
 )
 

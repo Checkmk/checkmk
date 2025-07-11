@@ -132,7 +132,7 @@ run_iwyu() {
 }
 
 run_clang_tidy() {
-    bazel build --config clang-tidy :all
+    bazel lint --aspect:interactive=false --quiet --diff --machine :all
 }
 
 run_format() {

@@ -16,6 +16,7 @@ select = [
   "SLF",    # flake8: self
   "UP",     # pyugrade
   "W",      # pycodestyle (warning)
+  "T10",    # flake8: debugger
 ]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.

@@ -34676,9 +34676,10 @@ msgstr "Sie wird noch von mindestens 1 Regel im Regelsatz verwendet:"
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "Es ist nicht erlaubt, hier ein führendes \"!\" zu verwenden."
 
+#, fuzzy
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
-"clusters &quot;overlap&quot;. In such a case using the ruleset <i>Clustered "
+"clusters \"overlap\". In such a case using the ruleset <i>Clustered "
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
@@ -42449,6 +42450,10 @@ msgstr "Keine Daten."
 
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
+
+#, fuzzy
+msgid "No default values can be set for condition choices."
+msgstr "Standardwerte für alle Sektionen setzen"
 
 msgid "No deprecated rule sets found."
 msgstr "Es wurden keine veralteten Regelsätze gefunden."
@@ -57957,15 +57962,16 @@ msgstr ""
 "gemountet ist. Bitte beachten Sie, dass der Checkmk-Agent keine automatische "
 "Bereinigung in diesem benutzerdefinierten Pfad vornimmt."
 
+#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
-"also for other hosts &quot;piggyback&quot; with their own data. This is the "
-"case for the vSphere special agent and the SAP R/3 plugin, for example. The "
-"host names that these agents send must match your host names in your "
-"monitoring configuration. If that is not the case, then with this rule you "
-"can define a host name translation. Note: This rule must be configured for "
-"the &quot;pig&quot; - i.e. the host that the agent is running on. It is not "
-"applied to the translated piggybacked hosts."
+"also for other hosts \"piggyback\" with their own data. This is the case for "
+"the vSphere special agent and the SAP R/3 plugin, for example. The host "
+"names that these agents send must match your host names in your monitoring "
+"configuration. If that is not the case, then with this rule you can define a "
+"host name translation. Note: This rule must be configured for the \"pig\" - "
+"i.e. the host that the agent is running on. It is not applied to the "
+"translated piggybacked hosts."
 msgstr ""
 "Manche Agenten oder Agenten-Plugins senden Daten nicht nur für den "
 "abgefragten Host, sondern für andere Hosts \"piggyback\" mit ihren eigenen "
@@ -75754,9 +75760,6 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Kann Verbindung nicht abgleichen"
 
-msgid "Unable to migrate value"
-msgstr "Wert kann nicht migriert werden"
-
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -75973,6 +75976,10 @@ msgstr ""
 
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Unerwartete 'Drosselungs'-Werte an das Formular übergeben."
+
+#, fuzzy, python-format
+msgid "Unexpected dictionary type: %s"
+msgstr "Erwarteter Cluster-Typ."
 
 #, python-format
 msgid ""
@@ -81219,11 +81226,12 @@ msgstr ""
 "normalerweise im Hauptfenster (rechts) angezeigt. Sie können diese URL hier "
 "durch eine beliebige andere ersetzen."
 
+#, fuzzy
 msgid ""
-"When you reschedule a check by clicking on the &quot;arrow&quot;-icon then "
-"Multisite will use this number of seconds as a timeout. If the monitoring "
-"core has not executed the check within this time, an error will be displayed "
-"and the page not reloaded."
+"When you reschedule a check by clicking on the \"arrow\"-icon then Multisite "
+"will use this number of seconds as a timeout. If the monitoring core has not "
+"executed the check within this time, an error will be displayed and the page "
+"not reloaded."
 msgstr ""
 "Immer wenn Sie Checks durch Anklicken des &quot;arrow&quot;-Symbols neu "
 "ansetzen wird die graphische Benutzeroberfläche (GUI) die Anzahl der "
@@ -86717,6 +86725,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Unable to migrate value"
+#~ msgstr "Wert kann nicht migriert werden"
 
 #~ msgid "Agent connection successful"
 #~ msgstr "Agentenverbindung erfolgreich"

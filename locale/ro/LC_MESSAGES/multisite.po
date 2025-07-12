@@ -36098,9 +36098,10 @@ msgstr "Acesta este încă utilizat de cel puțin o regulă din setul de reguli:
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "Nu este permisă utilizarea unui \"!\" de început aici."
 
+#, fuzzy
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
-"clusters &quot;overlap&quot;. In such a case using the ruleset <i>Clustered "
+"clusters \"overlap\". In such a case using the ruleset <i>Clustered "
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
@@ -44224,6 +44225,10 @@ msgstr "Nu există date."
 
 msgid "No datasource defined."
 msgstr "Nu este definită nicio sursă de date."
+
+#, fuzzy
+msgid "No default values can be set for condition choices."
+msgstr "Setați valorile implicite pentru toate secțiunile"
 
 #, fuzzy
 msgid "No deprecated rule sets found."
@@ -60589,13 +60594,13 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
-"also for other hosts &quot;piggyback&quot; with their own data. This is the "
-"case for the vSphere special agent and the SAP R/3 plugin, for example. The "
-"host names that these agents send must match your host names in your "
-"monitoring configuration. If that is not the case, then with this rule you "
-"can define a host name translation. Note: This rule must be configured for "
-"the &quot;pig&quot; - i.e. the host that the agent is running on. It is not "
-"applied to the translated piggybacked hosts."
+"also for other hosts \"piggyback\" with their own data. This is the case for "
+"the vSphere special agent and the SAP R/3 plugin, for example. The host "
+"names that these agents send must match your host names in your monitoring "
+"configuration. If that is not the case, then with this rule you can define a "
+"host name translation. Note: This rule must be configured for the \"pig\" - "
+"i.e. the host that the agent is running on. It is not applied to the "
+"translated piggybacked hosts."
 msgstr ""
 "Unii agenți sau pluginuri de agenți trimit date nu numai pentru gazda "
 "interogată, ci și pentru alte gazde &quot;piggyback&quot; cu propriile lor "
@@ -78881,10 +78886,6 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Nu se poate potrivi conexiunea"
 
-#, fuzzy
-msgid "Unable to migrate value"
-msgstr "Nu a reușit să redea valoarea:"
-
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -79107,6 +79108,10 @@ msgstr "Ștergerea regulii de notificare #%d"
 #, fuzzy
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Ștergerea regulii de notificare #%d"
+
+#, fuzzy, python-format
+msgid "Unexpected dictionary type: %s"
+msgstr "Tipul de cluster așteptat."
 
 #, python-format
 msgid ""
@@ -84627,11 +84632,12 @@ msgstr ""
 "bord este afișat în cadrul principal (dreapta). Puteți înlocui acest lucru "
 "cu orice alt URL doriți aici."
 
+#, fuzzy
 msgid ""
-"When you reschedule a check by clicking on the &quot;arrow&quot;-icon then "
-"Multisite will use this number of seconds as a timeout. If the monitoring "
-"core has not executed the check within this time, an error will be displayed "
-"and the page not reloaded."
+"When you reschedule a check by clicking on the \"arrow\"-icon then Multisite "
+"will use this number of seconds as a timeout. If the monitoring core has not "
+"executed the check within this time, an error will be displayed and the page "
+"not reloaded."
 msgstr ""
 "Când reprogramați o verificare făcând clic pe &quot;săgeată&quot;-icon, "
 "atunci Multisite va folosi acest număr de secunde ca timp de așteptare. Dacă "
@@ -90147,6 +90153,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Unable to migrate value"
+#~ msgstr "Nu a reușit să redea valoarea:"
 
 #, fuzzy
 #~ msgid "Agent connection successful"

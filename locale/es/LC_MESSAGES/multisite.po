@@ -36273,7 +36273,7 @@ msgstr "No está permitido usar un \"!\" inicial aquí."
 #, fuzzy
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
-"clusters &quot;overlap&quot;. In such a case using the ruleset <i>Clustered "
+"clusters \"overlap\". In such a case using the ruleset <i>Clustered "
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
@@ -44483,6 +44483,10 @@ msgstr "No hay datos."
 
 msgid "No datasource defined."
 msgstr "No se ha definido ninguna fuente de datos."
+
+#, fuzzy
+msgid "No default values can be set for condition choices."
+msgstr "Establecer valores por defecto para todas las secciones"
 
 #, fuzzy
 msgid "No deprecated rule sets found."
@@ -60960,13 +60964,13 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
-"also for other hosts &quot;piggyback&quot; with their own data. This is the "
-"case for the vSphere special agent and the SAP R/3 plugin, for example. The "
-"host names that these agents send must match your host names in your "
-"monitoring configuration. If that is not the case, then with this rule you "
-"can define a host name translation. Note: This rule must be configured for "
-"the &quot;pig&quot; - i.e. the host that the agent is running on. It is not "
-"applied to the translated piggybacked hosts."
+"also for other hosts \"piggyback\" with their own data. This is the case for "
+"the vSphere special agent and the SAP R/3 plugin, for example. The host "
+"names that these agents send must match your host names in your monitoring "
+"configuration. If that is not the case, then with this rule you can define a "
+"host name translation. Note: This rule must be configured for the \"pig\" - "
+"i.e. the host that the agent is running on. It is not applied to the "
+"translated piggybacked hosts."
 msgstr ""
 "Algunos agentes o plugins de agentes envían datos no sólo para el host "
 "consultado sino también para otros hosts &quot;piggyback&quot; con sus "
@@ -79324,10 +79328,6 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "No se ha podido establecer la conexión"
 
-#, fuzzy
-msgid "Unable to migrate value"
-msgstr "No se ha podido mostrar el valor:"
-
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -79547,6 +79547,10 @@ msgstr "Eliminar esta regla de notificación #%d"
 #, fuzzy
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Eliminar esta regla de notificación #%d"
+
+#, fuzzy, python-format
+msgid "Unexpected dictionary type: %s"
+msgstr "Tipo de racimo esperado."
 
 #, python-format
 msgid ""
@@ -85111,11 +85115,12 @@ msgstr ""
 "cuadro de mandos se mostrará en el marco principal (derecho). Aquí puede "
 "sustituirlo por cualquier otra URL que desee."
 
+#, fuzzy
 msgid ""
-"When you reschedule a check by clicking on the &quot;arrow&quot;-icon then "
-"Multisite will use this number of seconds as a timeout. If the monitoring "
-"core has not executed the check within this time, an error will be displayed "
-"and the page not reloaded."
+"When you reschedule a check by clicking on the \"arrow\"-icon then Multisite "
+"will use this number of seconds as a timeout. If the monitoring core has not "
+"executed the check within this time, an error will be displayed and the page "
+"not reloaded."
 msgstr ""
 "Cuando reprograma una comprobación haciendo clic en el icono de la "
 "\"flecha\", Multisite utilizará este número de segundos como tiempo de "
@@ -90649,6 +90654,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Unable to migrate value"
+#~ msgstr "No se ha podido mostrar el valor:"
 
 #, fuzzy
 #~ msgid "Agent connection successful"

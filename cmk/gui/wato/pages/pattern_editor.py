@@ -16,7 +16,7 @@ from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -177,7 +177,7 @@ class ModePatternEditor(WatoMode):
         )
 
         self._show_try_form()
-        self._show_patterns(site_configs=active_config.sites, debug=active_config.debug)
+        self._show_patterns(site_configs=config.sites, debug=config.debug)
 
     def _show_try_form(self) -> None:
         with html.form_context("try"):

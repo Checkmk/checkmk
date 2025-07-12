@@ -10,7 +10,7 @@ from typing import cast, Literal, override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -160,14 +160,14 @@ class ModeParentScan(WatoMode):
                     self._get_selected_hosts(),
                     self._job,
                     self._settings,
-                    site_configs=active_config.sites,
-                    pprint_value=active_config.wato_pprint_config,
-                    debug=active_config.debug,
+                    site_configs=config.sites,
+                    pprint_value=config.wato_pprint_config,
+                    debug=config.debug,
                 )
             ).is_error():
                 raise result.error
         except Exception as e:
-            if active_config.debug:
+            if config.debug:
                 raise
             logger.exception("Failed to start parent scan")
             raise MKUserError(

@@ -26,7 +26,7 @@ from cmk.utils.timeperiod import (
 
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -267,8 +267,8 @@ class ModeTimeperiods(WatoMode):
             watolib.timeperiods.delete_timeperiod(
                 TimeperiodName(delname),
                 user_id=user.id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
             self._timeperiods = load_timeperiods()
 
@@ -746,16 +746,16 @@ class ModeEditTimeperiod(WatoMode):
                 self._name,
                 self._timeperiod,
                 user_id=user.id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
         else:
             watolib.timeperiods.modify_timeperiod(
                 self._name,
                 self._timeperiod,
                 user_id=user.id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
 
         self._timeperiods = load_timeperiods()

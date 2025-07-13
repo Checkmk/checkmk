@@ -217,7 +217,9 @@ HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
-def _schedule_discovery_check(host_name: HostName) -> None:
+def _schedule_discovery_check(
+    host_name: HostName, monitoring_core: Literal["nagios", "cmc"]
+) -> None:
     now = int(time.time())
     service = (
         "Check_MK Discovery"
@@ -225,7 +227,7 @@ def _schedule_discovery_check(host_name: HostName) -> None:
         else "Check_MK inventory"
     )
     # Ignore missing check and avoid warning in cmc.log
-    cmc_try = ";TRY" if config.monitoring_core == "cmc" else ""
+    cmc_try = ";TRY" if monitoring_core == "cmc" else ""
     command = f"SCHEDULE_FORCED_SVC_CHECK;{host_name};{service};{now}{cmc_try}"
 
     try:
@@ -238,7 +240,12 @@ def _schedule_discovery_check(host_name: HostName) -> None:
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(self, config_cache: ConfigCache, host_name: HostName) -> None:
+    def _trigger_discovery_check(
+        self,
+        config_cache: ConfigCache,
+        host_name: HostName,
+        monitoring_core: Literal["nagios", "cmc"],
+    ) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
@@ -249,7 +256,7 @@ class DiscoveryAutomation(Automation):
         if host_name in config_cache.hosts_config.clusters:
             return
 
-        _schedule_discovery_check(host_name)
+        _schedule_discovery_check(host_name, monitoring_core)
 
 
 def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
@@ -403,7 +410,9 @@ class AutomationDiscovery(DiscoveryAutomation):
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
                 # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(config_cache, hostname)
+                self._trigger_discovery_check(
+                    config_cache, hostname, loading_result.loaded_config.monitoring_core
+                )
 
         return ServiceDiscoveryResult(results)
 
@@ -1053,7 +1062,9 @@ def _execute_autodiscovery(
                         host_label_plugins=host_label_plugins,
                         plugins=plugins,
                         autochecks_config=autochecks_config,
-                        schedule_discovery_check=_schedule_discovery_check,
+                        schedule_discovery_check=lambda host_name: _schedule_discovery_check(
+                            host_name, loading_result.loaded_config.monitoring_core
+                        ),
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
                         reference_time=rediscovery_reference_time,
@@ -1079,7 +1090,7 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
-    core = create_core(config.monitoring_core)
+    core = create_core(loading_result.loaded_config.monitoring_core)
     with config.set_use_core_config(
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=base_discovered_host_labels_dir,
@@ -1093,7 +1104,7 @@ def _execute_autodiscovery(
             )
 
             # reset these to their original value to create a correct config
-            if config.monitoring_core == "cmc":
+            if loading_result.loaded_config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     config_cache,
                     hosts_config,
@@ -1239,7 +1250,11 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
                     get_effective_host=get_effective_host_of_autocheck,
                 )
 
-        self._trigger_discovery_check(config_cache, set_autochecks_input.discovered_host)
+        self._trigger_discovery_check(
+            config_cache,
+            set_autochecks_input.discovered_host,
+            loading_result.loaded_config.monitoring_core,
+        )
 
         return SetAutochecksV2Result()
 
@@ -1268,7 +1283,9 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
         if loading_result is None:
             loading_result = load_config(discovery_rulesets=())
-        self._trigger_discovery_check(loading_result.config_cache, hostname)
+        self._trigger_discovery_check(
+            loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
+        )
         return UpdateHostLabelsResult()
 
 
@@ -1318,17 +1335,19 @@ class AutomationRenameHosts(Automation):
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
         # it now.
-        core_was_running = self._core_is_running()
+        core_was_running = self._core_is_running(loading_result.loaded_config.monitoring_core)
         if core_was_running:
             cmk.base.core.do_core_action(
                 CoreAction.STOP,
                 quiet=True,
-                monitoring_core=config.monitoring_core,
+                monitoring_core=loading_result.loaded_config.monitoring_core,
             )
 
         try:
             for oldname, newname in renamings:
-                actions += self._rename_host_files(oldname, newname)
+                actions += self._rename_host_files(
+                    oldname, newname, loading_result.loaded_config.monitoring_core
+                )
         finally:
             # Start monitoring again
             if core_was_running:
@@ -1380,8 +1399,8 @@ class AutomationRenameHosts(Automation):
 
         return RenameHostsResult(action_counts)
 
-    def _core_is_running(self) -> bool:
-        if config.monitoring_core == "nagios":
+    def _core_is_running(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
+        if monitoring_core == "nagios":
             command = str(nagios_startscript) + " status"
         else:
             command = "omd status cmc"
@@ -1398,6 +1417,7 @@ class AutomationRenameHosts(Automation):
         self,
         oldname: HistoryFile,
         newname: HistoryFile,
+        monitoring_core: Literal["nagios", "cmc"],
     ) -> list[str]:
         actions = []
 
@@ -1447,7 +1467,7 @@ class AutomationRenameHosts(Automation):
         if self._rename_host_file(deployment_dir, oldname, newname):
             actions.append("agent_deployment")
 
-        actions += self._omd_rename_host(oldname, newname)
+        actions += self._omd_rename_host(oldname, newname, monitoring_core)
 
         return actions
 
@@ -1472,6 +1492,7 @@ class AutomationRenameHosts(Automation):
         self,
         oldname: str,
         newname: str,
+        monitoring_core: Literal["nagios", "cmc"],
     ) -> list[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
@@ -1531,7 +1552,7 @@ class AutomationRenameHosts(Automation):
         self._rename_host_in_remaining_core_history_files(oldname, newname)
 
         # State retention (important for Downtimes, Acknowledgements, etc.)
-        if config.monitoring_core == "nagios":
+        if monitoring_core == "nagios":
             if self.rename_host_in_files(
                 "%s/var/nagios/retention.dat" % omd_root,
                 "^host_name=%s$" % oldregex,
@@ -2295,8 +2316,8 @@ automations.register(AutomationDeleteHostsKnownRemote())
 class AutomationRestart(Automation):
     cmd = "restart"
 
-    def _mode(self) -> CoreAction:
-        if config.monitoring_core == "cmc" and not self._check_plugins_have_changed():
+    def _mode(self, monitoring_core: Literal["nagios", "cmc"]) -> CoreAction:
+        if monitoring_core == "cmc" and not self._check_plugins_have_changed(monitoring_core):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
@@ -2332,7 +2353,7 @@ class AutomationRestart(Automation):
         return _execute_silently(
             loading_result.config_cache,
             service_name_config,
-            self._mode(),
+            self._mode(loading_result.loaded_config.monitoring_core),
             ip_lookup_config.ip_stack_config,
             ip_lookup_config.default_address_family,
             ip_address_of,
@@ -2350,8 +2371,8 @@ class AutomationRestart(Automation):
             ),
         )
 
-    def _check_plugins_have_changed(self) -> bool:
-        last_time = self._time_of_last_core_restart()
+    def _check_plugins_have_changed(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
+        last_time = self._time_of_last_core_restart(monitoring_core)
         for checks_path in [
             local_checks_dir,
             local_agent_based_plugins_dir,
@@ -2371,8 +2392,8 @@ class AutomationRestart(Automation):
             max_time = max(max_time, os.stat(str(dir_path) + "/" + file_name).st_mtime)
         return max_time
 
-    def _time_of_last_core_restart(self) -> float:
-        if config.monitoring_core == "cmc":
+    def _time_of_last_core_restart(self, monitoring_core: Literal["nagios", "cmc"]) -> float:
+        if monitoring_core == "cmc":
             pidfile_path = omd_root / "tmp/run/cmc.pid"
         else:
             pidfile_path = omd_root / "tmp/lock/nagios.lock"
@@ -2389,8 +2410,8 @@ automations.register(AutomationRestart())
 class AutomationReload(AutomationRestart):
     cmd = "reload"
 
-    def _mode(self) -> CoreAction:
-        if self._check_plugins_have_changed():
+    def _mode(self, monitoring_core: Literal["nagios", "cmc"]) -> CoreAction:
+        if self._check_plugins_have_changed(monitoring_core):
             return CoreAction.RESTART
         return CoreAction.RELOAD
 
@@ -2436,7 +2457,7 @@ def _execute_silently(
                 default_address_family,
                 ip_address_of,
                 ip_address_of_mgmt,
-                create_core(config.monitoring_core),
+                create_core(loaded_config.monitoring_core),
                 plugins,
                 action=action,
                 discovery_rules=loaded_config.discovery_rules,
@@ -3381,7 +3402,7 @@ class AutomationActiveCheck(Automation):
             FinalServiceNameConfig(
                 config_cache.ruleset_matcher,
                 illegal_chars=loading_result.loaded_config.cmc_illegal_chars
-                if config.is_cmc()
+                if loading_result.loaded_config.monitoring_core == "cmc"
                 else loading_result.loaded_config.nagios_illegal_chars,
                 translations=loading_result.loaded_config.service_description_translation,
             ),
@@ -3728,10 +3749,6 @@ class AutomationNotificationReplay(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> NotificationReplayResult:
-        def ensure_nagios(msg: str) -> None:
-            if config.is_cmc():
-                raise RuntimeError(msg)
-
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
 
@@ -3741,7 +3758,7 @@ class AutomationNotificationReplay(Automation):
                 hostname, plugin
             ),
             config.get_http_proxy,
-            ensure_nagios,
+            notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
             rules=config.notification_rules,
             parameters=config.notification_parameter,
@@ -3770,10 +3787,6 @@ class AutomationNotificationAnalyse(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> NotificationAnalyseResult:
-        def ensure_nagios(msg: str) -> None:
-            if config.is_cmc():
-                raise RuntimeError(msg)
-
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
 
@@ -3784,7 +3797,7 @@ class AutomationNotificationAnalyse(Automation):
                     hostname, plugin
                 ),
                 config.get_http_proxy,
-                ensure_nagios,
+                notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
                 int(nr),
                 rules=config.notification_rules,
                 parameters=config.notification_parameter,
@@ -3813,15 +3826,12 @@ class AutomationNotificationTest(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> NotificationTestResult:
-        def ensure_nagios(msg: str) -> None:
-            if config.is_cmc():
-                raise RuntimeError(msg)
-
         context = json.loads(args[0])
         dispatch = args[1]
 
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
+        ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
 
         return NotificationTestResult(
             notify.notification_test(

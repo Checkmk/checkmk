@@ -170,6 +170,20 @@ def _initialize_logging(logging_level: int) -> None:
     log.setup_watched_file_logging_handler(notification_log)
 
 
+def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[str], object]:
+    """
+    If the monitoring core is "nagios", return a no-op function.
+    Otherwise, return a function that raises a RuntimeError with the given message.
+    """
+    if monitoring_core == "nagios":
+        return lambda msg: None
+
+    def ensure_nagios(msg: str) -> None:
+        raise RuntimeError(msg)
+
+    return ensure_nagios
+
+
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |

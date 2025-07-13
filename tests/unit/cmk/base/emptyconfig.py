@@ -13,6 +13,7 @@ EMPTYCONFIG = LoadedConfigFragment(
     service_descriptions={},
     service_description_translation=(),
     use_new_descriptions_for=(),
+    monitoring_core="nagios",
     nagios_illegal_chars="",
     cmc_illegal_chars="",
     all_hosts=(),

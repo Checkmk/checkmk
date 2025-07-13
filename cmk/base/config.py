@@ -574,6 +574,7 @@ class LoadedConfigFragment:
         RuleSpec[cmk.utils.translations.TranslationOptionsSpec]
     ]
     use_new_descriptions_for: Container[str]
+    monitoring_core: Literal["nagios", "cmc"]
     nagios_illegal_chars: str
     cmc_illegal_chars: str
     all_hosts: Sequence[str]
@@ -689,6 +690,7 @@ def _perform_post_config_loading_actions(
         service_descriptions=service_descriptions,
         service_description_translation=service_description_translation,
         use_new_descriptions_for=use_new_descriptions_for,
+        monitoring_core=monitoring_core,
         nagios_illegal_chars=nagios_illegal_chars,
         cmc_illegal_chars=cmc_illegal_chars,
         all_hosts=all_hosts,
@@ -1211,11 +1213,6 @@ class ServiceDependsOn:
 #   '----------------------------------------------------------------------'
 
 
-def is_cmc() -> bool:
-    """Whether or not the site is currently configured to use the Micro Core."""
-    return monitoring_core == "cmc"
-
-
 def get_piggyback_translations(
     matcher: RulesetMatcher, labels_of_host: Callable[[HostName], Labels], hostname: HostName
 ) -> cmk.utils.translations.TranslationOptions:
@@ -1614,9 +1611,11 @@ class ConfigCache:
         return PassiveServiceNameConfig(
             FinalServiceNameConfig(
                 matcher=self.ruleset_matcher,
-                illegal_chars=self._loaded_config.cmc_illegal_chars
-                if is_cmc()
-                else self._loaded_config.nagios_illegal_chars,
+                illegal_chars=(
+                    self._loaded_config.cmc_illegal_chars
+                    if self._loaded_config.monitoring_core == "cmc"
+                    else self._loaded_config.nagios_illegal_chars
+                ),
                 translations=self._loaded_config.service_description_translation,
             ),
             user_defined_service_names=self._loaded_config.service_descriptions,
@@ -1652,7 +1651,13 @@ class ConfigCache:
     def fetcher_factory(
         self, service_configurer: ServiceConfigurer, ip_lookup: ip_lookup.IPLookup
     ) -> FetcherFactory:
-        return FetcherFactory(self, ip_lookup, self.ruleset_matcher, service_configurer)
+        return FetcherFactory(
+            self,
+            ip_lookup,
+            self.ruleset_matcher,
+            service_configurer,
+            is_cmc=self._loaded_config.monitoring_core == "cmc",
+        )
 
     def parser_factory(self) -> ParserFactory:
         return ParserFactory(self, self.ruleset_matcher)
@@ -1913,7 +1918,7 @@ class ConfigCache:
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> Sequence[ConfiguredService]:
         services = self._sorted_services(hostname, plugins, service_configurer, service_name_config)
-        if is_cmc():
+        if self._loaded_config.monitoring_core == "cmc":
             return services
 
         unresolved = [(s, set(service_depends_on(hostname, s.description))) for s in services]
@@ -2601,7 +2606,7 @@ class ConfigCache:
             if folder_cgrs:
                 cgrs += folder_cgrs[0]
 
-            if monitoring_core == "nagios" and enable_rulebased_notifications:
+            if self._loaded_config.monitoring_core == "nagios" and enable_rulebased_notifications:
                 cgrs.append("check-mk-notify")
 
             return list(set(cgrs))
@@ -2619,7 +2624,7 @@ class ConfigCache:
             if not entries:
                 return None
 
-            if entries[0] == "smart" and monitoring_core != "cmc":
+            if entries[0] == "smart" and self._loaded_config.monitoring_core == "nagios":
                 return "ping"  # avoid problems when switching back to nagios core
 
             return entries[0]
@@ -3205,7 +3210,7 @@ class ConfigCache:
         if folder_cgrs:
             cgrs.update(folder_cgrs[0])
 
-        if monitoring_core == "nagios":
+        if self._loaded_config.monitoring_core == "nagios":
             cgrs.add("check-mk-notify")
 
         return list(cgrs)
@@ -3765,12 +3770,15 @@ class FetcherFactory:
         ip_lookup: ip_lookup.IPLookup,
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
+        *,
+        is_cmc: bool,
     ) -> None:
         self._config_cache: Final = config_cache
         self._ip_lookup: Final = ip_lookup
         self._label_manager: Final = config_cache.label_manager
         self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
+        self.is_cmc: Final = is_cmc
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
 
     def clear(self) -> None:
@@ -3952,10 +3960,10 @@ class FetcherFactory:
         cmdline = self._make_fetcher_program_commandline(
             host_name, host_ip_family, ip_address, self._ip_lookup, program
         )
-        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=self.is_cmc)
 
     def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:
-        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=self.is_cmc)
 
     def make_piggyback_fetcher(
         self, host_name: HostName, ip_address: HostAddress | None

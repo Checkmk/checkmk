@@ -1691,7 +1691,6 @@ def test_get_sorted_check_table_no_cmc(
     ts.add_host(host_name)
     config_cache = ts.apply(monkeypatch)
 
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
     service_name_config = config_cache.make_passive_service_name_config()
     services = config_cache.configured_services(
@@ -1723,7 +1722,6 @@ def test_resolve_service_dependencies_cyclic(
     ts.add_host(host_name)
     config_cache = ts.apply(monkeypatch)
 
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
 
     service_name_config = config_cache.make_passive_service_name_config()

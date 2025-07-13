@@ -1536,7 +1536,7 @@ def mode_update() -> None:
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
-                core=create_core(config.monitoring_core),
+                core=create_core(loading_result.loaded_config.monitoring_core),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
@@ -1621,7 +1621,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(config.monitoring_core),
+        create_core(loading_result.loaded_config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
@@ -1693,7 +1693,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(config.monitoring_core),
+        create_core(loading_result.loaded_config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
@@ -1903,11 +1903,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     from cmk.base import notify
 
     with store.lock_checkmk_configuration(configuration_lockfile):
-        loaded_config = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
-
-    def ensure_nagios(msg: str) -> None:
-        if config.is_cmc():
-            raise RuntimeError(msg)
+        loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
 
     keepalive = "keepalive" in options and (
         cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
@@ -1920,11 +1916,11 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         args,
         define_servicegroups=config.define_servicegroups,
         host_parameters_cb=lambda hostname,
-        plugin: loaded_config.config_cache.notification_plugin_parameters(hostname, plugin),
+        plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
         get_http_proxy=config.get_http_proxy,
-        ensure_nagios=ensure_nagios,
+        ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         bulk_interval=config.notification_bulk_interval,
         plugin_timeout=config.notification_plugin_timeout,
         config_contacts=config.contacts,
@@ -2482,6 +2478,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
         plugins,
         loading_result.config_cache,
         config.make_hosts_config(loading_result.loaded_config),
+        loading_result.loaded_config.monitoring_core,
         config.ServiceDependsOn(
             tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
@@ -2497,6 +2494,7 @@ def run_checking(
     plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    monitoring_core: Literal["cmc", "nagios"],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     options: _CheckingOptions,
     args: list[str],
@@ -2632,7 +2630,7 @@ def run_checking(
                 ),
                 submitter=get_submitter(
                     check_submission=config.check_submission,
-                    monitoring_core=config.monitoring_core,
+                    monitoring_core=monitoring_core,
                     dry_run=dry_run,
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),

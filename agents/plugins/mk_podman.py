@@ -180,9 +180,11 @@ def query_container_inspect(
 def query_raw_stats(
     session: requests_unixsocket.Session, socket_path: str
 ) -> Mapping[str, object] | Error:
-    endpoint = "/v4.0.0/libpod/containers/stats?stream=false&all=true"
+    endpoint = "/v4.0.0/libpod/containers/stats"
     try:
-        response = session.get(build_url_callable(socket_path, endpoint))
+        response = session.get(
+            build_url_callable(socket_path, endpoint), params={"stream": "false", "all": "true"}
+        )
         response.raise_for_status()
         return response.json()
     except Exception as e:

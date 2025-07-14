@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Any
+
 import pytest
 
 from cmk.ccc.user import UserId
 
-from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
+from cmk.gui.message import _parse_message, Message, MessageText
 
 
 @pytest.mark.parametrize(
     "message, result",
     [
         pytest.param(
-            MessageV0(
+            dict(
                 text="Text",
                 dest=("list", [UserId("bar")]),
                 methods=[],
@@ -35,7 +38,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             id="v0",
         ),
         pytest.param(
-            MessageV0(
+            dict(
                 text="Text",
                 dest=("list", [UserId("bar")]),
                 methods=[],
@@ -58,7 +61,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             id="v0-sec-ack-false",
         ),
         pytest.param(
-            MessageV0(
+            dict(
                 text="Text",
                 dest=("list", [UserId("bar")]),
                 methods=[],
@@ -81,7 +84,7 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
             id="v0-sec-ack-true",
         ),
         pytest.param(
-            Message(
+            dict(
                 text=MessageText(content_type="html", content="<h>Text</h>"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
@@ -105,5 +108,5 @@ from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
         ),
     ],
 )
-def test__parse_message(message: Message | MessageV0, result: Message) -> None:
+def test__parse_message(message: Mapping[str, Any], result: Message) -> None:
     assert _parse_message(message) == result

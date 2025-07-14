@@ -9,7 +9,7 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
-from typing import Any, assert_never, Literal, NotRequired, TypedDict
+from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -61,24 +61,6 @@ type MessageDestination = (
 )
 
 
-class MessageV0(TypedDict):
-    text: str
-    dest: MessageDestination
-    methods: Sequence[MessageMethod]
-    valid_till: int | None
-    id: str
-    time: int
-    security: NotRequired[bool]
-    acknowledged: NotRequired[bool]
-
-
-class MessageFromVS(TypedDict):
-    text: str
-    dest: MessageDestination
-    methods: Sequence[MessageMethod]
-    valid_till: int | None
-
-
 class MessageText(TypedDict):
     content_type: Literal["text", "html"]
     content: str
@@ -89,7 +71,6 @@ class Message(TypedDict):
     dest: MessageDestination
     methods: Sequence[MessageMethod]
     valid_till: int | None
-    # Later added by _process_message
     id: str
     time: int
     security: bool
@@ -100,24 +81,31 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("message", page_message))
 
 
-def _parse_message(message: Message | MessageV0) -> Message:
-    if not isinstance(security := message.get("security"), bool):
-        security = False
-    if not isinstance(acknowledged := message.get("acknowledged"), bool):
-        acknowledged = False
+# TODO: Migrate all messages.mk during site update.
+# TODO: Use e.g. pydantic to *really* parse all parts.
+def _parse_message(message: Mapping[str, Any]) -> Message:
+    if isinstance(message["text"], str):
+        # pre 2.3 message format
+        return Message(
+            text=MessageText(content_type="text", content=message["text"]),
+            dest=message["dest"],
+            methods=message["methods"],
+            valid_till=message.get("valid_till"),
+            id=message["id"],
+            time=message["time"],
+            security=message.get("security", False),
+            acknowledged=message.get("acknowledged", False),
+        )
+
     return Message(
-        text=(
-            MessageText(content_type="text", content=t)
-            if isinstance(t := message["text"], str)
-            else t
-        ),
+        text=message["text"],
         dest=message["dest"],
         methods=message["methods"],
-        valid_till=message.get("valid_till"),
+        valid_till=message["valid_till"],
         id=message["id"],
         time=message["time"],
-        security=security,
-        acknowledged=acknowledged,
+        security=message["security"],
+        acknowledged=message["acknowledged"],
     )
 
 
@@ -254,11 +242,15 @@ def page_message(config: Config) -> None:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
             _process_message(
-                MessageFromVS(
-                    text=msg["text"],
+                Message(
+                    text=MessageText(content_type="text", content=msg["text"]),
                     dest=msg["dest"],
                     methods=msg["methods"],
                     valid_till=msg["valid_till"],
+                    id=utils.gen_id(),
+                    time=int(time.time()),
+                    security=False,
+                    acknowledged=False,
                 ),
                 all_user_ids=[UserId(s) for s in config.multisite_users],
             )
@@ -395,21 +387,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str, users: Mapping[str, Use
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message(
-    msg_from_vs: MessageFromVS,
-    all_user_ids: Sequence[UserId],
-) -> None:  # pylint: disable=too-many-branches
-    msg = Message(
-        text=MessageText(content_type="text", content=msg_from_vs["text"]),
-        dest=msg_from_vs["dest"],
-        methods=msg_from_vs["methods"],
-        valid_till=msg_from_vs["valid_till"],
-        id=utils.gen_id(),
-        time=int(time.time()),
-        security=False,
-        acknowledged=False,
-    )
-
+def _process_message(msg: Message, all_user_ids: Sequence[UserId]) -> None:
     recipients, num_success, errors = send_message(msg, all_user_ids)
     num_recipients = len(recipients)
 

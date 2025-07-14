@@ -857,7 +857,7 @@ class TestAutomationReceiveConfigSync:
         monkeypatch.setattr(
             cmk.gui.watolib.activate_changes,
             "_execute_post_config_sync_actions",
-            lambda site_id, local_files_changed: None,
+            lambda site_id, local_files_changed, use_git: None,
         )
 
         remote_path.mkdir(parents=True, exist_ok=True)
@@ -895,6 +895,7 @@ class TestAutomationReceiveConfigSync:
                     "file-to-dir",
                 ],
                 config_generation=0,
+                use_git=False,
             )
         )
 
@@ -941,6 +942,7 @@ class TestAutomationReceiveConfigSync:
                 sync_archive=b"some data",
                 to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
                 config_generation=123,
+                use_git=False,
             )
         )
 

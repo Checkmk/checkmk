@@ -1595,11 +1595,16 @@ class ActivateChangesManager(ActivateChanges):
             self._pre_activate_changes(debug=debug)
 
         with _debug_log_message("Creating snapshots"):
-            self._create_snapshots(activation_features.snapshot_manager_factory, debug=debug)
+            self._create_snapshots(
+                activation_features.snapshot_manager_factory,
+                max_snapshots=active_config.wato_max_snapshots,
+                debug=debug,
+                use_git=active_config.wato_use_git,
+            )
         self._save_activation()
 
         with _debug_log_message("Starting activation"):
-            self._start_activation()
+            self._start_activation(debug=debug, use_git=active_config.wato_use_git)
 
         with _debug_log_message("Update and activate central rabbitmq changes"):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
@@ -1767,7 +1772,9 @@ class ActivateChangesManager(ActivateChanges):
         self,
         snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
         *,
+        max_snapshots: int,
         debug: bool,
+        use_git: bool,
     ) -> None:
         """Creates the needed SyncSnapshots for each applicable site.
 
@@ -1796,8 +1803,8 @@ class ActivateChangesManager(ActivateChanges):
                 comment=self._comment,
                 created_by=user.id,
                 secret=backup_snapshots.snapshot_secret(),
-                max_snapshots=active_config.wato_max_snapshots,
-                use_git=active_config.wato_use_git,
+                max_snapshots=max_snapshots,
+                use_git=use_git,
                 debug=debug,
                 parent_span_context=trace.get_current_span().get_span_context(),
             ) as future_backup_snapshot_creation:
@@ -1883,8 +1890,8 @@ class ActivateChangesManager(ActivateChanges):
             )
 
     @tracer.instrument("start_activation")
-    def _start_activation(self) -> None:
-        self._log_activation()
+    def _start_activation(self, *, debug: bool, use_git: bool) -> None:
+        self._log_activation(use_git=use_git)
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(self._activation_id)
         result = job.start(
@@ -1895,6 +1902,8 @@ class ActivateChangesManager(ActivateChanges):
                     site_snapshot_settings=self._site_snapshot_settings,
                     prevent_activate=self._prevent_activate,
                     source=self._source,
+                    debug=debug,
+                    use_git=use_git,
                 ),
             ),
             InitialStatusArgs(
@@ -1907,13 +1916,13 @@ class ActivateChangesManager(ActivateChanges):
         if result.is_error():
             raise result.error
 
-    def _log_activation(self):
+    def _log_activation(self, *, use_git: bool) -> None:
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
         log_audit(
             action="activate-changes",
             message=log_msg,
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
         if self._comment:
@@ -1921,7 +1930,7 @@ class ActivateChangesManager(ActivateChanges):
                 action="activate-changes",
                 message="Comment: %s" % self._comment,
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
 
     def get_state(self) -> ActivationState:
@@ -2179,6 +2188,8 @@ def _prepare_for_activation_tasks(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     time_started: float,
     source: ActivationSource,
+    *,
+    use_git: bool,
 ) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
     # All activations need to fail if the initialization failed
     initialization_failure: Exception | None = None
@@ -2208,7 +2219,7 @@ def _prepare_for_activation_tasks(
                 action="activate-changes",
                 message="Started activation of site %s" % site_id,
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
             site_activation_states_per_site[site_id] = site_activation_state
 
@@ -2268,6 +2279,7 @@ def _sync_and_activate(
     *,
     debug: bool,
     prevent_activate: bool,
+    use_git: bool,
 ) -> None:
     """
     Realizes the incremental config sync from the central to the remote site
@@ -2299,7 +2311,12 @@ def _sync_and_activate(
                 return
 
         (site_central_file_infos, site_activation_states) = _prepare_for_activation_tasks(
-            activate_changes, activation_id, site_snapshot_settings, time_started, source
+            activate_changes,
+            activation_id,
+            site_snapshot_settings,
+            time_started,
+            source,
+            use_git=use_git,
         )
 
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
@@ -2585,13 +2602,20 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings]
     prevent_activate: bool
     source: ActivationSource
+    debug: bool
+    use_git: bool
 
 
 def activate_changes_scheduler_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ActivateChangesSchedulerJobArgs
 ) -> None:
     ActivateChangesSchedulerBackgroundJob(args.activation_id).schedule_sites(
-        job_interface, args.site_snapshot_settings, args.prevent_activate, args.source
+        job_interface,
+        args.site_snapshot_settings,
+        args.prevent_activate,
+        args.source,
+        args.debug,
+        args.use_git,
     )
 
 
@@ -2614,6 +2638,8 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
         prevent_activate: bool,
         source: ActivationSource,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         with job_interface.gui_context():
             job_interface.send_progress_update(
@@ -2632,8 +2658,9 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                     str(version.edition(paths.omd_root))
                 ].sync_file_filter_func,
                 source,
-                debug=active_config.debug,
+                debug=debug,
                 prevent_activate=prevent_activate,
+                use_git=use_git,
             )
             job_interface.send_result_message(_("Activate changes finished"))
 
@@ -2864,7 +2891,9 @@ def _has_local_file_changes(sync_archive: bytes, to_delete: list[str]) -> bool:
         return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in archive.getmembers())
 
 
-def _execute_post_config_sync_actions(site_id: SiteId, *, local_files_changed: bool) -> None:
+def _execute_post_config_sync_actions(
+    site_id: SiteId, *, local_files_changed: bool, use_git: bool
+) -> None:
     try:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
@@ -2917,7 +2946,7 @@ def _execute_post_config_sync_actions(site_id: SiteId, *, local_files_changed: b
         action="replication",
         message="Synchronized configuration from central site (local site ID is %s.)" % site_id,
         user_id=user.id,
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
     )
 
 
@@ -3325,6 +3354,7 @@ class ReceiveConfigSyncRequest(NamedTuple):
     sync_archive: bytes
     to_delete: list[str]
     config_generation: int
+    use_git: bool
 
 
 class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
@@ -3347,6 +3377,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             _request.uploaded_file("sync_archive")[2],
             ast.literal_eval(_request.get_str_input_mandatory("to_delete")),
             _request.get_integer_input_mandatory("config_generation"),
+            active_config.wato_use_git,
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
@@ -3369,6 +3400,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
                 local_files_changed=_has_local_file_changes(
                     api_request.sync_archive, api_request.to_delete
                 ),
+                use_git=api_request.use_git,
             )
 
             logger.debug("Done")

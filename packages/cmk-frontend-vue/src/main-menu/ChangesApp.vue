@@ -490,89 +490,91 @@ onMounted(() => {
             :class="[{ 'display-none': !activationStatusCollapsible }]"
           >
             <CmkScrollContainer height="auto" class="cmk-scroll-sites-container">
-              <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
-                <template v-if="siteRequiresAttention(site)">
-                  <CmkIndent>
-                    <div class="cmk-div-site-status-container">
-                      <div class="cmk-div-site-status-info">
-                        <div class="cmk-div-checkbox-site-status">
-                          <CmkCheckbox
-                            :model-value="selectedSites.includes(site.siteId)"
-                            @update:model-value="toggleSelectedSite(site.siteId)"
-                          />
-                          <div class="cmk-div-site-online-status">
-                            <CmkBadge
-                              :color="statusColor(site.onlineStatus)"
-                              size="small"
-                              class="cmk-div-site-online-status-badge"
-                              >{{ site.onlineStatus }}</CmkBadge
-                            >
-                            <span class="cmk-span-site-name">{{ site.siteName }}</span>
+              <template v-for="(site, idx) in sitesAndChanges.sites" :key="site.siteId">
+                <CmkZebra :num="idx">
+                  <template v-if="siteRequiresAttention(site)">
+                    <CmkIndent>
+                      <div class="cmk-div-site-status-container">
+                        <div class="cmk-div-site-status-info">
+                          <div class="cmk-div-checkbox-site-status">
+                            <CmkCheckbox
+                              :model-value="selectedSites.includes(site.siteId)"
+                              @update:model-value="toggleSelectedSite(site.siteId)"
+                            />
+                            <div class="cmk-div-site-online-status">
+                              <CmkBadge
+                                :color="statusColor(site.onlineStatus)"
+                                size="small"
+                                class="cmk-div-site-online-status-badge"
+                                >{{ site.onlineStatus }}</CmkBadge
+                              >
+                              <span class="cmk-span-site-name">{{ site.siteName }}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div
-                          v-if="!recentlyActivatedSites.includes(site.siteId)"
-                          class="cmk-div-site-status-changes"
-                        >
-                          <template v-if="site.changes > 0">
-                            <span class="cmk-span-changes-text">{{
-                              t('changes', 'Changes:')
-                            }}</span>
-                            <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
-                          </template>
-                          <span v-else class="cmk-span-changes-text">{{
-                            t('no-changes', 'No Changes')
-                          }}</span>
-                        </div>
-                        <div
-                          v-if="
-                            recentlyActivatedSites.includes(site.siteId) &&
-                            site.lastActivationStatus !== undefined
-                          "
-                          class="cmk-div-site-status-changes"
-                        >
                           <div
-                            v-if="activateChangesInProgress"
-                            class="cmk-progress-bar-site-activation-in-progress"
+                            v-if="!recentlyActivatedSites.includes(site.siteId)"
+                            class="cmk-div-site-status-changes"
                           >
-                            <CmkProgressbar max="unknown"></CmkProgressbar>
+                            <template v-if="site.changes > 0">
+                              <span class="cmk-span-changes-text">{{
+                                t('changes', 'Changes:')
+                              }}</span>
+                              <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
+                            </template>
+                            <span v-else class="cmk-span-changes-text">{{
+                              t('no-changes', 'No Changes')
+                            }}</span>
                           </div>
-                          <div v-else>
-                            {{ site.lastActivationStatus.status_text }}
+                          <div
+                            v-if="
+                              recentlyActivatedSites.includes(site.siteId) &&
+                              site.lastActivationStatus !== undefined
+                            "
+                            class="cmk-div-site-status-changes"
+                          >
+                            <div
+                              v-if="activateChangesInProgress"
+                              class="cmk-progress-bar-site-activation-in-progress"
+                            >
+                              <CmkProgressbar max="unknown"></CmkProgressbar>
+                            </div>
+                            <div v-else>
+                              {{ site.lastActivationStatus.status_text }}
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          v-if="site.lastActivationStatus?.state === 'warning'"
+                          class="cmk-div-site-activate-warning"
+                        >
+                          <CmkIcon variant="inline" name="validation-error" />
+                          <div class="cmk-div-warning-or-error-message">
+                            <span v-if="site.lastActivationStatus?.state === 'warning'">{{
+                              t('changes-activated-with-warning', 'Warning')
+                            }}</span>
+                            <span class="grey-text">{{
+                              site.lastActivationStatus.status_details
+                            }}</span>
+                          </div>
+                        </div>
+                        <div
+                          v-if="site.lastActivationStatus?.state === 'error'"
+                          class="cmk-div-site-activate-error"
+                        >
+                          <CmkIcon variant="inline" name="alert_crit" />
+                          <div class="cmk-div-warning-or-error-message">
+                            <span v-if="site.lastActivationStatus.state === 'error'">{{
+                              t('changes-failed-to-activate', 'Error')
+                            }}</span>
+                            <span class="grey-text">{{
+                              site.lastActivationStatus.status_details
+                            }}</span>
                           </div>
                         </div>
                       </div>
-                      <div
-                        v-if="site.lastActivationStatus?.state === 'warning'"
-                        class="cmk-div-site-activate-warning"
-                      >
-                        <CmkIcon variant="inline" name="validation-error" />
-                        <div class="cmk-div-warning-or-error-message">
-                          <span v-if="site.lastActivationStatus?.state === 'warning'">{{
-                            t('changes-activated-with-warning', 'Warning')
-                          }}</span>
-                          <span class="grey-text">{{
-                            site.lastActivationStatus.status_details
-                          }}</span>
-                        </div>
-                      </div>
-                      <div
-                        v-if="site.lastActivationStatus?.state === 'error'"
-                        class="cmk-div-site-activate-error"
-                      >
-                        <CmkIcon variant="inline" name="alert_crit" />
-                        <div class="cmk-div-warning-or-error-message">
-                          <span v-if="site.lastActivationStatus.state === 'error'">{{
-                            t('changes-failed-to-activate', 'Error')
-                          }}</span>
-                          <span class="grey-text">{{
-                            site.lastActivationStatus.status_details
-                          }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CmkIndent>
-                </template>
+                    </CmkIndent>
+                  </template>
+                </CmkZebra>
               </template>
             </CmkScrollContainer>
           </CmkCollapsible>
@@ -612,31 +614,33 @@ onMounted(() => {
               height="auto"
             >
               <div
-                v-for="change in sitesAndChanges.pendingChanges"
+                v-for="(change, idx) in sitesAndChanges.pendingChanges"
                 :key="change.changeId"
                 class="cmk-div-pending-changes-container"
               >
-                <CmkIndent
-                  v-if="
-                    change.whichSites === 'All sites' || selectedSites.includes(change.whichSites)
-                  "
-                  class="cmk-indent-pending-change-container"
-                  :class="{ 'red-text': change.user !== user_name && change.user !== null }"
-                >
-                  <span class="cmk-span-pending-change-text">{{ change.changeText }}</span>
-
-                  <div
-                    class="cmk-div-pending-change-details"
-                    :class="{ 'grey-text': change.user === user_name || change.user === null }"
+                <CmkZebra :num="idx">
+                  <CmkIndent
+                    v-if="
+                      change.whichSites === 'All sites' || selectedSites.includes(change.whichSites)
+                    "
+                    class="cmk-indent-pending-change-container"
+                    :class="{ 'red-text': change.user !== user_name && change.user !== null }"
                   >
-                    <div class="cmk-div-user-sites-timestamp">
-                      <span>{{ change.user }}</span>
-                      <span>|</span>
-                      <span>{{ change.whichSites }}</span>
+                    <span class="cmk-span-pending-change-text">{{ change.changeText }}</span>
+
+                    <div
+                      class="cmk-div-pending-change-details"
+                      :class="{ 'grey-text': change.user === user_name || change.user === null }"
+                    >
+                      <div class="cmk-div-user-sites-timestamp">
+                        <span>{{ change.user }}</span>
+                        <span>|</span>
+                        <span>{{ change.whichSites }}</span>
+                      </div>
+                      <span>{{ change.timestring }}</span>
                     </div>
-                    <span>{{ change.timestring }}</span>
-                  </div>
-                </CmkIndent>
+                  </CmkIndent>
+                </CmkZebra>
               </div>
             </CmkScrollContainer>
           </CmkCollapsible>
@@ -747,6 +751,7 @@ onMounted(() => {
   flex-direction: row;
   align-items: flex-start;
   gap: 6px;
+  border-bottom: 2px solid var(--ux-theme-4) !important;
 }
 
 .pending-changes-container {
@@ -874,7 +879,6 @@ onMounted(() => {
   width: inherit;
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .cmk-collapsible-pending-changes {
@@ -888,7 +892,7 @@ onMounted(() => {
 
 .cmk-indent {
   box-sizing: border-box;
-  background-color: var(--ux-theme-4);
+  background-color: var(--default-bg-color);
   margin: 0px !important;
   border-left: 0px !important;
 

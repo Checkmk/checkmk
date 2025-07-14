@@ -57,6 +57,7 @@ type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 type MessageDestination = (
     tuple[Literal["all_users"], None]
     | tuple[Literal["online"], None]
+    | tuple[Literal["admin"], None]
     | tuple[Literal["list"], Sequence[UserId]]
 )
 
@@ -436,6 +437,12 @@ def send_message(
             recipients = list(all_user_ids)
         case "online":
             recipients = userdb.get_online_user_ids(datetime.now())
+        case "admin":
+            recipients = [
+                UserId(user_id)
+                for user_id, attr in userdb.load_users(lock=False).items()
+                if attr.get("automation_user", False) is False and "admin" in attr.get("roles", [])
+            ]
         case "list":
             recipients = [UserId(u) for u in msg["dest"][1]]
         case other:

@@ -157,7 +157,12 @@ class ModeGroups(WatoMode, abc.ABC):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            groups.delete_group(delname, self.type_name, pprint_value=config.wato_pprint_config)
+            groups.delete_group(
+                delname,
+                self.type_name,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+            )
             self._groups = self._load_groups()
 
         if request.var("mode") == "edit_host_group":
@@ -274,6 +279,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self.type_name,
                 self.group,
                 pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
         else:
             assert self._name is not None
@@ -282,6 +288,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self.type_name,
                 self.group,
                 pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
 
         return redirect(mode_url("%s_groups" % self.type_name))

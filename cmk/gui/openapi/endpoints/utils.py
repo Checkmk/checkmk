@@ -101,14 +101,18 @@ def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject
 
 
 def update_groups(
-    group_type: GroupType, entries: list[dict[str, Any]], pprint_value: bool
+    group_type: GroupType,
+    entries: list[dict[str, Any]],
+    *,
+    pprint_value: bool,
+    use_git: bool,
 ) -> list[GroupSpec]:
     groups = []
     for details in entries:
         name = details["name"]
         group_details = details["attributes"]
         updated_details = updated_group_details(name, group_type, group_details)
-        edit_group(name, group_type, updated_details, pprint_value)
+        edit_group(name, group_type, updated_details, pprint_value=pprint_value, use_git=use_git)
         groups.append(name)
 
     return fetch_specific_groups(groups, group_type)

@@ -204,7 +204,13 @@ def create(params: Mapping[str, Any]) -> Response:
     }
     if version.edition(paths.omd_root) is version.Edition.CME:
         group_details = update_customer_info(group_details, body["customer"])
-    add_group(name, "contact", group_details, pprint_value=active_config.wato_pprint_config)
+    add_group(
+        name,
+        "contact",
+        group_details,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     group = fetch_group(name, "contact")
     return serve_group(_group_to_api(group), serialize_group("contact_group_config"))
 
@@ -231,7 +237,11 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
             group_details.get("inventory_paths")
         )
         add_group(
-            group_name, "contact", group_details, pprint_value=active_config.wato_pprint_config
+            group_name,
+            "contact",
+            group_details,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
         contact_group_names.append(group_name)
 
@@ -294,7 +304,12 @@ def delete(params: Mapping[str, Any]) -> Response:
     with disable_permission_tracking():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
         try:
-            delete_group(name, "contact", pprint_value=active_config.wato_pprint_config)
+            delete_group(
+                name,
+                "contact",
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
         except GroupInUseException as exc:
             raise ProblemException(
                 status=409,
@@ -330,7 +345,12 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
             try:
-                delete_group(group_name, "contact", pprint_value=active_config.wato_pprint_config)
+                delete_group(
+                    group_name,
+                    "contact",
+                    pprint_value=active_config.wato_pprint_config,
+                    use_git=active_config.wato_use_git,
+                )
             except GroupInUseException as exc:
                 raise ProblemException(
                     status=409,
@@ -369,6 +389,7 @@ def update(params: Mapping[str, Any]) -> Response:
         "contact",
         updated_group_details(name, "contact", _group_from_api(params["body"], keep_unset=True)),
         pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
     group = fetch_group(name, "contact")
     return serve_group(_group_to_api(group), serialize_group("contact_group_config"))
@@ -396,7 +417,10 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     updated_contact_groups = [
         _group_to_api(group)
         for group in update_groups(
-            "contact", entries, pprint_value=active_config.wato_pprint_config
+            "contact",
+            entries,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
     ]
     return serve_json(serialize_group_list("contact_group_config", updated_contact_groups))

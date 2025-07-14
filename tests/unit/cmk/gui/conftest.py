@@ -399,14 +399,14 @@ def aut_user_auth_wsgi_app(
 
 @pytest.fixture()
 def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_automation_calls):
-    groups.add_group("windows", "host", {"alias": "windows"}, pprint_value=False)
-    groups.add_group("routers", "service", {"alias": "routers"}, pprint_value=False)
-    groups.add_group("admins", "contact", {"alias": "admins"}, pprint_value=False)
+    groups.add_group("windows", "host", {"alias": "windows"}, pprint_value=False, use_git=False)
+    groups.add_group("routers", "service", {"alias": "routers"}, pprint_value=False, use_git=False)
+    groups.add_group("admins", "contact", {"alias": "admins"}, pprint_value=False, use_git=False)
     yield
-    groups.delete_group("windows", "host", pprint_value=False)
-    groups.delete_group("routers", "service", pprint_value=False)
+    groups.delete_group("windows", "host", pprint_value=False, use_git=False)
+    groups.delete_group("routers", "service", pprint_value=False, use_git=False)
     monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
-    groups.delete_group("admins", "contact", pprint_value=False)
+    groups.delete_group("admins", "contact", pprint_value=False, use_git=False)
 
 
 @pytest.fixture()

@@ -249,10 +249,12 @@ async function fetchPendingChangesAjax(): Promise<void> {
     )) as SitesAndChanges
 
     if (Array.isArray(dataAsJson.pendingChanges)) {
-      dataAsJson.pendingChanges = dataAsJson.pendingChanges.map((change: PendingChanges) => ({
-        ...change,
-        timestring: new Date(change.time * 1000).toLocaleString()
-      }))
+      dataAsJson.pendingChanges = dataAsJson.pendingChanges
+        .sort((a, b) => b.time - a.time)
+        .map((change: PendingChanges) => ({
+          ...change,
+          timestring: new Date(change.time * 1000).toLocaleString()
+        }))
     }
 
     dataAsJson.sites = loadLastActivationStatus(dataAsJson.sites)

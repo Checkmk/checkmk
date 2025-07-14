@@ -45,8 +45,8 @@ defineProps<{
     transform: rotate(135deg);
     top: -3px;
     transition:
-      transform 0.3s ease-in-out,
-      top 0.3s ease-in-out;
+      transform 0.3s ease-out,
+      top 0.3s ease-out;
   }
 }
 </style>

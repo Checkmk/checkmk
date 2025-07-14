@@ -89,11 +89,11 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   }
 
   &[data-state='open'] {
-    animation: slideDown 0.5s ease-in-out;
+    animation: slideDown 0.3s ease-out;
   }
 
   &[data-state='closed'] {
-    animation: slideUp 0.5s ease-in-out;
+    animation: slideUp 0.3s ease-out;
   }
 }
 

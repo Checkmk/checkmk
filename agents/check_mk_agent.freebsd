@@ -813,6 +813,7 @@ HERE
     if ${MK_RUN_ASYNC_PARTS}; then
 
         CACHEFILE_NEW="${CACHEFILE}.new"
+        _cleanup_obsolete_legacy_files "${CACHEFILE_NEW}"
         _cleanup_leftover_files "${CACHEFILE_NEW}" "${CREATION_TIMEOUT}" "${NOW}"
 
         # Time to refresh cache file and new job not yet running?
@@ -833,8 +834,7 @@ HERE
              } &
              {
                 trap 'rm -f "${CACHEFILE_NEW}"' INT HUP TERM KILL
-                sleep ${CREATION_TIMEOUT}
-                {
+                sleep ${CREATION_TIMEOUT} && {
                       printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
                       printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
                 } >"${FAIL_REPORT_FILE}" 2>&1
@@ -846,6 +846,13 @@ HERE
     fi
 
     unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE CACHEFILE_NEW NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
+}
+
+_cleanup_obsolete_legacy_files() {
+    # These files are from pre 2.4.0p8.
+    # They do no harm, but are irritating when debugging.
+    # Let's just remove them.
+    rm -f "${1}.*"
 }
 
 _cleanup_leftover_files() {

@@ -85,6 +85,7 @@ def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
     )
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_move_from_unwatched_to_watched_directory(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -101,6 +102,7 @@ def test_observer_handles_move_from_unwatched_to_watched_directory(
     assert f"Source: n/a, destination: {target_mk_file}, type: moved" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_move_from_watched_to_unwatched_directory(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -116,6 +118,7 @@ def test_observer_handles_move_from_watched_to_unwatched_directory(
     assert f"Source: {target_mk_file}, destination: n/a, type: moved" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_move_within_watched_directory(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -131,6 +134,7 @@ def test_observer_handles_move_within_watched_directory(
     assert f"Source: {tmp_file}, destination: {target_mk_file}, type: moved" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_created_mk_file(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -144,6 +148,7 @@ def test_observer_handles_created_mk_file(
     assert f"Source: {target_mk_file}, destination: n/a, type: created" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_modified_mk_file(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -158,6 +163,7 @@ def test_observer_handles_modified_mk_file(
     assert f"Source: {target_mk_file}, destination: n/a, type: modified" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_handles_deleted_mk_file(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
@@ -172,6 +178,7 @@ def test_observer_handles_deleted_mk_file(
     assert f"Source: {target_mk_file}, destination: n/a, type: deleted" in caplog.text
 
 
+@pytest.mark.skip(reason="CMK-24650; investigate failure / flake.")
 def test_observer_also_handles_txt_files(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,

@@ -104,9 +104,6 @@ def agent_azure_arguments(
     else:
         assert_never(params.subscription[0])
 
-    if params.piggyback_vms:
-        args += ["--piggyback_vms", params.piggyback_vms]
-
     if params.proxy:
         match params.proxy:
             case URLProxy(url=url):
@@ -115,6 +112,14 @@ def agent_azure_arguments(
                 args += ["--proxy", "FROM_ENVIRONMENT"]
             case NoProxy():
                 args += ["--proxy", "NO_PROXY"]
+
+    if params.connection_test:
+        args += ["--connection-test"]
+        yield SpecialAgentCommand(command_arguments=args)
+        return
+
+    if params.piggyback_vms:
+        args += ["--piggyback_vms", params.piggyback_vms]
 
     if params.services:
         args += [
@@ -131,9 +136,6 @@ def agent_azure_arguments(
         args += _explicit_args(config.explicit)
     if config.tag_based:
         args += _tag_based_args(config.tag_based)
-
-    if params.connection_test:
-        args += ["--connection-test"]
 
     args += [
         "--cache-id",

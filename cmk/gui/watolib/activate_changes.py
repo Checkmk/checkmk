@@ -2066,9 +2066,15 @@ def _prepare_for_activation_tasks(
     time_started: float,
     source: ActivationSource,
 ) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
-    config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
-        list(replication_path_registry.values())
-    )
+    # All activations need to fail if the initialization failed
+    initialization_failure: Exception | None = None
+    try:
+        config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
+            list(replication_path_registry.values())
+        )
+    except Exception as e:
+        initialization_failure = e
+
     central_file_infos_per_site = {}
     site_activation_states_per_site = {}
     for site_id, snapshot_settings in sorted(site_snapshot_settings.items(), key=lambda e: e[0]):
@@ -2078,6 +2084,10 @@ def _prepare_for_activation_tasks(
         try:
             if not _lock_activation(site_activation_state):
                 continue
+
+            if initialization_failure:
+                raise initialization_failure
+
             _mark_running(site_activation_state)
 
             log_audit("activate-changes", "Started activation of site %s" % site_id)

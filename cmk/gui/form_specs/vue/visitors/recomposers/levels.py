@@ -76,8 +76,12 @@ def _transform_from_disk(
         case "fixed", tuple(fixed_levels):
             return "fixed", fixed_levels
         case "predictive", dict(predictive_levels):  # format released in 2.3.0b3
+            predictive_levels.pop("__reference_metric__", None)
+            predictive_levels.pop("__direction__", None)
             return "predictive", predictive_levels
-        case "cmk_postprocessed", "predictive_levels", predictive_levels:
+        case "cmk_postprocessed", "predictive_levels", dict(predictive_levels):
+            predictive_levels.pop("__reference_metric__", None)
+            predictive_levels.pop("__direction__", None)
             return "predictive", predictive_levels
 
     raise ValueError(value)

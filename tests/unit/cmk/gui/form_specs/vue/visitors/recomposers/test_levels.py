@@ -127,6 +127,44 @@ def levels_spec() -> Levels:
                     "cmk_postprocessed",
                     "predictive_levels",
                     {
+                        "__reference_metric__": "foo",
+                        "__direction__": "lower",
+                        "period": "wday",
+                        "horizon": 90,
+                        "levels": ("absolute", (10.0, 20.0)),
+                        "bound": None,
+                    },
+                )
+            ),
+            (
+                "predictive",
+                {
+                    "period": "6c47c99835b507ae0ddffd0df817fbdd30633b902a75e5296b3a9c01417c2ec2",
+                    "horizon": 90,
+                    "levels": ("absolute", [10.0, 20.0]),
+                    "bound": None,
+                },
+            ),
+            (
+                "cmk_postprocessed",
+                "predictive_levels",
+                {
+                    "__reference_metric__": "foo",
+                    "__direction__": "lower",
+                    "period": "wday",
+                    "horizon": 90,
+                    "levels": ("absolute", (10.0, 20.0)),
+                    "bound": None,
+                },
+            ),
+        ),
+        pytest.param(
+            levels_spec(),
+            RawDiskData(
+                (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
                         "period": "wday",
                         "horizon": 90,
                         "levels": ("absolute", (10.0, 20.0)),

@@ -838,6 +838,10 @@ onMounted(() => {
   font-weight: 700;
   line-height: normal;
   letter-spacing: 0.36px;
+  max-width: 200px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .display-none {

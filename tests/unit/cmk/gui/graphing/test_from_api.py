@@ -323,6 +323,7 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
         # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
         "cmk.plugins.robotmk.graphing.cee",
+        "cmk.plugins.podman.graphing.cee",
     }
 )
 

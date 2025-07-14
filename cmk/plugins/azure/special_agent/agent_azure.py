@@ -1801,14 +1801,8 @@ def _get_resource_health_sections(
     return sections
 
 
-async def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
-    """We test the connection only via the Management API client, not via the Graph API client.
-    The Graph API client is used for three specific services, which are disabled in the default
-    setup when configured via the UI.
-    The Management API client is used for all other services, so we assume here that this is the
-    connection that's essential for the vast majority of setups."""
-
-    try:
+async def _authenticate_client(args: Args, subscription: str | None) -> None:
+    if subscription is not None:
         async with MgmtApiClient(
             get_mgmt_authority_urls(args.authority, subscription),
             deserialize_http_proxy_config(args.proxy),
@@ -1819,7 +1813,27 @@ async def _test_connection(args: Args, subscription: str) -> int | tuple[int, st
         ):
             # we just need to authenticate
             ...
+    else:
+        async with BaseAsyncApiClient(
+            get_mgmt_authority_urls(args.authority, ""),
+            deserialize_http_proxy_config(args.proxy),
+            tenant=args.tenant,
+            client=args.client,
+            secret=args.secret,
+        ):
+            # we just need to authenticate
+            ...
 
+
+async def _test_connection(args: Args, subscription: str | None) -> int | tuple[int, str]:
+    """We test the connection only via the Management API client, not via the Graph API client.
+    The Graph API client is used for three specific services, which are disabled in the default
+    setup when configured via the UI.
+    The Management API client is used for all other services, so we assume here that this is the
+    connection that's essential for the vast majority of setups."""
+
+    try:
+        await _authenticate_client(args, subscription)
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
@@ -2019,6 +2033,7 @@ async def _get_subscriptions(args: Args) -> set[str]:
 
 async def test_connections(args: Args, subscriptions: set[str]) -> int:
     tasks = {_test_connection(args, subscription) for subscription in subscriptions}
+    tasks = tasks or {_test_connection(args, None)}
 
     for coroutine in asyncio.as_completed(tasks):
         test_result = await coroutine
@@ -2044,7 +2059,6 @@ async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) 
 
 async def main_async(args: Args, selector: Selector) -> int:
     subscriptions = await _get_subscriptions(args)
-    # TODO: fix connection test in case of no subscriptions
     if args.connection_test:
         return await test_connections(args, subscriptions)
 

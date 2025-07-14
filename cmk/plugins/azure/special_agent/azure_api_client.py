@@ -363,6 +363,7 @@ class MgmtApiClient(BaseAsyncApiClient):
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
         )
 
+    # TODO: extract
     async def metrics(self, region, resource_ids, params):
         if self._regional_url is None:
             raise ValueError("Regional url not configured")

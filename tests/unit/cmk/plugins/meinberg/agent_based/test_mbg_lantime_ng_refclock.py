@@ -6,13 +6,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.legacy_checks.mbg_lantime_ng_refclock import (
-    check_lantime_ng_refclock,
-    check_lantime_ng_refclock_gps,
-    discover_lantime_ng_refclock,
-    discover_lantime_ng_refclock_gps,
-)
-
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -21,6 +14,12 @@ from cmk.agent_based.v2 import (
     Service,
     State,
     StringTable,
+)
+from cmk.plugins.meinberg.agent_based.mbg_lantime_ng_refclock import (
+    check_lantime_ng_refclock,
+    check_lantime_ng_refclock_gps,
+    discover_lantime_ng_refclock,
+    discover_lantime_ng_refclock_gps,
 )
 
 pytestmark = pytest.mark.checks

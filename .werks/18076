@@ -1,0 +1,25 @@
+Title: SMS (using modem API): Use new API endpoint for TRB140 if needed
+Class: fix
+Compatible: incomp
+Component: notifications
+Date: 1752490749
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+Since firmware Version 7.14 the notification script produced an error on
+sending notifications.
+This was caused by a change in the API specs from this firmware version on.
+
+The script now tries to send the SMS in the previous way. If it fails, the new
+API endpoint with token authentication is used.
+This means that also firmware versions below 7.14 are still supported by the
+notitication script.
+
+If you use firmware version 7.14 or higher, the user for sending notifications
+needs at least a group with permissions:
+
+LI: "Write action": "Allow"
+LI: "Write Access": "Services > Mobile Utilities > Messages"
+LI: "Read action": "Allow"
+LI: "Read access": "Services > Mobile Utilities > Messages".

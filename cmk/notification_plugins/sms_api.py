@@ -6,7 +6,7 @@
 import sys
 from collections.abc import MutableMapping
 from dataclasses import dataclass
-from typing import NoReturn
+from typing import Callable, NoReturn, Self
 
 import requests
 
@@ -54,10 +54,9 @@ class RequestParameter:
 
 @dataclass
 class Context:
-    url: str
     request_parameter: RequestParameter
     message: Message
-    data: dict[str, str]
+    send_function: Callable[[Self], int]
 
 
 # .
@@ -110,15 +109,9 @@ def _get_context_parameter(raw_context: PluginNotificationContext) -> Errors | C
     endpoint = raw_context["PARAMETER_MODEM_TYPE"]
     if endpoint == "trb140":
         return Context(
-            url=request_parameter.url + "/cgi-bin/sms_send",
             request_parameter=request_parameter,
+            send_function=_send_func_trb140,
             message=message,
-            data={
-                "username": request_parameter.user,
-                "password": request_parameter.pwd,
-                "number": request_parameter.recipient,
-                "text": message,
-            },
         )
 
     return Errors(["Unknown unsupported modem: %s" % endpoint])
@@ -157,23 +150,93 @@ def _get_request_params_from_context(
 #   '----------------------------------------------------------------------'
 
 
-def process_notifications(context: Context) -> int:
-    """Main processing of notifications for this API endpoint."""
-    response = requests.post(
-        context.url,
-        proxies=context.request_parameter.proxies,
-        timeout=context.request_parameter.timeout,
-        data=context.data,
-        verify=context.request_parameter.verify,
-    )
+def _send_func_trb140(context: Context) -> int:
+    """Main processing of notifications for trb140"""
+    try:
+        response = _trb140_mobile_post(context)
+        if "<!doctype html" in response.text.lower():
+            return _trb140_api(context)
 
-    if response.status_code != 200 or response.content != b"OK\n":
-        sys.stderr.write(f"Error Status: {response.status_code} Details: {response.content!r}\n")
+        response.raise_for_status()
+
+        if response.status_code != 200 or not response.content.startswith(b"OK\n"):
+            sys.stderr.write(
+                f"Error Status: {response.status_code} Details: {response.content!r}\n"
+            )
+            return 2
+
+    except requests.exceptions.HTTPError as e:
+        sys.stderr.write(f"HTTPError sending SMS: {e}, {response.content!r}\n")
         return 2
 
-    sys.stdout.write("Notification successfully send via sms.\n")
+    except Exception as e:
+        sys.stderr.write(f"Error sending SMS: {e}\n")
+        return 2
 
+    sys.stdout.write("Notification successfully sent via sms.\n")
     return 0
+
+
+def _trb140_api(context: Context) -> int:
+    """Since firmware 7.14 the API has to be used"""
+    try:
+        token_response = requests.post(
+            context.request_parameter.url + "/api/login",
+            json={
+                "username": context.request_parameter.user,
+                "password": context.request_parameter.pwd,
+            },
+            headers={"Content-Type": "application/json"},
+            proxies=context.request_parameter.proxies,
+            timeout=context.request_parameter.timeout,
+            verify=context.request_parameter.verify,
+        )
+        token_response.raise_for_status()
+        token = token_response.json().get("data", {}).get("token")
+        if not token:
+            raise ValueError("Got no session token.\n")
+
+        sms_data = {
+            "number": context.request_parameter.recipient,
+            "message": context.message,
+            "modem": "3-1",
+        }
+
+        sms_response = requests.post(
+            context.request_parameter.url + "/api/messages/actions/send",
+            json={"data": sms_data},
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+            proxies=context.request_parameter.proxies,
+            timeout=context.request_parameter.timeout,
+            verify=context.request_parameter.verify,
+        )
+        sms_response.raise_for_status()
+
+        if sms_response.json().get("success") is True and sms_response.status_code == 200:
+            sys.stdout.write("Notification successfully sent via sms.\n")
+            return 0
+
+        return 2
+
+    except ValueError as e:
+        sys.stderr.write(f"Error calling API: {e}")
+        return 2
+
+
+def _trb140_mobile_post(context: Context) -> requests.Response:
+    """This endpoint has to be used until firmware version 7.13"""
+    return requests.post(
+        context.request_parameter.url + "/cgi-bin/sms_send",
+        proxies=context.request_parameter.proxies,
+        timeout=context.request_parameter.timeout,
+        data={
+            "username": context.request_parameter.user,
+            "password": context.request_parameter.pwd,
+            "number": context.request_parameter.recipient,
+            "text": context.message,
+        },
+        verify=context.request_parameter.verify,
+    )
 
 
 def main() -> NoReturn:
@@ -186,7 +249,7 @@ def main() -> NoReturn:
         sys.stdout.write(" ".join(context))
         sys.exit(2)
 
-    sys.exit(process_notifications(context))
+    sys.exit(context.send_function(context))
 
 
 # .

@@ -5,6 +5,10 @@ FROM ${IMAGE_DEBIAN_10} AS base
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list
+RUN echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+RUN echo "deb http://archive.debian.org/debian buster-updates main" >> /etc/apt/sources.list 
+
 RUN apt-get update \
     && apt-get install -y \
     git \

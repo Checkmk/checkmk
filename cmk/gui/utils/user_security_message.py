@@ -353,5 +353,5 @@ def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: dat
             security=True,
             acknowledged=False,
         ),
-        [],
+        config.active_config.multisite_users.keys(),
     )

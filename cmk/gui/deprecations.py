@@ -522,7 +522,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
                             security=False,
                             acknowledged=False,
                         ),
-                        [],
+                        config.multisite_users.keys(),
                     )
 
             case str():

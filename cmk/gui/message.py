@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableSequence, Sequence
+from collections.abc import Iterable, Mapping, MutableSequence, Sequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -253,7 +253,7 @@ def page_message(config: Config) -> None:
                     security=False,
                     acknowledged=False,
                 ),
-                all_user_ids=[UserId(s) for s in config.multisite_users],
+                multisite_user_ids=config.multisite_users.keys(),
             )
         except MKUserError as e:
             html.user_error(e)
@@ -388,8 +388,8 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str, users: Mapping[str, Use
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message(msg: Message, all_user_ids: Sequence[UserId]) -> None:
-    recipients, num_success, errors = send_message(msg, all_user_ids)
+def _process_message(msg: Message, multisite_user_ids: Iterable[str]) -> None:
+    recipients, num_success, errors = send_message(msg, multisite_user_ids)
     num_recipients = len(recipients)
 
     message = HTML.with_escaping(_("The message has successfully been sent..."))
@@ -427,14 +427,13 @@ def _process_message(msg: Message, all_user_ids: Sequence[UserId]) -> None:
 
 
 def send_message(
-    msg: Message,
-    all_user_ids: Sequence[UserId],  # NOTE: Slighty weird typing, only used for the "all_users" tag
+    msg: Message, multisite_user_ids: Iterable[str]
 ) -> tuple[
     list[UserId], dict[MessageMethod, int], dict[MessageMethod, list[tuple[UserId, Exception]]]
 ]:
     match msg["dest"][0]:
         case "all_users":
-            recipients = list(all_user_ids)
+            recipients = [UserId(s) for s in multisite_user_ids]
         case "online":
             recipients = userdb.get_online_user_ids(datetime.now())
         case "admin":

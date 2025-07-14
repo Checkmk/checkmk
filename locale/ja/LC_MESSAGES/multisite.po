@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-12 09:51+0000\n"
+"PO-Revision-Date: 2025-07-14 07:19+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -3837,7 +3837,7 @@ msgid "Add configuration"
 msgstr "設定の追加"
 
 msgid "Add configuration is only available for special agent based rules."
-msgstr "設定の追加は、スペシャルエージェントベースのルールでのみ利用可能です。"
+msgstr "設定の追加は、特殊エージェントベースのルールでのみ利用可能です。"
 
 msgid "Add connection"
 msgstr "接続を追加"
@@ -7408,6 +7408,10 @@ msgstr "自動アクティベーション"
 
 msgid "Automatic agent updates"
 msgstr "エージェントの自動更新"
+
+#, fuzzy
+msgid "Automatic detection"
+msgstr "自動削除"
 
 msgid "Automatic detection (Python 3 > Python 2)"
 msgstr "自動検出(Python 3 > Python 2)"
@@ -11871,7 +11875,7 @@ msgid "Checker helper usage"
 msgstr "チェッカーヘルパーの使用法"
 
 msgid "Checking of Datadog monitors"
-msgstr "監視するファイルのセクション"
+msgstr "Datadogモニターのチェック"
 
 msgid ""
 "Checking this option allows self-signed certificates by ignoring OpenSSL "
@@ -24057,8 +24061,9 @@ msgid ""
 "will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
-"datadogインスタンスのイベントストリームからイベントをフェッチします。フェッチ"
-"されたイベントは、特殊エージェントが実行されるサイトのイベントコンソールに転"
+"datadog "
+"インスタンスのイベントストリームからイベントをフェッチします。フェッチされた"
+"イベントは、スペシャルエージェントが実行されるサイトのイベントコンソールに転"
 "送されます。"
 
 msgid "Fetch failed"
@@ -24087,8 +24092,9 @@ msgid ""
 "Fetch logs of your datadog instance. Fetched logs will be forwared to the "
 "Event Console of the site where the special agent is executed."
 msgstr ""
-"datadogインスタンスのログをフェッチします。フェッチされたログは、specialエー"
-"ジェントが実行されるサイトのイベントコンソールに転送されます。"
+"datadog "
+"インスタンスのログを取得します。フェッチされたログは、スペシャルエージェント"
+"が実行されるサイトのイベントコンソールに転送されます。"
 
 msgid "Fetch monitors"
 msgstr "モニターの取得"
@@ -24097,8 +24103,9 @@ msgid ""
 "Fetch monitors from your datadog instance. Fetched monitors will be "
 "discovered as services on the host where the special agent is executed."
 msgstr ""
-"datadogインスタンスからモニターをフェッチします。フェッチされたモニターは、"
-"specialエージェントが実行されるホスト上のサービスとして検出されます。"
+"datadog "
+"インスタンスからモニタを取得します。フェッチされたモニタは、スペシャルエージ"
+"ェントが実行されるホストのサービスとして検出されます。"
 
 msgid "Fetch no body (1xx)"
 msgstr "ボディをフェッチしない (1xx)"
@@ -38346,6 +38353,10 @@ msgstr "マニュアル"
 msgid "Manual check"
 msgstr "手動チェック"
 
+#, fuzzy
+msgid "Manual configuration"
+msgstr "構成"
+
 msgid "Manual page for this check type"
 msgstr "このチェックタイプのマニュアルページ"
 
@@ -44812,6 +44823,10 @@ msgid ""
 msgstr ""
 "ここに入力した正規表現で名前が<i>始まる</i>ホスト名のみの名前を変更します。"
 
+#, fuzzy
+msgid "Only root socket"
+msgstr "パーセントのみ"
+
 msgid "Only show current value"
 msgstr "現在の値のみを表示"
 
@@ -44854,6 +44869,10 @@ msgstr "大文字のみ使用できます"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
+
+#, fuzzy
+msgid "Only user sockets"
+msgstr "ネットワークソケットを開く"
 
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr "Jenkinsバージョン1.622以下でのみ有効です。"
@@ -49060,6 +49079,12 @@ msgstr "Podリソース: ステータスフルセット"
 msgid "Podman Monitoring"
 msgstr "モニタリング"
 
+msgid "Podman socket path"
+msgstr ""
+
+msgid "Podman socket paths"
+msgstr ""
+
 msgid "Pods"
 msgstr "Pod"
 
@@ -49809,7 +49834,7 @@ msgid "Protocol to use for fetching updates"
 msgstr "更新のフェッチに使用するプロトコル"
 
 msgid "Provide API host and credentials for your Datadog instance here."
-msgstr "DatadogインスタンスのAPIホストと■情報をここに入力します。"
+msgstr "Datadog インスタンスの API ホストと認証情報をここに入力します。"
 
 msgid "Provide command for python script execution"
 msgstr "Pythonスクリプト実行用のコマンドを提供する"
@@ -50130,9 +50155,9 @@ msgid ""
 "the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
 "search_syntax'>log search syntax</a>."
 msgstr ""
-"どのログをイベントコンソールに転送するか、speficyに問い合わせる。Datadog<a "
+"どのログをイベントコンソールに転送するかを指定するクエリ。Datadog<a "
 "href='https://docs.datadoghq.com/logs/explorer/search_syntax'>log search "
-"syntax</a>.のURLを使用します。"
+"syntax</a>のURLを使用します。"
 
 msgid "Queue"
 msgstr "キュー"
@@ -57757,6 +57782,10 @@ msgstr "スナップショット"
 msgid "Socket"
 msgstr "ソケット"
 
+#, fuzzy
+msgid "Socket detection method"
+msgstr "Smoke探知"
+
 msgid "Sockets"
 msgstr "ソケット"
 
@@ -62604,6 +62633,25 @@ msgstr ""
 "視サーバが何らかの理由で監視を停止している場合は、エージェントは監視サーバへ"
 "のデータ送信を停止します。このオプションは、このホストのCheckmkサービスの"
 "チェック間隔を変更した場合、その間隔に応じて変更する必要があります。"
+
+#, python-brace-format
+msgid ""
+"The agent will automatically discover Podman sockets on the system. This "
+"includes the root socket (/run/podman/podman.sock) and all user sockets "
+"matching the pattern /run/user/{user_id}/podman/podman.sock"
+msgstr ""
+
+msgid ""
+"The agent will automatically discover root Podman socket on the system. This "
+"includes the root socket (/run/podman/podman.sock)"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The agent will automatically discover user Podman sockets on the system. "
+"This includes all user sockets matching the pattern /run/user/{user_id}/"
+"podman/podman.sock"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -68223,10 +68271,10 @@ msgid ""
 "expressions matching one or more Datadog tags. Any matching tag will be "
 "added to the text of the corresponding event."
 msgstr ""
-"このオプションでは、イベントコンソールに転送されるイベントに表示されるDatadog"
-"タグを設定することができます。これは、1つ以上のDatadogタグにマッチする正規表"
-"現を入力することで実行します。一致するタグは、対応するイベントのテキストに追"
-"加されます。"
+"このオプションでは、イベントコンソールに転送されるイベントに表示される "
+"Datadog タグを設定することができます。これは、1 つ以上の Datadog "
+"タグにマッチする正規表現を入力することによって行われます。一致するタグは、対"
+"応するイベントのテキストに追加されます。"
 
 msgid ""
 "This option allows you to configure which Datadog tags will be shown in the "

@@ -7831,6 +7831,10 @@ msgstr "Ativação automática"
 msgid "Automatic agent updates"
 msgstr "Atualizações automáticas de agentes"
 
+#, fuzzy
+msgid "Automatic detection"
+msgstr "Eliminação automática"
+
 msgid "Automatic detection (Python 3 > Python 2)"
 msgstr "Detecção automática (Python 3 > Python 2)"
 
@@ -40143,6 +40147,10 @@ msgstr "Manual"
 msgid "Manual check"
 msgstr "Verificação manual"
 
+#, fuzzy
+msgid "Manual configuration"
+msgstr "configuração"
+
 msgid "Manual page for this check type"
 msgstr "Página do manual para este tipo de verificação"
 
@@ -46843,6 +46851,10 @@ msgstr ""
 "Somente renomeie os nomes das hostes cujos nomes <i>begin</i> com a "
 "expressão regular digitada aqui."
 
+#, fuzzy
+msgid "Only root socket"
+msgstr "Apenas por cento"
+
 msgid "Only show current value"
 msgstr "Mostrar apenas o valor actual"
 
@@ -46884,6 +46896,10 @@ msgstr "Somente letras maiúsculas são permitidas"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "Use apenas os níveis do dispositivo, ignore os seus"
+
+#, fuzzy
+msgid "Only user sockets"
+msgstr "Tomadas de rede abertas"
 
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
@@ -51318,6 +51334,12 @@ msgstr "Recursos do pod: StatefulSet"
 #, fuzzy
 msgid "Podman Monitoring"
 msgstr "Monitorização"
+
+msgid "Podman socket path"
+msgstr ""
+
+msgid "Podman socket paths"
+msgstr ""
 
 msgid "Pods"
 msgstr "Pods"
@@ -60344,6 +60366,10 @@ msgstr "Instantâneos"
 msgid "Socket"
 msgstr "Tomada"
 
+#, fuzzy
+msgid "Socket detection method"
+msgstr "Detecção de fumaça"
+
 msgid "Sockets"
 msgstr "Tomadas"
 
@@ -65456,6 +65482,25 @@ msgstr ""
 "monitoramento. Você precisa alterar esta opção de acordo com o intervalo de "
 "verificação do serviço Checkmk deste host, se você alterar o intervalo de "
 "verificação."
+
+#, python-brace-format
+msgid ""
+"The agent will automatically discover Podman sockets on the system. This "
+"includes the root socket (/run/podman/podman.sock) and all user sockets "
+"matching the pattern /run/user/{user_id}/podman/podman.sock"
+msgstr ""
+
+msgid ""
+"The agent will automatically discover root Podman socket on the system. This "
+"includes the root socket (/run/podman/podman.sock)"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The agent will automatically discover user Podman sockets on the system. "
+"This includes all user sockets matching the pattern /run/user/{user_id}/"
+"podman/podman.sock"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

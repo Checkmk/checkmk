@@ -38,7 +38,12 @@ from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 
 from cmk.base import config, core_config
-from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
+from cmk.base.config import (
+    ConfigCache,
+    HostgroupName,
+    ObjectAttributes,
+    ServicegroupName,
+)
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import (
     AbstractServiceID,

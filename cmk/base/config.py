@@ -30,6 +30,7 @@ from typing import (
     NamedTuple,
     overload,
     TypeGuard,
+    TypeVar,
 )
 
 import cmk.ccc.cleanup
@@ -66,6 +67,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
     RuleSpec,
+    SingleHostRulesetMatcher,
+    SingleHostRulesetMatcherMerge,
+    SingleServiceRulesetMatcher,
+    SingleServiceRulesetMatcherMerge,
 )
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
@@ -565,6 +570,8 @@ class LoadedConfigFragment:
     """
 
     # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!
+    # NOTE: all of the below is wishful typing, no parsing is done yet.
+    # for now we just copy what we find in default_config
     folder_attributes: Mapping[str, FolderAttributesForBase]
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
@@ -597,6 +604,24 @@ class LoadedConfigFragment:
     fake_dns: str | None
     tag_config: cmk.utils.tags.TagConfigSpec
     host_tags: ruleset_matcher.TagsOfHosts
+    cmc_log_rrdcreation: Literal["terse", "full"] | None
+    cmc_host_rrd_config: Sequence[RuleSpec[Any]]
+    host_recurring_downtimes: Sequence[RuleSpec[RecurringDowntime]]
+    cmc_flap_settings: tuple[float, float, float]
+    cmc_host_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]]
+    cmc_host_long_output_in_monitoring_history: Sequence[RuleSpec[bool]]
+    host_state_translation: Sequence[RuleSpec[Mapping[str, object]]]
+    cmc_smartping_settings: Sequence[RuleSpec[Mapping[str, float]]]
+    cmc_service_rrd_config: Sequence[RuleSpec[RRDObjectConfig]]
+    service_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]]
+    cmc_service_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]]
+    cmc_service_long_output_in_monitoring_history: Sequence[RuleSpec[bool]]
+    service_state_translation: Sequence[RuleSpec[Mapping[str, object]]]
+    cmc_check_timeout: int
+    cmc_service_check_timeout: Sequence[RuleSpec[int]]
+    cmc_graphite_host_metrics: Sequence[RuleSpec[Sequence[str]]]
+    cmc_graphite_service_metrics: Sequence[RuleSpec[Sequence[str]]]
+    cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -713,6 +738,24 @@ def _perform_post_config_loading_actions(
         fake_dns=fake_dns,
         tag_config=tag_config,
         host_tags=host_tags,
+        cmc_log_rrdcreation=cmc_log_rrdcreation,
+        cmc_host_rrd_config=cmc_host_rrd_config,
+        host_recurring_downtimes=host_recurring_downtimes,
+        cmc_flap_settings=cmc_flap_settings,
+        cmc_host_flap_settings=cmc_host_flap_settings,
+        cmc_host_long_output_in_monitoring_history=cmc_host_long_output_in_monitoring_history,
+        host_state_translation=host_state_translation,
+        cmc_smartping_settings=cmc_smartping_settings,
+        cmc_service_rrd_config=cmc_service_rrd_config,
+        service_recurring_downtimes=service_recurring_downtimes,
+        cmc_service_flap_settings=cmc_service_flap_settings,
+        cmc_service_long_output_in_monitoring_history=cmc_service_long_output_in_monitoring_history,
+        service_state_translation=service_state_translation,
+        cmc_check_timeout=cmc_check_timeout,
+        cmc_service_check_timeout=cmc_service_check_timeout,
+        cmc_graphite_host_metrics=cmc_graphite_host_metrics,
+        cmc_graphite_service_metrics=cmc_graphite_service_metrics,
+        cmc_influxdb_service_metrics=cmc_influxdb_service_metrics,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -3979,137 +4022,114 @@ class FetcherFactory:
 
 
 class CEEConfigCache(ConfigCache):
-    def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
-        return cmc_log_rrdcreation
+    pass
+
+
+_TConfiguredValue = TypeVar("_TConfiguredValue")
+
+type _HostRule[_TConfiguredValue] = Callable[[HostName], Sequence[_TConfiguredValue]]
+type _HostRuleMerged[_TConfiguredValue] = Callable[[HostName], Mapping[str, _TConfiguredValue]]
+type _ServiceRule[_TConfiguredValue] = Callable[
+    [HostName, ServiceName, Labels], Sequence[_TConfiguredValue]
+]
+type _ServiceRuleMerged[_TConfiguredValue] = Callable[
+    [HostName, ServiceName, Labels], Mapping[str, _TConfiguredValue]
+]
+
+
+class CMCConfig:
+    def __init__(
+        self,
+        cmc_flap_settings: tuple[float, float, float],
+        cmc_check_timeout: int,
+        cmc_log_rrdcreation: Literal["terse", "full"] | None,
+        cmc_host_rrd_config: _HostRule[RRDObjectConfig],
+        host_recurring_downtimes: _HostRule[RecurringDowntime],
+        cmc_host_flap_settings: _HostRule[tuple[float, float, float]],
+        log_long_output: _HostRule[bool],
+        host_state_translation: _HostRuleMerged[object],
+        cmc_smartping_settings: _HostRuleMerged[float],
+        cmc_service_rrd_config: _ServiceRule[RRDObjectConfig],
+        service_recurring_downtimes: _ServiceRule[RecurringDowntime],
+        cmc_service_flap_settings: _ServiceRule[tuple[float, float, float]],
+        cmc_service_long_output_in_monitoring_history: _ServiceRule[bool],
+        service_state_translation: _ServiceRuleMerged[object],
+        cmc_service_check_timeout: _ServiceRule[int],
+        cmc_graphite_host_metrics: _HostRule[Sequence[str]],
+        cmc_graphite_service_metrics: _ServiceRule[Sequence[str]],
+        cmc_influxdb_service_metrics: _ServiceRule[Mapping[str, object]],
+    ) -> None:
+        self._cmc_flap_settings = cmc_flap_settings
+        self._cmc_check_timeout = cmc_check_timeout
+        self.cmc_log_rrdcreation = cmc_log_rrdcreation
+        self._cmc_host_rrd_config = cmc_host_rrd_config
+        self.recurring_downtimes = host_recurring_downtimes
+        self._cmc_host_flap_settings = cmc_host_flap_settings
+        self._log_long_output = log_long_output
+        self.state_translation = host_state_translation
+        self._cmc_smartping_settings = cmc_smartping_settings
+        self._cmc_service_rrd_config = cmc_service_rrd_config
+        self.recurring_downtimes_of_service = service_recurring_downtimes
+        self._cmc_service_flap_settings = cmc_service_flap_settings
+        self._cmc_service_long_output_in_monitoring_history = (
+            cmc_service_long_output_in_monitoring_history
+        )
+        self.state_translation_of_service = service_state_translation
+        self._cmc_service_check_timeout = cmc_service_check_timeout
+        self._cmc_graphite_host_metrics = cmc_graphite_host_metrics
+        self._cmc_graphite_service_metrics = cmc_graphite_service_metrics
+        self._cmc_influxdb_service_metrics = cmc_influxdb_service_metrics
 
     def rrd_config(self, host_name: HostName) -> RRDObjectConfig | None:
-        entries = self.ruleset_matcher.get_host_values_all(
-            host_name, cmc_host_rrd_config, self.label_manager.labels_of_host
-        )
+        entries = self._cmc_host_rrd_config(host_name)
         return entries[0] if entries else None
 
-    def recurring_downtimes(self, host_name: HostName) -> Sequence[RecurringDowntime]:
-        return self.ruleset_matcher.get_host_values_all(
-            host_name,
-            host_recurring_downtimes,
-            self.label_manager.labels_of_host,
-        )
-
     def flap_settings(self, host_name: HostName) -> tuple[float, float, float]:
-        values = self.ruleset_matcher.get_host_values_all(
-            host_name,
-            cmc_host_flap_settings,
-            self.label_manager.labels_of_host,
-        )
-        return values[0] if values else cmc_flap_settings
+        values = self._cmc_host_flap_settings(host_name)
+        return values[0] if values else self._cmc_flap_settings
 
     def log_long_output(self, host_name: HostName) -> bool:
-        entries = self.ruleset_matcher.get_host_values_all(
-            host_name,
-            cmc_host_long_output_in_monitoring_history,
-            self.label_manager.labels_of_host,
-        )
+        entries = self._log_long_output(host_name)
         return entries[0] if entries else False
 
-    def state_translation(self, host_name: HostName) -> Mapping:
-        return self.ruleset_matcher.get_host_values_merged(
-            host_name,
-            host_state_translation,
-            self.label_manager.labels_of_host,
-        )
-
     def smartping_settings(self, host_name: HostName) -> dict:
-        settings = {"timeout": 2.5}
-        settings |= self.ruleset_matcher.get_host_values_merged(
-            host_name,
-            cmc_smartping_settings,
-            self.label_manager.labels_of_host,
-        )
-        return settings
+        return {
+            "timeout": 2.5,
+            **self._cmc_smartping_settings(host_name),
+        }
 
     def rrd_config_of_service(
-        self,
-        host_name: HostName,
-        service_name: ServiceName,
-        service_labels: Labels,
-    ) -> RRDObjectConfig | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_service_rrd_config,
-            self.label_manager.labels_of_host,
-        )
-        return out[0] if out else None
-
-    def recurring_downtimes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> list[RecurringDowntime]:
-        return self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            service_recurring_downtimes,
-            self.label_manager.labels_of_host,
-        )
+    ) -> RRDObjectConfig | None:
+        out = self._cmc_service_rrd_config(host_name, service_name, service_labels)
+        return out[0] if out else None
 
     def flap_settings_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> tuple[float, float, float]:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_service_flap_settings,
-            self.label_manager.labels_of_host,
-        )
-        return out[0] if out else cmc_flap_settings
+        out = self._cmc_service_flap_settings(host_name, service_name, service_labels)
+        return out[0] if out else self._cmc_flap_settings
 
     def log_long_output_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> bool:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_service_long_output_in_monitoring_history,
-            self.label_manager.labels_of_host,
+        out = self._cmc_service_long_output_in_monitoring_history(
+            host_name, service_name, service_labels
         )
         return out[0] if out else False
-
-    def state_translation_of_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> Mapping:
-        return self.ruleset_matcher.get_service_values_merged(
-            host_name,
-            service_name,
-            service_labels,
-            service_state_translation,
-            self.label_manager.labels_of_host,
-        )
 
     def check_timeout_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> int:
         """Returns the check timeout in seconds"""
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_service_check_timeout,
-            self.label_manager.labels_of_host,
-        )
-        return out[0] if out else cmc_check_timeout
+        out = self._cmc_service_check_timeout(host_name, service_name, service_labels)
+        return out[0] if out else self._cmc_check_timeout
 
     def graphite_metrics_of_host(
         self,
         host_name: HostName,
     ) -> Sequence[str] | None:
-        out = self.ruleset_matcher.get_host_values_all(
-            host_name,
-            cmc_graphite_host_metrics,
-            self.label_manager.labels_of_host,
-        )
+        out = self._cmc_graphite_host_metrics(host_name)
         return out[0] if out else None
 
     def graphite_metrics_of_service(
@@ -4118,13 +4138,7 @@ class CEEConfigCache(ConfigCache):
         service_name: ServiceName,
         service_labels: Labels,
     ) -> Sequence[str] | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_graphite_service_metrics,
-            self.label_manager.labels_of_host,
-        )
+        out = self._cmc_graphite_service_metrics(host_name, service_name, service_labels)
         return out[0] if out else None
 
     def influxdb_metrics_of_service(
@@ -4133,14 +4147,95 @@ class CEEConfigCache(ConfigCache):
         service_name: ServiceName,
         service_labels: Labels,
     ) -> Mapping[str, Any] | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            cmc_influxdb_service_metrics,
-            self.label_manager.labels_of_host,
-        )
+        out = self._cmc_influxdb_service_metrics(host_name, service_name, service_labels)
         return out[0] if out else None
+
+
+def make_cmc_config(
+    matcher: RulesetMatcher,
+    label_manager: LabelManager,
+    loaded_config: LoadedConfigFragment,
+) -> CMCConfig:
+    return CMCConfig(
+        cmc_flap_settings=loaded_config.cmc_flap_settings,
+        cmc_check_timeout=loaded_config.cmc_check_timeout,
+        cmc_log_rrdcreation=loaded_config.cmc_log_rrdcreation,
+        cmc_host_rrd_config=SingleHostRulesetMatcher(
+            loaded_config.cmc_host_rrd_config,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        host_recurring_downtimes=SingleHostRulesetMatcher(
+            loaded_config.host_recurring_downtimes,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_host_flap_settings=SingleHostRulesetMatcher(
+            loaded_config.cmc_host_flap_settings,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        log_long_output=SingleHostRulesetMatcher(
+            loaded_config.cmc_host_long_output_in_monitoring_history,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        host_state_translation=SingleHostRulesetMatcherMerge(
+            loaded_config.host_state_translation,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_smartping_settings=SingleHostRulesetMatcherMerge(
+            loaded_config.cmc_smartping_settings,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_service_rrd_config=SingleServiceRulesetMatcher(
+            loaded_config.cmc_service_rrd_config,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        service_recurring_downtimes=SingleServiceRulesetMatcher(
+            loaded_config.service_recurring_downtimes,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_service_flap_settings=SingleServiceRulesetMatcher(
+            loaded_config.cmc_service_flap_settings,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_service_long_output_in_monitoring_history=SingleServiceRulesetMatcher(
+            loaded_config.cmc_service_long_output_in_monitoring_history,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        service_state_translation=SingleServiceRulesetMatcherMerge(
+            loaded_config.service_state_translation,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_service_check_timeout=SingleServiceRulesetMatcher(
+            loaded_config.cmc_service_check_timeout,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_graphite_host_metrics=SingleHostRulesetMatcher(
+            loaded_config.cmc_graphite_host_metrics,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_graphite_service_metrics=SingleServiceRulesetMatcher(
+            loaded_config.cmc_graphite_service_metrics,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+        cmc_influxdb_service_metrics=SingleServiceRulesetMatcher(
+            loaded_config.cmc_influxdb_service_metrics,
+            matcher,
+            label_manager.labels_of_host,
+        ),
+    )
 
 
 class CMEConfigCache(CEEConfigCache):

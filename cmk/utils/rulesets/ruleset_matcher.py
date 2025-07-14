@@ -40,6 +40,7 @@ tracer = trace.get_tracer()
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
+TRuleValueMapping = TypeVar("TRuleValueMapping", bound=Mapping[str, object])
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
 # but they are used here.  Therefore, they do *not* belong
@@ -976,9 +977,57 @@ def matches_tag_condition(
 
 @dataclass(frozen=True)
 class SingleHostRulesetMatcher[TRuleValue]:
-    matcher: RulesetMatcher
     host_ruleset: Sequence[RuleSpec[TRuleValue]]
+    matcher: RulesetMatcher
     labels_of_host: Callable[[HostName], Labels]
 
     def __call__(self, host_name: HostName) -> Sequence[TRuleValue]:
         return self.matcher.get_host_values_all(host_name, self.host_ruleset, self.labels_of_host)
+
+
+@dataclass(frozen=True)
+class SingleHostRulesetMatcherMerge[TRuleValue]:
+    host_ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]]
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(self, host_name: HostName) -> Mapping[str, TRuleValue]:
+        return self.matcher.get_host_values_merged(
+            host_name, self.host_ruleset, self.labels_of_host
+        )
+
+
+@dataclass(frozen=True)
+class SingleServiceRulesetMatcher[TRuleValue]:
+    service_ruleset: Sequence[RuleSpec[TRuleValue]]
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> Sequence[TRuleValue]:
+        return self.matcher.get_service_values_all(
+            host_name,
+            service_name,
+            service_labels,
+            self.service_ruleset,
+            self.labels_of_host,
+        )
+
+
+@dataclass(frozen=True)
+class SingleServiceRulesetMatcherMerge[TRuleValue]:
+    service_ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]]
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> Mapping[str, TRuleValue]:
+        return self.matcher.get_service_values_merged(
+            host_name,
+            service_name,
+            service_labels,
+            self.service_ruleset,
+            self.labels_of_host,
+        )

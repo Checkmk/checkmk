@@ -1536,7 +1536,11 @@ def mode_update() -> None:
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
-                core=create_core(loading_result.loaded_config.monitoring_core),
+                core=create_core(
+                    loading_result.config_cache.ruleset_matcher,
+                    loading_result.config_cache.label_manager,
+                    loading_result.loaded_config,
+                ),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
@@ -1621,7 +1625,11 @@ def mode_restart(args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(loading_result.loaded_config.monitoring_core),
+        create_core(
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
+            loading_result.loaded_config,
+        ),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
@@ -1693,7 +1701,11 @@ def mode_reload(args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(loading_result.loaded_config.monitoring_core),
+        create_core(
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
+            loading_result.loaded_config,
+        ),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,

@@ -1090,7 +1090,11 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
-    core = create_core(loading_result.loaded_config.monitoring_core)
+    core = create_core(
+        loading_result.config_cache.ruleset_matcher,
+        loading_result.config_cache.label_manager,
+        loading_result.loaded_config,
+    )
     with config.set_use_core_config(
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=base_discovered_host_labels_dir,
@@ -2457,7 +2461,11 @@ def _execute_silently(
                 default_address_family,
                 ip_address_of,
                 ip_address_of_mgmt,
-                create_core(loaded_config.monitoring_core),
+                create_core(
+                    config_cache.ruleset_matcher,
+                    config_cache.label_manager,
+                    loaded_config,
+                ),
                 plugins,
                 action=action,
                 discovery_rules=loaded_config.discovery_rules,

@@ -7,11 +7,14 @@
 import shutil
 import socket
 from collections.abc import Mapping
+from dataclasses import replace
 
 import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -71,7 +74,11 @@ def test_do_create_config_nagios(
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     ip_lookup_config = core_scenario.ip_lookup_config()
     core_config.do_create_config(
-        create_core("nagios"),
+        create_core(
+            core_scenario.ruleset_matcher,
+            core_scenario.label_manager,
+            replace(EMPTYCONFIG, monitoring_core="nagios"),
+        ),
         core_scenario,
         core_scenario.hosts_config,
         core_scenario.make_passive_service_name_config(),
@@ -113,7 +120,11 @@ def test_do_create_config_nagios_collects_passwords(
     assert not password_store.load(core_store)
 
     core_config.do_create_config(
-        create_core("nagios"),
+        create_core(
+            core_scenario.ruleset_matcher,
+            core_scenario.label_manager,
+            replace(EMPTYCONFIG, monitoring_core="nagios"),
+        ),
         core_scenario,
         core_scenario.hosts_config,
         core_scenario.make_passive_service_name_config(),

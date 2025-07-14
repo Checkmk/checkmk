@@ -11,7 +11,7 @@ from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
-from cmk.base.config import LoadedConfigFragment, make_cmc_config
+from cmk.base.config import LoadedConfigFragment
 from cmk.base.core_config import MonitoringCore
 
 
@@ -34,6 +34,9 @@ def create_core(
         case "cmc":
             from cmk.base.cee.microcore_config import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
+            )
+            from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+                make_cmc_config,
             )
 
             return CmcPb(

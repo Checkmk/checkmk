@@ -2,8 +2,11 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import hashlib
 import json
+import shutil
 import sys
+import tempfile
 from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
@@ -178,6 +181,54 @@ def assert_presence_on_download_server(
     return AssertResult(assertion_ok=True, message="")
 
 
+def assert_hash_matches_package_content(
+    filename: str, version: str, credentials: Credentials
+) -> AssertResult:
+    if filename.endswith("hash"):
+        # Yes, we don't have hash file for hash files
+        return AssertResult(assertion_ok=True, message="not applicable")
+
+    url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
+    hash_url = f"https://download.checkmk.com/checkmk/{version}/{hash_file(filename)}"
+
+    sys.stdout.write(f"Checking if {url}'s sha256sum matches {hash_url}...")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_path = Path(temp_dir) / filename
+        hash_path = Path(temp_dir) / f"{hash_file(filename)}"
+
+        with requests.get(
+            url, auth=(credentials.username, credentials.password), stream=True, timeout=120
+        ) as r:
+            r.raise_for_status()
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+
+        with requests.get(
+            hash_url, auth=(credentials.username, credentials.password), stream=True, timeout=20
+        ) as r:
+            r.raise_for_status()
+            with open(hash_path, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+
+        sha256 = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                sha256.update(chunk)
+
+        # Read the expected hash from the hash file
+        with open(hash_path) as f:
+            expected_hash = f.read().strip().split()[0]
+
+        if not sha256.hexdigest() == expected_hash:
+            sys.stdout.write(" MISMATCH!\n")
+            return AssertResult(
+                assertion_ok=False, message=f"File's sha256 sum does not match the hash file {url}"
+            )
+        sys.stdout.write(" OK\n")
+        return AssertResult(assertion_ok=True, message="")
+
+
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     if not args.skip_docker:
@@ -188,21 +239,37 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         results.append(
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
+        if not internal_only:
+            results.append(
+                assert_hash_matches_package_content(artifact_name, args.version, credentials)
+            )
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         results.append(
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
+        if not internal_only:
+            results.append(
+                assert_hash_matches_package_content(artifact_name, args.version, credentials)
+            )
 
     for artifact_name, internal_only in build_meta_artifacts(args, loaded_yaml):
         results.append(
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
+        if not internal_only:
+            results.append(
+                assert_hash_matches_package_content(artifact_name, args.version, credentials)
+            )
 
     for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
         results.append(
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
+        if not internal_only:
+            results.append(
+                assert_hash_matches_package_content(artifact_name, args.version, credentials)
+            )
 
     if not args.skip_docker:
         for image_name, edition, registry in build_docker_image_name_and_registry(

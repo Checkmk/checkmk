@@ -748,8 +748,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mailman_lists",
         "mbg_lantime_ng_fan",
         "mbg_lantime_ng_power",
-        "mbg_lantime_ng_refclock_gps",
-        "mbg_lantime_ng_refclock",
         "mbg_lantime_ng_state",
         "mbg_lantime_ng_temp",
         "mbg_lantime_refclock",

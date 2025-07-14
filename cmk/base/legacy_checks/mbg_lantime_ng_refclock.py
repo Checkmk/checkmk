@@ -3,11 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -173,7 +185,7 @@ mbg_lantime_ng_refclock_types = {
 }
 
 
-def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
+def mbg_lantime_ng_generalstate(clock_type: str, usage: str, state: str, substate: str) -> Result:
     refclock_usages = {
         "0": "not available",
         "1": "secondary",
@@ -182,9 +194,9 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
     }
 
     refclock_states = {
-        "0": (2, "not available"),
-        "1": (0, "synchronized"),
-        "2": (1, "not synchronized"),
+        "0": (State.CRIT, "not available"),
+        "1": (State.OK, "synchronized"),
+        "2": (State.WARN, "not synchronized"),
     }
 
     # Translation for values of MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
@@ -226,11 +238,11 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
         "170": "MRS osc sync",
     }
 
-    state, state_txt = refclock_states[state]
+    state_enum, state_txt = refclock_states[state]
     detailed_state_txt = " (%s)" % refclock_substates[substate] if substate != "0" else ""
     infotext = f"Type: {mbg_lantime_ng_refclock_types[clock_type]}, Usage: {refclock_usages[usage]}, State: {state_txt}{detailed_state_txt}"
 
-    return state, infotext
+    return Result(state=state_enum, summary=infotext)
 
 
 # .
@@ -244,16 +256,18 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
 #   +----------------------------------------------------------------------+
 
 
-def inventory_lantime_ng_refclock_gps(info):
-    for line in info:
+def discover_lantime_ng_refclock_gps(section: StringTable) -> DiscoveryResult:
+    for line in section:
         clock_type = mbg_lantime_ng_refclock_types.get(line[1])
         if clock_type is None:
             continue
         if clock_type.startswith("gps"):
-            yield (line[0], {})
+            yield Service(item=line[0])
 
 
-def check_lantime_ng_refclock_gps(item, params, info):
+def check_lantime_ng_refclock_gps(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     for (
         index,
         clock_type,
@@ -266,38 +280,34 @@ def check_lantime_ng_refclock_gps(item, params, info):
         _,
         _,
         leapsecond_date,
-    ) in info:
+    ) in section:
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
 
             if substate not in ("1", "2"):
-                yield 0, "Next leap second: %s" % str(leapsecond_date)
+                yield Result(state=State.OK, summary="Next leap second: %s" % str(leapsecond_date))
 
             # Levels for satellites are checked only if we have a substate
             # that indicates that a GPS connection is needed. For the
             # LANTIME M600/MRS the GPS antenna is e.g. optional.
             if substate in ("1", "2", "3", "4", "5", "6", "150"):
-                state, levels_txt = 0, ""
                 good_sats, total_sats = int(status_a), int(max_status_a)
-                warn_lower, crit_lower = params["levels_lower"]
-                if good_sats < crit_lower:
-                    state = 2
-                    levels_txt = " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
-                elif good_sats < warn_lower:
-                    state = 1
-                    levels_txt = " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
-
-                yield state, "Satellites: %d/%d%s" % (good_sats, total_sats, levels_txt)
+                yield from check_levels(
+                    value=good_sats,
+                    levels_lower=params["levels_lower"],
+                    render_func=str,
+                    label=f"Satellites (total: {total_sats})",
+                )
 
 
-check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
+check_plugin_mbg_lantime_ng_refclock_gps = CheckPlugin(
     name="mbg_lantime_ng_refclock_gps",
     service_name="LANTIME Refclock %s",
     sections=["mbg_lantime_ng_refclock"],
-    discovery_function=inventory_lantime_ng_refclock_gps,
+    discovery_function=discover_lantime_ng_refclock_gps,
     check_function=check_lantime_ng_refclock_gps,
     check_default_parameters={
-        "levels_lower": (3, 3),
+        "levels_lower": ("fixed", (3, 3)),
     },
 )
 
@@ -318,16 +328,16 @@ check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_lantime_ng_refclock(info):
-    for line in info:
+def discover_lantime_ng_refclock(section: StringTable) -> DiscoveryResult:
+    for line in section:
         clock_type = mbg_lantime_ng_refclock_types.get(line[1])
         if clock_type is None:
             continue
         if not clock_type.startswith("gps"):
-            yield (line[0], None)
+            yield Service(item=line[0])
 
 
-def check_lantime_ng_refclock(item, _no_params, info):
+def check_lantime_ng_refclock(item: str, section: StringTable) -> CheckResult:
     for (
         index,
         clock_type,
@@ -340,35 +350,40 @@ def check_lantime_ng_refclock(item, _no_params, info):
         max_status_b,
         _,
         _,
-    ) in info:
+    ) in section:
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
 
             if max_status_b != "0":
                 field_strength = round(float(status_b) / float(max_status_b) * 100.0)
-                perfdata = [("field_strength", field_strength)]
-                yield 0, "Field strength: %d%%" % field_strength, perfdata
+                yield Result(state=State.OK, summary=f"Field strength: {field_strength}%")
+                yield Metric(name="field_strength", value=field_strength)
 
             # only used for longwave - pzf refclocks
             if max_status_a != "0":
                 correlation = round(float(status_a) / float(max_status_a) * 100.0)
-                perfdata = [("correlation", correlation)]
-                yield 0, "Correlation: %d%%" % correlation, perfdata
+                yield Result(state=State.OK, summary=f"Correlation: {correlation}%")
+                yield Metric(name="correlation", value=correlation)
 
 
 def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+snmp_section_mbg_lantime_ng_refclock = SimpleSNMPSection(
     name="mbg_lantime_ng_refclock",
-    parse_function=parse_mbg_lantime_ng_refclock,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.1.2.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    parse_function=parse_mbg_lantime_ng_refclock,
+)
+
+
+check_plugin_mbg_lantime_ng_refclock = CheckPlugin(
+    name="mbg_lantime_ng_refclock",
     service_name="LANTIME Refclock %s",
-    discovery_function=inventory_lantime_ng_refclock,
+    discovery_function=discover_lantime_ng_refclock,
     check_function=check_lantime_ng_refclock,
 )

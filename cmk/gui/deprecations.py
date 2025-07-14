@@ -32,7 +32,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
-from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
+from cmk.gui.message import get_gui_messages, Message, MessageText, send_message
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
@@ -508,8 +508,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
                     if problem_to_send.content in user.sent_messages:
                         continue
 
-                    message_gui(
-                        user.user_id,
+                    send_message(
                         Message(
                             dest=("list", [user.user_id]),
                             methods=["gui_hint"],
@@ -523,6 +522,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
                             security=False,
                             acknowledged=False,
                         ),
+                        [],
                     )
 
             case str():

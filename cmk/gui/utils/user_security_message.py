@@ -24,7 +24,7 @@ from cmk.utils.paths import web_dir
 
 from cmk.gui import config, userdb, utils
 from cmk.gui.i18n import _
-from cmk.gui.message import Message, message_gui, MessageText
+from cmk.gui.message import Message, MessageText, send_message
 
 #   .--Templates-----------------------------------------------------------.
 #   |            _____                    _       _                        |
@@ -342,8 +342,7 @@ def _get_attachments() -> list[Attachment]:
 def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: datetime) -> None:
     timestamp = int(event_time.timestamp())
     duration = int(config.active_config.user_security_notification_duration["max_duration"])
-    message_gui(
-        user_id,
+    send_message(
         Message(
             text=MessageText(content_type="text", content=user_friendly_gui_message(event)),
             dest=("list", [user_id]),
@@ -354,4 +353,5 @@ def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: dat
             security=True,
             acknowledged=False,
         ),
+        [],
     )

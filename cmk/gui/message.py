@@ -192,22 +192,22 @@ def _messaging_methods() -> dict[MessageMethod, dict[str, Any]]:
         "gui_popup": {
             "title": _("Show popup message"),
             "confirmation_title": _("as a popup message"),
-            "handler": message_gui,
+            "handler": _message_gui,
         },
         "gui_hint": {
             "title": _("Show hint in the 'User' menu"),
             "confirmation_title": _("as a hint in the 'User' menu"),
-            "handler": message_gui,
+            "handler": _message_gui,
         },
         "mail": {
             "title": _("Send email"),
             "confirmation_title": _("as an email"),
-            "handler": message_mail,
+            "handler": _message_mail,
         },
         "dashlet": {
             "title": _("Show in the dashboard element 'User messages'"),
             "confirmation_title": _("in the dashboard element 'User messages'"),
-            "handler": message_gui,
+            "handler": _message_gui,
         },
     }
 
@@ -455,7 +455,7 @@ def send_message(
 #   ---Message Plugins-------------------------------------------------------
 
 
-def message_gui(user_id: UserId, msg: Message) -> bool:
+def _message_gui(user_id: UserId, msg: Message) -> bool:
     messages = get_gui_messages(user_id)
     if msg not in messages:
         messages.append(msg)
@@ -463,7 +463,7 @@ def message_gui(user_id: UserId, msg: Message) -> bool:
     return True
 
 
-def message_mail(user_id: UserId, msg: Message) -> bool:
+def _message_mail(user_id: UserId, msg: Message) -> bool:
     users = userdb.load_users(lock=False)
     user_spec = users.get(user_id)
 

@@ -642,8 +642,7 @@ onMounted(() => {
 .cmk-default-popup-mainmenu {
   display: flex;
   width: 484px;
-  height: calc(100vh - 64px); /* 64px is the height of the header */
-  /* height: 1079px; */
+  height: calc(100vh - 64px);
   padding: 32px;
   flex-direction: column;
   align-items: flex-start;
@@ -787,7 +786,7 @@ onMounted(() => {
 }
 .cmk-span-changes-text {
   color: rgba(255, 255, 255, 0.5);
-  font-family: Roboto;
+
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -803,7 +802,7 @@ onMounted(() => {
   border-radius: 80px;
   background: #ffc31c;
   color: #000;
-  font-family: Roboto;
+
   font-size: 10px;
   font-style: normal;
   font-weight: 700;
@@ -820,7 +819,6 @@ onMounted(() => {
 
 .cmk-span-site-name {
   color: #fff;
-  font-family: Roboto;
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -875,7 +873,6 @@ onMounted(() => {
   align-items: center;
   align-self: stretch;
   color: rgba(255, 255, 255, 0.5);
-  /* font-family: Roboto; */
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -896,7 +893,6 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   color: rgba(255, 255, 255, 0.5);
-  font-family: Roboto;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -937,7 +933,6 @@ onMounted(() => {
   gap: 7px;
   align-self: stretch;
   color: #fff;
-  /* font-family: Roboto; */
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -961,6 +956,7 @@ onMounted(() => {
 .grey-text {
   color: rgb(150, 150, 150);
 }
+
 .red-text {
   color: var(--color-danger);
 }

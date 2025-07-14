@@ -228,7 +228,7 @@ class BaseAsyncApiClient(BaseApiClient):
         self._secret = secret
 
     async def __aenter__(self):
-        self.login(tenant=self._tenant, client=self._client, secret=self._secret)
+        await self.login_async(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
             # TODO: can the proxy be passed here?
             self._session = aiohttp.ClientSession(headers=self._headers)
@@ -239,6 +239,33 @@ class BaseAsyncApiClient(BaseApiClient):
         if self._session and not self._session.closed:
             await self._session.close()
         self._session = None
+
+    async def login_async(self, tenant: str, client: str, secret: str) -> None:
+        client_app = msal.ConfidentialClientApplication(
+            client,
+            secret,
+            f"{self._login_url}/{tenant}",
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
+        # this should be safe,
+        # the default thread pool in asyncio typically has a maximum number of worker threads
+        # tied to the system's CPU count
+        token = await asyncio.to_thread(
+            client_app.acquire_token_for_client, [self._resource_url + "/.default"]
+        )
+
+        if error := token.get("error"):
+            if error_description := token.get("error_description"):
+                error = f"{error}. {error_description}"
+            raise ApiLoginFailed(error)
+
+        self._headers.update(
+            {
+                "Authorization": "Bearer %s" % token["access_token"],
+                "Content-Type": "application/json",
+                "ClientType": "monitoring-custom-client-type",
+            }
+        )
 
     async def _handle_ratelimit_async(self, method, url, custom_headers=None, **kwargs):
         async def get_response():

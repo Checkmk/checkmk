@@ -2016,7 +2016,6 @@ def _get_subscriptions(args: Args) -> set[str]:
 
 
 async def test_connections(args: Args, subscriptions: set[str]) -> int:
-    # TODO: make login async, this is just in preparation for that
     tasks = {_test_connection(args, subscription) for subscription in subscriptions}
 
     for coroutine in asyncio.as_completed(tasks):
@@ -2055,7 +2054,6 @@ def main(argv=None):
     subscriptions = _get_subscriptions(args)
     # TODO:
     # * fix connection test in case of no subscriptions
-    # * make connection test async?
     if args.connection_test:
         return asyncio.run(test_connections(args, subscriptions))
 

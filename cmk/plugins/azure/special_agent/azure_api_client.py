@@ -114,28 +114,6 @@ class BaseApiClient:
         self._regional_url = authority_urls.regional
         self._http_proxy_config = http_proxy_config
 
-    def login(self, tenant: str, client: str, secret: str) -> None:
-        client_app = msal.ConfidentialClientApplication(
-            client,
-            secret,
-            f"{self._login_url}/{tenant}",
-            proxies=self._http_proxy_config.to_requests_proxies(),
-        )
-        token = client_app.acquire_token_for_client([self._resource_url + "/.default"])
-
-        if error := token.get("error"):
-            if error_description := token.get("error_description"):
-                error = f"{error}. {error_description}"
-            raise ApiLoginFailed(error)
-
-        self._headers.update(
-            {
-                "Authorization": "Bearer %s" % token["access_token"],
-                "Content-Type": "application/json",
-                "ClientType": "monitoring-custom-client-type",
-            }
-        )
-
     @property
     def ratelimit(self):
         if isinstance(self._ratelimit, int):

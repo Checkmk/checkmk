@@ -2053,7 +2053,7 @@ async def main_async(args: Args, selector: Selector) -> int:
     return 0
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         password_store.replace_passwords()
         argv = sys.argv[1:]

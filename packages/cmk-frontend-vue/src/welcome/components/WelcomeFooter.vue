@@ -9,7 +9,7 @@ import { ref, watch } from 'vue'
 import axios from 'axios'
 import usei18n from '@/lib/i18n'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
-import CmkBodyText from '@/components/typography/CmkBodyText.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const props = defineProps<{
   is_start_url: boolean
@@ -55,14 +55,14 @@ const setStartUrl = async (startUrlValue?: string): Promise<void> => {
       v-model="showWelcomeOnStart"
       :label="t('show-on-start', 'Show welcome page on start')"
     />
-    <CmkBodyText class="welcome-footer__hint">
+    <CmkParagraph class="welcome-footer__hint">
       {{
         t(
           'access-breadcrumbs',
           'You can still access it later via Help > Learning Checkmk > Get started'
         )
       }}
-    </CmkBodyText>
+    </CmkParagraph>
   </section>
 </template>
 

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkHeading1 from '@/components/typography/CmkHeading1.vue'
 import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
-import CmkBodyText from '@/components/typography/CmkBodyText.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>
@@ -15,7 +15,7 @@ defineProps<{ screenshotMode: boolean }>()
 <template>
   <CmkHeading1> Heading1 </CmkHeading1>
   <CmkHeading2> Heading2 </CmkHeading2>
-  <CmkBodyText> Body Text </CmkBodyText>
+  <CmkParagraph> Paragraph </CmkParagraph>
 </template>
 
 <style scoped></style>

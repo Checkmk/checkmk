@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkHeading1 from '@/components/typography/CmkHeading1.vue'
-import CmkBody from '@/components/typography/CmkBodyText.vue'
+import CmkBody from '@/components/typography/CmkParagraph.vue'
 import StepsProgressBar, { type StepsProgressBarProps } from './StepsProgressBar.vue'
 const { t } = usei18n('welcome-banner')
 

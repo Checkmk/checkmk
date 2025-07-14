@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkBodyText from '@/components/typography/CmkBodyText.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import usei18n from '@/lib/i18n.ts'
 import FlexRow from '@/welcome/components/steps/FlexRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
@@ -27,9 +27,9 @@ defineProps<{
     :title="t('title', 'Enable notifications')"
     :info="t('time', '10-15 min')"
   >
-    <CmkBodyText class="margin-bottom">
+    <CmkParagraph class="margin-bottom">
       {{ t('text', 'TBD') }}
-    </CmkBodyText>
+    </CmkParagraph>
 
     <b> {{ t('prepare', 'Prepare') }}</b>
     <FlexRow>

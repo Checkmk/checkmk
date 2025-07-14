@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
-import CmkBody from '@/components/typography/CmkBodyText.vue'
+import CmkBody from '@/components/typography/CmkParagraph.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 
 const { t } = usei18n('steps-progress-bar')

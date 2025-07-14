@@ -6,13 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts"></script>
 
 <template>
-  <p class="cmk-body-text">
+  <p class="cmk-paragraph">
     <slot />
   </p>
 </template>
 
 <style scoped>
-.cmk-body-text {
+.cmk-paragraph {
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
   color: var(--font-color);

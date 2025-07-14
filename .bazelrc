@@ -1,4 +1,5 @@
 # Use local registry to add local download mirrors
+common --registry="file:///%workspace%/bazel/thirdparty"
 common --registry="file:///%workspace%/bazel/registry"
 common --registry=https://bcr.bazel.build
 

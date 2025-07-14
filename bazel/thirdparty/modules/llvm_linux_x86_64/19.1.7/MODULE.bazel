@@ -1,0 +1,5 @@
+module(
+    name = "llvm_linux_x86_64",
+    version = "19.1.7",
+    compatibility_level = 1,
+)

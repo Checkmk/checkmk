@@ -48,6 +48,12 @@ bazel_dep(
 bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
 bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(
+    name = "llvm_linux_x86_64",
+    version = "19.1.7",
+    dev_dependency = True,
+    repo_name = "clang-linux-x86_64",
+)
+bazel_dep(
     name = "buildifier_prebuilt",
     version = "8.0.0",
     dev_dependency = True,
@@ -218,17 +224,6 @@ http_file(
     urls = [
         "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
         UPSTREAM_MIRROR_URL + "/taplo-linux-x86_64-0.10.0.gz",
-    ],
-)
-
-http_archive(
-    name = "clang-linux-x86_64",
-    build_file = "//bazel/toolchains/cc/clang:BUILD.clang.bazel",
-    integrity = "sha256-Sl7FOVGlhO02+AJA9vv4/dRrTPbH7ofMLVAY3DfK9nk=",
-    strip_prefix = "LLVM-19.1.7-Linux-X64",
-    urls = [
-        "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz",
-        UPSTREAM_MIRROR_URL + "LLVM-19.1.7-Linux-X64.tar.xz",
     ],
 )
 

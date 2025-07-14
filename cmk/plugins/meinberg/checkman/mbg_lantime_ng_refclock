@@ -6,8 +6,9 @@ distribution: check_mk
 description:
 
  This check monitors the refclock state of Meinberg LANTIME clocks supporting
- the new MBG-LANTIME-NG-MIB. It is only applied to non-gps (i.e. radio
+ the new MBG-LANTIME-NG-MIB. It is only applied to known non-gps (i.e. radio
  frequency) refclocks, since the gps refclocks have their own subcheck.
+ If the clock type ID is not known to Checkmk, it will be treated as a non-GPS clock.
 
  The check handles the reported state of the refclock and provides additional information
  about its state, like the field strength and the corellation.

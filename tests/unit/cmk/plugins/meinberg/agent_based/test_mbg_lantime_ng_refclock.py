@@ -20,6 +20,7 @@ from cmk.plugins.meinberg.agent_based.mbg_lantime_ng_refclock import (
     check_lantime_ng_refclock_gps,
     discover_lantime_ng_refclock,
     discover_lantime_ng_refclock_gps,
+    parse_mbg_lantime_ng_refclock,
 )
 
 pytestmark = pytest.mark.checks
@@ -38,11 +39,11 @@ meinberg_lantime_8 = [["1", "999", "3", "1", "1", "10", "13", "0", "0", "0", "no
         (meinberg_lantime_1, []),  # GPS clocks are not covered here
         (meinberg_lantime_2, [Service(item="1")]),
         (meinberg_lantime_7, [Service(item="1")]),
-        (meinberg_lantime_8, []),
+        (meinberg_lantime_8, [Service(item="1")]),  # Unknown types should be discovered!
     ],
 )
 def test_discovery_mbg_lantime_ng_refclock(info: StringTable, expected: DiscoveryResult) -> None:
-    discovery = list(discover_lantime_ng_refclock(info))
+    discovery = list(discover_lantime_ng_refclock(parse_mbg_lantime_ng_refclock(info)))
     assert discovery == expected
 
 
@@ -73,10 +74,22 @@ def test_discovery_mbg_lantime_ng_refclock(info: StringTable, expected: Discover
                 )
             ],
         ),
+        (
+            meinberg_lantime_8,
+            "1",
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Type: unknown (999), Usage: primary, State: synchronized (GPS sync)",
+                ),
+                Result(state=State.OK, summary="Correlation: 77%"),
+                Metric("correlation", 77.0),
+            ],
+        ),
     ],
 )
 def test_check_mbg_lantime_ng_refclock(info: StringTable, item: str, expected: CheckResult) -> None:
-    result = list(check_lantime_ng_refclock(item, info))
+    result = list(check_lantime_ng_refclock(item, parse_mbg_lantime_ng_refclock(info)))
     assert expected == result
 
 
@@ -94,7 +107,7 @@ def test_check_mbg_lantime_ng_refclock(info: StringTable, item: str, expected: C
 def test_discovery_mbg_lantime_ng_refclock_gps(
     info: StringTable, expected: DiscoveryResult
 ) -> None:
-    discovery = list(discover_lantime_ng_refclock_gps(info))
+    discovery = list(discover_lantime_ng_refclock_gps(parse_mbg_lantime_ng_refclock(info)))
     assert discovery == expected
 
 
@@ -145,5 +158,5 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
 def test_check_mbg_lantime_ng_refclock_gps(
     info: StringTable, item: str, params: Mapping[str, object], expected: CheckResult
 ) -> None:
-    result = list(check_lantime_ng_refclock_gps(item, params, info))
+    result = list(check_lantime_ng_refclock_gps(item, params, parse_mbg_lantime_ng_refclock(info)))
     assert result == expected

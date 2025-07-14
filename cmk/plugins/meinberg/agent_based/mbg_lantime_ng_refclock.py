@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -193,9 +194,14 @@ REFCLOCK_USAGES = {
 }
 # See mbgLtNgRefclockState in MIB
 REFCLOCK_STATES = {
-    "0": (State.CRIT, "not available"),
-    "1": (State.OK, "synchronized"),
-    "2": (State.WARN, "not synchronized"),
+    "0": "not available",  # CRIT
+    "1": "synchronized",  # OK
+    "2": "not synchronized",  # WARN
+}
+REFCLOCK_STATES_STATE = {
+    "0": State.CRIT,
+    "1": State.OK,
+    "2": State.WARN,
 }
 # See mbgLtNgRefclockSubstate in MIB
 REFCLOCK_SUBSTATES = {
@@ -237,12 +243,63 @@ REFCLOCK_SUBSTATES = {
 }
 
 
-def mbg_lantime_ng_generalstate(clock_type: str, usage: str, state: str, substate: str) -> Result:
-    state_enum, state_txt = REFCLOCK_STATES[state]
-    detailed_state_txt = " (%s)" % REFCLOCK_SUBSTATES[substate] if substate != "0" else ""
-    infotext = f"Type: {REFCLOCK_TYPES[clock_type]}, Usage: {REFCLOCK_USAGES[usage]}, State: {state_txt}{detailed_state_txt}"
+@dataclass
+class RefClock:
+    item: str
+    clock_type: str
+    usage: str
+    state: str
+    substate: str
+    status_a: int
+    max_status_a: int
+    status_b: int
+    max_status_b: int
+    info: str
+    leapsecond_date: str
 
-    return Result(state=state_enum, summary=infotext)
+    def _get_verbose_name(self, value: str, mapping: Mapping[str, str]) -> str | None:
+        return mapping.get(value, None)
+
+    @property
+    def verbose_clock_type(self) -> str:
+        return (
+            self._get_verbose_name(self.clock_type, REFCLOCK_TYPES)
+            or f"unknown ({self.clock_type})"
+        )
+
+    @property
+    def verbose_usage(self) -> str | None:
+        return self._get_verbose_name(self.usage, REFCLOCK_USAGES)
+
+    @property
+    def verbose_state(self) -> str | None:
+        return self._get_verbose_name(self.state, REFCLOCK_STATES)
+
+    @property
+    def verbose_substate(self) -> str | None:
+        return self._get_verbose_name(self.substate, REFCLOCK_SUBSTATES)
+
+    @property
+    def is_gps(self) -> bool | None:
+        if self.clock_type not in REFCLOCK_TYPES:
+            return None
+        return "gps" in self.verbose_clock_type
+
+    @property
+    def result_state(self) -> State:
+        state = REFCLOCK_STATES_STATE.get(self.state, State.UNKNOWN)
+        type_state = State.OK if self.clock_type in REFCLOCK_TYPES else State.WARN
+        return State.worst(state, type_state)
+
+
+ParsedSection = Mapping[str, RefClock]
+
+
+def mbg_lantime_ng_generalstate(refclock: RefClock) -> Result:
+    detailed_state_txt = " (%s)" % refclock.verbose_substate if refclock.substate != "0" else ""
+    infotext = f"Type: {refclock.verbose_clock_type}, Usage: {refclock.verbose_usage}, State: {refclock.verbose_state}{detailed_state_txt}"
+
+    return Result(state=refclock.result_state, summary=infotext)
 
 
 # .
@@ -256,48 +313,34 @@ def mbg_lantime_ng_generalstate(clock_type: str, usage: str, state: str, substat
 #   +----------------------------------------------------------------------+
 
 
-def discover_lantime_ng_refclock_gps(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        clock_type = REFCLOCK_TYPES.get(line[1])
-        if clock_type is None:
-            continue
-        if clock_type.startswith("gps"):
-            yield Service(item=line[0])
+def discover_lantime_ng_refclock_gps(section: ParsedSection) -> DiscoveryResult:
+    for clock in section.values():
+        if clock.is_gps:
+            yield Service(item=clock.item)
 
 
 def check_lantime_ng_refclock_gps(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str, params: Mapping[str, Any], section: ParsedSection
 ) -> CheckResult:
-    for (
-        index,
-        clock_type,
-        usage,
-        state,
-        substate,
-        status_a,
-        max_status_a,
-        _,
-        _,
-        _,
-        leapsecond_date,
-    ) in section:
-        if item == index:
-            yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
+    clock = section.get(item)
+    if not clock:
+        return
 
-            if substate not in ("1", "2"):
-                yield Result(state=State.OK, summary="Next leap second: %s" % str(leapsecond_date))
+    yield mbg_lantime_ng_generalstate(clock)
 
-            # Levels for satellites are checked only if we have a substate
-            # that indicates that a GPS connection is needed. For the
-            # LANTIME M600/MRS the GPS antenna is e.g. optional.
-            if substate in ("1", "2", "3", "4", "5", "6", "150"):
-                good_sats, total_sats = int(status_a), int(max_status_a)
-                yield from check_levels(
-                    value=good_sats,
-                    levels_lower=params["levels_lower"],
-                    render_func=str,
-                    label=f"Satellites (total: {total_sats})",
-                )
+    if clock.substate not in ("1", "2"):
+        yield Result(state=State.OK, summary="Next leap second: %s" % str(clock.leapsecond_date))
+
+    # Levels for satellites are checked only if we have a substate
+    # that indicates that a GPS connection is needed. For the
+    # LANTIME M600/MRS the GPS antenna is e.g. optional.
+    if clock.substate in ("1", "2", "3", "4", "5", "6", "150"):
+        yield from check_levels(
+            value=clock.status_a,
+            levels_lower=params["levels_lower"],
+            render_func=str,
+            label=f"Satellites (total: {clock.max_status_a})",
+        )
 
 
 check_plugin_mbg_lantime_ng_refclock_gps = CheckPlugin(
@@ -328,46 +371,48 @@ check_plugin_mbg_lantime_ng_refclock_gps = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def discover_lantime_ng_refclock(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        clock_type = REFCLOCK_TYPES.get(line[1])
-        if clock_type is None:
-            continue
-        if not clock_type.startswith("gps"):
-            yield Service(item=line[0])
+def discover_lantime_ng_refclock(section: ParsedSection) -> DiscoveryResult:
+    for clock in section.values():
+        if not clock.is_gps:  # This will include non-GPS and unknown types
+            yield Service(item=clock.item)
 
 
-def check_lantime_ng_refclock(item: str, section: StringTable) -> CheckResult:
-    for (
-        index,
-        clock_type,
-        usage,
-        state,
-        substate,
-        status_a,
-        max_status_a,
-        status_b,
-        max_status_b,
-        _,
-        _,
-    ) in section:
-        if item == index:
-            yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
+def check_lantime_ng_refclock(item: str, section: ParsedSection) -> CheckResult:
+    clock = section.get(item)
+    if not clock:
+        return
 
-            if max_status_b != "0":
-                field_strength = round(float(status_b) / float(max_status_b) * 100.0)
-                yield Result(state=State.OK, summary=f"Field strength: {field_strength}%")
-                yield Metric(name="field_strength", value=field_strength)
+    yield mbg_lantime_ng_generalstate(clock)
 
-            # only used for longwave - pzf refclocks
-            if max_status_a != "0":
-                correlation = round(float(status_a) / float(max_status_a) * 100.0)
-                yield Result(state=State.OK, summary=f"Correlation: {correlation}%")
-                yield Metric(name="correlation", value=correlation)
+    if clock.max_status_b != 0:
+        field_strength = round(float(clock.status_b) / float(clock.max_status_b) * 100.0)
+        yield Result(state=State.OK, summary=f"Field strength: {field_strength}%")
+        yield Metric(name="field_strength", value=field_strength)
+
+    # only used for longwave - pzf refclocks
+    if clock.max_status_a != 0:
+        correlation = round(float(clock.status_a) / float(clock.max_status_a) * 100.0)
+        yield Result(state=State.OK, summary=f"Correlation: {correlation}%")
+        yield Metric(name="correlation", value=correlation)
 
 
-def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> ParsedSection:
+    return {
+        line[0]: RefClock(
+            item=line[0],
+            clock_type=line[1],
+            usage=line[2],
+            state=line[3],
+            substate=line[4],
+            status_a=int(line[5]),
+            max_status_a=int(line[6]),
+            status_b=int(line[7]),
+            max_status_b=int(line[8]),
+            info=line[9],
+            leapsecond_date=line[10],
+        )
+        for line in string_table
+    }
 
 
 snmp_section_mbg_lantime_ng_refclock = SimpleSNMPSection(

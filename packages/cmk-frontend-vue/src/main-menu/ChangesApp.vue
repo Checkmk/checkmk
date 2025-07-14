@@ -16,10 +16,10 @@ import CmkButton from '@/components/CmkButton.vue'
 import { Api } from '@/lib/api-client'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
-import CmkChip from '@/components/CmkChip.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkBadge from '@/components/CmkBadge.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -494,11 +494,12 @@ onMounted(() => {
                             @update:model-value="toggleSelectedSite(site.siteId)"
                           />
                           <div class="cmk-div-site-online-status">
-                            <CmkChip
-                              :content="site.onlineStatus"
+                            <CmkBadge
                               :color="statusColor(site.onlineStatus)"
                               size="small"
-                            />
+                              class="cmk-div-site-online-status-badge"
+                              >{{ site.onlineStatus }}</CmkBadge
+                            >
                             <span class="cmk-span-site-name">{{ site.siteName }}</span>
                           </div>
                         </div>
@@ -510,7 +511,7 @@ onMounted(() => {
                             <span class="cmk-span-changes-text">{{
                               t('changes', 'Changes:')
                             }}</span>
-                            <span class="cmk-span-changes-number">{{ site.changes }}</span>
+                            <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
                           </template>
                           <span v-else class="cmk-span-changes-text">{{
                             t('no-changes', 'No Changes')
@@ -775,6 +776,10 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   gap: 10px;
+}
+
+.cmk-div-site-online-status-badge {
+  padding: 1px 5px;
 }
 
 .cmk-div-site-status-changes {

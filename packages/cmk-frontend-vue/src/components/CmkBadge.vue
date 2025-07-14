@@ -107,6 +107,7 @@ defineProps<CmkBadgeProps>()
 .cmk-badge-warning {
   background: var(--color-warning);
   border-color: var(--color-warning);
+  color: var(--black);
 }
 
 .cmk-badge-success {

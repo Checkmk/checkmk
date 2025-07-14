@@ -358,6 +358,14 @@ function toggleSelectedSite(siteId: string) {
   }
 }
 
+function calcChangesHeight(): number {
+  if (!activationStatusCollapsible.value) {
+    return -0.78
+  } else {
+    return sitesAndChanges.value.sites.length > 5 ? 5 : sitesAndChanges.value.sites.length - 1
+  }
+}
+
 onMounted(() => {
   void checkIfMenuActive()
 })
@@ -466,7 +474,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="sites-container">
+        <div class="sites-container" :class="{ 'add-flex': sitesAndChanges.sites.length === 1 }">
           <CmkCollapsibleTitle
             :title="'Sites'"
             class="collapsible-title"
@@ -474,15 +482,12 @@ onMounted(() => {
             @toggle-open="activationStatusCollapsible = !activationStatusCollapsible"
           />
 
-          <CmkCollapsible :open="activationStatusCollapsible">
-            <CmkScrollContainer
-              height="auto"
-              :class="[
-                { 'display-none': !activationStatusCollapsible },
-                { 'add-flex': sitesAndChanges.sites.length > 2 }
-              ]"
-              class="cmk-scroll-sites-container"
-            >
+          <CmkCollapsible
+            :open="activationStatusCollapsible"
+            class="cmk-collapsible-sites"
+            :class="[{ 'display-none': !activationStatusCollapsible }]"
+          >
+            <CmkScrollContainer height="auto" class="cmk-scroll-sites-container">
               <template v-for="site in sitesAndChanges.sites" :key="site.siteId">
                 <template v-if="siteRequiresAttention(site)">
                   <CmkIndent>
@@ -581,7 +586,7 @@ onMounted(() => {
             @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
           />
 
-          <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible">
+          <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible-pending-changes">
             <CmkIndent class="cmk-indent-foreign-changes-container">
               <div class="cmk-div-foreign-changes-text">
                 {{ t(`foreign-changes`, `Foreign changes: `) }}
@@ -676,7 +681,9 @@ onMounted(() => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 178px);
 }
+
 .cmk-div-activation-result-container {
   display: flex;
   padding: 20px 0px;
@@ -744,7 +751,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 5;
+  height: calc(100vh - 178px - (48px * v-bind('calcChangesHeight()')));
 }
 
 .cmk-div-site-status-container {
@@ -819,7 +826,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 1;
+  max-height: calc(
+    (48px * (v-bind('sitesAndChanges.sites.length > 5? 5: sitesAndChanges.sites.length ') + 1))
+  );
 }
 
 .cmk-span-site-name {
@@ -850,6 +859,11 @@ onMounted(() => {
   width: inherit;
 }
 
+.cmk-collapsible-sites {
+  width: 100%;
+  height: calc(100% - 44px);
+}
+
 .cmk-scroll-pending-changes-container {
   width: inherit;
   display: flex;
@@ -857,8 +871,13 @@ onMounted(() => {
   gap: 2px;
 }
 
-.cmk-collapsible {
+.cmk-collapsible-pending-changes {
   width: 100%;
+  height: calc(100% - 158px);
+}
+
+:deep(.cmk-collapsible__content) {
+  height: 100%;
 }
 
 .cmk-indent {

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
@@ -75,9 +75,9 @@ watch(model, (newValue) => {
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
   <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
-  <CmkHeading2 class="heading">
+  <CmkHeading type="h2" class="heading">
     {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
-  </CmkHeading2>
+  </CmkHeading>
   <CmkTabs v-model="openedTab">
     <template #tabs>
       <CmkTab v-for="tab in tabs" :id="tab.id" :key="tab.id" class="tabs">
@@ -116,14 +116,14 @@ watch(model, (newValue) => {
           :title="tab.registration_msg"
           :code_txt="tab.registration_cmd"
         />
-        <CmkHeading2>
+        <CmkHeading type="h2">
           {{
             t(
               'agent-download-finish-msg',
               'After installing, you can close the slideout and test the agent connection.'
             )
           }}
-        </CmkHeading2>
+        </CmkHeading>
       </CmkTabContent>
     </template>
   </CmkTabs>

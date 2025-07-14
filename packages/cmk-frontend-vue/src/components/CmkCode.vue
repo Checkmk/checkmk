@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkIconButton from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
@@ -34,7 +34,7 @@ async function copyToClipboard() {
 </script>
 
 <template>
-  <CmkHeading2 v-if="title" class="cmk-code__heading">{{ title }}</CmkHeading2>
+  <CmkHeading v-if="title" type="h2" class="cmk-code__heading">{{ title }}</CmkHeading>
   <div class="code_wrapper">
     <div class="code_container">
       <pre>

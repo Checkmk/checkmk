@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
-import CmkBody from '@/components/typography/CmkParagraph.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 
 const { t } = usei18n('steps-progress-bar')
@@ -22,12 +22,12 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 
 <template>
   <div class="steps-progress-bar">
-    <CmkHeading2>{{ t('your-progress', 'Your progress') }}</CmkHeading2>
+    <CmkHeading type="h2">{{ t('your-progress', 'Your progress') }}</CmkHeading>
     <div class="steps-progress-bar__content">
-      <CmkBody>
+      <CmkParagraph>
         {{ completedSteps }}/{{ totalSteps }}
         {{ t('steps-complete', 'Steps complete') }}
-      </CmkBody>
+      </CmkParagraph>
       <CmkProgressbar
         class="steps-progress-bar__bar"
         :value="completedSteps"

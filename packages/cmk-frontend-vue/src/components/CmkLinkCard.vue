@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { computed } from 'vue'
 
@@ -42,7 +42,7 @@ const classes = computed(() => [
   <a :href="url" :target="openInNewTab ? '_blank' : ''" class="cmk-link-card" :class="classes">
     <CmkIcon v-if="iconName" :name="iconName" size="xxlarge" class="cmk-link-card__icon" />
     <div class="cmk-link-card__text-area">
-      <CmkHeading2 class="cmk-link-card__heading">{{ title }}</CmkHeading2>
+      <CmkHeading type="h2" class="cmk-link-card__heading">{{ title }}</CmkHeading>
       <CmkParagraph :v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
     <CmkIcon v-if="openInNewTab" name="export_link" class="cmk-link-card__export-icon" />

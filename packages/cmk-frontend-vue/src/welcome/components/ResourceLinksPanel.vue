@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
@@ -18,9 +18,9 @@ defineProps<{
 </script>
 
 <template>
-  <CmkHeading2>
+  <CmkHeading type="h2">
     {{ t('resources', 'Resources') }}
-  </CmkHeading2>
+  </CmkHeading>
   <CmkSpace />
   <CmkLinkCard
     :title="t('ask-ai', 'Ask Checkmk AI')"

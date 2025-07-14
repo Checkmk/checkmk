@@ -13,7 +13,7 @@ import StepThree from '@/welcome/components/steps/StepThree.vue'
 import StepFour from '@/welcome/components/steps/StepFour.vue'
 import StepFive from '@/welcome/components/steps/StepFive.vue'
 import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
-import CmkHeading2 from '@/components/typography/CmkHeading2.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import usei18n from '@/lib/i18n.ts'
 import CmkSpace from '@/components/CmkSpace.vue'
 
@@ -35,9 +35,9 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps, p
 </script>
 
 <template>
-  <CmkHeading2>
+  <CmkHeading type="h2">
     {{ t('first-steps', 'First steps with Checkmk') }}
-  </CmkHeading2>
+  </CmkHeading>
   <CmkSpace />
   <CmkAccordionStepPanel v-model="openedItems">
     <StepOne />

@@ -31,7 +31,8 @@ from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 #   +----------------------------------------------------------------------+
 
 
-mbg_lantime_ng_refclock_types = {
+# See mbgLtNgRefclockType in MIB
+REFCLOCK_TYPES = {
     "0": "unknown",
     "1": "gps166",
     "2": "gps167",
@@ -183,64 +184,63 @@ mbg_lantime_ng_refclock_types = {
     "148": "gxl183",
     "149": "m3t",
 }
+# See mbgLtNgRefclockUsage in MIB
+REFCLOCK_USAGES = {
+    "0": "not available",
+    "1": "secondary",
+    "2": "compare",
+    "3": "primary",
+}
+# See mbgLtNgRefclockState in MIB
+REFCLOCK_STATES = {
+    "0": (State.CRIT, "not available"),
+    "1": (State.OK, "synchronized"),
+    "2": (State.WARN, "not synchronized"),
+}
+# See mbgLtNgRefclockSubstate in MIB
+REFCLOCK_SUBSTATES = {
+    "-1": "MRS Ref None",
+    "0": "not available",
+    "1": "GPS sync",
+    "2": "GPS tracking",
+    "3": "GPS antenna disconnected",
+    "4": "GPS warm boot",
+    "5": "GPS cold boot",
+    "6": "GPS antenna short circuit",
+    "50": "LW never sync",
+    "51": "LW not sync",
+    "52": "LW sync",
+    "100": "TCR not sync",
+    "101": "TCT sync",
+    "149": "MRS internal oscillator sync",
+    "150": "MRS GPS sync",
+    "151": "MRS 10Mhz sync",
+    "152": "MRS PPS in sync",
+    "153": "MRS 10Mhz PPS in sync",
+    "154": "MRS IRIG sync",
+    "155": "MRS NTP sync",
+    "156": "MRS PTP IEEE 1588 sync",
+    "157": "MRS PTP over E1 sync",
+    "158": "MRS fixed frequency in sync",
+    "159": "MRS PPS string sync",
+    "160": "MRS variable frequency GPIO sync",
+    "161": "MRS reserved",
+    "162": "MRS DCF77 PZF sync",
+    "163": "MRS longwave sync",
+    "164": "MRS GLONASS GPS sync",
+    "165": "MRS HAVE QUICK sync",
+    "166": "MRS external oscillator sync",
+    "167": "MRS SyncE",
+    "168": "MRS video in sync",
+    "169": "MRS ltc sync",
+    "170": "MRS osc sync",
+}
 
 
 def mbg_lantime_ng_generalstate(clock_type: str, usage: str, state: str, substate: str) -> Result:
-    refclock_usages = {
-        "0": "not available",
-        "1": "secondary",
-        "2": "compare",
-        "3": "primary",
-    }
-
-    refclock_states = {
-        "0": (State.CRIT, "not available"),
-        "1": (State.OK, "synchronized"),
-        "2": (State.WARN, "not synchronized"),
-    }
-
-    # Translation for values of MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
-    refclock_substates = {
-        "-1": "MRS Ref None",
-        "0": "not available",
-        "1": "GPS sync",
-        "2": "GPS tracking",
-        "3": "GPS antenna disconnected",
-        "4": "GPS warm boot",
-        "5": "GPS cold boot",
-        "6": "GPS antenna short circuit",
-        "50": "LW never sync",
-        "51": "LW not sync",
-        "52": "LW sync",
-        "100": "TCR not sync",
-        "101": "TCT sync",
-        "149": "MRS internal oscillator sync",
-        "150": "MRS GPS sync",
-        "151": "MRS 10Mhz sync",
-        "152": "MRS PPS in sync",
-        "153": "MRS 10Mhz PPS in sync",
-        "154": "MRS IRIG sync",
-        "155": "MRS NTP sync",
-        "156": "MRS PTP IEEE 1588 sync",
-        "157": "MRS PTP over E1 sync",
-        "158": "MRS fixed frequency in sync",
-        "159": "MRS PPS string sync",
-        "160": "MRS variable frequency GPIO sync",
-        "161": "MRS reserved",
-        "162": "MRS DCF77 PZF sync",
-        "163": "MRS longwave sync",
-        "164": "MRS GLONASS GPS sync",
-        "165": "MRS HAVE QUICK sync",
-        "166": "MRS external oscillator sync",
-        "167": "MRS SyncE",
-        "168": "MRS video in sync",
-        "169": "MRS ltc sync",
-        "170": "MRS osc sync",
-    }
-
-    state_enum, state_txt = refclock_states[state]
-    detailed_state_txt = " (%s)" % refclock_substates[substate] if substate != "0" else ""
-    infotext = f"Type: {mbg_lantime_ng_refclock_types[clock_type]}, Usage: {refclock_usages[usage]}, State: {state_txt}{detailed_state_txt}"
+    state_enum, state_txt = REFCLOCK_STATES[state]
+    detailed_state_txt = " (%s)" % REFCLOCK_SUBSTATES[substate] if substate != "0" else ""
+    infotext = f"Type: {REFCLOCK_TYPES[clock_type]}, Usage: {REFCLOCK_USAGES[usage]}, State: {state_txt}{detailed_state_txt}"
 
     return Result(state=state_enum, summary=infotext)
 
@@ -258,7 +258,7 @@ def mbg_lantime_ng_generalstate(clock_type: str, usage: str, state: str, substat
 
 def discover_lantime_ng_refclock_gps(section: StringTable) -> DiscoveryResult:
     for line in section:
-        clock_type = mbg_lantime_ng_refclock_types.get(line[1])
+        clock_type = REFCLOCK_TYPES.get(line[1])
         if clock_type is None:
             continue
         if clock_type.startswith("gps"):
@@ -330,7 +330,7 @@ check_plugin_mbg_lantime_ng_refclock_gps = CheckPlugin(
 
 def discover_lantime_ng_refclock(section: StringTable) -> DiscoveryResult:
     for line in section:
-        clock_type = mbg_lantime_ng_refclock_types.get(line[1])
+        clock_type = REFCLOCK_TYPES.get(line[1])
         if clock_type is None:
             continue
         if not clock_type.startswith("gps"):

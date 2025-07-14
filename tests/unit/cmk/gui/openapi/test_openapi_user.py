@@ -168,7 +168,7 @@ def test_openapi_user_minimal_settings(
                 "is_new_user": True,
             }
         }
-        edit_users(user_object, default_sites)
+        edit_users(user_object, default_sites, use_git=False)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -332,7 +332,7 @@ def test_openapi_user_internal_with_notifications(
         }
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites)
+        edit_users(user_object, default_sites, use_git=False)
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -536,7 +536,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with SuperUserContext():
-            edit_users(user_object, default_sites)
+            edit_users(user_object, default_sites, use_git=False)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -572,6 +572,7 @@ def test_openapi_user_internal_auth_handling(
                     }
                 },
                 default_sites,
+                use_git=False,
             )
 
     assert _load_internal_attributes(name) == {
@@ -608,6 +609,7 @@ def test_openapi_user_internal_auth_handling(
                     }
                 },
                 default_sites,
+                use_git=False,
             )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -674,7 +676,7 @@ def test_managed_global_internal(
         }
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites)
+        edit_users(user_object, default_sites, use_git=False)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -759,7 +761,7 @@ def test_managed_idle_internal(
         }
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites)
+        edit_users(user_object, default_sites, use_git=False)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
@@ -1421,7 +1423,7 @@ def test_edit_ldap_user_with_locked_attributes(
         },
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites)
+        edit_users(user_object, default_sites, use_git=False)
 
     clients.User.edit(
         username=name,

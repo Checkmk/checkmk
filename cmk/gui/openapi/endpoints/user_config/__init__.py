@@ -11,6 +11,7 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc.user import UserId
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
@@ -149,6 +150,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
             }
         },
         user_features_registry.features().sites,
+        use_git=active_config.wato_use_git,
     )
     return serve_user(username)
 
@@ -164,7 +166,11 @@ def create_user(params: Mapping[str, Any]) -> Response:
 def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
-    delete_users([username], user_features_registry.features().sites)
+    delete_users(
+        [username],
+        user_features_registry.features().sites,
+        use_git=active_config.wato_use_git,
+    )
     return Response(status=204)
 
 
@@ -212,6 +218,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
             }
         },
         user_features_registry.features().sites,
+        use_git=active_config.wato_use_git,
     )
     return serve_user(username)
 

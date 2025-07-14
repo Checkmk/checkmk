@@ -66,7 +66,9 @@ def _update_affected_sites(
     return affected_sites | set(user_sites)
 
 
-def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesFn) -> None:
+def delete_users(
+    users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesFn, *, use_git: bool
+) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     if user.id in users_to_delete:
@@ -101,7 +103,7 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
                 action="edit-user",
                 message="Deleted user: %s" % user_id,
                 user_id=user.id,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
                 object_ref=make_user_object_ref(user_id),
             )
         add_change(
@@ -109,12 +111,12 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
             text=_l("Deleted user: %s") % ", ".join(deleted_users),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         userdb.save_users(all_users, datetime.now())
 
 
-def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None:
+def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn, *, use_git: bool) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
@@ -142,7 +144,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
                 "Created new user: %s" % user_id if is_new_user else "Modified user: %s" % user_id
             ),
             user_id=user.id,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
         )
@@ -167,7 +169,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
             text=_l("Created new users: %s") % ", ".join(new_users_info),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
     if modified_users_info:
         add_change(
@@ -175,7 +177,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
             text=_l("Modified users: %s") % ", ".join(modified_users_info),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         hooks.call("users-changed", modified_users_info)
 
@@ -183,7 +185,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
 
 
 def remove_custom_attribute_from_all_users(
-    custom_attribute_name: str, sites: _UserAssociatedSitesFn
+    custom_attribute_name: str, sites: _UserAssociatedSitesFn, *, use_git: bool
 ) -> None:
     edit_users(
         {
@@ -197,6 +199,7 @@ def remove_custom_attribute_from_all_users(
             for user_id, settings in userdb.load_users(lock=True).items()
         },
         sites,
+        use_git=use_git,
     )
 
 

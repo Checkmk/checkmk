@@ -145,7 +145,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
 def test_only_affected_sites_require_activation_when_adding_users(
     sites: list[SiteId], changed_users: UserObject, expected_changed_sites: list[SiteId]
 ) -> None:
-    edit_users(changed_users, default_sites)
+    edit_users(changed_users, default_sites, use_git=False)
     all_users = userdb.load_users()
     assert all(user_id in all_users for user_id in changed_users)
     assert expected_changed_sites == _changed_sites(sites)
@@ -164,6 +164,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
             }
         },
         default_sites,
+        use_git=False,
     )
     _reset_site_changes(ALL_SITES)
 
@@ -178,6 +179,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
             }
         },
         default_sites,
+        use_git=False,
     )
 
     # THEN both site1 and site2 should require activation
@@ -223,11 +225,12 @@ def test_only_affected_sites_require_activation_when_deleting_users(
             },
         },
         default_sites,
+        use_git=False,
     )
     _reset_site_changes(ALL_SITES)
 
     # WHEN
-    delete_users(users_to_delete, default_sites)
+    delete_users(users_to_delete, default_sites, use_git=False)
 
     # THEN
     all_users = userdb.load_users()

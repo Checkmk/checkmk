@@ -517,7 +517,9 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             if attr["name"] == delname:
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
-        remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
+        remove_custom_attribute_from_all_users(
+            delname, user_features_registry.features().sites, use_git=config.wato_use_git
+        )
         self._update_config(pprint_value=config.wato_pprint_config)
         _changes.add_change(
             action_name="edit-%sattrs" % self._type,

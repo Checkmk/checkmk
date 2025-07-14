@@ -288,7 +288,9 @@ class ModeUsers(WatoMode):
         if self._can_create_and_delete_users and (
             delete_user := request.get_validated_type_input(UserId, "_delete")
         ):
-            delete_users([delete_user], user_features_registry.features().sites)
+            delete_users(
+                [delete_user], user_features_registry.features().sites, use_git=config.wato_use_git
+            )
             return redirect(self.mode_url())
 
         if request.var("_sync"):
@@ -318,7 +320,7 @@ class ModeUsers(WatoMode):
             return redirect(self.mode_url())
 
         if self._can_create_and_delete_users and request.var("_bulk_delete_users"):
-            self._bulk_delete_users_after_confirm()
+            self._bulk_delete_users_after_confirm(use_git=config.wato_use_git)
             return redirect(self.mode_url())
 
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
@@ -330,7 +332,7 @@ class ModeUsers(WatoMode):
 
         return None
 
-    def _bulk_delete_users_after_confirm(self):
+    def _bulk_delete_users_after_confirm(self, *, use_git: bool) -> None:
         selected_users = []
         users = userdb.load_users()
         for varname, _value in request.itervars(prefix="_c_user_"):
@@ -342,7 +344,7 @@ class ModeUsers(WatoMode):
                     selected_users.append(user_id)
 
         if selected_users:
-            delete_users(selected_users, user_features_registry.features().sites)
+            delete_users(selected_users, user_features_registry.features().sites, use_git=use_git)
 
     def page(self, config: Config) -> None:
         if not self._job_snapshot.exists:
@@ -831,7 +833,9 @@ class ModeEditUser(WatoMode):
             }
         }
         # The following call validates and updated the users
-        edit_users(user_object, user_features_registry.features().sites)
+        edit_users(
+            user_object, user_features_registry.features().sites, use_git=config.wato_use_git
+        )
         return redirect(mode_url("users"))
 
     def _get_identity_userattrs(self, user_attrs: UserSpec) -> None:

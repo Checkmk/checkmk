@@ -85,6 +85,7 @@ def create_and_destroy_user(
         edit_users(
             _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs),
             user_features_registry.features().sites,
+            use_git=False,
         )
 
     # Load the config with the newly created user

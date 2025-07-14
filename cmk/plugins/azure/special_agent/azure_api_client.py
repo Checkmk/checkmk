@@ -5,7 +5,6 @@
 import asyncio
 import logging
 import re
-import time
 from collections.abc import Callable, Mapping
 from typing import Literal, NamedTuple
 
@@ -150,20 +149,6 @@ class BaseApiClient:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
-    def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
-        response = get_response()
-
-        for cool_off_interval in (5, 10):
-            if response.status_code != 429:
-                break
-
-            LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
-            time.sleep(cool_off_interval)
-            response = get_response()
-        self._update_ratelimit(response)
-
-        return response
-
     def request(
         self,
         method,
@@ -195,17 +180,15 @@ class BaseApiClient:
         return data
 
     def _request_json_from_url(self, method, url, *, body=None, params=None):
-        def get_response():
-            return requests.request(
-                method,
-                url,
-                json=body,
-                params=params,
-                headers=self._headers,
-                proxies=self._http_proxy_config.to_requests_proxies(),
-            )
+        response = requests.request(
+            method,
+            url,
+            json=body,
+            params=params,
+            headers=self._headers,
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
 
-        response = self._handle_ratelimit(get_response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
         return json_data

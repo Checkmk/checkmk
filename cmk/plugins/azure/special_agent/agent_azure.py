@@ -34,7 +34,6 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     ApiErrorAuthorizationRequestDenied,
     ApiErrorMissingData,
     ApiLoginFailed,
-    BaseApiClient,
     BaseAsyncApiClient,
     get_graph_authority_urls,
     get_mgmt_authority_urls,
@@ -1994,23 +1993,26 @@ async def main_subscription(
         write_exception_to_agent_info_section(exc, "Management client")
 
 
-def _get_subscriptions(args: Args) -> set[str]:
+async def _get_subscriptions(args: Args) -> set[str]:
     if args.subscriptions:
         return set(args.subscriptions)
 
     if args.all_subscriptions:
-        api_client = BaseApiClient(
+        async with BaseAsyncApiClient(
             get_mgmt_authority_urls(args.authority, ""),
             deserialize_http_proxy_config(args.proxy),
-        )
-        api_client.login(args.tenant, args.client, args.secret)
-        # TODO: should we keep the sync client only for this call?
-        response = api_client.request(
-            method="GET",
-            full_uri="https://management.azure.com/subscriptions",
-            params={"api-version": "2022-12-01"},
-        )
-        return {item["subscriptionId"] for item in response.get("value", [])}
+            args.tenant,
+            args.client,
+            args.secret,
+        ) as api_client:
+            # TODO: should we keep the sync client only for this call?
+            response = api_client.request(
+                method="GET",
+                full_uri="https://management.azure.com/subscriptions",
+                params={"api-version": "2022-12-01"},
+            )
+
+            return {item["subscriptionId"] for item in response.get("value", [])}
 
     return set()  # no subscriptions
 
@@ -2040,6 +2042,17 @@ async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) 
     )
 
 
+async def main_async(args: Args, selector: Selector) -> int:
+    subscriptions = await _get_subscriptions(args)
+    # TODO: fix connection test in case of no subscriptions
+    if args.connection_test:
+        return await test_connections(args, subscriptions)
+
+    await collect_info(args, selector, subscriptions)
+    LOGGER.debug("%s", selector)
+    return 0
+
+
 def main(argv=None):
     if argv is None:
         password_store.replace_passwords()
@@ -2051,15 +2064,7 @@ def main(argv=None):
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
 
-    subscriptions = _get_subscriptions(args)
-    # TODO:
-    # * fix connection test in case of no subscriptions
-    if args.connection_test:
-        return asyncio.run(test_connections(args, subscriptions))
-
-    asyncio.run(collect_info(args, selector, subscriptions))
-    LOGGER.debug("%s", selector)
-    return 0
+    return asyncio.run(main_async(args, selector))
 
 
 if __name__ == "__main__":

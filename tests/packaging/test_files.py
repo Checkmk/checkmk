@@ -286,6 +286,9 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     managed_files = []
     cloud_files = []
     saas_files = []
+    test_data = []
+    non_free_files = []
+    cmc_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -299,11 +302,23 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
             cloud_files.append(path)
         if path != "%s/saas/" % prefix and path.startswith("%s/saas/" % prefix):
             saas_files.append(path)
+        if path != "%s/tests/qa-test-data/" % prefix and path.startswith(
+            "%s/tests/qa-test-data/" % prefix
+        ):
+            test_data.append(path)
+        if path != "%s/non-free/" % prefix and path.startswith("%s/non-free/" % prefix):
+            non_free_files.append(path)
+        if path != "%s/packages/cmc/" % prefix and path.startswith("%s/packages/cmc/" % prefix):
+            cmc_files.append(path)
 
     assert not enterprise_files
     assert not managed_files
     assert not cloud_files
     assert not saas_files
+
+    assert not test_data
+    assert not non_free_files
+    assert not cmc_files
 
 
 def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) -> None:

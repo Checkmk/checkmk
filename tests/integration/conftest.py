@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.web_session import CMKWebSession
 
 from .event_console import CMKEventConsole
@@ -16,13 +16,19 @@ from .event_console import CMKEventConsole
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(name="site_factory", scope="session")
+def _get_site_factory() -> SiteFactory:
+    """Get a site factory with a prefix for test sites."""
+    return get_site_factory(prefix="int_")
+
+
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(name="site", scope="session")
-def get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
+def get_site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Iterator[Site]:
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from get_site_factory(prefix="int_").get_test_site(
+        yield from site_factory.get_test_site(
             name="test",
             auto_restart_httpd=True,
         )

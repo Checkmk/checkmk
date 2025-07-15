@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 from tests.testlib.web_session import CMKWebSession
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="site_for_mkbackup_tests", scope="module")
-def site(request: pytest.FixtureRequest) -> Generator[Site]:
+def site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Generator[Site]:
     """
     The tests in this module heavily modify the site they operate on. For example, they restore the
     site from a previously created backup without history, which results in a site without baked
@@ -35,7 +35,7 @@ def site(request: pytest.FixtureRequest) -> Generator[Site]:
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from get_site_factory(prefix="int_").get_test_site(
+        yield from site_factory.get_test_site(
             name="test_mkbup",
             save_results=False,
         )

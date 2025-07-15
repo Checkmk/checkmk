@@ -272,12 +272,16 @@ def main() {
 
         // this must not be called from within the container (results in yaml package missing)
         def exclude_pattern = versioning.get_internal_artifacts_pattern();
-        artifacts_helper.upload_version_dir(
-            deliverables_dir,
-            WEB_DEPLOY_DEST,
-            WEB_DEPLOY_PORT,
-            EXCLUDE_PATTERN=exclude_pattern,
-        );
+        files_to_upload.each { filename ->
+            artifacts_helper.upload_via_rsync(
+                "${WORKSPACE}/deliverables",
+                "${cmk_version_rc_aware}",
+                "${filename}",
+                WEB_DEPLOY_DEST,
+                WEB_DEPLOY_PORT,
+                exclude_pattern=exclude_pattern,
+            );
+        }
 
         if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
             // uploads distro packages, source.tar.gz and hashes

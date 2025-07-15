@@ -7,7 +7,7 @@
 import base64
 import time
 import traceback
-from collections.abc import Collection, Iterable, Iterator
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from typing import cast, Literal, overload
 
 from cmk.ccc.user import UserId
@@ -94,7 +94,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 
-from cmk.crypto.password import Password
+from cmk.crypto.password import Password, PasswordPolicy
 
 
 def register(_mode_registry: ModeRegistry) -> None:
@@ -375,7 +375,7 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
         with html.form_context("bulk_delete_form", method="POST"):
-            self._show_user_list(users)
+            self._show_user_list(users, user_online_maxage=config.user_online_maxage)
         self._show_user_list_footer(users)
 
     def _job_details_link(self):
@@ -403,7 +403,7 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self, users: dict[UserId, UserSpec]) -> None:
+    def _show_user_list(self, users: Mapping[UserId, UserSpec], *, user_online_maxage: int) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
         ]
@@ -415,7 +415,7 @@ class ModeUsers(WatoMode):
 
         customer = customer_api()
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
-            online_threshold = time.time() - active_config.user_online_maxage
+            online_threshold = time.time() - user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
@@ -801,7 +801,13 @@ class ModeEditUser(WatoMode):
         # to edit users *hust* CSE *hust*
         is_automation_user = self._user.get("is_automation_user", False)
         if is_automation_user or self._can_edit_users:
-            self._get_security_userattrs(user_attrs)
+            self._get_security_userattrs(
+                user_attrs,
+                PasswordPolicy(
+                    config.password_policy.get("min_length"),
+                    config.password_policy.get("num_groups"),
+                ),
+            )
 
         # Language configuration
         language = request.get_ascii_input_mandatory("language", "")
@@ -894,7 +900,9 @@ class ModeEditUser(WatoMode):
     def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
         user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
-    def _handle_auth_attributes(self, user_attrs: UserSpec) -> None:
+    def _handle_auth_attributes(
+        self, user_attrs: UserSpec, password_policy: PasswordPolicy
+    ) -> None:
         increase_serial = False
 
         if request.var("authmethod") == "secret":  # automation secret
@@ -953,7 +961,8 @@ class ModeEditUser(WatoMode):
             user_attrs["is_automation_user"] = False
 
             if password:
-                verify_password_policy(password, password_field_name)
+                verify_password_policy(password, password_field_name, password_policy)
+
                 if "password" in user_attrs:
                     send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 user_attrs["password"] = hash_password(password)
@@ -969,7 +978,9 @@ class ModeEditUser(WatoMode):
         if increase_serial:
             self._increment_auth_serial(user_attrs)
 
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
+    def _get_security_userattrs(
+        self, user_attrs: UserSpec, password_policy: PasswordPolicy
+    ) -> None:
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked") or False
         if (  # toggled for an existing user
@@ -982,7 +993,7 @@ class ModeEditUser(WatoMode):
                 user_attrs["num_failed_logins"] = 0
 
         # Authentication: Password or Secret
-        self._handle_auth_attributes(user_attrs)
+        self._handle_auth_attributes(user_attrs, password_policy)
 
         # Roles
         if edition(paths.omd_root) != Edition.CSE:

@@ -44,7 +44,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 
-from cmk.crypto.password import Password
+from cmk.crypto.password import Password, PasswordPolicy
 
 TIMESTAMP_RANGE = tuple[float, float]
 
@@ -141,7 +141,15 @@ def create_user(params: Mapping[str, Any]) -> Response:
     # The interface options must be set for a new user, but we restrict the setting through the API
     internal_attrs: UserSpec = {"force_authuser": False}
 
-    internal_attrs = _api_to_internal_format(internal_attrs, api_attrs, new_user=True)
+    internal_attrs = _api_to_internal_format(
+        internal_attrs,
+        api_attrs,
+        PasswordPolicy(
+            active_config.password_policy.get("min_length"),
+            active_config.password_policy.get("num_groups"),
+        ),
+        new_user=True,
+    )
     edit_users(
         {
             username: {
@@ -196,7 +204,14 @@ def edit_user(params: Mapping[str, Any]) -> Response:
 
     current_attrs = _load_user(username)
     constructors.require_etag(constructors.hash_of_dict(current_attrs))
-    internal_attrs = _api_to_internal_format(current_attrs, api_attrs)
+    internal_attrs = _api_to_internal_format(
+        current_attrs,
+        api_attrs,
+        PasswordPolicy(
+            active_config.password_policy.get("min_length"),
+            active_config.password_policy.get("num_groups"),
+        ),
+    )
 
     if connector_id := internal_attrs.get("connector"):
         user_locked_attributes = set(locked_attributes(connector_id))
@@ -266,7 +281,7 @@ def serialize_user(
     )
 
 
-def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
+def _api_to_internal_format(internal_attrs, api_configurations, password_policy, new_user=False):
     attrs = internal_attrs.copy()
     for attr, value in api_configurations.items():
         if attr in (
@@ -300,7 +315,9 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             api_configurations.get("contact_options"), attrs.get("email")
         )
     )
-    attrs = _update_auth_options(attrs, api_configurations["auth_option"], new_user=new_user)
+    attrs = _update_auth_options(
+        attrs, api_configurations["auth_option"], password_policy, new_user=new_user
+    )
     attrs = _update_notification_options(attrs, api_configurations.get("disable_notifications"))
     attrs = _update_idle_options(attrs, api_configurations.get("idle_timeout"))
 
@@ -504,6 +521,7 @@ class AuthOptions(TypedDict, total=False):
 def _update_auth_options(
     internal_attrs: dict[str, int | str | bool],
     auth_options: AuthOptions,
+    password_policy: PasswordPolicy,
     new_user: bool = False,
 ) -> dict[str, int | str | bool]:
     """Update the internal attributes with the authentication options (used for create and update)
@@ -525,7 +543,7 @@ def _update_auth_options(
         internal_attrs["is_automation_user"] = False
         internal_attrs["serial"] = 1
     else:
-        internal_auth_attrs = _auth_options_to_internal_format(auth_options)
+        internal_auth_attrs = _auth_options_to_internal_format(auth_options, password_policy)
         if new_user and "password" not in internal_auth_attrs:
             # "password" (the password hash) is set for both automation users and regular users,
             # although automation users don't really use it yet (but they should, eventually).
@@ -549,7 +567,7 @@ def _update_auth_options(
 
 
 def _auth_options_to_internal_format(
-    auth_details: AuthOptions,
+    auth_details: AuthOptions, password_policy: PasswordPolicy
 ) -> dict[str, int | str | bool]:
     """Convert authentication information received via REST API to the Checkmk internal format"""
     internal_options: dict[str, str | bool | int] = {}
@@ -575,7 +593,7 @@ def _auth_options_to_internal_format(
         internal_options["password"] = htpasswd.hash_password(password)
 
         if auth_type == "password":
-            verify_password_policy(password, "password")
+            verify_password_policy(password, "password", password_policy)
             internal_options["is_automation_user"] = False
 
         if auth_type == "automation":

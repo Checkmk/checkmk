@@ -34,7 +34,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 
-from cmk.crypto.password import Password
+from cmk.crypto.password import Password, PasswordPolicy
 
 from .page_menu import user_profile_page_menu
 from .verify_requirements import verify_requirements
@@ -77,7 +77,14 @@ class UserChangePasswordPage(Page):
         if password2 and password != password2:
             raise MKUserError("password2", _("New passwords don't match."))
 
-        verify_password_policy(password, "password")
+        verify_password_policy(
+            password,
+            "password",
+            PasswordPolicy(
+                config.password_policy.get("min_length"),
+                config.password_policy.get("num_groups"),
+            ),
+        )
         user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
         send_security_message(user.id, SecurityNotificationEvent.password_change)

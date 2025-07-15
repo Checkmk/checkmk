@@ -19,7 +19,6 @@ from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 
 from cmk.gui import hooks, site_config, userdb
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
@@ -347,15 +346,15 @@ def notification_script_choices() -> list[tuple[str, str]]:
     return choices
 
 
-def verify_password_policy(password: Password, varname: str) -> None:
-    min_len = active_config.password_policy.get("min_length")
-    num_groups = active_config.password_policy.get("num_groups")
-
-    result = password.verify_policy(PasswordPolicy(min_len, num_groups))
+def verify_password_policy(
+    password: Password, varname: str, password_policy: PasswordPolicy
+) -> None:
+    result = password.verify_policy(password_policy)
     if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
             varname,
-            _("The given password is too short. It must have at least %d characters.") % min_len,
+            _("The given password is too short. It must have at least %d characters.")
+            % password_policy.min_length,
         )
     if result == PasswordPolicy.Result.TooSimple:
         raise MKUserError(
@@ -364,7 +363,7 @@ def verify_password_policy(password: Password, varname: str) -> None:
                 "The password does not use enough character groups. You need to "
                 "set a password which uses at least %d of them."
             )
-            % num_groups,
+            % password_policy.min_groups,
         )
 
 

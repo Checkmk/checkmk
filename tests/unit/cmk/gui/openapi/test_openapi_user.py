@@ -45,6 +45,7 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import default_sites, edit_users
 
+from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 
 managedtest = pytest.mark.skipif(
@@ -562,6 +563,7 @@ def test_openapi_user_internal_auth_handling(
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
+            PasswordPolicy(12, None),
         )
         with SuperUserContext():
             edit_users(
@@ -598,7 +600,9 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
         updated_internal_attributes = _api_to_internal_format(
-            _load_user(name), {"auth_option": {"auth_type": "remove"}}
+            _load_user(name),
+            {"auth_option": {"auth_type": "remove"}},
+            PasswordPolicy(12, None),
         )
         with SuperUserContext():
             edit_users(

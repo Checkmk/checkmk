@@ -10,6 +10,7 @@ from cmk.gui.http import request
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 
+from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 
 
@@ -35,7 +36,7 @@ def test_password_user_choose_secret_wo_secret(request_context: None) -> None:
         is_automation_user=False,
         password=PasswordHash("$2y$12$foo"),
     )
-    mode._handle_auth_attributes(user_with_password_auth)
+    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None))
     assert user_with_password_auth == {
         "is_automation_user": False,
         "store_automation_secret": False,
@@ -52,7 +53,7 @@ def test_password_user_choose_secret_w_secret(request_context: None) -> None:
         password=PasswordHash("$2y$12$foo"),
         serial=42,
     )
-    mode._handle_auth_attributes(user_with_password_auth)
+    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None))
     assert user_with_password_auth == {
         "automation_secret": "secret",
         "is_automation_user": True,
@@ -74,7 +75,7 @@ def test_automation_user_choose_secret_wo_secret(request_context: None) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth)
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None))
     assert user_with_secret_auth == {
         "is_automation_user": True,
         "last_pw_change": 23,
@@ -95,7 +96,7 @@ def test_automation_user_choose_password_wo_pw(request_context: None) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth)
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None))
     assert user_with_secret_auth == {
         "is_automation_user": False,
         "last_pw_change": 23,
@@ -116,7 +117,7 @@ def test_automation_user_choose_password_w_pw(request_context: None) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth)
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None))
     assert user_with_secret_auth == {
         "is_automation_user": False,
         "last_pw_change": ANY,

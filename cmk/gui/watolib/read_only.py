@@ -14,7 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
 
-def message():
+def message() -> str:
     text = _("The configuration is currently in read only mode. ")
 
     if active_config.wato_read_only["enabled"] is True:
@@ -43,7 +43,7 @@ def is_enabled() -> bool:
     return False
 
 
-def may_override():
+def may_override() -> bool:
     return user.id in active_config.wato_read_only["rw_users"] or (
         request.var("mode") == "read_only" and user.may("wato.set_read_only")
     )

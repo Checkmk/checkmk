@@ -882,3 +882,9 @@ class RenderMode(Enum):
     BACKEND = "backend"
     FRONTEND = "frontend"
     BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
+class ReadOnlySpec(TypedDict):
+    enabled: bool | tuple[float, float]
+    message: str
+    rw_users: Sequence[UserId]

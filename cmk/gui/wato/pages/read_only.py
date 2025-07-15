@@ -6,7 +6,7 @@
 
 import time
 from collections.abc import Collection
-from typing import Any
+from typing import cast
 
 from cmk.ccc import store
 
@@ -17,7 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
@@ -57,15 +57,17 @@ class ModeManageReadOnly(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        settings = self._vs().from_html_vars("_read_only")
-        self._vs().validate_value(settings, "_read_only")
+        raw_settings = self._vs().from_html_vars("_read_only")
+        self._vs().validate_value(raw_settings, "_read_only")
+        # cast needed because valuespec does not return a proper type
+        settings = cast(ReadOnlySpec, raw_settings)
 
         self._save(settings, pprint_value=config.wato_pprint_config)
         config.wato_read_only = settings
         flash(_("Saved read only settings"))
         return redirect(mode_url("read_only"))
 
-    def _save(self, settings: dict[str, Any], *, pprint_value: bool) -> None:
+    def _save(self, settings: ReadOnlySpec, *, pprint_value: bool) -> None:
         store.save_to_mk_file(
             multisite_dir() / "read_only.mk",
             key="wato_read_only",
@@ -82,10 +84,10 @@ class ModeManageReadOnly(WatoMode):
             )
         )
         with html.form_context("read_only", method="POST"):
-            self._vs().render_input("_read_only", config.wato_read_only)
+            self._vs().render_input("_read_only", dict(config.wato_read_only))
             html.hidden_fields()
 
-    def _vs(self):
+    def _vs(self) -> Dictionary:
         return Dictionary(
             title=_("Read only mode"),
             optional_keys=False,

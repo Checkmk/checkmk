@@ -23,6 +23,7 @@ from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     GroupSpec,
     IconSpec,
+    ReadOnlySpec,
     TrustedCertificateAuthorities,
     UserSpec,
     VirtualHostTreeSpec,
@@ -574,7 +575,13 @@ class CREConfig:
     wato_hidden_users: list = field(default_factory=list)
     wato_user_attrs: Sequence[CustomUserAttrSpec] = field(default_factory=list)
     wato_host_attrs: Sequence[CustomHostAttrSpec] = field(default_factory=list)
-    wato_read_only: dict = field(default_factory=dict)
+    wato_read_only: ReadOnlySpec = field(
+        default_factory=lambda: ReadOnlySpec(
+            enabled=False,
+            message="",
+            rw_users=[],
+        )
+    )
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False
     wato_icon_categories: list[tuple[str, str]] = field(

@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
 from pathlib import Path
+from time import time as time_time
 from typing import Any, Literal, TypedDict
 
 from cmk.ccc.store import DimSerializer, ObjectStore
@@ -75,6 +76,27 @@ class Message(TypedDict):
     time: int
     security: bool
     acknowledged: bool
+
+
+def create_message(
+    *,
+    text: MessageText,
+    dest: MessageDestination,
+    methods: Sequence[MessageMethod],
+    valid_till: int | None = None,
+    time: int | None = None,
+    security: bool = False,
+) -> Message:
+    return Message(
+        text=text,
+        dest=dest,
+        methods=methods,
+        valid_till=valid_till,
+        id=utils.gen_id(),
+        time=int(time_time()) if time is None else time,
+        security=security,
+        acknowledged=False,
+    )
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -224,15 +246,11 @@ def page_message(config: Config) -> None:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
             _process_message(
-                Message(
+                create_message(
                     text=MessageText(content_type="text", content=msg["text"]),
                     dest=msg["dest"],
                     methods=msg["methods"],
                     valid_till=msg["valid_till"],
-                    id=utils.gen_id(),
-                    time=int(time.time()),
-                    security=False,
-                    acknowledged=False,
                 ),
                 multisite_user_ids=config.multisite_users.keys(),
             )

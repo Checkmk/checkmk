@@ -6,7 +6,6 @@
 import abc
 import datetime
 import json
-import time
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
@@ -32,12 +31,11 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
-from cmk.gui.message import get_gui_messages, Message, MessageText, send_message
+from cmk.gui.message import create_message, get_gui_messages, MessageText, send_message
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
-from cmk.gui.utils import gen_id
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.urls import makeuri_contextless
@@ -496,7 +494,6 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
         else {}
     )
 
-    now = int(time.time())
     for problem_to_send in _find_problems_to_send(
         Version.from_str(__version__).version_base,
         _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path),
@@ -509,18 +506,13 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
                         continue
 
                     send_message(
-                        Message(
+                        create_message(
                             dest=("list", [user.user_id]),
                             methods=["gui_hint"],
                             text=MessageText(
                                 content_type="html",
                                 content=problem_to_send.content,
                             ),
-                            valid_till=None,
-                            id=gen_id(),
-                            time=now,
-                            security=False,
-                            acknowledged=False,
                         ),
                         config.multisite_users.keys(),
                     )

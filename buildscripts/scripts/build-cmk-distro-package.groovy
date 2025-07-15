@@ -236,7 +236,9 @@ def main() {
     }
 
     stage("Parse cache hits") {
-        bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
+        container("minimal-ubuntu-checkmk-${safe_branch_name}") {
+            bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
+        }
     }
 
     stage("Archive stuff") {

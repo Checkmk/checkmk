@@ -24,8 +24,6 @@
 .testmondata
 .venv.lock
 /.venv/
-/container_shadow_workspace*/
-/shared_cargo_folder/
 *.cookie
 *.gcno
 *.gcov
@@ -45,7 +43,14 @@
 /*.wpu
 /announce*
 artefacts/
+agents/linux/*
+agents/windows/*
+bazel_execution_log*.json
+/bazel-*
+/bazel_log*
+bazel-memory.profile
 build/
+/buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 ChangeLog
 check_mk-*.tar.gz
 check-mk-*.build
@@ -55,14 +60,12 @@ check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
-agents/linux/*
-agents/windows/*
+/container_shadow_workspace*/
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png
 doc/documentation/*.cmapx
 docker-build.log
-version_txt_from_previous_run
 GPATH
 GRTAGS
 GTAGS
@@ -72,22 +75,19 @@ mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
 omd/pkgs_by_bzl/
-bazel_execution_log*.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
+remote.bazelrc
 requirements-no-dev.txt
+/shared_cargo_folder/
 tags
 tests/web/data/*
 tests/var/*
 tests/results/*
 tests/.hypothesis/
 /results
-/buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
-/bazel-*
-/bazel_log*
-bazel-memory.profile
 user.bazelrc
-remote.bazelrc
+version_txt_from_previous_run
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

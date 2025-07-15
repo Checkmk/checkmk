@@ -118,9 +118,9 @@ class UserProfile(Page):
 
         html.show_user_errors()
 
-        self._show_form()
+        self._show_form(config.default_language)
 
-    def _show_form(self) -> None:
+    def _show_form(self, default_language: str) -> None:
         assert user.id is not None
 
         users = userdb.load_users()
@@ -142,7 +142,7 @@ class UserProfile(Page):
             forms.section(_("Full name"), simple=True)
             html.write_text_permissive(user_spec.get("alias", ""))
 
-            select_language(user_spec)
+            select_language(user_spec, default_language)
 
             if user.may("general.edit_user_attributes"):
                 custom_user_attr_topics = get_user_attributes_by_topic()

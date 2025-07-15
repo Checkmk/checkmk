@@ -18,7 +18,7 @@ from cmk.utils import paths, render
 from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1006,9 +1006,9 @@ class ModeEditUser(WatoMode):
         load_notification_scripts()
 
         with html.form_context("user", method="POST"):
-            self._show_form()
+            self._show_form(config.default_language)
 
-    def _show_form(self) -> None:
+    def _show_form(self, default_language: str) -> None:
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
         is_automation_user = self._user.get("is_automation_user", False)
@@ -1120,7 +1120,7 @@ class ModeEditUser(WatoMode):
         self._show_custom_user_attributes(custom_user_attr_topics.get("notify", []))
 
         forms.header(_("Personal settings"), isopen=False)
-        select_language(self._user)
+        select_language(self._user, default_language)
         self._show_custom_user_attributes(custom_user_attr_topics.get("personal", []))
         forms.header(_("Interface settings"), isopen=False)
         self._show_custom_user_attributes(custom_user_attr_topics.get("interface", []))
@@ -1453,7 +1453,7 @@ class ModeEditUser(WatoMode):
             html.help(_u(vs_help) if isinstance(vs_help, str) else vs_help)
 
 
-def select_language(user_spec: UserSpec) -> None:
+def select_language(user_spec: UserSpec, default_language: str) -> None:
     languages: Choices = [(ident, alias) for (ident, alias) in get_languages()]
     if not languages:
         return
@@ -1463,7 +1463,7 @@ def select_language(user_spec: UserSpec) -> None:
         0,
         (
             "_default_",
-            _("Use the default language (%s)") % get_language_alias(active_config.default_language),
+            _("Use the default language (%s)") % get_language_alias(default_language),
         ),
     )
 

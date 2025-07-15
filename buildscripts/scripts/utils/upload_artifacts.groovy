@@ -66,21 +66,19 @@ def download_version_dir(DOWNLOAD_SOURCE,
 }
 /* groovylint-enable ParameterCount */
 
-def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="", ADDITONAL_ARGS="") {
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
     println("""
         ||== upload_version_dir ====================================================================
         || SOURCE_PATH      = |${SOURCE_PATH}|
         || UPLOAD_DEST      = |${UPLOAD_DEST}|
         || PORT             = |${PORT}|
         || EXCLUDE_PATTERN  = |${EXCLUDE_PATTERN}|
-        || ADDITONAL_ARGS   = |${ADDITONAL_ARGS}|
         ||==========================================================================================
         """.stripMargin());
 
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
         sh("""
             rsync -av \
-                ${ADDITONAL_ARGS} \
                 -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                 --exclude=${EXCLUDE_PATTERN} \
                 ${SOURCE_PATH} \

@@ -4,6 +4,7 @@
 # copy of repo root .gitignore
 .*.swo
 .*.swp
+.aspect
 .bugs/.last
 .bugs/.my_ids
 .cache
@@ -17,13 +18,15 @@
 .mypy_cache
 .mypy_cache/
 .python-*-stamp
+.pytest_cache
 .cargo
 .ropeproject
 .hypothesis
+.ruff_cache
 .syntastic
 .testmondata
 .venv.lock
-/.venv/
+.venv*
 *.cookie
 *.gcno
 *.gcov
@@ -61,6 +64,7 @@ clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
 /container_shadow_workspace*/
+download/
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png
@@ -74,8 +78,12 @@ logback.log
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
+omd/build/
+omd/debian/check-mk-*
 omd/pkgs_by_bzl/
 pip-mirror-tmp
+packages/**/node_modules
+packages/**/dist
 RemoteSystemsTempFiles
 remote.bazelrc
 requirements-no-dev.txt
@@ -85,6 +93,7 @@ tests/web/data/*
 tests/var/*
 tests/results/*
 tests/.hypothesis/
+tests/qa-test-data
 /results
 user.bazelrc
 version_txt_from_previous_run

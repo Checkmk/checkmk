@@ -347,7 +347,7 @@ def notification_script_choices() -> list[tuple[str, str]]:
     return choices
 
 
-def verify_password_policy(password: Password, varname: str = "password") -> None:
+def verify_password_policy(password: Password, varname: str) -> None:
     min_len = active_config.password_policy.get("min_length")
     num_groups = active_config.password_policy.get("num_groups")
 

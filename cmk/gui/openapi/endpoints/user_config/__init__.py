@@ -551,47 +551,7 @@ def _update_auth_options(
 def _auth_options_to_internal_format(
     auth_details: AuthOptions,
 ) -> dict[str, int | str | bool]:
-    """Format the authentication information to be Checkmk compatible
-
-    Args:
-        auth_details:
-            user provided authentication details
-
-    Returns:
-        formatted authentication details for Checkmk user_attrs
-
-    Examples:
-
-    Setting a new automation secret:
-
-        >>> _auth_options_to_internal_format(
-        ...     {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"}
-        ... )  # doctest:+ELLIPSIS
-        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'store_automation_secret': False, 'is_automation_user': True, 'last_pw_change': ...}
-
-    Enforcing password change without changing the password:
-
-        >>> _auth_options_to_internal_format(
-        ...     {"auth_type": "password", "enforce_password_change": True}
-        ... )
-        {'enforce_pw_change': True}
-
-    Empty password is not allowed and passwords result in MKUserErrors:
-
-        >>> _auth_options_to_internal_format(
-        ...     {"auth_type": "password", "enforce_password_change": True, "password": ""}
-        ... )
-        Traceback (most recent call last):
-        ...
-        cmk.gui.exceptions.MKUserError: Password must not be empty
-
-        >>> _auth_options_to_internal_format(
-        ...     {"auth_type": "password", "enforce_password_change": True, "password": "\\0"}
-        ... )
-        Traceback (most recent call last):
-        ...
-        cmk.gui.exceptions.MKUserError: Password must not contain null bytes
-    """
+    """Convert authentication information received via REST API to the Checkmk internal format"""
     internal_options: dict[str, str | bool | int] = {}
     if not auth_details:
         return internal_options
@@ -615,7 +575,7 @@ def _auth_options_to_internal_format(
         internal_options["password"] = htpasswd.hash_password(password)
 
         if auth_type == "password":
-            verify_password_policy(password)
+            verify_password_policy(password, "password")
             internal_options["is_automation_user"] = False
 
         if auth_type == "automation":

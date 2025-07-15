@@ -77,7 +77,7 @@ class UserChangePasswordPage(Page):
         if password2 and password != password2:
             raise MKUserError("password2", _("New passwords don't match."))
 
-        verify_password_policy(password)
+        verify_password_policy(password, "password")
         user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
         send_security_message(user.id, SecurityNotificationEvent.password_change)

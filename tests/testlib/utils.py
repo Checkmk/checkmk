@@ -8,7 +8,6 @@ handling file operations, and interacting with the system environment.
 
 import dataclasses
 import enum
-import glob
 import logging
 import os
 import re
@@ -587,17 +586,39 @@ def get_services_with_status(
     return services_list
 
 
-def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[str, list[str]]:
-    """Parse file(s) for a given pattern."""
-    pattern_obj = re.compile(pattern, re.IGNORECASE if ignore_case else 0)
-    logger.info("Parsing logs for '%s' in %s", pattern, pathname)
+def parse_files(
+    path_name: Path,
+    files_name_pattern: str,
+    content_pattern: str,
+    sudo: bool = False,
+    ignore_case: bool = True,
+) -> dict[str, list[str]]:
+    """Parse file(s) for a given pattern.
+
+    Args:
+        path_name:          The directory path where the files are located.
+        files_name_pattern: The glob pattern to match file names.
+        content_pattern:    The regex pattern to search for in the file contents.
+        sudo:               Whether to run the command with sudo privileges.
+        ignore_case:        Whether to ignore case when matching the content pattern.
+
+    Returns:
+        A dictionary where keys are file paths and values are lists of matching lines.
+    """
+    pattern_obj = re.compile(content_pattern, re.IGNORECASE if ignore_case else 0)
+    logger.info("Parsing logs for '%s' in %s", content_pattern, path_name)
     match_dict: dict[str, list[str]] = {}
-    for file_path in glob.glob(str(pathname), recursive=True):
-        with open(file_path, encoding="utf-8") as file:
-            for line in file:
-                if pattern_obj.search(line):
-                    logger.info("Match found in %s: %s", file_path, line.strip())
-                    match_dict[file_path] = match_dict.get(file_path, []) + [line]
+    files_paths = check_output(
+        ["bash", "-c", f"find {path_name} -name {files_name_pattern} -type f"],
+        sudo=sudo,
+        encoding="utf-8",
+    ).splitlines()
+    for file_path in files_paths:
+        file_content = read_file(file_path, sudo=sudo, encoding="utf-8").splitlines()
+        for line in file_content:
+            if pattern_obj.search(line):
+                logger.info("Match found in %s: %s", file_path, line.strip())
+                match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict
 
 

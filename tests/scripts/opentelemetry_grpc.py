@@ -27,10 +27,12 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-ENDPOINT = "localhost:4317"
+GRPC_PORT = 4317
+ENDPOINT = f"localhost:{GRPC_PORT}"
 SERVICE_NAME = "test-service-grpc"
 LOG_LEVEL = logging.INFO
 SLEEP_DURATION = 30
+GRPC_METRIC_NAME = "test_counter_grpc"
 
 RESOURCE = Resource.create(
     {
@@ -101,7 +103,7 @@ def main():
     signal.signal(signal.SIGTERM, success_shutdown_handler)
 
     otel_counter = meter.create_counter(
-        name="test_counter",
+        name=GRPC_METRIC_NAME,
         unit="1",
         description="A simple counter for testing",
     )

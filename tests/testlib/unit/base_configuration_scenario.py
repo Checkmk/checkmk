@@ -47,10 +47,7 @@ class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
     def _get_config_cache(self) -> ConfigCache:
-        # NOTE: just `return ConfigCache()` here will break some tests.
-        # It seems that we are subjected to some dark edition magic here
-        # that will make this sometimes return a CMEConfigCache instance
-        return config._create_config_cache(
+        return ConfigCache(
             replace(
                 EMPTYCONFIG,
                 # This only works as long as the attribute names of LoadedConfigFragment
@@ -218,23 +215,3 @@ class Scenario:
             )
 
         return self.config_cache
-
-
-class CEEScenario(Scenario):
-    """Helper class to modify the Check_MK base configuration for unit tests"""
-
-    def _get_config_cache(self) -> config.CEEConfigCache:
-        return config.CEEConfigCache(
-            replace(
-                EMPTYCONFIG,
-                # This only works as long as the attribute names of LoadedConfigFragment
-                # are the same as the variabele names in config.py
-                # But it's probably less confusing if we stick to that pattern anyway.
-                **{k: v for k, v in self.config.items() if k in asdict(EMPTYCONFIG)},
-            )
-        )
-
-    def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
-        cc = super().apply(monkeypatch)
-        assert isinstance(cc, config.CEEConfigCache)
-        return cc

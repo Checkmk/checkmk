@@ -753,7 +753,7 @@ def _perform_post_config_loading_actions(
         cmc_influxdb_service_metrics=cmc_influxdb_service_metrics,
     )
 
-    config_cache = _create_config_cache(loaded_config).initialize()
+    config_cache = ConfigCache(loaded_config).initialize()
     _globally_cache_config_cache(config_cache)
     return LoadingResult(
         loaded_config=loaded_config,
@@ -3746,15 +3746,6 @@ def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
     cache_manager.obtain_cache("config_cache")["cache"] = config_cache
 
 
-def _create_config_cache(loaded_config: LoadedConfigFragment) -> ConfigCache:
-    """create clean config cache"""
-    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-        return ConfigCache(loaded_config)
-    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-        return CMEConfigCache(loaded_config)
-    return CEEConfigCache(loaded_config)
-
-
 class ParserFactory:
     # TODO: better and clearer separation between ConfigCache and this class.
     def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
@@ -4014,11 +4005,3 @@ class FetcherFactory:
             ),
             omd_root=cmk.utils.paths.omd_root,
         )
-
-
-class CEEConfigCache(ConfigCache):
-    pass
-
-
-class CMEConfigCache(CEEConfigCache):
-    pass

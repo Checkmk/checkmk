@@ -120,11 +120,11 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     updated = False
     for index, message in enumerate(messages):
         now = time.time()
-        valid_till = message.get("valid_till")
-        valid_from = message.get("time")
+        valid_till = message["valid_till"]
+        valid_from = message["time"]
         if valid_till is not None:
             if (
-                message.get("security")
+                message["security"]
                 and active_config.user_security_notification_duration.get(
                     "update_existing_duration"
                 )
@@ -151,7 +151,7 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
 def delete_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
-        if msg["id"] == msg_id and not msg.get("security"):
+        if msg["id"] == msg_id and not msg["security"]:
             # If "Show popup message" and other options are combined,
             # we have only to remove the popup method to avoid the
             # popup appearing again
@@ -479,14 +479,13 @@ def _message_mail(user_id: UserId, msg: Message) -> bool:
     if not (user_email := user_spec.get("email")):
         raise MKInternalError(_("This user has no mail address configured."))
 
-    recipient_name = user_spec.get("alias")
-    if not recipient_name:
+    if not (recipient_name := user_spec.get("alias")):
         recipient_name = user_id
 
     if user.id is None:
         raise Exception("no user ID")
-    sender_name = users[user.id].get("alias")
-    if not sender_name:
+
+    if not (sender_name := users[user.id].get("alias")):
         sender_name = user_id
 
     body = _("""Greetings %s,\n\n%s sent you a message: \n\n---\n%s\n---""") % (
@@ -495,7 +494,7 @@ def _message_mail(user_id: UserId, msg: Message) -> bool:
         msg["text"],
     )
 
-    if valid_till := msg.get("valid_till"):
+    if valid_till := msg["valid_till"]:
         body += _("This message has been created at %s and is valid till %s.") % (
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["time"])),
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),

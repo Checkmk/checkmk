@@ -42,7 +42,7 @@ def _scss_variables(_scss_files: Iterable[Path]) -> tuple[set[str], set[str]]:
 
 
 def _get_regex_matches_in_scss_files(
-    regex_pattern: re.Pattern,
+    regex_pattern: re.Pattern[str],
     exclude_files: Iterable[str] | None = None,
 ) -> Iterable[tuple[str, Iterable[tuple[str, str]]]]:
     """Return a generator holding all matches of regex_pattern in scss_files (without exclude_files)
@@ -79,7 +79,7 @@ def test_unused_scss_variables() -> None:
 def test_rgb_color_codes() -> None:
     """No rgb color codes allowed outside of _variables*.scss files"""
     rgb_pattern = re.compile(r"rgb\([^\)]*\)")
-    exclude_files = ["_variables.scss", "_variables_common.scss"]
+    exclude_files = ["_variables.scss", "_variables_common.scss", "colors.scss"]
     matches = list(_get_regex_matches_in_scss_files(rgb_pattern, exclude_files))
     assert not matches, f"RGB color codes found outside of variable SCSS files: {matches}"
 
@@ -91,7 +91,7 @@ def test_hex_color_codes() -> None:
     assert not matches, f"Hex color codes found {matches}"
 
 
-def test(function: Callable) -> Literal["FAILED", "OK"]:
+def test(function: Callable[[], None]) -> Literal["FAILED", "OK"]:
     sys.stdout.write(function.__name__ + "\n")
     try:
         function()

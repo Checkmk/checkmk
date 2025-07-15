@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+@import url('./colors.css');
 
 :root {
   /* Colors */
@@ -103,13 +104,13 @@
 @layer theme {
   body[data-theme='facelift'] {
     /* Base colors */
-    --ux-theme-0: rgb(249, 249, 255);
-    --ux-theme-1: rgb(245, 245, 251);
-    --ux-theme-2: rgb(239, 239, 245);
-    --ux-theme-3: rgb(235, 235, 241);
-    --ux-theme-4: rgb(232, 232, 238);
-    --ux-theme-5: rgb(224, 224, 228);
-    --ux-theme-6: rgb(204, 207, 219);
+    --ux-theme-0: var(--color-daylight-grey-0);
+    --ux-theme-1: var(--color-daylight-grey-10);
+    --ux-theme-2: var(--color-daylight-grey-20);
+    --ux-theme-3: var(--color-daylight-grey-30);
+    --ux-theme-4: var(--color-daylight-grey-40);
+    --ux-theme-5: var(--color-daylight-grey-50);
+    --ux-theme-6: var(--color-daylight-grey-60);
 
     --color-warning: rgb(255, 208, 0);
     --color-danger: rgb(229, 63, 63);
@@ -159,13 +160,13 @@
 
   body[data-theme='modern-dark'] {
     /* Base colors */
-    --ux-theme-0: rgb(17, 24, 29);
-    --ux-theme-1: rgb(28, 34, 40);
-    --ux-theme-2: rgb(32, 39, 46);
-    --ux-theme-3: rgb(38, 47, 56);
-    --ux-theme-4: rgb(38, 45, 52);
-    --ux-theme-5: rgb(48, 57, 70);
-    --ux-theme-6: rgb(53, 63, 74);
+    --ux-theme-0: var(--color-midnight-grey-100);
+    --ux-theme-1: var(--color-midnight-grey-90);
+    --ux-theme-2: var(--color-midnight-grey-80);
+    --ux-theme-3: var(--color-midnight-grey-70);
+    --ux-theme-4: var(--color-midnight-grey-60);
+    --ux-theme-5: var(--color-midnight-grey-50);
+    --ux-theme-6: var(--color-midnight-grey-40);
 
     --color-warning: rgb(255, 215, 3);
     --color-danger: rgb(180, 45, 45);

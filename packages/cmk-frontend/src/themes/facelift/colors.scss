@@ -1,0 +1,258 @@
+/**
+ * Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+:root {
+  /* PRIMARY COLORS */
+  /* corporate green */
+  --color-corporate-green-0: rgb(182, 241, 226);
+  --color-corporate-green-10: rgb(182, 241, 226);
+  --color-corporate-green-20: rgb(147, 234, 211);
+  --color-corporate-green-30: rgb(98, 224, 191);
+  --color-corporate-green-40: rgb(68, 218, 179);
+  --color-corporate-green-50: rgb(21, 209, 160);
+  --color-corporate-green-60: rgb(19, 190, 147);
+  --color-corporate-green-70: rgb(15, 148, 114);
+  --color-corporate-green-80: rgb(12, 115, 88);
+  --color-corporate-green-90: rgb(9, 88, 67);
+  --color-corporate-green-100: rgb(7, 69, 53);
+
+  /* SECONDARY COLORS */
+  /* light blue */
+  --color-light-blue-0: rgb(234, 246, 254);
+  --color-light-blue-10: rgb(188, 226, 251);
+  --color-light-blue-20: rgb(156, 212, 249);
+  --color-light-blue-30: rgb(111, 193, 247);
+  --color-light-blue-40: rgb(83, 181, 245);
+  --color-light-blue-50: rgb(40, 162, 243);
+  --color-light-blue-60: rgb(36, 147, 221);
+  --color-light-blue-70: rgb(28, 115, 173);
+  --color-light-blue-80: rgb(22, 89, 134);
+  --color-light-blue-90: rgb(17, 68, 102);
+  --color-light-blue-100: rgb(13, 52, 79);
+
+  /* dark blue */
+  --color-dark-blue-0: rgb(230, 240, 249);
+  --color-dark-blue-10: rgb(178, 208, 236);
+  --color-dark-blue-20: rgb(140, 185, 226);
+  --color-dark-blue-30: rgb(88, 153, 213);
+  --color-dark-blue-40: rgb(56, 133, 205);
+  --color-dark-blue-50: rgb(6, 103, 193);
+  --color-dark-blue-60: rgb(5, 94, 176);
+  --color-dark-blue-70: rgb(4, 73, 137);
+  --color-dark-blue-80: rgb(3, 57, 106);
+  --color-dark-blue-90: rgb(3, 43, 81);
+  --color-dark-blue-100: rgb(2, 31, 59);
+
+  /* yellow */
+  --color-yellow-0: rgb(255, 251, 230);
+  --color-yellow-10: rgb(255, 243, 177);
+  --color-yellow-20: rgb(255, 237, 139);
+  --color-yellow-30: rgb(255, 228, 86);
+  --color-yellow-40: rgb(255, 223, 53);
+  --color-yellow-50: rgb(255, 215, 3);
+  --color-yellow-60: rgb(232, 182, 3);
+  --color-yellow-70: rgb(172, 124, 2);
+  --color-yellow-80: rgb(140, 101, 2);
+  --color-yellow-90: rgb(107, 77, 1);
+  --color-yellow-100: rgb(81, 58, 1);
+
+  /* light red */
+  --color-light-red-0: rgb(253, 235, 235);
+  --color-light-red-10: rgb(249, 194, 194);
+  --color-light-red-20: rgb(247, 165, 165);
+  --color-light-red-30: rgb(243, 124, 124);
+  --color-light-red-40: rgb(241, 98, 98);
+  --color-light-red-50: rgb(237, 59, 59);
+  --color-light-red-60: rgb(216, 54, 54);
+  --color-light-red-70: rgb(168, 42, 42);
+  --color-light-red-80: rgb(130, 32, 32);
+  --color-light-red-90: rgb(100, 25, 25);
+  --color-light-red-100: rgb(73, 18, 18);
+
+  /* dark red */
+  --color-dark-red-0: rgb(250, 235, 235);
+  --color-dark-red-10: rgb(238, 191, 191);
+  --color-dark-red-20: rgb(230, 161, 161);
+  --color-dark-red-30: rgb(218, 118, 118);
+  --color-dark-red-40: rgb(211, 91, 91);
+  --color-dark-red-50: rgb(196, 49, 49);
+  --color-dark-red-60: rgb(182, 46, 46);
+  --color-dark-red-70: rgb(142, 36, 36);
+  --color-dark-red-80: rgb(110, 28, 28);
+  --color-dark-red-90: rgb(84, 21, 21);
+  --color-dark-red-100: rgb(61, 15, 15);
+
+  /* orange */
+  --color-orange-0: rgb(255, 243, 230);
+  --color-orange-10: rgb(255, 217, 176);
+  --color-orange-20: rgb(255, 198, 138);
+  --color-orange-30: rgb(255, 173, 84);
+  --color-orange-40: rgb(255, 157, 51);
+  --color-orange-50: rgb(255, 132, 0);
+  --color-orange-60: rgb(232, 120, 0);
+  --color-orange-70: rgb(181, 94, 0);
+  --color-orange-80: rgb(140, 73, 0);
+  --color-orange-90: rgb(107, 55, 0);
+  --color-orange-100: rgb(77, 39, 0);
+
+  /* pink */
+  --color-pink-0: rgb(253, 47, 47) a;
+  --color-pink-10: rgb(251, 223, 244);
+  --color-pink-20: rgb(251, 208, 240);
+  --color-pink-30: rgb(249, 168, 226);
+  --color-pink-40: rgb(244, 114, 205);
+  --color-pink-50: rgb(236, 72, 182);
+  --color-pink-60: rgb(219, 39, 151);
+  --color-pink-70: rgb(190, 24, 122);
+  --color-pink-80: rgb(157, 23, 101);
+  --color-pink-90: rgb(131, 24, 86);
+  --color-pink-100: rgb(99, 18, 65);
+
+  /* mist grey */
+  --color-mist-grey-0: rgb(243, 243, 243);
+  --color-mist-grey-10: rgb(217, 217, 217);
+  --color-mist-grey-20: rgb(198, 198, 198);
+  --color-mist-grey-30: rgb(172, 172, 172);
+  --color-mist-grey-40: rgb(156, 156, 156);
+  --color-mist-grey-50: rgb(140, 140, 140);
+  --color-mist-grey-60: rgb(119, 119, 119);
+  --color-mist-grey-70: rgb(93, 93, 93);
+  --color-mist-grey-80: rgb(72, 72, 72);
+  --color-mist-grey-90: rgb(55, 55, 55);
+  --color-mist-grey-100: rgb(46, 46, 46);
+
+  /* purple */
+  --color-purple-0: rgb(243, 242, 255);
+  --color-purple-10: rgb(217, 216, 255);
+  --color-purple-20: rgb(198, 197, 255);
+  --color-purple-30: rgb(172, 170, 255);
+  --color-purple-40: rgb(156, 153, 255);
+  --color-purple-50: rgb(131, 128, 255);
+  --color-purple-60: rgb(105, 102, 229);
+  --color-purple-70: rgb(93, 91, 180);
+  --color-purple-80: rgb(72, 70, 140);
+  --color-purple-90: rgb(55, 54, 107);
+  --color-purple-100: rgb(44, 43, 85);
+
+  /* digital green */
+  --color-digital-green-0: rgb(240, 255, 250);
+  --color-digital-green-10: rgb(208, 255, 239);
+  --color-digital-green-20: rgb(217, 255, 232);
+  --color-digital-green-30: rgb(152, 255, 221);
+  --color-digital-green-40: rgb(133, 255, 232);
+  --color-digital-green-50: rgb(102, 255, 204);
+  --color-digital-green-60: rgb(93, 232, 186);
+  --color-digital-green-70: rgb(72, 181, 145);
+  --color-digital-green-80: rgb(61, 153, 121);
+  --color-digital-green-90: rgb(43, 107, 86);
+  --color-digital-green-100: rgb(32, 80, 64);
+
+  /* dark green */
+  --color-dark-green-0: rgb(232, 242, 241);
+  --color-dark-green-10: rgb(182, 215, 211);
+  --color-dark-green-20: rgb(147, 195, 189);
+  --color-dark-green-30: rgb(98, 168, 159);
+  --color-dark-green-40: rgb(67, 151, 141);
+  --color-dark-green-50: rgb(20, 125, 112);
+  --color-dark-green-60: rgb(18, 114, 102);
+  --color-dark-green-70: rgb(14, 89, 80);
+  --color-dark-green-80: rgb(11, 69, 62);
+  --color-dark-green-90: rgb(8, 53, 47);
+  --color-dark-green-100: rgb(7, 44, 39);
+
+  /* cyan */
+  --color-cyan-0: rgb(233, 253, 253);
+  --color-cyan-10: rgb(185, 247, 247);
+  --color-cyan-20: rgb(152, 244, 244);
+  --color-cyan-30: rgb(104, 238, 238);
+  --color-cyan-40: rgb(75, 235, 235);
+  --color-cyan-50: rgb(30, 230, 230);
+  --color-cyan-60: rgb(27, 209, 209);
+  --color-cyan-70: rgb(23, 181, 181);
+  --color-cyan-80: rgb(20, 158, 158);
+  --color-cyan-90: rgb(14, 113, 113);
+  --color-cyan-100: rgb(11, 91, 91);
+
+  /* brown */
+  --color-brown-0: rgb(249, 243, 237);
+  --color-brown-10: rgb(235, 217, 198);
+  --color-brown-20: rgb(226, 199, 171);
+  --color-brown-30: rgb(212, 173, 132);
+  --color-brown-40: rgb(204, 157, 109);
+  --color-brown-50: rgb(191, 133, 72);
+  --color-brown-60: rgb(174, 121, 66);
+  --color-brown-70: rgb(136, 94, 51);
+  --color-brown-80: rgb(105, 73, 40);
+  --color-brown-90: rgb(80, 56, 30);
+  --color-brown-100: rgb(59, 42, 22);
+
+  /* mid grey */
+  --color-mid-grey-0: rgb(237, 240, 242);
+  --color-mid-grey-10: rgb(208, 213, 217);
+  --color-mid-grey-20: rgb(185, 193, 198);
+  --color-mid-grey-30: rgb(153, 165, 172);
+  --color-mid-grey-40: rgb(133, 147, 156);
+  --color-mid-grey-50: rgb(126, 138, 149);
+  --color-mid-grey-60: rgb(103, 120, 131);
+  --color-mid-grey-70: rgb(97, 112, 124);
+  --color-mid-grey-80: rgb(85, 98, 109);
+  --color-mid-grey-90: rgb(72, 82, 92);
+  --color-mid-grey-100: rgb(44, 56, 67);
+
+  /* BACKGROUND COLORS */
+  /* midnight gray */
+  --color-midnight-grey-0: rgb(106, 124, 149);
+  --color-midnight-grey-10: rgb(94, 112, 136);
+  --color-midnight-grey-20: rgb(83, 98, 121);
+  --color-midnight-grey-30: rgb(72, 86, 106);
+  --color-midnight-grey-40: rgb(62, 74, 91);
+  --color-midnight-grey-50: rgb(48, 57, 70);
+  --color-midnight-grey-60: rgb(37, 44, 54);
+  --color-midnight-grey-70: rgb(38, 46, 54);
+  --color-midnight-grey-80: rgb(32, 39, 46);
+  --color-midnight-grey-90: rgb(28, 34, 40);
+  --color-midnight-grey-100: rgb(15, 18, 21);
+
+  /* daylight gray */
+  --color-daylight-grey-0: rgb(252, 252, 252);
+  --color-daylight-grey-10: rgb(250, 250, 250);
+  --color-daylight-grey-20: rgb(249, 249, 255);
+  --color-daylight-grey-30: rgb(240, 240, 244);
+  --color-daylight-grey-40: rgb(235, 235, 241);
+  --color-daylight-grey-50: rgb(224, 224, 228);
+  --color-daylight-grey-60: rgb(220, 220, 224);
+  --color-daylight-grey-70: rgb(201, 201, 207);
+  --color-daylight-grey-80: rgb(174, 174, 183);
+  --color-daylight-grey-90: rgb(147, 147, 159);
+  --color-daylight-grey-100: rgb(115, 115, 135);
+
+  /* TYPOGRAPHY COLORS */
+  /* white */
+  --color-white-0: rgba(255, 255, 255, 0.05);
+  --color-white-10: rgba(255, 255, 255, 0.1);
+  --color-white-20: rgba(255, 255, 255, 0.2);
+  --color-white-30: rgba(255, 255, 255, 0.3);
+  --color-white-40: rgba(255, 255, 255, 0.4);
+  --color-white-50: rgba(255, 255, 255, 0.5);
+  --color-white-60: rgba(255, 255, 255, 0.6);
+  --color-white-70: rgba(255, 255, 255, 0.7);
+  --color-white-80: rgba(255, 255, 255, 0.8);
+  --color-white-90: rgba(255, 255, 255, 0.9);
+  --color-white-100: rgba(255, 255, 255, 1);
+
+  /* confoerence grey */
+  --color-conference-grey-0: rgba(30, 38, 46, 0.5);
+  --color-conference-grey-10: rgba(30, 38, 46, 0.1);
+  --color-conference-grey-20: rgba(30, 38, 46, 0.2);
+  --color-conference-grey-30: rgba(30, 38, 46, 0.3);
+  --color-conference-grey-40: rgba(30, 38, 46, 0.4);
+  --color-conference-grey-50: rgba(30, 38, 46, 0.5);
+  --color-conference-grey-60: rgba(30, 38, 46, 0.6);
+  --color-conference-grey-70: rgba(30, 38, 46, 0.7);
+  --color-conference-grey-80: rgba(30, 38, 46, 0.8);
+  --color-conference-grey-90: rgba(30, 38, 46, 0.9);
+  --color-conference-grey-100: rgba(30, 38, 46, 1);
+}

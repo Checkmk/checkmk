@@ -30,19 +30,22 @@ from pysmi.writer.pyfile import PyFileWriter
 
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations
 
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.changes as _changes
-import cmk.mkp_tool
-import cmk.utils.log
-import cmk.utils.paths
-import cmk.utils.render
-import cmk.utils.translations
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
+
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.render
+import cmk.utils.translations
+from cmk.utils.rulesets.definition import RuleGroup
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, hooks, log, sites, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -185,12 +188,13 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
+
+import cmk.mkp_tool
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     String,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole, EVENT_CONSOLE

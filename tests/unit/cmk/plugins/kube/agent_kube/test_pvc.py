@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from polyfactory.factories.pydantic_factory import ModelFactory
 
+from tests.unit.cmk.plugins.kube.agent_kube import factory
+
 from cmk.plugins.kube.agent_handlers.persistent_volume_claim_handler import (
     create_pvc_sections,
     group_parsed_pvcs_by_namespace,
     group_serialized_volumes_by_namespace,
 )
 from cmk.plugins.kube.schemata import api, section
-
-from tests.unit.cmk.plugins.kube.agent_kube import factory
 
 
 class SectionPVCMetadataFactory(ModelFactory):

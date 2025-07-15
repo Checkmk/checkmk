@@ -8,6 +8,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
 from cmk.agent_based.v2 import (
     CheckResult,
     InventoryResult,
@@ -18,7 +20,6 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.oracle_recovery_area import (
     inventory_oracle_recovery_area,
 )

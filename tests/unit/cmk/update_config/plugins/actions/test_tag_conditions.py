@@ -8,16 +8,18 @@ from collections.abc import MutableMapping
 
 import pytest
 
+from cmk.utils.notify_types import EventRule
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroupID, TagID
+
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.tags import TagConfigFile
+
 from cmk.update_config.plugins.actions.tag_conditions import (
     transform_host_tags,
     UpdateNotificationTagConditions,
 )
-from cmk.utils.notify_types import EventRule
-from cmk.utils.rulesets.ruleset_matcher import TagCondition
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroupID, TagID
 
 
 @pytest.mark.parametrize(

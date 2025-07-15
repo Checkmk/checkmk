@@ -6,11 +6,11 @@
 
 import pytest
 
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
+
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config
 from cmk.gui.watolib.host_attributes import all_host_attributes
-
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
 
 expected_attributes = {
     "additional_ipv4addresses": {

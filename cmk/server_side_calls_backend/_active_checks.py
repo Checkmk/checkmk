@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
-from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+
 from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
+
+from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 
 from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
 from .config_processing import (

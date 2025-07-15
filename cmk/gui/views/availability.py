@@ -12,6 +12,11 @@ from collections.abc import Iterator
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils import paths
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
+
 from cmk.gui import availability, bi
 from cmk.gui.availability import (
     AVData,
@@ -73,9 +78,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view import View
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
-from cmk.utils import paths
-from cmk.utils.servicename import ServiceName
-from cmk.utils.statename import host_state_name, service_state_name
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)

@@ -8,11 +8,17 @@ from collections.abc import Iterator
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.paths
-from cmk.automations.results import GetAgentOutputResult
+from tests.testlib.common.repo import repo_path
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+import cmk.utils.paths
+from cmk.utils.agentdatatype import AgentRawData
+
+from cmk.automations.results import GetAgentOutputResult
+
 from cmk.gui.wato.pages.fetch_agent_output import (
     FetchAgentOutputRequest,
     get_fetch_agent_job_status,
@@ -21,9 +27,6 @@ from cmk.gui.wato.pages.fetch_agent_output import (
 )
 from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.utils.agentdatatype import AgentRawData
-
-from tests.testlib.common.repo import repo_path
 
 
 @pytest.fixture(name="icon_dir")

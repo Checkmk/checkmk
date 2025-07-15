@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, cast, Literal, NewType, NotRequired, override, TypedDict
 
 from cmk.ccc import store
+
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import DisableNotificationsAttribute

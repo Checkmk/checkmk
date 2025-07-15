@@ -10,8 +10,9 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
-from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk import trace
 
 # mypy: disable-error-code="no-any-return"
 

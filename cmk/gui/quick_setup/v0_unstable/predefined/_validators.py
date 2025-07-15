@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import (
@@ -37,6 +38,7 @@ from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords
+
 from cmk.rulesets.v1.form_specs import Dictionary, Password
 
 

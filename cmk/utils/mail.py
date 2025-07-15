@@ -20,6 +20,7 @@ from typing import Literal, NamedTuple, TypeVar
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.store import load_text_from_file
+
 from cmk.utils import paths
 
 

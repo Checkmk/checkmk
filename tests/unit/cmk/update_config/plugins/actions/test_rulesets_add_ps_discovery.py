@@ -11,6 +11,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, RuleOptions, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
 from cmk.gui.watolib.sample_config._constants import _PS_COMMON_OPTS
+
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     add_ps_discovery_rules,
     overwrite_ps_discovery_rules,

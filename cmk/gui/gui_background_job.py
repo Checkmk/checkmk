@@ -9,8 +9,10 @@ from dataclasses import dataclass
 from typing import Literal, override
 
 import cmk.ccc.plugin_registry
-import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
+
+import cmk.utils.render
+
 from cmk.gui import background_job as background_job
 from cmk.gui import log
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot

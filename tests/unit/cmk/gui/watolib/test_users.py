@@ -10,6 +10,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserObject, UserSpec

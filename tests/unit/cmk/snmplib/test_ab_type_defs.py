@@ -7,8 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1 import OIDEnd, SNMPTree
 from cmk.snmplib import SpecialColumn
+
+from cmk.agent_based.v1 import OIDEnd, SNMPTree
 
 
 def test_oid_end_repr() -> None:

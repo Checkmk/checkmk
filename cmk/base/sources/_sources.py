@@ -12,9 +12,11 @@ from pathlib import Path
 from typing import Final, Literal, Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
-from cmk.checkengine.parser import SectionNameCollection
-from cmk.checkengine.plugins import AgentBasedPlugins
+
+from cmk.utils.agentdatatype import AgentRawData
+
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData
+
 from cmk.fetchers import (
     IPMIFetcher,
     NoFetcher,
@@ -35,8 +37,10 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
-from cmk.snmplib import SNMPBackendEnum, SNMPRawData
-from cmk.utils.agentdatatype import AgentRawData
+
+from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
+from cmk.checkengine.parser import SectionNameCollection
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 from ._api import Source
 

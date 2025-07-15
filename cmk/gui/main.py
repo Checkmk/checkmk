@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.site import omd_site
+
+from cmk.utils.urls import is_allowed_url
+
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -13,7 +16,6 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
-from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:

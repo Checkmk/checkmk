@@ -13,8 +13,10 @@ from typing import Any, Final, Generic, NamedTuple, NewType, Self, TypeVar
 
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
-from cmk.piggyback.backend import store_piggyback_raw_data
+
 from cmk.utils.sectionname import SectionMap, SectionName
+
+from cmk.piggyback.backend import store_piggyback_raw_data
 
 from .fetcher import HostKey, SourceType
 from .parser import HostSections

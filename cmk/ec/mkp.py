@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import cmk.utils.paths
+
 from cmk.mkp_tool import PackageOperationCallbacks, PackagePart
 
 from .config import MkpRulePackProxy

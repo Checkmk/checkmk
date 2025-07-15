@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import override
 
 import cmk.utils.paths
+from cmk.utils.prediction import PredictionData, PredictionStore
+
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.prediction import PredictionData, PredictionStore
 
 
 class RemoveUnreadablePredictions(UpdateAction):

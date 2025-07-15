@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.i18n import _, _l
 
 syslog_priorities: Sequence[tuple[int, str]] = list(ec.SyslogPriority.NAMES.items())

@@ -136,10 +136,12 @@ from cmk.ccc.version import (
     versions_compatible,
     VersionsIncompatible,
 )
-from cmk.crypto.password import Password
-from cmk.crypto.password_hashing import hash_password
+
 from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
+
+from cmk.crypto.password import Password
+from cmk.crypto.password_hashing import hash_password
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]

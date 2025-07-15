@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, State
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import Metric, Result, State
 
 
 def test_make_sure_bluecat_threads_can_handle_new_params_format(

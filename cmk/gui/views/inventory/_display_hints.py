@@ -9,6 +9,8 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal, TypeAlias
 
+from cmk.utils.structured_data import SDKey, SDPath
+
 from cmk.gui import inventory
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
@@ -24,7 +26,6 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
-from cmk.utils.structured_data import SDKey, SDPath
 
 from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunction, SortFunction
 

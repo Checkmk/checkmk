@@ -10,6 +10,7 @@ from pathlib import Path
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.structured_data import (
     deserialize_tree,
     HistoryStore,

@@ -11,15 +11,16 @@ import cmk.ccc.debug
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 
+from cmk.utils import paths
+from cmk.utils.log import VERBOSE
+from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
+
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
 # the moment we need to deal with it.
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.utils import paths
-from cmk.utils.log import VERBOSE
-from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
 
 from .logger import logger, setup_logging
 from .registry import rename_action_registry

@@ -2,8 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from tests.plugins_integration.checks import setup_host
 from tests.testlib.site import Site
+
+from tests.plugins_integration.checks import setup_host
 
 
 def test_management_board_services_receive_data(test_site: Site) -> None:

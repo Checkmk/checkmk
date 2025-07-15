@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Literal
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
@@ -17,7 +19,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato import RulespecGroupIntegrateOtherServices
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 # TODO: un-nest the parameters. No need for a dict in a tuple in a dict.

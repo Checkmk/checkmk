@@ -7,10 +7,11 @@ from collections.abc import Iterable
 
 import pytest
 
+from cmk.utils.password_store import Password
+
 import cmk.gui.watolib.password_store
 from cmk.gui import userdb
 from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
-from cmk.utils.password_store import Password
 
 
 @pytest.fixture

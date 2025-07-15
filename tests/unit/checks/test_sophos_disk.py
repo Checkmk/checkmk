@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-
 from tests.unit.checks.test_nimble_latency import Result
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 from .checktestlib import Check
 

@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

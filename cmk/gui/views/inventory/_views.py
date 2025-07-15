@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.user import UserId
+
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     ColumnSpec,

@@ -6,9 +6,11 @@
 
 import pprint
 
+from cmk.ccc.hostaddress import HostAddress
+
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.ccc.hostaddress import HostAddress
+
 from cmk.piggyback import backend
 
 _TEST_HOST_NAME = HostAddress("test-host")

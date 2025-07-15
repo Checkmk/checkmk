@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.utils import param_description
 from cmk.gui.watolib.activate_changes import activate_changes_start
+
+from cmk import fields
 
 
 class ActivateChanges(BaseSchema):

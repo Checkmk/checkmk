@@ -11,7 +11,12 @@ from typing import Any, Literal
 from livestatus import BrokerConnections, SiteConfigurations
 
 from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
+from cmk.utils.tags import TagConfigSpec
+
 from cmk.checkengine.discovery import DiscoverySettingFlags
+
 from cmk.gui.type_defs import (
     BuiltinIconVisibility,
     CustomHostAttrSpec,
@@ -23,8 +28,6 @@ from cmk.gui.type_defs import (
     VirtualHostTreeSpec,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.utils import paths
-from cmk.utils.tags import TagConfigSpec
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 

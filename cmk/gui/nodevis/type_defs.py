@@ -9,6 +9,7 @@ from enum import Enum
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.utils import topology_data_dir
 

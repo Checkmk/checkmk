@@ -12,11 +12,12 @@ from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 

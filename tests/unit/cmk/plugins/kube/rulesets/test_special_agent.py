@@ -5,6 +5,7 @@
 
 
 from cmk.ccc.version import Edition
+
 from cmk.plugins.kube.rulesets.special_agent import _migrate_and_transform
 
 

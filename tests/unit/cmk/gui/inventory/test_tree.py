@@ -10,9 +10,19 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.ccc.store
-import cmk.gui.inventory
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.structured_data import (
+    deserialize_tree,
+    HistoryStore,
+    ImmutableTree,
+    SDFilterChoice,
+    SDKey,
+    SDNodeName,
+)
+
+import cmk.gui.inventory
 from cmk.gui.inventory._tree import (
     _make_filter_choices_from_permitted_paths,
     get_history,
@@ -25,14 +35,6 @@ from cmk.gui.inventory._tree import (
     TreeSource,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
-from cmk.utils.structured_data import (
-    deserialize_tree,
-    HistoryStore,
-    ImmutableTree,
-    SDFilterChoice,
-    SDKey,
-    SDNodeName,
-)
 
 
 @pytest.mark.parametrize(

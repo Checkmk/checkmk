@@ -21,9 +21,12 @@ from typing import Any, assert_never, Literal, Self, TypedDict
 
 from livestatus import LocalConnection, SiteConfigurations
 
-import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
+
+from cmk.utils.statename import short_service_state_name
+
+import cmk.gui.sites
 from cmk.gui import log
 from cmk.gui.config import active_config
 from cmk.gui.http import Request, request
@@ -40,7 +43,6 @@ from cmk.gui.watolib.automations import (
     RemoteAutomationConfig,
 )
 from cmk.gui.watolib.sites import get_effective_global_setting
-from cmk.utils.statename import short_service_state_name
 
 
 class ACResultState(enum.IntEnum):

@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from datetime import timedelta
 
 from cmk.ccc import version
+
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry

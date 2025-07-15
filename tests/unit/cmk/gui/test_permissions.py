@@ -7,10 +7,10 @@ from collections.abc import Iterator, Sequence
 
 import pytest
 
+from tests.testlib.unit.utils import reset_registries
+
 from cmk.gui import permissions
 from cmk.gui.permissions import permission_registry, permission_section_registry
-
-from tests.testlib.unit.utils import reset_registries
 
 
 @pytest.fixture(name="reset_permission_registries")

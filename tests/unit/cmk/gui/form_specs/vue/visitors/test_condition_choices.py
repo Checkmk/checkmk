@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from cmk.gui.form_specs.private import ConditionChoices, not_empty
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+
 from cmk.rulesets.v1 import Label
 from cmk.shared_typing.vue_formspec_components import (
     Condition,

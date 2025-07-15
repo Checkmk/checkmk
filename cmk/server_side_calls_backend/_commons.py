@@ -7,9 +7,10 @@ import shlex
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 
+from cmk.utils import config_warnings, password_store
+
 from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.server_side_calls.v1 import Secret
-from cmk.utils import config_warnings, password_store
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 

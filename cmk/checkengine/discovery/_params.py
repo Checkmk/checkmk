@@ -12,9 +12,11 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.parameters import Parameters
+
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
+
+from cmk.checkengine.parameters import Parameters
 
 from ._filters import RediscoveryParameters
 

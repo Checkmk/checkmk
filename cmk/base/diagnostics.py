@@ -29,12 +29,12 @@ import requests
 import livestatus
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
-from cmk.base.config import LoadedConfigFragment
 from cmk.ccc import site, store, tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
+
+import cmk.utils.paths
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
@@ -68,6 +68,8 @@ from cmk.utils.structured_data import (
     SDRawTree,
     serialize_tree,
 )
+
+from cmk.base.config import LoadedConfigFragment
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,

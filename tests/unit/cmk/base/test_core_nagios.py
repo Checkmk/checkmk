@@ -17,8 +17,21 @@ from typing import Any, Literal
 import pytest
 from pytest import MonkeyPatch
 
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostAddress, HostName
+
+from cmk.utils import ip_lookup, paths
+from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
+from cmk.utils.servicename import ServiceName
+
+from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
+
 from cmk.base import config
 from cmk.base.core_nagios._create_config import (
     _format_nagios_object,
@@ -32,18 +45,10 @@ from cmk.base.core_nagios._precompile_host_checks import (
     HostCheckStore,
     PrecompileMode,
 )
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
+
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 from cmk.server_side_calls_backend import load_active_checks
-from cmk.utils import ip_lookup, paths
-from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
-from cmk.utils.servicename import ServiceName
-
-from tests.testlib.unit.base_configuration_scenario import Scenario
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 
 def ip_address_of_never_called(

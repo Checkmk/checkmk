@@ -6,6 +6,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, NamedTuple, NewType
 
+from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
+
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawFrontendData
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity._folder import (
@@ -20,10 +22,10 @@ from cmk.gui.watolib.notification_parameter import (
     save_notification_parameter,
 )
 from cmk.gui.watolib.users import notification_script_title
+
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
 EntityId = NewType("EntityId", str)
 

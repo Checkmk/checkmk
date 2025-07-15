@@ -9,9 +9,10 @@ import abc
 from collections.abc import Sized
 from typing import Generic, TypeVar
 
-from cmk.checkengine.fetcher import SourceInfo
 from cmk.fetchers import Fetcher
 from cmk.fetchers.filecache import FileCache, FileCacheOptions
+
+from cmk.checkengine.fetcher import SourceInfo
 
 _TRawData = TypeVar("_TRawData", bound=Sized)
 

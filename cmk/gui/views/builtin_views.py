@@ -10,6 +10,9 @@ from typing import Any
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+
 from cmk.gui.config import Config
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
@@ -22,7 +25,6 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
-from cmk.utils import paths
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 

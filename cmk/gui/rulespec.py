@@ -6,12 +6,14 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.debug import enabled as debug_enabled
+
 from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.utils.rule_specs.registering import register_plugin
 from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecRegistry
+
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 

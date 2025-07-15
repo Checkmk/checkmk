@@ -7,15 +7,7 @@ from logging import Logger
 from typing import Any, cast, override
 
 from cmk.ccc import tty
-from cmk.gui.config import active_config
-from cmk.gui.form_specs.vue import get_visitor, process_validation_messages, RawDiskData
-from cmk.gui.watolib import sample_config
-from cmk.gui.watolib.notification_parameter import notification_parameter_registry
-from cmk.gui.watolib.notifications import (
-    NotificationParameterConfigFile,
-    NotificationRuleConfigFile,
-)
-from cmk.update_config.registry import update_action_registry, UpdateAction
+
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterGeneralInfos,
@@ -25,6 +17,17 @@ from cmk.utils.notify_types import (
     NotificationParameterSpecs,
 )
 from cmk.utils.paths import check_mk_config_dir, omd_root
+
+from cmk.gui.config import active_config
+from cmk.gui.form_specs.vue import get_visitor, process_validation_messages, RawDiskData
+from cmk.gui.watolib import sample_config
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
+from cmk.gui.watolib.notifications import (
+    NotificationParameterConfigFile,
+    NotificationRuleConfigFile,
+)
+
+from cmk.update_config.registry import update_action_registry, UpdateAction
 
 # We're dealing with both the legacy and migrated representation of the "notify_plugin" parameter
 # field. So, we need a type to account for both regresentations.

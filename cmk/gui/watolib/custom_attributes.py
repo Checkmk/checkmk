@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import TypedDict
 
 from cmk.ccc import store
+
 from cmk.gui import userdb
 from cmk.gui.config import load_config
 from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec

@@ -13,6 +13,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.paths
+
 from cmk.update_config import main, registry
 
 

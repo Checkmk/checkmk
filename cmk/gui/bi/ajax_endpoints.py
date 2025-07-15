@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bi.computer import BIAggregationFilter
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+
+from cmk.bi.computer import BIAggregationFilter
 
 from .bi_manager import BIManager
 from .foldable_tree_renderer import (

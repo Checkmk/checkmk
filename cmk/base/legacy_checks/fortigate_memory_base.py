@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_legacy_includes.mem import check_memory_element
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 from cmk.plugins.lib.memory import get_levels_mode_from_value
 

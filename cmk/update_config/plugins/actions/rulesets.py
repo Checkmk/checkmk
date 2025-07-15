@@ -11,6 +11,7 @@ from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
+
 from cmk.update_config.lib import format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry, UpdateAction

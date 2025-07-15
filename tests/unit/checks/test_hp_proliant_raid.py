@@ -6,14 +6,16 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.utils.sectionname import SectionName
+
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     CheckPluginName,
     SNMPSectionPlugin,
 )
-from cmk.utils.sectionname import SectionName
+
+from cmk.agent_based.v2 import Result, Service, State
 
 
 @pytest.fixture(name="check_plugin")

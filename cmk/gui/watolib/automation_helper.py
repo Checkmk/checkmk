@@ -15,9 +15,11 @@ from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 
-from cmk.automations.helper_api import AutomationPayload, AutomationResponse
-from cmk.gui.exceptions import MKInternalError
 from cmk.utils import paths
+
+from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+
+from cmk.gui.exceptions import MKInternalError
 
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 

@@ -9,8 +9,10 @@ from typing import assert_never, Literal, TypeAlias
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
+
 from cmk.utils.sectionname import SectionName
+
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
 
 from ._utils import strip_snmp_value
 

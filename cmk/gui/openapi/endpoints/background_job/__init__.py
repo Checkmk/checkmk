@@ -14,8 +14,8 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields as gui_fields
 from cmk.ccc.site import omd_site, SiteId
+
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
@@ -25,6 +25,8 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+
+from cmk import fields as gui_fields
 
 
 class JobID:

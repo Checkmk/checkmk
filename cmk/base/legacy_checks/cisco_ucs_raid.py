@@ -7,9 +7,10 @@
 
 from typing import NamedTuple
 
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
 check_info = {}
 

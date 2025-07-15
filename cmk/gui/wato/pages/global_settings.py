@@ -14,8 +14,9 @@ from typing import Any, Final
 
 from livestatus import SiteConfigurations
 
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.exceptions import MKGeneralException
+
+import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config

@@ -15,11 +15,12 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Literal
 
-import cmk.utils.paths
 from cmk.ccc.user import UserId
-from cmk.crypto import password_hashing
-from cmk.crypto.password import Password
-from cmk.crypto.secrets import Secret
+
+import cmk.utils.paths
+from cmk.utils.local_secrets import SiteInternalSecret
+from cmk.utils.log.security_event import log_security_event
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -33,8 +34,10 @@ from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.gui.utils.urls import requested_file_name
-from cmk.utils.local_secrets import SiteInternalSecret
-from cmk.utils.log.security_event import log_security_event
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
+from cmk.crypto.secrets import Secret
 
 auth_logger = logger.getChild("auth")
 

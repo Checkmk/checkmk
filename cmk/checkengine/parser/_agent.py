@@ -13,6 +13,7 @@ from typing import Final, final, NamedTuple
 
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions

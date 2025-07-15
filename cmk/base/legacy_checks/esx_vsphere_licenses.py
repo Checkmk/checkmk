@@ -6,8 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

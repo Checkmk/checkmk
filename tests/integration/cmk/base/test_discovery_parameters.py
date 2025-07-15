@@ -7,11 +7,12 @@ import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
-
 from tests.integration.linux_test_host import create_linux_test_host
+
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
+
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:

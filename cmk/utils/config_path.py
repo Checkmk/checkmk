@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Final, Self
 
 from cmk.ccc.store import DimSerializer, ObjectStore
+
 from cmk.utils.paths import omd_root
 
 __all__ = ["VersionedConfigPath"]

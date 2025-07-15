@@ -10,8 +10,9 @@ import os
 import subprocess
 from collections.abc import Sequence
 
-from cmk import trace
 from cmk.utils.log import VERBOSE
+
+from cmk import trace
 
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 

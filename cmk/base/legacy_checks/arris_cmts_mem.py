@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_legacy_includes.mem import check_memory_element
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
-from cmk.base.check_legacy_includes.mem import check_memory_element
 
 check_info = {}
 

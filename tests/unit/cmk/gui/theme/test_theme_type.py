@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.theme._theme_type import Theme
 
 

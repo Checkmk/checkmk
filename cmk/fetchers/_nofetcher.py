@@ -9,6 +9,7 @@ import enum
 from typing import Final, NoReturn
 
 from cmk.ccc.exceptions import MKFetcherError
+
 from cmk.utils.agentdatatype import AgentRawData
 
 from ._abstract import Fetcher, Mode

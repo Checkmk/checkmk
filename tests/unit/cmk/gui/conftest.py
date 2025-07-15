@@ -19,30 +19,12 @@ from flask import Flask
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
-import cmk.gui.config as config_module
-import cmk.gui.mkeventd.wato as mkeventd
-import cmk.gui.watolib.password_store
-import cmk.utils.log
-from cmk.automations.results import DeleteHostsResult
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.user import UserId
-from cmk.gui import http, login, userdb
-from cmk.gui.config import active_config
-from cmk.gui.livestatus_utils.testing import mock_livestatus
-from cmk.gui.session import session
-from cmk.gui.type_defs import SessionInfo
-from cmk.gui.userdb.session import load_session_infos
-from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.watolib import activate_changes, groups
-from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.wsgi.blueprints import checkmk, rest_api
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
     get_client_registry,
     RestApiClient,
 )
+
 from tests.unit.cmk.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
@@ -58,6 +40,28 @@ from tests.unit.cmk.web_test_app import (
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
+
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.user import UserId
+
+import cmk.utils.log
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from cmk.automations.results import DeleteHostsResult
+
+import cmk.gui.config as config_module
+import cmk.gui.mkeventd.wato as mkeventd
+import cmk.gui.watolib.password_store
+from cmk.gui import http, login, userdb
+from cmk.gui.config import active_config
+from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.session import session
+from cmk.gui.type_defs import SessionInfo
+from cmk.gui.userdb.session import load_session_infos
+from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.watolib import activate_changes, groups
+from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from .users import create_and_destroy_user
 

@@ -8,9 +8,10 @@
 
 import time
 
+from cmk.base.check_legacy_includes.f5_bigip import get_conn_rate_params
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
-from cmk.base.check_legacy_includes.f5_bigip import get_conn_rate_params
 from cmk.plugins.lib.f5_bigip import F5_BIGIP
 
 check_info = {}

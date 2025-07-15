@@ -15,6 +15,7 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store

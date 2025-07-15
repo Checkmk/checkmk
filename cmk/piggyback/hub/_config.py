@@ -12,6 +12,7 @@ from typing import Annotated
 from pydantic import BaseModel, PlainValidator
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.messaging import Connection, QueueName, RoutingKey
 
 from ._paths import RELATIVE_CONFIG_PATH

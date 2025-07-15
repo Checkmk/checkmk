@@ -6,16 +6,19 @@ from wsgiref.types import WSGIEnvironment
 
 from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTelemetryMiddleware
 
-from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 from cmk.ccc.version import edition
+
+from cmk.utils import paths
+
 from cmk.gui.wsgi.applications.profile_switcher import (
     LazyImportProfilingMiddleware,
     ProfileConfigLoader,
     ProfileSetting,
 )
+
+from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
-from cmk.utils import paths
 
 DEBUG = False
 

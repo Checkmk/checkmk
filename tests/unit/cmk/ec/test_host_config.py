@@ -8,9 +8,11 @@ import logging
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.host_config import HostConfig
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="host_config")

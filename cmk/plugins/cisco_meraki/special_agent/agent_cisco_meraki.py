@@ -16,6 +16,9 @@ from typing import Final, TypedDict
 
 import meraki  # type: ignore[import-untyped]
 
+from cmk.utils import password_store
+from cmk.utils.paths import tmp_dir
+
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
@@ -23,8 +26,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils import password_store
-from cmk.utils.paths import tmp_dir
 
 _LOGGER = logging.getLogger("agent_cisco_meraki")
 

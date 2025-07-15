@@ -10,8 +10,14 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import override, TypeVar
 
-import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.labels import Labels
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
+from cmk.utils.tags import TagGroupID, TagID
+
+import cmk.gui.view_utils
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -94,10 +100,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.utils.labels import Labels
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.tags import TagGroupID, TagID
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes

@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
 from cmk.ccc.site import omd_site
+
+import cmk.utils.paths
+from cmk.utils.auto_queue import AutoQueue
+
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -28,7 +32,6 @@ from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.utils.auto_queue import AutoQueue
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):

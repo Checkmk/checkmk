@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui import sites
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission

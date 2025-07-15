@@ -5,8 +5,11 @@
 
 from typing import Literal
 
+from cmk.utils import password_store
+
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.http import request
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -16,7 +19,6 @@ from cmk.rulesets.v1.form_specs import (
     Proxy,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
-from cmk.utils import password_store
 
 from ._helpers import _get_url_prefix_setting
 

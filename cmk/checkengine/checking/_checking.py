@@ -9,9 +9,23 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import NamedTuple
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Result
+
+import cmk.utils.paths
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.log import console
+from cmk.utils.regex import regex
+from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.structured_data import (
+    InventoryStore,
+)
+from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
+
+from cmk.snmplib import SNMPRawData
+
 from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
@@ -37,17 +51,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.snmplib import SNMPRawData
-from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.log import console
-from cmk.utils.regex import regex
-from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import (
-    InventoryStore,
-)
-from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 __all__ = [
     "execute_checkmk_checks",

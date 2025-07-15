@@ -4,6 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
+from cmk.utils.notify_types import (
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
+)
+
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import FormSpecValidationError, RawFrontendData
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
@@ -17,6 +23,7 @@ from cmk.gui.watolib.notification_parameter import (
 )
 from cmk.gui.watolib.notification_parameter._utils import NotificationParameterDescription
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -24,11 +31,6 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
     String,
-)
-from cmk.utils.notify_types import (
-    NotificationParameterGeneralInfos,
-    NotificationParameterID,
-    NotificationParameterItem,
 )
 
 

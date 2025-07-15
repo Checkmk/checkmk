@@ -16,10 +16,23 @@ from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteConfiguration
 
-from cmk import messaging
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
+
+from cmk.utils import paths
+from cmk.utils.certs import (
+    LocalBrokerCertificate,
+    MessagingTrustedCAs,
+    SiteBrokerCA,
+    SiteBrokerCertificate,
+)
+
+from cmk.gui.http import request as _request
+from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+
+from cmk import messaging
 from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,
@@ -30,16 +43,6 @@ from cmk.crypto.x509 import (
     SAN,
     SubjectAlternativeNames,
     X509Name,
-)
-from cmk.gui.http import request as _request
-from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
-from cmk.utils import paths
-from cmk.utils.certs import (
-    LocalBrokerCertificate,
-    MessagingTrustedCAs,
-    SiteBrokerCA,
-    SiteBrokerCertificate,
 )
 
 logger = logging.getLogger("cmk.web.background-job")

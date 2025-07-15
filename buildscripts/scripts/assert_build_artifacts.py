@@ -16,10 +16,10 @@ from typing import Literal, NamedTuple
 import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
-from cmk.ccc.version import Version
-
 from tests.testlib.package_manager import ABCPackageManager, code_name
 from tests.testlib.version import CMKEdition
+
+from cmk.ccc.version import Version
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 from buildscripts.scripts.lib.registry import (

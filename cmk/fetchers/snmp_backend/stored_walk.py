@@ -10,8 +10,10 @@ from pathlib import Path
 from typing import Final
 
 from cmk.ccc.exceptions import MKException, MKGeneralException, MKSNMPError
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
+
 from cmk.utils.sectionname import SectionName
+
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 

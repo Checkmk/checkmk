@@ -12,15 +12,18 @@ from collections.abc import Sequence
 
 import pytest
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
 from cmk.ccc import version
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.utils import paths
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.parametrize(

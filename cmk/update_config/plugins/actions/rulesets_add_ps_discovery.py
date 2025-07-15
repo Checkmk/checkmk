@@ -10,6 +10,7 @@ from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"

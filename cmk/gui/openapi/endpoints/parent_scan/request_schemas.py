@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import FolderField, HostField
+
+from cmk import fields
 
 
 class PerformanceSettings(BaseSchema):

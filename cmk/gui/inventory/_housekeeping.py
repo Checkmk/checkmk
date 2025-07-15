@@ -9,8 +9,10 @@ import shutil
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.config import Config
+
 from cmk.utils.structured_data import InventoryPaths
+
+from cmk.gui.config import Config
 
 
 class InventoryHousekeeping:

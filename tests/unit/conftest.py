@@ -19,25 +19,28 @@ from unittest.mock import patch
 import pytest
 from fakeredis import FakeRedis
 
+from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
+
 import livestatus
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.crypto.password_hashing
-import cmk.utils.caching
-import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.site import omd_site, SiteId
-from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
-    AgentBasedPlugins,
-)
+
+import cmk.utils.caching
+import cmk.utils.paths
 from cmk.utils import redis
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
 
-from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
+from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
+)
+
+import cmk.crypto.password_hashing
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules

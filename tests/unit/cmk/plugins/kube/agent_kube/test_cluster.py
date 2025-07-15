@@ -8,22 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from cmk.plugins.kube.agent_handlers.cluster_handler import (
-    _allocatable_cpu_resource,
-    _allocatable_memory_resource,
-    _allocatable_pods,
-    _cpu_resources,
-    _memory_resources,
-    _node_collector_daemons,
-    _node_count,
-    _node_is_ready,
-    _pod_resources,
-    create_api_sections,
-)
-from cmk.plugins.kube.agent_handlers.common import Cluster
-from cmk.plugins.kube.schemata import api, section
-from cmk.plugins.kube.special_agents import agent_kube as agent
-
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APIDaemonSetFactory,
     APIDataFactory,
@@ -39,6 +23,22 @@ from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     PodSpecFactory,
     PodStatusFactory,
 )
+
+from cmk.plugins.kube.agent_handlers.cluster_handler import (
+    _allocatable_cpu_resource,
+    _allocatable_memory_resource,
+    _allocatable_pods,
+    _cpu_resources,
+    _memory_resources,
+    _node_collector_daemons,
+    _node_count,
+    _node_is_ready,
+    _pod_resources,
+    create_api_sections,
+)
+from cmk.plugins.kube.agent_handlers.common import Cluster
+from cmk.plugins.kube.schemata import api, section
+from cmk.plugins.kube.special_agents import agent_kube as agent
 
 
 def _create_labels_from_roles(roles: Sequence[str]) -> dict[str, str]:

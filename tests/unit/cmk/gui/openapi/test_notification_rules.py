@@ -9,7 +9,14 @@ from typing import Any, get_args, Literal
 
 import pytest
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
 from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.tags import TagID
+
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
@@ -50,11 +57,6 @@ from cmk.gui.watolib.notification_parameter import (
     register_notification_parameters,
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
-from cmk.utils import paths
-from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
-from cmk.utils.tags import TagID
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

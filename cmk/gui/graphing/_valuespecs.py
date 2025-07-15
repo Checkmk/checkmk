@@ -9,6 +9,8 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, TypedDict
 
+from cmk.utils.metrics import MetricName as MetricName_
+
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -37,7 +39,6 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.visuals import livestatus_query_bare
-from cmk.utils.metrics import MetricName as MetricName_
 
 from ._formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
 from ._from_api import metrics_from_api, RegisteredMetric

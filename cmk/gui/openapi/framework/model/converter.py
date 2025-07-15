@@ -11,14 +11,16 @@ from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
+
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
+from cmk.utils.tags import TagGroupID, TagID
+
 from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
-from cmk.utils.tags import TagGroupID, TagID
 
 
 def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]) -> PlainValidator:

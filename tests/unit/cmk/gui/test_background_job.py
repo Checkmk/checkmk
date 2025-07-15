@@ -13,10 +13,14 @@ import pytest
 from opentelemetry import trace as otel_trace
 from pydantic import BaseModel
 
+from tests.testlib.common.utils import wait_until
+
 import cmk.ccc.version as cmk_version
-import cmk.gui.log
+
 import cmk.utils.log
 import cmk.utils.paths
+
+import cmk.gui.log
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobDefines,
@@ -30,10 +34,9 @@ from cmk.gui.background_job import (
     simple_job_target,
     wait_for_background_jobs,
 )
+
 from cmk.trace import get_tracer, init_tracing, ReadableSpan
 from cmk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
-
-from tests.testlib.common.utils import wait_until
 
 tracer = get_tracer()
 

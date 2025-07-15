@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+
 from cmk.gui.i18n import _
 from cmk.gui.notifications import acknowledged_time, number_of_failed_notifications
 from cmk.gui.sites import live, prepend_site

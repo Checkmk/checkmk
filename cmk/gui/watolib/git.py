@@ -7,9 +7,11 @@ import glob
 import os
 import subprocess
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils
 import cmk.utils.paths
-from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

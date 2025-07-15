@@ -9,20 +9,24 @@
 import sys
 from contextlib import suppress
 
-import cmk.base.utils
 import cmk.ccc.debug
-import cmk.utils.log
-from cmk.base import config
-from cmk.base.core_nagios import HostCheckConfig
-from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.hostaddress import HostAddress, HostName
+
+import cmk.utils.log
+from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.password_store import core_password_store_path
+
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
     load_selected_plugins,
 )
+
+import cmk.base.utils
+from cmk.base import config
+from cmk.base.core_nagios import HostCheckConfig
+from cmk.base.modes.check_mk import run_checking
+
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.password_store import core_password_store_path
 
 # This will be replaced by the config generation, when the template is instantiated.
 CONFIG = HostCheckConfig(

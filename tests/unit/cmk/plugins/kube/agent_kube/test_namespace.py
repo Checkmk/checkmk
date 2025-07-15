@@ -3,6 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from tests.unit.cmk.plugins.kube.agent_kube.factory import (
+    APINamespaceFactory,
+    APIPodFactory,
+    APIResourceQuotaFactory,
+    MetaDataFactory,
+    PodSpecFactory,
+    PodStatusFactory,
+)
+
 from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
 from cmk.plugins.kube.agent_handlers.namespace_handler import (
     _filter_pods_by_resource_quota_scope_selector,
@@ -12,15 +21,6 @@ from cmk.plugins.kube.agent_handlers.namespace_handler import (
     filter_pods_by_resource_quota_scopes,
 )
 from cmk.plugins.kube.schemata import api
-
-from tests.unit.cmk.plugins.kube.agent_kube.factory import (
-    APINamespaceFactory,
-    APIPodFactory,
-    APIResourceQuotaFactory,
-    MetaDataFactory,
-    PodSpecFactory,
-    PodStatusFactory,
-)
 
 
 def test_namespace_create_api_sections() -> None:

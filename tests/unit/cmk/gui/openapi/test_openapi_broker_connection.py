@@ -8,15 +8,17 @@ from collections.abc import Iterator
 import pytest
 from pytest import MonkeyPatch
 
-from livestatus import SiteConfiguration
-
-from cmk.ccc.site import SiteId
-from cmk.gui.watolib.broker_connections import BrokerConnectionInfo, SiteConnectionInfo
-
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
 )
+
 from tests.unit.cmk.web_test_app import SetConfig
+
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
+
+from cmk.gui.watolib.broker_connections import BrokerConnectionInfo, SiteConnectionInfo
 
 TEST_CONNECTION_ID = "connection_1"
 TEST_CONNECTION_CONFIG = BrokerConnectionInfo(

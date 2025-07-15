@@ -5,8 +5,10 @@
 
 
 from cmk.ccc import version
-from cmk.gui.rest_api_types.site_connection import SiteConfig
+
 from cmk.utils import paths
+
+from cmk.gui.rest_api_types.site_connection import SiteConfig
 
 
 def default_config_example() -> SiteConfig:

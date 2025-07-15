@@ -17,11 +17,12 @@ in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields
 from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.utils import agent
+
+from cmk import fields
 
 OS_TYPES_AVAILABLE_IN_RAW = ["linux_rpm", "linux_deb", "windows_msi"]
 

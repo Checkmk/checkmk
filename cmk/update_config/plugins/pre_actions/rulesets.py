@@ -10,6 +10,11 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.log import VERBOSE
+from cmk.utils.redis import disable_redis
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
@@ -18,6 +23,7 @@ from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
+
 from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
@@ -25,9 +31,6 @@ from cmk.update_config.plugins.pre_actions.utils import (
     Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
-from cmk.utils import paths
-from cmk.utils.log import VERBOSE
-from cmk.utils.redis import disable_redis
 
 
 class PreUpdateRulesets(PreUpdateAction):

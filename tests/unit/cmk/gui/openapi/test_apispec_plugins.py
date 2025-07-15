@@ -9,9 +9,10 @@ import pytest
 from apispec import APISpec
 from marshmallow import post_load, Schema, ValidationError
 
-from cmk import fields
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
+
+from cmk import fields
 
 
 class Movie:

@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from cmk.utils.prediction import DataStat, PredictionData
+
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.update_config.plugins.actions.prediction_files_cleanup import RemoveUnreadablePredictions
-from cmk.utils.prediction import DataStat, PredictionData
 
 PREDICTION_INFO = PredictionInfo(
     valid_interval=(23, 42),

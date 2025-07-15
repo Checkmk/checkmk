@@ -7,11 +7,6 @@
 import pytest_mock
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.plugins.kube.agent_handlers import deployment_handler, pod_handler
-from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
-from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.special_agents import agent_kube as agent
-
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     api_to_agent_deployment,
     APIControllerFactory,
@@ -19,6 +14,11 @@ from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APIPodFactory,
     DeploymentStatusFactory,
 )
+
+from cmk.plugins.kube.agent_handlers import deployment_handler, pod_handler
+from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
+from cmk.plugins.kube.schemata import api
+from cmk.plugins.kube.special_agents import agent_kube as agent
 
 
 class DeploymentConditionFactory(ModelFactory):

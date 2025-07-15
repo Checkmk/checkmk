@@ -7,13 +7,14 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.tags import TagGroup, TagGroupID
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0 import Painter
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
-from cmk.utils.tags import TagGroup, TagGroupID
 
 
 class HashableTagGroups:

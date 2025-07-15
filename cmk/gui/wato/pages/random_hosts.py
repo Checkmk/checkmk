@@ -9,6 +9,7 @@ import random
 from collections.abc import Collection
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config

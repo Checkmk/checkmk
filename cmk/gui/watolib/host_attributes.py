@@ -22,7 +22,13 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.fields import String
+
+from cmk.utils.labels import Labels
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
+from cmk.utils.translations import TranslationOptionsSpec
+
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
@@ -34,12 +40,10 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
+
+from cmk.fields import String
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
-from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.labels import Labels
-from cmk.utils.tags import TagGroup, TagGroupID, TagID
-from cmk.utils.translations import TranslationOptionsSpec
 
 _ContactgroupName = str
 

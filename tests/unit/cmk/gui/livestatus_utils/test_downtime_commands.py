@@ -7,11 +7,12 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.gui import sites
 from cmk.gui.config import load_config
 from cmk.gui.livestatus_utils.commands import downtimes
 from cmk.gui.session import SuperUserContext
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="dates")

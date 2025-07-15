@@ -23,7 +23,10 @@ For a detailed list of columns, have a look at the [services table](#section/Tab
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields
+from cmk.utils.livestatus_helpers.expressions import And
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Services
+
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
@@ -34,9 +37,8 @@ from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.expressions import And
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Services
+
+from cmk import fields
 
 
 class _BaseParameters(BaseSchema):

@@ -16,7 +16,9 @@ You can find an introduction to hosts including host tags and host tag groups in
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields
+from cmk.utils.regex import REGEX_ID
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
+
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -47,8 +49,8 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     update_tag_config,
 )
-from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
+
+from cmk import fields
 
 PERMISSIONS = permissions.AllPerm(
     [

@@ -9,7 +9,12 @@ from unittest import mock
 import pytest
 from pytest import MonkeyPatch
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
 from cmk.ccc import version
+
+from cmk.utils import paths
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
@@ -24,9 +29,6 @@ from cmk.gui.rest_api_types.site_connection import (
     SiteConfig,
     StatusHost,
 )
-from cmk.utils import paths
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
 
 DOMAIN_TYPE = "site_connection"
 

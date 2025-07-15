@@ -8,8 +8,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.lib.fileinfo import Fileinfo, FileinfoItem
 
 

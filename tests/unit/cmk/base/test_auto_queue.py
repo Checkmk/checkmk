@@ -10,6 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.auto_queue import AutoQueue
 
 

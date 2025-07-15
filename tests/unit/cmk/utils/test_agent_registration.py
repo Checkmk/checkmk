@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.agent_registration import (
     _UUIDLink,
     get_r4r_filepath,

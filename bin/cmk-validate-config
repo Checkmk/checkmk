@@ -5,14 +5,18 @@
 
 import sys
 
-from cmk.base import config
+from cmk.utils import paths
+from cmk.utils.redis import disable_redis
+
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
 )
+
+from cmk.base import config
+
 from cmk.gui import main_modules
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.utils import paths
-from cmk.utils.redis import disable_redis
+
 from cmk.validate_config import validate_mk_files
 
 

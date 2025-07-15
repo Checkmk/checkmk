@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
-from cmk.utils import paths
 
 from ._network_topology import get_topology_context_and_filters
 from .builtin_dashboards import (

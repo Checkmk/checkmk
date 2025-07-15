@@ -6,7 +6,9 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec, ServiceState
 

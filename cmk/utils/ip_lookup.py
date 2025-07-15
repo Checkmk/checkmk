@@ -22,10 +22,11 @@ from dataclasses import dataclass
 from typing import Any, assert_never, Final, Generic, Literal, Protocol, TypeVar
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
+
+import cmk.utils.paths
 from cmk.utils.caching import cache_manager
 from cmk.utils.log import console
 

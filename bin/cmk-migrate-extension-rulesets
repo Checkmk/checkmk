@@ -9,12 +9,10 @@ import sys
 from collections.abc import Sequence
 from typing import assert_never
 
-from cmk.discover_plugins import (
-    CMK_ADDONS_PLUGINS,
-    CMK_PLUGINS,
-    discover_plugins_from_modules,
-    PluginGroup,
-)
+from cmk.utils import paths
+from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.rulespec import register_plugins  # pylint: disable=cmk-module-layer-violation
@@ -32,6 +30,13 @@ from cmk.gui.watolib.rulesets import (  # pylint: disable=cmk-module-layer-viola
 )
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
     rulespec_registry,
+)
+
+from cmk.discover_plugins import (
+    CMK_ADDONS_PLUGINS,
+    CMK_PLUGINS,
+    discover_plugins_from_modules,
+    PluginGroup,
 )
 from cmk.mkp_tool import Installer, Manifest, PackageName, PackagePart
 from cmk.rulesets.v1 import entry_point_prefixes
@@ -57,9 +62,6 @@ from cmk.update_config.plugins.actions.rulesets import (  # pylint: disable=cmk-
 from cmk.update_config.plugins.lib.rulesets import (  # pylint: disable=cmk-module-layer-violation
     transform_wato_rulesets_params,
 )
-from cmk.utils import paths
-from cmk.utils.redis import disable_redis
-from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
 

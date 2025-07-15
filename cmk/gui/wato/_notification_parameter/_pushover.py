@@ -5,6 +5,7 @@
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.http import request
+
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

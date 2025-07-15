@@ -9,10 +9,11 @@ from typing import Literal
 
 import pytest
 
+from cmk.utils.labels import LabelGroups
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.query_filters import AllLabelGroupsQuery
 from cmk.gui.type_defs import FilterHTTPVariables
-from cmk.utils.labels import LabelGroups
 
 
 @pytest.mark.parametrize(

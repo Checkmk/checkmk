@@ -7,9 +7,11 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.single_choice import NO_SELECTION
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

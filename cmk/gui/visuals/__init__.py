@@ -6,12 +6,14 @@
 from collections.abc import Callable
 
 from cmk.ccc import store
+
+from cmk.utils import paths
+
 from cmk.gui import hooks, utils
 from cmk.gui.config import Config
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.gui.valuespec import AutocompleterRegistry
-from cmk.utils import paths
 
 from . import _filters, _site_filters, info
 from ._add_to_visual import (

@@ -5,11 +5,13 @@
 
 import pytest
 
-from cmk.gui.watolib.timeperiods import load_timeperiod
-from cmk.utils.timeperiod import TimeperiodName, TimeperiodSpec, TimeperiodSpecs
-from cmk.validate_config import validate_timeperiods
-
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from cmk.utils.timeperiod import TimeperiodName, TimeperiodSpec, TimeperiodSpecs
+
+from cmk.gui.watolib.timeperiods import load_timeperiod
+
+from cmk.validate_config import validate_timeperiods
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

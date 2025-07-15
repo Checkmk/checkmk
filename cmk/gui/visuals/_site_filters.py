@@ -8,6 +8,7 @@ from collections.abc import Callable
 from functools import partial
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui import query_filters
 from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.html import html

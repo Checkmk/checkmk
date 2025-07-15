@@ -14,12 +14,14 @@ from livestatus import Command, MultiSiteConnection
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+
 from cmk.utils.livestatus_helpers.expressions import QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
+
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 
 SHORT_COLUMNS = [Comments.id, Comments.is_service]
 

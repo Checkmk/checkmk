@@ -6,6 +6,8 @@ from unittest import mock
 
 import pytest
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import RawFrontendData
@@ -16,6 +18,7 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameterRegistry,
     save_notification_parameter,
 )
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -23,8 +26,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def spec() -> ValueSpecDictionary:

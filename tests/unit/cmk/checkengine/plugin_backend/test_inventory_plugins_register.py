@@ -8,6 +8,7 @@ import pytest
 from cmk.checkengine.plugin_backend.inventory_plugins import create_inventory_plugin
 from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.discover_plugins import PluginLocation
 
 

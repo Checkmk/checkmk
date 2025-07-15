@@ -14,6 +14,9 @@ import livestatus
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
+
+from cmk.utils.tags import TagGroupID, TagID
+
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -38,7 +41,6 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
-from cmk.utils.tags import TagGroupID, TagID
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |

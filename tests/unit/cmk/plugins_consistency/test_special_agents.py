@@ -11,6 +11,9 @@ from typing import Final
 import pytest
 
 from cmk.ccc import version as checkmk_version
+
+from cmk.utils import password_store
+
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.activemq.special_agent import agent_activemq
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
@@ -45,7 +48,6 @@ from cmk.plugins.smb.special_agent import agent_smb_share
 from cmk.plugins.splunk.special_agent import agent_splunk
 from cmk.plugins.storeonce4x.special_agent import agent_storeonce4x
 from cmk.server_side_calls_backend import load_special_agents
-from cmk.utils import password_store
 
 agent_otel: ModuleType | None = None
 try:

@@ -10,6 +10,7 @@ from collections import Counter
 from fastapi.testclient import TestClient
 
 import cmk.ccc.resulttype as result
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,

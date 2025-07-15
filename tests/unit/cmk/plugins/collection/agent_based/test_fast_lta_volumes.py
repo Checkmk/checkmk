@@ -7,14 +7,16 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
+from cmk.utils.sectionname import SectionName
+
 from cmk.checkengine.plugins import (
     CheckFunction,
     CheckPluginName,
     SNMPParseFunction,
 )
+
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.utils.sectionname import SectionName
 
 type DiscoveryFunction = Callable[..., DiscoveryResult]
 

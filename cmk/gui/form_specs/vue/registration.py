@@ -5,7 +5,6 @@
 
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
-import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.gui.form_specs.converter import (
     SimplePassword,
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -53,6 +52,8 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_time_period,
     recompose_user_selection,
 )
+
+import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,

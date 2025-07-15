@@ -7,6 +7,12 @@
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import cast
 
+from cmk.checkengine.plugins import (
+    AgentSectionPlugin,
+    LegacyPluginLocation,
+    SNMPSectionPlugin,
+)
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -15,11 +21,6 @@ from cmk.agent_based.v2 import (
     SNMPSection,
     SNMPTree,
     StringTable,
-)
-from cmk.checkengine.plugins import (
-    AgentSectionPlugin,
-    LegacyPluginLocation,
-    SNMPSectionPlugin,
 )
 
 from .section_plugins import (

@@ -8,15 +8,18 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-import cmk.gui.watolib.hosts_and_folders
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+from cmk.utils.tags import TagGroupID
+
+import cmk.gui.watolib.hosts_and_folders
 from cmk.gui.watolib.builtin_attributes import HostAttributeSite
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
 from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.hosts_and_folders import update_hosts_and_folders
-from cmk.utils.tags import TagGroupID
 
 
 def _write_folder_attributes(folder_attributes: dict) -> Path:

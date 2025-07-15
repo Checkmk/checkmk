@@ -6,8 +6,10 @@
 import logging
 from unittest.mock import Mock
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
+
+import cmk.utils.paths
+
 from cmk.messaging import DeliveryTag
 from cmk.piggyback.backend import (
     get_messages_for,

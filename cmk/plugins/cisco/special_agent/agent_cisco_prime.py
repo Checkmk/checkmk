@@ -15,8 +15,9 @@ from collections.abc import Sequence
 import requests
 import urllib3
 
-from cmk.special_agents.v0_unstable.misc import vcrtrace
 from cmk.utils import password_store
+
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {

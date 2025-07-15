@@ -12,17 +12,19 @@ from types import ModuleType
 from typing import assert_never
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition
+
+from cmk.utils import paths
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plug-in discovery mechanism.
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
-from cmk import trace
-from cmk.ccc.version import Edition
 from cmk.gui import utils
 from cmk.gui.log import logger
-from cmk.utils import paths
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
+
+from cmk import trace
 
 match edition := cmk_version.edition(paths.omd_root):
     case Edition.CEE:

@@ -8,12 +8,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.graphing.v1 import perfometers
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.type_defs import Row
 from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.sorter import SorterPerfometer
+
+from cmk.graphing.v1 import perfometers
 
 
 @pytest.mark.parametrize(

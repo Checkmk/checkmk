@@ -13,8 +13,10 @@ from typing import Protocol
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.snmplib import SNMPRawData
+
 from cmk.utils.agentdatatype import AgentRawData
+
+from cmk.snmplib import SNMPRawData
 
 __all__ = ["FetcherFunction", "FetcherType", "HostKey", "SourceInfo", "SourceType"]
 

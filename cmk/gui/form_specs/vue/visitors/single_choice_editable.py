@@ -11,6 +11,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_list_of_configuration_entities,
     get_readable_entity_selection,
 )
+
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

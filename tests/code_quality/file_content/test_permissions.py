@@ -10,8 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.code_quality.utils import ChangedFiles
 from tests.testlib.common.repo import repo_path
+
+from tests.code_quality.utils import ChangedFiles
 
 
 def is_executable(path: Path) -> bool:

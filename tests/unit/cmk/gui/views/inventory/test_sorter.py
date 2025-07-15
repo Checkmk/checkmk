@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.structured_data import ImmutableTree, SDKey
+
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.views.inventory import _register_sorter
@@ -14,7 +16,6 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._sorter import attribute_sorter_from_hint
 from cmk.gui.views.sorter import sorter_registry
-from cmk.utils.structured_data import ImmutableTree, SDKey
 
 
 def test_registered_sorter_cmp() -> None:

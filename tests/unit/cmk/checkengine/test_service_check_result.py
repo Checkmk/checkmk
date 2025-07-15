@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 
 

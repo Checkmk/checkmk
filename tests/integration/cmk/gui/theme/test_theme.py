@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.gui.theme import Theme
-
 from tests.testlib.site import Site
+
+from cmk.gui.theme import Theme
 
 
 @pytest.fixture(name="th")

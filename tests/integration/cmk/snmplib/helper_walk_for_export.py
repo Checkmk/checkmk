@@ -12,13 +12,16 @@ from pathlib import Path
 from typing import Any
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
+
+from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
+
 from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
     ClassicSNMPBackend,
     StoredWalkSNMPBackend,
 )
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation

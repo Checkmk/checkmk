@@ -5,13 +5,17 @@
 
 import pytest
 
-from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils import paths
+
+from cmk.snmplib import SNMPBackendEnum
+
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.snmplib import SNMPBackendEnum
-from cmk.utils import paths
+
+from cmk.base.errorhandling import CheckResultErrorHandler
 
 
 def _handler() -> CheckResultErrorHandler:

@@ -8,9 +8,10 @@
 
 import time
 
+from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
-from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 
 check_info = {}
 

@@ -29,6 +29,10 @@ from typing import Any, Literal, Required, TypedDict, TypeVar
 
 import requests
 
+from cmk.utils import password_store
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.paths import tmp_dir
+
 from cmk.plugins.azure.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -42,9 +46,6 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     NoConsumptionAPIError,
 )
 from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
-from cmk.utils import password_store
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
 Args = argparse.Namespace

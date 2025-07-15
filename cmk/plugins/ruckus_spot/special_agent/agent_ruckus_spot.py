@@ -10,8 +10,9 @@ from dataclasses import dataclass
 
 import requests
 
-from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 from cmk.utils.password_store import replace_passwords
+
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 
 # TODO: put into special_agent lib

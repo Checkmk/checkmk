@@ -27,19 +27,22 @@ from pydantic import BaseModel, PlainValidator, WithJsonSchema
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+from cmk.utils.labels import Labels
+from cmk.utils.metrics import MetricName
+from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.structured_data import SDPath
+
+from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.http import Request
+from cmk.gui.utils.speaklater import LazyString
+
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
-from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.http import Request
-from cmk.gui.utils.speaklater import LazyString
-from cmk.utils.labels import Labels
-from cmk.utils.metrics import MetricName
-from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
-from cmk.utils.structured_data import SDPath
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)

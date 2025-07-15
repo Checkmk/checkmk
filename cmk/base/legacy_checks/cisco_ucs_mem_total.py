@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 
 check_info = {}
 

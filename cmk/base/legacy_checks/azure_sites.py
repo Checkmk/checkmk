@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import Service
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     get_data_or_go_stale,
 )
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import Service
 from cmk.plugins.lib.azure import (
     get_service_labels_from_resource_tags,
     iter_resource_attributes,

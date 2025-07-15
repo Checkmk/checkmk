@@ -10,9 +10,11 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.crypto.password import Password
+
 from cmk.gui import key_mgmt
 from cmk.gui.type_defs import Key
+
+from cmk.crypto.password import Password
 
 
 @pytest.mark.usefixtures("request_context")

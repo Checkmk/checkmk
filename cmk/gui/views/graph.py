@@ -10,7 +10,7 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
-from cmk.graphing.v1 import graphs as graphs_api
+
 from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_render_config import (
@@ -54,6 +54,8 @@ from cmk.gui.valuespec import (
     Transform,
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+
+from cmk.graphing.v1 import graphs as graphs_api
 
 
 def register(

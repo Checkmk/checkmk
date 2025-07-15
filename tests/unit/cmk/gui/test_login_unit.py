@@ -14,7 +14,13 @@ import flask
 import pytest
 from werkzeug.test import create_environ
 
+from tests.unit.cmk.gui.users import create_and_destroy_user
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
 from cmk.ccc.user import UserId
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.gui import auth, http, login
 from cmk.gui.config import load_config
 from cmk.gui.http import request
@@ -23,10 +29,6 @@ from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
-from tests.unit.cmk.gui.users import create_and_destroy_user
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")

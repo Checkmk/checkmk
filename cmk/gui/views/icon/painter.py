@@ -11,7 +11,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 import cmk.ccc.plugin_registry
+
 import cmk.utils.regex
+from cmk.utils.tags import TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -22,7 +25,6 @@ from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec, CSVExportError
-from cmk.utils.tags import TagID
 
 from .base import Icon
 from .registry import all_icons

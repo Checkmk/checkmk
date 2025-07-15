@@ -10,9 +10,9 @@ from typing import Any
 import pytest
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.watolib.audit_log import AuditLogStore
-
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from cmk.gui.watolib.audit_log import AuditLogStore
 
 
 @dataclass

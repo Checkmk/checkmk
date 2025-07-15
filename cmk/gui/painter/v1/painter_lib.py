@@ -7,7 +7,9 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import cmk.ccc.plugin_registry
+
 import cmk.utils
+
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows

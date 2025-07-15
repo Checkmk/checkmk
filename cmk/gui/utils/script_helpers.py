@@ -18,8 +18,10 @@ from flask.ctx import RequestContext
 from werkzeug.test import create_environ
 
 from cmk.ccc.version import edition
-from cmk.gui.http import Response
+
 from cmk.utils import paths
+
+from cmk.gui.http import Response
 
 Environments = typing.Literal["production", "testing", "development"]
 

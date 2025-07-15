@@ -10,6 +10,17 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.servicename import ServiceName
+
+from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
+from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugins import CheckPluginName, ConfiguredService
+
+from cmk.base import checkers
+
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
     PredictionInfo,
@@ -17,13 +28,6 @@ from cmk.agent_based.prediction_backend import (
 )
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.agent_based.v2 import CheckResult
-from cmk.base import checkers
-from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
-from cmk.checkengine.fetcher import HostKey, SourceType
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.plugins import CheckPluginName, ConfiguredService
-from cmk.utils.servicename import ServiceName
 
 
 def make_timespecific_params_list(

@@ -12,11 +12,16 @@ from typing import override
 from urllib.parse import unquote
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.mobile
-import cmk.utils.paths
 from cmk.ccc.site import omd_site, url_prefix
 from cmk.ccc.user import UserId
-from cmk.crypto.password import Password
+
+import cmk.utils.paths
+from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
+from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
+from cmk.utils.log.security_event import log_security_event
+from cmk.utils.urls import is_allowed_url
+
+import cmk.gui.mobile
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
@@ -48,10 +53,8 @@ from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, Authen
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
-from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
-from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
-from cmk.utils.log.security_event import log_security_event
-from cmk.utils.urls import is_allowed_url
+
+from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry) -> None:

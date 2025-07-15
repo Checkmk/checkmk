@@ -6,8 +6,11 @@
 from collections.abc import Container, Iterable
 from typing import Literal, TypeVar
 
-import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import DocReference
@@ -31,9 +34,9 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec.definitions import RegExp
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
+
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1.form_specs import migrate_to_password
-from cmk.utils.rulesets.definition import RuleGroup
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
 

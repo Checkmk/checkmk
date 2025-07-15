@@ -8,6 +8,7 @@ import json
 from typing import cast
 
 from cmk.ccc.user import UserId
+
 from cmk.gui.config import Config
 from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError

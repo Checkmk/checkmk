@@ -8,10 +8,11 @@ import re
 from collections.abc import Mapping
 from typing import NamedTuple, NotRequired, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import IgnoreResultsError
 
 check_info = {}
 

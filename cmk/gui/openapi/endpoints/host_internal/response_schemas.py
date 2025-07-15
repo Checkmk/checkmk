@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk import fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.utils import BaseSchema
+
+from cmk import fields
 
 
 class ConnectionMode(BaseSchema):

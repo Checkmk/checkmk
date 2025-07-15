@@ -21,6 +21,7 @@ import cmk.ccc.site
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+
 from cmk.utils.local_secrets import AutomationUserSecret, SiteInternalSecret
 from cmk.utils.password_store import lookup
 from cmk.utils.paths import omd_root

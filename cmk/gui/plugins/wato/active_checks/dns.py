@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
@@ -21,7 +23,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato import RulespecGroupActiveChecks
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _migrate(params: Mapping[str, Any] | tuple[str, Mapping[str, Any]]) -> Mapping[str, Any]:

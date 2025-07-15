@@ -6,6 +6,7 @@
 from datetime import datetime
 
 from cmk.ccc.user import UserId
+
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils import roles, saveint

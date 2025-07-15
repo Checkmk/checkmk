@@ -11,8 +11,13 @@ from pathlib import Path
 from typing import Literal, override
 
 import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
-from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.utils import man_pages
+from cmk.utils.labels import Labels
+from cmk.utils.render import approx_age
+from cmk.utils.statename import short_host_state_name, short_service_state_name
+
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
@@ -72,10 +77,8 @@ from cmk.gui.view_utils import (
     render_tag_groups,
 )
 from cmk.gui.visual_link import render_link_to_view
-from cmk.utils import man_pages
-from cmk.utils.labels import Labels
-from cmk.utils.render import approx_age
-from cmk.utils.statename import short_host_state_name, short_service_state_name
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter

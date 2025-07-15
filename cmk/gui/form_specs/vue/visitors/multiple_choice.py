@@ -13,6 +13,7 @@ from cmk.gui.form_specs.private.multiple_choice import (
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.valuespec import autocompleter_registry
+
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import (

@@ -16,16 +16,20 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
+from cmk.ccc import tty
+from cmk.ccc import version as cmk_version
+
+from cmk.utils import paths
+from cmk.utils.log import logger as cmk_logger
+
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
+
+from cmk.checkengine.plugins import AgentBasedPlugins
+
 from cmk.base import config
 from cmk.base.automations import AutomationError
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
-from cmk.ccc import version as cmk_version
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.utils import paths
-from cmk.utils.log import logger as cmk_logger
 
 from ._cache import Cache, CacheError
 from ._config import ReloaderConfig

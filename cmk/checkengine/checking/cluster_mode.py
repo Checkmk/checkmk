@@ -9,12 +9,14 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any, Final, Literal, NamedTuple, Protocol
 
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
-from cmk.agent_based.v1.type_defs import CheckResult
 from cmk.ccc.hostaddress import HostName
+
 from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugins import CheckPlugin, ServiceID
 from cmk.checkengine.value_store import ValueStoreManager
+
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 _Kwargs = Mapping[str, Any]
 

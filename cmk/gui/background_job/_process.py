@@ -26,12 +26,17 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate, MKTimeout
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
+
+from cmk.utils import paths
+from cmk.utils.log import VERBOSE
+
 from cmk.gui import log
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
+
 from cmk.trace import (
     get_tracer,
     get_tracer_provider,
@@ -40,8 +45,6 @@ from cmk.trace import (
     set_span_in_context,
     TracerProvider,
 )
-from cmk.utils import paths
-from cmk.utils.log import VERBOSE
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines

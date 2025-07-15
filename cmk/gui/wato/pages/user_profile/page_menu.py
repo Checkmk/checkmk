@@ -6,6 +6,9 @@
 from collections.abc import Iterator
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -19,7 +22,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.utils.urls import requested_file_name
-from cmk.utils import paths
 
 
 def user_profile_page_menu(breadcrumb: Breadcrumb) -> PageMenu:

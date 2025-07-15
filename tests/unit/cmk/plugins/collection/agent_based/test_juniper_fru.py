@@ -6,14 +6,15 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru
-
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
+
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru
 
 # SUP-13184
 DATA_0 = """

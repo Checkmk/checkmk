@@ -38,11 +38,12 @@ from typing import Any, NamedTuple
 
 import requests
 
-from cmk import trace
+from tests.testlib.version import CMKVersion
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 
-from tests.testlib.version import CMKVersion
+from cmk import trace
 
 logger = logging.getLogger("rest-session")
 tracer = trace.get_tracer()

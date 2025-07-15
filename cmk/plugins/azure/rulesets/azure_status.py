@@ -5,6 +5,8 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.azure_constants import AZURE_REGIONS
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -13,7 +15,6 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoiceElement,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils.azure_constants import AZURE_REGIONS
 
 
 def _regions_to_monitor() -> Sequence[MultipleChoiceElement]:

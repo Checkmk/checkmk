@@ -15,7 +15,9 @@ import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import overload, TypedDict, Union
 
-from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.utils import man_pages
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -42,8 +44,8 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.utils import man_pages
-from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._tile_menu import TileMenuRenderer
 

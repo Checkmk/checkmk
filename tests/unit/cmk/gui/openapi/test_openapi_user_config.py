@@ -7,9 +7,10 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.crypto.password import PasswordPolicy
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.endpoints.user_config import _auth_options_to_internal_format
+
+from cmk.crypto.password import PasswordPolicy
 
 
 @patch("time.time", return_value=1234567890)

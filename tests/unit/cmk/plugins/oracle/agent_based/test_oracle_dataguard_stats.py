@@ -6,6 +6,8 @@
 
 import pytest
 
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -17,7 +19,6 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import (
     inventory_oracle_dataguard_stats,
     parse_oracle_dataguard_stats,

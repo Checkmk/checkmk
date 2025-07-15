@@ -6,6 +6,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
 )
 from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
+
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 

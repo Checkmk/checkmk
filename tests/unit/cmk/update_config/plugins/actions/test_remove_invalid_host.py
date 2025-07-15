@@ -8,13 +8,16 @@ from collections.abc import Iterable
 
 import pytest
 
-import cmk.update_config.plugins.actions.remove_invalid_host
-from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+from cmk.automations.results import DeleteHostsResult
+
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+import cmk.update_config.plugins.actions.remove_invalid_host
 from cmk.update_config.plugins.actions.remove_invalid_host import RemoveInvalidHost
 
 

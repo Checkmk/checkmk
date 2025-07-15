@@ -8,6 +8,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
+
 from cmk.rulesets.v1.form_specs import migrate_to_password, Password
 
 PasswordOnDisk = tuple[

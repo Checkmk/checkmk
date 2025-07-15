@@ -6,6 +6,21 @@ from collections.abc import Mapping
 from typing import cast
 from uuid import uuid4
 
+from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
+    ConditionEventConsoleAlertsType,
+    EventRule,
+    GroupBy,
+    HostEventType,
+    is_non_state_change_event_type,
+    NonStateChangeEventType,
+    NotificationParameterID,
+    NotificationRuleID,
+    ServiceEventType,
+    TimeperiodBulkParameters,
+)
+from cmk.utils.timeperiod import TimeperiodName
+
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulk,
     AlwaysBulkTuple,
@@ -38,20 +53,6 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     TimeperiodBulkTuple,
     TriggeringEvents,
 )
-from cmk.utils.notify_types import (
-    AlwaysBulkParameters,
-    ConditionEventConsoleAlertsType,
-    EventRule,
-    GroupBy,
-    HostEventType,
-    is_non_state_change_event_type,
-    NonStateChangeEventType,
-    NotificationParameterID,
-    NotificationRuleID,
-    ServiceEventType,
-    TimeperiodBulkParameters,
-)
-from cmk.utils.timeperiod import TimeperiodName
 
 
 def host_event_mapper(

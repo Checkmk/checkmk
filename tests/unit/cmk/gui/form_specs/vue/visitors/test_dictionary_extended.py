@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.private import DictionaryExtended
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData
+
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, String
 
 

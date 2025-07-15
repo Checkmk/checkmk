@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.private import OptionalChoice
 from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
@@ -14,6 +15,7 @@ from cmk.gui.form_specs.vue import (
     RawDiskData,
     RawFrontendData,
 )
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, Integer
 

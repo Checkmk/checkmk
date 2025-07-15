@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.nullmailer_mailq import (
     check_nullmailer_mailq,
     NULLMAILER_MAILQ_DEFAULT_LEVELS,
     parse_nullmailer_mailq,
 )
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

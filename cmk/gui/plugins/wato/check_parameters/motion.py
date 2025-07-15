@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils import dateutils
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -10,7 +12,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersEnvironment,
 )
 from cmk.gui.valuespec import Dictionary, ListOfTimeRanges, TextInput
-from cmk.utils import dateutils
 
 
 def _item_spec_motion():

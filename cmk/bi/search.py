@@ -11,6 +11,11 @@ from typing import Any
 from marshmallow import post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.labels import AndOrNotLiteral, LabelGroup
+from cmk.utils.macros import MacroMapping
+
 from cmk import fields
 from cmk.bi.lib import (
     ABCBISearch,
@@ -28,9 +33,6 @@ from cmk.bi.lib import (
     SearchKind,
 )
 from cmk.bi.schema import Schema
-from cmk.ccc.hostaddress import HostName
-from cmk.utils.labels import AndOrNotLiteral, LabelGroup
-from cmk.utils.macros import MacroMapping
 
 
 class BIAllHostsChoiceSchema(Schema):

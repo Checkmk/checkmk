@@ -8,6 +8,7 @@ import pprint
 from collections.abc import Callable, Sequence
 
 from cmk.ccc.user import UserId
+
 from cmk.gui import pagetypes
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import get_permitted_dashboards

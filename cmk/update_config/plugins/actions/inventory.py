@@ -7,8 +7,9 @@ from logging import Logger
 from typing import override
 
 import cmk.utils.paths
-from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.structured_data import InventoryPaths
+
+from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class RemoveStatusDataTreeGz(UpdateAction):  # pylint: disable=too-few-public-methods

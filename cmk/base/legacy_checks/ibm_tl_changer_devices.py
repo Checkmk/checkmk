@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, SNMPTree, startswith, StringTable
-from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
 
 check_info = {}
 

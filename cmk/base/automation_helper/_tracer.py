@@ -6,8 +6,9 @@
 from pathlib import Path
 from typing import Final
 
-from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site
+
+from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
 
 TRACER_SERVICE_NAME: Final = "automation_helper"

@@ -13,8 +13,10 @@ from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 
 import cmk.ccc.resulttype as result
-from cmk.gui.i18n import _
+
 from cmk.utils import paths
+
+from cmk.gui.i18n import _
 
 JOB_SCHEDULER_HOST: Final = "localhost"
 JOB_SCHEDULER_BASE_URL: Final = "http://local-ui-job-scheduler"

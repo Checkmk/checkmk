@@ -6,16 +6,19 @@
 from logging import Logger
 from typing import override
 
-from cmk.agent_based.legacy import find_plugin_files
+from cmk.utils.paths import local_checks_dir
+
 from cmk.base.config import load_and_convert_legacy_checks
+
 from cmk.gui.exceptions import MKUserError
+
+from cmk.agent_based.legacy import find_plugin_files
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
     Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
-from cmk.utils.paths import local_checks_dir
 
 
 class PreUpdateLegacyCheckPlugins(PreUpdateAction):

@@ -7,6 +7,8 @@ from typing import get_args
 
 from werkzeug.test import create_environ
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 import cmk.gui.openapi.restful_objects.decorators
 from cmk.gui.openapi.restful_objects import response_schemas
 from cmk.gui.openapi.restful_objects.constructors import (
@@ -19,7 +21,6 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 def test_absolute_url_http() -> None:

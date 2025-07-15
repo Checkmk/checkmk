@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 from cmk.ccc import store
+
 from cmk.gui.i18n import _
 
 from ._defines import BackgroundJobDefines

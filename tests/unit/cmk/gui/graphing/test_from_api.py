@@ -11,13 +11,16 @@ from typing import Literal
 import pytest
 
 from cmk.ccc.version import Edition, edition
+
+from cmk.utils.paths import omd_root
+
+from cmk.gui.graphing_main import _load_graphing_plugins
+
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
-from cmk.gui.graphing_main import _load_graphing_plugins
-from cmk.utils.paths import omd_root
 
 
 def test_load_graphing_plugins() -> None:

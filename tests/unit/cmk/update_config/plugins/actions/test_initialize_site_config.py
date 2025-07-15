@@ -9,7 +9,9 @@ from collections.abc import Iterator
 import pytest
 
 import cmk.utils.paths
+
 from cmk.gui.watolib.sites import site_management_registry
+
 from cmk.update_config.plugins.actions.initialize_site_configuration import (
     InitializeSiteConfiguration,
 )

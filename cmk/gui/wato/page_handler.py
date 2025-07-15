@@ -6,6 +6,10 @@
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.utils import paths
+from cmk.utils.paths import configuration_lockfile
+
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.customer import customer_api
@@ -22,8 +26,6 @@ from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
-from cmk.utils import paths
-from cmk.utils.paths import configuration_lockfile
 
 from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
 from .pages.not_implemented import ModeNotImplemented

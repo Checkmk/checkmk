@@ -9,11 +9,12 @@
 import argparse
 import sys
 
+from cmk.utils import log
+
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.sample_config import init_wato_datastructures
-from cmk.utils import log
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:

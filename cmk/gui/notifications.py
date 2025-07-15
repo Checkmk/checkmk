@@ -7,8 +7,9 @@ from typing import NamedTuple, override
 
 from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 
-import cmk.gui.pages
 import cmk.utils.render
+
+import cmk.gui.pages
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, Config

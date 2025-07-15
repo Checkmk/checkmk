@@ -6,9 +6,10 @@
 
 from collections.abc import Iterable, Mapping
 
+from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
-from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 
 check_info = {}
 

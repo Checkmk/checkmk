@@ -24,8 +24,6 @@ from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Self,
 
 from redis.client import Pipeline
 
-import cmk.utils.paths
-from cmk.automations.results import ABCAutomationResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -33,6 +31,33 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
+
+import cmk.utils.paths
+from cmk.utils.global_ident_type import GlobalIdent
+from cmk.utils.host_storage import (
+    ABCHostsStorage,
+    apply_hosts_file_to_object,
+    FolderAttributesForBase,
+    get_all_storage_readers,
+    get_host_storage_loaders,
+    get_hosts_file_variables,
+    get_storage_format,
+    GroupRuleType,
+    HostsData,
+    HostsStorageData,
+    HostsStorageFieldsGenerator,
+    make_experimental_hosts_storage,
+    StandardHostsStorage,
+    StorageFormat,
+)
+from cmk.utils.labels import Labels
+from cmk.utils.object_diff import make_diff, make_diff_text
+from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
+from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
+from cmk.utils.tags import TagGroupID, TagID
+
+from cmk.automations.results import ABCAutomationResult
+
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -82,28 +107,6 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import wato_root_dir
-from cmk.utils.global_ident_type import GlobalIdent
-from cmk.utils.host_storage import (
-    ABCHostsStorage,
-    apply_hosts_file_to_object,
-    FolderAttributesForBase,
-    get_all_storage_readers,
-    get_host_storage_loaders,
-    get_hosts_file_variables,
-    get_storage_format,
-    GroupRuleType,
-    HostsData,
-    HostsStorageData,
-    HostsStorageFieldsGenerator,
-    make_experimental_hosts_storage,
-    StandardHostsStorage,
-    StorageFormat,
-)
-from cmk.utils.labels import Labels
-from cmk.utils.object_diff import make_diff, make_diff_text
-from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
-from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
-from cmk.utils.tags import TagGroupID, TagID
 
 _ContactgroupName = str
 

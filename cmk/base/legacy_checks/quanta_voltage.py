@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_legacy_includes.quanta import parse_quanta
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.plugins.lib.quanta import DETECT_QUANTA
 
 check_info = {}

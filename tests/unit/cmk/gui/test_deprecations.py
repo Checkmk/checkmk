@@ -10,6 +10,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
 from cmk.gui.deprecations import (
     _ACTestResultProblem,
     _ACTestResultProblemFile,
@@ -24,6 +25,7 @@ from cmk.gui.deprecations import (
     _ProblemToSend,
 )
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult
+
 from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
 
 

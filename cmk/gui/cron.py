@@ -10,6 +10,7 @@ from functools import partial
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
+
 from cmk.gui.config import Config
 
 

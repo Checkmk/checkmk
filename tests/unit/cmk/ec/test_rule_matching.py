@@ -8,8 +8,9 @@ import re
 
 import pytest
 
-import cmk.ec.export as ec
 from cmk.ccc.site import SiteId
+
+import cmk.ec.export as ec
 from cmk.ec.config import MatchGroups, TextMatchResult
 from cmk.ec.rule_matcher import compile_matching_value, MatchPriority
 

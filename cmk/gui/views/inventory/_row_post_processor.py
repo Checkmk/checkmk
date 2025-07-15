@@ -8,6 +8,8 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
+
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -18,7 +20,6 @@ from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
 from ..sorter import SorterEntry
 

@@ -16,11 +16,29 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final, Literal, override
 
-from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import GlobalIdent
+from cmk.utils.labels import LabelGroups, Labels
+from cmk.utils.object_diff import make_diff, make_diff_text
+from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets import ruleset_matcher
+from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.ruleset_matcher import (
+    RuleConditionsSpec,
+    RuleOptionsSpec,
+    RulesetName,
+    RuleSpec,
+    TagCondition,
+    TagConditionNE,
+)
+from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
+
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -41,24 +59,9 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+
+from cmk import trace
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
-from cmk.utils import paths
-from cmk.utils.global_ident_type import GlobalIdent
-from cmk.utils.labels import LabelGroups, Labels
-from cmk.utils.object_diff import make_diff, make_diff_text
-from cmk.utils.regex import escape_regex_chars
-from cmk.utils.rulesets import ruleset_matcher
-from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import (
-    RuleConditionsSpec,
-    RuleOptionsSpec,
-    RulesetName,
-    RuleSpec,
-    TagCondition,
-    TagConditionNE,
-)
-from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file

@@ -6,10 +6,11 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 
+from cmk.utils import paths
+
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs
 from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
-from cmk.utils import paths
 
 NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
 

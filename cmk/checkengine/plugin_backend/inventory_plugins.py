@@ -8,10 +8,12 @@ import functools
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName
-from cmk.discover_plugins import PluginLocation
 from cmk.utils.rulesets import RuleSetName
+
+from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName
+
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
+from cmk.discover_plugins import PluginLocation
 
 from .utils import (
     create_subscribed_sections,

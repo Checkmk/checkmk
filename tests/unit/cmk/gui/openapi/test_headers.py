@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.ccc.version as cmk_version
-from cmk.utils import paths
-
 from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
+
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 
 def _get_version(app: WebTestAppForCMK, status: int = 200) -> CmkTestResponse:

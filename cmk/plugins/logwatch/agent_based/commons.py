@@ -19,11 +19,14 @@ from dataclasses import dataclass
 from re import Pattern
 from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
+from cmk.ccc.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+
+from cmk.checkengine.plugins import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
-from cmk.ccc.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
-from cmk.checkengine.plugins import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # Watch out! Matching the 'logwatch_rules' ruleset against labels will not
 # work as expected, if logfiles are grouped!

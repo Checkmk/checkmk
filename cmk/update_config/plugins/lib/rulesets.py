@@ -9,8 +9,15 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Final
 
-from cmk.base import config
 from cmk.ccc import debug
+
+from cmk.utils.log import VERBOSE
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, TagCondition
+from cmk.utils.tags import TagGroupID
+
+from cmk.base import config
+
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -19,10 +26,6 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     RulesetCollection,
 )
-from cmk.utils.log import VERBOSE
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RulesetName, TagCondition
-from cmk.utils.tags import TagGroupID
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "entersekt_soaprrors": "entersekt_soaperrors",  # 2.4 -> 2.5

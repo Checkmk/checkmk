@@ -19,9 +19,11 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
-from cmk import fields
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
+
+from cmk.utils.encoding import json_encode
+
 from cmk.gui import i18n
 from cmk.gui.background_job import AlreadyRunningError
 from cmk.gui.config import active_config
@@ -67,7 +69,8 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
-from cmk.utils.encoding import json_encode
+
+from cmk import fields
 
 from .. import background_job
 from .request_schemas import (

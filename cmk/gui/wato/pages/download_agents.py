@@ -11,6 +11,7 @@ from collections.abc import Callable, Collection, Generator, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render
+
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config

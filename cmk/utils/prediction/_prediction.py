@@ -11,8 +11,9 @@ from typing import Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
-from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
+
+from cmk.agent_based.prediction_backend import PredictionInfo
 
 from ..misc import pnp_cleanup
 from ..paths import predictions_dir

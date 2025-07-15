@@ -12,8 +12,8 @@ is not fully documented and specified yet.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields
 from cmk.ccc.version import Edition
+
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.autocomplete.request_schemas import RequestSchema
@@ -22,6 +22,8 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.valuespec import autocompleter_registry
+
+from cmk import fields
 
 AUTOCOMPLETE_ID = {
     "autocomplete_id": fields.String(

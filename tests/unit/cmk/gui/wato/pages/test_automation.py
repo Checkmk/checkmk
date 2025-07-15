@@ -12,15 +12,18 @@ import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+from cmk.utils.local_secrets import DistributedSetupSecret
+
+from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
-from cmk.utils import paths
-from cmk.utils.local_secrets import DistributedSetupSecret
 
 
 @dataclass

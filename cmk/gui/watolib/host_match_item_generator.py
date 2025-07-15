@@ -6,6 +6,7 @@
 from collections.abc import Callable, Iterable, Mapping
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.gui.i18n import _
 from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
 

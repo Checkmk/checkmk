@@ -20,7 +20,6 @@ from dataclasses import asdict
 from typing import Any
 from urllib.parse import urlparse
 
-from cmk import fields
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
@@ -47,6 +46,8 @@ from cmk.gui.watolib.activate_changes import (
     load_activate_change_manager_with_id,
     MKLicensingError,
 )
+
+from cmk import fields
 
 ACTIVATION_ID = {
     "activation_id": fields.String(

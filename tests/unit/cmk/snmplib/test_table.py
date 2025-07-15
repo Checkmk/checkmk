@@ -14,11 +14,15 @@ from typing import NoReturn
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.snmplib._table as _snmp_table
-from cmk.base.config import ConfigCache
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.ccc.exceptions import MKSNMPError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher import SourceType
+
+from cmk.utils.log import logger
+from cmk.utils.sectionname import SectionName
+
+import cmk.snmplib._table as _snmp_table
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
@@ -33,10 +37,10 @@ from cmk.snmplib import (
     SNMPVersion,
     SpecialColumn,
 )
-from cmk.utils.log import logger
-from cmk.utils.sectionname import SectionName
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
+from cmk.checkengine.fetcher import SourceType
+
+from cmk.base.config import ConfigCache
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,

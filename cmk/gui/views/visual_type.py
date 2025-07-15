@@ -5,9 +5,17 @@
 
 from collections.abc import Iterator
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+from cmk.utils.structured_data import (
+    HistoryStore,
+    ImmutableDeltaTree,
+    ImmutableTree,
+    SDPath,
+)
+
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -26,12 +34,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals.type import VisualType
-from cmk.utils.structured_data import (
-    HistoryStore,
-    ImmutableDeltaTree,
-    ImmutableTree,
-    SDPath,
-)
 
 
 class VisualTypeViews(VisualType):

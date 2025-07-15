@@ -9,6 +9,7 @@ REST-API.
 """
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_images import graph_spec_from_request

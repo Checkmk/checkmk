@@ -24,6 +24,9 @@ from collections.abc import Iterable, Mapping
 from typing import Any, cast, Literal
 
 from cmk.ccc import version
+
+from cmk.utils import paths
+
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupSpec
 from cmk.gui.http import Response
@@ -78,7 +81,6 @@ from cmk.gui.watolib.groups_io import (
     NothingOrChoices,
     PermittedPath,
 )
-from cmk.utils import paths
 
 PERMISSIONS = permissions.Perm("wato.users")
 

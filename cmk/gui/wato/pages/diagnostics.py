@@ -11,9 +11,40 @@ from pathlib import Path
 from pydantic import BaseModel
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
-from cmk.automations.results import CreateDiagnosticsDumpResult
 from cmk.ccc.site import omd_site, SiteId
+
+import cmk.utils.paths
+from cmk.utils.diagnostics import (
+    CheckmkFileInfo,
+    CheckmkFileSensitivity,
+    CheckmkFilesMap,
+    DiagnosticsParameters,
+    get_checkmk_config_files_map,
+    get_checkmk_core_files_map,
+    get_checkmk_file_description,
+    get_checkmk_file_info,
+    get_checkmk_file_sensitivity_for_humans,
+    get_checkmk_licensing_files_map,
+    get_checkmk_log_files_map,
+    OPT_BI_RUNTIME_DATA,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
+    OPT_CHECKMK_LOG_FILES,
+    OPT_CHECKMK_OVERVIEW,
+    OPT_COMP_BUSINESS_INTELLIGENCE,
+    OPT_COMP_CMC,
+    OPT_COMP_GLOBAL_SETTINGS,
+    OPT_COMP_HOSTS_AND_FOLDERS,
+    OPT_COMP_LICENSING,
+    OPT_COMP_NOTIFICATIONS,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
+    serialize_wato_parameters,
+)
+
+from cmk.automations.results import CreateDiagnosticsDumpResult
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,
@@ -62,34 +93,6 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.utils.diagnostics import (
-    CheckmkFileInfo,
-    CheckmkFileSensitivity,
-    CheckmkFilesMap,
-    DiagnosticsParameters,
-    get_checkmk_config_files_map,
-    get_checkmk_core_files_map,
-    get_checkmk_file_description,
-    get_checkmk_file_info,
-    get_checkmk_file_sensitivity_for_humans,
-    get_checkmk_licensing_files_map,
-    get_checkmk_log_files_map,
-    OPT_BI_RUNTIME_DATA,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_CRASH_REPORTS,
-    OPT_CHECKMK_LOG_FILES,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_COMP_BUSINESS_INTELLIGENCE,
-    OPT_COMP_CMC,
-    OPT_COMP_GLOBAL_SETTINGS,
-    OPT_COMP_HOSTS_AND_FOLDERS,
-    OPT_COMP_LICENSING,
-    OPT_COMP_NOTIFICATIONS,
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-    serialize_wato_parameters,
-)
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"

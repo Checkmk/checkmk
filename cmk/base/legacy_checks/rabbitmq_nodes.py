@@ -7,10 +7,11 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import render
 
 check_info = {}
 

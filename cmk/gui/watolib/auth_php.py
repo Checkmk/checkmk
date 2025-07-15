@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cmk.ccc import store
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupName

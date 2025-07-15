@@ -11,6 +11,9 @@ from typing import Literal
 from pydantic import BaseModel
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui.config import Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -33,7 +36,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.utils import paths
 
 
 def ajax_popup_add(config: Config) -> None:

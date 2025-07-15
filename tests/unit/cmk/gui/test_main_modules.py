@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
+
 from cmk.gui import main_modules
 
 

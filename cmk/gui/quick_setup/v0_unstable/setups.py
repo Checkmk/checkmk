@@ -14,6 +14,7 @@ from typing import Protocol
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -23,6 +24,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+
 from cmk.rulesets.v1.form_specs import FormSpec
 
 

@@ -7,12 +7,14 @@ from collections.abc import MutableMapping, Sequence
 from logging import Logger
 from typing import override
 
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import AuxTagList, BuiltinTagConfig, TagConfig, TagGroup, TagGroupID, TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.tags import TagConfigFile
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.rulesets.ruleset_matcher import TagCondition
-from cmk.utils.tags import AuxTagList, BuiltinTagConfig, TagConfig, TagGroup, TagGroupID, TagID
 
 
 class UpdateNotificationTagConditions(UpdateAction):

@@ -7,11 +7,13 @@ from logging import Logger
 from typing import Generic, override, Protocol, TypeVar
 
 from cmk.ccc.user import UserId
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.pagetypes import (
     Overridable,
     OverridableInstances,
 )
+
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,

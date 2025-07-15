@@ -7,6 +7,7 @@ from types import NoneType
 from typing import Literal
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty
 from cmk.gui.i18n import _
@@ -22,6 +23,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecHelp,
 )
+
 from cmk.rulesets.v1 import form_specs, Title
 
 

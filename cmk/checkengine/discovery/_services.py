@@ -11,11 +11,13 @@ import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.log import console
+
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, DiscoveryPlugin, ServiceID
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
-from cmk.utils.log import console
 
 from ._utils import QualifiedDiscovery
 

@@ -8,6 +8,9 @@ from collections.abc import Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.agent_registration import get_uuid_link_manager
+
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -16,7 +19,6 @@ from cmk.gui.watolib.automations import (
     LocalAutomationConfig,
     RemoteAutomationConfig,
 )
-from cmk.utils.agent_registration import get_uuid_link_manager
 
 
 def remove_tls_registration(

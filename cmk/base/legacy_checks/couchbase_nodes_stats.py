@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines
 
 check_info = {}

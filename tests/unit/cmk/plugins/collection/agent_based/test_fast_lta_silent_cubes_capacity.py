@@ -7,8 +7,9 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
 from cmk.checkengine.plugins import CheckFunction, CheckPluginName
+
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 type DiscoveryFunction = Callable[..., DiscoveryResult]

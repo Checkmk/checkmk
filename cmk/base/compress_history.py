@@ -12,6 +12,7 @@ from typing import IO
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut
+
 from cmk.utils.log import VERBOSE
 
 logger = logging.getLogger("cmk.base.compress_history")

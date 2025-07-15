@@ -10,12 +10,15 @@ import string
 import pytest
 from pytest import FixtureRequest
 
+from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
+
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
 from cmk.ccc import version
-from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
+
 from cmk.utils import paths
 
-from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
+from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

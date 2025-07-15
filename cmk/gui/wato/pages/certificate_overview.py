@@ -9,9 +9,12 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from cmk.crypto.certificate import Certificate, CertificatePEM
-from cmk.crypto.hash import HashAlgorithm
-from cmk.crypto.x509 import X509Name
+from cmk.utils.paths import (
+    agent_cas_dir,
+    root_cert_file,
+    site_cert_file,
+)
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.cert_info import cert_info_registry, CertificateInfo
 from cmk.gui.config import Config
@@ -29,12 +32,11 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.x509 import X509Name
 from cmk.messaging import get_cert_info
-from cmk.utils.paths import (
-    agent_cas_dir,
-    root_cert_file,
-    site_cert_file,
-)
 
 
 @dataclass

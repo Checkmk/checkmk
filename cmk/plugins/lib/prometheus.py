@@ -13,12 +13,13 @@ from typing import Literal
 
 from requests.auth import HTTPBasicAuth
 
+from cmk.utils.password_store import lookup
+
 from cmk.special_agents.v0_unstable.request_helper import (
     ApiSession,
     HostnameValidationAdapter,
     parse_api_url,
 )
-from cmk.utils.password_store import lookup
 
 
 def add_authentication_args(parser: ArgumentParser) -> None:

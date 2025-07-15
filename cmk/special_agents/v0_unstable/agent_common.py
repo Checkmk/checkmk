@@ -22,9 +22,10 @@ from typing import Any
 
 import urllib3
 
-from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
 from cmk.utils.password_store import lookup as lookup_stored_passwords
 from cmk.utils.password_store.hack import resolve_password_hack
+
+from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
 
 
 class CannotRecover(RuntimeError):

@@ -12,6 +12,7 @@ from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
 )
+
 from cmk.update_config.plugins.actions.host_attribute_topics import (
     transform_pre_16_host_topics,
     UpdateHostAttributeTopics,

@@ -7,10 +7,10 @@ import datetime
 
 from kubernetes import client  # type: ignore[import-untyped]
 
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
+
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import parse_cron_job_spec, parse_cron_job_status, parse_metadata
-
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPICronJob:

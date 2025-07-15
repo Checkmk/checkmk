@@ -16,11 +16,13 @@ from unittest.mock import mock_open, patch
 import pytest
 import requests
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import livestatus
 
-import cmk.utils.paths
-from cmk.base import diagnostics
 from cmk.ccc.hostaddress import HostName
+
+import cmk.utils.paths
 from cmk.utils.structured_data import (
     deserialize_tree,
     InventoryStore,
@@ -28,7 +30,7 @@ from cmk.utils.structured_data import (
     SDRawTree,
 )
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from cmk.base import diagnostics
 
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:

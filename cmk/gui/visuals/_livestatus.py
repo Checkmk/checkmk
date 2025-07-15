@@ -7,6 +7,7 @@ from collections.abc import Container, Iterable
 from typing import Any, Literal
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import FilterHeader, VisualContext

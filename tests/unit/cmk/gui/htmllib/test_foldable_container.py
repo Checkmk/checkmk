@@ -5,6 +5,8 @@
 
 import pytest
 
+from tests.unit.cmk.gui.compare_html import compare_html
+
 from cmk.gui.htmllib.foldable_container import (
     foldable_container,
     foldable_container_id,
@@ -12,8 +14,6 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container_onclick,
 )
 from cmk.gui.utils.output_funnel import output_funnel
-
-from tests.unit.cmk.gui.compare_html import compare_html
 
 
 @pytest.mark.usefixtures("request_context")

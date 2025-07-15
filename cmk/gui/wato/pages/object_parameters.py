@@ -11,9 +11,14 @@ modified via rules."""
 import functools
 from collections.abc import Callable, Collection, Container, Iterator
 
-import cmk.gui.view_utils
-from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import Item
+
+from cmk.automations.results import AnalyseServiceResult, ServiceInfo
+
+import cmk.gui.view_utils
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -51,8 +56,6 @@ from cmk.gui.watolib.rulespecs import (
     RulespecAllowList,
 )
 from cmk.gui.watolib.utils import mk_repr
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.servicename import Item
 
 from ._status_links import make_service_status_link
 

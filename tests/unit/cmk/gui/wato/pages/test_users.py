@@ -5,12 +5,13 @@
 
 from unittest.mock import ANY
 
-from cmk.crypto.password import PasswordPolicy
-from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
+
+from cmk.crypto.password import PasswordPolicy
+from cmk.crypto.password_hashing import PasswordHash
 
 
 def test_users_breadcrumb_dont_list_users_topic(request_context: None) -> None:

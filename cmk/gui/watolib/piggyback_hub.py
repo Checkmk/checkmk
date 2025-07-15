@@ -9,13 +9,16 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
+
+from cmk.utils.paths import omd_root
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
+
 from cmk.piggyback.hub import HostLocations, publish_persisted_locations
-from cmk.utils.paths import omd_root
 
 _HOST_CHANGES = (
     "edit-host",  # includes moving a host from a site to another

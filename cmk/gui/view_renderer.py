@@ -10,9 +10,11 @@ from collections.abc import Callable, Iterator
 from typing import override
 
 import cmk.ccc.version as cmk_version
+
+import cmk.utils.paths
+
 import cmk.gui.pages
 import cmk.gui.view_utils
-import cmk.utils.paths
 from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb

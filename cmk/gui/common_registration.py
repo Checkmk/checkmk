@@ -7,9 +7,13 @@
 
 from collections.abc import Callable
 
-import cmk.gui.help
 from cmk.ccc.crash_reporting import CrashReportRegistry
 from cmk.ccc.version import edition
+
+from cmk.utils import paths
+from cmk.utils.licensing.registry import register_cre_licensing_handler
+
+import cmk.gui.help
 from cmk.gui import (
     activate_menu,
     agent_registration,
@@ -105,8 +109,6 @@ from cmk.gui.watolib.notification_parameter import notification_parameter_regist
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
-from cmk.utils import paths
-from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 
 def register(

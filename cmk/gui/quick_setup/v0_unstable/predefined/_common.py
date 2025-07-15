@@ -7,9 +7,12 @@ import re
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, cast
 
-from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgentInput
 from cmk.ccc.hostaddress import HostName
+
+from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgentInput
+
 from cmk.checkengine.discovery import CheckPreviewEntry
+
 from cmk.gui.form_specs.vue import (
     DiskModel,
     get_visitor,
@@ -27,6 +30,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.passwords import load_passwords
+
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 
 

@@ -11,9 +11,10 @@ from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
-from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
 
 check_info = {}
 

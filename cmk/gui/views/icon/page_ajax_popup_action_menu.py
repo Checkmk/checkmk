@@ -9,6 +9,9 @@ from livestatus import livestatus_lql
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils.servicename import ServiceName
+
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
@@ -17,7 +20,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import Row
-from cmk.utils.servicename import ServiceName
 
 from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
 

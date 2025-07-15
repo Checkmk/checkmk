@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.update_config.plugins.actions.background_jobs import UpdateBackgroundJobs
-
 from tests.unit.cmk.gui.test_background_job import job_base_dir  # noqa: F401
+
+from cmk.update_config.plugins.actions.background_jobs import UpdateBackgroundJobs
 
 
 @pytest.mark.parametrize(

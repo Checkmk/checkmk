@@ -5,8 +5,10 @@
 
 from pathlib import Path
 
-import cmk.utils.paths
 from cmk.ccc import store
+
+import cmk.utils.paths
+
 from cmk.werks.models import Werk
 from cmk.werks.utils import write_precompiled_werks
 

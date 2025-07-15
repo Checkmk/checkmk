@@ -6,11 +6,12 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.utils.tags import TagID
 
 from .base import Icon
 

@@ -6,8 +6,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
+
+from cmk.agent_based.v2 import Result, Service, State
 
 _SECTION = {
     "devices": [

@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.ccc.version as cmk_version
-from cmk.gui.sidebar import snapin_registry
+
 from cmk.utils import paths
+
+from cmk.gui.sidebar import snapin_registry
 
 
 def test_registered_snapins() -> None:

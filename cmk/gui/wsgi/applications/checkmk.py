@@ -16,10 +16,10 @@ from werkzeug.exceptions import RequestEntityTooLarge
 import livestatus
 
 import cmk.ccc.store
-import cmk.utils.paths
-from cmk import trace
 from cmk.ccc.exceptions import MKException
-from cmk.crypto import MKCryptoException
+
+import cmk.utils.paths
+
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -46,6 +46,9 @@ from cmk.gui.wsgi.applications.utils import (
     plain_error,
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
+
+from cmk import trace
+from cmk.crypto import MKCryptoException
 
 tracer = trace.get_tracer()
 

@@ -14,15 +14,18 @@ from types import ModuleType
 from typing import Any, Final
 
 import cmk.ccc.version as cmk_version
+
 import cmk.utils.tags
-from cmk import trace
+from cmk.utils import paths
+
 from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
-from cmk.utils import paths
+
+from cmk import trace
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
     from cmk.gui.cee.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation

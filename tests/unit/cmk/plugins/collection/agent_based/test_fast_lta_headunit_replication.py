@@ -7,6 +7,13 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckFunction,
+    CheckPlugin,
+    CheckPluginName,
+)
+
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -14,12 +21,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
     StringTable,
-)
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    CheckFunction,
-    CheckPlugin,
-    CheckPluginName,
 )
 
 type DiscoveryFunction = Callable[..., DiscoveryResult]

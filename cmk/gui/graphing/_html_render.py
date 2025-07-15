@@ -13,11 +13,15 @@ from typing import Any
 
 from livestatus import MKLivestatusNotFoundError
 
-import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing.v1 import graphs as graphs_api
+
+import cmk.utils.render
+from cmk.utils.jsontype import JsonSerializable
+from cmk.utils.paths import profile_dir
+from cmk.utils.servicename import ServiceName
+
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_templates import (
@@ -41,9 +45,8 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
-from cmk.utils.jsontype import JsonSerializable
-from cmk.utils.paths import profile_dir
-from cmk.utils.servicename import ServiceName
+
+from cmk.graphing.v1 import graphs as graphs_api
 
 from ._artwork import (
     compute_curve_values_at_timestamp,

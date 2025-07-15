@@ -12,6 +12,7 @@ from cmk.gui.form_specs.private.cascading_single_choice_extended import (
 )
 from cmk.gui.form_specs.private.single_choice_extended import SingleChoiceElementExtended
 from cmk.gui.form_specs.private.validators import ModelT
+
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

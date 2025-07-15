@@ -12,14 +12,17 @@ from marshmallow.decorators import post_load, pre_dump, validates_schema
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.ccc.user import UserId
-from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time
-from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
+
+from cmk.utils.tags import TagGroupID
+
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import GroupField, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
 from cmk.gui.watolib.tags import load_tag_group
-from cmk.utils.tags import TagGroupID
+
+from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time
+from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
 from .definitions import CmkOneOfSchema
 

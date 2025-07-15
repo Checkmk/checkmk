@@ -15,10 +15,15 @@ import time_machine
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from tests.unit.cmk.web_test_app import SetConfig
+
 from cmk.ccc import version
 from cmk.ccc.user import UserId
-from cmk.crypto.password import PasswordPolicy
-from cmk.crypto.password_hashing import PasswordHash
+
+from cmk.utils import paths
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -39,10 +44,9 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import default_sites, edit_users
-from cmk.utils import paths
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-from tests.unit.cmk.web_test_app import SetConfig
+from cmk.crypto.password import PasswordPolicy
+from cmk.crypto.password_hashing import PasswordHash
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

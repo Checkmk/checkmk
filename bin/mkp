@@ -7,9 +7,14 @@ import sys
 from typing import Final
 
 import cmk.ccc.store
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.paths
 from cmk.ccc.version import __version__, parse_check_mk_version
+
+import cmk.utils.paths
+from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.visuals import invalidate_visuals_cache
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,
@@ -18,8 +23,6 @@ from cmk.mkp_tool import (
     PathConfig,
     reload_services_affected_by_mkp_changes,
 )
-from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.visuals import invalidate_visuals_cache
 
 
 def _make_path_config() -> PathConfig:

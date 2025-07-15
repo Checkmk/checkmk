@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
-
 from tests.testlib.agent import (
     controller_connection_json,
     controller_status_json,
     register_controller,
 )
 from tests.testlib.site import Site
+
+from cmk.ccc.hostaddress import HostName
 
 
 def _test_rename_preserves_registration(

@@ -6,9 +6,9 @@
 
 import pathlib
 
-from cmk.plugins.kube import performance
-
 from tests.unit.cmk.plugins.kube.agent_kube import factory
+
+from cmk.plugins.kube import performance
 
 
 def test__create_cpu_rate_metrics(tmp_path: pathlib.Path) -> None:

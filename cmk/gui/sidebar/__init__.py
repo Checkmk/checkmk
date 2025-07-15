@@ -14,9 +14,11 @@ from collections.abc import Callable, Sequence
 from enum import Enum
 from typing import Any
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+
 from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config

@@ -9,6 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
 from cmk.agent_based.v2 import (
     IgnoreResultsError,
     Metric,
@@ -16,7 +18,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 

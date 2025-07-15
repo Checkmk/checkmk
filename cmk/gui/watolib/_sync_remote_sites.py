@@ -13,6 +13,7 @@ from pathlib import Path
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
+
 from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request

@@ -12,8 +12,9 @@ from zoneinfo import ZoneInfo
 
 import time_machine
 
-import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
+
+import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.history import _current_history_period
 from cmk.ec.history_file import (

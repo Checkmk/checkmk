@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from cmk.ccc.version import Edition
+
 from cmk.discover_plugins import (
     discover_all_plugins,
     discover_plugins_from_modules,

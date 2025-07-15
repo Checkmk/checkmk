@@ -8,11 +8,12 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Literal
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.utils.tags import TagID
 
 
 class Icon:

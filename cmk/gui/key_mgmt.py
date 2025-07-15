@@ -12,14 +12,14 @@ from typing import Any, Literal
 
 from dateutil.relativedelta import relativedelta
 
-import cmk.utils.render
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
-from cmk.crypto.hash import HashAlgorithm
-from cmk.crypto.password import Password as PasswordType
-from cmk.crypto.pem import PEMDecodingError
+
+import cmk.utils.render
+from cmk.utils.certs import CertManagementEvent
+from cmk.utils.log.security_event import log_security_event
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
@@ -48,8 +48,11 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
-from cmk.utils.certs import CertManagementEvent
-from cmk.utils.log.security_event import log_security_event
+
+from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 class KeypairStore:

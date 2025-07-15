@@ -250,6 +250,7 @@ def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
 
 if __name__ == "__main__":
     import cmk.ccc.version as cmk_version
+
     import cmk.utils.paths
 
     sys.stdout.write(

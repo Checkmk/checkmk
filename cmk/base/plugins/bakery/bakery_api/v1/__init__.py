@@ -5,6 +5,9 @@
 
 import shlex
 
+# For an explanation of what is what see comments in __all__definition at the end
+from cmk.utils import password_store
+
 from cmk.bakery.v1 import (
     DebStep,
     FileGenerator,
@@ -24,9 +27,6 @@ from cmk.bakery.v1 import (
     WindowsGlobalConfigEntry,
     WindowsSystemConfigEntry,
 )
-
-# For an explanation of what is what see comments in __all__definition at the end
-from cmk.utils import password_store
 
 from . import register
 

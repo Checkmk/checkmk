@@ -15,6 +15,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import safe_join
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.features import features_registry
 from cmk.gui.flask_app import CheckmkFlaskApp
 from cmk.gui.session import FileBasedSession

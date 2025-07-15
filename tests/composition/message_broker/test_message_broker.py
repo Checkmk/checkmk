@@ -19,6 +19,7 @@ from tests.composition.message_broker.utils import (
     Timeout,
     timeout,
 )
+
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

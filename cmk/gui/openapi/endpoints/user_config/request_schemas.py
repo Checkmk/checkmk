@@ -10,7 +10,6 @@ from typing import Any
 import marshmallow
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
@@ -18,6 +17,8 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.type_defs import DismissableWarning
 from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+
+from cmk import fields
 
 AUTH_PASSWORD = fields.String(
     required=False,

@@ -7,12 +7,8 @@ import logging
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.plugin_backend.section_plugins import create_snmp_section_plugin
-from cmk.discover_plugins import PluginLocation
-from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
-from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
+
 from cmk.snmplib import (
     BackendSNMPTree,
     ensure_str,
@@ -21,6 +17,14 @@ from cmk.snmplib import (
     SNMPHostConfig,
     SNMPVersion,
 )
+
+from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
+from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
+
+from cmk.checkengine.plugin_backend.section_plugins import create_snmp_section_plugin
+
+from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
+from cmk.discover_plugins import PluginLocation
 
 SNMP_HOST_CONFIG: Final = SNMPHostConfig(
     is_ipv6_primary=False,

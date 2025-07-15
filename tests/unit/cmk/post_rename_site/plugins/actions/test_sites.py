@@ -17,7 +17,9 @@ from livestatus import (
 )
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui.watolib.sites import site_management_registry
+
 from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.sites import update_site_config
 

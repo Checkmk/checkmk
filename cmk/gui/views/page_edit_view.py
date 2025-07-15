@@ -14,6 +14,9 @@ from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+
+from cmk.utils.structured_data import SDPath
+
 from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
@@ -60,7 +63,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.utils.structured_data import SDPath
 
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter

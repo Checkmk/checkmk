@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import assert_never
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.checkengine.fetcher import FetcherType
 
 __all__ = ["make_persisted_section_dir"]

@@ -7,15 +7,8 @@ import typing
 from collections.abc import Callable, Mapping
 from typing import Any, Literal, NamedTuple, TypeVar
 
-from cmk import fields
 from cmk.ccc.version import Edition
-from cmk.gui.fields.base import BaseSchema as BaseSchema
-from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.host_attributes import (
-    get_sorted_host_attribute_topics,
-    get_sorted_host_attributes_by_topic,
-)
-from cmk.gui.watolib.tags import load_tag_config
+
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
     And,
@@ -29,6 +22,16 @@ from cmk.utils.livestatus_helpers.expressions import (
 )
 from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
+
+from cmk.gui.fields.base import BaseSchema as BaseSchema
+from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.watolib.host_attributes import (
+    get_sorted_host_attribute_topics,
+    get_sorted_host_attributes_by_topic,
+)
+from cmk.gui.watolib.tags import load_tag_config
+
+from cmk import fields
 
 
 class Attr(NamedTuple):

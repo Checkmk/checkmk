@@ -8,16 +8,19 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, Protocol
 
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
+
+from cmk.snmplib import SNMPDetectBaseType
+
+from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.agent_based.v2 import (
     HostLabelGenerator,
     StringByteTable,
     StringTable,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.discover_plugins import PluginLocation
-from cmk.snmplib import SNMPDetectBaseType
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
 
 from ._common import LegacyPluginLocation, RuleSetTypeName
 

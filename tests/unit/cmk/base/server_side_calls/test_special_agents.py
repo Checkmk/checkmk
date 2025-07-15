@@ -12,6 +12,9 @@ from typing import NamedTuple
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+
+from cmk.utils import password_store
+
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -23,7 +26,6 @@ from cmk.server_side_calls.v1 import (
 )
 from cmk.server_side_calls_backend import SpecialAgent
 from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
-from cmk.utils import password_store
 
 HOST_ATTRS = {
     "alias": "my_host_alias",

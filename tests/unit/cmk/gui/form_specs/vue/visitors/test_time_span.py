@@ -6,6 +6,7 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange

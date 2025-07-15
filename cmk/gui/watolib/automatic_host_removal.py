@@ -14,9 +14,13 @@ from redis import ConnectionError as RedisConnectionError
 
 from livestatus import LocalConnection, MKLivestatusSocketError
 
-import cmk.gui.log
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils.paths import log_dir
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+
+import cmk.gui.log
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -34,8 +38,6 @@ from cmk.gui.watolib.automations import (
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
-from cmk.utils.paths import log_dir
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 _LOGGER = cmk.gui.log.logger.getChild("automatic_host_removal")
 _LOGGER_BACKGROUND_JOB = _LOGGER.getChild("background_job")

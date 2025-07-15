@@ -15,6 +15,12 @@ import time_machine
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.paths import default_config_dir
+from cmk.utils.structured_data import deserialize_tree
+
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -26,10 +32,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
-from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import deserialize_tree
 
 
 @pytest.fixture(name="live")

@@ -6,8 +6,9 @@
 
 from marshmallow import INCLUDE, ValidationError
 
-from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
+
+from cmk import fields
 
 
 class BoolOrStringField(fields.Field):

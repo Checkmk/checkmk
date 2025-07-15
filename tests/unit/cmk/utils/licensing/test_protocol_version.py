@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from cmk.ccc.version import Edition
+
 from cmk.utils.licensing.protocol_version import get_licensing_protocol_version
 
 

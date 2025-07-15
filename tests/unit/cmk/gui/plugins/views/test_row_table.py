@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.gui.data_source import RowTableLivestatus
 from cmk.gui.view import View
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("request_context")

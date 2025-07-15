@@ -14,10 +14,20 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import DeleteHostsResult
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
 from cmk.ccc import version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.tags import BuiltinTagConfig
+
+from cmk.automations.results import DeleteHostsResult
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
@@ -34,12 +44,6 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
-from cmk.utils import paths
-from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from cmk.utils.tags import BuiltinTagConfig
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

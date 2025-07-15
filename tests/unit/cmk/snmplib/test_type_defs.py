@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from cmk.agent_based.v1 import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
@@ -18,6 +18,8 @@ from cmk.snmplib import (
     SNMPVersion,
     SpecialColumn,
 )
+
+from cmk.agent_based.v1 import OIDBytes, OIDCached, OIDEnd, SNMPTree
 
 
 class TestSNMPHostConfig:

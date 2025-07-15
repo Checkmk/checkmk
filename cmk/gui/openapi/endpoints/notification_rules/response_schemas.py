@@ -10,22 +10,6 @@ from typing import Any, cast, get_args
 from marshmallow import post_dump
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk import fields
-from cmk.gui.fields import (
-    AuxTagIDField,
-    FolderIDField,
-    GlobalHTTPProxyField,
-    IPField,
-    PasswordStoreIDField,
-    ServiceLevelField,
-    TagGroupIDField,
-)
-from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
-    notification_rule_request_example,
-)
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
-from cmk.gui.rest_api_types.notifications_rule_types import PluginType
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EmailBodyElementsType,
@@ -41,6 +25,24 @@ from cmk.utils.notify_types import (
     SysLogFacilityStrType,
     SysLogPriorityStrType,
 )
+
+from cmk.gui.fields import (
+    AuxTagIDField,
+    FolderIDField,
+    GlobalHTTPProxyField,
+    IPField,
+    PasswordStoreIDField,
+    ServiceLevelField,
+    TagGroupIDField,
+)
+from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+    notification_rule_request_example,
+)
+from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.rest_api_types.notifications_rule_types import PluginType
+
+from cmk import fields
 
 
 class CheckboxOutput(BaseSchema):

@@ -9,8 +9,9 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.gui.wato._notification_parameter._ilert import _migrate_to_password
 from cmk.utils import password_store
+
+from cmk.gui.wato._notification_parameter._ilert import _migrate_to_password
 
 
 @pytest.mark.parametrize(

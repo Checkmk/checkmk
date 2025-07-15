@@ -5,15 +5,15 @@
 
 import pytest_mock
 
-from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
-from cmk.plugins.kube.agent_handlers.daemonset_handler import create_api_sections
-from cmk.plugins.kube.special_agents import agent_kube
-
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     api_to_agent_daemonset,
     APIDaemonSetFactory,
     APIPodFactory,
 )
+
+from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
+from cmk.plugins.kube.agent_handlers.daemonset_handler import create_api_sections
+from cmk.plugins.kube.special_agents import agent_kube
 
 
 def daemon_sets_api_sections() -> set[str]:

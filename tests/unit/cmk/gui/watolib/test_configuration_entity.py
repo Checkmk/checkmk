@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.gui.watolib.configuration_entity import configuration_entity as ce
+
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 

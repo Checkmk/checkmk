@@ -9,6 +9,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Final, NamedTuple
 
+from cmk.utils.sectionname import SectionMap, SectionName
+
 from cmk.snmplib import (
     BackendSNMPTree,
     SNMPBackend,
@@ -16,7 +18,6 @@ from cmk.snmplib import (
     SNMPDetectSpec,
     SNMPHostConfig,
 )
-from cmk.utils.sectionname import SectionMap, SectionName
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

@@ -19,8 +19,7 @@ from typing import NoReturn
 from jinja2 import Environment, FileSystemLoader
 
 from cmk.ccc.exceptions import MKException
-from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
+
 from cmk.utils.escaping import escape_permissive
 from cmk.utils.mail import (
     Attachment,
@@ -30,6 +29,9 @@ from cmk.utils.mail import (
     send_mail_sendmail,
 )
 from cmk.utils.paths import omd_root, web_dir
+
+from cmk.notification_plugins import utils
+from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 
 # Elements to be put into the mail body. Columns:
 # 1. Name

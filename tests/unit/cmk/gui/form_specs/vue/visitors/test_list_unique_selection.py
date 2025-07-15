@@ -11,6 +11,7 @@ from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFr
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
+
 from cmk.rulesets.v1 import Title
 
 

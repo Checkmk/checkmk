@@ -8,9 +8,12 @@ from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
 
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine import plugins
+
 from cmk import trace
 from cmk.agent_based import v2
-from cmk.checkengine import plugins
 from cmk.discover_plugins import (
     discover_all_plugins,
     discover_plugins_from_modules,
@@ -18,7 +21,6 @@ from cmk.discover_plugins import (
     PluginGroup,
     PluginLocation,
 )
-from cmk.utils.sectionname import SectionName
 
 from .check_plugins import create_check_plugin
 from .inventory_plugins import create_inventory_plugin

@@ -11,6 +11,15 @@ from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 from marshmallow import pre_dump
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+
+from cmk.utils.caching import instance_method_lru_cache
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
+
+from cmk.checkengine.submitters import ServiceState  # pylint: disable=cmk-module-layer-violation
+
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.lib import (
@@ -44,12 +53,6 @@ from cmk.bi.node_vis import (
 from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import HostState
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
-from cmk.checkengine.submitters import ServiceState  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.caching import instance_method_lru_cache
-from cmk.utils.servicename import ServiceName
-from cmk.utils.statename import host_state_name, service_state_name
 
 
 class CompiledAggrRule(TypedDict):

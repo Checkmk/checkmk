@@ -8,8 +8,14 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.config import FilterMode, HostCheckTable
+# No stub file
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
+
 from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
@@ -20,11 +26,8 @@ from cmk.checkengine.plugins import (
     ConfiguredService,
     ServiceID,
 )
-from cmk.utils.servicename import ServiceName
-from cmk.utils.tags import TagGroupID, TagID
 
-# No stub file
-from tests.testlib.unit.base_configuration_scenario import Scenario
+from cmk.base.config import FilterMode, HostCheckTable
 
 
 @dataclasses.dataclass(frozen=True)

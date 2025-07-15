@@ -6,9 +6,10 @@
 from collections.abc import Callable
 from typing import Any
 
+from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
-from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
 
 check_info = {}
 

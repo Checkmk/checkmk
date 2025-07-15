@@ -9,7 +9,11 @@ from collections.abc import Iterable, Iterator, Sequence
 from pprint import pformat
 from typing import Generic, NamedTuple, Protocol, TypeVar
 
+from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
+
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
 from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
@@ -21,8 +25,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     RulespecSubGroup,
 )
-from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
 

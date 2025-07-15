@@ -5,6 +5,7 @@
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.i18n import _
+
 from cmk.utils.licensing.handler import LicenseState
 
 

@@ -7,9 +7,9 @@
 from time import time
 from typing import Any
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 def add_event_console_events_to_live_status_table(live: MockLiveStatusConnection) -> None:

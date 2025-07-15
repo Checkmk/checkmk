@@ -8,9 +8,10 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Any, Protocol
 
+from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
-from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 
 check_info = {}
 

@@ -12,10 +12,12 @@ from livestatus import SiteConfigurations
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
+
+from cmk.utils import paths
+
 from cmk.gui.groups import GroupSpec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
-from cmk.utils import paths
 
 CustomerId = str
 SCOPE_GLOBAL = None

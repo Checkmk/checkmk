@@ -10,12 +10,15 @@ from typing import Literal
 
 import pytest
 
-from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.parser import NO_SELECTION
-from cmk.checkengine.plugins import AgentBasedPlugins
+
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.tags import TagGroupID, TagID
+
 from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
@@ -25,11 +28,12 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.tags import TagGroupID, TagID
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
+from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.plugins import AgentBasedPlugins
+
+from cmk.base.config import ConfigCache
+from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 
 
 def _dummy_rule_spec(host_name: HostName, value: Mapping[str, object] | str) -> RuleSpec:

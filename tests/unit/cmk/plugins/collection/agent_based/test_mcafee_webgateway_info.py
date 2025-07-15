@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, SimpleSNMPSection, State
-from cmk.plugins.collection.agent_based import mcafee_webgateway_info
-
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
+
+from cmk.agent_based.v2 import Result, Service, SimpleSNMPSection, State
+from cmk.plugins.collection.agent_based import mcafee_webgateway_info
 
 WALK_MCAFEE = """
 .1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7;Hyper-V;Microsoft Corporation

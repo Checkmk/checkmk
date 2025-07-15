@@ -5,9 +5,10 @@
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.gui.valuespec import ValueSpec
+
 import cmk.rulesets.v1
 import cmk.rulesets.v1.form_specs
-from cmk.gui.valuespec import ValueSpec
 
 
 @dataclass(frozen=True, kw_only=True)

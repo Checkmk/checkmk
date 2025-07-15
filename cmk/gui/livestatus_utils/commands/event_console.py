@@ -11,13 +11,16 @@ from typing import get_args, Literal
 
 from livestatus import lqencode, MultiSiteConnection, OnlySites
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
-from cmk.gui.logged_in import user
+
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 from cmk.utils.statename import core_state_names
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from cmk.gui.logged_in import user
 
 
 class EventNotFoundError(ValueError):

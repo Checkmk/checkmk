@@ -7,8 +7,9 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

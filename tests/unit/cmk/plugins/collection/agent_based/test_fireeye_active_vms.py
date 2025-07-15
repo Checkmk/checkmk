@@ -8,13 +8,14 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckFunction,
     CheckPlugin,
     CheckPluginName,
 )
+
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
 
 type DiscoveryFunction = Callable[..., DiscoveryResult]
 

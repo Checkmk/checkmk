@@ -8,8 +8,9 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
-from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.metrics import MetricName
+
+from cmk.gui.i18n import _, translate_to_current_language
 
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._formatter import AutoPrecision

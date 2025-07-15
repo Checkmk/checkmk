@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.messaging import DeliveryTag
 from cmk.piggyback.hub._config import (
     ConfigType,

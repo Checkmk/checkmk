@@ -6,11 +6,11 @@
 
 import pytest
 
+from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
+
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_guest_tools
 from cmk.plugins.vsphere.lib.esx_vsphere import ESXStatus, SectionESXVm
-
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 def test_parse_esx_vsphere_guest_tools() -> None:

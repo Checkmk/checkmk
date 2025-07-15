@@ -8,8 +8,9 @@
 
 from typing import NamedTuple
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

@@ -23,9 +23,11 @@ from typing import Any, Final, TypeVar
 from marshmallow import Schema, ValidationError
 from werkzeug.http import parse_options_header
 
-from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.version import Edition
+
+from cmk.utils.paths import configuration_lockfile
+
 from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
@@ -73,7 +75,8 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-from cmk.utils.paths import configuration_lockfile
+
+from cmk import trace
 
 tracer = trace.get_tracer()
 _logger = logging.getLogger(__name__)

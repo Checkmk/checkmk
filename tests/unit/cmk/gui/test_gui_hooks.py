@@ -10,12 +10,13 @@ from collections.abc import Generator
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui import hooks
 from cmk.gui.config import Config
 from cmk.gui.pages import Page, page_registry, PageEndpoint
-
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture()

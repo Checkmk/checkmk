@@ -7,6 +7,7 @@
 from collections.abc import Mapping
 
 from cmk.ccc.user import UserId
+
 from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request

@@ -8,12 +8,15 @@ import time
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 
+from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
+
+import cmk.utils
+from cmk.utils.setup_search_index import request_index_update
+
 import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
-import cmk.utils
-from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
@@ -26,7 +29,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.utils.setup_search_index import request_index_update
 
 
 def add_change(

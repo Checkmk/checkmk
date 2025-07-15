@@ -10,8 +10,10 @@ import time
 from collections.abc import Sequence
 from typing import Any, override
 
-import cmk.utils.render
 from cmk.ccc.plugin_registry import Registry
+
+import cmk.utils.render
+
 from cmk.gui import forms, valuespec
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options

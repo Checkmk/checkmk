@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import ast
 
-from cmk.snmplib import SNMPRawData
 from cmk.utils.sectionname import SectionName
+
+from cmk.snmplib import SNMPRawData
 
 from ._cache import FileCache
 

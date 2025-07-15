@@ -13,7 +13,11 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
-from cmk.crypto.password import Password, PasswordPolicy
+
+from cmk.utils import paths
+from cmk.utils.log.security_event import log_security_event
+from cmk.utils.object_diff import make_diff_text
+
 from cmk.gui import hooks, site_config, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
@@ -33,9 +37,8 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.utils import paths
-from cmk.utils.log.security_event import log_security_event
-from cmk.utils.object_diff import make_diff_text
+
+from cmk.crypto.password import Password, PasswordPolicy
 
 _UserAssociatedSitesFn: TypeAlias = Callable[[UserSpec], Sequence[SiteId] | None]
 

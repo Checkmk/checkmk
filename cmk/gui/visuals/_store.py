@@ -11,12 +11,15 @@ from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
 import cmk.ccc.version as cmk_version
-import cmk.utils
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.store import save_object_to_file
 from cmk.ccc.user import UserId
+
+import cmk.utils
+import cmk.utils.paths
+from cmk.utils.escaping import escape
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.exceptions import MKUserError
@@ -28,8 +31,8 @@ from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
+
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
-from cmk.utils.escaping import escape
 
 TVisual = TypeVar("TVisual", bound=Visual)
 CustomUserVisuals = dict[tuple[UserId, VisualName], TVisual]

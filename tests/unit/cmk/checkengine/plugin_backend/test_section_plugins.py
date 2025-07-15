@@ -8,6 +8,12 @@ from collections.abc import Callable
 
 import pytest
 
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.plugin_backend import section_plugins
+from cmk.checkengine.plugins import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.agent_based.v2 import (
     AgentSection,
     matches,
@@ -18,11 +24,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     StringTable,
 )
-from cmk.checkengine.plugin_backend import section_plugins
-from cmk.checkengine.plugins import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.sectionname import SectionName
 
 
 def _generator_function():

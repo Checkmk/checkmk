@@ -6,7 +6,8 @@
 import time
 from datetime import datetime
 
-from cmk.crypto.password import Password, PasswordPolicy
+from cmk.utils.log.security_event import log_security_event
+
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.config import Config
@@ -32,7 +33,8 @@ from cmk.gui.watolib.users import (
     get_enabled_remote_sites_for_logged_in_user,
     verify_password_policy,
 )
-from cmk.utils.log.security_event import log_security_event
+
+from cmk.crypto.password import Password, PasswordPolicy
 
 from .page_menu import user_profile_page_menu
 from .verify_requirements import verify_requirements

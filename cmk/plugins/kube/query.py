@@ -22,9 +22,10 @@ import requests
 import urllib3
 from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+
 from cmk.plugins.kube.prometheus_api import parse_raw_response, Response, ResponseSuccess, Vector
 from cmk.plugins.lib import node_exporter
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 

@@ -11,6 +11,7 @@ from typing import override
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
+
 from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,

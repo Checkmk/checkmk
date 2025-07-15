@@ -14,8 +14,10 @@ from collections.abc import Callable, Mapping, Sequence
 from html import unescape
 from typing import Any, Literal
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
+
+import cmk.utils.paths
+
 from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options

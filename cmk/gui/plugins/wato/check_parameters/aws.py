@@ -28,6 +28,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
 from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,

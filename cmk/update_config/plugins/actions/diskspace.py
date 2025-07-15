@@ -11,9 +11,11 @@ from typing import override
 from pydantic import BaseModel
 
 from cmk.ccc.store import save_text_to_file
+
+from cmk.utils.paths import diskspace_config_dir, omd_root
+
 from cmk.diskspace.config import Config
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.paths import diskspace_config_dir, omd_root
 
 
 class _OldConfig(BaseModel, frozen=True):

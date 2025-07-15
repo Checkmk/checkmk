@@ -6,13 +6,13 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.kube.common import create_sections, Piggyback, PodsToHost, SectionName, Selector
-from cmk.plugins.kube.performance import _determine_cpu_rate_metrics
-
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     CPUSampleFactory,
     IdentifiableSampleFactory,
 )
+
+from cmk.plugins.kube.common import create_sections, Piggyback, PodsToHost, SectionName, Selector
+from cmk.plugins.kube.performance import _determine_cpu_rate_metrics
 
 
 def test_determine_cpu_rate_metrics() -> None:

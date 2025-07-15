@@ -8,6 +8,9 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui import visuals
 from cmk.gui.http import request
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -15,7 +18,6 @@ from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.utils import paths
 
 
 def test_get_filter() -> None:

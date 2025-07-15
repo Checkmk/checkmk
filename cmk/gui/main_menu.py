@@ -12,6 +12,7 @@ import copy
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
+
 from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 
 

@@ -10,6 +10,7 @@ from apispec.utils import dedent
 from werkzeug.utils import import_string
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
     EditionLabel,

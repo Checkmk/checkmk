@@ -10,6 +10,11 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+from cmk.utils.notify_types import HostEventType, ServiceEventType
+from cmk.utils.tags import AuxTag, TagGroup
+from cmk.utils.timeperiod import TimeperiodName
+
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
@@ -94,6 +99,7 @@ from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -132,9 +138,6 @@ from cmk.shared_typing.vue_formspec_components import (
     ConditionGroup,
     ListOfStringsLayout,
 )
-from cmk.utils.notify_types import HostEventType, ServiceEventType
-from cmk.utils.tags import AuxTag, TagGroup
-from cmk.utils.timeperiod import TimeperiodName
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")

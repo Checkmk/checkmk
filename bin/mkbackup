@@ -22,6 +22,7 @@ from typing import IO, NamedTuple, NoReturn
 import cmk.ccc.version as cmk_version
 from cmk.ccc import daemon
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate
+
 from cmk.utils import render, schedule
 from cmk.utils.backup.config import Config
 from cmk.utils.backup.job import Job

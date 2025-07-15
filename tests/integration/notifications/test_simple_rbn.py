@@ -10,9 +10,9 @@ from typing import Final
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
-
 from tests.testlib.site import Site
+
+from cmk.ccc.hostaddress import HostName
 
 from .watch_log import WatchLog
 

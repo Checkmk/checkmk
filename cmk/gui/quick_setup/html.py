@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # ruff: noqa: A005
 
+from cmk.utils.global_ident_type import GlobalIdent
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.table import Table
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.mode import mode_url
-from cmk.utils.global_ident_type import GlobalIdent
 
 
 def _quick_setup_link(ident: GlobalIdent) -> str:

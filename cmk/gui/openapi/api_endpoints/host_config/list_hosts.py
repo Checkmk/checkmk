@@ -6,7 +6,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal
 
-from cmk import trace
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
     HostConfigModel,
@@ -28,6 +27,8 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+
+from cmk import trace
 
 tracer = trace.get_tracer()
 

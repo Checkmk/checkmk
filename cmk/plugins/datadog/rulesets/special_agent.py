@@ -7,12 +7,16 @@
 from collections.abc import Callable, Mapping
 
 from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
+
 from cmk.gui.form_specs.private import ListExtended  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.mkeventd import (  # pylint: disable=cmk-module-layer-violation
     service_levels,
     syslog_facilities,
     syslog_priorities,
 )
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -36,7 +40,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils import paths
 
 
 def _valuespec_special_agents_datadog() -> Dictionary:

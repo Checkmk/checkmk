@@ -10,15 +10,15 @@ import pytest
 import requests
 import urllib3
 
-from cmk.plugins.kube import prometheus_api, query
-from cmk.plugins.kube.schemata import section
-
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     ResponseErrorFactory,
     ResponseSuccessFactory,
     SampleFactory,
     VectorFactory,
 )
+
+from cmk.plugins.kube import prometheus_api, query
+from cmk.plugins.kube.schemata import section
 
 RESPONSEERROR = ResponseErrorFactory.build()
 SSLERROR = requests.exceptions.SSLError(

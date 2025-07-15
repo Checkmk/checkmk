@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import inventory_wmi_table_total, wmi_yield_raw_persec
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 check_info = {}

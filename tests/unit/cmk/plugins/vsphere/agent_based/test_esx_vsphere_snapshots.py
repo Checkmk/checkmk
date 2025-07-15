@@ -10,6 +10,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
+
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.vsphere.agent_based.esx_vsphere_snapshot import (
     check_snapshots,
@@ -20,8 +22,6 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_snapshot import (
 )
 from cmk.plugins.vsphere.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
 from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
-
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 def test_parse_esx_vsphere_snapshots():

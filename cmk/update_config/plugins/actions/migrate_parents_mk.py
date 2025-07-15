@@ -11,15 +11,18 @@ from logging import Logger
 from pathlib import Path
 from typing import NamedTuple, override
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
+
+import cmk.utils.paths
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

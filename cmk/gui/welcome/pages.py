@@ -5,6 +5,10 @@
 from collections.abc import Generator
 from dataclasses import asdict
 
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
+from cmk.utils.notify_types import EventRule
+
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -18,10 +22,8 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule
+
 from cmk.shared_typing.welcome import StageInformation, WelcomePage, WelcomeUrls
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.notify_types import EventRule
 
 
 def register(page_registry: PageRegistry) -> None:

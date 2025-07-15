@@ -13,7 +13,6 @@ from typing import Literal
 
 import pytest
 
-from tests.performance.sysmon import track_resources
 from tests.testlib.site import (
     connection,
     get_site_factory,
@@ -22,6 +21,8 @@ from tests.testlib.site import (
     tracing_config_from_env,
 )
 from tests.testlib.utils import is_containerized, run
+
+from tests.performance.sysmon import track_resources
 
 site_factory = get_site_factory(prefix="perf_")
 

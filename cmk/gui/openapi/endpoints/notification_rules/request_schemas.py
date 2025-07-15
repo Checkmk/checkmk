@@ -10,8 +10,27 @@ from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 from urllib3.util import parse_url
 
-from cmk import fields
 from cmk.ccc.i18n import _
+
+from cmk.utils.notify_types import (
+    CaseStateStr,
+    EmailBodyElementsType,
+    get_builtin_plugin_names,
+    GroupbyType,
+    IlertPriorityType,
+    IncidentStateStr,
+    MgmntPriorityType,
+    MgmntUrgencyType,
+    OpsgenieElement,
+    OpsGeniePriorityStrType,
+    PluginOptions,
+    PushOverPriorityStringType,
+    RegexModes,
+    SoundType,
+    SysLogFacilityStrType,
+    SysLogPriorityStrType,
+)
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import (
     AuxTagIDField,
@@ -36,25 +55,9 @@ from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespe
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
+
+from cmk import fields
 from cmk.rulesets.v1.rule_specs import NotificationParameters
-from cmk.utils.notify_types import (
-    CaseStateStr,
-    EmailBodyElementsType,
-    get_builtin_plugin_names,
-    GroupbyType,
-    IlertPriorityType,
-    IncidentStateStr,
-    MgmntPriorityType,
-    MgmntUrgencyType,
-    OpsgenieElement,
-    OpsGeniePriorityStrType,
-    PluginOptions,
-    PushOverPriorityStringType,
-    RegexModes,
-    SoundType,
-    SysLogFacilityStrType,
-    SysLogPriorityStrType,
-)
 
 
 class Checkbox(BaseSchema):

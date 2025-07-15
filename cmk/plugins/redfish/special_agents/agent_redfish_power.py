@@ -22,6 +22,8 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
+from cmk.utils import password_store
+
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
@@ -30,7 +32,6 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
-from cmk.utils import password_store
 
 SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 

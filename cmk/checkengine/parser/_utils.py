@@ -9,8 +9,10 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import HostKey
+
 from cmk.utils.sectionname import MutableSectionMap
+
+from cmk.checkengine.fetcher import HostKey
 
 from ._parser import HostSections
 

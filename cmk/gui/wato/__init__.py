@@ -13,6 +13,10 @@ backend business and persistence logic, which is also shared with the REST API.
 # for them, we can remove this here and the imports
 # ruff: noqa: F401
 
+from cmk.ccc.exceptions import MKGeneralException
+
+import cmk.utils.paths
+
 import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
@@ -30,8 +34,6 @@ import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
-import cmk.utils.paths
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html

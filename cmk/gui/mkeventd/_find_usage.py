@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings

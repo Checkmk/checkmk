@@ -5,8 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Service
 from cmk.base.legacy_checks.ra32e_power import check_ra32e_power, discover_ra32e_power
+
+from cmk.agent_based.v2 import Service
 
 from .checktestlib import BasicCheckResult
 

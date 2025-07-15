@@ -11,8 +11,16 @@ from typing import Literal
 
 import pytest
 
-import cmk.ec.export as ec
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
+
+from cmk.base import config
+
+import cmk.ec.export as ec
+
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -22,13 +30,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.base import config
-from cmk.ccc.hostaddress import HostName
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch_ec
 from cmk.plugins.logwatch.agent_based.logwatch_section import parse_logwatch
-
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 _STRING_TABLE_NO_MESSAGES = [
     ["[[[log1]]]"],

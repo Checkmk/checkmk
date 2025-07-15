@@ -15,31 +15,27 @@ from typing import Any, Literal, NoReturn
 import pytest
 from pytest import MonkeyPatch
 
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 import cmk.ccc.debug
-import cmk.checkengine.plugin_backend as agent_based_register
-import cmk.utils.paths
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    exists,
-    Result,
-    Service,
-    SimpleSNMPSection,
-    SNMPTree,
-    StringTable,
-)
-from cmk.base import config
-from cmk.base.config import (
-    ConfigCache,
-)
-from cmk.base.configlib.checkengine import CheckingConfig
-from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.servicename import FinalServiceNameConfig
-from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
+from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
+from cmk.utils.sectionname import SectionName
+from cmk.utils.tags import TagGroupID, TagID
+
+from cmk.snmplib import SNMPBackendEnum
+
+from cmk.fetchers import Mode, TCPEncryptionHandling
+
+import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
@@ -57,18 +53,28 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
-from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
-from cmk.fetchers import Mode, TCPEncryptionHandling
-from cmk.server_side_calls.v1 import ActiveCheckConfig
-from cmk.snmplib import SNMPBackendEnum
-from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
-from cmk.utils.sectionname import SectionName
-from cmk.utils.tags import TagGroupID, TagID
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
+from cmk.base import config
+from cmk.base.config import (
+    ConfigCache,
+)
+from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.labels import LabelConfig
+from cmk.base.configlib.servicename import FinalServiceNameConfig
+from cmk.base.default_config.base import _PeriodicDiscovery
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    exists,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckConfig
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

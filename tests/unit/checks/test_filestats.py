@@ -7,8 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
 
 @pytest.mark.parametrize(

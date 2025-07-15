@@ -9,6 +9,7 @@ from pathlib import Path
 from uuid import UUID
 
 from cmk.ccc.site import SiteId
+
 from cmk.utils import paths
 from cmk.utils.paths import log_dir
 

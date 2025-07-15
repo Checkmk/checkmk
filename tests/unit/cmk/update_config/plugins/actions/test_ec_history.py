@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 
 from cmk.ec.settings import create_paths
+
 from cmk.update_config.plugins.actions.ec_history import UpdateECHistory
 
 

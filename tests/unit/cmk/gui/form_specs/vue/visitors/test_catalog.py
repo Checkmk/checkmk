@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.user import UserId
+
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import LengthInRange

@@ -11,8 +11,11 @@ from typing import Any, NewType
 from livestatus import SiteConfigurations
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
+
+from cmk.utils import paths
+
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -44,7 +47,6 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
-from cmk.utils import paths
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)

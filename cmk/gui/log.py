@@ -7,6 +7,7 @@ from logging import FileHandler, Formatter, getLogger
 
 import cmk.utils.log
 import cmk.utils.paths
+
 from cmk.trace.logs import add_span_log_handler
 
 logger = getLogger("cmk.web")

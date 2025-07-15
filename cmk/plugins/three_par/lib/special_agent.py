@@ -14,6 +14,7 @@ import requests
 import urllib3
 
 import cmk.utils.password_store
+
 from cmk.rulesets.v1 import Title
 
 DEFAULT_VALUES = {

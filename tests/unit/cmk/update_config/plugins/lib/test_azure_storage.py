@@ -9,6 +9,7 @@ import pytest
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule
+
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration
 
 logger = logging.getLogger("azure.storage")

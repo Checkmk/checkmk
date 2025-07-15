@@ -10,7 +10,10 @@ from typing import Literal
 
 import pytest
 
+from tests.testlib.common.repo import repo_path
+
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.structured_data import (
     _DeltaDict,
     _deserialize_retention_interval,
@@ -41,8 +44,6 @@ from cmk.utils.structured_data import (
     serialize_tree,
     UpdateResult,
 )
-
-from tests.testlib.common.repo import repo_path
 
 
 @pytest.mark.parametrize(

@@ -8,6 +8,9 @@ from typing import Any
 import pytest
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.config import active_config
@@ -17,7 +20,6 @@ from cmk.gui.views.icon import (
     icon_and_action_registry,
 )
 from cmk.gui.views.icon import registry as icon_registry
-from cmk.utils import paths
 
 
 def test_builtin_icons_and_actions() -> None:

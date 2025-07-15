@@ -17,11 +17,33 @@ from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteConfiguration
 
-import cmk.gui.watolib.changes as _changes
-from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils.labels import LabelGroups
+from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets import ruleset_matcher
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_label_conditions,
+    allow_service_label_conditions,
+    HostOrServiceConditions,
+    HostOrServiceConditionsSimple,
+)
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
+from cmk.utils.rulesets.ruleset_matcher import (
+    RulesetName,
+    RuleSpec,
+    TagCondition,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+)
+from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.tags import GroupedTag, TagGroupID, TagID
+
+import cmk.gui.watolib.changes as _changes
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -153,28 +175,9 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.utils import mk_eval, mk_repr
+
+from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.utils.labels import LabelGroups
-from cmk.utils.regex import escape_regex_chars
-from cmk.utils.rulesets import ruleset_matcher
-from cmk.utils.rulesets.conditions import (
-    allow_host_label_conditions,
-    allow_label_conditions,
-    allow_service_label_conditions,
-    HostOrServiceConditions,
-    HostOrServiceConditionsSimple,
-)
-from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
-from cmk.utils.rulesets.ruleset_matcher import (
-    RulesetName,
-    RuleSpec,
-    TagCondition,
-    TagConditionNE,
-    TagConditionNOR,
-    TagConditionOR,
-)
-from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
 from ...form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
 from ._rule_conditions import DictHostTagCondition

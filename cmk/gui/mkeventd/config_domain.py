@@ -7,14 +7,17 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, override
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc.site import omd_site
+
+from cmk.utils.config_warnings import ConfigurationWarnings
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
-from cmk.utils.config_warnings import ConfigurationWarnings
 
 from .livestatus import execute_command
 

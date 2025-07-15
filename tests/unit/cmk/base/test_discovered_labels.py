@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+
+import cmk.utils.paths
 from cmk.utils.labels import (
     _Label,
     DiscoveredHostLabelsStore,

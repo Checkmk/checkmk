@@ -8,6 +8,8 @@ import shlex
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -15,7 +17,6 @@ from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon
-from cmk.utils.tags import TagID
 
 
 def _render_mkeventd_icon(

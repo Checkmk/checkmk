@@ -11,9 +11,9 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.ccc.hostaddress import HostName
-
 from tests.testlib.site import Site
+
+from cmk.ccc.hostaddress import HostName
 
 _THIS_DIR = Path(__file__).parent
 

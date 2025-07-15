@@ -10,8 +10,6 @@ from contextlib import contextmanager
 
 import pytest
 
-from cmk.piggyback.backend._paths import source_status_dir
-
 from tests.composition.cmk.piggyback.piggyback_test_helper import (
     create_local_check,
     get_piggybacked_service_time,
@@ -19,7 +17,10 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
     piggybacked_service_discovered,
     set_omd_config_piggyback_hub,
 )
+
 from tests.testlib.site import Site
+
+from cmk.piggyback.backend._paths import source_status_dir
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"

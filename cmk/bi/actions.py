@@ -9,6 +9,8 @@ from typing import Any
 
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.utils.macros import MacroMapping
+
 from cmk.bi.lib import (
     ABCBIAction,
     ABCBICompiledNode,
@@ -31,7 +33,6 @@ from cmk.bi.lib import (
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
-from cmk.utils.macros import MacroMapping
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |

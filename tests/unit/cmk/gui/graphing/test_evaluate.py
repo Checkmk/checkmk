@@ -7,13 +7,14 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.graphing.v1 import Title
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_matches
 from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
+
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import Title
 
 UNIT = metrics_api.Unit(metrics_api.DecimalNotation(""))
 

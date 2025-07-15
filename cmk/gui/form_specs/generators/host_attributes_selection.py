@@ -15,6 +15,7 @@ from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,
     get_sorted_host_attributes_by_topic,
 )
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

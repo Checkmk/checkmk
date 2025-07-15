@@ -10,13 +10,15 @@ from livestatus import MultiSiteConnection
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.tables import Hosts
+
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.logged_in import user as _user
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
-from cmk.utils.livestatus_helpers.tables import Hosts
 
 
 def _acknowledge_problem(

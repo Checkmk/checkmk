@@ -9,6 +9,7 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 
 import cmk.utils.paths
+
 from cmk.inventory import transform_inventory_trees
 
 

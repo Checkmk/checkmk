@@ -15,6 +15,10 @@ from typing import Any, cast, Literal, NamedTuple
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition, mark_edition_only
+
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.converter import Tuple as FSTuple
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
@@ -50,11 +54,10 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
-from cmk.utils import paths
-from cmk.utils.rulesets.definition import RuleGroup
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry

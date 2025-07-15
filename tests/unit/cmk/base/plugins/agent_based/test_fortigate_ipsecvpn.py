@@ -5,8 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import Metric, Result, State
 
 SECTION = [
     ["up1", "2"],

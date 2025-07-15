@@ -9,8 +9,9 @@ from collections.abc import Callable
 import pytest
 
 import cmk.gui.valuespec as vs
-from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.gui.exceptions import MKUserError
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
 
 
 # some relevant data:

@@ -10,6 +10,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.shared_typing.configuration_entity import ConfigEntityType

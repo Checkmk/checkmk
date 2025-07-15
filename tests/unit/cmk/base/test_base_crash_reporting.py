@@ -5,9 +5,10 @@
 
 from pathlib import Path
 
-from cmk.base.errorhandling import CheckCrashReport, CheckDetails
 from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.hostaddress import HostName
+
+from cmk.base.errorhandling import CheckCrashReport, CheckDetails
 
 
 def _check_generic_crash_info(crash):

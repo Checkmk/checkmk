@@ -10,6 +10,16 @@ from unittest.mock import call, MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
+
+from cmk.ccc.hostaddress import HostName
+
+from cmk.utils.labels import HostLabel
+from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
+
 from cmk.automations.results import (
     AnalyzeServiceRuleMatchesResult,
     GetServicesLabelsResult,
@@ -17,16 +27,11 @@ from cmk.automations.results import (
     SetAutochecksInput,
     SetAutochecksV2Result,
 )
-from cmk.ccc.hostaddress import HostName
+
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
-from cmk.gui.watolib.automations import LocalAutomationConfig
-from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
+from cmk.gui.watolib.automations import LocalAutomationConfig
 
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[

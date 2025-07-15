@@ -8,6 +8,13 @@ from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc import version as cmk_version
+from cmk.ccc.hostaddress import HostAddress, HostName
+
+from cmk.utils import paths
+from cmk.utils.labels import HostLabel
+from cmk.utils.sectionname import SectionName
+
 from cmk.automations.results import (
     ABCAutomationResult,
     DiagSpecialAgentHostConfig,
@@ -20,14 +27,11 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
-from cmk.base.automations import automations
-from cmk.ccc import version as cmk_version
-from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
-from cmk.utils import paths
-from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
+
+from cmk.base.automations import automations
 
 
 def test_result_type_registry_completeness() -> None:

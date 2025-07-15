@@ -9,23 +9,27 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import (
-    AnalyzeHostRuleMatchesResult,
-    AnalyzeServiceRuleMatchesResult,
-)
-from cmk.base.automations.check_mk import (
-    AutomationAnalyzeHostRuleMatches,
-    AutomationAnalyzeServiceRuleMatches,
-)
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.watolib import rulesets
-from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
-from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
+
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
+from cmk.automations.results import (
+    AnalyzeHostRuleMatchesResult,
+    AnalyzeServiceRuleMatchesResult,
+)
+
+from cmk.base.automations.check_mk import (
+    AutomationAnalyzeHostRuleMatches,
+    AutomationAnalyzeServiceRuleMatches,
+)
+
+from cmk.gui.watolib import rulesets
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
+from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 
 
 @pytest.fixture(name="mock_analyze_host_rule_matches_automation")

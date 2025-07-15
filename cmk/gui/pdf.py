@@ -34,11 +34,12 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 import cmk.utils.paths
+from cmk.utils.images import CMKImage, ImageType
+
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
-from cmk.utils.images import CMKImage, ImageType
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]

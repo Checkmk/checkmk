@@ -9,6 +9,8 @@ from collections.abc import Mapping, Sequence
 
 import cmk.utils
 import cmk.utils.paths
+from cmk.utils.encryption import fetch_certificate_details
+
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -19,7 +21,6 @@ from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.utils.encryption import fetch_certificate_details
 
 from .definitions import HostAddress, IconSelector, ListOfMultiple, NetworkPort, ValueSpec
 

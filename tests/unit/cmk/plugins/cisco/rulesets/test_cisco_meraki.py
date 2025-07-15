@@ -6,7 +6,9 @@
 import pytest
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+
 from cmk.plugins.cisco_meraki.rulesets.agent_cisco_meraki import rule_spec_cisco_meraki
 
 

@@ -6,16 +6,18 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
+
+import cmk.utils.paths
+from cmk.utils.structured_data import InventoryPaths
+from cmk.utils.tags import TagID
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
-from cmk.utils.structured_data import InventoryPaths
-from cmk.utils.tags import TagID
 
 
 def _has_inventory(host_name: HostName) -> bool:

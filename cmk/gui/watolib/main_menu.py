@@ -9,6 +9,7 @@ from collections.abc import Iterable, Sequence
 from typing import NamedTuple, override
 
 import cmk.ccc.plugin_registry
+
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user

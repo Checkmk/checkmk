@@ -8,11 +8,11 @@ import json
 
 import pytest
 
+from tests.testlib.common.repo import repo_path
+
 from livestatus import RRDResponse
 
 from cmk.utils.prediction import _prediction
-
-from tests.testlib.common.repo import repo_path
 
 
 def _load_fake_rrd_response(start: int, end: int) -> RRDResponse:

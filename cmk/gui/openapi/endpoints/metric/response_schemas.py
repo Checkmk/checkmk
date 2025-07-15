@@ -2,9 +2,10 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.fields import Float, Integer, List, Nested, String
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.endpoints.metric.common import TimeRange
+
+from cmk.fields import Float, Integer, List, Nested, String
 
 
 class MetricSchema(BaseSchema):

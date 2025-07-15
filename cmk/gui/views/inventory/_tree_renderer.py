@@ -10,23 +10,11 @@ from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal
 
-import cmk.utils.paths
-import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import inventory
-from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
-from cmk.gui.i18n import _
-from cmk.gui.theme import Theme
-from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.utils.user_errors import user_errors
+
+import cmk.utils.paths
+import cmk.utils.render
 from cmk.utils.structured_data import (
     HistoryStore,
     ImmutableAttributes,
@@ -42,6 +30,20 @@ from cmk.utils.structured_data import (
     SDRowIdent,
     SDValue,
 )
+
+from cmk.gui import inventory
+from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import Request, request
+from cmk.gui.i18n import _
+from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.user_errors import user_errors
 
 from ._display_hints import DisplayHints, inv_display_hints, NodeDisplayHint
 from .registry import PaintFunction

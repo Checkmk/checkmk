@@ -10,12 +10,13 @@ from typing import Any, NamedTuple
 import pytest
 import time_machine
 
-from cmk.agent_based.v1 import IgnoreResultsError
 from cmk.base.check_legacy_includes.temperature import (
     check_temperature,
     check_temperature_trend,
     Number,
 )
+
+from cmk.agent_based.v1 import IgnoreResultsError
 from cmk.plugins.lib.temperature import TempParamDict, TempParamType, TrendComputeDict
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state

@@ -12,17 +12,23 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import assert_never, Final, Literal
 
-from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher import FetcherType
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import SNMPFetcher, TLSConfig
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.server_side_calls_backend import SpecialAgentCommandLine
-from cmk.snmplib import SNMPBackendEnum
+
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.tags import ComputedDataSources, TagID
+
+from cmk.snmplib import SNMPBackendEnum
+
+from cmk.fetchers import SNMPFetcher, TLSConfig
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+
+from cmk.checkengine.fetcher import FetcherType
+from cmk.checkengine.plugins import AgentBasedPlugins
+
+from cmk.base.snmp_plugin_store import make_plugin_store
+
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (

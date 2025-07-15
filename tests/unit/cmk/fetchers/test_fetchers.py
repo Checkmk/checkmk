@@ -17,9 +17,25 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
-import cmk.fetchers._snmp as snmp
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.paths import omd_root
+from cmk.utils.sectionname import SectionMap, SectionName
+
+from cmk.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    SNMPBackendEnum,
+    SNMPDetectSpec,
+    SNMPHostConfig,
+    SNMPRawData,
+    SNMPTable,
+    SNMPVersion,
+)
+
+import cmk.fetchers._snmp as snmp
 from cmk.fetchers import (
     Fetcher,
     get_raw_data,
@@ -44,19 +60,6 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
-from cmk.snmplib import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    SNMPBackendEnum,
-    SNMPDetectSpec,
-    SNMPHostConfig,
-    SNMPRawData,
-    SNMPTable,
-    SNMPVersion,
-)
-from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.paths import omd_root
-from cmk.utils.sectionname import SectionMap, SectionName
 
 
 class SensorReading(NamedTuple):

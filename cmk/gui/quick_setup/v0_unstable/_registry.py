@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
+
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
 
 

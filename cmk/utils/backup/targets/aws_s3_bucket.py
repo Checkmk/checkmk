@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.password_store import extract, PasswordId
 

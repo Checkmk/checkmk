@@ -8,10 +8,10 @@ import pydantic
 from kubernetes import client  # type: ignore[import-untyped]
 from pydantic import ConfigDict
 
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
+
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform_json import _metadata_no_namespace_from_json
-
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class NodeConditions(pydantic.RootModel):

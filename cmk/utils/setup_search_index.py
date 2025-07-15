@@ -7,6 +7,7 @@ import json
 from typing import TypedDict
 
 from cmk.ccc.store import locked
+
 from cmk.utils.paths import tmp_dir
 
 _PATH_UPDATE_REQUESTS = tmp_dir / "search_index_updates.json"

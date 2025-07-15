@@ -12,9 +12,14 @@ from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
 from typing import Any, cast, Literal, override, TypedDict
 
-import cmk.werks.utils as werks_utils
 from cmk.ccc.version import Edition
-from cmk.discover_plugins import discover_families, PluginGroup
+
+from cmk.utils.man_pages import make_man_page_path_map
+from cmk.utils.werks import load_werk_entries
+from cmk.utils.werks.acknowledgement import is_acknowledged
+from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
+from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
+
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -60,12 +65,11 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.utils.man_pages import make_man_page_path_map
-from cmk.utils.werks import load_werk_entries
-from cmk.utils.werks.acknowledgement import is_acknowledged
-from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
-from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
+
+import cmk.werks.utils as werks_utils
 from cmk.werks.models import Compatibility, Werk
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 

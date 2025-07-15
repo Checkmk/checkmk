@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.plugins.lib.bvip import DETECT_BVIP
 
 check_info = {}

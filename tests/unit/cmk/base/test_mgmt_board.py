@@ -10,10 +10,10 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.ccc.hostaddress import HostName
-
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+from cmk.ccc.hostaddress import HostName
 
 
 @pytest.mark.parametrize(

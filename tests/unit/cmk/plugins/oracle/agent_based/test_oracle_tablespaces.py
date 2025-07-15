@@ -8,6 +8,8 @@ from collections.abc import Mapping
 
 import pytest
 
+from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
+
 from cmk.agent_based.v2 import (
     CheckResult,
     IgnoreResultsError,
@@ -20,8 +22,6 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.oracle.agent_based import oracle_tablespaces
 from cmk.plugins.oracle.agent_based.liboracle import OraErrors, SectionTableSpaces
 from cmk.plugins.oracle.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
-
-from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
 STRING_TABLE = [
     ["line", "too", "short"],

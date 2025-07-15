@@ -12,14 +12,26 @@ from unittest.mock import patch
 import pytest
 from pytest import FixtureRequest
 
-import cmk.gui.utils
-from cmk.automations.results import AnalyzeHostRuleEffectivenessResult
-from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleEffectiveness
-from cmk.base.config import LoadingResult
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
+from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
+
+from cmk.automations.results import AnalyzeHostRuleEffectivenessResult
+
+from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleEffectiveness
+from cmk.base.config import LoadingResult
+
+import cmk.gui.utils
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
@@ -30,14 +42,6 @@ from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
-from cmk.utils import paths
-from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from cmk.utils.redis import disable_redis
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
-from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
-
-from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:

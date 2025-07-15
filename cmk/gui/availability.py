@@ -24,20 +24,15 @@ from livestatus import (
 )
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
-from cmk.bi.lib import (
-    BIHostSpec,
-    BIHostStatusInfoRow,
-    BIServiceWithFullState,
-    BIStatusInfo,
-    NodeComputeResult,
-    NodeResultBundle,
-)
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 from cmk.ccc import store
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+from cmk.utils import dateutils
+from cmk.utils.servicename import ServiceName
+
 from cmk.gui import sites
 from cmk.gui.bi import BIManager
 from cmk.gui.data_source import query_livestatus
@@ -73,8 +68,16 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.view_utils import CSSClass
-from cmk.utils import dateutils
-from cmk.utils.servicename import ServiceName
+
+from cmk.bi.lib import (
+    BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStatusInfo,
+    NodeComputeResult,
+    NodeResultBundle,
+)
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]

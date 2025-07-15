@@ -34,7 +34,8 @@ from typing import cast
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
-from cmk import fields
+from cmk.utils.tags import AuxTag, TagGroup
+
 from cmk.gui import fields as gui_fields
 from cmk.gui import valuespec
 from cmk.gui.fields.base import BaseSchema
@@ -64,7 +65,8 @@ from cmk.gui.wato import DictHostTagCondition, FullPathFolderChoice
 from cmk.gui.wato._group_selection import _GroupSelection
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.tags import load_all_tag_config_read_only
-from cmk.utils.tags import AuxTag, TagGroup
+
+from cmk import fields
 
 MATCHERS: ValuespecToSchemaMatchDict[valuespec.ValueSpec] = {}
 PRECALCULATED_SCHEMAS: dict[str, BaseOrOneOfSchemaType] = {}

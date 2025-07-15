@@ -9,9 +9,8 @@ from typing import Any, Literal, override
 
 from marshmallow import validate, ValidationError
 
-from cmk import fields
-from cmk.crypto import certificate, keys
-from cmk.fields import validators
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
@@ -24,7 +23,10 @@ from cmk.gui.watolib.tags import (
     tag_group_exists,
 )
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
-from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
+
+from cmk import fields
+from cmk.crypto import certificate, keys
+from cmk.fields import validators
 
 
 class RelativeUrl(fields.String):

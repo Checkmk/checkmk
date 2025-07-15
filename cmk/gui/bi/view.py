@@ -9,13 +9,13 @@ from typing import Any, Literal
 
 from livestatus import OnlySites
 
-from cmk.bi import storage
-from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import FrozenMarker
-from cmk.bi.trees import BICompiledRule
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import short_service_state_name
+
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
 from cmk.gui.bi.filesystem import bi_fs
 from cmk.gui.bi.foldable_tree_renderer import (
@@ -55,8 +55,11 @@ from cmk.gui.views.command import (
 from cmk.gui.views.command.base import CommandSpecWithoutSite
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.servicename import ServiceName
-from cmk.utils.statename import short_service_state_name
+
+from cmk.bi import storage
+from cmk.bi.computer import BIAggregationFilter
+from cmk.bi.lib import FrozenMarker
+from cmk.bi.trees import BICompiledRule
 
 
 class DataSourceBIAggregations(ABCDataSource):

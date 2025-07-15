@@ -7,13 +7,14 @@ import textwrap
 
 import pytest
 
+from tests.testlib.agent_dumps import get_dump_and_walk_names, read_cmk_dump, read_disk_dump
+from tests.testlib.site import Site
+
 from tests.plugins_integration.checks import (
     config,
     process_check_output,
     setup_host,
 )
-from tests.testlib.agent_dumps import get_dump_and_walk_names, read_cmk_dump, read_disk_dump
-from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 

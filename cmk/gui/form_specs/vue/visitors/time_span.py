@@ -6,12 +6,15 @@ from collections.abc import Callable, Iterator, Sequence
 from typing import cast
 
 from cmk.ccc.i18n import _
+
+from cmk.utils.render import SecondsRenderer
+
 from cmk.gui.form_specs.private.validators import IsFloat
+
 from cmk.rulesets.v1 import Label, Message
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
-from cmk.utils.render import SecondsRenderer
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue
 from .._utils import (

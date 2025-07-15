@@ -8,6 +8,10 @@ from collections.abc import Mapping
 from typing import override
 
 from cmk.ccc import store
+
+from cmk.utils import password_store
+from cmk.utils.password_store import Password
+
 from cmk.gui import userdb, valuespec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -15,8 +19,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
-from cmk.utils import password_store
-from cmk.utils.password_store import Password
 
 
 class PasswordStore(WatoSimpleConfigFile[Password]):

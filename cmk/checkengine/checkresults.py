@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from typing import Self
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.metrics import MetricName
 

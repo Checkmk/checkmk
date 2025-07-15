@@ -17,6 +17,9 @@ from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
+
+from cmk.utils.log.security_event import SecurityEvent
+
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -26,7 +29,6 @@ from cmk.crypto.certificate import (
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
-from cmk.utils.log.security_event import SecurityEvent
 
 
 class _CNTemplate:

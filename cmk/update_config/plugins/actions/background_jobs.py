@@ -10,7 +10,9 @@ from logging import Logger
 from typing import Literal, override
 
 from cmk.ccc import tty
+
 from cmk.gui.background_job import BackgroundJobDefines
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

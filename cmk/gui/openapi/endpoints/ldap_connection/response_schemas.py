@@ -8,11 +8,12 @@ from typing import Any
 from marshmallow import post_dump
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 from cmk.gui.userdb import get_user_attributes, UserRolesConfigFile
+
+from cmk import fields
 
 
 class LDAPCheckbox(BaseSchema):

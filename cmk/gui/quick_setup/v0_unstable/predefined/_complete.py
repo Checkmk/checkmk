@@ -10,6 +10,12 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
+
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
+from cmk.utils.password_store import Password as StorePassword
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
+
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -64,11 +70,8 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
 )
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
+
 from cmk.rulesets.v1.form_specs import Dictionary
-from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.password_store import Password as StorePassword
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 
 
 class DCDHook:

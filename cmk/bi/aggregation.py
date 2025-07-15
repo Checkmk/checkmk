@@ -8,6 +8,11 @@ from __future__ import annotations
 from collections import OrderedDict
 from typing import Any
 
+from cmk.ccc.hostaddress import HostName
+
+# TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
+from cmk.utils.servicename import ServiceName
+
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -23,11 +28,7 @@ from cmk.bi.rule import BIRule
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 from cmk.bi.type_defs import AggrConfigDict
-from cmk.ccc.hostaddress import HostName
 from cmk.fields import String
-
-# TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
-from cmk.utils.servicename import ServiceName
 
 SCOPE_GLOBAL = None
 

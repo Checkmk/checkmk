@@ -16,6 +16,14 @@ import recurring_ical_events
 from icalendar import Calendar, Event
 from icalendar.prop import vDDDTypes
 
+from cmk.utils import dateutils
+from cmk.utils.timeperiod import (
+    is_builtin_timeperiod,
+    timeperiod_spec_alias,
+    TimeperiodName,
+    TimeperiodSpec,
+)
+
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -59,13 +67,6 @@ from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.timeperiods import load_timeperiods
-from cmk.utils import dateutils
-from cmk.utils.timeperiod import (
-    is_builtin_timeperiod,
-    timeperiod_spec_alias,
-    TimeperiodName,
-    TimeperiodSpec,
-)
 
 logger = logging.getLogger(__name__)
 

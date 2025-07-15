@@ -10,10 +10,7 @@ from pathlib import Path
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.ccc import tty
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import FolderRulesets, InvalidRuleException
-from cmk.gui.watolib.simple_config_file import config_file_registry
-from cmk.gui.watolib.timeperiods import load_timeperiods
+
 from cmk.utils import paths
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -22,6 +19,11 @@ from cmk.utils.timeperiod import (
     validate_day_time_ranges,
     validate_timeperiod_exceptions,
 )
+
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.rulesets import FolderRulesets, InvalidRuleException
+from cmk.gui.watolib.simple_config_file import config_file_registry
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 
 class LABELS:

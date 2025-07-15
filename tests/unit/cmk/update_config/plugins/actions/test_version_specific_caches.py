@@ -7,8 +7,9 @@ import logging
 
 import pytest
 
-from cmk.update_config.plugins.actions.version_specific_caches import VersionSpecificCachesCleaner
 from cmk.utils import paths as paths_utils
+
+from cmk.update_config.plugins.actions.version_specific_caches import VersionSpecificCachesCleaner
 
 
 @pytest.fixture(name="plugin", scope="module")

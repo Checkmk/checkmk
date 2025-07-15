@@ -65,12 +65,16 @@ from ldap import (  # type: ignore[attr-defined]  # dynamic attributes
 from ldap.controls import SimplePagedResultsControl
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-from cmk.crypto.password import Password
+
+import cmk.utils.paths
+from cmk.utils import password_store
+from cmk.utils.log.security_event import log_security_event
+from cmk.utils.macros import replace_macros_in_str
+
 from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
@@ -98,9 +102,8 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.utils import password_store
-from cmk.utils.log.security_event import log_security_event
-from cmk.utils.macros import replace_macros_in_str
+
+from cmk.crypto.password import Password
 
 from ._connections import (
     active_connections,

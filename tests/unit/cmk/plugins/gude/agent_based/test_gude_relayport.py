@@ -9,6 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+)
+
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.gude.agent_based import gude_relayport as gr
 from cmk.plugins.gude.agent_based.gude_relayport import (
@@ -17,10 +21,6 @@ from cmk.plugins.gude.agent_based.gude_relayport import (
     parse_gude_relayport,
 )
 from cmk.plugins.lib.elphase import CheckParams
-
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-)
 
 _STRING_TABLE = [
     ["TWTA 2", "1", "0", "0", "228", "4995", "0"],

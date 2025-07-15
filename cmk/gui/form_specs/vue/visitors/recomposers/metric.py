@@ -5,7 +5,9 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.private import MetricExtended
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec, InputHint, Metric
 from cmk.shared_typing.vue_formspec_components import (

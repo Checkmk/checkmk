@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, final, Generic, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

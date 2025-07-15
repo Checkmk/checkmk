@@ -7,11 +7,12 @@ import time
 
 import pytest
 
-import cmk.ec.export as ec
-from cmk.ccc.hostaddress import HostName
-from cmk.ec.main import EventStatus, StatusServer
-
 from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
+
+from cmk.ccc.hostaddress import HostName
+
+import cmk.ec.export as ec
+from cmk.ec.main import EventStatus, StatusServer
 
 
 def test_handle_client(status_server: StatusServer) -> None:

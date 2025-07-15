@@ -5,6 +5,7 @@
 
 
 from cmk.gui.form_specs.private import ListOfStrings
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

@@ -21,6 +21,7 @@ from cmk.checkengine.plugins import (
     InventoryPluginName,
 )
 from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.discover_plugins import PluginLocation
 
 

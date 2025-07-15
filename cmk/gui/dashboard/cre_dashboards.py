@@ -5,9 +5,11 @@
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
-from cmk.utils import paths
 
 from .builtin_dashboards import GROW, MAX
 from .dashlet import LinkedViewDashletConfig, StatsDashletConfig, ViewDashletConfig

@@ -6,6 +6,8 @@
 from collections.abc import Iterable, Mapping
 from itertools import chain
 
+from cmk.base.check_legacy_includes.humidity import check_humidity
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
@@ -16,7 +18,6 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
-from cmk.base.check_legacy_includes.humidity import check_humidity
 
 check_info = {}
 

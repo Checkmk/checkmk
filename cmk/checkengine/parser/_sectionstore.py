@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final, Generic, TypeVar
 
 import cmk.ccc.store as _store
+
 from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 __all__ = ["SectionStore"]

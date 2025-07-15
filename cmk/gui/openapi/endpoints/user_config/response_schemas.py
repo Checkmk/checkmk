@@ -9,8 +9,6 @@ from typing import Any
 from marshmallow import fields as _fields
 from marshmallow import post_load
 
-from cmk import fields
-from cmk.fields import base
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
@@ -18,6 +16,9 @@ from cmk.gui.fields.definitions import ensure_string
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 from cmk.gui.userdb import get_user_attributes
+
+from cmk import fields
+from cmk.fields import base
 
 _logger = logging.getLogger(__name__)
 

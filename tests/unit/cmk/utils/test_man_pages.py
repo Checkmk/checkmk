@@ -10,14 +10,17 @@ from pathlib import Path
 
 import pytest
 
-from cmk.agent_based.v2 import CheckPlugin
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
-from cmk.server_side_calls_backend import load_active_checks
+from tests.testlib.common.repo import repo_path
+
+from tests.unit.mocks_and_helpers import FixPluginLegacy
+
 from cmk.utils import man_pages
 
-from tests.testlib.common.repo import repo_path
-from tests.unit.mocks_and_helpers import FixPluginLegacy
+from cmk.checkengine.plugins import AgentBasedPlugins
+
+from cmk.agent_based.v2 import CheckPlugin
+from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
+from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",

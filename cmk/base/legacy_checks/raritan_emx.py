@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, equals, SNMPTree
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors_binary,
     raritan_map_state,
     raritan_map_unit,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import any_of, equals, SNMPTree
 
 check_info = {}
 

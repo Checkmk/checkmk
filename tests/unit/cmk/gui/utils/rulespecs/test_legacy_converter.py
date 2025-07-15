@@ -9,10 +9,12 @@ from typing import Any, TypeVar
 
 import pytest
 
+from cmk.ccc.version import Edition
+
+from cmk.utils.rulesets.definition import RuleGroup
+
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 import cmk.gui.valuespec as legacy_valuespecs
-import cmk.rulesets.v1 as api_v1
-from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
@@ -42,8 +44,9 @@ from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
+
+import cmk.rulesets.v1 as api_v1
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _v1_custom_text_validate(value: str) -> None:

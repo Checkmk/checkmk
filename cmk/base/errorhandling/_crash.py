@@ -11,17 +11,21 @@ from typing import Any, Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.utils.encoding
-import cmk.utils.paths
 from cmk.ccc import crash_reporting
 from cmk.ccc.crash_reporting import CrashInfo
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.plugins import CheckPluginName
-from cmk.piggyback.backend import get_messages_for
-from cmk.snmplib import SNMPBackendEnum
+
+import cmk.utils.encoding
+import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
+
+from cmk.snmplib import SNMPBackendEnum
+
+from cmk.checkengine.plugins import CheckPluginName
+
+from cmk.piggyback.backend import get_messages_for
 
 CrashReportStore = crash_reporting.CrashReportStore
 

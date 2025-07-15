@@ -5,12 +5,14 @@
 import re
 from typing import Any
 
-from cmk import fields
+from cmk.utils.regex import REGEX_ID
+from cmk.utils.tags import TAG_GROUP_NAME_PATTERN, TagID
+
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, tag_group_exists
-from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import TAG_GROUP_NAME_PATTERN, TagID
+
+from cmk import fields
 
 
 class Tags(fields.List):

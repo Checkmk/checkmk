@@ -10,6 +10,9 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.utils.ntop import (
@@ -17,7 +20,6 @@ from cmk.gui.utils.ntop import (
     is_ntop_available,
     is_ntop_configured,
 )
-from cmk.utils import paths
 
 
 @pytest.mark.usefixtures("load_config")

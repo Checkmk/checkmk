@@ -13,17 +13,20 @@ from pathlib import Path
 
 from setproctitle import setproctitle
 
-from cmk.base import config
-from cmk.base.automations import automations
-from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
+
+from cmk.utils.caching import cache_manager
+from cmk.utils.paths import omd_root
+from cmk.utils.redis import get_redis_client
+
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
 )
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.utils.caching import cache_manager
-from cmk.utils.paths import omd_root
-from cmk.utils.redis import get_redis_client
+
+from cmk.base import config
+from cmk.base.automations import automations
+from cmk.base.config import ConfigCache
 
 from ._app import make_application
 from ._cache import Cache

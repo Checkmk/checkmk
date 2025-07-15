@@ -16,8 +16,9 @@ from typing import IO, NamedTuple
 
 from pydantic import BaseModel, field_serializer, field_validator
 
-from cmk.trace import SpanContext, TraceFlags, TraceState
 from cmk.utils import render
+
+from cmk.trace import SpanContext, TraceFlags, TraceState
 
 from ._defines import BackgroundJobDefines
 

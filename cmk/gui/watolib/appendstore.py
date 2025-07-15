@@ -12,6 +12,7 @@ from typing import Generic, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 

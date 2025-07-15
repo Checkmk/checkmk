@@ -24,6 +24,8 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
+from cmk.utils import password_store, paths
+
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionManager,
@@ -34,7 +36,6 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
-from cmk.utils import password_store, paths
 
 
 class CachedSectionWriter(SectionManager):

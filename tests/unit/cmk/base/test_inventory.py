@@ -9,24 +9,9 @@ from typing import Literal
 import pytest
 
 import cmk.ccc.resulttype as result
-from cmk.agent_based.v1 import Attributes, TableRow
-from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
-from cmk.checkengine.inventory import (
-    _check_fetched_data_or_trees,
-    _create_trees_from_inventory_plugin_items,
-    _inventorize_real_host,
-    _parse_inventory_plugin_item,
-    HWSWInventoryParameters,
-    inventorize_host,
-    ItemsOfInventoryPlugin,
-)
-from cmk.checkengine.parser import HostSections
-from cmk.checkengine.sectionparser import ParsedSectionName, SectionPlugin
-from cmk.snmplib import SNMPRawData
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -44,6 +29,26 @@ from cmk.utils.structured_data import (
     serialize_tree,
     UpdateResult,
 )
+
+from cmk.snmplib import SNMPRawData
+
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
+from cmk.checkengine.inventory import (
+    _check_fetched_data_or_trees,
+    _create_trees_from_inventory_plugin_items,
+    _inventorize_real_host,
+    _parse_inventory_plugin_item,
+    HWSWInventoryParameters,
+    inventorize_host,
+    ItemsOfInventoryPlugin,
+)
+from cmk.checkengine.parser import HostSections
+from cmk.checkengine.sectionparser import ParsedSectionName, SectionPlugin
+
+from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
+
+from cmk.agent_based.v1 import Attributes, TableRow
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:

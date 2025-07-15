@@ -20,13 +20,17 @@ from typing import Any, NewType, override
 from pydantic import BaseModel
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-from cmk.crypto.certificate import Certificate, CertificatePEM
-from cmk.crypto.hash import HashAlgorithm
+
+import cmk.utils.paths
+from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
+from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.log.security_event import log_security_event
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -52,10 +56,9 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
-from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.encryption import raw_certificates_from_file
-from cmk.utils.log.security_event import log_security_event
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.hash import HashAlgorithm
 
 ProcessId = NewType("ProcessId", int)
 

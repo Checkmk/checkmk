@@ -8,18 +8,20 @@ from pathlib import Path
 
 from livestatus import LivestatusResponse, Query
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
+
+from cmk.gui import sites
+from cmk.gui.bi.filesystem import bi_fs
+from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _
+
 from cmk.bi.compiler import BICompiler
 from cmk.bi.computer import BIComputer
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.lib import SitesCallback
 from cmk.bi.storage import AggregationNotFound, AggregationStore
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
-from cmk.gui import sites
-from cmk.gui.bi.filesystem import bi_fs
-from cmk.gui.hooks import request_memoize
-from cmk.gui.i18n import _
 
 
 class BIManager:

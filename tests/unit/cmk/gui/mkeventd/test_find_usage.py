@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.mkeventd import _find_usage
 
 _RULE_PACKS: Sequence[ec.ECRulePack] = [

@@ -11,11 +11,12 @@ from typing import Final
 
 import pytest
 
-from tests.plugins_integration import checks
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
 from tests.testlib.version import CMKEdition, CMKPackageInfo, get_min_version
+
+from tests.plugins_integration import checks
 
 logger = logging.getLogger(__name__)
 cleanup: Final[bool] = os.getenv("CLEANUP", "1") == "1"

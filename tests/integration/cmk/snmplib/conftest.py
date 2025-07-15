@@ -26,13 +26,15 @@ from pysnmp.hlapi import (  # type: ignore[import-untyped]
     UdpTransportTarget,
 )
 
-from cmk.ccc import debug
-from cmk.snmplib import SNMPBackendEnum
-from cmk.utils import log
-
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
+
+from cmk.ccc import debug
+
+from cmk.utils import log
+
+from cmk.snmplib import SNMPBackendEnum
 
 logger = logging.getLogger(__name__)
 

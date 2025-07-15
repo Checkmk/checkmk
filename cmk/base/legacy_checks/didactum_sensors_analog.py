@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.didactum import (
     check_didactum_sensors_humidity,
     check_didactum_sensors_temp,
@@ -12,6 +10,9 @@ from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
 )
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 check_info = {}

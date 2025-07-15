@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bi.packs import BIAggregationPacks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoiceEntries
+
+from cmk.bi.packs import BIAggregationPacks
 
 from .bi_manager import BIManager
 

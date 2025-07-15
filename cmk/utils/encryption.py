@@ -22,6 +22,7 @@ from cryptography.x509.oid import NameOID
 from OpenSSL import crypto, SSL
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.crypto.certificate import Certificate
 
 _PEM_RE = re.compile(

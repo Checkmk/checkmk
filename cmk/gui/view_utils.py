@@ -8,6 +8,11 @@ from collections.abc import Iterator, Mapping
 from typing import Any, Literal
 
 from cmk.ccc.site import SiteId
+
+from cmk.utils.html import replace_state_markers
+from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
+from cmk.utils.tags import TagGroupID, TagID
+
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
@@ -19,9 +24,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.utils.html import replace_state_markers
-from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
-from cmk.utils.tags import TagGroupID, TagID
 
 
 class PythonExportError(Exception):

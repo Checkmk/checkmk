@@ -8,8 +8,10 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema, CoreSchema
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.openapi.framework.model import ApiOmitted
+
 from cmk.utils import paths
+
+from cmk.gui.openapi.framework.model import ApiOmitted
 
 
 @dataclass(kw_only=True, slots=True)

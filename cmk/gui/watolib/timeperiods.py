@@ -7,13 +7,7 @@ from collections.abc import Callable
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
-from cmk.gui.hooks import request_memoize
-from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.gui.watolib.utils import wato_root_dir
+
 from cmk.utils.timeperiod import (
     add_builtin_timeperiods,
     cleanup_timeperiod_caches,
@@ -24,6 +18,14 @@ from cmk.utils.timeperiod import (
     TimeperiodSpec,
     TimeperiodSpecs,
 )
+
+from cmk.gui.hooks import request_memoize
+from cmk.gui.http import request
+from cmk.gui.i18n import _
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
+from cmk.gui.watolib.utils import wato_root_dir
 
 from . import changes as _changes
 

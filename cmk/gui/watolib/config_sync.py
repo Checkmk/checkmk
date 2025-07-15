@@ -16,13 +16,16 @@ from typing import NamedTuple, override, Self
 from livestatus import SiteConfiguration, SiteGlobals
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+
 from cmk.gui.log import logger
 from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
+
 from cmk.messaging import rabbitmq
 
 Command = list[str]

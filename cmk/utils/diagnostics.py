@@ -10,8 +10,9 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
 
-import cmk.utils.paths
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
 from cmk.utils.structured_data import SDRawTree
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.

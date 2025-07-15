@@ -10,7 +10,6 @@ entity API, for more information see "Configuration entities" endpoints."""
 from collections.abc import Mapping
 from typing import Any
 
-from cmk import fields
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     get_endpoint_decorator,
@@ -20,6 +19,8 @@ from cmk.gui.openapi.endpoints.configuration_entity._common import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+
+from cmk import fields
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 

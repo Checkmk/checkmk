@@ -2,9 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.ccc.site import omd_site
+
 import cmk.gui.utils
 import cmk.gui.view_utils
-from cmk.ccc.site import omd_site
 from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.data_source import ABCDataSource, data_source_registry

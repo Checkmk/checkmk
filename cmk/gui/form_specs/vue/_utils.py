@@ -9,6 +9,7 @@ from typing import Any, Protocol, TypeVar
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
+
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, Prefill
 from cmk.rulesets.v1.form_specs.validators import ValidationError

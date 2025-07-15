@@ -6,10 +6,10 @@
 
 from kubernetes import client  # type: ignore[import-untyped]
 
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
+
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import deployment_conditions, parse_metadata
-
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIDeployments:

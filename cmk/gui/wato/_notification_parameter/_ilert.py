@@ -5,6 +5,8 @@
 
 from typing import Literal
 
+from cmk.utils import password_store
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -20,7 +22,6 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.utils import password_store
 
 from ._helpers import _get_url_prefix_setting
 

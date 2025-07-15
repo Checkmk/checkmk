@@ -25,6 +25,7 @@ from functools import cache
 from pathlib import Path
 
 import cmk.utils.paths
+
 from cmk.werks.models import Werk
 from cmk.werks.utils import (
     load_precompiled_werks_file,

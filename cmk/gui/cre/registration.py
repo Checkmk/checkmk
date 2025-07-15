@@ -5,11 +5,12 @@
 
 """Raw edition and only raw edition specific registrations"""
 
+from cmk.ccc.crash_reporting import crash_report_registry
+from cmk.ccc.version import Edition
+
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.wato._notification_parameter._mail as mail
-from cmk.ccc.crash_reporting import crash_report_registry
-from cmk.ccc.version import Edition
 from cmk.gui import nagvis, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register

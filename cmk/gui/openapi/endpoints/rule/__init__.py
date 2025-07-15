@@ -10,6 +10,14 @@ import dataclasses
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.datastructures import denilled
+from cmk.utils.labels import LabelGroups
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+)
+from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
+
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData
@@ -52,13 +60,6 @@ from cmk.gui.watolib.rulesets import (
     visible_rulesets,
 )
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
-from cmk.utils.datastructures import denilled
-from cmk.utils.labels import LabelGroups
-from cmk.utils.rulesets.conditions import (
-    allow_host_label_conditions,
-    allow_service_label_conditions,
-)
-from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 
 class FieldValidationException(Exception):

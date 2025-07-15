@@ -7,7 +7,11 @@
 from cmk.ccc import version
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition
+
+from cmk.utils import paths
+
 from cmk.gui.form_specs.private import ListExtended  # pylint: disable=cmk-module-layer-violation
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -33,7 +37,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils import paths
 
 OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
 

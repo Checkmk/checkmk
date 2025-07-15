@@ -13,10 +13,11 @@ from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import suppress
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import CheckPlugin, LegacyPluginLocation
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 
 from .check_plugins import (
     create_check_plugin,

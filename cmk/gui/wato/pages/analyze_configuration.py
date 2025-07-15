@@ -15,9 +15,11 @@ from collections.abc import Collection
 
 from livestatus import SiteConfigurations
 
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError

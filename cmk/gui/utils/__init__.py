@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import cmk.utils.paths
+
 from cmk.gui.log import logger
 
 

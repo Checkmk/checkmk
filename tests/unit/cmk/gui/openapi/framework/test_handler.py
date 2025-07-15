@@ -12,6 +12,11 @@ import pytest
 from pydantic import PlainSerializer
 from werkzeug.datastructures import Headers
 
+from tests.unit.cmk.gui.openapi.framework.factories import (
+    RawRequestDataFactory,
+    RequestEndpointFactory,
+)
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import ApiContext, APIVersion, HeaderParam, PathParam, QueryParam
 from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
@@ -25,11 +30,6 @@ from cmk.gui.openapi.utils import (
     RestAPIWatoDisabledException,
 )
 from cmk.gui.utils.permission_verification import AllPerm, Perm
-
-from tests.unit.cmk.gui.openapi.framework.factories import (
-    RawRequestDataFactory,
-    RequestEndpointFactory,
-)
 
 
 @dataclass

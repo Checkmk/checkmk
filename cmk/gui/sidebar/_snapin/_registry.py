@@ -9,6 +9,7 @@ from typing import Literal, Self
 from pydantic import BaseModel
 
 from cmk.ccc.plugin_registry import Registry
+
 from cmk.gui import pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, PageEndpoint

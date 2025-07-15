@@ -9,8 +9,10 @@ from pathlib import Path
 from cmk.ccc import tty
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
-from cmk.post_rename_site.registry import rename_action_registry, RenameAction
+
 from cmk.utils.log import console
+
+from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 
 def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:

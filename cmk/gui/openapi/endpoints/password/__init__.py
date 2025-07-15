@@ -6,6 +6,10 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.password_store import Password
+
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -31,8 +35,6 @@ from cmk.gui.watolib.passwords import (
     remove_password,
     save_password,
 )
-from cmk.utils import paths
-from cmk.utils.password_store import Password
 
 PASSWORD_FAMILY = EndpointFamily(
     name="Passwords",

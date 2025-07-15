@@ -9,12 +9,14 @@ from dataclasses import replace
 
 from pytest import MonkeyPatch
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v1 import Metric, Result, Service, State
+from cmk.utils.rulesets import RuleSetName
+
 from cmk.checkengine.plugin_backend import check_plugins_legacy
 from cmk.checkengine.plugins import CheckPluginName, LegacyPluginLocation
 from cmk.checkengine.sectionparser import ParsedSectionName
-from cmk.utils.rulesets import RuleSetName
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v1 import Metric, Result, Service, State
 
 
 def dummy_generator(section):

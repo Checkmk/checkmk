@@ -8,10 +8,13 @@ from collections.abc import Sequence
 
 import pytest
 
-import cmk.base.config as base_config
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config
+
 from cmk.utils import ip_lookup
+
+import cmk.base.config as base_config
+
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config
 
 
 def make_config_cache_mock(

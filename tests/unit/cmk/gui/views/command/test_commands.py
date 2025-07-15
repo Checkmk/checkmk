@@ -6,8 +6,9 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.views.command.commands import _acknowledgement_needs_removal
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from cmk.gui.views.command.commands import _acknowledgement_needs_removal
 
 COMMENT_TABLE = [
     # Host comments

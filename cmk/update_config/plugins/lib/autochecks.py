@@ -7,17 +7,22 @@ from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from cmk.base.config import load_all_pluginX
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
+
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
+
+from cmk.base.config import load_all_pluginX
+
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
+
 from cmk.update_config.plugins.lib.replaced_check_plugins import ALL_REPLACED_CHECK_PLUGINS
-from cmk.utils import paths
-from cmk.utils.rulesets.definition import RuleGroup
 
 TDiscoveredItemsTransforms = Mapping[CheckPluginName, Callable[[str | None], str | None]]
 

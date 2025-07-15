@@ -9,6 +9,8 @@ from typing import Any
 
 import pytest
 
+from cmk.utils.check_utils import ParametersTypeAlias
+
 from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.systemd_units import (
     _services_split,
@@ -26,7 +28,6 @@ from cmk.plugins.collection.agent_based.systemd_units import (
     Section,
     UnitEntry,
 )
-from cmk.utils.check_utils import ParametersTypeAlias
 
 
 @pytest.mark.parametrize(

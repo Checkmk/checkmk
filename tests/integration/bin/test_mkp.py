@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
-
 from tests.testlib.site import Site
+
+from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
 
 
 def test_mkp_help(site: Site) -> None:

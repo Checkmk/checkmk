@@ -13,7 +13,6 @@ import pytest
 
 import livestatus
 
-from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.utils import man_pages
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
@@ -34,6 +33,8 @@ from cmk.utils.licensing.usage import (
     save_extensions,
     try_update_license_usage,
 )
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 
 def test_try_update_license_usage() -> None:

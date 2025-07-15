@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.ccc.user import UserId
+
 from cmk.utils.local_secrets import AutomationUserSecret
 
 

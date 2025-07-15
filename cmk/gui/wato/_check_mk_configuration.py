@@ -9,8 +9,14 @@ from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
+
+from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
@@ -108,9 +114,6 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
-from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection

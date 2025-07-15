@@ -5,11 +5,12 @@
 
 import pytest
 
-from cmk.gui.valuespec import autocompleter_registry
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from tests.testlib.common.repo import is_enterprise_repo
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from cmk.gui.valuespec import autocompleter_registry
 
 
 @pytest.fixture(name="expected_autocompleters")

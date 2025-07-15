@@ -9,11 +9,13 @@ from datetime import datetime
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
+from cmk.utils.sectionname import SectionName
+
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based import sap_hana_diskusage
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.utils.sectionname import SectionName
 
 NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 LAST_TIME_EPOCH = (

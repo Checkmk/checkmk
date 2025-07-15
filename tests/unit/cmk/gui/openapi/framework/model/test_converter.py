@@ -10,9 +10,16 @@ import pytest
 from pydantic import AfterValidator
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import DeleteHostsResult
+from tests.unit.cmk.gui.users import create_and_destroy_user
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
+
+from cmk.automations.results import DeleteHostsResult
+
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
@@ -27,10 +34,6 @@ from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.tags import TagGroup, TagGroupID, TagID
-
-from tests.unit.cmk.gui.users import create_and_destroy_user
 
 
 def test_validators_dont_run_on_json_dump() -> None:

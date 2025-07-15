@@ -7,6 +7,8 @@
 import time
 from collections.abc import Collection, Iterator
 
+from cmk.utils import render
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
@@ -51,7 +53,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.utils import render
 
 
 def register(mode_registry: ModeRegistry) -> None:

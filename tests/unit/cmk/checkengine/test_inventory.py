@@ -7,9 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
+
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
-from cmk.utils.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(

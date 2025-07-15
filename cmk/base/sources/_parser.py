@@ -9,9 +9,11 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.ccc.hostaddress import HostName
+
+from cmk.snmplib import SNMPRawDataElem
+
 from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore
-from cmk.snmplib import SNMPRawDataElem
 
 __all__ = ["make_parser", "ParserFactory"]
 

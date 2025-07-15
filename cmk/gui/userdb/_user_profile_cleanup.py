@@ -7,6 +7,7 @@ import shutil
 from datetime import datetime, timedelta
 
 import cmk.utils.paths
+
 from cmk.gui.config import Config
 from cmk.gui.log import logger
 

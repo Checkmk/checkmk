@@ -7,9 +7,11 @@ import errno
 from logging import Logger
 from typing import override
 
-from cmk.gui.visuals._store import _CombinedVisualsCache
-from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils import paths as paths_utils
+
+from cmk.gui.visuals._store import _CombinedVisualsCache
+
+from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class VersionSpecificCachesCleaner(UpdateAction):

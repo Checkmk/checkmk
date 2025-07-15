@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow_oneofschema import OneOfSchema  # typing: ignore[attr-defined]
 
-from cmk.fields import String
 from cmk.gui.fields import HostField, SiteField
 from cmk.gui.openapi.endpoints.metric.common import (
     BaseRequestSchema,
@@ -12,6 +11,8 @@ from cmk.gui.openapi.endpoints.metric.common import (
     MetricIdField,
     TYPE_FIELD,
 )
+
+from cmk.fields import String
 
 
 class _BaseGetSchema(BaseRequestSchema):

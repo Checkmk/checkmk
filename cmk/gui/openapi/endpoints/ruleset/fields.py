@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields import base
 from cmk.gui.openapi.restful_objects import response_schemas
+
+from cmk import fields
 
 RULESET_NAME = {
     "ruleset_name": fields.String(

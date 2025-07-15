@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
+
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.collection.agent_based import ups_power
-
-from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
 
 # walks/usv-liebert
 DATA0 = """

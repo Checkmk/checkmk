@@ -15,6 +15,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
+
 from cmk.update_config.plugins.lib import rulesets as rulesets_updater
 
 

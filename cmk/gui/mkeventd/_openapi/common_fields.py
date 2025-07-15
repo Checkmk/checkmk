@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk import fields
-from cmk.gui import fields as gui_fields
 from cmk.utils.statename import core_state_names
+
+from cmk.gui import fields as gui_fields
+
+from cmk import fields
 
 
 class StateField(fields.String):

@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
 from cmk.utils.tags import TagGroupID
+
+from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |

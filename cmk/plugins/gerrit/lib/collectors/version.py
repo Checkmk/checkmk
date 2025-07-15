@@ -10,8 +10,9 @@ from typing import Self
 
 import requests
 
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 from cmk.utils.semantic_version import SemanticVersion
+
+from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 
 @dataclasses.dataclass

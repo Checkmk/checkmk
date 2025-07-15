@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
 from cmk.ccc.user import UserId
-from cmk.crypto import password_hashing
-from cmk.crypto.password import Password
+
+import cmk.utils.paths
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import UserSpec
@@ -17,6 +17,9 @@ from cmk.gui.userdb import (
     UserConnector,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 
 # Checkmk supports different authentication frontends for verifying the

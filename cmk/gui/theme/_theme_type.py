@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _

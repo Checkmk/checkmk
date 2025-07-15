@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 from cmk.snmplib import BackendSNMPTree, SNMPDetectSpec
+
+from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
+
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 __all__ = ["make_plugin_store"]
 

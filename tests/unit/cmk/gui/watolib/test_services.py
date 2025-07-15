@@ -9,16 +9,24 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.user import UserId
+
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.labels import HostLabel
+from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
+
 from cmk.automations.results import (
     DeleteHostsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
     SetAutochecksV2Result,
 )
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.user import UserId
+
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automations import LocalAutomationConfig
@@ -34,10 +42,6 @@ from cmk.gui.watolib.services import (
     perform_host_label_discovery,
     perform_service_discovery,
 )
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
 
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     check_table=[

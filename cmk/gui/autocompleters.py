@@ -11,6 +11,8 @@ from typing import get_args
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
+from cmk.utils.regex import regex
+
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -23,7 +25,6 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
 from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
-from cmk.utils.regex import regex
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:

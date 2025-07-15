@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.notify_types import (
     EventRule,

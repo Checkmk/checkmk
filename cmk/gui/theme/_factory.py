@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import edition
+
 from cmk.utils.paths import local_web_dir, omd_root, web_dir
 
 from ._theme_type import Theme

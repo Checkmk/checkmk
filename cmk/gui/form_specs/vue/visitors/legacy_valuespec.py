@@ -11,6 +11,7 @@ from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
+
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData

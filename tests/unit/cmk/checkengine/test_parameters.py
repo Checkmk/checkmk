@@ -7,8 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 from cmk.utils.timeperiod import TimeperiodName
+
+from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 
 
 def _default() -> Mapping[str, int]:

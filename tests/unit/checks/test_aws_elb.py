@@ -5,8 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 
 
 @pytest.mark.parametrize(

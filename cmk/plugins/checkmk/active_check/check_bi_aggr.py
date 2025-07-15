@@ -17,6 +17,7 @@ import requests
 import urllib3
 
 from cmk.ccc.user import UserId
+
 from cmk.utils import password_store
 from cmk.utils.local_secrets import AutomationUserSecret
 

@@ -7,6 +7,8 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
 from cmk.gui.fields.definitions import FOLDER_PATTERN
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
@@ -32,6 +34,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecWrapper,
 )
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -39,8 +42,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-
-from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def register_quick_setup(

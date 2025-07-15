@@ -9,8 +9,9 @@ import os
 
 import pytest
 
-import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
+
+import cmk.ec.export as ec
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable

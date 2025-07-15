@@ -13,17 +13,11 @@ from typing import Literal
 
 import livestatus
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import sites, userdb
-from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.hooks import request_memoize
-from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.watolib.groups_io import PermittedPath
+
+import cmk.utils.paths
 from cmk.utils.structured_data import (
     HistoryArchivePath,
     HistoryDeltaPath,
@@ -41,6 +35,14 @@ from cmk.utils.structured_data import (
     SDNodeName,
     SDPath,
 )
+
+from cmk.gui import sites, userdb
+from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
+from cmk.gui.watolib.groups_io import PermittedPath
 
 
 class TreeSource(Enum):

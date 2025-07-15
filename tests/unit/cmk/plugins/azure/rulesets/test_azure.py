@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
-import cmk.plugins.azure.rulesets.azure as azure_ruleset
 from cmk.ccc.version import Edition
+
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+
+import cmk.plugins.azure.rulesets.azure as azure_ruleset
 
 AZURE_VS_RULESET_VALUE: Final = {
     "authority": "global",

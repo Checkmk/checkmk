@@ -11,6 +11,9 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import SiteId
+
+from cmk.utils import paths
+
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResultState,
@@ -19,7 +22,6 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestResult,
     merge_tests,
 )
-from cmk.utils import paths
 
 
 def test_registered_ac_tests() -> None:

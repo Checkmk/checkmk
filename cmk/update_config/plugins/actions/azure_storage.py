@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.rulesets import AllRulesets
+
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration
 from cmk.update_config.registry import update_action_registry, UpdateAction
 

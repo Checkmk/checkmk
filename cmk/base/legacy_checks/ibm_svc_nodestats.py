@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import render, Service
 
 check_info = {}
 

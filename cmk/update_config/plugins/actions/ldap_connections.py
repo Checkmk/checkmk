@@ -8,6 +8,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.userdb import LDAPUserConnectionConfig, UserConnectionConfigFile
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

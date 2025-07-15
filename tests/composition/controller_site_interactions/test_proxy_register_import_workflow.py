@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
-
 from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
 from tests.testlib.site import Site
 from tests.testlib.utils import run
+
+from cmk.ccc.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

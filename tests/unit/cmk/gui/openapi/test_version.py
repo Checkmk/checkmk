@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.ccc import version
+
 from cmk.utils import paths
 
 managedtest = pytest.mark.skipif(

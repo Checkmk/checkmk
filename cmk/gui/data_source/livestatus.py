@@ -11,6 +11,8 @@ from typing import cast
 
 from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification
 
+from cmk.utils.check_utils import worst_service_state
+
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -19,7 +21,6 @@ from cmk.gui.http import request
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.check_utils import worst_service_state
 
 from .base import ABCDataSource, RowTable
 

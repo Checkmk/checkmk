@@ -9,6 +9,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.ccc.user import UserId
+
+from cmk.utils.structured_data import SDKey, SDPath
+
 from cmk.gui import inventory
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _l
@@ -25,7 +28,6 @@ from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
-from cmk.utils.structured_data import SDKey, SDPath
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (

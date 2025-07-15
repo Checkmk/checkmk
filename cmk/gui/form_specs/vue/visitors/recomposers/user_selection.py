@@ -6,6 +6,7 @@ from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
@@ -13,6 +14,7 @@ from cmk.gui.form_specs.private import (
 )
 from cmk.gui.form_specs.private.user_selection import UserSelection
 from cmk.gui.userdb._user_selection import generate_wato_users_elements_function
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec
 

@@ -7,8 +7,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, Self, TypeVar
 
-from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
 from cmk.utils import config_warnings
+
+from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 

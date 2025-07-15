@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from cmk.utils import password_store
+
 from cmk.plugins.mqtt.special_agent import agent_mqtt
 from cmk.special_agents.v0_unstable.argument_parsing import Args
-from cmk.utils import password_store
 
 
 def test_parse_minimal_arguments() -> None:

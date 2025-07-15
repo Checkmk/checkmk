@@ -10,6 +10,7 @@ from functools import partial
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id

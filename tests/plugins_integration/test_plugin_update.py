@@ -6,13 +6,14 @@ import logging
 
 import pytest
 
+from tests.testlib.agent_dumps import get_dump_and_walk_names
+from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import get_services_with_status
+
 from tests.plugins_integration.checks import (
     config,
     setup_host,
 )
-from tests.testlib.agent_dumps import get_dump_and_walk_names
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import get_services_with_status
 
 logger = logging.getLogger(__name__)
 

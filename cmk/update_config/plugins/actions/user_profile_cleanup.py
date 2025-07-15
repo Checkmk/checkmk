@@ -7,8 +7,9 @@ from logging import Logger
 from shutil import rmtree
 from typing import override
 
-from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.paths import var_dir
+
+from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class RemoveLeftoversUserProfileCleanup(UpdateAction):

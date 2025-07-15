@@ -7,6 +7,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui import job_scheduler
+
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

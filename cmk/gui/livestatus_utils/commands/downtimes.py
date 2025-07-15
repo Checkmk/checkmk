@@ -11,17 +11,19 @@ from livestatus import MultiSiteConnection
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
-from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
-from cmk.gui.livestatus_utils.commands.utils import to_timestamp
-from cmk.gui.logged_in import user as _user
+
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
+
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
+from cmk.gui.livestatus_utils.commands.utils import to_timestamp
+from cmk.gui.logged_in import user as _user
 
 # TODO: Test duration option
 

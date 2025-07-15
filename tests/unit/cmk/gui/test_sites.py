@@ -6,10 +6,13 @@
 
 from pytest_mock.plugin import MockerFixture
 
-import cmk.utils.paths
 from cmk.ccc.site import SiteId
+
+import cmk.utils.paths
+
 from cmk.gui import sites, user_sites
 from cmk.gui.logged_in import user
+
 from cmk.livestatus_client import NetworkSocketDetails, SiteConfiguration, UnixSocketDetails
 
 

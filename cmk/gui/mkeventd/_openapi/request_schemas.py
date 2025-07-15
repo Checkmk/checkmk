@@ -7,10 +7,12 @@
 from marshmallow import post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk import fields
+from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+
+from cmk import fields
 
 from .common_fields import ApplicationField, HostNameField, PhaseField, StateField
 

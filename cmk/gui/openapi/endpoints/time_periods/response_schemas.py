@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk import fields
+from cmk.utils.dateutils import weekday_ids
+
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObjectCollection, Linkable
-from cmk.utils.dateutils import weekday_ids
+
+from cmk import fields
 
 TIME_FIELD = fields.String(
     example="14:00",

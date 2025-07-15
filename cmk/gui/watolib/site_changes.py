@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from cmk.ccc.site import SiteId
+
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir

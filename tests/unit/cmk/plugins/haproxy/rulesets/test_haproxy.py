@@ -7,7 +7,9 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+
 from cmk.plugins.haproxy.rulesets.haproxy import (
     rule_spec_haproxy_frontend,
     rule_spec_haproxy_server,

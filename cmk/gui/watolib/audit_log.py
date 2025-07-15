@@ -13,8 +13,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, NamedTuple, TypedDict
 
-import cmk.gui.watolib.git
 from cmk.ccc.user import UserId
+
+import cmk.gui.watolib.git
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString

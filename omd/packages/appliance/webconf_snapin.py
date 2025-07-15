@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import override
 
 import cmk.ccc.version as cmk_version
+
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _

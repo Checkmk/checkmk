@@ -10,7 +10,9 @@ from collections.abc import Collection
 from typing import cast, override
 
 from cmk.ccc.hostaddress import HostName
+
 from cmk.checkengine.discovery import DiscoverySettings
+
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config

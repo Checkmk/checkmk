@@ -7,6 +7,9 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
+from cmk.utils.servicename import ServiceName
+
 from cmk.gui import pagetypes, visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
@@ -33,7 +36,6 @@ from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware, view_title
-from cmk.utils.servicename import ServiceName
 
 
 class View:

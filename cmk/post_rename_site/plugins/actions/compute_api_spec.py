@@ -8,6 +8,7 @@ from logging import Logger
 
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
+
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 

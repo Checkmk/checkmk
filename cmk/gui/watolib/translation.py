@@ -6,6 +6,7 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,

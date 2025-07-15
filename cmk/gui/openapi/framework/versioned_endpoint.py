@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from cmk.ccc.version import Edition
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework._types import DataclassInstance
 from cmk.gui.openapi.framework.api_config import APIVersion

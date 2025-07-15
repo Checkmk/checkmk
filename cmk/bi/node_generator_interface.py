@@ -14,6 +14,8 @@
 
 from abc import abstractmethod
 
+from cmk.utils.macros import MacroMapping
+
 from cmk.bi.lib import (
     ABCBIAction,
     ABCBICompiledNode,
@@ -24,7 +26,6 @@ from cmk.bi.lib import (
     bi_search_registry,
 )
 from cmk.bi.type_defs import NodeDict
-from cmk.utils.macros import MacroMapping
 
 
 class ABCBINodeGenerator(ABCWithSchema):

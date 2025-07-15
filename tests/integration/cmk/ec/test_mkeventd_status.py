@@ -9,6 +9,7 @@ import time
 import pytest
 
 from tests.integration.event_console import CMKEventConsole
+
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

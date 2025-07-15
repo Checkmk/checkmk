@@ -6,12 +6,13 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

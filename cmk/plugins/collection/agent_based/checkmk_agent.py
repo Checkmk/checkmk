@@ -10,6 +10,12 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, UTC
 from typing import Any
 
+# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
+from cmk.ccc.version import (  # pylint: disable=cmk-module-layer-violation
+    __version__,
+    parse_check_mk_version,
+)
+
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -19,12 +25,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-)
-
-# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.ccc.version import (  # pylint: disable=cmk-module-layer-violation
-    __version__,
-    parse_check_mk_version,
 )
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,

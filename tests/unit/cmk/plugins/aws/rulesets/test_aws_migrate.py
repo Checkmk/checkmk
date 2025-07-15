@@ -5,6 +5,7 @@
 import pytest
 
 from cmk.gui.plugins.wato.special_agents.aws import _migrate
+
 from cmk.plugins.aws.server_side_calls.aws_agent_call import AwsParams
 from cmk.server_side_calls.v1 import Secret
 

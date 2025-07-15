@@ -13,6 +13,7 @@ import livestatus
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+
 from cmk.gui import sites
 from cmk.gui.breadcrumb import (
     Breadcrumb,

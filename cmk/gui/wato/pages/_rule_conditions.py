@@ -5,6 +5,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, override, TypeVar
 
+from cmk.utils.tags import AuxTag, TagGroup, TagGroupID, TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
@@ -20,7 +22,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.valuespec.definitions import ValueSpec
-from cmk.utils.tags import AuxTag, TagGroup, TagGroupID, TagID
 
 _TagChoiceID = TypeVar("_TagChoiceID", TagGroupID, TagID)
 

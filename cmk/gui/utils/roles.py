@@ -8,10 +8,12 @@ from typing import Final, Literal
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
+
+from cmk.utils import paths
+
 from cmk.gui import permissions
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.utils import paths
 
 
 @request_memoize()

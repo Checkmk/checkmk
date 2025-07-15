@@ -11,17 +11,6 @@ import pytest
 from polyfactory.factories import TypedDictFactory
 from pytest import MonkeyPatch
 
-import cmk.gui.exceptions
-from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.watolib import sample_config
-from cmk.gui.watolib.notifications import (
-    NotificationParameterConfigFile,
-    NotificationRuleConfigFile,
-)
-from cmk.gui.watolib.password_store import PasswordStore
-from cmk.update_config.plugins.actions.migrate_notifications import (
-    MigrateNotifications,
-)
 from cmk.utils.notify_types import (
     AsciiMailPluginModel,
     BasicAuthCredentials,
@@ -46,6 +35,19 @@ from cmk.utils.notify_types import (
     SplunkPluginModel,
 )
 from cmk.utils.password_store import Password
+
+import cmk.gui.exceptions
+from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib import sample_config
+from cmk.gui.watolib.notifications import (
+    NotificationParameterConfigFile,
+    NotificationRuleConfigFile,
+)
+from cmk.gui.watolib.password_store import PasswordStore
+
+from cmk.update_config.plugins.actions.migrate_notifications import (
+    MigrateNotifications,
+)
 
 
 class EventRuleFactory(TypedDictFactory[EventRule]): ...

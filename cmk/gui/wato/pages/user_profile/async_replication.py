@@ -7,10 +7,11 @@
 import time
 from typing import get_args
 
-import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+
+import cmk.gui.sites
 from cmk.gui import userdb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError

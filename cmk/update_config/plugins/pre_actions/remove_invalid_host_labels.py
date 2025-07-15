@@ -8,6 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.exceptions import MKUserError
+
 from cmk.update_config.plugins.lib.remove_invalid_host_labels import (
     _find_invalid_labels,
 )

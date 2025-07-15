@@ -15,12 +15,16 @@ from typing import override
 
 from livestatus import SiteConfigurations
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Version
-from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
+
+from cmk.utils import paths
+from cmk.utils.html import replace_state_markers
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -38,9 +42,9 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
+
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
-from cmk.utils import paths
-from cmk.utils.html import replace_state_markers
 
 
 @dataclass(frozen=True)

@@ -27,6 +27,7 @@ from typing import Any
 import urllib3
 
 import cmk.utils.password_store
+
 from cmk.plugins.emailchecks.lib import connections
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, Scope
 

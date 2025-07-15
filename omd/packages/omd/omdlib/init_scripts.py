@@ -12,6 +12,7 @@ import sys
 from typing import Literal
 
 from cmk.ccc import tty
+
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
 

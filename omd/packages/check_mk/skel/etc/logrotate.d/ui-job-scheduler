@@ -1,4 +1,4 @@
-###ROOT###/var/log/ui-job-scheduler/*.log
+###ROOT###/var/log/ui-job-scheduler/*.log {
 	missingok
 	rotate 7
 	compress

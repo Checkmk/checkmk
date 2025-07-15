@@ -98,9 +98,8 @@ def parse_f5_bigip_vserver(string_table):
 
 
 def inventory_f5_bigip_vserver(parsed):
-    for name, vserver in parsed.items():
-        if vserver["status"] in ("1", "4"):  # Green and Blue
-            yield name, {}
+    for name in parsed:
+        yield name, {}
 
 
 def get_aggregated_values(vserver):

@@ -119,6 +119,9 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	    --exclude .gitignore \
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
+	    --exclude non-free \
+	    --exclude packages/cmc \
+	    --exclude tests/qa-test-data \
 	    $$EXCLUDES \
 	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
 	if [ -f COMMIT ]; then \

@@ -43,6 +43,7 @@ import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'
 import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
 import { type GraphRenderer } from '@/graph-designer/graph'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const props = defineProps<{
   graph_id: string
@@ -318,6 +319,14 @@ const dataScalar = ref<Metric>({
 
 const graphLines: Ref<GraphLines> = ref(props.graph_lines)
 const selectedGraphLines: Ref<GraphLines> = ref([])
+
+function changeSelection(graphLine: GraphLine, newValue: boolean) {
+  if (newValue) {
+    selectedGraphLines.value = [...selectedGraphLines.value, graphLine]
+  } else {
+    selectedGraphLines.value = selectedGraphLines.value.filter((g) => g.id !== graphLine.id)
+  }
+}
 
 function nextIndex(): number {
   if (graphLines.value.length === 0) {
@@ -837,15 +846,10 @@ const graphDesignerContentAsJson = computed(() => {
       >
         <td class="narrow nowrap">{{ graphLine.id }}</td>
         <td class="buttons">
-          <!-- TODO: use CmkCheckbox building block, see FormCheckboxListChoice how to utilize events!-->
-          <input
-            :id="graphLine.id.toString()"
-            v-model="selectedGraphLines"
-            :value="graphLine"
-            type="checkbox"
-            class="checkbox"
+          <CmkCheckbox
+            :model-value="selectedGraphLines.map((v) => v.id).includes(graphLine.id)"
+            @update:model-value="(newValue) => changeSelection(graphLine, newValue)"
           />
-          <label :for="graphLine.id.toString()"></label>
         </td>
         <td class="buttons">
           <img

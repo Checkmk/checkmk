@@ -141,6 +141,68 @@ def main() {
                 }
             }]
         }
+
+        // the following images are special ones required for k8s
+        def special_image_details = [
+            "minimal-alpine-bash-git": [
+                "tag_name": "minimal-alpine-bash-git",
+                "image_alias_name": "IMAGE_ALPINE_3_22",
+                "docker_file_path": "buildscripts/infrastructure/build-nodes/bootstrap/Dockerfile",
+            ],
+            "minimal-ubuntu-checkmk": [
+                "tag_name": "minimal-ubuntu-checkmk-${safe_branch_name}",
+                "image_alias_name": "IMAGE_UBUNTU_24_04",
+                "docker_file_path": "buildscripts/infrastructure/build-nodes/minimal/Dockerfile",
+            ],
+            "minimal-alpine-python-checkmk": [
+                "tag_name": "minimal-alpine-python-checkmk-${safe_branch_name}",
+                "image_alias_name": "IMAGE_PYTHON_3_12",
+                "docker_file_path": "buildscripts/scripts/Dockerfile",
+            ],
+        ];
+
+        stages += special_image_details.collectEntries { image_name, details ->
+            [("${image_name}") : {
+                def image = false;
+
+                smart_stage(
+                    name: "Build ${image_name}",
+                    raiseOnError: true,
+                ) {
+                    def image_base = resolve_docker_image_alias(details.image_alias_name);
+                    def docker_build_args = (""
+                        + " --build-arg IMAGE_BASE='${image_base}'"
+
+                        + " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'"
+                        + " --build-arg NEXUS_ARCHIVES_URL='${NEXUS_ARCHIVES_URL}'"
+                        + " --build-arg NEXUS_USERNAME='${NEXUS_USERNAME}'"
+                        + " --build-arg NEXUS_PASSWORD='${NEXUS_PASSWORD}'"
+                        + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
+
+                        + " -f '${details.docker_file_path}'"
+                        + " ."
+                    );
+
+                    if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                        docker_build_args = "--no-cache " + docker_build_args;
+                    }
+                    dir("${checkout_dir}") {
+                        image = docker.build(details.tag_name, docker_build_args);
+                    }
+                }
+
+                smart_stage(
+                    name: "Upload ${image_name}",
+                    condition: publish_images,
+                    raiseOnError: true,
+                ) {
+                    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                        image.push();
+                        image.push("latest");
+                    }
+                }
+            }]
+        }
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 

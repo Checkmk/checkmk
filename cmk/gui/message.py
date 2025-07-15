@@ -9,7 +9,7 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
-from typing import Any, assert_never, Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -55,10 +55,7 @@ from cmk.gui.valuespec import (
 
 type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 type MessageDestination = (
-    tuple[Literal["all_users"], None]
-    | tuple[Literal["online"], None]
-    | tuple[Literal["admin"], None]
-    | tuple[Literal["list"], Sequence[UserId]]
+    Literal["all_users", "online", "admin"] | tuple[Literal["list"], Sequence[UserId]]
 )
 
 
@@ -311,6 +308,7 @@ def _vs_message(users: Mapping[str, UserSpec]) -> Dictionary:
                 allow_empty=False,
             ),
         ),
+        # TODO: Shall we add "admin" here, too?
         # ('contactgroup', _('All members of a contact group')),
         ("online", _("All online users")),
     ]
@@ -431,21 +429,7 @@ def send_message(
 ) -> tuple[
     list[UserId], dict[MessageMethod, int], dict[MessageMethod, list[tuple[UserId, Exception]]]
 ]:
-    match msg["dest"][0]:
-        case "all_users":
-            recipients = [UserId(s) for s in multisite_user_ids]
-        case "online":
-            recipients = userdb.get_online_user_ids(datetime.now())
-        case "admin":
-            recipients = [
-                UserId(user_id)
-                for user_id, attr in userdb.load_users(lock=False).items()
-                if attr.get("automation_user", False) is False and "admin" in attr.get("roles", [])
-            ]
-        case "list":
-            recipients = [UserId(u) for u in msg["dest"][1]]
-        case other:
-            assert_never(other)
+    recipients = _recipients_for(msg["dest"], multisite_user_ids)
     num_success = {method: 0 for method in msg["methods"]}
     errors = dict[MessageMethod, list[tuple[UserId, Exception]]]()
     for user_id in recipients:
@@ -456,6 +440,27 @@ def send_message(
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
     return recipients, num_success, errors
+
+
+def _recipients_for(
+    destination: MessageDestination, multisite_user_ids: Iterable[str]
+) -> list[UserId]:
+    match destination:
+        case "all_users":
+            return [UserId(s) for s in multisite_user_ids]
+        case "online":
+            return userdb.get_online_user_ids(datetime.now())
+        case "admin":
+            return [
+                user_id
+                for user_id, attr in userdb.load_users(lock=False).items()
+                if attr.get("automation_user", False) is False and "admin" in attr.get("roles", [])
+            ]
+        case ("list", user_ids):
+            return list(user_ids)
+        case other:
+            # assert_never(other) doesn't work here due to several mypy bugs
+            raise ValueError(f"Invalid message destination {other}")
 
 
 #   ---Message Plugins-------------------------------------------------------

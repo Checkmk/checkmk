@@ -8,7 +8,7 @@ import { ref, onMounted, computed } from 'vue'
 import type { Ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
-import SlideIn from '@/components/SlideIn.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 import AgentRegisterSlideOutContent from '@/mode-host/agent-connection-test/components/AgentRegisterSlideOutContent.vue'
@@ -324,7 +324,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
       </div>
     </div>
 
-    <SlideIn
+    <CmkSlideInDialog
       :header="{
         title: slideOutTitle,
         closeButton: true
@@ -342,7 +342,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :url="url"
         @close="((slideInOpen = false), (isError = false))"
       />
-    </SlideIn>
+    </CmkSlideInDialog>
   </Teleport>
 </template>
 

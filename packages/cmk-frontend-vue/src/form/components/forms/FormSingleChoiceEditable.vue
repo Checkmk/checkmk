@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 import CmkSpace from '@/components/CmkSpace.vue'
-import SlideIn from '@/components/SlideIn.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
@@ -146,7 +146,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
       {{ spec.i18n.create }}
     </FormButton>
 
-    <SlideIn
+    <CmkSlideInDialog
       :open="slideInOpen"
       :header="{
         title:
@@ -173,7 +173,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
           @submitted="slideInSubmitted"
         />
       </ErrorBoundary>
-    </SlideIn>
+    </CmkSlideInDialog>
   </div>
   <FormValidation :validation="validation"></FormValidation>
 </template>

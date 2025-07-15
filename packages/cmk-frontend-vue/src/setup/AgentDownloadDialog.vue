@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import SlideIn from '@/components/SlideIn.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
 import { TooltipArrow } from 'radix-vue'
 
@@ -67,14 +67,14 @@ const tooltipOpen = ref(true)
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>
-  <SlideIn
+  <CmkSlideInDialog
     :open="slideInOpen"
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-html="externalContent"></div>
-  </SlideIn>
+  </CmkSlideInDialog>
 </template>
 
 <style scoped>

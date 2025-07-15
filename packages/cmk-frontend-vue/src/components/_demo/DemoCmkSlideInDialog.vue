@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import SlideIn from '@/components/SlideIn.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
@@ -90,7 +90,7 @@ const catalog = ref<Catalog>({
 <template>
   <h2>With embedded Form</h2>
   <CmkButton @click="slideOut1 = !slideOut1">open</CmkButton>
-  <SlideIn
+  <CmkSlideInDialog
     :open="slideOut1"
     :header="{ title: 'some title', closeButton: true }"
     @close="slideOut1 = false"
@@ -102,20 +102,20 @@ const catalog = ref<Catalog>({
     <div class="content">
       <FormEdit v-model:data="data" :spec="catalog" :backend-validation="[]" />
     </div>
-  </SlideIn>
+  </CmkSlideInDialog>
   <pre>{{ data }}</pre>
   <h2>With very long content</h2>
   <CmkButton @click="slideOut2 = !slideOut2">open</CmkButton>
-  <SlideIn
+  <CmkSlideInDialog
     :open="slideOut2"
     :header="{ title: 'some title', closeButton: true }"
     @close="slideOut2 = false"
   >
     <div v-for="i in 100" :key="i">{{ i }} <br /></div>
-  </SlideIn>
+  </CmkSlideInDialog>
   <h2>With very wide content</h2>
   <CmkButton @click="slideOut3 = !slideOut3">open</CmkButton>
-  <SlideIn
+  <CmkSlideInDialog
     :open="slideOut3"
     :header="{ title: 'some title', closeButton: true }"
     @close="slideOut3 = false"
@@ -128,7 +128,7 @@ const catalog = ref<Catalog>({
     <CmkCollapsible :open="collapsible">
       <span v-for="i in 100" :key="i">{{ i }}</span></CmkCollapsible
     >
-  </SlideIn>
+  </CmkSlideInDialog>
 </template>
 
 <style scoped>

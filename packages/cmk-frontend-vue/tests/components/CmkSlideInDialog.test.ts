@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import SlideIn from '@/components/SlideIn.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 import userEvent from '@testing-library/user-event'
@@ -14,30 +14,30 @@ const helpTextComp = `<HelpText :help="'some help'" />`
 // We need to test the slideout specifically with and without a nested tooltip
 // because the nested portals (dialog & tooltip) from radix break their auto
 // focus functionality.
-const createSlideInComp = (addHelp: boolean) =>
+const createCmkSlideInDialogComp = (addHelp: boolean) =>
   defineComponent({
-    components: { SlideIn, HelpText },
+    components: { CmkSlideInDialog, HelpText },
     setup() {
       const open = ref(false)
       return { open }
     },
     template: `
     <button @click="open = true">Open</button>
-    <SlideIn
+    <CmkSlideInDialog
       :open="open"
       :header="{ title: 'Some Title', closeButton: true }"
       @close="open = false"
       >
       <input data-testid="focus-element" />
       <div id="main">Main Content${addHelp ? helpTextComp : ``}</div>
-    </SlideIn>
+    </CmkSlideInDialog>
 `
   })
 
 test.each([{ addTooltip: true }, { addTooltip: false }])(
   'Slidein shows and hides content',
   async ({ addTooltip }) => {
-    render(createSlideInComp(addTooltip))
+    render(createCmkSlideInDialogComp(addTooltip))
 
     expect(screen.queryByText('Main Content')).not.toBeInTheDocument()
 
@@ -56,7 +56,7 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
 test.each([{ addTooltip: true }, { addTooltip: false }])(
   'Slidein auto focuses',
   async ({ addTooltip }) => {
-    render(createSlideInComp(addTooltip))
+    render(createCmkSlideInDialogComp(addTooltip))
 
     expect(document.activeElement).toBe(document.body)
 
@@ -71,7 +71,7 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
 test.each([{ addTooltip: true }, { addTooltip: false }])(
   'Slidein supports tabbing',
   async ({ addTooltip }) => {
-    render(createSlideInComp(addTooltip))
+    render(createCmkSlideInDialogComp(addTooltip))
 
     const button = screen.getByRole('button', { name: 'Open' })
     await fireEvent.click(button)

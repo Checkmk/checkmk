@@ -8,7 +8,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import DemoEmpty from './DemoEmpty.vue'
 import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
-import DemoSlideIn from './DemoSlideIn.vue'
+import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
@@ -114,9 +114,9 @@ const routes: Route[] = [
     component: DemoHelp
   },
   {
-    path: '/slidein',
-    name: 'SlideIn',
-    component: DemoSlideIn
+    path: '/cmkslideindialog',
+    name: 'CmkSlideInDialog',
+    component: DemoCmkSlideInDialog
   },
   {
     path: '/cmkspace',

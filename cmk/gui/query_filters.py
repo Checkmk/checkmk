@@ -13,9 +13,6 @@ from typing import Literal, override
 
 import livestatus
 
-from cmk.utils.labels import LabelGroups
-from cmk.utils.tags import TagGroupID
-
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -31,6 +28,8 @@ from cmk.gui.utils.labels import (
     parse_labels_value,
 )
 from cmk.gui.utils.user_errors import user_errors
+from cmk.utils.labels import LabelGroups
+from cmk.utils.tags import TagGroupID
 
 SitesOptions = list[tuple[str, str]]
 

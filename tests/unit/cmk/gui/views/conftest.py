@@ -6,7 +6,6 @@
 import pytest
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.view import View
 from cmk.gui.views.store import get_all_views
 

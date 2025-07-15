@@ -18,18 +18,15 @@ from hashlib import sha256
 from pathlib import Path
 from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.user import UserId
-
 import cmk.utils
 import cmk.utils.paths
-
+from cmk import trace
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.audit_log import log_audit
-
-from cmk import trace
 
 var_dir = str(cmk.utils.paths.var_dir) + "/wato/"
 snapshot_dir = var_dir + "snapshots/"

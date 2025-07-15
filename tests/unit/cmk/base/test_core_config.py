@@ -11,25 +11,22 @@ from collections.abc import Mapping
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
+import cmk.base.nagios_utils
 import cmk.ccc.version as cmk_version
-from cmk.ccc.hostaddress import HostAddress, HostName
-
 import cmk.utils.paths
+from cmk.base import config, core_config
+from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
+from cmk.base.core_factory import create_core
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, ConfiguredService
 from cmk.utils import ip_lookup, password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, ConfiguredService
-
-import cmk.base.nagios_utils
-from cmk.base import config, core_config
-from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
-from cmk.base.core_factory import create_core
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 @pytest.fixture(name="config_path")

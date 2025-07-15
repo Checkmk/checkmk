@@ -7,7 +7,6 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from tests.unit.cmk.web_test_app import SetConfig, WebTestAppForCMK
 
 

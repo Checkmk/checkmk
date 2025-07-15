@@ -18,7 +18,7 @@ import livestatus
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
+from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
@@ -32,8 +32,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import Page
 from cmk.gui.type_defs import SizePT
-
-from cmk.graphing.v1 import graphs as graphs_api
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._from_api import graphs_from_api, metrics_from_api, RegisteredMetric

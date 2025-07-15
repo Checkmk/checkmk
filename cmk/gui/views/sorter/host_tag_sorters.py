@@ -8,8 +8,6 @@
 from collections.abc import Mapping
 from functools import partial
 
-from cmk.utils.tags import TagGroupID
-
 from cmk.gui.config import Config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
@@ -17,6 +15,7 @@ from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import Row
+from cmk.utils.tags import TagGroupID
 
 from .base import Sorter
 

@@ -6,11 +6,9 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc import tty
-
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.rulesets import AllRulesets
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mem import check_memory_dict
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.mem import check_memory_dict
 
 check_info = {}
 

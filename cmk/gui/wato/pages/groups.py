@@ -6,12 +6,10 @@
 import abc
 from collections.abc import Collection, Iterator, Sequence
 
+import cmk.utils.paths
 from cmk.ccc import version
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition_supports_nagvis
-
-import cmk.utils.paths
-
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config

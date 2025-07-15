@@ -6,11 +6,6 @@ from collections.abc import Callable, Iterable, Sequence
 
 import pytest
 
-# not ideal, but for now access this member.
-# TODO: find out if it's ok for the fetcher to have the API as
-# a dependency, b/c that is where this function belongs.
-from cmk.fetchers._snmpscan import _evaluate_snmp_detection
-
 from cmk.agent_based.v1 import (
     all_of,
     any_of,
@@ -24,6 +19,11 @@ from cmk.agent_based.v1 import (
     not_startswith,
     startswith,
 )
+
+# not ideal, but for now access this member.
+# TODO: find out if it's ok for the fetcher to have the API as
+# a dependency, b/c that is where this function belongs.
+from cmk.fetchers._snmpscan import _evaluate_snmp_detection
 
 _SpecCreator = Callable[[str, str], list[list[tuple[str, str, bool]]]]
 

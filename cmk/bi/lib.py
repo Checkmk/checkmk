@@ -15,20 +15,6 @@ from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusResponse, Query
 
-from cmk.ccc import plugin_registry
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
-
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.rulesets.ruleset_matcher import TagCondition
-from cmk.utils.servicename import ServiceName
-from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
-    ServiceDetails,
-    ServiceState,
-)
-
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
     ActionConfig,
@@ -37,7 +23,18 @@ from cmk.bi.type_defs import (
     HostState,
     SearchConfig,
 )
+from cmk.ccc import plugin_registry
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
+    ServiceDetails,
+    ServiceState,
+)
 from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
 
 ReqList = partial(List, required=True)
 ReqDict = partial(Dict, required=True)

@@ -14,16 +14,11 @@ from pydantic import BaseModel
 
 from livestatus import SiteConfiguration
 
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
-
-import cmk.utils.paths
-from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.notify_types import EventRule
-from cmk.utils.object_diff import make_diff_text
-
 from cmk.gui import userdb
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
@@ -35,6 +30,9 @@ from cmk.gui.watolib.automations import (
     LocalAutomationConfig,
     make_automation_config,
 )
+from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.notify_types import EventRule
+from cmk.utils.object_diff import make_diff_text
 
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand

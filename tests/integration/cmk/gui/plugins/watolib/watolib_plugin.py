@@ -7,14 +7,13 @@ from pathlib import Path
 from typing import override
 
 import cmk.utils.paths
-from cmk.utils.config_warnings import ConfigurationWarnings
-
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
     SerializedSettings,
 )
+from cmk.utils.config_warnings import ConfigurationWarnings
 
 
 class ConfigDomainTest(ABCConfigDomain):

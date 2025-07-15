@@ -8,18 +8,15 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
+from cmk import trace
+from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
-
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.tags import TagID
-
-from cmk.base.config import ConfigCache
-
-from cmk import trace
 
 OptionSpec = str
 Argument = str

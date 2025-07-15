@@ -9,10 +9,9 @@ from stat import S_IMODE
 
 import pytest
 
-from cmk.utils.certs import SiteCA
-
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+from cmk.utils.certs import SiteCA
 
 SITE_ID = "test-site"
 

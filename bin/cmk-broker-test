@@ -28,10 +28,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 
 from cmk.ccc.site import omd_site
-
-from cmk.utils.paths import omd_root
-
 from cmk.messaging import AppName, Channel, Connection, DeliveryTag, QueueName, RoutingKey
+from cmk.utils.paths import omd_root
 
 
 class TestMessage(BaseModel):

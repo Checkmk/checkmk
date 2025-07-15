@@ -11,7 +11,6 @@ from dataclasses import asdict
 from typing import NamedTuple, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui import message
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
@@ -29,7 +28,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
-
 from cmk.shared_typing.unified_search import UnifiedSearchConfig
 
 

@@ -12,7 +12,6 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.piggyback_hub import _validate_piggyback_hub_config, compute_new_config

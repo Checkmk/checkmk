@@ -18,6 +18,9 @@ from flask.testing import FlaskClient
 from mypy_extensions import KwArg
 from werkzeug.test import TestResponse
 
+from cmk.ccc.user import UserId
+from cmk.gui.type_defs import SessionInfo
+
 from tests.testlib.unit.rest_api_client import (
     assert_and_delete_rest_crash_report,
     expand_rel,
@@ -25,10 +28,6 @@ from tests.testlib.unit.rest_api_client import (
     RequestHandler,
     Response,
 )
-
-from cmk.ccc.user import UserId
-
-from cmk.gui.type_defs import SessionInfo
 
 HTTPMethod = Literal[
     "get",

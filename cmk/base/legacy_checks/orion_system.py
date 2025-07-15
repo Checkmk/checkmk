@@ -6,11 +6,10 @@
 
 # mypy: disable-error-code="index,attr-defined"
 
-from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+from cmk.base.check_legacy_includes.elphase import check_elphase
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 check_info = {}
 

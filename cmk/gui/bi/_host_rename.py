@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.ccc.hostaddress import HostName
-
-from cmk.gui.bi import get_cached_bi_packs
-
 from cmk.bi.packs import BIHostRenamer
+from cmk.ccc.hostaddress import HostName
+from cmk.gui.bi import get_cached_bi_packs
 
 
 def rename_host_in_bi(oldname: HostName, newname: HostName) -> list[str]:

@@ -15,12 +15,10 @@ import flask
 from flask import Flask
 from flask.sessions import SessionInterface, SessionMixin
 
+from cmk import trace
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-
-from cmk.utils.log.security_event import log_security_event
-
 from cmk.gui import config, userdb
 from cmk.gui.auth import (
     check_auth,
@@ -38,8 +36,7 @@ from cmk.gui.utils import roles
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
-
-from cmk import trace
+from cmk.utils.log.security_event import log_security_event
 
 tracer = trace.get_tracer()
 

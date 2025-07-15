@@ -7,6 +7,12 @@
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
+import cmk.plugins.kube.agent_handlers.common
+from cmk.plugins.kube.agent_handlers.common import aggregate_resources
+from cmk.plugins.kube.api_server import SUPPORTED_VERSIONS
+from cmk.plugins.kube.schemata import api, section
+from cmk.plugins.kube.special_agents import agent_kube as agent
+
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APICronJobFactory,
     APIDeploymentFactory,
@@ -20,12 +26,6 @@ from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     PodSpecFactory,
     PodStatusFactory,
 )
-
-import cmk.plugins.kube.agent_handlers.common
-from cmk.plugins.kube.agent_handlers.common import aggregate_resources
-from cmk.plugins.kube.api_server import SUPPORTED_VERSIONS
-from cmk.plugins.kube.schemata import api, section
-from cmk.plugins.kube.special_agents import agent_kube as agent
 
 
 class ResourcesRequirementsFactory(ModelFactory):

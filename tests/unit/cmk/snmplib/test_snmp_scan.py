@@ -10,24 +10,19 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.mocks_and_helpers import FixPluginLegacy
-
+import cmk.fetchers._snmpcache as snmp_cache
+import cmk.fetchers._snmpscan as snmp_scan
+from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.ccc.exceptions import MKSNMPError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-
+from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
+from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
-
-import cmk.fetchers._snmpcache as snmp_cache
-import cmk.fetchers._snmpscan as snmp_scan
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
-from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
-from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 
 @pytest.mark.parametrize(

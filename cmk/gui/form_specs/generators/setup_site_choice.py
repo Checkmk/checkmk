@@ -6,13 +6,11 @@ from collections.abc import Sequence
 from typing import TypeVar
 
 from cmk.ccc.site import omd_site
-
 from cmk.gui import site_config
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.user_sites import activation_sites, site_choices
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, InvalidElementValidator
 

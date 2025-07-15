@@ -7,7 +7,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.config import Config
 
 from .type_defs import DashboardConfig, DashboardName

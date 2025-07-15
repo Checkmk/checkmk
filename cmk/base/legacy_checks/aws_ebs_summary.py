@@ -8,9 +8,8 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_legacy_includes.aws import inventory_aws_generic
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 check_info = {}

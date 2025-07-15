@@ -6,10 +6,9 @@
 from collections.abc import Iterable, Mapping
 from typing import Final, NamedTuple
 
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.plugins.lib.kentix import DETECT_KENTIX
 from cmk.plugins.lib.temperature import TempParamType
 

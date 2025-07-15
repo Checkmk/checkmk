@@ -11,9 +11,7 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
 from cmk.checkengine.plugins import CheckPluginName
-
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config

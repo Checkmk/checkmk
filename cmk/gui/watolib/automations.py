@@ -28,18 +28,13 @@ from pydantic import BaseModel, field_validator, PlainValidator
 from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
+from cmk.automations.results import SerializedResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
-
-from cmk.utils import paths
-from cmk.utils.licensing.handler import LicenseState
-from cmk.utils.licensing.registry import get_license_state
-
-from cmk.automations.results import SerializedResult
-
 from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundStatusSnapshot,
@@ -62,8 +57,9 @@ from cmk.gui.utils.compatibility import (
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.utils import mk_repr
-
-from cmk import trace
+from cmk.utils import paths
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import get_license_state
 
 from . import automation_helper, automation_subprocess
 from .automation_executor import AutomationExecutor

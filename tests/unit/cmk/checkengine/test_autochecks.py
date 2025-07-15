@@ -9,17 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.paths
-
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 @pytest.fixture(autouse=True)

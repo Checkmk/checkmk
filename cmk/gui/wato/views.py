@@ -7,7 +7,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l

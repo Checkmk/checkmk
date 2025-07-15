@@ -10,7 +10,6 @@ from typing import Final
 import pytest
 
 from cmk.ccc import version as checkmk_version
-
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.checkmk.active_check import check_bi_aggr
 from cmk.plugins.elasticsearch.active_check import check_elasticsearch_query

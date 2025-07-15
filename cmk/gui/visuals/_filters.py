@@ -13,7 +13,6 @@ from typing import Literal
 import livestatus
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui import query_filters
 from cmk.gui import sites as sites
 from cmk.gui.config import active_config, Config

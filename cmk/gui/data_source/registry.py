@@ -8,7 +8,6 @@ from __future__ import annotations
 import hashlib
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.type_defs import Row
 
 from .base import ABCDataSource

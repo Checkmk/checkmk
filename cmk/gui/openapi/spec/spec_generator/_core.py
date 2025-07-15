@@ -402,9 +402,6 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.ccc.site import omd_site, SiteId
-
-from cmk.utils.paths import omd_root
-
 from cmk.gui import main_modules
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.registry import (
@@ -427,6 +424,7 @@ from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.utils.paths import omd_root
 
 Ident = tuple[str, str]
 

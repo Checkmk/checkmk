@@ -5,11 +5,10 @@
 
 from marshmallow import post_load, ValidationError
 
+from cmk import fields
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
-
-from cmk import fields
 
 
 class AuxTagIDShouldExist(BaseSchema):

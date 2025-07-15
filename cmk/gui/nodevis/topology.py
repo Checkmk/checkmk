@@ -18,16 +18,13 @@ from typing import Any, Literal
 import livestatus
 
 import cmk.ccc.plugin_registry
+import cmk.gui.visuals
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import locked
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.tags import TagID
-
-import cmk.gui.visuals
 from cmk.gui import sites
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
 from cmk.gui.config import Config
@@ -87,6 +84,7 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.utils.tags import TagID
 
 
 @request_memoize()

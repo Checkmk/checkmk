@@ -30,9 +30,7 @@ import urllib3
 from pydantic import TypeAdapter
 
 import cmk.ccc.profile
-
 import cmk.utils.password_store
-
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
     cluster_handler,

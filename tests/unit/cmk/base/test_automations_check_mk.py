@@ -8,30 +8,23 @@ from dataclasses import replace
 
 import pytest
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
-
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
-from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.utils.tags import TagGroupID, TagID
-
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
-
-from cmk.fetchers import PiggybackFetcher
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
 from cmk.base import config, core_config
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
-
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
+from cmk.fetchers import PiggybackFetcher
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
+from cmk.utils.tags import TagGroupID, TagID
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 
 class TestAutomationDiagHost:

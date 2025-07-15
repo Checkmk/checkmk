@@ -13,11 +13,9 @@ from typing import Any
 
 import pytest
 
+from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
-
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
-
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.http import request
 from cmk.gui.watolib import automation_background_job

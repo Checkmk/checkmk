@@ -9,16 +9,15 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.utils.agent_registration import HostAgentConnectionMode
+
 from tests.testlib.agent import (
     register_controller,
     wait_until_host_has_services,
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-
-from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.agent_registration import HostAgentConnectionMode
 
 logger = logging.getLogger(__name__)
 

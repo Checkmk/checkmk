@@ -6,10 +6,10 @@
 
 from kubernetes import client  # type: ignore[import-untyped]
 
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
-
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import namespace_from_client
+
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPINamespace:

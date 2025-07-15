@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils import password_store
-
 from cmk.server_side_calls_backend import load_active_checks, load_special_agents
+from cmk.utils import password_store
 
 
 def test_hack_apply_map_special_agents_is_complete() -> None:

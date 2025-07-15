@@ -17,9 +17,8 @@ from pydantic import BaseModel, PydanticInvalidForJsonSchema, TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue, PydanticJsonSchemaWarning
 from pydantic_core import core_schema, PydanticOmit, PydanticSerializationError
 
-from cmk.utils.object_diff import make_diff
-
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
+from cmk.utils.object_diff import make_diff
 
 type Direction = Literal["inbound", "outbound"]
 

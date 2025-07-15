@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from cmk.gui.config import builtin_role_ids
+
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_get_userrole_endpoint(clients: ClientRegistry) -> None:

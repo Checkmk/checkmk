@@ -6,12 +6,11 @@
 from collections.abc import Sequence
 from typing import TypedDict
 
-from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
-
 from cmk.gui import userdb
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
 
 
 class PredefinedConditionSpec(TypedDict):

@@ -5,8 +5,6 @@
 import copy
 from collections.abc import Collection
 
-from cmk.utils.password_store import Password
-
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -43,8 +41,8 @@ from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
-
 from cmk.rulesets.v1.form_specs import DictElement
+from cmk.utils.password_store import Password
 
 
 def register(mode_registry: ModeRegistry) -> None:

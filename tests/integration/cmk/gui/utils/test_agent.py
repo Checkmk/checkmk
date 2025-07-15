@@ -6,9 +6,9 @@
 
 from pytest_mock import MockerFixture
 
-from tests.testlib.site import Site
-
 from cmk.gui.utils import agent
+
+from tests.testlib.site import Site
 
 
 def test_vanilla_agents_filenames(site: Site, mocker: MockerFixture) -> None:

@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import CustomUserAttrSpec

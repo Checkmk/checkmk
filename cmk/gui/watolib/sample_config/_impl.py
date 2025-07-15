@@ -13,23 +13,6 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, url_prefix
-
-from cmk.utils.encryption import raw_certificates_from_file
-from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import (
-    EventRule,
-    MailPluginModel,
-    NotificationParameterGeneralInfos,
-    NotificationParameterID,
-    NotificationParameterItem,
-    NotificationParameterSpecs,
-    NotificationPluginNameStr,
-    NotificationRuleID,
-    NotifyPlugin,
-)
-from cmk.utils.paths import configuration_lockfile, site_cert_file
-from cmk.utils.tags import sample_tag_config, TagConfig
-
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
 from cmk.gui.userdb import create_cmk_automation_user
@@ -48,6 +31,21 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.log import VERBOSE
+from cmk.utils.notify_types import (
+    EventRule,
+    MailPluginModel,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
+    NotificationRuleID,
+    NotifyPlugin,
+)
+from cmk.utils.paths import configuration_lockfile, site_cert_file
+from cmk.utils.tags import sample_tag_config, TagConfig
 
 from ._abc import SampleConfigGeneratorABCGroups
 from ._constants import SHIPPED_RULES, USE_NEW_DESCRIPTIONS_FOR_SETTING

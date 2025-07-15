@@ -9,11 +9,6 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import cisco_vpn_tunnel
 from cmk.plugins.collection.agent_based.cisco_vpn_tunnel import (
@@ -24,6 +19,11 @@ from cmk.plugins.collection.agent_based.cisco_vpn_tunnel import (
     Phase,
     snmp_section_cisco_vpn_tunnel,
     VPNTunnel,
+)
+
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
 )
 
 _STRING_TABLE = [

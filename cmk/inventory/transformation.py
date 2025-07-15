@@ -13,9 +13,8 @@ from pathlib import Path
 from typing import TypedDict
 
 import cmk.ccc.store
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 from cmk.utils.structured_data import InventoryPaths, TreePath, TreePathGz
 
 

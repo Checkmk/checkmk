@@ -11,7 +11,6 @@ from typing import Any, cast
 from urllib.parse import unquote
 
 from cmk.ccc.user import UserId
-
 from cmk.gui import forms
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError

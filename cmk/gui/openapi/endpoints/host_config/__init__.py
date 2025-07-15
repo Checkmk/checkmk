@@ -8,9 +8,9 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 from urllib.parse import urlparse
 
+from cmk import fields
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import InitialStatusArgs, JobTarget
 from cmk.gui.config import active_config
@@ -52,8 +52,6 @@ from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
-
-from cmk import fields
 
 BAKE_AGENT_PARAM_NAME = "bake_agent"
 BAKE_AGENT_PARAM = {

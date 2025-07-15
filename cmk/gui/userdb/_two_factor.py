@@ -6,11 +6,9 @@
 import ast
 
 from cmk.ccc.user import UserId
-
-from cmk.gui.type_defs import TwoFactorCredentials
-
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
+from cmk.gui.type_defs import TwoFactorCredentials
 
 from .store import load_custom_attr, save_two_factor_credentials
 

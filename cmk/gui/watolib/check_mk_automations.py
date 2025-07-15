@@ -8,21 +8,12 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeVar
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site, SiteId
-
-from cmk.utils.diagnostics import DiagnosticsCLParameters
-from cmk.utils.labels import HostLabel, Labels
-from cmk.utils.notify import NotificationContext
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.servicename import Item, ServiceName
-
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
-
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
-
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -37,6 +28,11 @@ from cmk.gui.watolib.automations import (
     RemoteAutomationConfig,
 )
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
+from cmk.utils.diagnostics import DiagnosticsCLParameters
+from cmk.utils.labels import HostLabel, Labels
+from cmk.utils.notify import NotificationContext
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import Item, ServiceName
 
 
 class AutomationResponse(NamedTuple):

@@ -11,7 +11,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderSiteStats
 
 

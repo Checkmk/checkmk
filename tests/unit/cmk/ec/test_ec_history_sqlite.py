@@ -10,9 +10,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
-
 import cmk.ec.export as ec
+from cmk.ccc.hostaddress import HostName
 from cmk.ec.history_sqlite import filters_to_sqlite_query, SQLiteHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable

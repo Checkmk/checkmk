@@ -8,9 +8,6 @@ from collections.abc import Mapping, Sequence
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
-
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -55,9 +52,9 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.utils.rulesets.definition import RuleGroup
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")

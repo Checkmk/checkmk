@@ -14,7 +14,6 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.security import safe_join
 
 from cmk.ccc import store
-
 from cmk.gui import hooks, sites
 from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager

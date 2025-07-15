@@ -6,14 +6,9 @@
 import time
 from collections.abc import Mapping
 
+import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-import cmk.utils.render
-from cmk.utils.labels import Labels, LabelSources
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.tags import TagGroupID, TagID
-
 from cmk.gui import http
 from cmk.gui.config import active_config
 from cmk.gui.display_options import DisplayOptions
@@ -27,6 +22,9 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.view_utils import CellSpec, get_host_list_links
+from cmk.utils.labels import Labels, LabelSources
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.tags import TagGroupID, TagID
 
 
 def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | None]:

@@ -5,12 +5,11 @@
 
 from pathlib import Path
 
-from tests.testlib.common.repo import repo_path
-
 import cmk.ccc.debug
-
+import cmk.crypto.password_hashing
 import cmk.utils.caching
 import cmk.utils.paths
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -18,8 +17,7 @@ from cmk.utils.licensing.handler import (
     UserEffect,
 )
 
-import cmk.crypto.password_hashing
-from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
+from tests.testlib.common.repo import repo_path
 
 
 class FixPluginLegacy:

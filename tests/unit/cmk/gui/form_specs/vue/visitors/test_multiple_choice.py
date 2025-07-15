@@ -7,7 +7,6 @@ import pytest
 
 from cmk.gui.form_specs.vue import DefaultValue as FormSpecDefaultValue
 from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, MultipleChoice, MultipleChoiceElement
 

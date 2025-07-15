@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.check_utils import maincheckify
-
 from cmk.gui.graphing._legacy import check_metrics
+from cmk.utils.check_utils import maincheckify
 
 
 def test_all_keys_migrated() -> None:

@@ -11,11 +11,9 @@ from pathlib import Path
 from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.utils.agentdatatype import AgentRawData
-
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import get_messages_for, PiggybackMessage, PiggybackTimeSettings
+from cmk.utils.agentdatatype import AgentRawData
 
 from ._abstract import Fetcher, Mode
 

@@ -9,6 +9,14 @@ from typing import Any
 
 import pytest
 
+from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
+from cmk.gui.logged_in import user
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
+from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
+from cmk.utils import paths
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.rulesets.definition import RuleGroup
+
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
     Response,
@@ -16,16 +24,6 @@ from tests.testlib.unit.rest_api_client import (
     RuleConditions,
     RuleProperties,
 )
-
-from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
-
-from cmk.utils import paths
-from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from cmk.utils.rulesets.definition import RuleGroup
-
-from cmk.gui.logged_in import user
-from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
-from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],

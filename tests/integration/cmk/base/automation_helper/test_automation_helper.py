@@ -11,16 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.integration.linux_test_host import create_linux_test_host
-
-from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
-
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import AnalyseServiceResult, SerializedResult
-
 from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
     Config,
@@ -29,6 +21,11 @@ from cmk.base.automation_helper._config import (
     ReloaderConfig,
     ServerConfig,
 )
+from cmk.utils.rulesets.definition import RuleGroup
+
+from tests.integration.linux_test_host import create_linux_test_host
+from tests.testlib.common.utils import wait_until
+from tests.testlib.site import Site
 
 from ._helper_query_automation_helper import AutomationMode, HealthMode
 

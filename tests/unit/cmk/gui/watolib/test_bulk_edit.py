@@ -7,7 +7,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
-
 from cmk.gui.wato.pages._bulk_actions import _search_text_matches
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host

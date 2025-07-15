@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import HostConfigModel

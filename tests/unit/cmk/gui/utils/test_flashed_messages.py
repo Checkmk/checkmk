@@ -8,7 +8,6 @@ from datetime import datetime
 import pytest
 
 from cmk.ccc.user import UserId
-
 from cmk.gui import login
 from cmk.gui.session import session
 from cmk.gui.userdb.session import on_succeeded_login

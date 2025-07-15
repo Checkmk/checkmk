@@ -8,12 +8,10 @@ import sys
 import pytest
 
 import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
-
 import cmk.gui.pages
 from cmk.gui.config import Config
 from cmk.gui.pages import PageEndpoint
+from cmk.utils import paths
 
 
 def test_registered_pages() -> None:

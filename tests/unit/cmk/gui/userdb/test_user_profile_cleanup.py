@@ -10,10 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.user import UserId
-
 import cmk.utils.paths
-
+from cmk.ccc.user import UserId
 from cmk.gui.userdb._user_profile_cleanup import cleanup_abandoned_profiles
 
 

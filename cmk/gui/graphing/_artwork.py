@@ -16,7 +16,6 @@ from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 
 import cmk.utils.render
-
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _

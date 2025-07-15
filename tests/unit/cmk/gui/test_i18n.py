@@ -11,12 +11,11 @@ from pathlib import Path
 import flask
 import pytest
 
-from tests.testlib.common.repo import repo_path
-
 import cmk.utils.paths
-
 from cmk.gui import i18n
 from cmk.gui.utils.script_helpers import application_and_request_context
+
+from tests.testlib.common.repo import repo_path
 
 LOCAL_DE_TRANSLATIONS = {
     "Age": "Alter",

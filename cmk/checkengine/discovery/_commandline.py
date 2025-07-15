@@ -13,11 +13,6 @@ import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.log import console, section
-from cmk.utils.sectionname import SectionMap, SectionName
-
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin
@@ -28,6 +23,9 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console, section
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from ._autochecks import AutochecksStore
 from ._host_labels import discover_host_labels, HostLabelPlugin

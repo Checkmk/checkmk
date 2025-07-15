@@ -8,10 +8,8 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc.site import get_omd_config
-
-from cmk.utils.paths import omd_root
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.utils.paths import omd_root
 
 
 class UpdateCoreConfig(UpdateAction):

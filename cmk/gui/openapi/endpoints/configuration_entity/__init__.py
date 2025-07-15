@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any
 
+from cmk import fields
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue import FormSpecValidationError
 from cmk.gui.http import Response
@@ -36,8 +37,6 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_configuration_entity_schema,
     save_configuration_entity,
 )
-
-from cmk import fields
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 

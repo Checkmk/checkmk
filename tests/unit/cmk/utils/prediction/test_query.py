@@ -5,14 +5,12 @@
 
 from livestatus import LocalConnection
 
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection, SiteName
 from cmk.utils.prediction import DataStat, PredictionData
 from cmk.utils.prediction._query import PredictionQuerier
 from cmk.utils.servicename import ServiceName
-
-from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 
 
 class TestPredictionQuerier:

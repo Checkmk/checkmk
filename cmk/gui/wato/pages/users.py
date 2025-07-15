@@ -12,9 +12,7 @@ from typing import cast, Literal, overload
 
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
-
-from cmk.utils import paths, render
-
+from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -93,8 +91,7 @@ from cmk.gui.watolib.users import (
     user_features_registry,
     verify_password_policy,
 )
-
-from cmk.crypto.password import Password, PasswordPolicy
+from cmk.utils import paths, render
 
 
 def register(_mode_registry: ModeRegistry) -> None:

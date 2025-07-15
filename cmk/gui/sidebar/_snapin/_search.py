@@ -14,9 +14,6 @@ from typing import Final, Literal, TypeVar
 import livestatus
 
 from cmk.ccc.exceptions import MKException
-
-from cmk.utils.redis import get_redis_client
-
 from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -46,6 +43,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.utils.redis import get_redis_client
 
 from ._base import PageHandlers, SidebarSnapin
 

@@ -11,7 +11,6 @@ from xml.etree import ElementTree as etree
 import requests
 
 import cmk.utils.password_store
-
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 

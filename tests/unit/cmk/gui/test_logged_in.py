@@ -10,16 +10,11 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.users import create_and_destroy_user
-
 from livestatus import SiteConfiguration, SiteConfigurations
 
+import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui import permissions
 from cmk.gui.config import (
     active_config,
@@ -32,6 +27,9 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.watolib.rulesets import may_edit_ruleset
+from cmk.utils.rulesets.definition import RuleGroup
+
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 
 def test_user_context(with_user: tuple[UserId, str]) -> None:

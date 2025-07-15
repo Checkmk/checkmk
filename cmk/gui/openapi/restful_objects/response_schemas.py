@@ -9,10 +9,9 @@ import logging
 from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-
-from cmk import fields
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values

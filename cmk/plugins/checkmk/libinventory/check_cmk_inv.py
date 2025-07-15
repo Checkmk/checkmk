@@ -12,23 +12,20 @@ from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.utils.password_store
+import cmk.utils.paths
+from cmk.base import config
+from cmk.base.checkers import (
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
+    SectionPluginMapper,
+)
+from cmk.base.errorhandling import CheckResultErrorHandler
+from cmk.base.modes.check_mk import execute_active_check_inventory
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-
-import cmk.utils.password_store
-import cmk.utils.paths
-from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.ip_lookup import (
-    ConfiguredIPLookup,
-    make_lookup_ip_address,
-    make_lookup_mgmt_board_ip_address,
-)
-from cmk.utils.log import console
-
-from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers.filecache import FileCacheOptions
-
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import HWSWInventoryParameters
@@ -40,16 +37,15 @@ from cmk.checkengine.plugin_backend import (
 )
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
-
-from cmk.base import config
-from cmk.base.checkers import (
-    CMKFetcher,
-    CMKParser,
-    CMKSummarizer,
-    SectionPluginMapper,
+from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers.filecache import FileCacheOptions
+from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.ip_lookup import (
+    ConfiguredIPLookup,
+    make_lookup_ip_address,
+    make_lookup_mgmt_board_ip_address,
 )
-from cmk.base.errorhandling import CheckResultErrorHandler
-from cmk.base.modes.check_mk import execute_active_check_inventory
+from cmk.utils.log import console
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

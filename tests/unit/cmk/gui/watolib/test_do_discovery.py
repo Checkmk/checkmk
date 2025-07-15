@@ -6,11 +6,9 @@
 import itertools
 from collections.abc import MutableMapping
 
-from cmk.utils.servicename import ServiceName
-
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
-
 from cmk.gui.watolib.services import _apply_state_change, DiscoveryState
+from cmk.utils.servicename import ServiceName
 
 MOCK_VALUE = AutocheckEntry(CheckPluginName("local"), "1st service", {}, {})
 MOCK_DESC = "1st service"

@@ -26,9 +26,7 @@ from typing import IO, Literal, TypedDict
 
 # for now, we shamelessly violate the API:
 import cmk.ccc.debug  # pylint: disable=cmk-module-layer-violation
-
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,

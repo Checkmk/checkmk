@@ -20,21 +20,13 @@ from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
 
-from cmk.ccc import debug, tty
-from cmk.ccc.version import Edition, edition
-
-from cmk.utils import log, paths
-from cmk.utils.log import VERBOSE
-from cmk.utils.paths import check_mk_config_dir
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.redis import disable_redis
-
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-
+from cmk.ccc import debug, tty
+from cmk.ccc.version import Edition, edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -46,8 +38,12 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
-
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.utils import log, paths
+from cmk.utils.log import VERBOSE
+from cmk.utils.paths import check_mk_config_dir
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.redis import disable_redis
 
 from .registry import pre_update_action_registry, update_action_registry
 

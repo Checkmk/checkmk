@@ -10,10 +10,10 @@ from collections.abc import Iterator
 
 import pytest
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-
-from cmk.utils.rulesets.definition import RuleGroup
 
 from .watch_log import WatchLog
 

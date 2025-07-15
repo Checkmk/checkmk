@@ -11,16 +11,12 @@ from pydantic import BaseModel
 
 from livestatus import SiteConfiguration
 
+from cmk.automations.results import Gateway, GatewayResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.resulttype import Result
 from cmk.ccc.site import SiteId
-
-from cmk.utils.paths import configuration_lockfile
-
-from cmk.automations.results import Gateway, GatewayResult
-
 from cmk.gui.background_job import (
     AlreadyRunningError,
     BackgroundJob,
@@ -49,6 +45,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     Host,
 )
+from cmk.utils.paths import configuration_lockfile
 
 
 @dataclass(frozen=True)

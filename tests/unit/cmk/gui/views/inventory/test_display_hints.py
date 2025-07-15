@@ -7,8 +7,6 @@
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
-
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.inventory.filters import FilterInvtableText, FilterInvtableVersion
@@ -32,6 +30,7 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 
 def test_display_hint_titles() -> None:

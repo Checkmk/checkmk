@@ -5,7 +5,6 @@
 """Configuration variables for the notification via cmk --notify"""
 
 import cmk.utils.paths
-
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import (
@@ -26,7 +25,6 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
 from cmk.gui.watolib.utils import site_neutral_path
-
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 

@@ -9,9 +9,9 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.utils import import_module_hack
-
 import cmk.utils.paths
+
+from tests.testlib.unit.utils import import_module_hack
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",

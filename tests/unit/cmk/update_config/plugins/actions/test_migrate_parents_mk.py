@@ -10,14 +10,11 @@ from pathlib import Path
 
 import pytest
 
+import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-
 from cmk.update_config.plugins.actions.migrate_parents_mk import MigrateParentsMK
 
 EXAMPLE_PARENTS_EMPTY = """# Automatically created by --scan-parents at Mon Apr 15 07:52:26 2024

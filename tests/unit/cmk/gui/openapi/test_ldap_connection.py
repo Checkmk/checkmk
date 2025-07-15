@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # LDAP API Schema Example

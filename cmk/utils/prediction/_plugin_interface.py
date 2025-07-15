@@ -8,9 +8,8 @@ import logging
 from collections.abc import Callable, Mapping
 from typing import assert_never, Literal
 
-from cmk.utils.log import VERBOSE
-
 from cmk.agent_based.prediction_backend import PredictionInfo
+from cmk.utils.log import VERBOSE
 
 from ._prediction import (
     compute_prediction,

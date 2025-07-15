@@ -9,10 +9,6 @@ from typing import cast, Literal
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils import paths
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui import forms
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -37,6 +33,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     SearchFolder,
 )
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog

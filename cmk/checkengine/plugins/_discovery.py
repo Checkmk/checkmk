@@ -10,11 +10,9 @@ from dataclasses import dataclass
 from typing import NamedTuple, TypedDict
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.servicename import Item
-
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import ParsedSectionName
+from cmk.utils.servicename import Item
 
 from ._check import CheckPluginName, ServiceID
 

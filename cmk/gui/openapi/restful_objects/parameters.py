@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID
-
+from cmk.fields import String
 from cmk.gui.fields import FolderField, HostField
 from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN
-
-from cmk.fields import String
+from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID
 
 HOST_NAME = {
     "host_name": HostField(

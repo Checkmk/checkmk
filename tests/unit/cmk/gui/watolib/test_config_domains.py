@@ -16,7 +16,6 @@ from omdlib.contexts import SiteContext
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import load_text_from_file
-
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 

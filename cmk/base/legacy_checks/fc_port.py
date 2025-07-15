@@ -8,8 +8,6 @@
 
 import time
 
-from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -23,6 +21,7 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 
 check_info = {}
 

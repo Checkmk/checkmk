@@ -9,7 +9,6 @@ from typing import cast, Literal, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-
 from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet

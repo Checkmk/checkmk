@@ -10,11 +10,6 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.check_legacy_includes.jolokia import (
-    jolokia_mbean_attribute,
-    parse_jolokia_json_output,
-)
-
 from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckDefinition,
@@ -22,6 +17,10 @@ from cmk.agent_based.legacy.v0_unstable import (
     LegacyDiscoveryResult,
 )
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+from cmk.base.check_legacy_includes.jolokia import (
+    jolokia_mbean_attribute,
+    parse_jolokia_json_output,
+)
 
 check_info = {}
 

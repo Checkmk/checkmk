@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-
 from cmk.agent_based.v2 import Service
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.utils.sectionname import SectionName
 
 SECTION = """
 equipmentPsu	dn sys/rack-unit-7/psu-2	id 2	model UCSC-PSU1-1050W	operability operable	voltage ok

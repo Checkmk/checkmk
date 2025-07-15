@@ -7,19 +7,15 @@ from dataclasses import replace
 
 import pytest
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
-
 import cmk.ccc.resulttype as result
-from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.fetchers import PiggybackFetcher
-
 from cmk.base import config
 from cmk.base.modes import check_mk
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.fetchers import PiggybackFetcher
+from cmk.utils.tags import TagGroupID, TagID
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 
 class TestModeDumpAgent:

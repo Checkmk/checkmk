@@ -7,6 +7,7 @@ import logging
 
 import pytest
 
+from tests.plugins_integration.checks import config, dump_path_site
 from tests.testlib.agent_dumps import (
     get_dump_names,
     read_cmk_dump,
@@ -17,8 +18,6 @@ from tests.testlib.agent_hosts import piggyback_host_from_dump_file
 from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, write_file
-
-from tests.plugins_integration.checks import config, dump_path_site
 
 logger = logging.getLogger(__name__)
 

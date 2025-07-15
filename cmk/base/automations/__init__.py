@@ -12,22 +12,17 @@ from contextlib import nullcontext, redirect_stdout, suppress
 from typing import assert_never
 
 import cmk.ccc.debug
+from cmk import trace
+from cmk.automations.results import ABCAutomationResult
+from cmk.base import config, profiling
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.timeout import Timeout
-
-from cmk.automations.results import ABCAutomationResult
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
-from cmk.base import config, profiling
-
-from cmk import trace
 
 tracer = trace.get_tracer()
 

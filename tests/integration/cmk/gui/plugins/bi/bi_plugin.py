@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.macros import MacroMapping
-
 from cmk.bi.lib import ABCBISearch, ABCBISearcher, bi_search_registry, SearchKind
 from cmk.bi.schema import Schema
+from cmk.utils.macros import MacroMapping
 
 
 @bi_search_registry.register

@@ -7,10 +7,8 @@ import socket
 from typing import Any
 
 from cmk.ccc.site import url_prefix
-
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended
 from cmk.gui.i18n import _
-
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

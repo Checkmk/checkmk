@@ -12,14 +12,14 @@ from urllib.parse import quote_plus
 import pytest
 from playwright.sync_api import expect, FilePayload, Locator
 
+from cmk.crypto.certificate import CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.password import Password
+
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-
-from cmk.crypto.certificate import CertificateWithPrivateKey
-from cmk.crypto.hash import HashAlgorithm
-from cmk.crypto.password import Password
 
 logger = logging.getLogger(__name__)
 

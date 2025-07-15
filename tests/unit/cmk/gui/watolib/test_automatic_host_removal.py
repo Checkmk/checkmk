@@ -14,25 +14,20 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
+from cmk.automations.results import AnalyzeHostRuleMatchesResult
+from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.paths import default_config_dir
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-
-from cmk.automations.results import AnalyzeHostRuleMatchesResult
-
-from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
-
 from cmk.gui.config import Config
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
-
 from cmk.livestatus_client import SiteConfiguration
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.paths import default_config_dir
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 def default_site_config() -> SiteConfiguration:

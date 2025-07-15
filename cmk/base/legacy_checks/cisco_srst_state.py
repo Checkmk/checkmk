@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 

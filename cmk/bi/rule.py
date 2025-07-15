@@ -16,8 +16,6 @@ from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Any
 
-from cmk.utils.macros import MacroMapping
-
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
 from cmk.bi.lib import (
@@ -44,6 +42,7 @@ from cmk.bi.rule_interface import (
 )
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
+from cmk.utils.macros import MacroMapping
 
 
 class BIRule(ABCBIRule, ABCWithSchema):

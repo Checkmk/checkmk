@@ -18,9 +18,6 @@ from livestatus import SiteConfigurations
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.user import UserId
-
-from cmk.utils import paths
-
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -57,6 +54,7 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
+from cmk.utils import paths
 
 from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb

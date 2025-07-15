@@ -5,13 +5,11 @@
 from dataclasses import dataclass
 
 from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.private.validators import not_empty
 from cmk.gui.form_specs.vue import get_visitor, process_validation_messages, RawFrontendData
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
-
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError

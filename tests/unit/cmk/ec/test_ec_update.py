@@ -6,13 +6,12 @@
 
 import pytest
 
-from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
-
-from cmk.ccc.hostaddress import HostName
-
 import cmk.ec.export as ec
+from cmk.ccc.hostaddress import HostName
 from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
+
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 
 @pytest.mark.parametrize(

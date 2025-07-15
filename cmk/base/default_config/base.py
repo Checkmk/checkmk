@@ -7,7 +7,11 @@ from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-
+from cmk.checkengine.discovery import RediscoveryParameters
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.fetchers import IPMICredentials
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
+from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
@@ -18,15 +22,6 @@ from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 from cmk.utils.translations import TranslationOptions, TranslationOptionsSpec
-
-from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
-
-from cmk.fetchers import IPMICredentials
-
-from cmk.checkengine.discovery import RediscoveryParameters
-from cmk.checkengine.exitspec import ExitSpec
-
-from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration

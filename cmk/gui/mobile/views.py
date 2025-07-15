@@ -8,7 +8,6 @@ from functools import partial
 from typing import override
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l

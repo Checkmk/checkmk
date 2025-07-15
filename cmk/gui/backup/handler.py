@@ -28,32 +28,8 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
-
-from cmk.utils import render
-from cmk.utils.backup.config import Config as RawConfig
-from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
-from cmk.utils.backup.targets import TargetId
-from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
-from cmk.utils.backup.targets.azure_blob_storage import (
-    BlobStorage,
-    BlobStorageParams,
-    BlobStorageTarget,
-)
-from cmk.utils.backup.targets.config import TargetConfig
-from cmk.utils.backup.targets.local import LocalTarget, LocalTargetParams
-from cmk.utils.backup.targets.protocol import Target as TargetProtocol
-from cmk.utils.backup.targets.remote_interface import (
-    RemoteTarget,
-    RemoteTargetParams,
-    TRemoteParams,
-    TRemoteStorage,
-)
-from cmk.utils.backup.type_defs import SiteBackupInfo
-from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
-from cmk.utils.certs import CertManagementEvent
-from cmk.utils.paths import omd_root
-from cmk.utils.schedule import next_scheduled_time
-
+from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
@@ -104,9 +80,30 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.wato import IndividualOrStoredPassword
-
-from cmk.crypto.password import Password as PasswordType
-from cmk.crypto.pem import PEMDecodingError
+from cmk.utils import render
+from cmk.utils.backup.config import Config as RawConfig
+from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
+from cmk.utils.backup.targets import TargetId
+from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
+from cmk.utils.backup.targets.azure_blob_storage import (
+    BlobStorage,
+    BlobStorageParams,
+    BlobStorageTarget,
+)
+from cmk.utils.backup.targets.config import TargetConfig
+from cmk.utils.backup.targets.local import LocalTarget, LocalTargetParams
+from cmk.utils.backup.targets.protocol import Target as TargetProtocol
+from cmk.utils.backup.targets.remote_interface import (
+    RemoteTarget,
+    RemoteTargetParams,
+    TRemoteParams,
+    TRemoteStorage,
+)
+from cmk.utils.backup.type_defs import SiteBackupInfo
+from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.certs import CertManagementEvent
+from cmk.utils.paths import omd_root
+from cmk.utils.schedule import next_scheduled_time
 
 
 def register() -> None:

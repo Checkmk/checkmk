@@ -33,10 +33,9 @@ from livestatus import SiteConfigurations
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-
-from cmk.utils.jsontype import JsonSerializable
-from cmk.utils.log.security_event import log_security_event
-
+from cmk.crypto.password import Password
+from cmk.crypto.password_hashing import PasswordHash
+from cmk.crypto.totp import TOTP
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.config import Config
@@ -94,10 +93,8 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
-
-from cmk.crypto.password import Password
-from cmk.crypto.password_hashing import PasswordHash
-from cmk.crypto.totp import TOTP
+from cmk.utils.jsontype import JsonSerializable
+from cmk.utils.log.security_event import log_security_event
 
 from .page_menu import page_menu_dropdown_user_related
 from .verify_requirements import verify_requirements

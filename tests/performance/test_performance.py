@@ -10,14 +10,13 @@ from time import time
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
 
+from tests.performance.sysmon import track_resources
 from tests.testlib.agent_dumps import dummy_agent_dump_generator
 from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
 from tests.testlib.common.repo import qa_test_data_path
 from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.version import CMKVersion, version_from_env
-
-from tests.performance.sysmon import track_resources
 
 logger = logging.getLogger(__name__)
 

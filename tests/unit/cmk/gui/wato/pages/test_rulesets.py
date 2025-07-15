@@ -10,14 +10,13 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from cmk.utils.rulesets.conditions import HostOrServiceConditions
-from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
-from cmk.utils.tags import TagConfig, TagGroupID, TagID
-
 from cmk.gui.config import active_config
 from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import RuleConditionRenderer
 from cmk.gui.watolib.hosts_and_folders import FolderLookupCache, Host
+from cmk.utils.rulesets.conditions import HostOrServiceConditions
+from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 
 @pytest.fixture(name="tag_config")

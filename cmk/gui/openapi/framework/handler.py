@@ -9,10 +9,8 @@ from inspect import BoundArguments
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 
+from cmk import trace
 from cmk.ccc import store
-
-from cmk.utils.paths import configuration_lockfile
-
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.framework._types import ApiContext, DataclassInstance, RawRequestData
@@ -38,8 +36,7 @@ from cmk.gui.openapi.utils import (
 )
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
-
-from cmk import trace
+from cmk.utils.paths import configuration_lockfile
 
 tracer = trace.get_tracer()
 

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.local import LocalTarget
 

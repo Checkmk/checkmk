@@ -18,10 +18,9 @@ from typing import Any, NamedTuple, NoReturn, override
 import requests
 from requests import JSONDecodeError
 
-from cmk.ccc import site
-
 import cmk.utils.password_store
 import cmk.utils.paths
+from cmk.ccc import site
 from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.html import (  # noqa: F401
     replace_state_markers as format_plugin_output,

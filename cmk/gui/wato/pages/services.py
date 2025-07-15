@@ -14,22 +14,12 @@ from typing import Any, Literal, NamedTuple
 
 from pydantic import BaseModel, Field
 
+import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
-
-import cmk.utils.render
-from cmk.utils.check_utils import worst_service_state
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.html import get_html_state_marker
-from cmk.utils.labels import HostLabelValueDict, Labels
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.servicename import Item
-from cmk.utils.statename import short_service_state_name
-
 from cmk.checkengine.discovery import CheckPreviewEntry
-
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
@@ -102,8 +92,14 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import mk_repr
-
 from cmk.shared_typing.setup import AgentDownload, AgentDownloadI18n
+from cmk.utils.check_utils import worst_service_state
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.html import get_html_state_marker
+from cmk.utils.labels import HostLabelValueDict, Labels
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import Item
+from cmk.utils.statename import short_service_state_name
 
 from ._status_links import make_host_status_link
 

@@ -9,10 +9,10 @@ from collections.abc import Iterator
 
 import pytest
 
+from cmk.gui.type_defs import TotpCredential, TwoFactorCredentials
+
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
-
-from cmk.gui.type_defs import TotpCredential, TwoFactorCredentials
 
 
 @pytest.fixture(name="with_automation_user")

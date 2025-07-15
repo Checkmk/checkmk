@@ -15,16 +15,10 @@ from typing import Literal
 
 from livestatus import SiteConfiguration
 
+import cmk.gui.watolib.changes as _changes
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
-
-from cmk.utils import paths, render
-from cmk.utils.licensing.registry import get_licensing_user_effect
-from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
-from cmk.utils.setup_search_index import request_index_rebuild
-
-import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -73,6 +67,10 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.utils import paths, render
+from cmk.utils.licensing.registry import get_licensing_user_effect
+from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.setup_search_index import request_index_rebuild
 
 from .sites import sort_sites
 

@@ -6,10 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
 from cmk.plugins.lib.fireeye import DETECT
 
 check_info = {}

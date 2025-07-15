@@ -8,10 +8,9 @@
 
 import time
 
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 

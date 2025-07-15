@@ -6,16 +6,16 @@
 import pytest
 import pytest_mock
 
+import cmk.plugins.kube.agent_handlers.common
+from cmk.plugins.kube.agent_handlers.statefulset_handler import create_api_sections
+from cmk.plugins.kube.special_agents import agent_kube
+
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     api_to_agent_statefulset,
     APIPodFactory,
     APIStatefulSetFactory,
     PodStatusFactory,
 )
-
-import cmk.plugins.kube.agent_handlers.common
-from cmk.plugins.kube.agent_handlers.statefulset_handler import create_api_sections
-from cmk.plugins.kube.special_agents import agent_kube
 
 
 def statefulsets_api_sections() -> set[str]:

@@ -9,10 +9,8 @@ from typing import Any, assert_never, Literal, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.private import OptionalChoice
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

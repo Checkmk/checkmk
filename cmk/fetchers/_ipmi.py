@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress
-
 from cmk.utils.agentdatatype import AgentRawData
 
 from ._abstract import Fetcher, Mode

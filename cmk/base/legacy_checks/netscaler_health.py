@@ -5,11 +5,10 @@
 
 import re
 
-from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.base.check_legacy_includes.fan import check_fan
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 
 check_info = {}

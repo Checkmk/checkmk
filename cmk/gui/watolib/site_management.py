@@ -30,9 +30,6 @@ from livestatus import (
 from cmk.ccc import version
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils import paths
-
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
@@ -46,6 +43,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.utils import paths
 
 DEFAULT_MESSAGE_BROKER_PORT = 5672
 

@@ -12,11 +12,11 @@ from argparse import ArgumentParser
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
+from cmk.agent_based import v2 as agent_based_v2
+from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+    load_all_pluginX,
+)
 from cmk.ccc import debug
-
-from cmk.utils import paths
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
@@ -29,11 +29,7 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
     InventoryPlugin,
     InventoryPluginName,
 )
-
-from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    load_all_pluginX,
-)
-
+from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.rule_specs.loader import RuleSpec  # pylint: disable=cmk-module-layer-violation
@@ -41,9 +37,6 @@ from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-modu
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
     rulespec_registry,
 )
-
-from cmk.agent_based import v2 as agent_based_v2
-from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
@@ -56,6 +49,8 @@ from cmk.server_side_calls_backend import (  # pylint: disable=cmk-module-layer-
     load_active_checks,
     load_special_agents,
 )
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 _AgentBasedPlugins = (
     agent_based_v2.SimpleSNMPSection

@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import assert_never
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api

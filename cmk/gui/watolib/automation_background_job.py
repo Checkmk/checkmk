@@ -14,11 +14,9 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from cmk.automations.results import result_type_registry, SerializedResult
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
-
-from cmk.automations.results import result_type_registry, SerializedResult
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _

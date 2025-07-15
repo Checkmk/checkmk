@@ -5,11 +5,9 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.form_specs.private.cascading_single_choice_extended import (
     CascadingSingleChoiceExtended,
 )
-
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec
 from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 

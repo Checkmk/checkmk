@@ -9,10 +9,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
-
-import cmk.utils.paths
 from cmk.utils.log import VERBOSE
 
 __all__ = ["do_localize"]

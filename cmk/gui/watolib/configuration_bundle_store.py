@@ -5,11 +5,10 @@
 from collections.abc import Mapping
 from typing import NewType, NotRequired, TypedDict, TypeGuard
 
-from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-
 from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 
 BundleId = NewType("BundleId", str)
 

@@ -7,10 +7,9 @@ import datetime
 from pathlib import Path
 from typing import Any
 
-from cmk.utils.paths import tmp_dir
-
 from cmk.plugins.gerrit.lib.shared_typing import SectionCollector, Sections
 from cmk.special_agents.v0_unstable.misc import DataCache
+from cmk.utils.paths import tmp_dir
 
 
 class VersionCache(DataCache):

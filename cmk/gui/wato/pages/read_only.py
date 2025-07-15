@@ -9,7 +9,6 @@ from collections.abc import Collection
 from typing import Any
 
 from cmk.ccc import store
-
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config

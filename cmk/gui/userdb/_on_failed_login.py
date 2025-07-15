@@ -6,7 +6,6 @@
 from datetime import datetime
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger

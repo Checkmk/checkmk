@@ -8,8 +8,6 @@ from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
 from typing import TypedDict
 
-from cmk.utils.tags import TagGroup, TagGroupID, TagID
-
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -24,6 +22,7 @@ from cmk.gui.type_defs import HTTPVariables, VirtualHostTreeSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 
 class Tree(TypedDict, total=False):

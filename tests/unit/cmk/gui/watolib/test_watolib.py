@@ -6,9 +6,6 @@
 import pytest
 
 import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
-
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -16,6 +13,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     configvar_order,
 )
+from cmk.utils import paths
 
 
 def test_registered_config_domains() -> None:

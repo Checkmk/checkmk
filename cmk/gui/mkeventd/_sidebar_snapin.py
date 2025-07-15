@@ -10,7 +10,6 @@ from livestatus import MKLivestatusBadGatewayError, MKLivestatusTableNotFoundErr
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter

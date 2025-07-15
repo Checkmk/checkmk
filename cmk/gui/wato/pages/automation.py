@@ -12,19 +12,16 @@ from contextlib import nullcontext
 from datetime import datetime
 
 import cmk.ccc.version as cmk_version
+import cmk.gui.utils
+import cmk.gui.watolib.utils as watolib_utils
+import cmk.utils.paths
+from cmk import trace
+from cmk.automations.results import result_type_registry, SerializedResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.local_secrets import DistributedSetupSecret
-from cmk.utils.paths import configuration_lockfile
-
-from cmk.automations.results import result_type_registry, SerializedResult
-
-import cmk.gui.utils
-import cmk.gui.watolib.utils as watolib_utils
+from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
@@ -45,9 +42,8 @@ from cmk.gui.watolib.automations import (
     verify_request_compatibility,
 )
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
-
-from cmk import trace
-from cmk.crypto.password import Password
+from cmk.utils.local_secrets import DistributedSetupSecret
+from cmk.utils.paths import configuration_lockfile
 
 tracer = trace.get_tracer()
 

@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-
 from cmk.rulesets.v1.form_specs import Dictionary
 
 

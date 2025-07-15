@@ -10,7 +10,6 @@ import socket
 import time
 
 import cmk.utils.render
-
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import make_fetch_connection, POP3
 from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult

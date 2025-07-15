@@ -21,6 +21,7 @@ from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
+from cmk import trace
 from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.exceptions import MKAuthException
@@ -46,8 +47,6 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
 )
 from cmk.gui.utils import permission_verification as permissions
-
-from cmk import trace
 
 tracer = trace.get_tracer()
 _logger = logging.getLogger(__name__)

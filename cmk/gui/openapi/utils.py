@@ -10,10 +10,9 @@ from wsgiref.types import StartResponse, WSGIEnvironment
 import docstring_parser
 from werkzeug.exceptions import HTTPException
 
-from cmk.utils.encoding import json_encode
-
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.type_defs import Serializable
+from cmk.utils.encoding import json_encode
 
 FIELDS = NewType("FIELDS", dict[str, Any])
 EXT = NewType("EXT", dict[str, Any])

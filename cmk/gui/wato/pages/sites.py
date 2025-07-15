@@ -24,18 +24,13 @@ from livestatus import (
     TLSParams,
 )
 
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
-from cmk.utils.licensing.registry import is_free
-from cmk.utils.paths import omd_root
-
 import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
+import cmk.utils.paths
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -146,8 +141,10 @@ from cmk.gui.watolib.sites import (
     site_globals_editable,
     site_management_registry,
 )
-
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
+from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
+from cmk.utils.licensing.registry import is_free
+from cmk.utils.paths import omd_root
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

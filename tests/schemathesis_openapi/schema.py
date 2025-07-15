@@ -14,9 +14,8 @@ from schemathesis import DataGenerationMethod
 from schemathesis.generation import GenerationConfig
 from schemathesis.specs.openapi import schemas
 
-from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
-
 from tests.schemathesis_openapi import settings
+from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
 
 logger = logging.getLogger(__name__)
 

@@ -5,10 +5,9 @@
 
 from http.client import responses
 
+from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt
-
-from cmk import fields
 
 
 class ApiError(BaseSchema):

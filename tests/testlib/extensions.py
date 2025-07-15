@@ -14,9 +14,9 @@ import pytest
 import requests
 from pydantic import BaseModel
 
-from tests.testlib.site import Site
-
 from cmk.ccc.version import parse_check_mk_version
+
+from tests.testlib.site import Site
 
 
 def download_extension(url: str, timeout: int = 10) -> bytes:

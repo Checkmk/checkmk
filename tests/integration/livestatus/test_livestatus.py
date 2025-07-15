@@ -12,7 +12,6 @@ from collections.abc import Iterator, Mapping
 import pytest
 
 from tests.integration.linux_test_host import create_linux_test_host
-
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 

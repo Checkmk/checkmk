@@ -18,8 +18,7 @@ all notification rules configured.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.notify_types import NotificationRuleID
-
+from cmk import fields
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
@@ -41,8 +40,7 @@ from cmk.gui.watolib.notifications import (
     NotificationRule,
     NotificationRuleConfigFile,
 )
-
-from cmk import fields
+from cmk.utils.notify_types import NotificationRuleID
 
 RO_PERMISSIONS = permissions.Perm("general.edit_notifications")
 RW_PERMISSIONS = permissions.AllPerm(

@@ -7,7 +7,6 @@
 from typing import Literal
 
 from cmk.ccc.version import Edition, edition
-
 from cmk.utils.paths import omd_root
 
 

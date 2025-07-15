@@ -6,9 +6,6 @@
 import pytest
 from fakeredis import FakeRedis
 
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
-
 from cmk.bi.aggregation_functions import BIAggregationFunctionWorst
 from cmk.bi.filesystem import BIFileSystem
 from cmk.bi.lib import BIAggregationComputationOptions, BIAggregationGroups
@@ -23,6 +20,8 @@ from cmk.bi.storage import (
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
 from cmk.bi.type_defs import ComputationConfigDict
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 
 
 class TestAggregationStore:

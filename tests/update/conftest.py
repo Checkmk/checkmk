@@ -17,7 +17,6 @@ from tests.testlib.version import (
     edition_from_env,
     TypeCMKEdition,
 )
-
 from tests.update.helpers import (
     BaseVersions,
     bulk_discover_and_schedule,

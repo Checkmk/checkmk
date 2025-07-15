@@ -12,13 +12,11 @@ from typing import TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
-
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

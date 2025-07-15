@@ -17,14 +17,11 @@ from cmk.ccc.exceptions import (
     MKTimeout,
 )
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.servicename import ServiceName
-
-from cmk.snmplib import SNMPBackendEnum
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.submitters import ServiceState
+from cmk.snmplib import SNMPBackendEnum
+from cmk.utils.servicename import ServiceName
 
 from ._crash import create_check_crash_dump
 

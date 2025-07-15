@@ -8,10 +8,8 @@ import time
 from typing import Final
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
-
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
+from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 from ._parser import HostSections, Parser, SectionNameCollection
 from ._sectionstore import SectionStore

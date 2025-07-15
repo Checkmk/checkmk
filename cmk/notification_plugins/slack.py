@@ -14,8 +14,6 @@ from dataclasses import dataclass
 
 from urllib3.util import parse_url
 
-from cmk.utils.notify_types import PluginNotificationContext
-
 from cmk.notification_plugins.utils import (
     host_url_from_context,
     post_request,
@@ -25,6 +23,7 @@ from cmk.notification_plugins.utils import (
     retrieve_from_passwordstore,
     service_url_from_context,
 )
+from cmk.utils.notify_types import PluginNotificationContext
 
 MSG_ADDITIONAL_INFO = "Additional Info"
 MSG_TIMESTAMP_PREFIX = "Check_MK notification: "

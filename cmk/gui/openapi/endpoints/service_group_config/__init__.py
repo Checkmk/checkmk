@@ -22,9 +22,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.ccc import version
-
-from cmk.utils import paths
-
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -59,6 +56,7 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_service_group_information
+from cmk.utils import paths
 
 PERMISSIONS = permissions.Perm("wato.groups")
 

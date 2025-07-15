@@ -5,9 +5,7 @@
 from collections.abc import Callable, Sequence
 
 from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-
 from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

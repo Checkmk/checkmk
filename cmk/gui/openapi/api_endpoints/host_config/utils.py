@@ -6,7 +6,6 @@ from collections.abc import Callable
 from typing import get_type_hints
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
     HostConfigModel,
     HostExtensionsModel,

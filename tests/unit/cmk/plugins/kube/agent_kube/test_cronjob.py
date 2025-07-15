@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.kube.agent_handlers import cronjob_handler
+from cmk.plugins.kube.schemata import api, section
+
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APIJobFactory,
     APIPodFactory,
     CronJobStatusFactory,
     JobStatusFactory,
 )
-
-from cmk.plugins.kube.agent_handlers import cronjob_handler
-from cmk.plugins.kube.schemata import api, section
 
 
 def test_cron_job_status_section() -> None:

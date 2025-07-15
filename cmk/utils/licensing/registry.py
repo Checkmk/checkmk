@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition, edition
-
 from cmk.utils import paths
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (

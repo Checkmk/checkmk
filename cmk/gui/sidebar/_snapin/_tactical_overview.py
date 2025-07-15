@@ -9,7 +9,6 @@ from typing import Literal, NamedTuple
 import livestatus
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui import notifications, sites, visuals
 from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter

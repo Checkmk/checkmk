@@ -40,6 +40,12 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check
 
+import livestatus
+
+from cmk import trace
+from cmk.crypto.password import Password
+from cmk.crypto.secrets import Secret
+
 from tests.testlib.common.repo import current_branch_name, repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
@@ -70,12 +76,6 @@ from tests.testlib.version import (
     version_from_env,
 )
 from tests.testlib.web_session import CMKWebSession
-
-import livestatus
-
-from cmk import trace
-from cmk.crypto.password import Password
-from cmk.crypto.secrets import Secret
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()

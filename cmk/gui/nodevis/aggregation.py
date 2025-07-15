@@ -6,8 +6,11 @@ import json
 import time
 from typing import Any
 
+from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.computer import BIAggregationFilter
+from cmk.bi.lib import NodeResultBundle
+from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 from cmk.ccc.user import UserId
-
 from cmk.gui import bi as bi
 from cmk.gui.bi import bi_config_aggregation_function_registry
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -27,11 +30,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
-
-from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
-from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import NodeResultBundle
-from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 
 def register(

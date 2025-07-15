@@ -9,7 +9,6 @@ from pathlib import Path
 import cmk.ccc.cleanup
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostAddress, HostName
-
 from cmk.snmplib import OID, SNMPDecodedString
 
 # TODO: Replace this by generic caching

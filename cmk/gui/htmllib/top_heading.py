@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from cmk.utils.licensing.registry import get_licensing_user_effect
-
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import Request
@@ -17,6 +15,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.utils.licensing.registry import get_licensing_user_effect
 
 from .debug_vars import debug_vars
 from .generator import HTMLWriter

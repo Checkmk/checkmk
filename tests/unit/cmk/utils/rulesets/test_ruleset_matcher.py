@@ -10,10 +10,7 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.rulesets.ruleset_matcher import (
     matches_tag_condition,
     RuleConditionsSpec,
@@ -24,6 +21,8 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 ruleset: Sequence[RuleSpec[str]] = [
     {

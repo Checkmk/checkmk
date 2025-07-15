@@ -8,7 +8,6 @@ from logging import Logger
 from typing import Final, override
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 

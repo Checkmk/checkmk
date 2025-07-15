@@ -8,8 +8,6 @@ import traceback
 import pytest
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.compare_html import compare_html
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -19,6 +17,8 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
+
+from tests.unit.cmk.gui.compare_html import compare_html
 
 
 @pytest.mark.usefixtures("request_context")

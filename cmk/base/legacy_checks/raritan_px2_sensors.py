@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
@@ -14,9 +16,6 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.raritan import DETECT_RARITAN
 
 check_info = {}

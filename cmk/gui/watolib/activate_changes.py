@@ -43,27 +43,22 @@ from setproctitle import setthreadtitle
 
 from livestatus import BrokerConnections, SiteConfiguration
 
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.utils
+import cmk.gui.watolib.automations
+import cmk.gui.watolib.git
+import cmk.gui.watolib.sidebar_reload
+import cmk.gui.watolib.utils
+from cmk import mkp_tool, trace
+from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils import agent_registration, paths, render, setup_search_index
-from cmk.utils.licensing.export import LicenseUsageExtensions
-from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
-from cmk.utils.licensing.usage import save_extensions
-from cmk.utils.paths import configuration_lockfile
-from cmk.utils.visuals import invalidate_visuals_cache
-
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
-import cmk.gui.utils
-import cmk.gui.watolib.automations
-import cmk.gui.watolib.git
-import cmk.gui.watolib.sidebar_reload
-import cmk.gui.watolib.utils
+from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui import hooks, userdb
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -139,12 +134,13 @@ from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
-
-from cmk import mkp_tool, trace
-from cmk.bi.type_defs import frozen_aggregations_dir
-from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
-from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
+from cmk.utils import agent_registration, paths, render, setup_search_index
+from cmk.utils.licensing.export import LicenseUsageExtensions
+from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
+from cmk.utils.licensing.usage import save_extensions
+from cmk.utils.paths import configuration_lockfile
+from cmk.utils.visuals import invalidate_visuals_cache
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type

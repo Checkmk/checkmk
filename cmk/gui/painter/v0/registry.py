@@ -6,7 +6,6 @@
 from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response

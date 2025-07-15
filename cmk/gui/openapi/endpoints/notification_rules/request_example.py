@@ -5,9 +5,8 @@
 
 """Event notification rule api request/response example"""
 
-from cmk.utils.notify_types import PluginOptions
-
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
+from cmk.utils.notify_types import PluginOptions
 
 
 def notification_rule_request_example() -> APINotificationRule:

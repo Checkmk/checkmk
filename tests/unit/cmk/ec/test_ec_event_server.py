@@ -5,13 +5,12 @@
 
 import logging
 
-from tests.unit.cmk.ec.helpers import new_event
-
-from cmk.ccc.hostaddress import HostName
-
 import cmk.ec.export as ec
+from cmk.ccc.hostaddress import HostName
 from cmk.ec.config import Config, MatchGroups, ServiceLevel
 from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
+
+from tests.unit.cmk.ec.helpers import new_event
 
 RULE = ec.Rule(
     actions=[],

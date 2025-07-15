@@ -5,17 +5,6 @@
 
 import pytest
 
-from tests.unit.cmk.plugins.kube.agent_kube.factory import (
-    api_to_agent_node,
-    APINodeFactory,
-    APIPodFactory,
-    ContainerStatusFactory,
-    create_container_state,
-    NodeConditionFactory,
-    NodeResourcesFactory,
-    NodeStatusFactory,
-)
-
 from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption, CheckmkHostSettings
 from cmk.plugins.kube.agent_handlers.node_handler import (
     _allocatable_cpu_resource,
@@ -27,6 +16,17 @@ from cmk.plugins.kube.agent_handlers.node_handler import (
     create_api_sections,
 )
 from cmk.plugins.kube.schemata import api, section
+
+from tests.unit.cmk.plugins.kube.agent_kube.factory import (
+    api_to_agent_node,
+    APINodeFactory,
+    APIPodFactory,
+    ContainerStatusFactory,
+    create_container_state,
+    NodeConditionFactory,
+    NodeResourcesFactory,
+    NodeStatusFactory,
+)
 
 
 def api_nodes_api_sections() -> set[str]:

@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.base.legacy_checks.cmctc import parse_cmctc_temp, Section, Sensor
-
 from cmk.agent_based.v2 import StringTable
+from cmk.base.legacy_checks.cmctc import parse_cmctc_temp, Section, Sensor
 
 _INF = float("-inf")
 

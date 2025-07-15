@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.checkengine.plugins import AgentBasedPlugins, LegacyPluginLocation
-
 from cmk.discover_plugins import PluginLocation
 
 from .utils import filter_relevant_raw_sections

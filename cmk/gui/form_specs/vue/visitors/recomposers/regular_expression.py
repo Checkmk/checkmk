@@ -7,7 +7,6 @@ import warnings
 from collections.abc import Callable
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.rulesets.v1 import Help, Message
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope, RegularExpression, String
 from cmk.rulesets.v1.form_specs.validators import ValidationError

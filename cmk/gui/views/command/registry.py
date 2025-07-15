@@ -8,7 +8,6 @@ import re
 from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.permissions import permission_registry
 
 from .base import Command

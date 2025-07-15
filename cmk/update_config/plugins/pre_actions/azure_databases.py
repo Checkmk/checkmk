@@ -7,7 +7,6 @@ from typing import override
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.rulesets import AllRulesets
-
 from cmk.update_config.plugins.lib.azure_databases import AzureDatabaseMigration
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,

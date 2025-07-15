@@ -7,7 +7,6 @@ from typing import assert_never
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.i18n import _
-
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._registry import get_visitor

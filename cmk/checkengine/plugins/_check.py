@@ -9,18 +9,15 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.servicename import Item, ServiceName
-
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
-
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult
 from cmk.discover_plugins import PluginLocation
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.servicename import Item, ServiceName
 
 from ._common import LegacyPluginLocation, RuleSetTypeName
 

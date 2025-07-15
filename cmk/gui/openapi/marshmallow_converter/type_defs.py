@@ -7,10 +7,9 @@ import typing
 
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk import fields
 from cmk.gui import valuespec
 from cmk.gui.fields.base import BaseSchema
-
-from cmk import fields
 
 V_c = typing.TypeVar("V_c", bound=valuespec.ValueSpec)
 

@@ -6,9 +6,8 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
 
 check_info = {}
 

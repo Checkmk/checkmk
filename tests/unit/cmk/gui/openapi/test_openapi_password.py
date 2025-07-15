@@ -5,11 +5,10 @@
 
 import pytest
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from cmk.ccc import version
-
 from cmk.utils import password_store, paths
+
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

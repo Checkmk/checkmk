@@ -10,9 +10,6 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
-
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
-
 from cmk.gui import visuals
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
@@ -22,6 +19,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DictionaryEntry, ValueSpec, ValueSpecValidateFunc
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (

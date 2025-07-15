@@ -6,7 +6,6 @@
 from pathlib import Path
 
 from cmk.ccc.crash_reporting import crash_report_registry, VersionInfo
-
 from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
 
 

@@ -33,11 +33,23 @@ from pathlib import Path
 from typing import cast, Literal
 
 import cmk.ccc.debug
+import cmk.utils.paths
+from cmk.base import events
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-
-import cmk.utils.paths
+from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.log_to_history import (
+    log_to_history,
+    notification_message,
+    notification_result_message,
+)
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.events.notification_spool_file import (
+    create_spool_file,
+    NotificationForward,
+    NotificationViaPlugin,
+)
 from cmk.utils import log
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
@@ -71,21 +83,6 @@ from cmk.utils.timeperiod import (
     TimeperiodName,
     TimeperiodSpecs,
 )
-
-from cmk.events.event_context import EnrichedEventContext, EventContext
-from cmk.events.log_to_history import (
-    log_to_history,
-    notification_message,
-    notification_result_message,
-)
-from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
-from cmk.events.notification_spool_file import (
-    create_spool_file,
-    NotificationForward,
-    NotificationViaPlugin,
-)
-
-from cmk.base import events
 
 logger = logging.getLogger("cmk.base.notify")
 

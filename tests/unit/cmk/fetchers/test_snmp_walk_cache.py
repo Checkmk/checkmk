@@ -8,9 +8,8 @@ import logging
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
 
-from cmk.snmplib import SNMPRowInfo
-
 from cmk.fetchers._snmp import WalkCache
+from cmk.snmplib import SNMPRowInfo
 
 
 class MockWalkCache(WalkCache):

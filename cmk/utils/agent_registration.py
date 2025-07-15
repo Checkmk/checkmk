@@ -12,9 +12,8 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 
 
 class HostAgentConnectionMode(enum.Enum):

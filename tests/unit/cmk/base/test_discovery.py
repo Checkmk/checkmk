@@ -13,22 +13,19 @@ from typing import NamedTuple
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
+from cmk.base import config
+from cmk.base.checkers import (
+    CMKFetcher,
+    CMKParser,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
+    SectionPluginMapper,
+)
+from cmk.base.config import ConfigCache
+from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
-
-from cmk.snmplib import SNMPRawData
-
-from cmk.fetchers import Mode
-from cmk.fetchers.filecache import FileCacheOptions
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
@@ -69,24 +66,21 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-
-from cmk.base import config
-from cmk.base.checkers import (
-    CMKFetcher,
-    CMKParser,
-    DiscoveryPluginMapper,
-    HostLabelPluginMapper,
-    SectionPluginMapper,
-)
-from cmk.base.config import ConfigCache
-from cmk.base.configlib.checkengine import DiscoveryConfig
-
-from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
+from cmk.fetchers import Mode
+from cmk.fetchers.filecache import FileCacheOptions
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
 from cmk.plugins.collection.agent_based.labels import agent_section_labels
 from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
 from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
+from cmk.snmplib import SNMPRawData
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 def _as_plugin(plugin: AgentSection | SimpleSNMPSection) -> SectionPlugin:

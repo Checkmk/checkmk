@@ -12,7 +12,6 @@ from typing import TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import is_cma
-
 from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (
     BACKUP_INFO_FILENAME,

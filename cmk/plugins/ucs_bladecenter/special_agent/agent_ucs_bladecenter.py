@@ -26,11 +26,9 @@ import requests
 import urllib3
 
 from cmk.ccc.exceptions import MKException
-
-from cmk.utils.password_store import replace_passwords
-
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
+from cmk.utils.password_store import replace_passwords
 
 ElementAttributes = dict[str, str]
 

@@ -8,7 +8,6 @@ from re import Pattern
 from typing import Any, Literal, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
-
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import TranslationOptions
 

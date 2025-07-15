@@ -7,13 +7,12 @@ import itertools
 from collections import defaultdict
 from collections.abc import Hashable, Mapping
 
-from cmk.utils.sectionname import SectionName
-
 from cmk.checkengine.plugin_backend import filter_relevant_raw_sections
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     SectionPlugin,
 )
+from cmk.utils.sectionname import SectionName
 
 
 def test_detect_spec_dedup(

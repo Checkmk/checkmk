@@ -12,10 +12,8 @@ from livestatus import BrokerConnection, BrokerConnections, BrokerSite, Connecti
 
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
-
-from cmk.utils import paths
-
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
+from cmk.utils import paths
 
 
 class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):

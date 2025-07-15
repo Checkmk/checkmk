@@ -6,7 +6,6 @@
 from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-
 from cmk.discover_plugins import PluginLocation
 
 

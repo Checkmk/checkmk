@@ -5,14 +5,11 @@
 
 import pytest
 
-from cmk.ccc.user import UserId
-
 import cmk.utils.paths
-
+from cmk.ccc.user import UserId
+from cmk.crypto.password import Password
 from cmk.gui.backup.pages import ModeBackupEditKey
 from cmk.gui.logged_in import user
-
-from cmk.crypto.password import Password
 
 
 @pytest.mark.usefixtures("request_context")

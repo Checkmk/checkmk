@@ -6,13 +6,13 @@
 
 import pytest
 
-from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
-
 from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
 from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventory_oracle_instance
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
+
+from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
 
 def test_parse_oracle_instance_db_without_host_12() -> None:

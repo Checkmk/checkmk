@@ -8,7 +8,6 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.sites import site_management_registry
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

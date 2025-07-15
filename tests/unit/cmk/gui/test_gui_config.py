@@ -8,12 +8,11 @@ from dataclasses import asdict
 
 import pytest
 
-from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
-
-import cmk.utils.paths
-
 import cmk.gui.config
+import cmk.utils.paths
 from cmk.gui.config import active_config
+
+from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
 
 
 def test_default_config_from_plugins() -> None:

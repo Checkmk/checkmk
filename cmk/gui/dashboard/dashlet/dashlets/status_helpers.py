@@ -9,7 +9,6 @@ from typing import assert_never
 from livestatus import LivestatusResponse
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-
 from cmk.gui import sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError

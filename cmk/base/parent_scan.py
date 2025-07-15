@@ -13,15 +13,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 import cmk.ccc.debug
+from cmk.automations.results import Gateway, GatewayResult
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-
 from cmk.utils.caching import cache_manager, DictCache
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
-
-from cmk.automations.results import Gateway, GatewayResult
 
 
 @dataclass(frozen=True, kw_only=True)

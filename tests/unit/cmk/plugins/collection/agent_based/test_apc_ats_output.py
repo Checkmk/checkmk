@@ -7,11 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
 from cmk.plugins.collection.agent_based.apc_ats_output import (
@@ -19,6 +14,11 @@ from cmk.plugins.collection.agent_based.apc_ats_output import (
     DefaultParameters,
     Section,
     snmp_section_apc_ats_output,
+)
+
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
 )
 
 

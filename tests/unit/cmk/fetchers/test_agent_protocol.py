@@ -10,7 +10,6 @@ from zlib import compress
 import pytest
 
 from cmk.ccc.exceptions import MKFetcherError
-
 from cmk.fetchers._agentprtcl import (
     AgentCtlMessage,
     CompressionType,

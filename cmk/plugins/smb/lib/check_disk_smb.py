@@ -14,9 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from cmk.utils import password_store
-
 from cmk.agent_based.v2 import render
+from cmk.utils import password_store
 
 
 @dataclass

@@ -18,63 +18,43 @@ from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
+import cmk.base.core
+import cmk.base.core_nagios
+import cmk.base.diagnostics
+import cmk.base.dump_host
+import cmk.base.parent_scan
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+import cmk.fetchers.snmp as snmp_factory
+import cmk.utils.password_store
+import cmk.utils.paths
+from cmk import trace
+from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.base import config, profiling, sources
+from cmk.base.checkers import (
+    CheckerPluginMapper,
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
+    SectionPluginMapper,
+)
+from cmk.base.config import (
+    ConfigCache,
+    handle_ip_lookup_failure,
+)
+from cmk.base.configlib.checkengine import DiscoveryConfig
+from cmk.base.core_factory import create_core, get_licensing_handler_type
+from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
+from cmk.base.modes import Mode, modes, Option
+from cmk.base.sources import make_parser, SNMPFetcherConfig
+from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store, tty
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-
-import cmk.utils.password_store
-import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log
-from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.diagnostics import (
-    DiagnosticsModesParameters,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_LOG_FILES,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-)
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.ip_lookup import ConfiguredIPLookup
-from cmk.utils.log import console, section
-from cmk.utils.paths import configuration_lockfile
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
-from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import (
-    ImmutableTree,
-    InventoryPaths,
-    InventoryStore,
-    make_meta,
-    MutableTree,
-    RawIntervalFromConfig,
-    UpdateResult,
-)
-from cmk.utils.tags import TagID
-from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import load_timeperiods
-
-from cmk.snmplib import (
-    get_single_oid,
-    OID,
-    oids_to_walk,
-    SNMPBackend,
-    SNMPBackendEnum,
-    walk_for_export,
-)
-
-import cmk.fetchers.snmp as snmp_factory
-from cmk.fetchers import get_raw_data, SNMPScanConfig, TLSConfig
-from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
@@ -111,38 +91,52 @@ from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
-
-import cmk.base.core
-import cmk.base.core_nagios
-import cmk.base.diagnostics
-import cmk.base.dump_host
-import cmk.base.parent_scan
-from cmk.base import config, profiling, sources
-from cmk.base.checkers import (
-    CheckerPluginMapper,
-    CMKFetcher,
-    CMKParser,
-    CMKSummarizer,
-    DiscoveryPluginMapper,
-    HostLabelPluginMapper,
-    SectionPluginMapper,
-)
-from cmk.base.config import (
-    ConfigCache,
-    handle_ip_lookup_failure,
-)
-from cmk.base.configlib.checkengine import DiscoveryConfig
-from cmk.base.core_factory import create_core, get_licensing_handler_type
-from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
-from cmk.base.modes import Mode, modes, Option
-from cmk.base.sources import make_parser, SNMPFetcherConfig
-from cmk.base.utils import register_sigint_handler
-
-from cmk import trace
-from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.fetchers import get_raw_data, SNMPScanConfig, TLSConfig
+from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import load_active_checks
+from cmk.snmplib import (
+    get_single_oid,
+    OID,
+    oids_to_walk,
+    SNMPBackend,
+    SNMPBackendEnum,
+    walk_for_export,
+)
+from cmk.utils import config_warnings, ip_lookup, log
+from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.check_utils import maincheckify
+from cmk.utils.diagnostics import (
+    DiagnosticsModesParameters,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
+    OPT_CHECKMK_OVERVIEW,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
+)
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.ip_lookup import ConfiguredIPLookup
+from cmk.utils.log import console, section
+from cmk.utils.paths import configuration_lockfile
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
+from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.structured_data import (
+    ImmutableTree,
+    InventoryPaths,
+    InventoryStore,
+    make_meta,
+    MutableTree,
+    RawIntervalFromConfig,
+    UpdateResult,
+)
+from cmk.utils.tags import TagID
+from cmk.utils.timeout import Timeout
+from cmk.utils.timeperiod import load_timeperiods
 
 from ._localize import do_localize
 
@@ -1410,9 +1404,8 @@ modes.register(
 
 
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
-    from cmk.utils.config_path import VersionedConfigPath
-
     from cmk.base.core_nagios import create_config
+    from cmk.utils.config_path import VersionedConfigPath
 
     plugins = load_checks()
     loading_result = load_config(plugins)

@@ -6,7 +6,6 @@
 from unittest.mock import ANY
 
 from cmk.gui.quick_setup.config_setups.aws.stages import aws_transform_to_disk
-
 from cmk.plugins.aws.server_side_calls.aws_agent_call import special_agent_aws
 from cmk.server_side_calls.v1 import HostConfig
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters

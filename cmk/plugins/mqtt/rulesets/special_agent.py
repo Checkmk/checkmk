@@ -5,7 +5,6 @@
 
 
 from cmk.ccc.hostaddress import HostAddress
-
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

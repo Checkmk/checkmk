@@ -8,6 +8,8 @@ from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import cast, Literal, NotRequired, Required, TypedDict
 
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.tags import load_all_tag_config_read_only
 from cmk.utils import password_store
 from cmk.utils.notify_types import (
     AckState,
@@ -89,10 +91,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.tags import TagGroupID, TagID
-
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
-from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 CheckboxState = Literal["enabled", "disabled"]
 

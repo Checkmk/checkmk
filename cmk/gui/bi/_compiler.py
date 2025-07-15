@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.hooks import request_memoize
-from cmk.gui.i18n import _
-
 from cmk.bi.compiler import BICompiler
 from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPacks
+from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _
 
 from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 

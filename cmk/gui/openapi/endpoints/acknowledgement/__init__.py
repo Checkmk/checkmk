@@ -18,10 +18,7 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import unquote
 
-from cmk.utils.livestatus_helpers.expressions import And, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hosts, Services
-
+from cmk import fields
 from cmk.gui import http, sites
 from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
@@ -41,8 +38,9 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
-
-from cmk import fields
+from cmk.utils.livestatus_helpers.expressions import And, QueryExpression
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hosts, Services
 
 SERVICE_DESCRIPTION = {
     "service_description": fields.String(

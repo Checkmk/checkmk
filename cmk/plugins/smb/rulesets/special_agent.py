@@ -6,7 +6,6 @@
 from collections.abc import Mapping
 
 from cmk.ccc.hostaddress import HostAddress
-
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,

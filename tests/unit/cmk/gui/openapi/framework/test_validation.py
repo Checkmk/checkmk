@@ -9,8 +9,6 @@ from typing import Annotated
 
 import pytest
 
-from tests.unit.cmk.gui.openapi.framework.factories import EndpointDefinitionFactory
-
 from cmk.gui.openapi.framework import (
     HandlerFunction,
     HeaderParam,
@@ -20,6 +18,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework._validation import ParameterValidator
 from cmk.gui.openapi.framework.endpoint_model import SignatureParametersProcessor
+
+from tests.unit.cmk.gui.openapi.framework.factories import EndpointDefinitionFactory
 
 
 def _handler_error_query_duplicate(

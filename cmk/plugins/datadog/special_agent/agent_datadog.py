@@ -25,15 +25,12 @@ import pydantic
 import requests
 from dateutil import parser as dateutil_parser
 
-from cmk.ccc import store
-
-from cmk.utils import paths
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
+from cmk.ccc import store
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.utils import paths
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 Tags = Sequence[str]
 

@@ -10,7 +10,6 @@ from collections.abc import Generator
 import pytest
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.watolib import backup_snapshots
 
 

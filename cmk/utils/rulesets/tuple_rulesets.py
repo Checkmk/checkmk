@@ -7,9 +7,8 @@ from collections.abc import Iterable, Sequence
 from re import Pattern
 
 import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException
-
 import cmk.utils.paths
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 

@@ -18,9 +18,6 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 
 import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
-
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -42,6 +39,7 @@ from cmk.gui.utils.urls import (
     youtube_reference_url,
     YouTubeReference,
 )
+from cmk.utils import paths
 
 
 @dataclass

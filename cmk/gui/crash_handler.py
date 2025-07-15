@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, NotRequired, override, Self, TypedDict
 
 import cmk.ccc.version as cmk_version
+import cmk.utils.paths
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashReportRegistry,
@@ -14,9 +15,6 @@ from cmk.ccc.crash_reporting import (
     VersionInfo,
 )
 from cmk.ccc.site import omd_site
-
-import cmk.utils.paths
-
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

@@ -9,7 +9,6 @@ from enum import Enum
 from typing import NamedTuple
 
 from cmk.ccc.user import UserId
-
 from cmk.rulesets.v1 import form_specs, Help, Label, Title
 
 

@@ -6,10 +6,9 @@
 import re
 from functools import lru_cache
 
-from cmk.utils.escaping import escape, escape_permissive
-
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.utils.escaping import escape, escape_permissive
 
 # .
 #   .--Escaper-------------------------------------------------------------.

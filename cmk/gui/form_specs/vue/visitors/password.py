@@ -5,15 +5,13 @@
 import base64
 from typing import Literal
 
-from cmk.utils.password_store import ad_hoc_password_id
-
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.watolib.password_store import passwordstore_choices
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Password
 from cmk.shared_typing import vue_formspec_components as VueComponents
+from cmk.utils.password_store import ad_hoc_password_id
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData
 from .._utils import (

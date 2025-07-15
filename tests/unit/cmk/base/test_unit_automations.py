@@ -6,25 +6,20 @@
 
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
-
+import cmk.base.automations
+import cmk.base.automations.check_mk as automations
 import cmk.ccc.version as cmk_version
+from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
+from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
-
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import paths
 from cmk.utils.labels import LabelSource
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
-import cmk.base.automations
-import cmk.base.automations.check_mk as automations
-from cmk.base.config import LoadingResult
+from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 
 def test_registered_automations() -> None:

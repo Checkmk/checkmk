@@ -11,18 +11,18 @@ import pprint
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
-from tests.testlib.common.repo import qa_test_data_path
-
 import cmk.ccc.resulttype as result
+from cmk.base.checkers import (
+    CMKParser,
+    CMKSummarizer,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
+    SectionPluginMapper,
+)
+from cmk.base.config import ConfigCache, ParserFactory
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
-
-from cmk.utils.everythingtype import EVERYTHING
-
-from cmk.fetchers import Mode
-from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
-
 from cmk.checkengine.discovery import ABCDiscoveryConfig, commandline_discovery
 from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import SourceInfo
@@ -34,15 +34,11 @@ from cmk.checkengine.submitters import (
     Submitter,
 )
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.fetchers import Mode
+from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
+from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.base.checkers import (
-    CMKParser,
-    CMKSummarizer,
-    DiscoveryPluginMapper,
-    HostLabelPluginMapper,
-    SectionPluginMapper,
-)
-from cmk.base.config import ConfigCache, ParserFactory
+from tests.testlib.common.repo import qa_test_data_path
 
 LOGGER = logging.getLogger(__name__)
 DATA_DIR = qa_test_data_path() / "plugins_siteless"

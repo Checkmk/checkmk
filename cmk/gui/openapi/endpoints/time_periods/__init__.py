@@ -16,9 +16,6 @@ import http.client
 from collections.abc import Mapping
 from typing import Any, cast
 
-from cmk.utils import dateutils
-from cmk.utils.timeperiod import TimeperiodSpec
-
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -46,6 +43,8 @@ from cmk.gui.watolib.timeperiods import (
     TimePeriodInUseError,
     TimePeriodNotFoundError,
 )
+from cmk.utils import dateutils
+from cmk.utils.timeperiod import TimeperiodSpec
 
 TIME_RANGE = tuple[str, str]
 

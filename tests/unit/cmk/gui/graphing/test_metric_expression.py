@@ -9,7 +9,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._metric_expression import (
     Metric,

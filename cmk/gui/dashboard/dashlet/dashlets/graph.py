@@ -14,9 +14,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils.macros import MacroMapping
-
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
@@ -56,6 +53,7 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
     get_singlecontext_vars,
 )
+from cmk.utils.macros import MacroMapping
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName

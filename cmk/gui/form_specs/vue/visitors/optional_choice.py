@@ -5,9 +5,7 @@
 from typing import Never
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.form_specs.private.optional_choice import OptionalChoice
-
 from cmk.rulesets.v1 import Label
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

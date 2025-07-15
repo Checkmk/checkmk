@@ -14,11 +14,15 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-
 import cmk.utils.password_store
 import cmk.utils.paths
+from cmk import trace
+from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
+from cmk.base.nagios_utils import do_check_nagiosconfig
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
@@ -29,14 +33,6 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
-
-from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
-from cmk.base.nagios_utils import do_check_nagiosconfig
-
-from cmk import trace
 
 CoreCommandName = str
 CoreCommand = str

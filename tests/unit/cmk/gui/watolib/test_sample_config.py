@@ -7,10 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.paths import omd_root
-
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.sample_config import init_wato_datastructures, SampleConfigGeneratorGroups
+from cmk.utils.paths import omd_root
 
 
 def test_init_wato_data_structures(request_context: None) -> None:

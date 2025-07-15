@@ -9,7 +9,6 @@ from typing import Any
 import pytest
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.message import _parse_message, Message, MessageText
 
 

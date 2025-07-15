@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.base.legacy_checks.juniper_fru import check_juniper_fru
-
 from cmk.plugins.juniper.agent_based.juniper_fru_section import parse_juniper_fru
 
 _SECTION = {

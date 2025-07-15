@@ -11,11 +11,8 @@ from typing import Final
 
 import pytest
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -25,6 +22,8 @@ from cmk.utils.rulesets.tuple_rulesets import (
     in_extraconf_servicelist,
 )
 from cmk.utils.tags import TagGroupID, TagID
+
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 @pytest.fixture(autouse=True)

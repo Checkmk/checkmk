@@ -6,7 +6,6 @@
 import re
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.regex import validate_regex

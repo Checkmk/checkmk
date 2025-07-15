@@ -14,7 +14,6 @@ import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.composition.utils import get_cre_agent_path
-
 from tests.testlib.agent import (
     agent_controller_daemon,
     bake_agents,

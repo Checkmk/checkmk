@@ -7,9 +7,8 @@ from typing import Any, Literal, TypedDict
 
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.gui.fields.base import BaseSchema
-
 from cmk import fields
+from cmk.gui.fields.base import BaseSchema
 
 
 class NoRestriction(BaseSchema):

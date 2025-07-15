@@ -11,11 +11,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
+from cmk.utils.sectionname import SectionName
 
 _STRING_TABLE = [
     [

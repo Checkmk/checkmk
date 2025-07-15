@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     check_aws_http_errors,
@@ -11,9 +13,6 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
     MetricInfo,
 )
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 check_info = {}

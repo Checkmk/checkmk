@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition
-
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-
 from cmk.plugins.sftp.rulesets.active_check import rule_spec_active_check_sftp
 
 

@@ -6,6 +6,9 @@
 
 import pytest
 
+from cmk.plugins.kube.agent_handlers.common import PodOwner
+from cmk.plugins.kube.schemata import api
+
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APIPodFactory,
     ContainerResourcesFactory,
@@ -13,9 +16,6 @@ from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     PodSpecFactory,
     PodStatusFactory,
 )
-
-from cmk.plugins.kube.agent_handlers.common import PodOwner
-from cmk.plugins.kube.schemata import api
 
 
 @pytest.mark.parametrize("pod_number", [0, 10, 20])

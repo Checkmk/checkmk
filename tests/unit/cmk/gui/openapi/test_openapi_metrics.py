@@ -7,11 +7,10 @@ import json
 
 import pytest
 
-from tests.testlib.unit.rest_api_client import RestApiClient
-
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
-
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from tests.testlib.unit.rest_api_client import RestApiClient
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/metric/actions/get/invoke"
 COLOR_HEX = "#87cefa"

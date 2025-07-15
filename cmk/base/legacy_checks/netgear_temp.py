@@ -6,10 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.plugins.lib.netgear import DETECT_NETGEAR
 
 check_info = {}

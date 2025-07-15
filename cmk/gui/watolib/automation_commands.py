@@ -10,7 +10,6 @@ from collections.abc import Mapping
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
-
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 

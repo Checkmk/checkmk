@@ -11,14 +11,10 @@ from typing import Literal, NamedTuple, NewType, override
 from pydantic import BaseModel
 
 import cmk.ccc.resulttype as result
+from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.paths import configuration_lockfile, tmp_run_dir
-
-from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
-
 from cmk.checkengine.discovery import (
     DiscoveryReport,
     DiscoverySettingFlags,
@@ -26,7 +22,6 @@ from cmk.checkengine.discovery import (
     DiscoveryValueSpecModel,
     TransitionCounter,
 )
-
 from cmk.gui.background_job import (
     AlreadyRunningError,
     BackgroundJob,
@@ -62,6 +57,7 @@ from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
 DoFullScan = NewType("DoFullScan", bool)
 

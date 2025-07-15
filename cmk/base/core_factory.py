@@ -2,12 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.base.core_config import MonitoringCore
 from cmk.ccc.version import Edition, edition
-
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicensingHandler
-
-from cmk.base.core_config import MonitoringCore
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:

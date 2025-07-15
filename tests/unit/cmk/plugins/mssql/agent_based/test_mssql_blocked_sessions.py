@@ -6,11 +6,8 @@
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-
 from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (
     check_mssql_blocked_sessions,
     cluster_check_mssql_blocked_sessions,
@@ -20,6 +17,7 @@ from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (
     Params,
     parse_mssql_blocked_sessions,
 )
+from cmk.utils.sectionname import SectionName
 
 INFO_0 = [
     ["INST_ID0", "Blocked _Sessions"],

@@ -14,11 +14,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import cmk.utils.paths
+from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-
-import cmk.utils.paths
-
 from cmk.gui import hooks
 from cmk.gui.log import logger
 from cmk.gui.watolib.config_sync import (
@@ -32,8 +31,6 @@ from cmk.gui.watolib.config_sync import (
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import save_site_global_settings
-
-from cmk import trace
 
 tracer = trace.get_tracer()
 

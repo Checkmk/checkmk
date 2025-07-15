@@ -23,18 +23,14 @@ from pathlib import Path
 from typing import assert_never
 
 import cmk.ccc.debug
+import cmk.checkengine.plugin_backend as agent_based_register
+import cmk.utils.password_store
+import cmk.utils.paths
+from cmk.base.config import ConfigCache, FilterMode, save_packed_config
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-import cmk.utils.password_store
-import cmk.utils.paths
-from cmk.utils.ip_lookup import IPLookup, IPStackConfig
-from cmk.utils.log import console
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-
-import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
@@ -42,12 +38,12 @@ from cmk.checkengine.plugins import (
     LegacyPluginLocation,
     SectionPlugin,
 )
-
-from cmk.base.config import ConfigCache, FilterMode, save_packed_config
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
-
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_special_agents
+from cmk.utils.ip_lookup import IPLookup, IPStackConfig
+from cmk.utils.log import console
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from ._host_check_config import HostCheckConfig
 

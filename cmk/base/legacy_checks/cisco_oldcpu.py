@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -16,6 +14,7 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 check_info = {}
 

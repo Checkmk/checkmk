@@ -8,17 +8,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-import cmk.utils.paths
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.log import console
-from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item
-from cmk.utils.timeperiod import timeperiod_active
-
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,
@@ -43,6 +36,11 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
+from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import Item
+from cmk.utils.timeperiod import timeperiod_active
 
 from ._autochecks import AutochecksConfig, AutochecksStore
 from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name

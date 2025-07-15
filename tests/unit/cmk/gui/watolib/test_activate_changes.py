@@ -15,18 +15,12 @@ from unittest.mock import patch
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
-from tests.testlib.unit.rabbitmq import get_expected_definition
-from tests.testlib.unit.utils import reset_registries
-
 from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.site import SiteId
-
-import cmk.utils.paths
-
 import cmk.gui.watolib.utils
+import cmk.utils.paths
+from cmk.ccc.site import SiteId
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import (
@@ -39,7 +33,6 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
 )
-
 from cmk.livestatus_client import (
     BrokerConnection,
     BrokerConnections,
@@ -48,6 +41,10 @@ from cmk.livestatus_client import (
     NetworkSocketDetails,
 )
 from cmk.messaging import rabbitmq
+
+from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.unit.rabbitmq import get_expected_definition
+from tests.testlib.unit.utils import reset_registries
 
 logger = logging.getLogger(__name__)
 

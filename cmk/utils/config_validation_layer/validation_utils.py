@@ -9,7 +9,6 @@ from typing import Any
 from pydantic import ValidationError
 
 from cmk.ccc import tty
-
 from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
 
 

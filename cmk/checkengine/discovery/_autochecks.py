@@ -9,14 +9,12 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import NamedTuple, Protocol
 
+import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
-
-import cmk.utils.paths
-from cmk.utils.servicename import Item, ServiceName
-
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID
+from cmk.utils.servicename import Item, ServiceName
 
 from ._utils import DiscoveredItem
 

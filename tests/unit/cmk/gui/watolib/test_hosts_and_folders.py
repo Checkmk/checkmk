@@ -26,9 +26,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils.redis import disable_redis
-
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -40,6 +37,7 @@ from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
+from cmk.utils.redis import disable_redis
 
 
 def test_effective_attributes() -> None:

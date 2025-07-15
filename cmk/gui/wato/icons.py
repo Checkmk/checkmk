@@ -6,8 +6,6 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.utils.tags import TagID
-
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
@@ -17,6 +15,7 @@ from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.icon import Icon
+from cmk.utils.tags import TagID
 
 
 def _render_wato_icon(

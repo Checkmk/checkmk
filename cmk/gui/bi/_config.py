@@ -10,11 +10,15 @@ from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
 import cmk.ccc.version as cmk_version
+from cmk.bi.actions import BICallARuleAction
+from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
+from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.compiler import BICompiler
+from cmk.bi.lib import SitesCallback
+from cmk.bi.packs import BIAggregationPack, BIPackConfig
+from cmk.bi.rule import BIRule, BIRuleSchema
+from cmk.bi.type_defs import AggrConfigDict
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils import paths
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -94,15 +98,8 @@ from cmk.gui.watolib.main_menu import (
     MenuItem,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
-from cmk.bi.actions import BICallARuleAction
-from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
-from cmk.bi.compiler import BICompiler
-from cmk.bi.lib import SitesCallback
-from cmk.bi.packs import BIAggregationPack, BIPackConfig
-from cmk.bi.rule import BIRule, BIRuleSchema
-from cmk.bi.type_defs import AggrConfigDict
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (

@@ -8,7 +8,6 @@ import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
 from cmk.gui.form_specs.vue.visitors import (
     FileUploadVisitor,
@@ -16,7 +15,6 @@ from cmk.gui.form_specs.vue.visitors import (
 from cmk.gui.form_specs.vue.visitors.file_upload import FileUploadModel
 from cmk.gui.http import request
 from cmk.gui.session import UserContext
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     FileUpload,

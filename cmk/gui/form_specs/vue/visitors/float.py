@@ -6,9 +6,7 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.private.validators import IsFloat
-
 from cmk.rulesets.v1.form_specs import Float
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

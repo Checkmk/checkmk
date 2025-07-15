@@ -6,10 +6,9 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 

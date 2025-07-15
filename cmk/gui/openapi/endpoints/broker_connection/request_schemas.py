@@ -7,11 +7,10 @@ from typing import Any
 
 from marshmallow import validates_schema, ValidationError
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.definitions import ConnectionIdentifier
 from cmk.gui.fields.utils import BaseSchema
-
-from cmk import fields
 
 
 class SiteId(BaseSchema):

@@ -13,13 +13,10 @@ from typing import Literal, override
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
-
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
-
-from cmk.gui.i18n import _, translate_to_current_language
-
-from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._formatter import AutoPrecision, StrictPrecision

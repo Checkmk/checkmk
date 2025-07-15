@@ -19,9 +19,7 @@ from typing import Any, Literal
 from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
-
 import cmk.utils.paths
-
 from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr

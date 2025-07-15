@@ -6,7 +6,6 @@ from dataclasses import asdict
 
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
-
 from cmk.rulesets.v1.form_specs import ServiceState
 from cmk.shared_typing.vue_formspec_components import SingleChoice
 

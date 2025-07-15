@@ -12,12 +12,11 @@ from dataclasses import dataclass
 from typing import Literal, TypedDict
 
 import cmk.utils.regex
-from cmk.utils.metrics import MetricName
-
 from cmk.gui.config import active_config, Config
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
+from cmk.utils.metrics import MetricName
 
 from ._from_api import RegisteredMetric
 from ._legacy import check_metrics, CheckMetricEntry

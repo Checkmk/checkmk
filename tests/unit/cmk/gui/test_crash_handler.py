@@ -6,10 +6,8 @@
 import pytest
 
 from cmk.ccc.crash_reporting import crash_report_registry
-
-from cmk.utils import paths
-
 from cmk.gui.crash_handler import GUICrashReport, RequestDetails
+from cmk.utils import paths
 
 
 def test_gui_crash_report_registry() -> None:

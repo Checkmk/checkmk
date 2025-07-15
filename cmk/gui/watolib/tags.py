@@ -9,15 +9,11 @@ from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Any, override, TypeVar
 
+import cmk.utils.paths
+import cmk.utils.tags
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-
-import cmk.utils.paths
-import cmk.utils.tags
-from cmk.utils.rulesets.ruleset_matcher import TagCondition
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
-
 from cmk.gui import hooks
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
@@ -28,6 +24,8 @@ from cmk.gui.watolib.php_formatter import format_php
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 
 class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):

@@ -9,8 +9,7 @@ from collections.abc import ItemsView, Mapping, Sequence
 
 from marshmallow import Schema
 
-from cmk.utils.datastructures import denilled
-
+from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.type_defs import (
     LocationType,
@@ -18,8 +17,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
-
-from cmk import fields
+from cmk.utils.datastructures import denilled
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 

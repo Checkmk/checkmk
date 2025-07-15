@@ -8,12 +8,10 @@ import traceback
 from pathlib import Path
 from typing import override
 
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.version import Edition, edition
-
-import cmk.utils.paths
-from cmk.utils.config_warnings import ConfigurationWarnings
-
+from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import GlobalSettings
@@ -47,8 +45,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathType,
 )
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
-
-from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
+from cmk.utils.config_warnings import ConfigurationWarnings
 
 
 def register(

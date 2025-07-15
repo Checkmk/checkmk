@@ -11,9 +11,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.checkengine.plugins import CheckPluginName
-
 from cmk.agent_based.v2 import Attributes, CheckResult, DiscoveryResult, Result, Service, State
+from cmk.checkengine.plugins import CheckPluginName
 from cmk.plugins.collection.agent_based.suseconnect import (
     inventory_suseconnect,
     parse_suseconnect,

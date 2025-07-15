@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Final, TypedDict
 
 import cmk.ccc.debug
-
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.timeperiod import TimeperiodName

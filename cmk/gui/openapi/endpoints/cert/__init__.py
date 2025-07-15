@@ -15,10 +15,8 @@ from typing import Any
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
-from cmk.utils.log.security_event import log_security_event
-from cmk.utils.paths import omd_root
-
+from cmk.crypto.certificate import CertificateSigningRequest
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 from cmk.gui import config
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.http import Response
@@ -34,9 +32,9 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
-
-from cmk.crypto.certificate import CertificateSigningRequest
-from cmk.crypto.x509 import SAN, SubjectAlternativeNames
+from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
+from cmk.utils.log.security_event import log_security_event
+from cmk.utils.paths import omd_root
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 

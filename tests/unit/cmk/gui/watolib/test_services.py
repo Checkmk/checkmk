@@ -164,6 +164,7 @@ def test_perform_discovery_none_action(
         automation_config=LocalAutomationConfig(),
         raise_errors=True,
         debug=False,
+        use_git=False,
     )
     mock_discovery_preview.assert_called_once()
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
@@ -182,6 +183,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         automation_config=LocalAutomationConfig(),
         raise_errors=True,
         debug=False,
+        use_git=False,
     )
 
     mock_discovery.assert_called_once()
@@ -337,12 +339,14 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
+            use_git=False,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
         raise_errors=True,
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
@@ -594,6 +598,7 @@ def test_perform_discovery_single_update(
             automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
+            use_git=False,
         ),
         selected_services=(("mem_linux", None),),
         update_source="new",
@@ -603,6 +608,7 @@ def test_perform_discovery_single_update(
         automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Check_MK Agent": AutocheckEntry(CheckPluginName("checkmk_agent"), None, {}, {}),
@@ -810,6 +816,7 @@ def test_perform_discovery_action_update_services(
             automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
+            use_git=False,
         ),
         selected_services=EVERYTHING,
         update_source=None,
@@ -819,6 +826,7 @@ def test_perform_discovery_action_update_services(
         automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Filesystem /opt/omd/sites/heute/tmp": AutocheckEntry(
@@ -930,12 +938,14 @@ def test_perform_discovery_action_update_host_labels(
             automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
+            use_git=False,
         ),
         host=sample_host,
         raise_errors=True,
         automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
 
     mock_update_host_labels.assert_called_once_with(

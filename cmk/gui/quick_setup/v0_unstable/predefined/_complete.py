@@ -355,6 +355,7 @@ def _create_and_save_special_agent_bundle(
                 automation_config=make_automation_config(active_config.sites[site_id]),
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,
+                use_git=active_config.wato_use_git,
             )
         except Exception as e:
             progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
@@ -420,6 +421,7 @@ def _run_service_discovery(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
     if isinstance(automation_config, RemoteAutomationConfig):
@@ -430,6 +432,7 @@ def _run_service_discovery(
             automation_config=automation_config,
             raise_errors=False,
             debug=debug,
+            use_git=use_git,
         )
 
         snapshot = fetch_service_discovery_background_job_status(
@@ -451,6 +454,7 @@ def _run_service_discovery(
         automation_config=automation_config,
         raise_errors=False,
         debug=debug,
+        use_git=use_git,
     )
     perform_fix_all(
         discovery_result=check_table,
@@ -459,4 +463,5 @@ def _run_service_discovery(
         automation_config=LocalAutomationConfig(),
         pprint_value=pprint_value,
         debug=debug,
+        use_git=use_git,
     )

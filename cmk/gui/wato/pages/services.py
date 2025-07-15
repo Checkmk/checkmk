@@ -348,6 +348,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             raise_errors=not api_request.discovery_options.ignore_errors,
             pprint_value=config.wato_pprint_config,
             debug=config.debug,
+            use_git=config.wato_use_git,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -428,6 +429,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         raise_errors: bool,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> DiscoveryResult:
         if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
@@ -437,6 +439,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 automation_config=automation_config,
                 raise_errors=raise_errors,
                 debug=debug,
+                use_git=use_git,
             )
 
         if action in (
@@ -450,6 +453,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 automation_config=automation_config,
                 raise_errors=raise_errors,
                 debug=debug,
+                use_git=use_git,
             )
 
         discovery_result = initial_discovery_result(
@@ -459,6 +463,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             automation_config=automation_config,
             raise_errors=raise_errors,
             debug=debug,
+            use_git=use_git,
         )
 
         match action:
@@ -470,6 +475,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
+                    use_git=use_git,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -480,6 +486,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
+                    use_git=use_git,
                 )
             case (
                 DiscoveryAction.SINGLE_UPDATE
@@ -500,6 +507,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
+                    use_git=use_git,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
@@ -513,6 +521,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
+                    use_git=use_git,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")

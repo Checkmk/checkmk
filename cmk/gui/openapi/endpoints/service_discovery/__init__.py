@@ -180,6 +180,7 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
             automation_config=make_automation_config(active_config.sites[host.site_id()]),
             raise_errors=False,
             debug=active_config.debug,
+            use_git=active_config.wato_use_git,
         )
     except MKAutomationException:
         pass
@@ -283,6 +284,7 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
         automation_config=make_automation_config(active_config.sites[host.site_id()]),
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
+        use_git=active_config.wato_use_git,
     )
     return Response(status=204)
 
@@ -296,6 +298,7 @@ def _update_single_service_phase(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> None:
     action = DiscoveryAction.SINGLE_UPDATE
     Discovery(
@@ -311,11 +314,13 @@ def _update_single_service_phase(
             automation_config=make_automation_config(active_config.sites[host.site_id()]),
             raise_errors=False,
             debug=debug,
+            use_git=use_git,
         ),
         host.name(),
         automation_config=automation_config,
         pprint_value=pprint_value,
         debug=debug,
+        use_git=use_git,
     )
 
 
@@ -424,6 +429,7 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
         automation_config=make_automation_config(active_config.sites[host.site_id()]),
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
+        use_git=active_config.wato_use_git,
     )
 
 
@@ -434,6 +440,7 @@ def _execute_service_discovery(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
@@ -456,6 +463,7 @@ def _execute_service_discovery(
         automation_config=automation_config,
         raise_errors=False,
         debug=debug,
+        use_git=use_git,
     )
     match api_discovery_action:
         case APIDiscoveryAction.new:
@@ -470,6 +478,7 @@ def _execute_service_discovery(
                 automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
@@ -483,6 +492,7 @@ def _execute_service_discovery(
                 automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
@@ -492,6 +502,7 @@ def _execute_service_discovery(
                 automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -507,6 +518,7 @@ def _execute_service_discovery(
                 automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
         case APIDiscoveryAction.only_service_labels:
             discovery_result = perform_service_discovery(
@@ -520,6 +532,7 @@ def _execute_service_discovery(
                 automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
 
         case _:

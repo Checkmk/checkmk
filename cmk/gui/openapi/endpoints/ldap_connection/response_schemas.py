@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from marshmallow import post_dump
+from marshmallow import post_dump, pre_dump
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
@@ -588,6 +588,12 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 
 
 class LDAPSyncPlugins(BaseSchema):
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    @pre_dump
+    def _fill_mega_menu_icons(self, data, **kwargs):
+        data["mega_menu_icons"] = data.get("main_menu_icons")
+        return data
+
     alias = fields.Nested(
         LDAPSyncPluginAlias,
         description="Populates the alias attribute of the Setup user by synchronizing an attribute "
@@ -609,6 +615,12 @@ class LDAPSyncPlugins(BaseSchema):
     email_address = fields.Nested(
         LDAPSyncPluginEmailAddress,
         description="Synchronizes the email of the LDAP user account into Checkmk",
+    )
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    mega_menu_icons = fields.Nested(
+        LDAPSyncPluginMenuIcons,
+        description="Deprecated - use `main_menu_icons` instead.",
+        deprecated=True,
     )
     main_menu_icons = fields.Nested(
         LDAPSyncPluginMenuIcons,

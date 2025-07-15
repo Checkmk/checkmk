@@ -1,19 +1,10 @@
 """Export a library from an output group."""
 
-def cc_export_shared_library(
-        name = None,
-        srcs = [],
-        shared_library = None,
-        visibility = None):
-    """Export shared library from output group.
-
-    Args:
-        name: Name of this target.
-        srcs: List of labels.  See filegroups.
-        shared_library: Library to export.
-        visibility: The visibility attribute on the target.
-
-    """
+def _cc_export_shared_library_impl(
+        name,
+        srcs,
+        shared_library,
+        visibility):
     filegroup_name = name + "_fg"
     native.filegroup(
         name = filegroup_name,
@@ -27,20 +18,28 @@ def cc_export_shared_library(
         visibility = visibility,
     )
 
-def cc_export_static_library(
-        name = None,
-        srcs = [],
-        static_library = None,
-        visibility = None):
-    """Export static library from output group.
+cc_export_shared_library = macro(
+    doc = """Export shared library from output group.
 
     Args:
         name: Name of this target.
         srcs: List of labels.  See filegroups.
-        static_library: Library to export.
+        shared_library: Library to export.
         visibility: The visibility attribute on the target.
 
-    """
+    """,
+    implementation = _cc_export_shared_library_impl,
+    attrs = {
+        "srcs": attr.label_list(mandatory = True),
+        "shared_library": attr.string(mandatory = True),
+    },
+)
+
+def _cc_export_static_library_impl(
+        name,
+        srcs,
+        static_library,
+        visibility):
     filegroup_name = name + "_fg"
     native.filegroup(
         name = filegroup_name,
@@ -54,3 +53,20 @@ def cc_export_static_library(
         alwayslink = 1,
         visibility = visibility,
     )
+
+cc_export_static_library = macro(
+    doc = """Export static library from output group.
+
+    Args:
+        name: Name of this target.
+        srcs: List of labels.  See filegroups.
+        static_library: Library to export.
+        visibility: The visibility attribute on the target.
+
+    """,
+    implementation = _cc_export_static_library_impl,
+    attrs = {
+        "srcs": attr.label_list(mandatory = True),
+        "static_library": attr.string(mandatory = True),
+    },
+)

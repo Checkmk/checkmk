@@ -283,10 +283,13 @@ def _get_generic_crash_info(
 
 
 def _get_local_vars_of_last_exception() -> str:
+    local_vars = {}
+
     # Suppressing to handle case where sys.exc_info has no crash information
     # (https://docs.python.org/2/library/sys.html#sys.exc_info)
     with suppress(IndexError):
-        local_vars = _sanitize_variables(inspect.trace()[-1][0].f_locals)
+        for key, val in inspect.trace()[-1][0].f_locals.items():
+            local_vars[key] = _format_var_for_export(val)
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
@@ -310,7 +313,12 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     if isinstance(val, dict):
         val = val.copy()
         for item_key, item_val in val.items():
-            val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
+            if any(
+                sensitive_keyword in item_key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS
+            ):
+                val[item_key] = REDACTED_STRING
+            else:
+                val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
 
     elif isinstance(val, list):
         val = val[:]

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+import base64
 import copy
 import itertools
 import json
@@ -38,6 +38,8 @@ def crashdir(tmp_path: Path) -> Path:
 @pytest.fixture()
 def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
+        # We need some var so the local_vars are part of the crash report
+        some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]  # noqa: F841
         raise ValueError("XYZ")
     except ValueError:
         return UnitTestCrashReport(
@@ -69,6 +71,12 @@ def test_crash_report_sanitization(crash: ABCCrashReport) -> None:
             "auth_token": REDACTED_STRING,
         }
     }
+
+
+def test_crash_report_sanitization_local_vars(crash: ABCCrashReport) -> None:
+    decoded_local_vars = base64.b64decode(crash.crash_info["local_vars"])
+    assert b"verysecret" not in decoded_local_vars
+    assert b"notsecret" in decoded_local_vars
 
 
 def test_crash_report_ident(crash: ABCCrashReport) -> None:

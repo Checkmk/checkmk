@@ -32,6 +32,8 @@ from buildscripts.scripts.lib.registry import (
 
 MetaFileExtension = Literal["json", "csv"]
 
+DOWNLOAD_SERVER_BASE_URL = "https://download.checkmk.com/checkmk"
+
 
 def hash_file(artifact_name: str) -> str:
     return f"{artifact_name}.hash"
@@ -134,11 +136,11 @@ def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
 
 
 def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
-    url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
+    url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}"
     sys.stdout.write(f"Checking for {url}...")
     if (
         requests.head(
-            f"https://download.checkmk.com/checkmk/{version}/{filename}",
+            f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}",
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
@@ -186,8 +188,8 @@ def assert_hash_matches_package_content(
         # Yes, we don't have hash file for hash files
         return AssertResult(assertion_ok=True, message="not applicable")
 
-    url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
-    hash_url = f"https://download.checkmk.com/checkmk/{version}/{hash_file(filename)}"
+    url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}"
+    hash_url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{hash_file(filename)}"
 
     sys.stdout.write(f"Checking if {url}'s sha256sum matches {hash_url}...")
 

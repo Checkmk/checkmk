@@ -9,6 +9,7 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 from cmk.ccc import store
@@ -64,6 +65,7 @@ class MessageText(TypedDict):
     content: str
 
 
+# TODO: Use e.g. pydantic to *really* parse all parts.
 class Message(TypedDict):
     text: MessageText
     dest: MessageDestination
@@ -79,39 +81,23 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("message", page_message))
 
 
-# TODO: Migrate all messages.mk during site update.
-# TODO: Use e.g. pydantic to *really* parse all parts.
-def _parse_message(message: Mapping[str, Any]) -> Message:
-    if isinstance(message["text"], str):
-        # pre 2.3 message format
-        return Message(
-            text=MessageText(content_type="text", content=message["text"]),
-            dest=message["dest"],
-            methods=message["methods"],
-            valid_till=message.get("valid_till"),
-            id=message["id"],
-            time=message["time"],
-            security=message.get("security", False),
-            acknowledged=message.get("acknowledged", False),
-        )
+_MESSAGES_FILENAME = "messages.mk"
 
-    return Message(
-        text=message["text"],
-        dest=message["dest"],
-        methods=message["methods"],
-        valid_till=message["valid_till"],
-        id=message["id"],
-        time=message["time"],
-        security=message["security"],
-        acknowledged=message["acknowledged"],
+
+def all_messages_paths() -> Iterable[Path]:
+    return cmk.utils.paths.profile_dir.glob(f"*/{_MESSAGES_FILENAME}")
+
+
+def _messages_path(user_id: UserId | None) -> Path:
+    return (
+        cmk.utils.paths.profile_dir
+        / (user.ident if user_id is None else user_id)
+        / _MESSAGES_FILENAME
     )
 
 
 def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
-    if user_id is None:
-        user_id = user.ident
-    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
-    messages = [_parse_message(m) for m in store.load_object_from_file(path, default=[])]
+    messages: list[Message] = store.load_object_from_file(_messages_path(user_id), default=[])
 
     # Delete too old messages and update security message durations
     updated = False
@@ -178,9 +164,7 @@ def acknowledge_all_messages() -> None:
 
 
 def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None = None) -> None:
-    if user_id is None:
-        user_id = user.ident
-    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
+    path = _messages_path(user_id)
     path.parent.mkdir(mode=0o770, exist_ok=True)
     store.save_object_to_file(path, messages)
 

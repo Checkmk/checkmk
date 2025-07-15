@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from typing import Any
-
 import pytest
 
 from cmk.ccc.user import UserId
 
-from cmk.gui.message import _parse_message, Message, MessageText
+from cmk.update_config.plugins.actions.user_messages import MigrateUserMessages
 
 
 @pytest.mark.parametrize(
@@ -25,8 +22,8 @@ from cmk.gui.message import _parse_message, Message, MessageText
                 id="ID",
                 time=123,
             ),
-            Message(
-                text=MessageText(content_type="text", content="Text"),
+            dict(
+                text=dict(content_type="text", content="Text"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
@@ -48,8 +45,8 @@ from cmk.gui.message import _parse_message, Message, MessageText
                 security=False,
                 acknowledged=False,
             ),
-            Message(
-                text=MessageText(content_type="text", content="Text"),
+            dict(
+                text=dict(content_type="text", content="Text"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
@@ -71,8 +68,8 @@ from cmk.gui.message import _parse_message, Message, MessageText
                 security=True,
                 acknowledged=True,
             ),
-            Message(
-                text=MessageText(content_type="text", content="Text"),
+            dict(
+                text=dict(content_type="text", content="Text"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
@@ -85,7 +82,7 @@ from cmk.gui.message import _parse_message, Message, MessageText
         ),
         pytest.param(
             dict(
-                text=MessageText(content_type="html", content="<h>Text</h>"),
+                text=dict(content_type="html", content="<h>Text</h>"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
@@ -94,8 +91,8 @@ from cmk.gui.message import _parse_message, Message, MessageText
                 security=False,
                 acknowledged=False,
             ),
-            Message(
-                text=MessageText(content_type="html", content="<h>Text</h>"),
+            dict(
+                text=dict(content_type="html", content="<h>Text</h>"),
                 dest=("list", [UserId("bar")]),
                 methods=[],
                 valid_till=456,
@@ -108,5 +105,5 @@ from cmk.gui.message import _parse_message, Message, MessageText
         ),
     ],
 )
-def test__parse_message(message: Mapping[str, Any], result: Message) -> None:
-    assert _parse_message(message) == result
+def test_migrate(message: object, result: object) -> None:
+    assert MigrateUserMessages.migrate(message) == result

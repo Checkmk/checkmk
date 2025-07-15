@@ -7,7 +7,8 @@ def package_wheel(
         name,
         whl,
         excludes = [],
-        visibility = None):
+        visibility = None,
+        additional_files = []):
     """Packages a python wheel into our omd site-packages.
 
     Args:
@@ -15,6 +16,7 @@ def package_wheel(
         whl: Wheel to be packaged.
         excludes: Optional, exclude files from packaging.
         visibility: The visibility attribute on the target.
+        additional_files: List of additional files to be put in the tar.
     """
     whl_filegroup_name = name + "_fg"
     filtered_name = name + "_filtered"
@@ -45,6 +47,6 @@ def package_wheel(
     )
     pkg_tar(
         name = name,
-        srcs = [pkg_files_name + "2"],
+        srcs = [pkg_files_name + "2"] + additional_files,
         visibility = visibility,
     )

@@ -740,7 +740,6 @@ function applyTransformation() {
 // Graph lines table
 
 function computeOddEven(index: number) {
-  // TODO n-th children
   return index % 2 === 0 ? 'even0' : 'odd0'
 }
 

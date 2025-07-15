@@ -3,7 +3,7 @@
 /// file: test-python3-code-quality.groovy
 
 def main() {
-    def docker_args = "--ulimit nofile=1024:1024 --init";
+    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024 --init";
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
             stage('test python3 code quality') {

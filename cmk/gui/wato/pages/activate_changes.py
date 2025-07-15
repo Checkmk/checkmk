@@ -50,7 +50,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -208,14 +208,14 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
-    def _may_discard_changes(self, *, debug: bool) -> bool:
+    def _may_discard_changes(self, read_only_config: ReadOnlySpec, *, debug: bool) -> bool:
         if not user.may("wato.activate"):
             return False
 
         if not user.may("wato.discard"):
             return False
 
-        if read_only.is_enabled() and not read_only.may_override():
+        if read_only.is_enabled(read_only_config) and not read_only.may_override(read_only_config):
             return False
 
         if not _get_last_wato_snapshot_file(debug=debug):
@@ -230,7 +230,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if not transactions.check_transaction():
             return None
 
-        if not self._may_discard_changes(debug=config.debug):
+        if not self._may_discard_changes(config.wato_read_only, debug=config.debug):
             return None
 
         if not self.has_changes():
@@ -449,7 +449,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
 
     def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_discard_changes(debug=active_config.debug):
+        if not self._may_discard_changes(active_config.wato_read_only, debug=active_config.debug):
             return
 
         enabled = False
@@ -486,7 +486,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_activate_changes():
+        if not self._may_activate_changes(active_config.wato_read_only):
             return
 
         yield PageMenuEntry(
@@ -502,14 +502,14 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             is_enabled=self.has_pending_changes(),
         )
 
-    def _may_discard_changes(self, *, debug: bool) -> bool:
+    def _may_discard_changes(self, read_only_config: ReadOnlySpec, *, debug: bool) -> bool:
         if not user.may("wato.discard"):
             return False
 
         if not user.may("wato.discardforeign") and self._has_foreign_changes_on_any_site():
             return False
 
-        if not self._may_activate_changes():
+        if not self._may_activate_changes(read_only_config):
             return False
 
         if not _get_last_wato_snapshot_file(debug=debug):
@@ -532,14 +532,14 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             return block_effect.block is None and license_usage_report_valid
         return True
 
-    def _may_activate_changes(self) -> bool:
+    def _may_activate_changes(self, read_only_config: ReadOnlySpec) -> bool:
         if not user.may("wato.activate"):
             return False
 
         if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
             return False
 
-        if read_only.is_enabled() and not read_only.may_override():
+        if read_only.is_enabled(read_only_config) and not read_only.may_override(read_only_config):
             return False
 
         return self._license_allows_activation()

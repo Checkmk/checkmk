@@ -97,8 +97,10 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> Non
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
-            if read_only.is_enabled() and not read_only.may_override():
-                raise MKUserError(None, read_only.message())
+            if read_only.is_enabled(config.wato_read_only) and not read_only.may_override(
+                config.wato_read_only
+            ):
+                raise MKUserError(None, read_only.message(config.wato_read_only))
 
             result = mode.action(config)
             if isinstance(result, tuple | str | bool):
@@ -135,8 +137,10 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> Non
         show_top_heading=display_options.enabled(display_options.T),
     )
 
-    if read_only.is_enabled() and (not transactions.is_transaction() or read_only.may_override()):
-        html.show_warning(read_only.message())
+    if read_only.is_enabled(config.wato_read_only) and (
+        not transactions.is_transaction() or read_only.may_override(config.wato_read_only)
+    ):
+        html.show_warning(read_only.message(config.wato_read_only))
 
     # Show outcome of failed action on this page
     html.show_user_errors()

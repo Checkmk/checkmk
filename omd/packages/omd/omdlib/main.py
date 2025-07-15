@@ -2082,9 +2082,11 @@ def main_create(
         sys.stdout.write("Going to set TMPFS to off.\n")
 
     if "no-init" not in options:
-        admin_password = init_site(version_info, site, global_opts, config_settings, options)
+        outcome, admin_password = init_site(
+            version_info, site, global_opts, config_settings, options
+        )
         welcome_message(site, admin_password)
-
+        sys.exit(outcome.value)
     else:
         sys.stdout.write(
             f"Create new site {site.name} in disabled state and with empty {site_home}.\n"
@@ -2154,8 +2156,11 @@ def main_init(
         ok()
 
     # Do the things that have been ommited on omd create --disabled
-    admin_password = init_site(version_info, site, global_opts, config_settings={}, options=options)
+    outcome, admin_password = init_site(
+        version_info, site, global_opts, config_settings={}, options=options
+    )
     welcome_message(site, admin_password)
+    sys.exit(outcome.value)
 
 
 def init_site(
@@ -2164,7 +2169,7 @@ def init_site(
     global_opts: GlobalOptions,
     config_settings: Config,
     options: CommandOptions,
-) -> Password:
+) -> tuple[FinalizeOutcome, Password]:
     apache_reload = "apache-reload" in options
 
     site_home = SitePaths.from_site_name(site.name).home
@@ -2199,9 +2204,10 @@ def init_site(
     # Change the few files that config save as created as root
     chown_tree(site_home, site.name)
 
-    finalize_site(version_info, site, CommandType.create, apache_reload, global_opts.verbose)
-
-    return admin_password
+    outcome = finalize_site(
+        version_info, site, CommandType.create, apache_reload, global_opts.verbose
+    )
+    return outcome, admin_password
 
 
 # Is being called at the end of create, cp and mv.
@@ -2213,7 +2219,7 @@ def finalize_site(
     command_type: CommandType,
     apache_reload: bool,
     verbose: bool,
-) -> None:
+) -> FinalizeOutcome:
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -2259,7 +2265,7 @@ def finalize_site(
         apache_reload,
         verbose=verbose,
     )
-    sys.exit(outcome.value)
+    return outcome
 
 
 class FinalizeOutcome(enum.Enum):
@@ -2579,9 +2585,10 @@ def main_mv_or_cp(
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
 
-    finalize_site(
+    outcome = finalize_site(
         version_info, new_site, command_type, "apache-reload" in options, global_opts.verbose
     )
+    sys.exit(outcome.value)
 
 
 def main_diff(
@@ -3524,7 +3531,8 @@ def postprocess_restore_as_root(
         command_type = CommandType.restore_as_new_site
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
-    finalize_site(version_info, site, command_type, "apache-reload" in options, verbose)
+    outcome = finalize_site(version_info, site, command_type, "apache-reload" in options, verbose)
+    sys.exit(outcome.value)
 
 
 def postprocess_restore_as_site_user(

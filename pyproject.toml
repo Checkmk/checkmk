@@ -110,6 +110,7 @@ section-order = [
   "unittests",
   "livestatus",
   "omd",
+  "tests",
   "cmk_ccc",
   "cmk_utils",
   "cmk_events",
@@ -154,6 +155,7 @@ cmk_gui = ["cmk.gui"]
 cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
 cmk_notification_plugins = ["cmk.notification_plugins"]
 cmk_werks = ["cmk.werks"]
+tests = ["tests"]
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In

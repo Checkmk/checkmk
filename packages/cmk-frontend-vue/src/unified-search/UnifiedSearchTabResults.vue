@@ -137,7 +137,7 @@ immediateWatch(
       if (res) {
         tR.push({
           count: res.counts.total,
-          title: t('all-results', 'All Results'),
+          title: t('all-results', 'All results'),
           results: res.results
         })
         for (const provider of (searchUtils.search?.get('unified') as UnifiedSearchProvider)
@@ -170,7 +170,10 @@ onBeforeUnmount(() => {
       >|<CmkChip size="small" content="Right"></CmkChip><br />
       <label>{{ t('to-nav-tabs', 'to navigate between tabs') }}</label>
     </div>
-    <CmkTabs v-model="tabModel">
+    <div v-if="tabbedResults.length === 0" class="cmk-unified-search-result-empty">
+      {{ t('no-results', 'No results found. ¯\\_(ツ)_/¯') }}
+    </div>
+    <CmkTabs v-if="tabbedResults.length > 0" v-model="tabModel">
       <template #tabs>
         <CmkTab
           v-for="(tab, idx) in tabbedResults"
@@ -192,12 +195,16 @@ onBeforeUnmount(() => {
           :key="tab.title"
           class="cmk-unified-search-result-tab-content"
         >
-          <CmkScrollContainer class="cmk-unified-search-result-tab-scroll">
+          <CmkScrollContainer
+            max-height="calc(100vh - 300px)"
+            class="cmk-unified-search-result-tab-scroll"
+          >
             <ResultList>
               <ResultItem
                 v-for="(item, idxe) in tab.results"
                 ref="recently-viewed-item"
                 :key="item.url ? item.url : item.title"
+                :idx="idxe"
                 :title="item.title"
                 :context="item.context"
                 :icon="providerIcons[item.provider]"
@@ -231,6 +238,7 @@ onBeforeUnmount(() => {
   margin-top: 10px;
   line-height: 14px;
   font-size: 10px;
+  opacity: 0.5;
 }
 
 .cmk-unified-search-result-tabs {
@@ -250,7 +258,10 @@ onBeforeUnmount(() => {
 
   h2 {
     margin: 16px;
-    text-transform: capitalize;
+
+    &::first-letter {
+      text-transform: capitalize;
+    }
 
     span {
       font-weight: normal;
@@ -263,7 +274,6 @@ onBeforeUnmount(() => {
 }
 
 .cmk-unified-search-result-tab-scroll {
-  max-height: calc(100vh - 268px) !important;
   padding-right: 4px;
 }
 </style>

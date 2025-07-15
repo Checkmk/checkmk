@@ -82,7 +82,7 @@ immediateWatch(
     if (newHistoryResult) {
       const res = await newHistoryResult.result
       if (res) {
-        recentlyViewed.value = res.entries
+        recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
         recentlySearches.value = res.queries
         return
       }
@@ -118,6 +118,7 @@ onBeforeUnmount(() => {
         v-for="(item, idx) in recentlyViewed"
         ref="recently-viewed-item"
         :key="item.element.url"
+        :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
         :icon="providerIcons[item.element.provider]"
@@ -160,6 +161,7 @@ onBeforeUnmount(() => {
         v-for="(q, idx) in recentlySearches"
         ref="recently-searched-item"
         :key="q"
+        :idx="idx"
         :title="q"
         :icon="{
           name: 'history'

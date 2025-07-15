@@ -11,6 +11,7 @@ import { useTemplateRef } from 'vue'
 import ResultItemTitle from './ResultItemTitle.vue'
 
 export interface ResultItemProps {
+  idx: number
   icon?: CmkIconProps | undefined
   title: string
   html?: string | undefined

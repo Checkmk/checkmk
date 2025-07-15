@@ -141,7 +141,9 @@ function onCtrlEnter() {
           ref="unified-search-input"
           v-model="searchUtils.query.value"
           class="unified-search-input"
-          :placeholder="t('type-ctrl', 'Type ctrl + k for search')"
+          :placeholder="
+            t('search-accross', 'Search across Checkmk – type \'/\' for filter options')
+          "
           @focus="setFocus"
           @input="onInput"
         />
@@ -182,25 +184,14 @@ function onCtrlEnter() {
         ></CmkIcon>
       </div>
 
-      <div class="unified-search-input-panel-buttons">
-        <CmkIcon variant="inline" name="sparkle" :title="t('ask-ai', 'Ask Checkmk AI')" />
-        <a href="https://chat.checkmk.com/" target="_blank">{{ t('ask-ai', 'Ask Checkmk AI') }}</a>
-      </div>
-    </div>
-
-    <div class="unified-search-info-panel">
       <div class="unified-search-info-item">
-        <label>{{ t('start-with', 'Start with') }}</label>
-        <CmkChip size="small" content="/"></CmkChip>
-        <label>{{ t('for-filter-selection', 'for filter selection') }}</label>
-      </div>
-      <div v-if="ctrlEnterHelpShown" class="unified-search-info-item">
-        <label>{{ t('hit', 'Hit') }}</label>
+        <span>{{ t('press', 'Press') }}</span>
         <CmkChip size="small" content="Ctrl"></CmkChip>+<CmkChip
           size="small"
           content="Enter"
-        ></CmkChip>
-        <label>{{ t('to-execute-service-search', 'to execute service search') }}</label>
+        ></CmkChip
+        ><br />
+        <span>{{ t('to-view-matching-service', 'to view matching service') }}</span>
       </div>
     </div>
   </div>
@@ -208,12 +199,11 @@ function onCtrlEnter() {
 
 <style scoped>
 .unified-search-header {
-  height: 90px;
-  min-height: 90px !important;
+  height: 60px;
+  min-height: 60px !important;
   z-index: +1;
   background: var(--ux-theme-2);
   width: calc(100% - 40px);
-  min-height: 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -237,11 +227,10 @@ function onCtrlEnter() {
 }
 
 .unified-search-info-item {
-  height: 12px;
-  margin-right: 16px;
   color: var(--help-text-font-color);
+  opacity: 0.5;
 
-  label {
+  span {
     font-size: 10px;
   }
 }
@@ -307,19 +296,5 @@ function onCtrlEnter() {
   opacity: 0.6;
   margin-right: 3px;
   cursor: pointer;
-}
-
-.unified-search-input-panel-buttons {
-  height: 27px;
-  line-height: 15px;
-  display: flex;
-  align-items: center;
-}
-
-.unified-search-input-panel-button > * {
-  height: 27px;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
 }
 </style>

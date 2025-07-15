@@ -13,6 +13,7 @@ import {
 } from '@/lib/unified-search/providers/history'
 import UnifiedSearchHeader from './UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './UnifiedSearchStart.vue'
+import UnifiedSearchFooter from './UnifiedSearchFooter.vue'
 import { apiServiceProvider } from './providers/api'
 import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import { Api } from '@/lib/api-client'
@@ -100,6 +101,7 @@ onMounted(() => {
       :unified-result="searchResult"
     >
     </UnifiedSearchTabResults>
+    <UnifiedSearchFooter></UnifiedSearchFooter>
   </DefaultPopup>
 </template>
 
@@ -108,7 +110,7 @@ onMounted(() => {
   position: absolute;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 58px);
+  height: calc(100vh - 58px);
   background: var(--ux-theme-2);
   z-index: +1;
   left: 0;

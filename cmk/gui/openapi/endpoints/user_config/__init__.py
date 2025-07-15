@@ -61,6 +61,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     sidebar_position: Literal["left", "right"]
     navigation_bar_icons: Literal["show", "hide"]
     main_menu_icons: Literal["topic", "entry"]
+    mega_menu_icons: Literal["topic", "entry"]  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
     contextual_help_icon: Literal["show_icon", "hide_icon"]
 
@@ -654,10 +655,16 @@ def _interface_options_to_internal_format(
             "show": None,
             "hide": "hide",
         }[show_icon_titles]
-    if main_menu_icons := api_interface_options.get("main_menu_icons"):
+
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    icons_per_item = api_interface_options.get("main_menu_icons", None)
+    if icons_per_item is None:
+        icons_per_item = api_interface_options.get("mega_menu_icons", None)
+    if icons_per_item is not None:
         internal_inteface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
-            main_menu_icons
+            icons_per_item
         ]
+
     if show_mode := api_interface_options.get("show_mode"):
         internal_inteface_options["show_mode"] = {
             "default": None,
@@ -689,6 +696,10 @@ def _interface_options_to_api_format(
         )
 
     if "icons_per_item" in internal_interface_options:
+        # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+        attributes["mega_menu_icons"] = (
+            "topic" if internal_interface_options["icons_per_item"] is None else "entry"
+        )
         attributes["main_menu_icons"] = (
             "topic" if internal_interface_options["icons_per_item"] is None else "entry"
         )

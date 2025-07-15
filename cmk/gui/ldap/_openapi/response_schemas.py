@@ -5,7 +5,7 @@
 
 from typing import Any, override
 
-from marshmallow import post_dump
+from marshmallow import post_dump, pre_dump
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
@@ -589,9 +589,9 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 
 
 class LDAPSyncPlugins(BaseSchema):
-    def _fill_mega_menu_icons(
-        self, data: dict[str, str | None], **kwargs: object
-    ) -> dict[str, str | None]:
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    @pre_dump
+    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         data["mega_menu_icons"] = data.get("main_menu_icons")
         return data
 
@@ -622,6 +622,12 @@ class LDAPSyncPlugins(BaseSchema):
         description="In the main menus you can select between two options: Have a green icon only for "
         "the headlines – the 'topics' – for lean design. Or have a colored icon for every entry so that "
         "over time you can zoom in more quickly to a specific entry.",
+    )
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    mega_menu_icons = fields.Nested(
+        LDAPSyncPluginMenuIcons,
+        description="Deprecated - use `main_menu_icons` instead.",
+        deprecated=True,
     )
     navigation_bar_icons = fields.Nested(
         LDAPSyncPluginNavBarIcons,

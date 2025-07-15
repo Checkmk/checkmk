@@ -425,7 +425,7 @@ class UsersAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
 
-    def get(self, username: str) -> tuple[dict[Any, str], str] | None:
+    def get(self, username: str) -> tuple[dict[str, Any], str] | None:
         """
         Returns
             a tuple with the user details and the Etag header if the user was found

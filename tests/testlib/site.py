@@ -1444,6 +1444,9 @@ class Site:
         user_spec, etag = user
         user_spec["language"] = "en"
         user_spec.pop("enforce_password_change", None)
+        # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+        # Response contains "mega_menu_icons" AND "main_menu_icons" only _one_ is allowed in a request.
+        user_spec["interface_options"].pop("mega_menu_icons", None)
         self.openapi.users.edit(ADMIN_USER, user_spec, etag)
 
         # Verify the language is as expected now

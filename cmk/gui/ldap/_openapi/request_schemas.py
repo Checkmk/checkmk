@@ -5,7 +5,7 @@
 from collections.abc import MutableMapping
 from typing import Any, override
 
-from marshmallow import INCLUDE, post_load, ValidationError
+from marshmallow import INCLUDE, post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
@@ -13,6 +13,7 @@ from cmk.gui.fields import LDAPConnectionID, Timestamp
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.custom_fields import LDAPConnectionSuffix
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.utils import mutually_exclusive_fields
 from cmk.gui.userdb import get_ldap_connections, UserRolesConfigFile
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 
@@ -790,6 +791,20 @@ class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
 
 
 class LDAPSyncPluginsRequest(BaseSchema):
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    @pre_load
+    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        params = {key: value for key, value in data.items() if value is not None}
+        if params:
+            data["main_menu_icons"] = mutually_exclusive_fields(
+                dict,
+                params,
+                "mega_menu_icons",
+                "main_menu_icons",
+                default={"state": "disabled"},
+            )
+        return data
+
     alias = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
         description="Enables and populates the alias attribute of the Setup user by synchronizing an "
@@ -815,6 +830,13 @@ class LDAPSyncPluginsRequest(BaseSchema):
         LDAPSyncPluginAttrubuteSelector,
         description="Synchronizes the email of the LDAP user account into Checkmk when enabled",
         load_default={"state": "disabled"},
+    )
+    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+    mega_menu_icons = fields.Nested(
+        LDAPSyncPluginAttrubuteSelector,
+        description="Deprecated - use `main_menu_icons` instead.",
+        load_default={"state": "disabled"},
+        deprecated=True,
     )
     main_menu_icons = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,

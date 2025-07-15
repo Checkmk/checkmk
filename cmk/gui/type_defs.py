@@ -111,7 +111,7 @@ AuthType = Literal[
     "web_server",
 ]
 
-DismissableWarning = Literal["notification_fallback", "immediate_slideout_change"]
+DismissableWarning = Literal["notification_fallback", "immediate_slideout_change", "changes-info"]
 
 
 @dataclass

@@ -23,9 +23,13 @@ const dialogHidden = props.dismissal_button
   ? usePersistentRef(props.dismissal_button.key, false, 'session')
   : ref(false)
 
-async function hideContent() {
+async function hideContent(event?: Event) {
   if (props.dismissal_button) {
+    // Stop event propagation to prevent affecting parent components
+    event?.stopPropagation()
+
     dialogHidden.value = true
+
     await persistWarningDismissal(props.dismissal_button.key)
   }
 }
@@ -55,7 +59,7 @@ onMounted(() => {
           <CmkSpace />
         </template>
         <!-- eslint-enable vue/valid-v-for -->
-        <CmkButton v-if="props.dismissal_button" @click="hideContent">
+        <CmkButton v-if="props.dismissal_button" @click="hideContent($event)">
           {{ props.dismissal_button.title }}
         </CmkButton>
       </div>
@@ -73,6 +77,7 @@ div.cmk-dialog {
     border-radius: 0 4px 4px 0;
     flex-grow: 1;
     padding: var(--spacing);
+    white-space: pre-line;
 
     & > .cmk-dialog__title {
       font-weight: var(--font-weight-bold);

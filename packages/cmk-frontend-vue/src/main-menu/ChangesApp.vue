@@ -21,6 +21,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
+import CmkDialog from '@/components/CmkDialog.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -394,20 +395,32 @@ onMounted(() => {
           @click="() => openActivateChangesPage()"
           >{{ t('open-full-page', 'Open full page') }}
         </CmkButton>
-        <CmkAlertBox
-          v-if="!user_has_activate_foreign && sitesAndChanges.pendingChanges.length > 0"
-          variant="warning"
-          class="cmk-alert-box"
-        >
-          {{
-            t(
-              'activate-foreign-changes-info',
-              'Sorry, you are not allowed to activate changes of other users.'
-            )
-          }}
-        </CmkAlertBox>
       </div>
-
+      <CmkDialog
+        :message="
+          t(
+            'changes-info-message',
+            'Changes are saved in a temporary environment first, letting you review and adjust them safely.\n' +
+              'Activate changes to apply them to live monitoring.'
+          )
+        "
+        :dismissal_button="{
+          title: t('Do not show again', 'Do not show again'),
+          key: 'changes-info'
+        }"
+      />
+      <CmkAlertBox
+        v-if="!user_has_activate_foreign && sitesAndChanges.pendingChanges.length > 0"
+        variant="warning"
+        class="cmk-alert-box"
+      >
+        {{
+          t(
+            'activate-foreign-changes-info',
+            'Sorry, you are not allowed to activate changes of other users.'
+          )
+        }}
+      </CmkAlertBox>
       <div v-if="activateChangesInProgress" class="cmk-div-activation-result-container">
         <div class="cmk-div-activation-result">
           <span class="cmk-span-activation-result-text">{{

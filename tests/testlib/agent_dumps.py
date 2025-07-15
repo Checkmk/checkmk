@@ -269,9 +269,12 @@ def dummy_agent_dump_generator(
     """
     source_path = Path(__file__).parent.parent / "scripts/dummy_agent_dump_generator.py"
     with site.copy_file(source_path, "dump_generator.py") as target_path:
+        # Use a tilde path so that the script can be run in a copied site
+        tilde_path = f"~/{target_path.relative_to(site.root).as_posix()}"
+
         args = [
             "python3",
-            target_path.as_posix(),
+            tilde_path,
             "--host-name",
             host_name,
             "--service-count",

@@ -65,10 +65,9 @@ def dcd_connector(
     try:
         yield dcd_id
     finally:
-        if not cleanup:
-            return
-        site.openapi.dcd.delete(dcd_id)
-        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+        if cleanup and site.openapi.dcd.get(dcd_id):
+            site.openapi.dcd.delete(dcd_id)
+            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def execute_dcd_cycle(

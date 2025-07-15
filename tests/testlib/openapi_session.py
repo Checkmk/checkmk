@@ -545,7 +545,7 @@ class HostsAPI(BaseAPI):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
-    def get(self, hostname: str) -> tuple[dict[Any, str], str] | None:
+    def get(self, hostname: str) -> tuple[dict[str, Any], str] | None:
         """
         Returns
             a tuple with the host details and the Etag header if the host was found
@@ -1105,6 +1105,19 @@ class DcdAPI(BaseAPI):
         )
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
+
+    def get(self, dcd_id: str) -> dict[str, Any] | None:
+        """
+        Returns
+            the DCD details if the dcd_id was found
+            None if the dcd_id was not found
+        """
+        response = self.session.get(f"/objects/dcd/{dcd_id}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return response.json()
 
     def delete(self, dcd_id: str) -> None:
         """Delete a DCD connection via REST API."""

@@ -1974,6 +1974,8 @@ class SiteFactory:
         site_copy = self.get_existing_site(copy_name)
         site_copy.start()
 
+        site.start()
+
         try:
             yield site_copy
 

@@ -191,8 +191,15 @@ class BaseAsyncApiClient(BaseApiClient):
     async def __aenter__(self):
         await self.login_async(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
-            # TODO: can the proxy be passed here?
-            self._session = aiohttp.ClientSession(headers=self._headers)
+            proxy_mapping = self._http_proxy_config.to_requests_proxies()
+            self._session = aiohttp.ClientSession(
+                # aiohttp session and aiohttp request only accept a string as proxy
+                # (not the mapping with multiple schemes of the classical requests library)
+                # I assume it will always be https since all the url (for management and graph) are https
+                headers=self._headers,
+                proxy=proxy_mapping["https"] if proxy_mapping else None,
+                timeout=aiohttp.ClientTimeout(total=30),
+            )
 
         return self
 
@@ -274,8 +281,6 @@ class BaseAsyncApiClient(BaseApiClient):
             custom_headers=custom_headers,
             json=body,
             params=params,
-            timeout=30,
-            proxy=self._http_proxy_config.to_requests_proxies(),
         )
         json_data = await response.json()
         LOGGER.debug("response: %r", json_data)

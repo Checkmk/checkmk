@@ -100,26 +100,15 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     messages: list[Message] = store.load_object_from_file(_messages_path(user_id), default=[])
 
     # Delete too old messages and update security message durations
+    now = time.time()
+    duration = active_config.user_security_notification_duration
+    update_existing_duration = duration.get("update_existing_duration")
+    max_duration = duration.get("max_duration")
     updated = False
     for index, message in enumerate(messages):
-        now = time.time()
-        valid_till = message["valid_till"]
-        valid_from = message["time"]
-        if valid_till is not None:
-            if (
-                message["security"]
-                and active_config.user_security_notification_duration.get(
-                    "update_existing_duration"
-                )
-                and valid_from is not None
-                and (
-                    max_duration := active_config.user_security_notification_duration.get(
-                        "max_duration"
-                    )
-                )
-                is not None
-            ):
-                message["valid_till"] = valid_from + max_duration
+        if (valid_till := message["valid_till"]) is not None:
+            if message["security"] and update_existing_duration and max_duration is not None:
+                message["valid_till"] = message["time"] + max_duration
                 updated = True
             if valid_till < now:
                 messages.pop(index)

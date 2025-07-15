@@ -293,12 +293,6 @@ class CREConfig:
     # Default language for l10n
     default_language: str = "en"
 
-    # Hide these languages from user selection
-    hide_languages: list[str] = field(default_factory=list)
-
-    # Enable/Disable choice of community translated languages
-    enable_community_translations: bool = True
-
     # Default timestamp format to be used in multisite
     default_ts_format: str = "mixed"
 

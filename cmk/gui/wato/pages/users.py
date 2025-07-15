@@ -24,7 +24,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _u, get_language_alias, get_languages, is_community_translation
+from cmk.gui.i18n import _, _u, get_language_alias, get_languages
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -1454,17 +1454,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user_spec: UserSpec) -> None:
-    languages: Choices = [
-        (ident, alias)
-        for (ident, alias) in get_languages()
-        if ident not in active_config.hide_languages
-    ]
-    if not active_config.enable_community_translations:
-        languages = [
-            (ident, alias)
-            for (ident, alias) in languages
-            if ident and not is_community_translation(ident)
-        ]
+    languages: Choices = [(ident, alias) for (ident, alias) in get_languages()]
     if not languages:
         return
 

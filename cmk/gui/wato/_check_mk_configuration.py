@@ -127,7 +127,6 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
 ) -> None:
     config_variable_registry.register(ConfigVariableUITheme)
-    config_variable_registry.register(ConfigVariableEnableCommunityTranslations)
     config_variable_registry.register(ConfigVariableDefaultLanguage)
     config_variable_registry.register(ConfigVariableShowMoreMode)
     config_variable_registry.register(ConfigVariableBulkDiscoveryDefaultSettings)
@@ -321,24 +320,6 @@ ConfigVariableUITheme = ConfigVariable(
         help=_("Change the default user interface theme of your Checkmk installation"),
         choices=theme_choices(),
     ),
-)
-
-ConfigVariableEnableCommunityTranslations = ConfigVariable(
-    group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
-    ident="enable_community_translations",
-    valuespec=lambda: Checkbox(
-        title=_("Community translated languages (not supported)"),
-        label=_("Community translated languages"),
-        help=_(
-            'Show/hide community translated languages in the "Language" dropdown (User > Edit '
-            "profile). Note that these translations are contributed by the Checkmk community "
-            "and thus no liability is assumed for their validity.<br>"
-            "If this setting is turned from 'on' to 'off' while a user has set a community "
-            "translated language, the user's language is changed to 'English'."
-        ),
-    ),
-    need_restart=True,
 )
 
 ConfigVariableDefaultLanguage = ConfigVariable(

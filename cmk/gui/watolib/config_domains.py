@@ -13,7 +13,6 @@ import warnings as warnings_module
 from collections.abc import Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, NewType, override
@@ -40,12 +39,11 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _, get_language_alias, is_community_translation
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
-from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
@@ -164,33 +162,6 @@ class ConfigDomainGUI(ABCConfigDomain):
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         warnings: ConfigurationWarnings = []
-        if not active_config.enable_community_translations:
-            # Check whether a community translated language is set either as default language or as
-            # user specific UI language. Fix the respective language settings to 'English'.
-            dflt_lang = active_config.default_language
-            if is_community_translation(dflt_lang):
-                warnings.append(
-                    f"Resetting the default language '{get_language_alias(dflt_lang)}' to 'English' due to "
-                    "globally disabled commmunity translations (Global settings > User interface)."
-                )
-                gui_config = {k: v for k, v in self.load().items() if k != "default_language"}
-                self.save(gui_config)
-                active_config.default_language = "en"
-
-            users = load_users()
-            for ident, user_config in users.items():
-                lang: str = user_config.get("language", "en")
-                if lang is None:
-                    lang = "en"
-                if is_community_translation(lang):
-                    warnings.append(
-                        f"For user '{ident}': Resetting the language '{get_language_alias(lang)}' to the default "
-                        f"language '{get_language_alias(active_config.default_language)}' due to "
-                        "globally disabled commmunity translations (Global settings > User "
-                        "interface)."
-                    )
-                    user_config.pop("language", None)
-            save_users(users, datetime.now())
 
         if active_config.wato_use_git and shutil.which("git") is None:
             raise MKUserError(

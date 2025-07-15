@@ -1699,6 +1699,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 self._logger,
                 sync_users_result.profiles_to_synchronize,
                 sync_users_result.changes,
+                active_config.sites,
+                active_config.wato_enabled,
+                active_config.wato_use_git,
                 active_config.debug,
             )
         except AttributeError:

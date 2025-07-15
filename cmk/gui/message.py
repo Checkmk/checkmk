@@ -98,26 +98,38 @@ def _messages_path(user_id: UserId | None) -> Path:
 
 def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     messages: list[Message] = store.load_object_from_file(_messages_path(user_id), default=[])
+    updated_messages = _remove_expired(_update_validity(messages))
+    if messages != updated_messages:
+        save_gui_messages(updated_messages, user_id)
+    return updated_messages
 
-    # Delete too old messages and update security message durations
-    now = time.time()
+
+def _update_validity(messages: Iterable[Message]) -> list[Message]:
     duration = active_config.user_security_notification_duration
     update_existing_duration = duration.get("update_existing_duration")
     max_duration = duration.get("max_duration")
-    updated = False
-    for index, message in enumerate(messages):
-        if (valid_till := message["valid_till"]) is not None:
-            if message["security"] and update_existing_duration and max_duration is not None:
-                message["valid_till"] = message["time"] + max_duration
-                updated = True
-            if valid_till < now:
-                messages.pop(index)
-                updated = True
+    return [
+        (
+            {**message, "valid_till": message["time"] + max_duration}
+            if (
+                message["valid_till"] is not None
+                and message["security"]
+                and update_existing_duration
+                and max_duration is not None
+            )
+            else message
+        )
+        for message in messages
+    ]
 
-    if updated:
-        save_gui_messages(messages, user_id)
 
-    return messages
+def _remove_expired(messages: Iterable[Message]) -> list[Message]:
+    now = time.time()
+    return [
+        message
+        for message in messages
+        if (valid_till := message["valid_till"]) is None or valid_till >= now
+    ]
 
 
 def delete_gui_message(msg_id: str) -> None:

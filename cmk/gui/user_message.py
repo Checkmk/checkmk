@@ -90,7 +90,7 @@ def _handle_ack_all() -> None:
 
     if request.var("_ack_all"):
         num = len([msg for msg in message.get_gui_messages() if not msg.get("acknowledged")])
-        message.acknowledge_all_messages()
+        message.acknowledge_gui_message(None)
         flash(
             _("%d %s.")
             % (

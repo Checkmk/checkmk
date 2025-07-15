@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable, Mapping, MutableSequence, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,7 +12,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
-from cmk.ccc import store
+from cmk.ccc.store import DimSerializer, ObjectStore
 from cmk.ccc.user import UserId
 
 import cmk.utils.paths
@@ -96,12 +96,17 @@ def _messages_path(user_id: UserId | None) -> Path:
     )
 
 
-def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
-    messages: list[Message] = store.load_object_from_file(_messages_path(user_id), default=[])
-    updated_messages = _remove_expired(_update_validity(messages))
-    if messages != updated_messages:
-        save_gui_messages(updated_messages, user_id)
-    return updated_messages
+def _modify_gui_messages(
+    transform: Callable[[Iterable[Message]], list[Message]],
+    user_id: UserId | None = None,
+) -> list[Message]:
+    store = ObjectStore[list[Message]](_messages_path(user_id), serializer=DimSerializer())
+    with store.locked():
+        messages = store.read_obj(default=[])
+        updated_messages = transform(_remove_expired(_update_validity(messages)))
+        if messages != updated_messages:
+            store.write_obj(updated_messages)
+        return updated_messages
 
 
 def _update_validity(messages: Iterable[Message]) -> list[Message]:
@@ -123,6 +128,10 @@ def _update_validity(messages: Iterable[Message]) -> list[Message]:
     ]
 
 
+def get_gui_messages(user_id: UserId | None = None) -> list[Message]:
+    return _modify_gui_messages(list, user_id)
+
+
 def _remove_expired(messages: Iterable[Message]) -> list[Message]:
     now = time.time()
     return [
@@ -142,35 +151,22 @@ def delete_gui_message(msg_id: str) -> None:
             return {**message, "methods": [m for m in message["methods"] if m != "gui_popup"]}
         return None
 
-    messages = get_gui_messages()
-    updated_messages = [
-        updated_message
-        for message in messages
-        for updated_message in [keep_or_delete(message)]
-        if updated_message is not None
-    ]
-    save_gui_messages(updated_messages)
+    _modify_gui_messages(
+        lambda messages: [
+            updated_message
+            for message in messages
+            if (updated_message := keep_or_delete(message)) is not None
+        ]
+    )
 
 
-def acknowledge_gui_message(msg_id: str) -> None:
-    messages = get_gui_messages()
-    updated_messages: list[Message] = [
-        ({**message, "acknowledged": True} if message["id"] == msg_id else message)
-        for message in messages
-    ]
-    save_gui_messages(updated_messages)
-
-
-def acknowledge_all_messages() -> None:
-    messages = get_gui_messages()
-    updated_messages: list[Message] = [{**message, "acknowledged": True} for message in messages]
-    save_gui_messages(updated_messages)
-
-
-def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None = None) -> None:
-    path = _messages_path(user_id)
-    path.parent.mkdir(mode=0o770, exist_ok=True)
-    store.save_object_to_file(path, messages)
+def acknowledge_gui_message(msg_id: str | None) -> None:
+    _modify_gui_messages(
+        lambda messages: [
+            ({**message, "acknowledged": True} if msg_id in (message["id"], None) else message)
+            for message in messages
+        ]
+    )
 
 
 def _messaging_methods() -> dict[MessageMethod, dict[str, Any]]:
@@ -455,10 +451,10 @@ def _recipients_for(
 
 
 def _message_gui(user_id: UserId, msg: Message) -> bool:
-    messages = get_gui_messages(user_id)
-    if msg not in messages:
-        messages.append(msg)
-        save_gui_messages(messages, user_id)
+    _modify_gui_messages(
+        lambda messages: msgs if msg in (msgs := list(messages)) else msgs + [msg],
+        user_id,
+    )
     return True
 
 

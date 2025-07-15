@@ -87,7 +87,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
     }
 }
 
-def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port) {
+def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
     println("""
         ||== upload_via_rsync() ================================================
         || archive_base = |${archive_base}|
@@ -95,6 +95,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
         || filename =     |${filename}|
         || upload_dest =  |${upload_dest}|
         || upload_port =  |${upload_port}|
+        || exclude_pattern  = |${exclude_pattern}|
         ||======================================================================
         """.stripMargin());
 
@@ -103,6 +104,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
         sh("""
             rsync -av --relative \
                 --exclude '*dbgsym*.deb' \
+                --exclude=${exclude_pattern} \
                 -e "ssh -o StrictHostKeyChecking=no \
                 -i ${RELEASE_KEY} -p ${upload_port}" \
                 ${archive_base}/./${cmk_version}/${filename} \

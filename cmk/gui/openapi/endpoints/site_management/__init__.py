@@ -46,6 +46,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
@@ -279,7 +280,9 @@ def _convert_validate_and_save_site_data(
         site_id=site_id,
         is_new_connection=is_new_connection,
         replication_enabled=site_obj.configuration_connection.enable_replication,
+        is_local_site=site_is_local(internal_config),
         connected_sites=sites_to_update,
+        use_git=active_config.wato_use_git,
     )
 
     return serve_json(data=_serialize_site(site_obj), status=200)

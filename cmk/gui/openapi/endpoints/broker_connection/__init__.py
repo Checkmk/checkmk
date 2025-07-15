@@ -145,6 +145,7 @@ def _validate_and_save_boker_connection(
     *,
     is_new_connection: bool,
     pprint_value: bool,
+    use_git: bool,
 ) -> BrokerConnectionConfig:
     connection_info = BrokerConnectionInfo(
         connecter=SiteConnectionInfo(site_id=connection_request["connecter"]["site_id"]),
@@ -164,6 +165,7 @@ def _validate_and_save_boker_connection(
         connection_id=connection_id_request,
         is_new_broker_connection=is_new_connection,
         sites=list(site_to_update),
+        use_git=use_git,
     )
 
     return connection_obj
@@ -191,6 +193,7 @@ def create_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_request=connection_request,
             is_new_connection=True,
             pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
     except MKUserError as exc:
         return _validation_error(exc)
@@ -226,6 +229,7 @@ def edit_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_request=connection_request,
             is_new_connection=False,
             pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
     except MKUserError as exc:
         return _validation_error(exc)
@@ -257,6 +261,7 @@ def delete_broker_connection(params: Mapping[str, Any]) -> Response:
         connection_id=connection_id_request,
         is_new_broker_connection=False,
         sites=list(site_to_update),
+        use_git=active_config.wato_use_git,
     )
 
     return Response(status=204)

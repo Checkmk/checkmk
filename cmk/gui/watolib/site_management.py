@@ -33,7 +33,6 @@ from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 
-from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -688,6 +687,7 @@ def add_changes_after_editing_broker_connection(
     connection_id: str,
     is_new_broker_connection: bool,
     sites: list[SiteId],
+    use_git: bool,
 ) -> LogMessage:
     change_message = (
         _("Created new peer-to-peer broker connection ID %s") % connection_id
@@ -703,7 +703,7 @@ def add_changes_after_editing_broker_connection(
         need_restart=True,
         sites=[omd_site()] + sites,
         domains=[ConfigDomainGUI()],
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
     )
 
     return change_message
@@ -714,7 +714,9 @@ def add_changes_after_editing_site_connection(
     site_id: SiteId,
     is_new_connection: bool,
     replication_enabled: bool,
-    connected_sites: Set[SiteId] | None = None,
+    is_local_site: bool,
+    connected_sites: Set[SiteId],
+    use_git: bool,
 ) -> LogMessage:
     change_message = (
         _("Created new connection to site %s") % site_id
@@ -722,12 +724,12 @@ def add_changes_after_editing_site_connection(
         else _("Modified site connection %s") % site_id
     )
 
-    sites_to_update = list((connected_sites or set()) | {site_id})
+    sites_to_update = connected_sites | {site_id}
     add_change(
         action_name="edit-sites",
         text=change_message,
         user_id=user.id,
-        sites=sites_to_update,
+        sites=list(sites_to_update),
         # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
         # significant more time to restart than the other domains, we now try to be more specific
         # and mention potentially affected domains instead. The idea here is to first hard code
@@ -758,11 +760,11 @@ def add_changes_after_editing_site_connection(
                 # "mknotifyd",
             }
         ],
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
-    if not replication_enabled and not site_is_local(active_config.sites[site_id]):
+    if not replication_enabled and not is_local_site:
         clear_site_replication_status(site_id)
 
     if site_id != omd_site():
@@ -773,7 +775,7 @@ def add_changes_after_editing_site_connection(
             user_id=user.id,
             sites=[omd_site()],
             domains=[ConfigDomainGUI()],
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     return change_message

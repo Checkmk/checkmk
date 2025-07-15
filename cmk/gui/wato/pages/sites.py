@@ -286,6 +286,7 @@ class ModeEditSite(WatoMode):
         configured_sites: SiteConfigurations,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
@@ -320,7 +321,9 @@ class ModeEditSite(WatoMode):
             site_id=self._site_id,
             is_new_connection=self._new,
             replication_enabled=is_replication_enabled(site_spec),
+            is_local_site=site_is_local(site_spec),
             connected_sites=sites_to_update,
+            use_git=use_git,
         )
 
         flash(msg)
@@ -329,7 +332,10 @@ class ModeEditSite(WatoMode):
     def action(self, config: Config) -> ActionResult:
         site_spec = self._site_from_valuespec(config)
         return self.save_site_changes(
-            site_spec, self._configured_sites, pprint_value=config.wato_pprint_config
+            site_spec,
+            self._configured_sites,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
 
     def page(self, config: Config) -> None:
@@ -735,6 +741,7 @@ class ModeEditBrokerConnection(WatoMode):
             connection_id=raw_site_spec["unique_id"],
             is_new_broker_connection=self._is_new,
             sites=[source_site, dest_site],
+            use_git=config.wato_use_git,
         )
 
         flash(msg)
@@ -900,7 +907,9 @@ class ModeDistributedMonitoring(WatoMode):
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
             return self._action_delete_broker_connection(
-                ConnectionId(delete_connection_id), pprint_value=config.wato_pprint_config
+                ConnectionId(delete_connection_id),
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
 
         logout_id = request.get_ascii_input("_logout")
@@ -1027,7 +1036,7 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete_broker_connection(
-        self, delete_connection_id: ConnectionId, *, pprint_value: bool
+        self, delete_connection_id: ConnectionId, *, pprint_value: bool, use_git: bool
     ) -> ActionResult:
         source_site, dest_site = self._site_mgmt.delete_broker_connection(
             delete_connection_id, pprint_value=pprint_value
@@ -1036,6 +1045,7 @@ class ModeDistributedMonitoring(WatoMode):
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
             sites=[source_site, dest_site],
+            use_git=use_git,
         )
         return redirect(mode_url("sites"))
 

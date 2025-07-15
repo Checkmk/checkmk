@@ -31,7 +31,7 @@ const propsCva = cva('', {
   defaultVariants: {
     size: 'medium',
     color: 'default',
-    type: 'outline',
+    type: 'fill',
     shape: 'default'
   }
 })

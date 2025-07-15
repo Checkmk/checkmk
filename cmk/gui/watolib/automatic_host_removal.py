@@ -8,7 +8,7 @@ import json
 import time
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from logging import FileHandler, Formatter
-from typing import Literal, TypedDict
+from typing import Literal, NamedTuple, override, TypedDict
 
 from redis import ConnectionError as RedisConnectionError
 
@@ -21,8 +21,9 @@ from cmk.utils.paths import log_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 import cmk.gui.log
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site, wato_site_ids
@@ -276,12 +277,22 @@ def _activate_changes(sites: Collection[SiteId], *, debug: bool) -> None:
         _LOGGER_BACKGROUND_JOB.info("Activation finished")
 
 
-class AutomationHostsForAutoRemoval(AutomationCommand[None]):
+class HostsForAutoRemovalRequest(NamedTuple):
+    debug: bool
+
+
+class AutomationHostsForAutoRemoval(AutomationCommand[HostsForAutoRemovalRequest]):
+    @override
     def command_name(self) -> str:
         return "hosts-for-auto-removal"
 
-    def execute(self, api_request: None) -> str:
-        return json.dumps(list(_hosts_to_be_removed_local(debug=active_config.debug)))
+    @override
+    def get_request(self) -> HostsForAutoRemovalRequest:
+        return HostsForAutoRemovalRequest(
+            #  default is needed for 2.4 central site compability in 2.5
+            debug=request.get_str_input_mandatory("debug", deflt="") == "1"
+        )
 
-    def get_request(self) -> None:
-        pass
+    @override
+    def execute(self, api_request: HostsForAutoRemovalRequest) -> str:
+        return json.dumps(list(_hosts_to_be_removed_local(debug=api_request.debug)))

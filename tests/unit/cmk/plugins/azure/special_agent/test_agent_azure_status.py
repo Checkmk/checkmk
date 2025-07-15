@@ -9,14 +9,13 @@ from unittest.mock import MagicMock
 import pytest
 from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
 
-from cmk.utils.azure_constants import AZURE_REGIONS
-
 from cmk.plugins.azure.special_agent.agent_azure_status import (
     get_affected_regions,
     main,
     parse_arguments,
     write_section,
 )
+from cmk.utils.azure_constants import AZURE_REGIONS
 
 STATUS_RESPONSE = """
 <?xml version="1.0" encoding="utf-8"?>

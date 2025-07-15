@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.check_legacy_includes.hwg import parse_hwg
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+from cmk.base.check_legacy_includes.humidity import check_humidity
+from cmk.base.check_legacy_includes.hwg import parse_hwg
 
 check_info = {}
 

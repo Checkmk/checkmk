@@ -8,9 +8,8 @@ from unittest.mock import call
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from cmk.gui.watolib.automations import LocalAutomationConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

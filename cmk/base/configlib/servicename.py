@@ -8,7 +8,7 @@ from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.hostaddress import HostName
-
+from cmk.checkengine.plugins import CheckPluginName
 from cmk.utils.caching import cache_manager
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
@@ -18,8 +18,6 @@ from cmk.utils.translations import (
     TranslationOptions,
     TranslationOptionsSpec,
 )
-
-from cmk.checkengine.plugins import CheckPluginName
 
 
 class FinalServiceNameConfig:

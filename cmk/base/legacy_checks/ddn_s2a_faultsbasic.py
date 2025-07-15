@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 
 check_info = {}
 

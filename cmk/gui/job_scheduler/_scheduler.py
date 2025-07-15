@@ -14,16 +14,13 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from cmk import trace
 from cmk.ccc import store
-
-from cmk.utils import paths
-
 from cmk.gui.config import active_config
 from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-
-from cmk import trace
+from cmk.utils import paths
 
 logger = logging.getLogger("cmk.web.ui-job-scheduler")
 tracer = trace.get_tracer()

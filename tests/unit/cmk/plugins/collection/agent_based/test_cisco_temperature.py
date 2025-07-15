@@ -7,14 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from cmk.agent_based.v1 import Metric, Result, Service, State
+from cmk.agent_based.v1.type_defs import CheckResult, StringTable
+from cmk.plugins.collection.agent_based import cisco_temperature as ct
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
-
-from cmk.agent_based.v1 import Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import CheckResult, StringTable
-from cmk.plugins.collection.agent_based import cisco_temperature as ct
 
 
 @pytest.mark.parametrize(

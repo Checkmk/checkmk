@@ -11,10 +11,8 @@ import pytest
 from pydantic import TypeAdapter
 
 import cmk.utils.werks
-
-from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
-
 from cmk.update_config.plugins.actions.werks import load_unacknowledged_werks, UnacknowledgedWerks
+from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
 
 
 def generate_werk(

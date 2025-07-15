@@ -8,9 +8,6 @@ from collections.abc import Callable, Iterable, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.sectionname import SectionMap, SectionName
-
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
@@ -22,6 +19,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
+from cmk.utils.sectionname import SectionMap, SectionName
 
 
 def _section(

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.structured_data import InventoryPaths, TreePath, TreePathGz
 
 

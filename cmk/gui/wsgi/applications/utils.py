@@ -13,12 +13,11 @@ from wsgiref.types import StartResponse, WSGIEnvironment
 
 import cmk.ccc.store
 import cmk.ccc.version as cmk_version
-from cmk.ccc.site import url_prefix
-
-import cmk.utils.paths
-
 import cmk.gui.auth
 import cmk.gui.session
+import cmk.utils.paths
+from cmk import trace
+from cmk.ccc.site import url_prefix
 from cmk.gui import login, pages, userdb
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
@@ -33,8 +32,6 @@ from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
-
-from cmk import trace
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

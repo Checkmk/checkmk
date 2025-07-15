@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-
 from cmk.gui.i18n import _
 from cmk.gui.watolib.backup_snapshots import backup_domains
 

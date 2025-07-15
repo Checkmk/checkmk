@@ -13,12 +13,8 @@ from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 from redis import Redis
 
-from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from cmk.automations.results import GetConfigurationResult
-
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import LoggedInNobody, user
@@ -46,6 +42,7 @@ from cmk.gui.wato._omd_configuration import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(scope="function")

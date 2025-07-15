@@ -16,7 +16,6 @@ import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_from_mk_file
-
 from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday, weekday_ids
 from cmk.utils.paths import check_mk_config_dir

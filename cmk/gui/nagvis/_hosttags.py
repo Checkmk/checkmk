@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.ccc import store
-
 import cmk.utils.paths
 import cmk.utils.tags
+from cmk.ccc import store
 from cmk.utils.tags import TagConfigSpec
 
 from ._php_formatter import format_php

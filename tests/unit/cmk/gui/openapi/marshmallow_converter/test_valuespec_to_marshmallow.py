@@ -6,15 +6,13 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.unit.cmk.gui.users import create_and_destroy_user
-
 import cmk.utils.paths
-
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
 from cmk.gui.session import UserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.config_domain_name import config_variable_registry
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 
 @pytest.fixture(name="fake_user")

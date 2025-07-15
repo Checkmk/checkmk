@@ -102,67 +102,19 @@ ignore = [
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 [tool.ruff.lint.isort]
-# combine-as-imports = true # This would arguably be nicer.
-known-first-party = ["cmk"]
-order-by-type = false # TODO: Why do we actually want this?
+known-first-party = ["cmk", "tests"]
+order-by-type = false
 section-order = [
   "future",
   "standard-library",
   "third-party",
-  "cmc_proto",
-  "compositiontests",
-  "uitests",
-  "integrationtests",
-  "testlib",
-  "unittests",
-  "livestatus",
-  "omd",
-  "tests",
-  "cmk_ccc",
-  "cmk_utils",
-  "cmk_events",
-  "cmk_automations",
-  "cmk_snmplib",
-  "cmk_fetchers",
-  "cmk_checkengine",
-  "cmk_base",
-  "cmk_ec",
-  "cmk_gui",
-  "cmk_cee",
-  "cmk_notification_plugins",
-  "cmk_werks",
+  "first-party-not-cmk",
   "first-party",
   "local-folder",
 ]
 
 [tool.ruff.lint.isort.sections]
-cmc_proto = ["cmc_proto"]
-testlib = ["tests.testlib", "tests.gui_e2e.testlib"]
-integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
-compositiontests = ["tests.composition"]
-unittests = [
-  "tests.unit",
-  "tests.plugins_integration",
-  "tests.plugins_siteless",
-  "tests.update",
-]
-uitests = ["tests.gui_crawl", "tests.gui_e2e"]
-livestatus = ["livestatus"]
-omd = ["omdlib"]
-cmk_ccc = ["cmk.ccc"]
-cmk_events = ["cmk.events"]
-cmk_utils = ["cmk.utils"]
-cmk_automations = ["cmk.automations"]
-cmk_snmplib = ["cmk.snmplib"]
-cmk_fetchers = ["cmk.fetchers"]
-cmk_checkengine = ["cmk.checkengine"]
-cmk_base = ["cmk.base"]
-cmk_ec = ["cmk.ec"]
-cmk_gui = ["cmk.gui"]
-cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
-cmk_notification_plugins = ["cmk.notification_plugins"]
-cmk_werks = ["cmk.werks"]
-tests = ["tests"]
+first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In

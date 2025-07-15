@@ -7,15 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.collection.agent_based.sap_hana_instance_status import (
     InstanceProcess,
     InstanceStatus,
 )
+from cmk.utils.sectionname import SectionName
 
 
 @pytest.mark.parametrize(

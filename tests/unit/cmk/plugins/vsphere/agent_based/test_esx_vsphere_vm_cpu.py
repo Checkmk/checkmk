@@ -6,11 +6,10 @@
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
-
 from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
 from cmk.plugins.vsphere.lib import esx_vsphere
+from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 class ESXCpuFactory(ModelFactory):

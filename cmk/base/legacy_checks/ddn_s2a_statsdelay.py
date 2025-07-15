@@ -8,10 +8,9 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, StringTable
+from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 
 check_info = {}
 

@@ -17,12 +17,9 @@ import json
 from collections.abc import Mapping
 from typing import Any, cast, Generic, TypeVar
 
+import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils.urls import is_allowed_url
-
-import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -75,11 +72,11 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, FormSpec
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.utils.urls import is_allowed_url
 
 _T = TypeVar("_T", bound=Mapping[str, Any])
 

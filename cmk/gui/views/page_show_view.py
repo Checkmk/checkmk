@@ -19,9 +19,6 @@ import livestatus
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils.livestatus_helpers.queries import Query
-
 from cmk.gui import log, visuals
 from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
@@ -54,6 +51,7 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
+from cmk.utils.livestatus_helpers.queries import Query
 
 from . import availability
 from .row_post_processing import post_process_rows

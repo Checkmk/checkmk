@@ -5,7 +5,6 @@
 import pytest
 
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData
-
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import MatchingScope, RegularExpression
 from cmk.rulesets.v1.form_specs.validators import ValidationError

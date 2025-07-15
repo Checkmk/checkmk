@@ -19,14 +19,10 @@ from livestatus import (
 )
 
 import cmk.ccc.debug
+from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
-from cmk.utils.servicename import ServiceName
-
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
@@ -36,8 +32,9 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
-
-from cmk.agent_based.prediction_backend import PredictionInfo
+from cmk.utils.metrics import MetricName
+from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
+from cmk.utils.servicename import ServiceName
 
 _GRAPH_SIZE = 2000, 700
 

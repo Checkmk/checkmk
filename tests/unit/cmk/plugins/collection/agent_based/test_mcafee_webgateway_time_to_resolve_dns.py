@@ -9,11 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State
 from cmk.plugins.collection.agent_based import mcafee_webgateway_time_to_resolve_dns
 from cmk.plugins.collection.agent_based.mcafee_webgateway_misc_section import (
@@ -21,6 +16,10 @@ from cmk.plugins.collection.agent_based.mcafee_webgateway_misc_section import (
     snmp_section_skyhigh_security_webgateway_misc,
 )
 from cmk.plugins.lib import mcafee_gateway
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 
 WALK_MCAFEE = """
 .1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7

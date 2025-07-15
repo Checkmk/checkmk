@@ -12,10 +12,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version  # pylint: disable=cmk-module-layer-violation
-
-from cmk.utils import paths
-
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
+from cmk.utils import paths
 
 
 def _service_status(

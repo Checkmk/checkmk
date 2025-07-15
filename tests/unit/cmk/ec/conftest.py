@@ -11,9 +11,8 @@ from unittest import mock
 
 import pytest
 
-import cmk.utils.paths
-
 import cmk.ec.export as ec
+import cmk.utils.paths
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory

@@ -13,15 +13,12 @@ from urllib.parse import unquote
 
 from livestatus import SiteConfigurations
 
+import cmk.gui.watolib.sites as watolib_sites
+import cmk.utils.tags
+from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInput
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-
-import cmk.utils.tags
-
-from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInput
-
-import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -75,7 +72,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
 from cmk.shared_typing.mode_host import (
     I18nPingHost,
     ModeHost,

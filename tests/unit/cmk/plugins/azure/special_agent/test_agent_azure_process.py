@@ -11,8 +11,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from cmk.utils.http_proxy_config import NoProxyConfig
-
 from cmk.plugins.azure.special_agent.agent_azure import (
     _collect_resources,
     _get_resource_health_sections,
@@ -39,6 +37,7 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     BaseAsyncApiClient,
     MgmtApiClient,
 )
+from cmk.utils.http_proxy_config import NoProxyConfig
 
 
 class MockMgmtApiClient(MgmtApiClient):

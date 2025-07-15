@@ -7,9 +7,7 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc.store import DimSerializer, ObjectStore
-
 from cmk.gui.message import all_messages_paths
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

@@ -59,21 +59,16 @@ from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
 import cmk.ccc.plugin_registry
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.regex
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress as HostAddressType
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
-
-import cmk.utils.log
-import cmk.utils.paths
-import cmk.utils.regex
-from cmk.utils import dateutils
-from cmk.utils.images import CMKImage, ImageType
-from cmk.utils.labels import AndOrNotLiteral, LabelSources
-from cmk.utils.render import SecondsRenderer
-from cmk.utils.urls import is_allowed_url
-
+from cmk.crypto import certificate, keys
+from cmk.crypto.hash import HashAlgorithm
 from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -113,9 +108,11 @@ from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
-
-from cmk.crypto import certificate, keys
-from cmk.crypto.hash import HashAlgorithm
+from cmk.utils import dateutils
+from cmk.utils.images import CMKImage, ImageType
+from cmk.utils.labels import AndOrNotLiteral, LabelSources
+from cmk.utils.render import SecondsRenderer
+from cmk.utils.urls import is_allowed_url
 
 seconds_per_day = 86400
 

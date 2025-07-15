@@ -16,10 +16,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
-
-import cmk.utils.paths
 from cmk.utils.log import logger
 
 type _PluginName = str

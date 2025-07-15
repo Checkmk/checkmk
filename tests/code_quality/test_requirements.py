@@ -19,14 +19,13 @@ from typing import NamedTuple, NewType
 import isort
 import pytest
 
+import requirements
 from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
     is_enterprise_repo,
     repo_path,
 )
-
-import requirements
 
 IGNORED_LIBS = {
     "agent_receiver",

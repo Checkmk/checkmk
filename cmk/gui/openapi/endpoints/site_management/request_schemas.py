@@ -6,12 +6,11 @@
 
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.definitions import Username
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.site_management.common import default_config_example
-
-from cmk import fields
 
 SITE_ID = {
     "site_id": gui_fields.SiteField(

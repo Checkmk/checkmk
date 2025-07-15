@@ -9,10 +9,9 @@
 import re
 from collections.abc import Sequence
 
-from cmk.base.check_legacy_includes.mem import check_memory_element
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.plugins.lib.brocade import DETECT_MLX
 
 check_info = {}

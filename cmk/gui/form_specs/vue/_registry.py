@@ -6,7 +6,6 @@ from collections.abc import Callable
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.rulesets.v1.form_specs import FormSpec
 
 from ._visitor_base import FormSpecVisitor

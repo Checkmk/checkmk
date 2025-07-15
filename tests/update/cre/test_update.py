@@ -10,7 +10,6 @@ import pytest
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import TypeCMKEdition
-
 from tests.update.helpers import (
     bulk_discover_and_schedule,
     check_agent_receiver_error_log,

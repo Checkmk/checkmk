@@ -4,18 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.ms_teams_constants import (
-    ms_teams_tmpl_host_details,
-    ms_teams_tmpl_host_summary,
-    ms_teams_tmpl_host_title,
-    ms_teams_tmpl_svc_details,
-    ms_teams_tmpl_svc_summary,
-    ms_teams_tmpl_svc_title,
-)
-
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.watolib.password_store import passwordstore_choices_without_user
-
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -31,6 +21,14 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.utils.ms_teams_constants import (
+    ms_teams_tmpl_host_details,
+    ms_teams_tmpl_host_summary,
+    ms_teams_tmpl_host_title,
+    ms_teams_tmpl_svc_details,
+    ms_teams_tmpl_svc_summary,
+    ms_teams_tmpl_svc_title,
+)
 
 from ._helpers import (
     _get_url_prefix_setting,

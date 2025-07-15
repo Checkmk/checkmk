@@ -9,11 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.cisco_wlc_clients import (
@@ -30,6 +25,10 @@ from cmk.plugins.lib.wlc_clients import (
     ClientsTotal,
     VsResult,
     WlcClientsSection,
+)
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
 )
 
 # raw data looks like this:

@@ -7,12 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import get_value_store, Metric, Result, State
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
+from cmk.utils.sectionname import SectionName
 
 
 @pytest.fixture(name="check")

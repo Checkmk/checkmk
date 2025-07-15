@@ -8,7 +8,6 @@ from collections.abc import Collection
 from datetime import datetime
 
 from cmk.ccc.user import UserId
-
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.config import Config

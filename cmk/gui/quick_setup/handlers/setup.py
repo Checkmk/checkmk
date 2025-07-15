@@ -11,7 +11,6 @@ from typing import override
 from pydantic import BaseModel, ValidationError
 
 from cmk.ccc import store
-
 from cmk.gui.background_job import (
     AlreadyRunningError,
     BackgroundJob,

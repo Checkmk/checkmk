@@ -8,7 +8,6 @@ from enum import Enum
 from typing import Any, Literal, override, TypedDict
 
 from cmk.ccc import store
-
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _

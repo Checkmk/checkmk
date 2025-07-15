@@ -11,8 +11,19 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.repo import repo_path
-
+from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.base import config
+from cmk.base.checkers import (
+    CheckerPluginMapper,
+    SectionPluginMapper,
+)
+from cmk.ccc.hostaddress import HostName
+from cmk.checkengine import value_store
+from cmk.checkengine.checking import execute_checkmk_checks
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
+from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.utils.everythingtype import EVERYTHING
 from tests.plugins_siteless.helpers import (
     BasicSubmitter,
     compare_services_states,
@@ -25,25 +36,8 @@ from tests.plugins_siteless.helpers import (
     store_services_states,
     summarizer,
 )
+from tests.testlib.common.repo import repo_path
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
-
-from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.everythingtype import EVERYTHING
-
-from cmk.checkengine import value_store
-from cmk.checkengine.checking import execute_checkmk_checks
-from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
-from cmk.checkengine.inventory import HWSWInventoryParameters
-
-from cmk.base import config
-from cmk.base.checkers import (
-    CheckerPluginMapper,
-    SectionPluginMapper,
-)
-
-from cmk.agent_based.v1.value_store import set_value_store_manager
 
 os.environ["OMD_SITE"] = ""
 HOSTNAME = HostName("test_host")

@@ -8,16 +8,14 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
+from cmk.agent_based.v2 import DiscoveryResult, Result, Service, State
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckFunction,
     CheckPlugin,
     CheckPluginName,
 )
-
-from cmk.agent_based.v2 import DiscoveryResult, Result, Service, State
+from cmk.utils.sectionname import SectionName
 
 check_name = "megaraid_bbu"
 

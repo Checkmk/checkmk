@@ -9,7 +9,6 @@ from tempfile import mkdtemp
 import pytest
 
 from tests.integration.mkp import lib
-
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 

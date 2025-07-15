@@ -43,10 +43,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
-
-from cmk.utils import password_store
-from cmk.utils.paths import tmp_dir
-
 from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
@@ -68,6 +64,8 @@ from cmk.special_agents.v0_unstable.misc import (
     get_seconds_since_midnight,
     vcrtrace,
 )
+from cmk.utils import password_store
+from cmk.utils.paths import tmp_dir
 
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import CloudWatchLogsClient

@@ -12,9 +12,8 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Literal, NamedTuple
 
-from cmk.ccc.site import SiteId
-
 import cmk.utils.regex
+from cmk.ccc.site import SiteId
 from cmk.utils.timeperiod import TimeperiodName
 
 from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern

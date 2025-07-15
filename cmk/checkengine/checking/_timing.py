@@ -8,7 +8,6 @@ from collections.abc import Iterable
 from contextlib import suppress
 
 from cmk.ccc.cpu_tracking import Snapshot
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 

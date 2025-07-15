@@ -19,7 +19,6 @@ from typing import Final
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.backup.job import Job, JobState
 from cmk.utils.backup.stream import BackupStream, RestoreStream
 from cmk.utils.backup.type_defs import Backup, RawBackupInfo, SiteBackupInfo

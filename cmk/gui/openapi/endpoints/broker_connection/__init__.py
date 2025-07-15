@@ -23,7 +23,6 @@ from typing import Any
 from livestatus import BrokerConnections, ConnectionId
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.definitions import ConnectionIdentifier

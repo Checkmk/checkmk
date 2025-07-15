@@ -5,7 +5,6 @@
 from pathlib import Path
 
 import cmk.utils.paths
-
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 LIVESTATUS_GENERIC_EXPLANATION = (

@@ -8,12 +8,11 @@ from typing import Any, Literal
 
 from marshmallow import ValidationError
 
+import cmk.fields.validators
+import cmk.utils.tags
+from cmk import fields
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-
-import cmk.utils.tags
-from cmk.utils.tags import TagGroupID
-
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
@@ -84,9 +83,6 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
-
-import cmk.fields.validators
-from cmk import fields
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     InvalidElementMode,
@@ -95,6 +91,7 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredHost,
     String,
 )
+from cmk.utils.tags import TagGroupID
 
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):

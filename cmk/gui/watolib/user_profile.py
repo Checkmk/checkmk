@@ -17,7 +17,6 @@ from livestatus import SiteConfigurations
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
 from cmk.gui import sites, userdb
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request

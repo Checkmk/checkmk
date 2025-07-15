@@ -8,12 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from cmk.agent_based.v1.value_store import get_value_store, set_value_store_manager
 from cmk.ccc.hostaddress import HostName
-
 from cmk.checkengine import value_store
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
-
-from cmk.agent_based.v1.value_store import get_value_store, set_value_store_manager
 
 
 def test_load_host_value_store_loads_file(tmp_path: Path) -> None:

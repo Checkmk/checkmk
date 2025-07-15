@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 from tests.testlib.agent import (
     agent_controller_daemon,
     download_and_install_agent_package,
@@ -18,10 +20,6 @@ from tests.testlib.agent import (
 from tests.testlib.site import Site
 from tests.testlib.utils import ServiceInfo
 from tests.testlib.version import edition_from_env
-
-from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
 

@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
-
 from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
     ECRulePackSpec,
     EventLimit,
@@ -22,8 +20,8 @@ from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
     ServiceLevel,
     State,
 )
-
 from cmk.gui.watolib.site_changes import ChangeSpec  # pylint: disable=cmk-module-layer-violation
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 

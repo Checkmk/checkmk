@@ -11,7 +11,6 @@ import time_machine
 from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import SiteId
-
 from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,

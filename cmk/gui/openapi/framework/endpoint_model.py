@@ -17,6 +17,7 @@ from typing import (
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, with_config
 
+from cmk import trace
 from cmk.gui.openapi.framework._types import (
     ApiContext,
     DataclassInstance,
@@ -30,8 +31,6 @@ from cmk.gui.openapi.framework.content_types import convert_request_body
 from cmk.gui.openapi.framework.model.api_field import api_field
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
-
-from cmk import trace
 
 type ApiInputModel[T: type[DataclassInstance]] = T
 """Dataclass with optional fields: body, path, query, headers

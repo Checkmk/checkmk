@@ -13,9 +13,6 @@ from livestatus import OnlySites
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-from cmk.utils.statename import short_service_state_name
-
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
@@ -68,6 +65,7 @@ from cmk.gui.views.sorter import (
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals.filter import Filter
+from cmk.utils.statename import short_service_state_name
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices

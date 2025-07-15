@@ -5,11 +5,9 @@
 
 from logging import Logger
 
+from cmk import messaging
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
-
-from cmk.utils import paths
-
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import get_all_replicated_sites
 from cmk.gui.watolib.broker_certificates import (
@@ -17,9 +15,8 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-
-from cmk import messaging
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
+from cmk.utils import paths
 
 
 def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:

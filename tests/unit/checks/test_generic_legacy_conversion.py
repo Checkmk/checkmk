@@ -5,14 +5,11 @@
 
 import pytest
 
-from tests.unit.mocks_and_helpers import FixPluginLegacy
-
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
+from cmk.utils.sectionname import SectionName
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 pytestmark = pytest.mark.checks
 

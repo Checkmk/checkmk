@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
 
 check_info = {}
 

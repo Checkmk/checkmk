@@ -26,15 +26,7 @@ from cmk.ccc import version
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
-
-from cmk.utils import paths
-from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
-from cmk.utils.livestatus_helpers.types import Column, Table
-from cmk.utils.regex import regex, REGEX_ID
-from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
-
+from cmk.fields import base, Boolean, DateTime, validators
 from cmk.gui import sites
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -52,8 +44,13 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
-
-from cmk.fields import base, Boolean, DateTime, validators
+from cmk.utils import paths
+from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
+from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.utils.regex import regex, REGEX_ID
+from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
 
 _logger = logging.getLogger(__name__)
 _CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"

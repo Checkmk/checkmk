@@ -9,9 +9,8 @@ import sys
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
-from cmk.utils.password_store import replace_passwords
-
 from cmk.special_agents.v0_unstable.misc import vcrtrace
+from cmk.utils.password_store import replace_passwords
 
 sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
 sys.path.append(str(cmk.utils.paths.agents_dir / "plugins"))

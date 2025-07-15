@@ -11,7 +11,6 @@ import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
 # pylint: disable-next=cmk-module-layer-violation
 from cmk.ec.update_config import history_files_to_sqlite
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

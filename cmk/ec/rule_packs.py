@@ -18,10 +18,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from cmk.ccc import store
-
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.ccc import store
 
 from .config import (
     ConfigFromWATO,

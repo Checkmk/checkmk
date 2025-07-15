@@ -8,7 +8,6 @@ from typing import Generic, override, TypeAlias, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.i18n import _, translate_to_current_language
-
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import InvalidElementMode
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

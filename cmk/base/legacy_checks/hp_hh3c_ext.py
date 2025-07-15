@@ -6,12 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
 
 check_info = {}
 

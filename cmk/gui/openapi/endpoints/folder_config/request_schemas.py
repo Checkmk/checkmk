@@ -7,8 +7,7 @@ from typing import Any
 
 from marshmallow import validates_schema, ValidationError
 
-from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
-
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints._common.folder_attribute_schemas import (
@@ -16,8 +15,7 @@ from cmk.gui.openapi.endpoints._common.folder_attribute_schemas import (
     FolderUpdateAttribute,
 )
 from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER, EXISTING_FOLDER_PATTERN
-
-from cmk import fields
+from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 
 class CreateFolder(BaseSchema):

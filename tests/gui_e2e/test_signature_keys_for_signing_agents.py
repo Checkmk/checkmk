@@ -10,6 +10,9 @@ from collections.abc import Callable, Iterator
 import pytest
 from playwright.sync_api import expect
 
+from cmk.crypto.certificate import CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.password import Password
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.agent_bakery import AgentBakeryPage
 from tests.gui_e2e.testlib.playwright.pom.setup.signature_keys import (
@@ -18,10 +21,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.signature_keys import (
     UploadSignatureKeyPage,
 )
 from tests.testlib.site import Site
-
-from cmk.crypto.certificate import CertificateWithPrivateKey
-from cmk.crypto.hash import HashAlgorithm
-from cmk.crypto.password import Password
 
 logger = logging.getLogger(__name__)
 

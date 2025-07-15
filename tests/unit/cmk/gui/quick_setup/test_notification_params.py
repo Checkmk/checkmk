@@ -8,9 +8,6 @@ from typing import Literal
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
-from cmk.utils.timeperiod import TimeperiodName
-
 from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
@@ -21,6 +18,8 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     SpecificEvents,
     TriggeringEvents,
 )
+from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
+from cmk.utils.timeperiod import TimeperiodName
 
 
 def set_specific_triggering_events(

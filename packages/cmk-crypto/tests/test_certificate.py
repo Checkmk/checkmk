@@ -17,7 +17,6 @@ from cryptography import x509 as pyca_x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import SiteId
-
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,

@@ -8,9 +8,7 @@ import urllib.parse
 from dataclasses import asdict
 
 from cmk.ccc.site import url_prefix
-
 from cmk.gui.http import Request, Response
-
 from cmk.shared_typing.user_frontend_config import UserFrontendConfig
 
 

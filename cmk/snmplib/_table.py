@@ -11,7 +11,6 @@ from functools import partial
 from typing import assert_never
 
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError
-
 from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
 

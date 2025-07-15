@@ -28,50 +28,13 @@ from typing import Any, Literal, NoReturn
 
 import livestatus
 
+import cmk.base.core
+import cmk.base.nagios_utils
+import cmk.base.parent_scan
 import cmk.ccc.debug
-from cmk.ccc import tty, version
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.ccc.version import edition_supports_nagvis
-
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log, man_pages
-from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.caching import cache_manager
-from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
-from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager
-from cmk.utils.log import console
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.paths import (
-    autochecks_dir,
-    autodiscovery_dir,
-    base_discovered_host_labels_dir,
-    counters_dir,
-    data_source_cache_dir,
-    discovered_host_labels_dir,
-    local_agent_based_plugins_dir,
-    local_checks_dir,
-    local_cmk_addons_plugins_dir,
-    local_cmk_plugins_dir,
-    logwatch_dir,
-    nagios_startscript,
-    omd_root,
-    precompiled_hostchecks_dir,
-    snmpwalks_dir,
-    tcp_cache_dir,
-    tmp_dir,
-    var_dir,
-)
-from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
-
+from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
@@ -118,59 +81,6 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
 )
-
-from cmk.snmplib import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    get_snmp_table,
-    oids_to_walk,
-    SNMPCredentials,
-    SNMPHostConfig,
-    SNMPVersion,
-    walk_for_export,
-)
-
-from cmk.fetchers import (
-    get_raw_data,
-    Mode,
-    ProgramFetcher,
-    SNMPScanConfig,
-    TCPEncryptionHandling,
-    TCPFetcher,
-    TLSConfig,
-)
-from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
-from cmk.fetchers.snmp import make_backend as make_snmp_backend
-
-from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
-from cmk.checkengine.discovery import (
-    autodiscovery,
-    automation_discovery,
-    CheckPreview,
-    CheckPreviewEntry,
-    DiscoveryReport,
-    DiscoverySettings,
-    get_check_preview,
-    set_autochecks_for_effective_host,
-)
-from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
-from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
-from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets, get_check_plugin
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    AutocheckEntry,
-    CheckPlugin,
-    CheckPluginName,
-)
-from cmk.checkengine.submitters import ServiceDetails, ServiceState
-from cmk.checkengine.summarize import summarize
-from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
-
-import cmk.base.core
-import cmk.base.nagios_utils
-import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
 from cmk.base.automations import (
     Automation,
@@ -202,9 +112,47 @@ from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.sources import make_parser, SNMPFetcherConfig
-
-from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.ccc import tty, version
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.version import edition_supports_nagvis
+from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
+from cmk.checkengine.discovery import (
+    autodiscovery,
+    automation_discovery,
+    CheckPreview,
+    CheckPreviewEntry,
+    DiscoveryReport,
+    DiscoverySettings,
+    get_check_preview,
+    set_autochecks_for_effective_host,
+)
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
+from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
+from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets, get_check_plugin
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    AutocheckEntry,
+    CheckPlugin,
+    CheckPluginName,
+)
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
+from cmk.checkengine.summarize import summarize
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.fetchers import (
+    get_raw_data,
+    Mode,
+    ProgramFetcher,
+    SNMPScanConfig,
+    TCPEncryptionHandling,
+    TCPFetcher,
+    TLSConfig,
+)
+from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
+from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
     ExecutableFinder,
@@ -212,6 +160,51 @@ from cmk.server_side_calls_backend import (
     SpecialAgent,
     SpecialAgentCommandLine,
 )
+from cmk.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    get_snmp_table,
+    oids_to_walk,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPVersion,
+    walk_for_export,
+)
+from cmk.utils import config_warnings, ip_lookup, log, man_pages
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.caching import cache_manager
+from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
+from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager
+from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.paths import (
+    autochecks_dir,
+    autodiscovery_dir,
+    base_discovered_host_labels_dir,
+    counters_dir,
+    data_source_cache_dir,
+    discovered_host_labels_dir,
+    local_agent_based_plugins_dir,
+    local_checks_dir,
+    local_cmk_addons_plugins_dir,
+    local_cmk_plugins_dir,
+    logwatch_dir,
+    nagios_startscript,
+    omd_root,
+    precompiled_hostchecks_dir,
+    snmpwalks_dir,
+    tcp_cache_dir,
+    tmp_dir,
+    var_dir,
+)
+from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.timeout import Timeout
+from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]

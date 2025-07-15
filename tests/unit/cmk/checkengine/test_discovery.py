@@ -9,9 +9,6 @@ from dataclasses import dataclass
 
 import pytest
 
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.labels import HostLabel
-
 from cmk.checkengine.discovery import (
     _filters,
     analyse_services,
@@ -20,6 +17,8 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.labels import HostLabel
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:

@@ -9,9 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
-
 from cmk.plugins.collection.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
+from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
 
 # SUP-12323
 DATA0 = """

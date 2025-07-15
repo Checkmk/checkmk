@@ -14,7 +14,6 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,

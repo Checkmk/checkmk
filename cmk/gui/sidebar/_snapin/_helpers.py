@@ -9,7 +9,6 @@ import traceback
 from collections.abc import Sequence
 
 from cmk.ccc.site import SiteId, url_prefix
-
 from cmk.gui import pagetypes
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container

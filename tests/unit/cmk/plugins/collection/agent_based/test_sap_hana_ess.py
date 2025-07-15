@@ -7,10 +7,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -21,6 +17,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.utils.sectionname import SectionName
 
 
 @pytest.mark.parametrize(

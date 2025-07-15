@@ -7,13 +7,11 @@ from logging import Logger
 from typing import Final, Generic, override, Protocol, TypeVar
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.pagetypes import (
     Overridable,
     OverridableInstances,
     PagetypeTopics,
 )
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)

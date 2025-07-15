@@ -9,7 +9,6 @@ import time
 from typing import Any, override
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.ec.event import Event
 
 

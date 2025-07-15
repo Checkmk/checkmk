@@ -17,13 +17,10 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
+import cmk.gui.pages
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.tags import TagGroup
-
-import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -64,6 +61,7 @@ from cmk.gui.watolib import bakery
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.utils.tags import TagGroup
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any

@@ -10,9 +10,8 @@ import pytest
 import yaml
 from openapi_spec_validator import validate
 
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
-
 from cmk.utils import paths
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:

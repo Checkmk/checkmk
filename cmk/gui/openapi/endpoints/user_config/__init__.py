@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc.user import UserId
-
+from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
@@ -43,8 +43,6 @@ from cmk.gui.watolib.users import (
     user_features_registry,
     verify_password_policy,
 )
-
-from cmk.crypto.password import Password, PasswordPolicy
 
 TIMESTAMP_RANGE = tuple[float, float]
 

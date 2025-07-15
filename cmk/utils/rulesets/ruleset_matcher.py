@@ -19,8 +19,8 @@ from typing import (
     TypeVar,
 )
 
+from cmk import trace
 from cmk.ccc.hostaddress import HostAddress, HostName
-
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import (
     AndOrNotLiteral,
@@ -31,8 +31,6 @@ from cmk.utils.parameters import merge_parameters
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-from cmk import trace
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 

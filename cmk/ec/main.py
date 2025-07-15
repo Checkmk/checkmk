@@ -39,12 +39,11 @@ from setproctitle import setthreadtitle
 import cmk.ccc.daemon
 import cmk.ccc.profile
 import cmk.ccc.version as cmk_version
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
-
-import cmk.utils.paths
 from cmk.utils import log
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE

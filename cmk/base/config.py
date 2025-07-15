@@ -35,69 +35,25 @@ from typing import (
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.ccc.site import omd_site, SiteId
-
+import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.translations
-from cmk.utils import config_warnings, ip_lookup, password_store
-from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
-from cmk.utils.caching import cache_manager
-from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.experimental_config import load_experimental_config
-from cmk.utils.host_storage import (
-    apply_hosts_file_to_object,
-    FolderAttributesForBase,
-    get_host_storage_loaders,
-)
-from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.ip_lookup import IPLookup, IPStackConfig
-from cmk.utils.labels import LabelManager, Labels, LabelSources
-from cmk.utils.log import console
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.regex import regex
-from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
-from cmk.utils.rulesets.ruleset_matcher import (
-    RulesetMatcher,
-    RulesetName,
-    RuleSpec,
-)
-from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.structured_data import RawIntervalFromConfig
-from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
-from cmk.utils.timeperiod import TimeperiodName
-
-from cmk.snmplib import (  # these are required in the modules' namespace to load the configuration!
-    SNMPBackendEnum,
-    SNMPContextConfig,
-    SNMPCredentials,
-    SNMPHostConfig,
-    SNMPRawDataElem,
-    SNMPTiming,
-    SNMPVersion,
-)
-
-from cmk.fetchers import (
-    IPMICredentials,
-    IPMIFetcher,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    SNMPSectionMeta,
-    TCPEncryptionHandling,
-    TCPFetcher,
-    TLSConfig,
-)
-from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import MaxAge
-
-import cmk.checkengine.plugin_backend as agent_based_register
+from cmk import trace
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
+from cmk.base import default_config
+from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.labels import LabelConfig
+from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
+from cmk.base.default_config import *  # noqa: F403
+from cmk.base.parent_scan import ScanConfig as ParentScanConfig
+from cmk.base.sources import SNMPFetcherConfig
+from cmk.ccc import tty
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.checking import (
     merge_enforced_services,
     ServiceConfigurer,
@@ -137,17 +93,19 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.summarize import SummaryConfig
-
-from cmk.base import default_config
-from cmk.base.configlib.checkengine import CheckingConfig
-from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
-from cmk.base.default_config import *  # noqa: F403
-from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.sources import SNMPFetcherConfig
-
-from cmk import trace
-from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
+from cmk.fetchers import (
+    IPMICredentials,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPSectionMeta,
+    TCPEncryptionHandling,
+    TCPFetcher,
+    TLSConfig,
+)
+from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.filecache import MaxAge
 from cmk.piggyback import backend as piggyback_backend
 from cmk.rrd.config import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.server_side_calls import v1 as server_side_calls_api
@@ -162,6 +120,42 @@ from cmk.server_side_calls_backend import (
     SSCRules,
 )
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+from cmk.snmplib import (  # these are required in the modules' namespace to load the configuration!
+    SNMPBackendEnum,
+    SNMPContextConfig,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPRawDataElem,
+    SNMPTiming,
+    SNMPVersion,
+)
+from cmk.utils import config_warnings, ip_lookup, password_store
+from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
+from cmk.utils.caching import cache_manager
+from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.experimental_config import load_experimental_config
+from cmk.utils.host_storage import (
+    apply_hosts_file_to_object,
+    FolderAttributesForBase,
+    get_host_storage_loaders,
+)
+from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
+from cmk.utils.ip_lookup import IPLookup, IPStackConfig
+from cmk.utils.labels import LabelManager, Labels, LabelSources
+from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.regex import regex
+from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
+from cmk.utils.rulesets.ruleset_matcher import (
+    RulesetMatcher,
+    RulesetName,
+    RuleSpec,
+)
+from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.structured_data import RawIntervalFromConfig
+from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
+from cmk.utils.timeperiod import TimeperiodName
 
 try:
     from cmk.utils.cme.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]

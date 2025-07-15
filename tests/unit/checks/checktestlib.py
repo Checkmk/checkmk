@@ -14,12 +14,10 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.common.repo import repo_path
-
 import cmk.utils.paths
-
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from tests.testlib.common.repo import repo_path
 
 
 class MissingCheckInfoError(KeyError):

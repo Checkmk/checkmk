@@ -8,7 +8,6 @@ from logging import Logger
 from typing import override
 
 from cmk.gui import userdb
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

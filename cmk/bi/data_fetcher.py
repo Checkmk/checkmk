@@ -11,9 +11,6 @@ from pathlib import Path
 
 from livestatus import LivestatusResponse, Query, QuerySpecification
 
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
-
 from cmk.bi.filesystem import BIFileSystem
 from cmk.bi.lib import (
     ABCBIStatusFetcher,
@@ -27,6 +24,8 @@ from cmk.bi.lib import (
     SitesCallback,
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 
 SiteProgramStart = tuple[SiteId, int]
 

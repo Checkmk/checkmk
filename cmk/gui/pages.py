@@ -13,7 +13,6 @@ from typing import Any, override
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException
-
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g

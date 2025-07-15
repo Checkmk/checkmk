@@ -6,10 +6,9 @@
 import json
 import logging
 
+from cmk.checkengine.parser import SectionStore
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import MaxAge
-
-from cmk.checkengine.parser import SectionStore
 
 
 class TestSectionStore:

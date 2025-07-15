@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC delete methods with one or more event IDs"""
 
-from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
-
-from cmk.ccc.hostaddress import HostName
-
 import cmk.ec.export as ec
+from cmk.ccc.hostaddress import HostName
 from cmk.ec.main import EventStatus, StatusServer
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 
 def test_delete_event(event_status: EventStatus, status_server: StatusServer) -> None:

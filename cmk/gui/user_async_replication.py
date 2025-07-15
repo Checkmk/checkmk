@@ -7,7 +7,6 @@ import json
 from collections.abc import Sequence
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l

@@ -15,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal, TypeVar
 
+import cmk.gui.pages
+import cmk.utils.paths
 from cmk.ccc.store import (
     acquire_lock,
     load_from_mk_file,
@@ -24,12 +26,8 @@ from cmk.ccc.store import (
     save_to_mk_file,
 )
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.local_secrets import AutomationUserSecret
-from cmk.utils.paths import htpasswd_file, var_dir
-
-import cmk.gui.pages
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -47,9 +45,8 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
-
-from cmk.crypto import password_hashing
-from cmk.crypto.password import Password
+from cmk.utils.local_secrets import AutomationUserSecret
+from cmk.utils.paths import htpasswd_file, var_dir
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector

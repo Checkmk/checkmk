@@ -18,15 +18,13 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
-
-from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
-
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
+from cmk.utils.metrics import MetricName
+from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import GraphDataRange, GraphRecipe

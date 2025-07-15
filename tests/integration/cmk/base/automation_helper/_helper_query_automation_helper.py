@@ -14,9 +14,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 
-from cmk.utils.paths import omd_root
-
 from cmk.automations.helper_api import AutomationPayload
+from cmk.utils.paths import omd_root
 
 _BASE_URL = "http://aut-helper"
 

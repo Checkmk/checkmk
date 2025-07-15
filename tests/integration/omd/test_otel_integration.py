@@ -8,6 +8,9 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.scripts.opentelemetry_grpc import GRPC_METRIC_NAME, GRPC_PORT
+from tests.scripts.opentelemetry_http import HTTP_METRIC_NAME, HTTP_PORT, PASSWORD, USERNAME
+from tests.scripts.opentelemetry_prometheus import EXPECTED_PROMETHEUS_SERVICE_COUNT
 from tests.testlib.opentelemetry import (
     delete_opentelemetry_data,
     opentelemetry_app,
@@ -15,10 +18,6 @@ from tests.testlib.opentelemetry import (
     wait_for_opentelemetry_data,
 )
 from tests.testlib.site import Site
-
-from tests.scripts.opentelemetry_grpc import GRPC_METRIC_NAME, GRPC_PORT
-from tests.scripts.opentelemetry_http import HTTP_METRIC_NAME, HTTP_PORT, PASSWORD, USERNAME
-from tests.scripts.opentelemetry_prometheus import EXPECTED_PROMETHEUS_SERVICE_COUNT
 
 pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 

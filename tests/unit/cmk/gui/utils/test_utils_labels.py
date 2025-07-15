@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from cmk.gui import sites
 from cmk.gui.utils.labels import _get_labels_from_livestatus, LabelType
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="live")

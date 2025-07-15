@@ -37,7 +37,6 @@ from cmk.ccc.crash_reporting import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import get_general_version_infos
-
 from cmk.utils import paths, pnp_cleanup
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName

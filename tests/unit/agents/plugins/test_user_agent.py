@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.ccc import version
-
 from agents.plugins import apache_status, mk_jolokia, nginx_status
+from cmk.ccc import version
 
 
 @pytest.mark.parametrize(

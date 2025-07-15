@@ -9,17 +9,16 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State
 from cmk.plugins.collection.agent_based import (
     mcafee_webgateway_misc,
     mcafee_webgateway_misc_section,
 )
 from cmk.plugins.lib import mcafee_gateway
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 
 # SUP-13087
 WALK_MCAFEE = """

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.common.repo import is_enterprise_repo
-
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
+from tests.testlib.common.repo import is_enterprise_repo
 
 
 def test_group_usage_finder_registry_entries() -> None:

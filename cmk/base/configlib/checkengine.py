@@ -12,16 +12,6 @@ from typing import (
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.labels import Labels
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import (
-    RulesetMatcher,
-    RulesetName,
-    RuleSpec,
-)
-from cmk.utils.servicename import Item
-
 from cmk.checkengine.checking import (
     ABCCheckingConfig,
 )
@@ -31,6 +21,14 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.plugins import (
     RuleSetTypeName,
 )
+from cmk.utils.labels import Labels
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import (
+    RulesetMatcher,
+    RulesetName,
+    RuleSpec,
+)
+from cmk.utils.servicename import Item
 
 
 class CheckingConfig(ABCCheckingConfig):

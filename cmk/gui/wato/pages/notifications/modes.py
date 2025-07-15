@@ -17,33 +17,14 @@ from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedD
 
 from livestatus import LivestatusResponse, SiteConfiguration, SiteConfigurations
 
+import cmk.gui.view_utils
+import cmk.gui.watolib.audit_log as _audit_log
+import cmk.gui.watolib.changes as _changes
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
-
-from cmk.utils import paths
-from cmk.utils.labels import Labels
-from cmk.utils.notify import NotificationContext
-from cmk.utils.notify_types import (
-    EventRule,
-    get_rules_related_to_parameter,
-    is_always_bulk,
-    NotificationParameterGeneralInfos,
-    NotificationParameterID,
-    NotificationParameterItem,
-    NotificationParameterSpec,
-    NotificationParameterSpecs,
-    NotificationPluginNameStr,
-    NotifyAnalysisInfo,
-    NotifyPluginInfo,
-)
-from cmk.utils.statename import host_state_name, service_state_name
-
-import cmk.gui.view_utils
-import cmk.gui.watolib.audit_log as _audit_log
-import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -174,7 +155,6 @@ from cmk.gui.watolib.sample_config import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
-
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.shared_typing.notifications import (
     NotificationCoreStats,
@@ -189,6 +169,23 @@ from cmk.shared_typing.notifications import (
     RuleSection,
     RuleTopic,
 )
+from cmk.utils import paths
+from cmk.utils.labels import Labels
+from cmk.utils.notify import NotificationContext
+from cmk.utils.notify_types import (
+    EventRule,
+    get_rules_related_to_parameter,
+    is_always_bulk,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
+    NotificationParameterSpec,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
+    NotifyAnalysisInfo,
+    NotifyPluginInfo,
+)
+from cmk.utils.statename import host_state_name, service_state_name
 
 
 def register(

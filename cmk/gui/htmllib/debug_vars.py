@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cmk.ccc.crash_reporting import REDACTED_STRING, SENSITIVE_KEYWORDS
-
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 

@@ -10,14 +10,11 @@ import itertools
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.v1 import HostLabel, SNMPTree
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.regex import regex
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
-
-from cmk.snmplib import SNMPDetectBaseType
-
 from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -28,12 +25,11 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import ParsedSectionName
-
-from cmk.agent_based.v1 import HostLabel, SNMPTree
-from cmk.agent_based.v1.register import RuleSetType
-from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
-from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
 from cmk.discover_plugins import PluginLocation
+from cmk.snmplib import SNMPDetectBaseType
+from cmk.utils.regex import regex
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
 
 from .utils import (
     validate_default_parameters,

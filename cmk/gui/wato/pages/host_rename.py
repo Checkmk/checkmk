@@ -17,10 +17,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
-from cmk.utils.regex import regex
-
 from cmk.gui import forms
 from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
@@ -76,6 +72,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.utils import paths
+from cmk.utils.regex import regex
 
 
 def register(mode_registry: ModeRegistry) -> None:

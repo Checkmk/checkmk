@@ -9,12 +9,11 @@ from collections.abc import Iterator
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils import tags
-from cmk.utils.tags import TagGroupID, TagID
-
 import cmk.gui.nagvis._hosttags
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir
+from cmk.utils import tags
+from cmk.utils.tags import TagGroupID, TagID
 
 
 def _tag_test_cfg():

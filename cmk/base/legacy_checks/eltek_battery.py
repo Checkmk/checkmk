@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+from cmk.base.check_legacy_includes.elphase import check_elphase
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.plugins.lib.eltek import DETECT_ELTEK
 
 check_info = {}

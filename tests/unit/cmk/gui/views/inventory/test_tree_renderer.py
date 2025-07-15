@@ -7,17 +7,6 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.structured_data import (
-    ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
-    ImmutableTable,
-    RetentionInterval,
-    SDDeltaValue,
-    SDKey,
-    SDPath,
-)
-
 from cmk.gui.inventory.filters import FilterInvtableText
 from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
@@ -31,6 +20,16 @@ from cmk.gui.views.inventory._tree_renderer import (
     _SDDeltaItemsSorter,
     _SDItemsSorter,
     SDItem,
+)
+from cmk.utils.structured_data import (
+    ImmutableAttributes,
+    ImmutableDeltaAttributes,
+    ImmutableDeltaTable,
+    ImmutableTable,
+    RetentionInterval,
+    SDDeltaValue,
+    SDKey,
+    SDPath,
 )
 
 

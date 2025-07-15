@@ -10,17 +10,15 @@ from typing import override
 
 from werkzeug.datastructures import FileStorage
 
-from cmk.utils.render import filesize
-
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.encrypter import Encrypter
-
 from cmk.rulesets.v1 import Help, Message
 from cmk.rulesets.v1.form_specs import FileUpload
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as VueComponents
+from cmk.utils.render import filesize
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData
 from .._utils import (

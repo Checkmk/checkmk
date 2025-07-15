@@ -5,10 +5,9 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.plugins.lib.emc import DETECT_VPLEX
 
 check_info = {}

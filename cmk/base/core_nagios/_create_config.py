@@ -17,26 +17,6 @@ from socket import AddressFamily
 from typing import Any, assert_never, IO, Literal
 
 import cmk.ccc.debug
-from cmk.ccc import store, tty
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-
-from cmk.utils import config_warnings, ip_lookup, password_store
-from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import LabelManager, Labels
-from cmk.utils.licensing.handler import LicensingHandler
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
-from cmk.utils.notify_types import Contact
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.timeperiod import add_builtin_timeperiods
-
-from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-
 from cmk.base import config, core_config
 from cmk.base.config import (
     ConfigCache,
@@ -53,8 +33,24 @@ from cmk.base.core_config import (
     get_service_attributes,
     get_tags_with_groups_from_attributes,
 )
-
+from cmk.ccc import store, tty
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 from cmk.server_side_calls_backend import ActiveServiceData
+from cmk.utils import config_warnings, ip_lookup, password_store
+from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.labels import LabelManager, Labels
+from cmk.utils.licensing.handler import LicensingHandler
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
+from cmk.utils.notify_types import Contact
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
+from cmk.utils.timeperiod import add_builtin_timeperiods
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 

@@ -17,12 +17,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
-
+from cmk.crypto.password import Password
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
-
-from cmk.crypto.password import Password
 
 
 @pytest.fixture(name="mock_ldap", autouse=True)

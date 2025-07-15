@@ -11,13 +11,9 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, cast, Literal, Self, TypeVar
 
+import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
-
-from cmk.utils.password_store import ad_hoc_password_id
-from cmk.utils.rulesets.definition import RuleGroup
-
-import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui.exceptions import MKUserError
@@ -53,9 +49,10 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     RulespecSubGroup,
 )
-
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
+from cmk.utils.password_store import ad_hoc_password_id
+from cmk.utils.rulesets.definition import RuleGroup
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None

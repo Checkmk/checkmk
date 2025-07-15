@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 import cmk.utils.paths
-
 from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
 from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString

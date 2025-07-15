@@ -12,7 +12,6 @@ import pytest
 import time_machine
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
     create_event_from_syslog_message,

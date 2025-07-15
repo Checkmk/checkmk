@@ -2,8 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.utils.tags import BuiltinTagConfig, TagGroupID
-
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.attributes import HostContactGroup
@@ -32,8 +31,7 @@ from cmk.gui.watolib.builtin_attributes import (
     HostAttributeWaitingForDiscovery,
 )
 from cmk.gui.watolib.groups import HostAttributeContactGroups
-
-from cmk import fields
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID
 
 built_in_tag_group_config = BuiltinTagConfig()
 

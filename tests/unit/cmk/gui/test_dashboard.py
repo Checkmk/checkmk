@@ -10,18 +10,15 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.unit.utils import reset_registries
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
-
-from cmk.utils import paths
-
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
+from cmk.utils import paths
+from tests.testlib.unit.utils import reset_registries
 
 
 class DummyDashletConfig(DashletConfig): ...

@@ -7,10 +7,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress
-
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.servicename import ServiceName
-
 from cmk.checkengine.checking import (
     ABCCheckingConfig,
     check_plugins_missing_data,
@@ -27,8 +23,9 @@ from cmk.checkengine.plugins import (
     ConfiguredService,
     ServiceID,
 )
-
 from cmk.discover_plugins import PluginLocation
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.servicename import ServiceName
 
 _DUMMY_DF_PLUGIN = CheckPlugin(
     name=CheckPluginName("df"),

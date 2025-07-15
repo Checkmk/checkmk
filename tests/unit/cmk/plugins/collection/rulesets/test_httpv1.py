@@ -6,9 +6,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-
 from cmk.plugins.collection.rulesets.httpv1 import rule_spec_http
 
 

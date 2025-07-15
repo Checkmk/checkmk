@@ -10,8 +10,6 @@ from typing import Any, cast
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
-
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -24,6 +22,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.collection.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
 from cmk.plugins.collection.agent_based.epower import check_epower, discover_epower
 from cmk.plugins.collection.agent_based.ups_power import snmp_section_ups_power
+from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
 
 # SUP-12323
 APC_SYMMETRA_0 = """

@@ -10,14 +10,11 @@ from uuid import UUID
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
-
 from cmk.ccc.hostaddress import HostName
-
+from cmk.gui.exceptions import MKAuthException
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
-
-from cmk.gui.exceptions import MKAuthException
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 _API_BASE = "/NO_SITE/check_mk/api/1.0/"
 _HOST_CONFIG_INTERNAL_BASE = urljoin(_API_BASE, "objects/host_config_internal/")

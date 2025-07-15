@@ -8,10 +8,9 @@ from collections.abc import Iterable, Sequence
 
 import pytest
 
-from cmk.utils.macros import MacroMapping
-
 from cmk.gui.dashboard import title_macros
 from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.utils.macros import MacroMapping
 
 
 @pytest.mark.parametrize(

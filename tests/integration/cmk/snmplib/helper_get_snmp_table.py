@@ -11,11 +11,12 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-from cmk.ccc.version import Edition, edition
-
 import cmk.utils.paths
-from cmk.utils.sectionname import SectionName
-
+from cmk.ccc.version import Edition, edition
+from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
+    ClassicSNMPBackend,
+    StoredWalkSNMPBackend,
+)
 from cmk.snmplib import (
     BackendSNMPTree,
     get_snmp_table,
@@ -23,11 +24,7 @@ from cmk.snmplib import (
     SNMPBackendEnum,
     SNMPHostConfig,
 )
-
-from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
-    ClassicSNMPBackend,
-    StoredWalkSNMPBackend,
-)
+from cmk.utils.sectionname import SectionName
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation

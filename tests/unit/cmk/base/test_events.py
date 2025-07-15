@@ -8,18 +8,6 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify import NotificationHostConfig
-from cmk.utils.notify_types import (
-    EventRule,
-    NotificationParameterID,
-    NotificationRuleID,
-    NotifyPluginParamsDict,
-)
-from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
-from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.events.event_context import EnrichedEventContext, EventContext
-
 import cmk.base.events
 from cmk.base.events import (
     _update_enriched_context_from_notify_host_file,
@@ -29,6 +17,16 @@ from cmk.base.events import (
     event_match_hosttags,
     raw_context_from_string,
 )
+from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.utils.notify import NotificationHostConfig
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterID,
+    NotificationRuleID,
+    NotifyPluginParamsDict,
+)
+from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
+from cmk.utils.tags import TagGroupID, TagID
 
 
 class HTTPPRoxyConfig:

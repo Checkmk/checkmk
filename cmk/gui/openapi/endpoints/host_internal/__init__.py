@@ -13,13 +13,6 @@ from uuid import UUID
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
-
-from cmk.utils.agent_registration import (
-    connection_mode_from_host_config,
-    get_uuid_link_manager,
-    HostAgentConnectionMode,
-)
-
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
@@ -37,6 +30,11 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.utils.agent_registration import (
+    connection_mode_from_host_config,
+    get_uuid_link_manager,
+    HostAgentConnectionMode,
+)
 
 permission_registry.register(
     Permission(

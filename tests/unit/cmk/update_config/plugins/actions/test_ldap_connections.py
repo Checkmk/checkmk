@@ -11,7 +11,6 @@ from cmk.gui.userdb import (
     UserConnectionConfigFile,
 )
 from cmk.gui.utils.script_helpers import gui_context
-
 from cmk.update_config.plugins.actions.ldap_connections import UpdateLDAPConnections
 
 

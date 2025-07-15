@@ -8,7 +8,6 @@ from typing import Any
 import pytest
 
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
-
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

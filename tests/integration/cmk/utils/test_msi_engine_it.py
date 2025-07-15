@@ -9,10 +9,9 @@ from typing import Final
 
 import pytest
 
+from cmk.utils import msi_engine
 from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
-
-from cmk.utils import msi_engine
 
 MSI_LOCATION: Final = "share/check_mk/agents/windows"
 EXPECTED_EXECUTABLES: Final = ["msiinfo", "msibuild", "lcab"]

@@ -22,7 +22,6 @@ import livestatus
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
-
 from cmk.utils import paths
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,

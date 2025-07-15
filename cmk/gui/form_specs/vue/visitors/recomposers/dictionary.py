@@ -5,9 +5,7 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec
 
 

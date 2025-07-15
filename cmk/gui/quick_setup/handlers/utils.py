@@ -41,7 +41,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     ListOfWidgets,
     Widget,
 )
-
 from cmk.rulesets.v1.form_specs import FormSpec
 
 LOAD_WAIT_LABEL = _("Please wait...")

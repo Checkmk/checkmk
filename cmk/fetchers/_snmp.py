@@ -12,9 +12,7 @@ from typing import Any, Final
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
-
-from cmk.utils.sectionname import SectionMap, SectionName
-
+from cmk.checkengine.parser import SectionStore
 from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,
@@ -23,8 +21,7 @@ from cmk.snmplib import (
     SNMPRawDataElem,
     SNMPRowInfo,
 )
-
-from cmk.checkengine.parser import SectionStore
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig

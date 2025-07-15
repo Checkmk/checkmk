@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import assert_never
 
+from cmk.base.config import LoadedConfigFragment
+from cmk.base.core_config import MonitoringCore
 from cmk.ccc.version import Edition, edition
-
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-
-from cmk.base.config import LoadedConfigFragment
-from cmk.base.core_config import MonitoringCore
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:

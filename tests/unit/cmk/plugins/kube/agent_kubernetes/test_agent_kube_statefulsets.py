@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
-
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import parse_metadata
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIStatefulSets:

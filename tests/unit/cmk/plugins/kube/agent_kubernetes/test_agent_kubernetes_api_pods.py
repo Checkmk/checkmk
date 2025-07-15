@@ -10,8 +10,6 @@ from unittest import TestCase
 from dateutil.tz import tzutc
 from kubernetes import client  # type: ignore[import-untyped]
 
-from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
-
 from cmk.plugins.kube.agent_handlers import pod_handler
 from cmk.plugins.kube.schemata import api, section
 from cmk.plugins.kube.transform import (
@@ -21,6 +19,7 @@ from cmk.plugins.kube.transform import (
     pod_spec,
     pod_status,
 )
+from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIPod:

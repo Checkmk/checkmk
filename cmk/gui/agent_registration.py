@@ -4,16 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, override
 
+from cmk import fields
 from cmk.ccc import version
-
-from cmk.utils import paths
-from cmk.utils.agent_registration import HostAgentConnectionMode
-
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
-
-from cmk import fields
+from cmk.utils import paths
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 
 class _AgentConnectionField(fields.String):

@@ -8,10 +8,8 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.user import UserId
-
-from cmk.gui.utils.htpasswd import Entries, Htpasswd
-
 from cmk.crypto.password_hashing import PasswordHash
+from cmk.gui.utils.htpasswd import Entries, Htpasswd
 
 
 @pytest.fixture(name="htpasswd_file")

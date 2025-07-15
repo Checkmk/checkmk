@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc import site
-
 from cmk.utils.paths import omd_root
 
 

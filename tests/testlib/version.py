@@ -12,13 +12,6 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, Self
 
-from tests.testlib.common.repo import (
-    branch_from_env,
-    current_base_branch_name,
-    current_branch_version,
-)
-from tests.testlib.utils import version_spec_from_env
-
 from cmk.ccc.version import (
     Edition,
     Version,
@@ -27,6 +20,12 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 from cmk.ccc.version import edition as cmk_edition
+from tests.testlib.common.repo import (
+    branch_from_env,
+    current_base_branch_name,
+    current_branch_version,
+)
+from tests.testlib.utils import version_spec_from_env
 
 logger = logging.getLogger()
 

@@ -6,9 +6,8 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_legacy_includes.mem import check_memory_dict
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.mem import check_memory_dict
 from cmk.plugins.lib import memory
 
 check_info = {}

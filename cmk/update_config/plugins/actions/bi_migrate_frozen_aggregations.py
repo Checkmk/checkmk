@@ -7,10 +7,9 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.ccc import store
-
 from cmk.bi.filesystem import get_default_site_filesystem
 from cmk.bi.storage import generate_identifier
+from cmk.ccc import store
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 ORIGIN_HINTS_PREFIX = "origin_hints_"

@@ -17,8 +17,6 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any
 
-from cmk.utils.paths import tmp_dir
-
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     LogData,
     ProxmoxVeAPI,
@@ -27,6 +25,7 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
 from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import to_bytes
 from cmk.special_agents.v0_unstable.storage import Storage
+from cmk.utils.paths import tmp_dir
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")
 

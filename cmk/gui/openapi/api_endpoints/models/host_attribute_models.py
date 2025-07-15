@@ -11,10 +11,6 @@ from pydantic import AfterValidator, WithJsonSchema
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
-
-from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.tags import TagGroupID
-
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
@@ -38,6 +34,8 @@ from cmk.gui.openapi.framework.model.converter import (
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.utils.agent_registration import HostAgentConnectionMode
+from cmk.utils.tags import TagGroupID
 
 HostNameOrIPv4 = Annotated[
     HostAddress,

@@ -6,9 +6,6 @@ from collections.abc import Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.version import Edition, edition
-
-from cmk.utils import paths
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -32,6 +29,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+from cmk.utils import paths
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent

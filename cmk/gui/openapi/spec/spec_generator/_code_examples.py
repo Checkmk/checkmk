@@ -18,11 +18,10 @@ from typing import Any, cast, NamedTuple, TypeAlias
 import jinja2
 from apispec import APISpec
 
-from cmk.utils.jsontype import JsonSerializable
-
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 from cmk.gui.openapi.spec.spec_generator._type_defs import SpecEndpoint
+from cmk.utils.jsontype import JsonSerializable
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}

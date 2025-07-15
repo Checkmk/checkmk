@@ -8,20 +8,6 @@ from typing import TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.structured_data import (
-    ImmutableAttributes,
-    ImmutableDeltaTree,
-    ImmutableTree,
-    SDKey,
-    SDPath,
-    SDRawDeltaTree,
-    SDRawTree,
-    SDValue,
-    serialize_delta_tree,
-    serialize_tree,
-)
-
 from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -36,6 +22,18 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
 from cmk.gui.view_utils import CellSpec, CSVExportError
+from cmk.utils.structured_data import (
+    ImmutableAttributes,
+    ImmutableDeltaTree,
+    ImmutableTree,
+    SDKey,
+    SDPath,
+    SDRawDeltaTree,
+    SDRawTree,
+    SDValue,
+    serialize_delta_tree,
+    serialize_tree,
+)
 
 from ._display_hints import (
     AttributeDisplayHint,

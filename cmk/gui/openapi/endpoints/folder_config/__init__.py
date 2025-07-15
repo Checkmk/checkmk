@@ -38,6 +38,7 @@ from typing import Any
 
 from werkzeug.datastructures import ETags
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -68,8 +69,6 @@ from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainOb
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
-
-from cmk import fields
 
 PATH_FOLDER_FIELD = {
     "folder": gui_fields.FolderField(

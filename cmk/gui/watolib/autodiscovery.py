@@ -5,13 +5,9 @@
 
 from pydantic import BaseModel
 
-from cmk.ccc.site import omd_site
-
 import cmk.utils.paths
-from cmk.utils.auto_queue import AutoQueue
-
+from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -33,6 +29,7 @@ from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.utils.auto_queue import AutoQueue
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):

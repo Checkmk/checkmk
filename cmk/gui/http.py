@@ -22,12 +22,10 @@ from werkzeug.utils import get_content_type
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import url_prefix
-
-from cmk.utils.urls import is_allowed_url
-
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.utils.urls import is_allowed_url
 
 UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")

@@ -15,7 +15,6 @@ import pytest
 import time_machine
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.prediction import _grouping, _prediction, DataStat, PredictionStore
 
 Timestamp = int

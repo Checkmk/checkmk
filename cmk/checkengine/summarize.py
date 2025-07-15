@@ -20,16 +20,13 @@ from cmk.ccc.exceptions import (
     MKTimeout,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.utils.sectionname import SectionName
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
-
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
+from cmk.utils.sectionname import SectionName
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 

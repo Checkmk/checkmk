@@ -24,10 +24,9 @@ import dateutil.parser
 import requests
 import urllib3
 
+import cmk.special_agents.v0_unstable.misc as utils
 import cmk.utils.password_store
 import cmk.utils.paths
-
-import cmk.special_agents.v0_unstable.misc as utils
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 #   .--defines-------------------------------------------------------------.

@@ -13,13 +13,10 @@ from typing import Final, Generic, Protocol, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
-
+from cmk.checkengine.fetcher import SourceInfo
+from cmk.snmplib import SNMPRawData
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import SectionMap, SectionName
-
-from cmk.snmplib import SNMPRawData
-
-from cmk.checkengine.fetcher import SourceInfo
 
 __all__ = [
     "AgentRawDataSection",

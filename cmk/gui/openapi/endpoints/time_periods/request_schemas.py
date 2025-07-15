@@ -9,13 +9,11 @@ from typing import Any, Literal
 import marshmallow
 from marshmallow.utils import from_iso_time
 
-from cmk.utils.dateutils import weekday_ids
-
+from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN, verify_timeperiod_name_exists
-
-from cmk import fields
+from cmk.utils.dateutils import weekday_ids
 
 
 class TimePeriodName(fields.String):

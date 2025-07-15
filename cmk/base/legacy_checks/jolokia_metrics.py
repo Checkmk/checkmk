@@ -8,11 +8,6 @@
 
 import time
 
-from cmk.base.check_legacy_includes.jolokia import (
-    get_inventory_jolokia_metrics_apps,
-    jolokia_metrics_parse,
-)
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     get_rate,
@@ -20,6 +15,10 @@ from cmk.agent_based.v2 import (
     GetRateError,
     IgnoreResultsError,
     StringTable,
+)
+from cmk.base.check_legacy_includes.jolokia import (
+    get_inventory_jolokia_metrics_apps,
+    jolokia_metrics_parse,
 )
 
 check_info = {}

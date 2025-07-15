@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui import ifaceoper
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -27,6 +25,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroupRegistry,
     RulespecRegistry,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 

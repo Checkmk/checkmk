@@ -10,15 +10,14 @@ from typing import Any
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import (
-    get_parsed_snmp_section,
-    snmp_is_detected,
-)
-
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.collection.agent_based import brocade_fcport as bf
 from cmk.plugins.lib.brocade import DISCOVERY_DEFAULT_PARAMETERS
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 
 STRING_TABLE_INDEX_1_MISSING = [
     [

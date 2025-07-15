@@ -6,9 +6,8 @@
 
 from pytest_mock import MockerFixture
 
-from cmk.gui.utils.encrypter import Encrypter
-
 from cmk.crypto.secrets import Secret
+from cmk.gui.utils.encrypter import Encrypter
 
 
 def test_value_encrypter_transparent(mocker: MockerFixture) -> None:

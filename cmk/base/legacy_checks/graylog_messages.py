@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
 
 check_info = {}
 

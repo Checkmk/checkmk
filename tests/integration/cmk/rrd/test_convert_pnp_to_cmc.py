@@ -7,11 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.integration.linux_test_host import create_linux_test_host
-
-from tests.testlib.site import Site
-
 from cmk.ccc.hostaddress import HostAddress
+from tests.integration.linux_test_host import create_linux_test_host
+from tests.testlib.site import Site
 
 _RELATIVE_PATH_PNP_RRDS = Path("var", "pnp4nagios", "perfdata")
 _RELATIVE_PATH_CMC_RRDS = Path("var", "check_mk", "rrd")

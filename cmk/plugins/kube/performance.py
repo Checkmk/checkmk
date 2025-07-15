@@ -21,7 +21,6 @@ from typing import Literal, NewType, TypeVar
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 import cmk.utils
-
 from cmk.plugins.kube import common
 from cmk.plugins.kube.schemata import section
 

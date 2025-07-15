@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.user import UserId
-
-from cmk.utils.password_store import Password
-
 from cmk.gui import userdb
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
+from cmk.utils.password_store import Password
 
 
 def contact_group_choices(only_own: bool = False) -> list[tuple[str, str]]:

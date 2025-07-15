@@ -7,8 +7,6 @@ from collections.abc import Mapping, Sequence
 from logging import Logger
 from typing import override
 
-from cmk.utils.log import VERBOSE
-
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
@@ -24,9 +22,9 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
-
 from cmk.update_config.plugins.actions.tag_conditions import get_tag_config, transform_host_tags
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 _RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []

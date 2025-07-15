@@ -6,9 +6,8 @@
 
 from typing import Any, Literal
 
-from cmk.ccc.store import load_mk_file
-
 import cmk.utils.paths
+from cmk.ccc.store import load_mk_file
 
 
 def load_gui_log_levels() -> dict[str, int]:

@@ -21,14 +21,13 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
-from tests.testlib.common.utils import wait_until
-
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import Schedule, WatcherConfig
 from cmk.base.automation_helper._watcher import (
     _AutomationWatcherHandler,
     run,
 )
+from tests.testlib.common.utils import wait_until
 
 _WATCHED_MK_PATTERN: Final = "*.mk"
 _WATCHED_TXT_FILE: Final = "foo.txt"

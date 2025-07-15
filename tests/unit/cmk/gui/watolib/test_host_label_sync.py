@@ -8,10 +8,8 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.paths
-
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.watolib.host_label_sync import (
     get_host_labels_entry_of_host,
     get_updated_host_label_files,

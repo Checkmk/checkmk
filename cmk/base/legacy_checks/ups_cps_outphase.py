@@ -7,10 +7,9 @@
 from collections.abc import Iterable, Mapping
 from typing import Literal, TypedDict
 
-from cmk.base.check_legacy_includes.elphase import check_elphase
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 check_info = {}

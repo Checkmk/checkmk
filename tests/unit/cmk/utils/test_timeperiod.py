@@ -10,9 +10,8 @@ import recurring_ical_events  # type: ignore[import-untyped]
 import time_machine
 from icalendar import Calendar  # type: ignore[import-untyped]
 
-from cmk.utils.timeperiod import is_timeperiod_active, TimeperiodName, TimeperiodSpecs
-
 from cmk.gui.wato.pages.timeperiods import ICalEvent, TimeperiodUsage
+from cmk.utils.timeperiod import is_timeperiod_active, TimeperiodName, TimeperiodSpecs
 
 
 def test_is_timeperiod_active() -> None:

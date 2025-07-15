@@ -8,9 +8,7 @@ from typing import Any
 import pytest
 
 from cmk.ccc.version import Edition
-
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-
 from cmk.plugins.windows.rulesets.winperf_ts_sessions import rule_spec_winperf_ts_sessions
 
 

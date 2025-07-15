@@ -16,13 +16,6 @@ from redis import Redis
 
 from livestatus import Query, QuerySpecification
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
-
-from cmk.utils.log import logger
-from cmk.utils.redis import get_redis_client
-
 from cmk.bi import storage
 from cmk.bi.aggregation import BIAggregation
 from cmk.bi.data_fetcher import BIStructureFetcher, SiteProgramStart
@@ -31,6 +24,11 @@ from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+from cmk.utils.log import logger
+from cmk.utils.redis import get_redis_client
 
 _LOGGER = logger.getChild("web.bi.compilation")
 

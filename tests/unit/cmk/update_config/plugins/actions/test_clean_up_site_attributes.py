@@ -10,9 +10,7 @@ import pytest
 from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui.watolib.sites import site_management_registry
-
 from cmk.update_config.plugins.actions.clean_up_site_attributes import (
     CleanUpSiteAttributes,
 )

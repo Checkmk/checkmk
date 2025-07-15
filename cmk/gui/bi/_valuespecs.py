@@ -7,10 +7,16 @@ import abc
 import copy
 from typing import Any
 
+from cmk.bi import actions
+from cmk.bi.aggregation_functions import (
+    BIAggregationFunctionBest,
+    BIAggregationFunctionCountOK,
+    BIAggregationFunctionWorst,
+)
+from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
+from cmk.bi.packs import BIAggregationPack
+from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
 from cmk.ccc import plugin_registry
-
-from cmk.utils.statename import short_service_state_name
-
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -34,16 +40,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import DictHostTagCondition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-
-from cmk.bi import actions
-from cmk.bi.aggregation_functions import (
-    BIAggregationFunctionBest,
-    BIAggregationFunctionCountOK,
-    BIAggregationFunctionWorst,
-)
-from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
-from cmk.bi.packs import BIAggregationPack
-from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.utils.statename import short_service_state_name
 
 from ._packs import get_cached_bi_packs
 

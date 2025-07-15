@@ -12,6 +12,8 @@ from flask import Flask
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
+from cmk.ccc.user import UserId
+from cmk.gui import http
 from tests.unit.cmk.gui.common_fixtures import (
     create_flask_app,
     create_wsgi_app,
@@ -23,10 +25,6 @@ from tests.unit.cmk.gui.users import create_and_destroy_user
 from tests.unit.cmk.web_test_app import (
     WebTestAppForCMK,
 )
-
-from cmk.ccc.user import UserId
-
-from cmk.gui import http
 
 
 @pytest.fixture()

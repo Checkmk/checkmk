@@ -10,7 +10,6 @@ from typing import Literal, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import load_object_from_file
-
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.servicename import ServiceName
 

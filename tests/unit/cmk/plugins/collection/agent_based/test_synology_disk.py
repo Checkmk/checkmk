@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
-
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.collection.agent_based import synology_disks
+from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
 
 # SUP-13080
 DATA_0 = """

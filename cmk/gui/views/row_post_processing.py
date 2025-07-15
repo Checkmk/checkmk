@@ -6,7 +6,6 @@
 from collections.abc import Callable, Sequence
 
 from cmk.ccc.plugin_registry import Registry
-
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter

@@ -9,11 +9,9 @@ from datetime import datetime, UTC
 import time_machine
 from pytest import MonkeyPatch
 
+import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-import cmk.ec.export as ec
-
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.search import MatchItem
 

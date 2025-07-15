@@ -22,12 +22,11 @@ from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
 import cmk.ccc.version as cmk_version
+from cmk import trace
 from cmk.ccc import crash_reporting, store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site, SiteId
-
-from cmk.utils import paths
-
+from cmk.crypto import MKCryptoException
 from cmk.gui import session
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
@@ -60,9 +59,7 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
-
-from cmk import trace
-from cmk.crypto import MKCryptoException
+from cmk.utils import paths
 
 if TYPE_CHECKING:
     from cmk.gui.http import HTTPMethod

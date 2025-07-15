@@ -16,7 +16,6 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
     transform_attribute_topic_title_to_id,
 )
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

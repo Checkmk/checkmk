@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mem import check_memory_element
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
+from cmk.base.check_legacy_includes.mem import check_memory_element
 
 check_info = {}
 

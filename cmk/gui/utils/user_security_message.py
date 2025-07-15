@@ -11,7 +11,9 @@ from functools import partial
 from jinja2 import Template
 
 from cmk.ccc.user import UserId
-
+from cmk.gui import config, userdb
+from cmk.gui.i18n import _
+from cmk.gui.message import create_message, MessageText, send_message
 from cmk.utils.mail import (
     Attachment,
     default_from_address,
@@ -21,10 +23,6 @@ from cmk.utils.mail import (
     send_mail_sendmail,
 )
 from cmk.utils.paths import web_dir
-
-from cmk.gui import config, userdb
-from cmk.gui.i18n import _
-from cmk.gui.message import create_message, MessageText, send_message
 
 #   .--Templates-----------------------------------------------------------.
 #   |            _____                    _       _                        |

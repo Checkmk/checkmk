@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.rulesets.definition import RuleGroup
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
 from cmk.gui.wato import RulespecGroupIntegrateOtherServices
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_active_checks_notify_count():

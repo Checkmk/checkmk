@@ -5,9 +5,8 @@
 
 import subprocess
 
-from tests.testlib.site import Site
-
 from cmk.utils.paths import mkbackup_lock_dir
+from tests.testlib.site import Site
 
 
 def test_backup_dir(site: Site) -> None:

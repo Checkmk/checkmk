@@ -7,14 +7,11 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.log import VERBOSE
-
 from cmk.gui.config import active_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.hosts_and_folders import FolderTree
-
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.utils.log import VERBOSE
 
 
 class RemoveInvalidHost(UpdateAction):

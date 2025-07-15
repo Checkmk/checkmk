@@ -20,6 +20,7 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any, assert_never, Literal
 
+from cmk.ccc.hostaddress import HostName
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -30,8 +31,6 @@ from tests.testlib.utils import (
     is_containerized,
     run,
 )
-
-from cmk.ccc.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

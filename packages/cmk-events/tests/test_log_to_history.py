@@ -12,7 +12,6 @@ from pytest import MonkeyPatch
 import livestatus
 
 from cmk.ccc.site import SiteId
-
 from cmk.events.log_to_history import (
     log_to_history,
     notification_result_message,

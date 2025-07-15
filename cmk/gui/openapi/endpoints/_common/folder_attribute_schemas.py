@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.attributes import HostContactGroup
 from cmk.gui.fields.base import BaseSchema
@@ -22,8 +23,6 @@ from cmk.gui.watolib.builtin_attributes import (
 )
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
-
-from cmk import fields
 
 from .host_attribute_schemas import BaseHostTagGroup
 

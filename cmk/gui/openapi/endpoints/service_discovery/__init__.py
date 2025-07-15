@@ -16,10 +16,8 @@ from collections.abc import Mapping
 from typing import Any, assert_never
 from urllib.parse import urlparse
 
-from cmk.utils.everythingtype import EVERYTHING
-
+from cmk import fields
 from cmk.checkengine.discovery import DiscoverySettings
-
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
 from cmk.gui.config import active_config
@@ -61,8 +59,7 @@ from cmk.gui.watolib.services import (
     perform_service_discovery,
     ServiceDiscoveryBackgroundJob,
 )
-
-from cmk import fields
+from cmk.utils.everythingtype import EVERYTHING
 
 from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
 

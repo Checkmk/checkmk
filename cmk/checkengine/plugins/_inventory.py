@@ -8,14 +8,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import NewType
 
-from cmk.utils.rulesets import RuleSetName
-
+from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
 )
-
-from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.discover_plugins import PluginLocation
+from cmk.utils.rulesets import RuleSetName
 
 InventoryPluginName = NewType("InventoryPluginName", str)
 

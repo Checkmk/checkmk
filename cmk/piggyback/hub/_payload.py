@@ -14,7 +14,6 @@ from typing import Self
 from pydantic import BaseModel
 
 from cmk.ccc.hostaddress import HostName
-
 from cmk.messaging import Channel, CMKConnectionError, DeliveryTag, RoutingKey
 from cmk.piggyback.backend import (
     get_messages_for,

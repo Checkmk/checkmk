@@ -8,11 +8,9 @@ import base64
 from pathlib import Path
 from typing import Any
 
-from cmk.ccc.exceptions import MKGeneralException
-
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
-
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code

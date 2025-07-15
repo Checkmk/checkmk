@@ -15,22 +15,17 @@ from typing import Any, override
 
 from pytest import MonkeyPatch
 
-from tests.testlib.utils import get_standard_linux_agent_output
-
-from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
-
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import SiteId
-
 import cmk.utils.tags
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.checkengine.discovery import AutochecksMemoizer
-from cmk.checkengine.plugins import AutocheckEntry
-
 from cmk.base import config
 from cmk.base.config import ConfigCache
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import SiteId
+from cmk.checkengine.discovery import AutochecksMemoizer
+from cmk.checkengine.plugins import AutocheckEntry
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.tags import TagGroupID, TagID
+from tests.testlib.utils import get_standard_linux_agent_output
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 
 class _AutochecksMocker(AutochecksMemoizer):

@@ -8,13 +8,10 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
-
 import cmk.ccc.version as cmk_version
-
 from cmk.utils import paths
+from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.skipif(

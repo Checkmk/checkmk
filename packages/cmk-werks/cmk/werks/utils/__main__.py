@@ -8,7 +8,6 @@ import argparse
 from pathlib import Path
 
 from cmk.ccc.version import __version__, Version
-
 from cmk.werks.models import Edition, Werk
 
 from . import (

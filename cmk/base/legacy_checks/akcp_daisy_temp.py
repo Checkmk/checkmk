@@ -7,8 +7,6 @@
 from collections.abc import Sequence
 from itertools import chain
 
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -20,6 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 check_info = {}
 

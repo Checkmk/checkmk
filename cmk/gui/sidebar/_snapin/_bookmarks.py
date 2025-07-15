@@ -11,9 +11,6 @@ from dataclasses import dataclass
 from typing import Any, Self, TypedDict
 
 from cmk.ccc.user import UserId
-
-from cmk.utils.urls import is_allowed_url
-
 from cmk.gui import pagetypes
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -33,6 +30,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.utils.urls import is_allowed_url
 
 from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, iconlink, link

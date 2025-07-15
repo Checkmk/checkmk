@@ -13,14 +13,13 @@ from typing import Self
 
 import pytest
 
+from cmk.ccc.version import __version__, parse_check_mk_version
 from tests.testlib.extensions import (
     compatible_extensions_sorted_by_n_downloads,
     download_extension,
     install_extensions,
 )
 from tests.testlib.site import Site
-
-from cmk.ccc.version import __version__, parse_check_mk_version
 
 NUMBER_OF_EXTENSIONS_TO_COVER = 120
 

@@ -10,15 +10,14 @@ from typing import NoReturn
 
 import requests
 
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.notify_types import PluginNotificationContext
-
 from cmk.notification_plugins.utils import (
     collect_context,
     get_password_from_env_or_context,
     get_sms_message_from_context,
     quote_message,
 )
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.notify_types import PluginNotificationContext
 
 #   .--Classes-------------------------------------------------------------.
 #   |                    ____ _                                            |

@@ -17,7 +17,6 @@ from redis import Redis
 from redis.client import Pipeline
 
 from cmk.ccc.exceptions import MKTimeout
-
 from cmk.utils.paths import omd_root
 
 QueryData = TypeVar("QueryData")

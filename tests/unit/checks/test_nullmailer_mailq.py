@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.agent_based.v1.type_defs import StringTable
 from cmk.base.check_legacy_includes.nullmailer_mailq import (
     check_nullmailer_mailq,
     check_single_queue,
@@ -14,8 +15,6 @@ from cmk.base.check_legacy_includes.nullmailer_mailq import (
     parse_nullmailer_mailq,
     Queue,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 

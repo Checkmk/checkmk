@@ -6,11 +6,7 @@
 import sys
 
 import cmk.ccc.debug
-
 import cmk.utils.paths
-from cmk.utils.log import console
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-
 from cmk.bakery.v1 import (
     BakeryPlugin,
     create_bakery_plugin,
@@ -18,6 +14,8 @@ from cmk.bakery.v1 import (
     ScriptletsFunction,
     WindowsConfigFunction,
 )
+from cmk.utils.log import console
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 registered_bakery_plugins: dict[str, BakeryPlugin] = {}
 

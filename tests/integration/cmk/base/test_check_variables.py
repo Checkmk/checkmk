@@ -7,14 +7,11 @@ import subprocess
 
 import pytest
 
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.utils import paths
 from tests.integration.linux_test_host import create_linux_test_host
-
 from tests.testlib.site import Site
 from tests.testlib.version import CMKEdition
-
-from cmk.utils import paths
-
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 # Test whether or not factory settings and checkgroup parameters work

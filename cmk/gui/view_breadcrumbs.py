@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.servicename import ServiceName
-
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _u
@@ -15,6 +12,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
+from cmk.utils.servicename import ServiceName
 
 
 def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Breadcrumb:

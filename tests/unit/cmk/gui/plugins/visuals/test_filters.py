@@ -12,21 +12,18 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.web_test_app import SetConfig
-
 import cmk.ccc.version as cmk_version
-
 import cmk.utils.tags
-from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import deserialize_tree
-
 from cmk.gui.bi import _filters as bi_filters
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.wato.filters import FilterWatoFolder
+from cmk.utils import paths
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.structured_data import deserialize_tree
+from tests.unit.cmk.web_test_app import SetConfig
 
 
 # mock_livestatus does not support Stats queries at the moment. We need to mock the function away

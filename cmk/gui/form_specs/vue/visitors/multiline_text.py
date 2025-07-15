@@ -6,7 +6,6 @@
 from typing import override
 
 from cmk.ccc.i18n import _
-
 from cmk.rulesets.v1.form_specs import MultilineText
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

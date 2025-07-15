@@ -9,8 +9,6 @@ from collections.abc import Mapping, Sequence
 import pytest
 import time_machine
 
-from tests.unit.checks.checktestlib import mock_item_state
-
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.threepar_volumes import (
     check_threepar_volumes,
@@ -18,6 +16,7 @@ from cmk.plugins.collection.agent_based.threepar_volumes import (
     parse_threepar_volumes,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from tests.unit.checks.checktestlib import mock_item_state
 
 STRING_TABLE = [
     [

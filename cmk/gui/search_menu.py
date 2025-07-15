@@ -12,7 +12,6 @@ from cmk.gui.i18n import _
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.type_defs import ABCMainMenuSearch, MainMenu, MainMenuData, MainMenuVueApp
 from cmk.gui.wato._snapins import _hide_menu
-
 from cmk.shared_typing.unified_search import Provider, Providers, UnifiedSearchConfig
 
 

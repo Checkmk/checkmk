@@ -13,12 +13,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-
-from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.password_store import Password
-from cmk.utils.rulesets.definition import RuleGroupType
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -29,6 +23,10 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
+from cmk.utils.password_store import Password
+from cmk.utils.rulesets.definition import RuleGroupType
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 _T = TypeVar("_T")
 IdentFinder = Callable[[GlobalIdent | None], str | None]

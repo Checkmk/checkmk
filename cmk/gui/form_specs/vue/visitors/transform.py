@@ -6,7 +6,6 @@ from typing import override
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.i18n import _
-
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from .._registry import get_visitor

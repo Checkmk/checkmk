@@ -9,10 +9,8 @@ from datetime import datetime
 from typing import Generic, Literal, TypedDict, TypeVar
 
 from cmk.ccc.user import UserId
-
-from cmk.gui.type_defs import Users, UserSpec
-
 from cmk.crypto.password import Password
+from cmk.gui.type_defs import Users, UserSpec
 
 CheckCredentialsResult = UserId | None | Literal[False]
 

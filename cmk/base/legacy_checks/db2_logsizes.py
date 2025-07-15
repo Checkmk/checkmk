@@ -6,10 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.base.check_legacy_includes.df import df_check_filesystem_single
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
 check_info = {}

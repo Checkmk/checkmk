@@ -9,19 +9,9 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import Literal
 
 import cmk.ccc.resulttype as result
+import cmk.utils.paths
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-
-import cmk.utils.paths
-from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.log import console
-from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import ServiceName
-
-from cmk.snmplib import SNMPRawData
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
@@ -29,6 +19,13 @@ from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, DiscoveryPl
 from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
+from cmk.snmplib import SNMPRawData
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
+from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import ServiceName
 
 from ._autochecks import (
     AutochecksConfig,

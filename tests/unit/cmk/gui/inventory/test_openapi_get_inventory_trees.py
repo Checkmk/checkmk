@@ -8,16 +8,12 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from tests.testlib.unit.rest_api_client import RequestHandler, Response, RestApiException
-
-from tests.unit.cmk.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
-
 import cmk.ccc.store
-
 import cmk.utils.paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from cmk.gui.http import HTTPMethod
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from tests.testlib.unit.rest_api_client import RequestHandler, Response, RestApiException
+from tests.unit.cmk.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
 
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 

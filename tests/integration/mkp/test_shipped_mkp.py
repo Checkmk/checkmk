@@ -10,9 +10,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.extension_compatibility.test_extension_compatibility import ImportErrors
+from tests.testlib.site import Site
 
 from .lib import disable_extension, enable_extension
 

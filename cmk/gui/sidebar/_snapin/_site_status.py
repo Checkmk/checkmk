@@ -6,7 +6,6 @@
 import json
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui import sites, user_sites
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html

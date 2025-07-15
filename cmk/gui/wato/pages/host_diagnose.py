@@ -11,9 +11,6 @@ from typing import NotRequired, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
-
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -45,6 +42,7 @@ from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]

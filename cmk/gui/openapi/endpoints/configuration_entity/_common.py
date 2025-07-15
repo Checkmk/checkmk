@@ -5,6 +5,7 @@
 from collections.abc import Mapping
 from typing import Any, assert_never
 
+from cmk import fields
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
 from cmk.gui.openapi.utils import problem, serve_json
@@ -13,8 +14,6 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_configuration_entity,
     get_list_of_configuration_entities,
 )
-
-from cmk import fields
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 ENTITY_ID_FIELD = {

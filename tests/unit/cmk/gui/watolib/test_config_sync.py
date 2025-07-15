@@ -13,25 +13,21 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
-
 from livestatus import NetworkSocketDetails, SiteConfiguration, TLSParams
 
 import cmk.ccc.version as cmk_version
+import cmk.gui.mkeventd.wato
+import cmk.utils.paths
+from cmk import trace
+from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-
-import cmk.gui.mkeventd.wato
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
 from cmk.gui.watolib.automations import RemoteAutomationConfig
-
-from cmk import trace
-from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.messaging import rabbitmq
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
 
 @pytest.fixture(name="mocked_responses")

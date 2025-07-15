@@ -12,7 +12,6 @@ from contextlib import suppress
 from pathlib import Path
 
 from cmk.ccc.version import Edition
-
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
 from cmk.gui.openapi.spec.spec_generator._core import _make_spec, populate_spec
 

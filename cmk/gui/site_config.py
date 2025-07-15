@@ -9,9 +9,8 @@ from collections.abc import Mapping
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
-from cmk.ccc.site import omd_site, SiteId
-
 import cmk.utils.paths
+from cmk.ccc.site import omd_site, SiteId
 
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)

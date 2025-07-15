@@ -8,7 +8,6 @@ from __future__ import annotations
 from datetime import timedelta
 
 import cmk.utils.paths
-
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry

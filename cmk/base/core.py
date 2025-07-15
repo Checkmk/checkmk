@@ -14,24 +14,20 @@ from contextlib import contextmanager, suppress
 from typing import Literal
 
 import cmk.ccc.debug
-from cmk.ccc import store, tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.ccc.hostaddress import HostName, Hosts
-
 import cmk.utils.paths
-from cmk.utils import ip_lookup
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.servicename import ServiceName
-
-from cmk.checkengine.plugins import AgentBasedPlugins
-
+from cmk import trace
 from cmk.base import core_config
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
-
-from cmk import trace
+from cmk.ccc import store, tty
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.utils import ip_lookup
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import ServiceName
 
 tracer = trace.get_tracer()
 

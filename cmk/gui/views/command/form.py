@@ -7,7 +7,6 @@ from collections.abc import Sequence
 from typing import Literal
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options

@@ -16,9 +16,7 @@ from pydantic import BaseModel
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.servicename import ServiceName
-
+from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
 from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.i18n import _, translate_to_current_language
@@ -26,8 +24,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, VisualContext
 from cmk.gui.visuals import livestatus_query_bare
-
-from cmk.graphing.v1 import graphs as graphs_api
+from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import (

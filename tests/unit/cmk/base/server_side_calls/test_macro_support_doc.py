@@ -13,16 +13,13 @@ from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
 
-from tests.testlib.unit.base_configuration_scenario import Scenario
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.hostaddress import HostAddress, HostName
-
-import cmk.utils.paths
-from cmk.utils.ip_lookup import IPStackConfig
-
 import cmk.base.config as base_config
+import cmk.ccc.version as cmk_version
+import cmk.utils.paths
 from cmk.base.config import ConfigCache
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 DOCUMENTED_ACTIVE_CHECK_MACROS = {
     "required": [

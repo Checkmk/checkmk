@@ -16,7 +16,6 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-
 from cmk.update_config.plugins.actions import global_settings
 
 

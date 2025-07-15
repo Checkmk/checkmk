@@ -2,14 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from tests.unit.cmk.plugins.kube.agent_kube.factory import (
-    APIControllerFactory,
-    APIPodFactory,
-    MetaDataFactory,
-    PodSpecFactory,
-    PodStatusFactory,
-)
-
 from cmk.plugins.kube.agent_handlers.common import pod_lifecycle_phase
 from cmk.plugins.kube.agent_handlers.pod_handler import (
     _conditions,
@@ -19,6 +11,13 @@ from cmk.plugins.kube.agent_handlers.pod_handler import (
     _start_time,
 )
 from cmk.plugins.kube.schemata import api, section
+from tests.unit.cmk.plugins.kube.agent_kube.factory import (
+    APIControllerFactory,
+    APIPodFactory,
+    MetaDataFactory,
+    PodSpecFactory,
+    PodStatusFactory,
+)
 
 
 def test_pod_conditions_with_no_conditions_present() -> None:

@@ -18,14 +18,11 @@ from typing import Any
 
 from livestatus import SiteConfiguration
 
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-import cmk.utils.paths
-from cmk.utils.labels import DiscoveredHostLabelsStore
-
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
@@ -42,6 +39,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.utils.labels import DiscoveredHostLabelsStore
 
 UpdatedHostLabelsEntry = tuple[str, float, str]
 

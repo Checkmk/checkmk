@@ -13,15 +13,13 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.common.repo import is_managed_repo
-
 import cmk.ccc.version
-from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-
 import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # pylint: disable-unused-import
+import cmk.utils.paths
+from cmk.ccc.user import UserId
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -34,9 +32,7 @@ from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
-
-from cmk.crypto import password_hashing
-from cmk.crypto.password import Password
+from tests.testlib.common.repo import is_managed_repo
 
 if TYPE_CHECKING:
     from tests.unit.cmk.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK

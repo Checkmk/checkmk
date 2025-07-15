@@ -8,8 +8,7 @@ from typing import Any
 from marshmallow import post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.livestatus_helpers import tables
-
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.downtimes import (
@@ -20,8 +19,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 from cmk.gui.openapi.utils import param_description
-
-from cmk import fields
+from cmk.utils.livestatus_helpers import tables
 
 MONITORED_HOST = gui_fields.HostField(
     description="The host name or IP address itself.",

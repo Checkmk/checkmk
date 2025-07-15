@@ -6,6 +6,9 @@ from collections.abc import Generator
 
 import pytest
 
+from cmk.gui.openapi import endpoint_family_registry
+from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from tests.unit.cmk.gui.openapi.framework.factories import (
     EndpointDocFactory,
     EndpointFamilyFactory,
@@ -13,10 +16,6 @@ from tests.unit.cmk.gui.openapi.framework.factories import (
     EndpointMetadataFactory,
     VersionedEndpointFactory,
 )
-
-from cmk.gui.openapi import endpoint_family_registry
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 
 
 @pytest.fixture

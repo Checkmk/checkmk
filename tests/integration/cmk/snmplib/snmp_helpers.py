@@ -7,10 +7,7 @@ import ast
 from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 
-from tests.testlib.site import Site
-
 from cmk.ccc.hostaddress import HostAddress, HostName
-
 from cmk.snmplib import (
     BackendSNMPTree,
     OID,
@@ -20,6 +17,7 @@ from cmk.snmplib import (
     SNMPTable,
     SNMPVersion,
 )
+from tests.testlib.site import Site
 
 
 def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:

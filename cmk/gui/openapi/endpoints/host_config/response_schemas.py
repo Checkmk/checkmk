@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints._common.folder_attribute_schemas import FolderViewAttribute
@@ -15,8 +16,6 @@ from cmk.gui.openapi.restful_objects.response_schemas import (
     ObjectActionMember,
     ObjectCollectionMember,
 )
-
-from cmk import fields
 
 # <------------------------------------ Folders ------------------------------------>
 

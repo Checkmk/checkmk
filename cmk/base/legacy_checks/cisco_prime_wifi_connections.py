@@ -12,10 +12,9 @@ see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/Clien
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 
 check_info = {}
 

@@ -13,7 +13,6 @@ import time_machine
 from pytest import MonkeyPatch
 
 import cmk.utils.render
-
 from cmk.gui import availability
 
 

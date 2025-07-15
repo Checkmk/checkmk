@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from cmk.gui.form_specs.private.validators import ModelT
-
 from cmk.rulesets.v1.form_specs import DefaultValue, List
 
 T = TypeVar("T")

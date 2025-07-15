@@ -15,7 +15,6 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
-
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.tags import TagGroupID, TagID

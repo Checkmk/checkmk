@@ -6,7 +6,6 @@
 import time
 
 from cmk.ccc.site import SiteId
-
 from cmk.gui import sites
 
 

@@ -10,8 +10,6 @@ from collections.abc import Collection, Sequence
 from hashlib import sha256
 from typing import override
 
-from cmk.utils.tags import TagGroup
-
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -38,6 +36,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.utils.tags import TagGroup
 
 from ._bulk_actions import get_hostnames_from_checkboxes, get_hosts_from_checkboxes
 from ._host_attributes import configure_attributes

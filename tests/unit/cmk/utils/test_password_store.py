@@ -10,9 +10,8 @@ from pathlib import Path
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from cmk.ccc.exceptions import MKGeneralException
-
 import cmk.utils.paths
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils import password_store
 from cmk.utils.local_secrets import PasswordStoreSecret
 from cmk.utils.password_store import PasswordId, PasswordStore

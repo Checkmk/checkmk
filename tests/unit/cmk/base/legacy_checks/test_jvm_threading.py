@@ -8,9 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.legacy_checks import jolokia_jvm_threading as jvm_threading
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckResult
+from cmk.base.legacy_checks import jolokia_jvm_threading as jvm_threading
 
 Section = Mapping[str, Any]
 

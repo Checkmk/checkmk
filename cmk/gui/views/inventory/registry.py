@@ -10,9 +10,6 @@ from collections.abc import Callable, Sequence
 from typing import Protocol, TypedDict, TypeVar
 
 from cmk.ccc.plugin_registry import Registry
-
-from cmk.utils.structured_data import SDValue
-
 from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvFloat,
@@ -28,6 +25,7 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.utils.structured_data import SDValue
 
 
 class _Comparable(Protocol):

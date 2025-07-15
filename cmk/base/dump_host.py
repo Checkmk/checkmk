@@ -10,20 +10,20 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
-from cmk.ccc import tty
-from cmk.ccc.exceptions import OnError
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
-from cmk.utils.paths import tmp_dir
-from cmk.utils.tags import ComputedDataSources
-from cmk.utils.timeperiod import timeperiod_active
-
-from cmk.snmplib import SNMPBackendEnum, SNMPVersion
-
+from cmk.base import sources
+from cmk.base.config import ConfigCache
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
+from cmk.base.sources import SNMPFetcherConfig, Source
+from cmk.ccc import tty
+from cmk.ccc.exceptions import OnError
+from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.fetcher import SourceType
+from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import (
     IPMIFetcher,
     PiggybackFetcher,
@@ -34,16 +34,11 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-
-from cmk.checkengine.fetcher import SourceType
-from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.parser import NO_SELECTION
-from cmk.checkengine.plugins import AgentBasedPlugins
-
-from cmk.base import sources
-from cmk.base.config import ConfigCache
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
-from cmk.base.sources import SNMPFetcherConfig, Source
+from cmk.snmplib import SNMPBackendEnum, SNMPVersion
+from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
+from cmk.utils.paths import tmp_dir
+from cmk.utils.tags import ComputedDataSources
+from cmk.utils.timeperiod import timeperiod_active
 
 
 def dump_source(source: Source) -> str:

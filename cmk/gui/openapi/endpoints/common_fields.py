@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
+from cmk.fields import Boolean
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.fields_filter import FieldsFilterField
-
-from cmk.fields import Boolean
 
 EXISTING_FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-\w]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
 

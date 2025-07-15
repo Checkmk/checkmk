@@ -6,7 +6,6 @@
 import pytest
 
 from cmk.ccc.user import UserId
-
 from cmk.update_config.plugins.actions.user_messages import MigrateUserMessages
 
 

@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import Any, TypeAlias, TypedDict
 
 import cmk.utils.paths
-
 from cmk.gui.i18n import _u
 from cmk.gui.permissions import declare_permission
 

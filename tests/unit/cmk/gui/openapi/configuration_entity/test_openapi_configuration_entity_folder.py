@@ -8,11 +8,9 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.unit.rest_api_client import ClientRegistry
-
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-
 from cmk.shared_typing.configuration_entity import ConfigEntityType
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 SUB_FOLDER = "sub-folder"
 SUB_FOLDER_TITLE = "Sub Folder"

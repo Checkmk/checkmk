@@ -9,6 +9,9 @@ from typing import Literal
 
 import pytest
 
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import Title
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._formatter import AutoPrecision
@@ -54,10 +57,6 @@ from cmk.gui.graphing._translated_metrics import (
 )
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
-
-from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import Title
 
 _CPU_UTIL_GRAPHS = {
     "cpu_utilization_simple": graphs_api.Graph(

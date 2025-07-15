@@ -15,24 +15,13 @@ import urllib3
 
 from livestatus import LocalConnection, SiteConfiguration, SiteConfigurations
 
+import cmk.gui.userdb.ldap_connector as ldap
+import cmk.gui.utils
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Version
-
-from cmk.utils.paths import (
-    local_agent_based_plugins_dir,
-    local_checks_dir,
-    local_gui_plugins_dir,
-    local_inventory_dir,
-    local_legacy_check_manpages_dir,
-    local_pnp_templates_dir,
-    local_web_dir,
-)
-from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
-
-import cmk.gui.userdb.ldap_connector as ldap
-import cmk.gui.utils
+from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.backup.handler import BackupConfig
 from cmk.gui.config import active_config
@@ -58,8 +47,16 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
-
-from cmk.crypto.password import Password
+from cmk.utils.paths import (
+    local_agent_based_plugins_dir,
+    local_checks_dir,
+    local_gui_plugins_dir,
+    local_inventory_dir,
+    local_legacy_check_manpages_dir,
+    local_pnp_templates_dir,
+    local_web_dir,
+)
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

@@ -8,7 +8,7 @@ import io
 from pathlib import Path
 
 import cmk.ccc.store
-
+from cmk.inventory.transformation import transform_inventory_trees
 from cmk.utils.structured_data import (
     make_meta,
     SDKey,
@@ -16,8 +16,6 @@ from cmk.utils.structured_data import (
     SDNodeName,
     SDRawTree,
 )
-
-from cmk.inventory.transformation import transform_inventory_trees
 
 
 def test_transformation_nothing_to_do(tmp_path: Path) -> None:

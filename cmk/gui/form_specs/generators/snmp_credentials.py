@@ -7,7 +7,6 @@ from enum import Enum
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.form_specs.converter import (
     SimplePassword,
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -19,7 +18,6 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
 )
 from cmk.gui.form_specs.vue import DefaultValue as VueDefaultValue
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

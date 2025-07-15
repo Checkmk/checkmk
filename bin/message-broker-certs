@@ -10,9 +10,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
-
 from cmk import messaging
+from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
 
 
 @dataclass(frozen=True)

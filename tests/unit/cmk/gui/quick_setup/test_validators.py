@@ -9,7 +9,6 @@ from cmk.gui.wato.pages.notifications.quick_setup import (
     validate_notification_count_values,
     validate_throttling_values,
 )
-
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 

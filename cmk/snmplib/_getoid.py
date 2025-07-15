@@ -10,7 +10,6 @@ import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.sectionname import SectionName
 
 from ._table import SNMPDecodedString

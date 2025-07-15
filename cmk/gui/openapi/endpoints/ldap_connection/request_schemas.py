@@ -8,14 +8,13 @@ from typing import Any
 from marshmallow import INCLUDE, post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk import fields
 from cmk.gui.fields import LDAPConnectionID, Timestamp
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.custom_fields import LDAPConnectionSuffix
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.userdb import get_ldap_connections, UserRolesConfigFile
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
-
-from cmk import fields
 
 
 class LDAPCheckboxDisabledRequest(BaseSchema):

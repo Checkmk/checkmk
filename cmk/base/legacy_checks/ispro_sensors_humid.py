@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.base.check_legacy_includes.humidity import check_humidity
+from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
 
 check_info = {}

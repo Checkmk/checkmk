@@ -6,10 +6,9 @@
 
 import time
 
-from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
+from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.plugins.lib.fireeye import DETECT
 
 check_info = {}

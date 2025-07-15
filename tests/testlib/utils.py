@@ -25,9 +25,8 @@ import pexpect  # type: ignore[import-untyped]
 import psutil
 import yaml
 
-from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
-
 from cmk import trace
+from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()

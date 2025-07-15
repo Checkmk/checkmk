@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.kube.schemata import api
+from cmk.plugins.kube.special_agents.agent_kube import kube_objects_from_namespaces
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     api_to_agent_deployment,
     APIDeploymentFactory,
     MetaDataFactory,
 )
-
-from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.special_agents.agent_kube import kube_objects_from_namespaces
 
 
 def test_filter_deployments_from_monitored_namespaces() -> None:

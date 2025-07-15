@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.watolib.objref import ObjectRefType
-
 from cmk import fields
+from cmk.gui.watolib.objref import ObjectRefType
 
 object_types = ["All", "None"] + [t.name for t in ObjectRefType]
 

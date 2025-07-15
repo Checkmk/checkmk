@@ -5,15 +5,13 @@
 from logging import Logger
 from typing import override
 
-from cmk.utils.log import VERBOSE
-
 from cmk.gui.config import active_config
-
 from cmk.update_config.plugins.lib.remove_invalid_host_labels import (
     _find_invalid_labels,
     _remove_labels,
 )
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.utils.log import VERBOSE
 
 
 class RemoveInvalidHostLabels(UpdateAction):

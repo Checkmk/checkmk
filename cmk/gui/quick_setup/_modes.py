@@ -8,9 +8,6 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import override, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
-
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -63,6 +60,7 @@ from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic, MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 
 def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:

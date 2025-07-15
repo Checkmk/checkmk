@@ -17,7 +17,6 @@ from multiprocessing.synchronize import Event
 from pathlib import Path
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
-
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
 from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config

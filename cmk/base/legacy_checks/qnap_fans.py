@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.fan import check_fan
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.plugins.lib.qnap import DETECT_QNAP
 
 check_info = {}

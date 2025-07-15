@@ -8,7 +8,6 @@
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
-
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -40,7 +39,6 @@ from cmk.gui.utils.urls import (
     urlencode,
 )
 from cmk.gui.visuals.type import visual_type_registry
-
 from cmk.mkp_tool import PackageName
 
 from ._breadcrumb import visual_page_breadcrumb

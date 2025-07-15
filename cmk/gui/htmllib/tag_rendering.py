@@ -7,11 +7,10 @@
 import re
 from collections.abc import Iterator
 
-from cmk.utils import urls
-
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.utils import urls
 
 HTMLTagName = str
 HTMLTagValue = str | None

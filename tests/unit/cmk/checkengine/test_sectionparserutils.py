@@ -9,9 +9,6 @@ from typing import Any
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-
-from cmk.utils.sectionname import SectionName
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
@@ -26,6 +23,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
+from cmk.utils.sectionname import SectionName
 
 
 def _test_section(

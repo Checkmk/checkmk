@@ -31,7 +31,6 @@ import typing
 from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
 from cmk.gui.utils.flashed_messages import MsgType

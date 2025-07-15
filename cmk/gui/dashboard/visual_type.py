@@ -8,7 +8,6 @@ from collections.abc import Iterator
 from typing import cast
 
 from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import response

@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from typing import Final
 
 from cmk.ccc import tty
-
 from cmk.utils.log import console
 
 ConfigurationWarnings = list[str]

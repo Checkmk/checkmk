@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, IO
 
 from cmk.ccc.exceptions import MKException, MKGeneralException
-
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.deprecated import (
     AesCbcCipher,

@@ -9,10 +9,9 @@ import time
 from collections.abc import Iterable
 from logging import Logger
 
+from cmk.events import event_context
 from cmk.utils.log import VERBOSE
 from cmk.utils.statename import service_state_name
-
-from cmk.events import event_context
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications

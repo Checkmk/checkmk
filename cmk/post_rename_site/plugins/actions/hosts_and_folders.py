@@ -8,13 +8,10 @@ from logging import Logger
 
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
-
-from cmk.utils.global_ident_type import GlobalIdent
-
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
+from cmk.utils.global_ident_type import GlobalIdent
 
 
 def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:

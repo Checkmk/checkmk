@@ -9,11 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
-
 import cmk.utils.paths
-from cmk.utils import password_store
-
+from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
@@ -24,6 +21,7 @@ from cmk.server_side_calls.v1 import (
     IPv6Config,
 )
 from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData
+from cmk.utils import password_store
 
 HOST_CONFIG = HostConfig(
     name="hostname",

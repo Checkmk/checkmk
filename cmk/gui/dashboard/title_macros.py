@@ -7,12 +7,10 @@ from collections.abc import Iterable
 from itertools import chain
 
 from cmk.ccc.site import SiteId
-
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
-
 from cmk.gui.i18n import _, _u
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
 
 
 def macro_mapping_from_context(

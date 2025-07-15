@@ -19,7 +19,6 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobDefines,
@@ -81,7 +80,6 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     RemoteAutomationConfig,
 )
-
 from cmk.rulesets.v1.form_specs import FormSpec
 
 

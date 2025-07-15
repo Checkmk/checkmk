@@ -15,12 +15,9 @@ from typing import Any, Final, Literal, NotRequired, TypedDict
 
 from pydantic import TypeAdapter
 
+import cmk.utils.paths
 from cmk.ccc.store import DimSerializer, ObjectStore
 from cmk.ccc.user import UserId
-
-import cmk.utils.paths
-from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
-
 from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, Config
@@ -58,6 +55,7 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
+from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 type MessageDestination = (

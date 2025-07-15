@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.version import Edition
-
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-
 from cmk.plugins.aws.rulesets.aws_status import rule_spec_aws_status
 
 

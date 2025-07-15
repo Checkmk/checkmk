@@ -14,7 +14,6 @@ from cmk.gui.form_specs.private.user_selection import (  # pylint: disable=cmk-m
     UserSelection,
     UserSelectionFilter,
 )
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

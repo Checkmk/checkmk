@@ -9,7 +9,6 @@ from logging import Logger
 from typing import cast, override
 
 from cmk.ccc.user import UserId
-
 from cmk.gui import visuals
 from cmk.gui.dashboard import get_all_dashboards
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
@@ -17,7 +16,6 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashletConfig,
 )
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig
-
 from cmk.update_config.plugins.lib.graph_templates import RENAMED_GRAPH_TEMPLATES
 from cmk.update_config.registry import update_action_registry, UpdateAction
 

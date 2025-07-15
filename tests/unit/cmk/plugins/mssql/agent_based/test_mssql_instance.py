@@ -6,8 +6,6 @@
 
 import pytest
 
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -18,6 +16,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 from cmk.plugins.mssql.agent_based.mssql_instance import (
     inventory_mssql_instance,
     parse_mssql_instance,

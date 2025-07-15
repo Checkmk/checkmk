@@ -10,6 +10,10 @@ from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk import fields
+from cmk.gui import fields as gui_fields
+from cmk.gui.fields import base
+from cmk.gui.openapi.restful_objects import response_schemas
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
     HostOrServiceConditionsNegated,
@@ -22,12 +26,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.tags import TagID
-
-from cmk.gui import fields as gui_fields
-from cmk.gui.fields import base
-from cmk.gui.openapi.restful_objects import response_schemas
-
-from cmk import fields
 
 LabelConditions = dict[str, str | TagConditionNE]
 

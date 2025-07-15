@@ -25,9 +25,8 @@ from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
 
-from cmk.ccc.site import SiteId
-
 from cmk import trace
+from cmk.ccc.site import SiteId
 
 UserId = NewType("UserId", str)
 

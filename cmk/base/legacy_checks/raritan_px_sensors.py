@@ -41,6 +41,8 @@
 # .1.3.6.1.4.1.13742.4.3.3.1.34.13 550 --> PDU-MIB::externalSensorUpperWarningThreshold.13
 
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import equals, SNMPTree
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_binary,
@@ -49,9 +51,6 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree
 
 check_info = {}
 

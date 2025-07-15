@@ -13,12 +13,10 @@ from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import SiteId
-
-from cmk.utils.certs import CN_TEMPLATE, RootCA
-
 from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
+from cmk.utils.certs import CN_TEMPLATE, RootCA
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:

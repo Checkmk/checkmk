@@ -10,13 +10,11 @@ from collections.abc import Iterable
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
-
-from cmk.base import config
-
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.base import config
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 TEST_DISCO_PARAMS = [logwatch_.ParameterLogwatchGroups(host_name="test-host", grouping_patterns=[])]
 

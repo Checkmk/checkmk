@@ -10,11 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.integration.linux_test_host import create_linux_test_host
-
-from tests.testlib.site import Site
-
 from cmk.ccc.hostaddress import HostName
+from tests.integration.linux_test_host import create_linux_test_host
+from tests.testlib.site import Site
 
 
 @contextmanager

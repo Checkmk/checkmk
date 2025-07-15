@@ -10,10 +10,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.metrics import MetricName
-
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import RegisteredMetric
@@ -30,6 +26,8 @@ from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.metrics import MetricName
 
 
 @contextmanager

@@ -133,35 +133,38 @@ def _remove_expired(messages: Iterable[Message]) -> list[Message]:
 
 
 def delete_gui_message(msg_id: str) -> None:
+    def keep_or_delete(message: Message) -> Message | None:
+        if message["id"] != msg_id or message["security"]:
+            return message
+        if len(message["methods"]) != 1 and "gui_popup" in message["methods"]:
+            # If "Show popup message" and other options are combined, we have only to remove the
+            # popup method to avoid the popup appearing again.
+            return {**message, "methods": [m for m in message["methods"] if m != "gui_popup"]}
+        return None
+
     messages = get_gui_messages()
-    for index, msg in enumerate(messages):
-        if msg["id"] == msg_id and not msg["security"]:
-            # If "Show popup message" and other options are combined,
-            # we have only to remove the popup method to avoid the
-            # popup appearing again
-            msg_methods = msg["methods"]
-            if len(msg_methods) != 1 and "gui_popup" in msg_methods:
-                messages[index]["methods"] = [
-                    method for method in msg_methods if method != "gui_popup"
-                ]
-                continue
-            messages.pop(index)
-    save_gui_messages(messages)
+    updated_messages = [
+        updated_message
+        for message in messages
+        for updated_message in [keep_or_delete(message)]
+        if updated_message is not None
+    ]
+    save_gui_messages(updated_messages)
 
 
 def acknowledge_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
-    for index, msg in enumerate(messages):
-        if msg["id"] == msg_id:
-            messages[index]["acknowledged"] = True
-    save_gui_messages(messages)
+    updated_messages: list[Message] = [
+        ({**message, "acknowledged": True} if message["id"] == msg_id else message)
+        for message in messages
+    ]
+    save_gui_messages(updated_messages)
 
 
 def acknowledge_all_messages() -> None:
     messages = get_gui_messages()
-    for index, _msg in enumerate(messages):
-        messages[index]["acknowledged"] = True
-    save_gui_messages(messages)
+    updated_messages: list[Message] = [{**message, "acknowledged": True} for message in messages]
+    save_gui_messages(updated_messages)
 
 
 def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None = None) -> None:

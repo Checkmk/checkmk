@@ -6,6 +6,7 @@ use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
 use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType};
 use anyhow::Result;
+use std::path::PathBuf;
 use std::time::Duration;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -39,13 +40,15 @@ impl EngineTag {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
-    hostname: HostName,
+    hostname: HostName,         // "localhost" if not defined
+    port: Port,                 // 1521 if not defined
+    timeout: u64,               // 5 if not defined
+    tns_admin: Option<PathBuf>, // config dir if not defined
+    oracle_local_registry: Option<PathBuf>,
     service_name: Option<ServiceName>,
     service_type: Option<ServiceType>,
     instance: Option<InstanceName>,
-    port: Port,
-    timeout: u64,
-    engine: EngineTag,
+    engine: EngineTag, // Std if not defined
 }
 
 impl Connection {
@@ -67,6 +70,10 @@ impl Connection {
                 .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
                 .to_lowercase()
                 .into(),
+            tns_admin: conn.get_string(keys::TNS_ADMIN).map(PathBuf::from),
+            oracle_local_registry: conn
+                .get_string(keys::ORACLE_LOCAL_REGISTRY)
+                .map(PathBuf::from),
             service_name: conn.get_string(keys::SERVICE_NAME).map(ServiceName::from),
             service_type: conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from),
             instance: conn.get_string(keys::INSTANCE).map(InstanceName::from),
@@ -100,6 +107,12 @@ impl Connection {
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
     }
+    pub fn tns_admin(&self) -> Option<&PathBuf> {
+        self.tns_admin.as_ref()
+    }
+    pub fn oracle_local_registry(&self) -> Option<&PathBuf> {
+        self.oracle_local_registry.as_ref()
+    }
     pub fn engine_tag(&self) -> &EngineTag {
         &self.engine
     }
@@ -123,6 +136,8 @@ impl Default for Connection {
     fn default() -> Self {
         Self {
             hostname: HostName::from(defaults::CONNECTION_HOST_NAME.to_string()),
+            oracle_local_registry: None,
+            tns_admin: None,
             service_name: None,
             service_type: None,
             instance: None,
@@ -143,11 +158,14 @@ mod tests {
         pub const CONNECTION_FULL: &str = r#"
 connection:
   hostname: "alice"
-  service_name: service_NAME 
-  service_type: service_TYPE
-  instance: instance_NAME # mandatory
   port: 9999
   timeout: 341
+  tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
+  oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
+  # not defined in docu, reserved for a future use
+  service_name: service_NAME  #
+  service_type: dedicated # dedicated or shared
+  instance: instance_NAME
   engine: std
 "#;
     }
@@ -160,11 +178,13 @@ connection:
                 .unwrap(),
             Connection {
                 hostname: HostName::from("alice".to_string()),
-                service_name: Some(ServiceName::from("service_NAME")),
-                service_type: Some(ServiceType::from("service_TYPE")),
-                instance: Some(InstanceName::from("instance_NAME")),
                 port: Port(9999),
                 timeout: 341,
+                tns_admin: Some(PathBuf::from("/path/to/oracle/config/files/")),
+                oracle_local_registry: Some(PathBuf::from("/etc/oracle/olr.loc")),
+                service_name: Some(ServiceName::from("service_NAME")),
+                service_type: Some(ServiceType::from("dedicated")),
+                instance: Some(InstanceName::from("instance_NAME")),
                 engine: EngineTag::Std,
             }
         );
@@ -175,6 +195,8 @@ connection:
             Connection::default(),
             Connection {
                 hostname: HostName::from("localhost".to_string()),
+                tns_admin: None,
+                oracle_local_registry: None,
                 service_name: None,
                 service_type: None,
                 instance: None,

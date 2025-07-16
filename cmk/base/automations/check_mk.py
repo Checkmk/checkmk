@@ -710,7 +710,6 @@ def _make_compute_check_parameters_of_autocheck(
         host_name: HostName, entry: AutocheckEntry
     ) -> TimespecificParameters:
         service_name = service_name_config.make_name(
-            label_manager.labels_of_host,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
@@ -1179,7 +1178,6 @@ def _make_get_effective_host_of_autocheck_callback(
         service_name = precomputed_service_descriptions.get(
             (host, entry.check_plugin_name, entry.item)
         ) or service_name_config.make_name(
-            config_cache.label_manager.labels_of_host,
             host,
             entry.check_plugin_name,
             service_name_template=(
@@ -1741,7 +1739,6 @@ class AutomationGetServiceName(Automation):
         service_name_config = loaded_config.config_cache.make_passive_service_name_config()
         return GetServiceNameResult(
             service_name=service_name_config.make_name(
-                loaded_config.config_cache.label_manager.labels_of_host,
                 host_name,
                 check_plugin_name,
                 service_name_template=(

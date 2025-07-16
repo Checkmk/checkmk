@@ -425,7 +425,6 @@ def _get_clustered_services(
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
             service_name = service_name_config.make_name(
-                config_cache.label_manager.labels_of_host,
                 node_name,
                 entry.check_plugin_name,
                 service_name_template=(
@@ -1176,7 +1175,6 @@ def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
 
 def _make_service_description_cb(
     passive_service_name_config: PassiveServiceNameConfig,
-    labels_of_host: Callable[[HostName], Labels],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
     """Replacement for functool.partial(service_description, matcher)
@@ -1186,7 +1184,6 @@ def _make_service_description_cb(
 
     def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
         return passive_service_name_config.make_name(
-            labels_of_host,
             hostname,
             check_plugin_name,
             service_name_template=(
@@ -1525,7 +1522,6 @@ class AutochecksConfigurer:
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
         return self.service_name_config.make_name(
-            self._label_manager.labels_of_host,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
@@ -1660,6 +1656,7 @@ class ConfigCache:
             ),
             user_defined_service_names=self._loaded_config.service_descriptions,
             use_new_names_for=self._loaded_config.use_new_descriptions_for,
+            labels_of_host=self.label_manager.labels_of_host,
         )
 
     def make_service_configurer(
@@ -1677,11 +1674,7 @@ class ConfigCache:
                 service_rule_groups,
             ),
             check_plugins,
-            _make_service_description_cb(
-                service_name_config,
-                self.label_manager.labels_of_host,
-                check_plugins,
-            ),
+            _make_service_description_cb(service_name_config, check_plugins),
             self.effective_host,
             lambda host_name, service_name, discovered_labels: self.label_manager.labels_of_service(
                 host_name, service_name, discovered_labels
@@ -3693,7 +3686,6 @@ class ConfigCache:
                         check_plugin_name=check_plugin_name,
                         item=item,
                         description=service_name_config.make_name(
-                            self.label_manager.labels_of_host,
                             hostname,
                             check_plugin_name,
                             service_name_template=(

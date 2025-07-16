@@ -69,7 +69,6 @@ def test_cluster_ignores_nodes_parameters(
         hostname: HostName, check_plugin_name: CheckPluginName, item: str | None
     ) -> ServiceName:
         return service_name_config.make_name(
-            config_cache.label_manager.labels_of_host,
             hostname,
             check_plugin_name,
             service_name_template=(

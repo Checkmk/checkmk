@@ -90,14 +90,15 @@ class PassiveServiceNameConfig:
         final_service_name_config: FinalServiceNameConfig,
         user_defined_service_names: Mapping[str, str],
         use_new_names_for: Container[str],
+        labels_of_host: Callable[[HostName], Labels],
     ):
         self.final_service_name_config: Final = final_service_name_config
         self.user_defined_service_names: Final = user_defined_service_names
         self.use_new_names_for: Final = use_new_names_for
+        self.labels_of_host: Final = labels_of_host
 
     def make_name(
         self,
-        labels_of_host: Callable[[HostName], Labels],
         host_name: HostName,
         check_plugin_name: CheckPluginName,
         *,
@@ -118,7 +119,7 @@ class PassiveServiceNameConfig:
                 )
             ),
             host_name,
-            labels_of_host,
+            self.labels_of_host,
         )
 
     def _get_service_description_template_and_item(

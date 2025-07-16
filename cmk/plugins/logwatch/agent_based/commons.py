@@ -160,7 +160,6 @@ class RulesetAccess:
         # Fail #2: Compute the correct service description
         # This will be wrong if the logfile is grouped.
         service_description = cc.make_passive_service_name_config().make_name(
-            cc.label_manager.labels_of_host,
             host_name,
             CheckPluginName(plugin.name),
             service_name_template=plugin.service_name,

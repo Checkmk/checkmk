@@ -1,0 +1,18 @@
+Title: snmplib: Always use SNMPv3 contexts in requests
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1752668647
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+When an SNMPv3 device (e.g. a printer from HP or Brother) required a context, the connection test and service discovery failed with the following error:
+
+C+:
+SNMP Error on <hostname> while walking .1.3.6.1.2.1.1.1. Normally this is caused by a device sending invalid SNMP responses (Details: Bad context specified (0/-17)).
+C-:
+
+This error was caused by an incorrect assumption in the filtering of the "SNMPv3 contexts to use in requests" rules.
+
+With this change, the filter algorithm returns the context valid for all SNMP sections even if the request was not specific to a single SNMP section.

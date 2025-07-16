@@ -131,7 +131,7 @@ class SNMPHostConfig(NamedTuple):
         self,
         section_name: _SectionName | None,
     ) -> Sequence[SNMPContext]:
-        if not section_name or not self.is_snmpv3_host:
+        if not self.is_snmpv3_host:
             return [None]
         section_name_str = str(section_name)
         for ty, rules in self.snmpv3_contexts:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.ccc.i18n import _
 
@@ -25,6 +26,7 @@ _FallbackModel = Sequence[str]
 
 
 class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -43,6 +45,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
         # Filter empty strings
         return [x for x in value if x]
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.ListOfStrings, object]:
@@ -64,6 +67,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -81,5 +85,6 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
                 )
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> Sequence[str]:
         return parsed_value

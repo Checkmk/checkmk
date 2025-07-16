@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
+from typing import override
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -14,6 +15,7 @@ from ..visitors.multiline_text import MultilineTextVisitor
 
 
 class CommentTextAreaVisitor(MultilineTextVisitor):
+    @override
     def _to_vue(
         self, parsed_value: str | InvalidValue[str]
     ) -> tuple[shared_type_defs.CommentTextArea, object]:

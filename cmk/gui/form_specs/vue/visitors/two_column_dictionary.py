@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
+from typing import override
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
@@ -15,6 +16,7 @@ from .dictionary import (
 
 
 class TwoColumnDictionaryVisitor(DictionaryVisitor):
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.TwoColumnDictionary, object]:

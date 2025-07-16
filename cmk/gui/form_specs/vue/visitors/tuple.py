@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import assert_never
+from typing import assert_never, override
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.i18n import _
@@ -28,6 +28,7 @@ _FallbackModel = list[IncomingData]
 
 
 class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -60,6 +61,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
             case other:
                 assert_never(other)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Tuple, object]:
@@ -90,6 +92,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
             vue_elements,
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -106,6 +109,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
                 )
         return validation_errors
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> tuple[object, ...]:
         disk_values = []
         for parameter_form, value in zip(self.form_spec.elements, parsed_value, strict=True):

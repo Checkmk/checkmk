@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
-from typing import Literal
+from typing import Literal, override
 
 from cmk.ccc.i18n import _
 
@@ -29,6 +29,7 @@ type _FallbackModel = float | Literal[""]
 
 
 class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -52,9 +53,11 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
 
         return float(value)
 
+    @override
     def _validators(self) -> Sequence[Callable[[object], object]]:
         return [IsFloat()] + compute_validators(self.form_spec)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Float, object]:
@@ -74,5 +77,6 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> float:
         return parsed_value

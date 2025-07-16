@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Generic, TypeVar
+from typing import Generic, override, TypeVar
 
 from cmk.gui.form_specs.private import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.list_unique_selection import (
@@ -39,6 +39,7 @@ class ListUniqueSelectionVisitor(
     Generic[T],
     FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel, _FallbackModel],
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -53,6 +54,7 @@ class ListUniqueSelectionVisitor(
 
         return [RawFrontendData(entry) for entry in raw_value.value]
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.ListUniqueSelection, object]:
@@ -134,6 +136,7 @@ class ListUniqueSelectionVisitor(
             )
         raise ValueError("Invalid single_choice_type")
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -151,6 +154,7 @@ class ListUniqueSelectionVisitor(
                 )
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> list[T]:
         disk_values = []
         element_visitor = get_visitor(self._build_element_template())

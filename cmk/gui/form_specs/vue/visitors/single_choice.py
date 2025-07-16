@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeAlias, TypeGuard, TypeVar
+from typing import Generic, override, TypeAlias, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.i18n import _, translate_to_current_language
@@ -84,6 +84,7 @@ class SingleChoiceVisitor(
             return self.form_spec.elements()
         return self.form_spec.elements
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]:
@@ -145,6 +146,7 @@ class SingleChoiceVisitor(
 
         return _ValidValue(value.value, elements)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel[T] | InvalidValue[_FallbackModel[T]]
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
@@ -206,6 +208,7 @@ class SingleChoiceVisitor(
             return message_localized % (invalid_value,)
         return message_localized
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel[T]
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -216,5 +219,6 @@ class SingleChoiceVisitor(
             )
         return []
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel[T]) -> object:
         return parsed_value.value

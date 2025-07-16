@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
-from typing import Literal
+from typing import Literal, override
 
 from cmk.utils.password_store import ad_hoc_password_id
 
@@ -37,6 +37,7 @@ VuePassword = tuple[Literal["explicit_password", "stored_password"], PasswordId,
 
 
 class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
+    @override
     def _parse_value(self, raw_value: IncomingData) -> ParsedPassword | InvalidValue[VuePassword]:
         fallback_value: VuePassword = ("explicit_password", "", "", False)
         if isinstance(raw_value, DefaultValue):
@@ -87,6 +88,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
 
         return "cmk_postprocessed", password_type, (password_id, password)
 
+    @override
     def _to_vue(
         self, parsed_value: ParsedPassword | InvalidValue[VuePassword]
     ) -> tuple[VueComponents.Password, VuePassword]:
@@ -126,6 +128,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
             value,
         )
 
+    @override
     def _validate(self, parsed_value: ParsedPassword) -> list[VueComponents.ValidationMessage]:
         if parsed_value[1] == "explicit_password":
             return [
@@ -139,12 +142,14 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
 
         return []
 
+    @override
     def _to_disk(self, parsed_value: ParsedPassword) -> ParsedPassword:
         postprocessed, password_type, (password_id, password) = parsed_value
         if password_type == "explicit_password" and not password_id:
             password_id = ad_hoc_password_id()
         return (postprocessed, password_type, (password_id, password))
 
+    @override
     def _mask(self, parsed_value: ParsedPassword) -> ParsedPassword:
         postprocessed, password_type, (password_id, _) = self._to_disk(parsed_value)
         return (postprocessed, password_type, (password_id, "******"))

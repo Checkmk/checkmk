@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from typing import override
 
 from cmk.gui.form_specs.private.labels import Labels
 from cmk.gui.i18n import _, translate_to_current_language
@@ -20,6 +21,7 @@ _FallbackModel = Mapping[str, str]
 
 
 class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -32,6 +34,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
 
         return raw_value.value
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Labels, Mapping[str, str]]:
@@ -71,5 +74,6 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
             ),
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> Mapping[str, str]:
         return parsed_value

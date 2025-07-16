@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import override
+
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.i18n import _
 
@@ -22,6 +24,7 @@ class TransformVisitor(
         _FallbackModel,
     ]
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -35,6 +38,7 @@ class TransformVisitor(
 
         return raw_value
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[VueComponents.FormSpec, object]:
@@ -45,9 +49,11 @@ class TransformVisitor(
         )
         return get_visitor(self.form_spec.wrapped_form_spec).to_vue(value)
 
+    @override
     def _validate(self, parsed_value: _ParsedValueModel) -> list[VueComponents.ValidationMessage]:
         return get_visitor(self.form_spec.wrapped_form_spec).validate(parsed_value)
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return self.form_spec.to_disk(
             get_visitor(self.form_spec.wrapped_form_spec).to_disk(parsed_value)

@@ -6,6 +6,7 @@ import base64
 import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
+from typing import override
 
 from werkzeug.datastructures import FileStorage
 
@@ -46,7 +47,7 @@ class FileUploadModel:
 @request_memoize()
 def read_content_of_uploaded_file(file_storage: FileStorage) -> FileContent:
     # We have to memoize the file content extraction, since the data can only be read once
-    return file_storage.read()
+    return file_storage.stream.read()
 
 
 class _FileSizeValidator:
@@ -98,6 +99,7 @@ class _FileExtensionValidator:
 
 
 class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> FileUploadModel | InvalidValue[FileUploadModel]:
@@ -159,6 +161,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
     def decrypt_content(cls, content: str) -> bytes:
         return base64.b64decode(Encrypter.decrypt(base64.b64decode(content)))
 
+    @override
     def _to_vue(
         self, parsed_value: FileUploadModel | InvalidValue[FileUploadModel]
     ) -> tuple[VueComponents.FileUpload, FileUploadModel]:
@@ -182,6 +185,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _validators(self) -> Sequence[Callable[[tuple[str, str, bytes]], object]]:
         validators: list[Callable[[tuple[str, str, bytes]], object]] = []
 
@@ -195,6 +199,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
 
         return validators + compute_validators(self.form_spec)
 
+    @override
     def _to_disk(self, parsed_value: FileUploadModel) -> tuple[str, str, bytes]:
         assert parsed_value.file_name is not None
         assert parsed_value.file_type is not None

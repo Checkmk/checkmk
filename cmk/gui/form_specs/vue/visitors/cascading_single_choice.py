@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import override
+
 from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
 from cmk.gui.i18n import _, translate_to_current_language
 
@@ -37,6 +39,7 @@ _FallbackModel = tuple[str, DefaultValue]
 class CascadingSingleChoiceVisitor(
     FormSpecVisitor[CascadingSingleChoiceExtended, _ParsedValueModel, _FallbackModel]
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -63,6 +66,7 @@ class CascadingSingleChoiceVisitor(
         else:
             return (name, RawFrontendData(raw_value.value[1]))
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.CascadingSingleChoice, object]:
@@ -105,6 +109,7 @@ class CascadingSingleChoiceVisitor(
             (selected_name, selected_vue_value),
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -127,6 +132,7 @@ class CascadingSingleChoiceVisitor(
 
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> tuple[str, object]:
         selected_name, selected_value = parsed_value
 

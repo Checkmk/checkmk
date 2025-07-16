@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import override
+
 from cmk.gui.form_specs.vue import DefaultValue, IncomingData, InvalidValue, RawDiskData
 from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 
@@ -23,6 +25,7 @@ _FallbackModel = RandomSentinel
 
 
 class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
+    @override
     def _parse_value(self, raw_value: IncomingData) -> _ParsedValue | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return "this isn't under test"
@@ -35,6 +38,7 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
 
         return str(raw_value.value)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValue | InvalidValue[_FallbackModel]
     ) -> tuple[VueTypes.String, object]:
@@ -58,6 +62,7 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
             frontend_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValue) -> object:
         return parsed_value
 

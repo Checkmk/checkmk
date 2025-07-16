@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
-from typing import Literal
+from typing import Literal, override
 
 from cmk.ccc.i18n import _
 
@@ -29,6 +29,7 @@ _FallbackModel = int | Literal[""]
 
 
 class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -59,9 +60,11 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]
                 reason=_("Not an integer number"), fallback_value=""
             )
 
+    @override
     def _validators(self) -> Sequence[Callable[[int], object]]:
         return [IsInteger()] + compute_validators(self.form_spec)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Integer, Literal[""] | int]:
@@ -81,5 +84,6 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FallbackModel]
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> int:
         return parsed_value

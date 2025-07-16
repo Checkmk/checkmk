@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
-from typing import TypeVar
+from typing import override, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -27,14 +27,17 @@ _FallbackModel = int | float | str | bool | None
 class FixedValueVisitor(
     FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FallbackModel]
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         return self.form_spec.value
 
+    @override
     def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.FixedValue, object]:
@@ -50,6 +53,7 @@ class FixedValueVisitor(
             self.form_spec.value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")

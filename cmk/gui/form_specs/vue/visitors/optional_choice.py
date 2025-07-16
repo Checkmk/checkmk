@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Never
+from typing import Never, override
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -33,6 +33,7 @@ _FallbackModel = Never
 
 
 class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -41,7 +42,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
             return RawDiskData(None)
         return raw_value
 
-    def _compute_label(self):
+    def _compute_label(self) -> str:
         if self.form_spec.label is not None:
             return localize(self.form_spec.label)
         title = localize(self.form_spec.title)
@@ -49,6 +50,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
             return title
         return localize(Label(" Activate this option"))
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.OptionalChoice, object]:
@@ -81,6 +83,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
             None if parsed_value.value is None else embedded_value,
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -99,6 +102,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
 
         return validation_errors
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         if parsed_value.value is None:
             return None

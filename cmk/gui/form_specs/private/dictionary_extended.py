@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import override, TypeVar
 
 from cmk.rulesets.v1.form_specs import DictGroup, Dictionary
 from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
@@ -21,6 +21,7 @@ class DictionaryExtended(Dictionary):
     # default preselected.
     default_checked: list[str] | None = None
 
+    @override
     def __post_init__(self) -> None:
         for checked in self.default_checked or []:
             if checked not in self.elements:

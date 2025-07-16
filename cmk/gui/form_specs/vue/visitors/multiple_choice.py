@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import assert_never, TypedDict
+from typing import assert_never, override, TypedDict
 
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.private.multiple_choice import (
@@ -73,6 +73,7 @@ class MultipleChoiceVisitor(
     def _build_data_format_from_names(self, names: Sequence[str]) -> _ParsedValueModel:
         return [element for element in self._get_elements() if element["name"] in names]
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -103,6 +104,7 @@ class MultipleChoiceVisitor(
             case other:
                 assert_never(other)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[
@@ -169,5 +171,6 @@ class MultipleChoiceVisitor(
             and_x_more=_("and %s more"),
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> list[str]:
         return [v["name"] for v in parsed_value]

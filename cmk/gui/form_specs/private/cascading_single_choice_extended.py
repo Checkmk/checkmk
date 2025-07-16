@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from typing import override
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, CascadingSingleChoiceElement
@@ -19,7 +20,8 @@ class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[
     user input, like for contact groups.
     """
 
-    def __post_init__(self):
+    @override
+    def __post_init__(self) -> None:
         pass
 
 

@@ -334,7 +334,6 @@ module = [
   "cmk.gui.custom_icons.*",
   "cmk.gui.dashboard.*",
   "cmk.gui.data_source.*",
-  "cmk.gui.form_specs.*",
   "cmk.gui.graphing.*",
   "cmk.gui.htmllib.*",
   "cmk.gui.inventory.*",

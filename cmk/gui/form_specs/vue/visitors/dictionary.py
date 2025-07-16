@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
 from collections.abc import Mapping, Sequence
+from typing import override
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.i18n import _
@@ -60,6 +61,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         valid_keys = self.form_spec.elements.keys()
         return list(value.keys() - valid_keys - self._get_static_elements())
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -105,6 +107,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                 fallback_value=self._compute_default_values(),
             )
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Dictionary, object]:
@@ -165,6 +168,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
             vue_values,
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -195,6 +199,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
 
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> dict[str, object]:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():

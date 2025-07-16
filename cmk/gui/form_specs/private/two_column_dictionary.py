@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
+from typing import override
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -14,6 +15,7 @@ class TwoColumnDictionary(Dictionary):
     # configuration. Add complexity (stray from the default) by checking boxes, not unchecking them.
     default_checked: list[str] | None = None
 
+    @override
     def __post_init__(self) -> None:
         for checked in self.default_checked or []:
             if checked not in self.elements:

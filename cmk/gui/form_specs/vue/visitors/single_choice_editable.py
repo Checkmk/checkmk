@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Sequence
+from typing import override
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
 from cmk.gui.i18n import _
@@ -36,6 +37,7 @@ _FallbackModel = str | None
 class SingleChoiceEditableVisitor(
     FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FallbackModel]
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -59,6 +61,7 @@ class SingleChoiceEditableVisitor(
             )
         return value
 
+    @override
     def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:
         def _validate_not_none(value: str | None) -> None:
             if value is None:
@@ -70,6 +73,7 @@ class SingleChoiceEditableVisitor(
 
         return validators + compute_validators(self.form_spec)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.SingleChoiceEditable, object]:
@@ -123,5 +127,6 @@ class SingleChoiceEditableVisitor(
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return parsed_value

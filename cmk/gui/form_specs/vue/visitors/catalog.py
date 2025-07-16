@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import Any, override, Self
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -82,6 +82,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
 
         return resolved_value
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -127,6 +128,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
             default_value=element_value,
         )
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.Catalog, object]:
@@ -187,6 +189,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
 
         return vue_catalog, vue_value
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -215,6 +218,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                     )
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> Mapping[str, dict[str, object]]:
         disk_values: dict[str, dict[str, object]] = {}
         for topic_name, topic in self.form_spec.elements.items():

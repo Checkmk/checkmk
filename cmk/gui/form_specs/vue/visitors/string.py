@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.gui.form_specs.private import StringAutocompleter
 from cmk.gui.i18n import _
 
@@ -25,6 +27,7 @@ _FallbackModel = str
 
 
 class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -44,6 +47,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
 
         return raw_value.value
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.String, object]:
@@ -66,6 +70,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
             ),
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> str:
         return parsed_value
 

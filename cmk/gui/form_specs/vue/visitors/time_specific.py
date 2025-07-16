@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 from collections.abc import Sequence
-from typing import Any, TypedDict, TypeGuard
+from typing import Any, override, TypedDict, TypeGuard
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
@@ -41,6 +41,7 @@ _FallbackModel = object
 
 
 class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -74,6 +75,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
     ) -> Sequence[tuple[str, object]]:
         return [(x["timeperiod"], x["parameters"]) for x in config]
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.TimeSpecific, None | object]:
@@ -103,11 +105,13 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
             self._get_current_visitor(parsed_value).to_vue(parsed_value)[1],
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         return self._get_current_visitor(parsed_value).validate(parsed_value)
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         disk_value = self._get_current_visitor(parsed_value).to_disk(parsed_value)
         if self._is_active(parsed_value):

@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import override
 
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, MultipleChoiceElement
 from cmk.shared_typing.vue_formspec_components import Autocompleter
@@ -27,7 +28,8 @@ class MultipleChoiceElementExtended(MultipleChoiceElement):
     user input, like for contact groups.
     """
 
-    def __post_init__(self):
+    @override
+    def __post_init__(self) -> None:
         pass
 
 

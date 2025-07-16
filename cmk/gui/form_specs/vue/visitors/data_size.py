@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
+from typing import override
 
 from cmk.ccc.i18n import _
 
@@ -82,6 +83,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel
                 return int(converted_value * factor)
         return int(converted_value)
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParseValueModel | InvalidValue[_FallbackModel]:
@@ -108,6 +110,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel
 
         return value
 
+    @override
     def _to_vue(
         self, parsed_value: _ParseValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.DataSize, object]:
@@ -138,8 +141,10 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FallbackModel
             [str(displayed_value), displayed_unit],
         )
 
+    @override
     def _validators(self) -> Sequence[Callable[[int], object]]:
         return [IsInteger()] + compute_validators(self.form_spec)
 
+    @override
     def _to_disk(self, parsed_value: _ParseValueModel) -> int:
         return int(parsed_value)

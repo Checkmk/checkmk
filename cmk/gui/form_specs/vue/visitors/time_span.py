@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Iterator, Sequence
-from typing import cast
+from typing import cast, override
 
 from cmk.ccc.i18n import _
 
@@ -54,6 +54,7 @@ _FallbackModel = float | None
 
 
 class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -78,6 +79,7 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackMode
         except ValueError:
             return InvalidValue[_FallbackModel](reason=_("Not a number"), fallback_value=None)
 
+    @override
     def _validators(self) -> Sequence[Callable[[object], object]]:
         def custom_validate() -> Iterator[Callable[[object], object]]:
             for validator in compute_validators(self.form_spec):
@@ -113,6 +115,7 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackMode
 
         return [IsFloat()] + list(custom_validate())
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.TimeSpan, object]:
@@ -142,5 +145,6 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FallbackMode
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> float:
         return parsed_value

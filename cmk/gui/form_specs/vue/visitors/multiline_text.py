@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.ccc.i18n import _
 
 from cmk.rulesets.v1.form_specs import MultilineText
@@ -23,6 +25,7 @@ _FallbackModel = str
 
 
 class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -39,6 +42,7 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fa
             return InvalidValue(reason=_("Invalid text"), fallback_value="")
         return value
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.MultilineText, object]:
@@ -56,5 +60,6 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fa
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> str:
         return parsed_value

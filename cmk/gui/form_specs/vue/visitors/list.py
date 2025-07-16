@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Generic, TypeVar
+from typing import Generic, override, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.i18n import _, translate_to_current_language
@@ -34,6 +34,7 @@ class ListVisitor(
     Generic[T],
     FormSpecVisitor[ListExtended[T], _ParsedValueModel, _FallbackModel],
 ):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -48,6 +49,7 @@ class ListVisitor(
             for v in raw_value.value
         ]
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.List, object]:
@@ -87,6 +89,7 @@ class ListVisitor(
             list_values,
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -103,6 +106,7 @@ class ListVisitor(
                 )
         return element_validations
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> list[object]:
         disk_values = []
         element_visitor = get_visitor(self.form_spec.element_template)

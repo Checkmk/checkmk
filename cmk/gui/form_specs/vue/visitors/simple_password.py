@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty
@@ -27,6 +27,7 @@ _FallbackModel = tuple[str, bool]
 
 
 class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _FallbackModel]):
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -48,9 +49,11 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
             Encrypter.decrypt(base64.b64decode(password.encode("ascii"))) if encrypted else password
         )
 
+    @override
     def _validators(self) -> Sequence[Callable[[Any], object]]:
         return [not_empty()] + compute_validators(self.form_spec)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.SimplePassword, object]:
@@ -69,6 +72,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
             (encrypted_password, bool(encrypted_password)),
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -78,8 +82,10 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
             if x is not None
         ]
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return parsed_value
 
+    @override
     def _mask(self, parsed_value: _ParsedValueModel) -> object:
         return "******"

@@ -77,7 +77,7 @@ class ListUniqueSelection(FormSpec[Sequence[ModelT]]):
     """Label used in the rule summary if the list is empty."""
     prefill: DefaultValue[Sequence[ModelT]] = DefaultValue([])
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.single_choice_type is SingleChoice:
             if not all(isinstance(element, UniqueSingleChoiceElement) for element in self.elements):
                 raise ValueError(

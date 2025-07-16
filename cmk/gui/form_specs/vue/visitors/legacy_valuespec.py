@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import uuid
-from typing import Any
+from typing import Any, override
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import LegacyValueSpec
@@ -35,6 +35,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
     have a clear distinction
     """
 
+    @override
     def _migrate_disk_value(self, value: IncomingData) -> IncomingData:
         try:
             return super()._migrate_disk_value(value)
@@ -42,6 +43,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             # The legacy valuespecs handle errors themselves
             return RawFrontendData(MigrationFailed())
 
+    @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
@@ -62,6 +64,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         readonly_html = self.form_spec.valuespec.value_to_html(value)
         return input_html, str(readonly_html)
 
+    @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.LegacyValuespec, object]:
@@ -120,6 +123,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             {"input_html": input_html, "readonly_html": readonly_html},
         )
 
+    @override
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
@@ -151,6 +155,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                 output_funnel.drain()
         return []
 
+    @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> Any:
         if isinstance(parsed_value, DefaultValue):
             return self.form_spec.valuespec.default_value()

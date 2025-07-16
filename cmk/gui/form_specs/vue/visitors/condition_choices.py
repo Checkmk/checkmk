@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import assert_never, cast, Literal
+from typing import assert_never, cast, Literal, override
 
 from cmk.gui.form_specs.private.condition_choices import (
     Condition,
@@ -137,6 +137,7 @@ def _parse_disk(raw_value: object) -> Conditions | InvalidValue[_FallbackModel]:
 
 
 class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _FallbackModel]):
+    @override
     def _parse_value(self, raw_value: IncomingData) -> Conditions | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(
@@ -148,6 +149,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fal
 
         return _parse_disk(raw_value.value)
 
+    @override
     def _to_vue(
         self, parsed_value: Conditions | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.ConditionChoices, object]:
@@ -187,6 +189,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fal
             value,
         )
 
+    @override
     def _validate(self, parsed_value: Conditions) -> list[shared_type_defs.ValidationMessage]:
         vue_value = (
             [_condition_to_value(name, c) for name, c in parsed_value.items()]
@@ -198,5 +201,6 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fal
             compute_validators(self.form_spec), lambda: vue_value, vue_value
         )
 
+    @override
     def _to_disk(self, parsed_value: Conditions) -> Conditions:
         return parsed_value

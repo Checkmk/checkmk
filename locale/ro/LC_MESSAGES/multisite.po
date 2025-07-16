@@ -14191,14 +14191,6 @@ msgstr ""
 msgid "Community forum"
 msgstr "Forumul comunitar"
 
-#, fuzzy
-msgid "Community translated languages"
-msgstr "Activați limbile traduse de comunitate"
-
-#, fuzzy
-msgid "Community translated languages (not supported)"
-msgstr "Activați limbile traduse de comunitate (nu sunt acceptate)"
-
 msgid "Compare against discovered state"
 msgstr "Comparați cu starea descoperită"
 
@@ -21904,6 +21896,10 @@ msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (spațiu utilizat și creștere)"
 
 #, fuzzy
+msgid "ESX GPU Utilization"
+msgstr "Utilizare CPU"
+
+#, fuzzy
 msgid "ESX Host System Maintenance Mode"
 msgstr "Modul de întreținere a sistemului gazdă ESX"
 
@@ -24856,9 +24852,6 @@ msgstr "Setare din fabrică"
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
 
-msgid "Fail over partner"
-msgstr "Partenerul Fail over"
-
 msgid "Failed"
 msgstr "A eșuat"
 
@@ -26947,6 +26940,14 @@ msgstr "Variabilele GET/POST ale acestei pagini"
 
 msgid "GI resource"
 msgstr "Resurse IG"
+
+#, fuzzy
+msgid "GPU"
+msgstr "CPU"
+
+#, fuzzy
+msgid "GPU Utilization"
+msgstr "Utilizare CPU"
 
 msgid "GPU utilization"
 msgstr "Utilizare GPU"
@@ -43511,12 +43512,6 @@ msgstr "Numele mașinii virtuale și/sau<br>tipul de colectare a gunoiului"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Numele mașinii virtuale și/sau al<br>threadpool-ului"
 
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr ""
-"Numele sau adresa IP a gazdei unde se execută MS SQL, în cazul în care "
-"numele de gazdă nu reușește"
-
 msgid "Name resolution"
 msgstr "Rezoluția numelui"
 
@@ -59795,21 +59790,6 @@ msgstr "Afișați axa verticală"
 
 msgid "Show volume name in service output"
 msgstr "Afișați numele volumului în ieșirea serviciului"
-
-#, fuzzy
-msgid ""
-"Show/hide community translated languages in the \"Language\" dropdown (User "
-"> Edit profile). Note that these translations are contributed by the Checkmk "
-"community and thus no liability is assumed for their validity.<br>If this "
-"setting is turned from 'on' to 'off' while a user has set a community "
-"translated language, the user's language is changed to 'English'."
-msgstr ""
-"Afișați/ascundeți limbile traduse de comunitate în meniul derulant "
-"\"Language\" (Utilizator > Editare profil). Rețineți că aceste traduceri "
-"sunt contribuții ale comunității Checkmk și, prin urmare, nu ne asumăm nicio "
-"răspundere pentru validitatea lor.<br>Dacă această setare este trecută de la "
-"'on' la 'off' în timp ce un utilizator a setat o limbă tradusă de "
-"comunitate, limba utilizatorului' este schimbată în 'Română'."
 
 #, fuzzy
 msgid "Show/hide password"
@@ -80331,6 +80311,10 @@ msgstr "Limite superioare în procente"
 msgid "Upper percentage levels"
 msgstr "Niveluri procentuale superioare"
 
+#, fuzzy
+msgid "Upper percentage threshold for GPU utilization"
+msgstr "Niveluri superioare de utilizare a discului"
+
 msgid "Upper percentual levels for DELETE requests"
 msgstr "Niveluri procentuale superioare pentru cererile DELETE"
 
@@ -90198,6 +90182,39 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Community translated languages"
+#~ msgstr "Activați limbile traduse de comunitate"
+
+#, fuzzy
+#~ msgid "Community translated languages (not supported)"
+#~ msgstr "Activați limbile traduse de comunitate (nu sunt acceptate)"
+
+#~ msgid "Fail over partner"
+#~ msgstr "Partenerul Fail over"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr ""
+#~ "Numele sau adresa IP a gazdei unde se execută MS SQL, în cazul în care "
+#~ "numele de gazdă nu reușește"
+
+#, fuzzy
+#~ msgid ""
+#~ "Show/hide community translated languages in the \"Language\" dropdown "
+#~ "(User > Edit profile). Note that these translations are contributed by "
+#~ "the Checkmk community and thus no liability is assumed for their validity."
+#~ "<br>If this setting is turned from 'on' to 'off' while a user has set a "
+#~ "community translated language, the user's language is changed to "
+#~ "'English'."
+#~ msgstr ""
+#~ "Afișați/ascundeți limbile traduse de comunitate în meniul derulant "
+#~ "\"Language\" (Utilizator > Editare profil). Rețineți că aceste traduceri "
+#~ "sunt contribuții ale comunității Checkmk și, prin urmare, nu ne asumăm "
+#~ "nicio răspundere pentru validitatea lor.<br>Dacă această setare este "
+#~ "trecută de la 'on' la 'off' în timp ce un utilizator a setat o limbă "
+#~ "tradusă de comunitate, limba utilizatorului' este schimbată în 'Română'."
 
 #, fuzzy
 #~ msgid "Unable to migrate value"

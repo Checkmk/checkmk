@@ -14173,14 +14173,6 @@ msgstr ""
 msgid "Community forum"
 msgstr "Gemeenschapsforum"
 
-#, fuzzy
-msgid "Community translated languages"
-msgstr "Maak vertaalde gemeenschapstalen mogelijk"
-
-#, fuzzy
-msgid "Community translated languages (not supported)"
-msgstr "Inschakelen van vertaalde gemeenschapstalen (niet ondersteund)"
-
 msgid "Compare against discovered state"
 msgstr "Vergelijken met ontdekte staat"
 
@@ -21874,6 +21866,10 @@ msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (gebruikte ruimte en groei)"
 
 #, fuzzy
+msgid "ESX GPU Utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
 msgid "ESX Host System Maintenance Mode"
 msgstr "ESX Hostsystem onderhoudsmodus"
 
@@ -24787,10 +24783,6 @@ msgstr "Fabrieksinstelling"
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
 
-#, fuzzy
-msgid "Fail over partner"
-msgstr "Failover staten"
-
 msgid "Failed"
 msgstr "Mislukt"
 
@@ -26884,6 +26876,14 @@ msgstr "GET/POST variabelen van deze pagina"
 #, fuzzy
 msgid "GI resource"
 msgstr "CPU-bronnen"
+
+#, fuzzy
+msgid "GPU"
+msgstr "CPU"
+
+#, fuzzy
+msgid "GPU Utilization"
+msgstr "CPU-gebruik"
 
 msgid "GPU utilization"
 msgstr "CPU-gebruik"
@@ -43428,10 +43428,6 @@ msgstr "Naam van de virtuele machine en/of het<br>type vuilnisverzameling"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Naam van de virtuele machine en/of<br>threadpool"
 
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr "Hostnaam of IPv4 adres voor luisteraar"
-
 msgid "Name resolution"
 msgstr "Naam resolutie"
 
@@ -59643,21 +59639,6 @@ msgstr "Verticale as tonen"
 
 msgid "Show volume name in service output"
 msgstr "Toon volumenaam in dienstuitvoer"
-
-#, fuzzy
-msgid ""
-"Show/hide community translated languages in the \"Language\" dropdown (User "
-"> Edit profile). Note that these translations are contributed by the Checkmk "
-"community and thus no liability is assumed for their validity.<br>If this "
-"setting is turned from 'on' to 'off' while a user has set a community "
-"translated language, the user's language is changed to 'English'."
-msgstr ""
-"Toon/verberg door de gemeenschap vertaalde talen in de \"Language\" dropdown "
-"(User > Edit profile). Merk op dat deze vertalingen zijn bijgedragen door de "
-"Checkmk gemeenschap en dus geen aansprakelijkheid wordt aanvaard voor hun "
-"geldigheid.<br>Als deze instelling van 'on' naar 'off' wordt gezet terwijl "
-"een gebruiker een door de gemeenschap vertaalde taal heeft ingesteld, wordt "
-"de taal van de gebruiker'veranderd in 'English'."
 
 #, fuzzy
 msgid "Show/hide password"
@@ -80135,6 +80116,10 @@ msgstr "Bovengrenzen in procenten"
 msgid "Upper percentage levels"
 msgstr "Bovenste percentages"
 
+#, fuzzy
+msgid "Upper percentage threshold for GPU utilization"
+msgstr "Bovenste niveaus voor schijfgebruik"
+
 msgid "Upper percentual levels for DELETE requests"
 msgstr "Maximale percentuele niveaus voor DELETE-verzoeken"
 
@@ -89976,6 +89961,39 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Community translated languages"
+#~ msgstr "Maak vertaalde gemeenschapstalen mogelijk"
+
+#, fuzzy
+#~ msgid "Community translated languages (not supported)"
+#~ msgstr "Inschakelen van vertaalde gemeenschapstalen (niet ondersteund)"
+
+#, fuzzy
+#~ msgid "Fail over partner"
+#~ msgstr "Failover staten"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr "Hostnaam of IPv4 adres voor luisteraar"
+
+#, fuzzy
+#~ msgid ""
+#~ "Show/hide community translated languages in the \"Language\" dropdown "
+#~ "(User > Edit profile). Note that these translations are contributed by "
+#~ "the Checkmk community and thus no liability is assumed for their validity."
+#~ "<br>If this setting is turned from 'on' to 'off' while a user has set a "
+#~ "community translated language, the user's language is changed to "
+#~ "'English'."
+#~ msgstr ""
+#~ "Toon/verberg door de gemeenschap vertaalde talen in de \"Language\" "
+#~ "dropdown (User > Edit profile). Merk op dat deze vertalingen zijn "
+#~ "bijgedragen door de Checkmk gemeenschap en dus geen aansprakelijkheid "
+#~ "wordt aanvaard voor hun geldigheid.<br>Als deze instelling van 'on' naar "
+#~ "'off' wordt gezet terwijl een gebruiker een door de gemeenschap vertaalde "
+#~ "taal heeft ingesteld, wordt de taal van de gebruiker'veranderd in "
+#~ "'English'."
 
 #, fuzzy
 #~ msgid "Unable to migrate value"

@@ -14279,14 +14279,6 @@ msgstr ""
 msgid "Community forum"
 msgstr "Foro comunitario"
 
-#, fuzzy
-msgid "Community translated languages"
-msgstr "Permitir idiomas comunitarios traducidos"
-
-#, fuzzy
-msgid "Community translated languages (not supported)"
-msgstr "Habilitar idiomas comunitarios traducidos (no compatible)"
-
 msgid "Compare against discovered state"
 msgstr "Comparar con el estado descubierto"
 
@@ -22045,6 +22037,10 @@ msgid "ESX Datastores (used space and growth)"
 msgstr "ESX Datastores (espacio utilizado y crecimiento)"
 
 #, fuzzy
+msgid "ESX GPU Utilization"
+msgstr "Utilización de la CPU"
+
+#, fuzzy
 msgid "ESX Host System Maintenance Mode"
 msgstr "Modo de mantenimiento del sistema de hosts ESX"
 
@@ -24984,10 +24980,6 @@ msgstr "Ajuste de fábrica"
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
 
-#, fuzzy
-msgid "Fail over partner"
-msgstr "Estados de conmutación por error"
-
 msgid "Failed"
 msgstr "Fallido"
 
@@ -27097,6 +27089,14 @@ msgstr "Variables GET/POST de esta página"
 #, fuzzy
 msgid "GI resource"
 msgstr "Recursos de la CPU"
+
+#, fuzzy
+msgid "GPU"
+msgstr "CPU"
+
+#, fuzzy
+msgid "GPU Utilization"
+msgstr "Utilización de la CPU"
 
 msgid "GPU utilization"
 msgstr "Utilización de la GPU"
@@ -43775,11 +43775,6 @@ msgstr "Nombre de la máquina virtual y/o<br>tipo de recolección de basura"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nombre de la máquina virtual y/o<br>threadpool"
 
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr ""
-"Nombre o dirección IP del host donde se ejecuta MS SQL si falla hostname"
-
 msgid "Name resolution"
 msgstr "Resolución del nombre"
 
@@ -60158,21 +60153,6 @@ msgstr "Mostrar eje vertical"
 
 msgid "Show volume name in service output"
 msgstr "Mostrar el nombre del volumen en la salida del servicio"
-
-#, fuzzy
-msgid ""
-"Show/hide community translated languages in the \"Language\" dropdown (User "
-"> Edit profile). Note that these translations are contributed by the Checkmk "
-"community and thus no liability is assumed for their validity.<br>If this "
-"setting is turned from 'on' to 'off' while a user has set a community "
-"translated language, the user's language is changed to 'English'."
-msgstr ""
-"Mostrar/Ocultar idiomas traducidos por la comunidad en el menú desplegable "
-"\"Idioma\" (Usuario > Editar perfil). Tenga en cuenta que estas traducciones "
-"han sido aportadas por la comunidad Checkmk y, por lo tanto, no se asume "
-"ninguna responsabilidad por su validez.<br>Si este ajuste se cambia de "
-"'activado' a 'desactivado' mientras un usuario ha establecido un idioma "
-"traducido por la comunidad, el idioma del usuario'se cambia a 'inglés'."
 
 #, fuzzy
 msgid "Show/hide password"
@@ -80793,6 +80773,10 @@ msgstr "Límites superiores en porcentaje"
 msgid "Upper percentage levels"
 msgstr "Niveles porcentuales superiores"
 
+#, fuzzy
+msgid "Upper percentage threshold for GPU utilization"
+msgstr "Niveles superiores de utilización del disco"
+
 msgid "Upper percentual levels for DELETE requests"
 msgstr "Niveles porcentuales superiores para las solicitudes DELETE"
 
@@ -90699,6 +90683,40 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Community translated languages"
+#~ msgstr "Permitir idiomas comunitarios traducidos"
+
+#, fuzzy
+#~ msgid "Community translated languages (not supported)"
+#~ msgstr "Habilitar idiomas comunitarios traducidos (no compatible)"
+
+#, fuzzy
+#~ msgid "Fail over partner"
+#~ msgstr "Estados de conmutación por error"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr ""
+#~ "Nombre o dirección IP del host donde se ejecuta MS SQL si falla hostname"
+
+#, fuzzy
+#~ msgid ""
+#~ "Show/hide community translated languages in the \"Language\" dropdown "
+#~ "(User > Edit profile). Note that these translations are contributed by "
+#~ "the Checkmk community and thus no liability is assumed for their validity."
+#~ "<br>If this setting is turned from 'on' to 'off' while a user has set a "
+#~ "community translated language, the user's language is changed to "
+#~ "'English'."
+#~ msgstr ""
+#~ "Mostrar/Ocultar idiomas traducidos por la comunidad en el menú "
+#~ "desplegable \"Idioma\" (Usuario > Editar perfil). Tenga en cuenta que "
+#~ "estas traducciones han sido aportadas por la comunidad Checkmk y, por lo "
+#~ "tanto, no se asume ninguna responsabilidad por su validez.<br>Si este "
+#~ "ajuste se cambia de 'activado' a 'desactivado' mientras un usuario ha "
+#~ "establecido un idioma traducido por la comunidad, el idioma del "
+#~ "usuario'se cambia a 'inglés'."
 
 #, fuzzy
 #~ msgid "Unable to migrate value"

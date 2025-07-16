@@ -144,7 +144,7 @@ class SNMPHostConfig:
         self,
         section_name: SectionName | None,
     ) -> SNMPContextConfig:
-        if not section_name or self.snmp_version is not SNMPVersion.V3:
+        if self.snmp_version is not SNMPVersion.V3:
             return SNMPContextConfig.default()
         for ctx in self.snmpv3_contexts:
             if ctx.section is None or ctx.section == section_name:

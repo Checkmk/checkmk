@@ -147,7 +147,7 @@ def test_delete_host_row(
 ) -> None:
     """Validate deletion of a host using the burger menu."""
     setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area.locator()
+    main_area_locator = setup_host.main_area.locator()
     # 'pop' prevents the host from being deleted (again) in teardown of fixture
     host_details = host_to_be_deleted.pop()
 
@@ -155,12 +155,14 @@ def test_delete_host_row(
     setup_host.action_icon_for_host(host_details.name, "Delete host").click()
     # validation
     expect(
-        main_area.get_by_role("dialog", name=re.compile(f"Delete host.*{host_details.name}")),
+        main_area_locator.get_by_role(
+            "dialog", name=re.compile(f"Delete host.*{host_details.name}")
+        ),
         message=f"Missing message to confirm deletion of host: {host_details.name}!",
     ).to_be_visible()
     setup_host.main_area.get_confirmation_popup_button("Delete host").click()
     expect(
-        main_area.get_by_text(host_details.name),
+        main_area_locator.get_by_text(host_details.name),
         message=f"Deleted host: '{host_details.name}' is still visible!",
     ).to_have_count(0)
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
@@ -169,7 +171,8 @@ def test_delete_host_row(
 def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> None:
     """Validate agent connection test of a host."""
     setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area.locator()
+    main_area = setup_host.main_area
+    main_area_locator = setup_host.main_area.locator()
     setup_host.add_host.click()
 
     agent_test_button_default_tag = main_area.locator("#attr_default_tag_agent > button")
@@ -198,26 +201,28 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
 
     host_input.fill("localhost")
 
-    setup_host.page.pause()
-
-    datasource_checkbox = main_area.get_by_role("cell", name="Checkmk agent / API").locator("label")
+    datasource_checkbox = main_area_locator.get_by_role("cell", name="Checkmk agent / API").locator(
+        "label"
+    )
     datasource_checkbox.click()
 
-    main_area.get_by_label("API integrations if").get_by_text("API integrations if").click()
-    main_area.get_by_role("option", name="Configured API integrations and Checkmk agent").click()
+    main_area_locator.get_by_label("API integrations if").get_by_text("API integrations if").click()
+    main_area_locator.get_by_role(
+        "option", name="Configured API integrations and Checkmk agent"
+    ).click()
     expect(agent_test_button_entry_tag).to_be_visible()
     expect(agent_test_button_entry_tag).not_to_be_disabled()
 
-    main_area.get_by_label("Configured API integrations").get_by_text(
+    main_area_locator.get_by_label("Configured API integrations").get_by_text(
         "Configured API integrations"
     ).click()
-    main_area.get_by_title("Configured API integrations,").click()
+    main_area_locator.get_by_title("Configured API integrations,").click()
     expect(agent_test_button_entry_tag).not_to_be_visible()
 
-    main_area.get_by_label("Configured API integrations,").get_by_text(
+    main_area_locator.get_by_label("Configured API integrations,").get_by_text(
         "Configured API integrations,"
     ).click()
-    main_area.get_by_title("No API integrations, no").click()
+    main_area_locator.get_by_title("No API integrations, no").click()
     expect(agent_test_button_entry_tag).not_to_be_visible()
 
     datasource_checkbox.click()
@@ -228,7 +233,7 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
 def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
     """Validate agent download slideout when creating a host."""
     setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area.locator()
+    main_area = setup_host.main_area
     setup_host.add_host.click()
 
     host_input = main_area.locator("input.text[name='host']")
@@ -265,7 +270,7 @@ def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
 def test_ping_host(dashboard_page: Dashboard, test_site: Site) -> None:
     """Validate pinging of a host."""
     setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area.locator()
+    main_area = setup_host.main_area
     setup_host.add_host.click()
 
     host_name_input_field = main_area.locator("input.text[name='host']")

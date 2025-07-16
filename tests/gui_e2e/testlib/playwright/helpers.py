@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pprint import pformat
 from re import Pattern
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from playwright.sync_api import Error, expect, Frame, FrameLocator, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -20,10 +20,7 @@ from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOU
 
 
 class LocatorHelper(ABC):
-    """base class for helper classes for certain page elements
-
-    `timeout` defaults to 30 seconds, if not provided.
-    """
+    """Base class for helper classes for certain page elements"""
 
     def __init__(
         self,
@@ -42,26 +39,64 @@ class LocatorHelper(ABC):
         expect.set_options(timeout=timeout_assertions)
         self.page = page
 
+    def _build_locator_kwargs(
+        self,
+        *,
+        has_text: Pattern[str] | str | None = None,
+        has_not_text: Pattern[str] | str | None = None,
+        has: Locator | None = None,
+        has_not: Locator | None = None,
+    ) -> dict[str, Any]:
+        """Build kwargs for the locator method."""
+        kwargs: dict[str, Any] = {}
+        kwargs = {
+            k: v
+            for k, v in {
+                "has_text": has_text,
+                "has_not_text": has_not_text,
+                "has": has,
+                "has_not": has_not,
+            }.items()
+            if v is not None
+        }
+        return kwargs
+
+    @property
+    def _iframe_locator(self) -> FrameLocator:
+        return self.page.frame_locator("iframe[name='main']")
+
     @abstractmethod
-    def locator(self, selector: str) -> Locator:
-        """return locator for this subpart"""
+    def locator(
+        self,
+        selector: str | None = None,
+        *,
+        has_text: Pattern[str] | str | None = None,
+        has_not_text: Pattern[str] | str | None = None,
+        has: Locator | None = None,
+        has_not: Locator | None = None,
+    ) -> Locator:
+        """Return locator for the component of the page.
+
+        Arguments and keyword arguments must match to ones' of Playwright's `Locator.locator`
+        method.
+        """
 
     def check_success(self, message: str | Pattern) -> None:
-        """check for a success div and its content"""
+        """Check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message)
 
     def check_error(self, message: str | Pattern) -> None:
-        """check for an error div and its content"""
+        """Check for an error div and its content"""
         expect(self.locator("div.error"), "Invalid text in the error message box.").to_have_text(
             message
         )
 
     def get_error_text(self) -> str | None:
-        """get error text content"""
+        """Get error text content"""
         return self.locator("div.error").text_content()
 
     def check_warning(self, message: str | Pattern) -> None:
-        """check for a warning div and its content"""
+        """Check for a warning div and its content"""
         expect(self.locator("div.warning")).to_have_text(message)
 
     def get_input(self, input_name: str) -> Locator:

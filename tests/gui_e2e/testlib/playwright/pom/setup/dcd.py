@@ -51,7 +51,7 @@ class DCD(CmkPage):
         The identifier should be a uniquely identifying string within a cell of the row, like the
         connection name/ID. Use `exact=True` to match the entire cell contents.
         """
-        return self.main_area.locator().locator(
+        return self.main_area.locator(
             "tr.data",
             has=self.main_area.locator().get_by_role("cell", name=identifier, exact=exact),
         )

@@ -186,9 +186,10 @@ function onCtrlEnter() {
 
       <div class="unified-search-info-item">
         <span>{{ t('press', 'Press') }}</span>
-        <CmkChip size="small" content="Ctrl"></CmkChip>+<CmkChip
+        <CmkChip size="small" :content="t('ctrl', 'Ctrl')"></CmkChip>+<CmkChip
+          class="arrow-key enter"
           size="small"
-          content="Enter"
+          content=""
         ></CmkChip
         ><br />
         <span>{{ t('to-view-matching-service', 'to view matching service') }}</span>
@@ -231,6 +232,23 @@ function onCtrlEnter() {
 
   span {
     font-size: 10px;
+  }
+
+  .arrow-key {
+    width: 11px;
+    display: inline-flex;
+    height: 12px;
+    margin-bottom: -4px;
+
+    &::after {
+      font-size: 21px;
+      position: absolute;
+      margin: -8px 0 0 -1px;
+    }
+
+    &.enter::after {
+      content: '\21B5';
+    }
   }
 }
 

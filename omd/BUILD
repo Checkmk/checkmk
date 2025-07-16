@@ -51,6 +51,7 @@ file_from_flag(
     deps = [
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
+               "//omd/packages/changelog",
                "//omd/packages/check-cert",
                "//omd/packages/cpp-libs",
                "//omd/packages/erlang",
@@ -179,6 +180,7 @@ py_binary(
         "$(location werks_precompiled_%s)" % edition,
     ],
     tool = ":werks_utils_binary",
+    visibility = ["@@//omd:__subpackages__"],
 ) for edition in [
     "cre",
     "cce",

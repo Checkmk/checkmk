@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -77,7 +77,7 @@ def test_do_create_config_nagios(
         create_core(
             core_scenario.ruleset_matcher,
             core_scenario.label_manager,
-            replace(EMPTYCONFIG, monitoring_core="nagios"),
+            replace(EMPTY_CONFIG, monitoring_core="nagios"),
         ),
         core_scenario,
         core_scenario.hosts_config,
@@ -123,7 +123,7 @@ def test_do_create_config_nagios_collects_passwords(
         create_core(
             core_scenario.ruleset_matcher,
             core_scenario.label_manager,
-            replace(EMPTYCONFIG, monitoring_core="nagios"),
+            replace(EMPTY_CONFIG, monitoring_core="nagios"),
         ),
         core_scenario,
         core_scenario.hosts_config,

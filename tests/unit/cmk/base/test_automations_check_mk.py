@@ -10,7 +10,7 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
@@ -84,7 +84,7 @@ class TestAutomationDiagHost:
             }
         }
 
-        loaded_config = replace(EMPTYCONFIG, host_tags=configured_tags)
+        loaded_config = replace(EMPTY_CONFIG, host_tags=configured_tags)
 
         assert check_mk.AutomationDiagHost().execute(
             args,
@@ -221,7 +221,7 @@ def test_automation_active_check(
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.ConfigCache(EMPTYCONFIG)
+    config_cache = config.ConfigCache(EMPTY_CONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
@@ -230,7 +230,7 @@ def test_automation_active_check(
             active_check_args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
-                loaded_config=EMPTYCONFIG,
+                loaded_config=EMPTY_CONFIG,
                 config_cache=config_cache,
             ),
         )
@@ -287,7 +287,7 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
     loaded_config = replace(
-        EMPTYCONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
+        EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
     )
     config_cache = config.ConfigCache(loaded_config)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)

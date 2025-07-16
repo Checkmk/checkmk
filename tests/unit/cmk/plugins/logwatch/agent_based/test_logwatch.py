@@ -10,7 +10,7 @@ from collections.abc import Iterable
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 from cmk.base import config
 
@@ -170,7 +170,7 @@ def test_check_single(
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTYCONFIG),
+        lambda: config.ConfigCache(EMPTY_CONFIG),
     )
     monkeypatch.setattr(
         logwatch_,
@@ -229,7 +229,7 @@ def test_check_logwatch_groups_node(
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTYCONFIG),
+        lambda: config.ConfigCache(EMPTY_CONFIG),
     )
     monkeypatch.setattr(
         logwatch_,

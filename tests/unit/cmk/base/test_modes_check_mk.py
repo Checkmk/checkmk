@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -40,7 +40,7 @@ class TestModeDumpAgent:
         self, monkeypatch: pytest.MonkeyPatch, hostname: HostName, ipaddress: HostAddress
     ) -> None:
         loaded_config = replace(
-            EMPTYCONFIG,
+            EMPTY_CONFIG,
             ipaddresses={hostname: ipaddress},
             host_tags={
                 hostname: {

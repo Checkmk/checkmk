@@ -17,7 +17,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.utils import get_standard_linux_agent_output
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -49,11 +49,11 @@ class Scenario:
     def _get_config_cache(self) -> ConfigCache:
         return ConfigCache(
             replace(
-                EMPTYCONFIG,
+                EMPTY_CONFIG,
                 # This only works as long as the attribute names of LoadedConfigFragment
                 # are the same as the variabele names in config.py
                 # But it's probably less confusing if we stick to that pattern anyway.
-                **{k: v for k, v in self.config.items() if k in asdict(EMPTYCONFIG)},
+                **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
             ),
         )
 

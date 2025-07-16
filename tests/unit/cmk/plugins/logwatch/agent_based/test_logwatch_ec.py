@@ -11,7 +11,7 @@ from typing import Literal
 
 import pytest
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 from cmk.ccc.hostaddress import HostName
 
@@ -103,7 +103,7 @@ def _patch_config_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTYCONFIG),
+        lambda: config.ConfigCache(EMPTY_CONFIG),
     )
 
 

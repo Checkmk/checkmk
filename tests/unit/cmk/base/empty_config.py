@@ -8,7 +8,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.base.config import LoadedConfigFragment
 
-EMPTYCONFIG = LoadedConfigFragment(
+EMPTY_CONFIG = LoadedConfigFragment(
     discovery_rules={},
     checkgroup_parameters={},
     service_rule_groups=set(),

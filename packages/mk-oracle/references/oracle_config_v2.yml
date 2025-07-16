@@ -10,7 +10,7 @@ oracle:
       max_connections: 6 # optional, default: absent, 6
       max_queries: 16 # optional, for the future use
     authentication: # mandatory
-      username: "foo" # optional, examples: "mydbuser", "c##multitenantuser"
+      username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
       password: "bar" # optional
       role: "sysdba" # optional, default: empty, values: sysdba, sysasm, ...
       type: "sql_server" # mandatory, default: "sql_server", values: sql_server, wallet
@@ -22,27 +22,25 @@ oracle:
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     sections: # optional, if absent will use default as defined below
     - instance: # special section
-    - instance: # special section for ASM
-      is_asm: yes
-    - sessions:
+      type: "all" # optional, default: "db", values: "all", "db", "asm"
+    - dataguard_stats:
+    - locks:
     - logswitches:
-    - undostat:
+    - longactivesessions:
+    - performance:
+    - processes:
+      type: "all" # optional, default "db", values: "all", "db", "asm"
     - recovery_area:
     - recovery_status:
-    - processes:
-    - processes:
-      is_asm: yes
-    - longactivesessions:
-    - dataguard_stats:
-    - performance:
-    - locks:
+    - sessions:
     - systemparameter:
+    - undostat:
     - asm_diskgroup:
       is_async: yes
-      is_asm: yes
-    - jobs:
-      is_async: yes
+      type: "asm" # optional, default: "asm", values: "all", "db", "asm"
     - iostats:
+      is_async: yes
+    - jobs:
       is_async: yes
     - resumable:
       is_async: yes
@@ -67,10 +65,13 @@ oracle:
     mode: "port" # optional, default: "port", values: "port", "special"
   configs:
     - main:
-      options:
-      authentication:
-      connection:
-      instances:
+      options: # optional, if absent will use main
+      authentication: # optional, if absent will use main
+        username: "foo" # mandatory if not using wallet
+      connection: # optional, if absent will use main
+        hostname: "myremoteserver" # optional, default: "localhost", empty string: "localhost"
+      instances: # optiona, describes how to monitor/access instances, both detected and non-detectable
+        - sid: "MYDATABASE" # mandatory
 
 
 

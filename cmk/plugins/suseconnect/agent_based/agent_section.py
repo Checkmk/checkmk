@@ -6,7 +6,6 @@
 # Agent output examples:# #   .
 
 # Pre-V15 agent output:
-
 # <<<suseconnect:sep(58)>>>
 # identifier: SLES
 # version: 12.1
@@ -19,45 +18,37 @@
 # _type: full
 
 # V15+ agent output
-
 # <<<suseconnect:sep(58)>>>
 # Installed Products:
-
 #   advanced Systems Management Module
 #   (sle-module-adv-systems-management/12/x86_64)
-
 #   Registered
-
 #   sUSE Linux Enterprise Server for SAP Applications 12 SP5
 #   (SLES_SAP/12.5/x86_64)
-
 #   Registered
-
 #     Subscription:
-
 #     Regcode: banana005
 #     Starts at: 2018-07-01 00:00:00 UTC
 #     Expires at: 2021-06-30 00:00:00 UTC
 #     Status: ACTIVE
 #     Type: full
-
 #   SUSE Package Hub 12
 #   (PackageHub/12.5/x86_64)
 
-#   Registered
-
 from collections.abc import Mapping, Sequence
-from typing import Final, TypeVar
+from typing import TypeVar
 
 from cmk.agent_based.v2 import (
     AgentSection,
-    Attributes,
-    InventoryPlugin,
-    InventoryResult,
     StringTable,
 )
 
 Section = Mapping[str, Mapping[str, str]]
+_TVal = TypeVar("_TVal")
+
+
+def get_data(section: Mapping[str, _TVal]) -> _TVal | None:
+    return next((value for key, value in section.items() if "SLES" in key), None)
 
 
 def _join_line(line: Sequence[str]) -> str:
@@ -132,38 +123,4 @@ def parse(string_table: StringTable) -> Section:
 agent_section_suseconnect = AgentSection(
     name="suseconnect",
     parse_function=parse,
-)
-
-
-_MAP: Final = (
-    ("starts_at", "License Begin"),
-    ("expires_at", "License Expiration"),
-    ("regcode", "Registration Code"),
-    ("status", "Registration Status"),
-    ("subscription_status", "Subscription Status"),
-    ("type", "Subscription Type"),
-)
-
-
-_TVal = TypeVar("_TVal")
-
-
-def get_data(section: Mapping[str, _TVal]) -> _TVal | None:
-    return next((value for key, value in section.items() if "SLES" in key), None)
-
-
-def inventory(section: Section) -> InventoryResult:
-    if (data := get_data(section)) is None:
-        return
-    yield Attributes(
-        path=["software", "os"],
-        inventory_attributes={
-            description: value for key, description in _MAP if (value := data.get(key)) is not None
-        },
-    )
-
-
-inventory_plugin_suseconnect = InventoryPlugin(
-    name="suseconnect",
-    inventory_function=inventory,
 )

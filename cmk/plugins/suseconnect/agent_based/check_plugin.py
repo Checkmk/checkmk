@@ -2,49 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# Agent output examples:# #   .
-
-# Pre-V15 agent output:
-
-# <<<suseconnect:sep(58)>>>
-# identifier: SLES
-# version: 12.1
-# arch: x86_64
-# status: Registered
-# regcode: banana001
-# starts_at: 2015-12-01 00:00:00 UTC
-# expires_at: 2019-12-31 00:00:00 UTC
-# subscription_status: ACTIVE
-# _type: full
-
-# V15+ agent output
-
-# <<<suseconnect:sep(58)>>>
-# Installed Products:
-
-#   advanced Systems Management Module
-#   (sle-module-adv-systems-management/12/x86_64)
-
-#   Registered
-
-#   sUSE Linux Enterprise Server for SAP Applications 12 SP5
-#   (SLES_SAP/12.5/x86_64)
-
-#   Registered
-
-#     Subscription:
-
-#     Regcode: banana005
-#     Starts at: 2018-07-01 00:00:00 UTC
-#     Expires at: 2021-06-30 00:00:00 UTC
-#     Status: ACTIVE
-#     Type: full
-
-#   SUSE Package Hub 12
-#   (PackageHub/12.5/x86_64)
-
-
 import time
 from collections.abc import Mapping
 from typing import Any
@@ -59,7 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
+from cmk.plugins.suseconnect.agent_based.agent_section import get_data, Section
 
 
 def discover(section: Section) -> DiscoveryResult:

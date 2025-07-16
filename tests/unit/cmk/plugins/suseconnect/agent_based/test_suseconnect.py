@@ -13,11 +13,8 @@ import time_machine
 
 from cmk.agent_based.v2 import Attributes, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.plugins.collection.agent_based.suseconnect import (
-    inventory,
-    parse,
-    Section,
-)
+from cmk.plugins.suseconnect.agent_based.agent_section import parse, Section
+from cmk.plugins.suseconnect.agent_based.inventory import inventory
 
 
 @pytest.fixture(name="plugin", scope="module")

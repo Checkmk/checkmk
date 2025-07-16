@@ -83,7 +83,7 @@ immediateWatch(
       const res = await newHistoryResult.result
       if (res) {
         recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
-        recentlySearches.value = res.queries
+        recentlySearches.value = res.queries.slice(0, maxRecentlySearched)
         return
       }
     }

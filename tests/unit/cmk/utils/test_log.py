@@ -7,12 +7,13 @@
 import contextlib
 import logging
 import queue
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 from pytest import CaptureFixture
 
 from cmk.utils import log
+from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
 
 
@@ -82,11 +83,8 @@ def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRe
 
 
 def test_security_event(tmp_path: Path) -> None:
-    event = SecurityEvent(
-        "test security event",
-        {"a": ["serialize", "me"], "b": {"b.1": 42.23}},
-        SecurityEvent.Domain.auth,
-    )
+    details: Mapping[str, JsonSerializable] = {"a": ["serialize", "me"], "b": {"b.1": 42.23}}
+    event = SecurityEvent("test security event", details, SecurityEvent.Domain.auth)
 
     logger = logging.getLogger("cmk_security")
     with set_log_level(logger, logging.INFO):

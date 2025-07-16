@@ -38,6 +38,7 @@ from cmk.utils.structured_data import (
     SDMetaAndRawTree,
     SDNodeName,
     SDPath,
+    SDRawDeltaTree,
     SDRawTree,
     SDRetentionFilterChoices,
     serialize_delta_tree,
@@ -310,55 +311,55 @@ def test_deserialize_empty_delta_tree() -> None:
 
 def test_deserialize_filled_delta_tree() -> None:
     delta_tree = deserialize_delta_tree(
-        {
-            "Attributes": {},
-            "Nodes": {
-                SDNodeName("path-to-nta"): {
-                    "Attributes": {},
-                    "Nodes": {
-                        SDNodeName("na"): {
-                            "Attributes": {
+        SDRawDeltaTree(
+            Attributes={},
+            Nodes={
+                SDNodeName("path-to-nta"): SDRawDeltaTree(
+                    Attributes={},
+                    Nodes={
+                        SDNodeName("na"): SDRawDeltaTree(
+                            Attributes={
                                 "Pairs": {
                                     SDKey("na0"): ("NA 0", None),
                                     SDKey("na1"): ("NA 1", None),
                                 }
                             },
-                            "Nodes": {},
-                            "Table": {},
-                        },
-                        SDNodeName("nt"): {
-                            "Attributes": {},
-                            "Nodes": {},
-                            "Table": {
+                            Nodes={},
+                            Table={},
+                        ),
+                        SDNodeName("nt"): SDRawDeltaTree(
+                            Attributes={},
+                            Nodes={},
+                            Table={
                                 "KeyColumns": [SDKey("nt0")],
                                 "Rows": [
                                     {SDKey("nt0"): ("NT 00", None), SDKey("nt1"): ("NT 01", None)},
                                     {SDKey("nt0"): ("NT 10", None), SDKey("nt1"): ("NT 11", None)},
                                 ],
                             },
-                        },
-                        SDNodeName("ta"): {
-                            "Attributes": {
+                        ),
+                        SDNodeName("ta"): SDRawDeltaTree(
+                            Attributes={
                                 "Pairs": {
                                     SDKey("ta0"): ("TA 0", None),
                                     SDKey("ta1"): ("TA 1", None),
                                 }
                             },
-                            "Nodes": {},
-                            "Table": {
+                            Nodes={},
+                            Table={
                                 "KeyColumns": [SDKey("ta0")],
                                 "Rows": [
                                     {SDKey("ta0"): ("TA 00", None), SDKey("ta1"): ("TA 01", None)},
                                     {SDKey("ta0"): ("TA 10", None), SDKey("ta1"): ("TA 11", None)},
                                 ],
                             },
-                        },
+                        ),
                     },
-                    "Table": {},
-                }
+                    Table={},
+                )
             },
-            "Table": {},
-        }
+            Table={},
+        )
     )
     assert len(delta_tree) == 12
     stats = delta_tree.get_stats()

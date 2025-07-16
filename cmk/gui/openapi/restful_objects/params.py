@@ -138,15 +138,7 @@ def marshmallow_to_openapi(
                     "schema_num_maximum": field.metadata.get("maximum"),
                 }
             )
-            # Waiting for:
-            # PEP 692 – Using TypedDict for more precise **kwargs typing
-            # https://peps.python.org/pep-0692/
-            param = translate_to_openapi_keys(
-                name=name,
-                location=location,
-                **metadata,  # type: ignore[arg-type]
-            )
-            result.append(param)
+            result.append(translate_to_openapi_keys(name=name, location=location, **metadata))
     return result
 
 

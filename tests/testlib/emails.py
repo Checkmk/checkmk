@@ -28,10 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 def message_from_file(f: IO[str]) -> Message:
-    # The typing of the email package is... "interesting". Here we have a mismatch between the
-    # expected "Message[str, str]" and the actual "EmailMessage". Even the example on
-    # https://docs.python.domainunion.de/3/library/email.examples.html has this typing problem. :-}
-    return email.message_from_file(f, policy=default)  # type: ignore[arg-type]
+    return email.message_from_file(f, policy=default)
 
 
 class EmailManager:

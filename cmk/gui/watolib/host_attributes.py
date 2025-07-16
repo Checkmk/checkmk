@@ -839,12 +839,6 @@ def all_host_attributes(
     return result
 
 
-def host_attribute(name: str) -> ABCHostAttribute:
-    return all_host_attributes(
-        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-    )[name]
-
-
 # This is the counterpart of "configure_attributes". Another place which
 # is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(

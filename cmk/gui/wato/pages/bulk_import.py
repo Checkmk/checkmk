@@ -12,7 +12,7 @@ import operator
 import time
 import typing
 import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
@@ -40,7 +40,11 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    PermissionName,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
@@ -57,7 +61,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.host_attributes import host_attribute, HostAttributes
+from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
@@ -150,6 +154,9 @@ class ModeBulkImport(WatoMode):
             if request.var("_do_import"):
                 return self._import(
                     csv_reader,
+                    host_attributes=all_host_attributes(
+                        config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
+                    ),
                     debug=config.debug,
                     pprint_value=config.wato_pprint_config,
                 )
@@ -233,7 +240,14 @@ class ModeBulkImport(WatoMode):
 
         return csv.reader(csv_file, csv_dialect)
 
-    def _import(self, csv_reader: CSVReader, *, debug: bool, pprint_value: bool) -> ActionResult:
+    def _import(
+        self,
+        csv_reader: CSVReader,
+        host_attributes: Mapping[str, ABCHostAttribute],
+        *,
+        debug: bool,
+        pprint_value: bool,
+    ) -> ActionResult:
         def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
                 try:
@@ -275,6 +289,7 @@ class ModeBulkImport(WatoMode):
 
         def _transform_and_validate_raw_rows(
             iterator: typing.Iterator[dict[str, str]],
+            host_attributes: Mapping[str, ABCHostAttribute],
         ) -> typing.Generator[ImportTuple, None, None]:
             """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
@@ -291,14 +306,6 @@ class ModeBulkImport(WatoMode):
 
             """
             hostname_valuespec = Hostname()
-
-            class HostAttributeInstances(dict):
-                def __missing__(self, key):
-                    inst = host_attribute(key)
-                    self[key] = inst
-                    return inst
-
-            host_attributes = HostAttributeInstances()
 
             for row_num, entry in enumerate(iterator):
                 _host_name: HostName | None = None
@@ -341,7 +348,7 @@ class ModeBulkImport(WatoMode):
 
         raw_rows = _emit_raw_rows(csv_reader)
         host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
-            raw_rows
+            raw_rows, host_attributes
         )
 
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))

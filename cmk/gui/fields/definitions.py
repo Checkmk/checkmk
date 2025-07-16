@@ -47,7 +47,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.groups_io import load_group_information
-from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, host_attribute
+from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
@@ -729,51 +729,6 @@ def group_is_monitored(group_type: Literal["host", "service", "contact"], group_
 
 def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
-
-
-def validate_custom_host_attributes(
-    host_attributes: dict[str, str],
-    errors: Literal["warn", "raise"],
-) -> dict[str, str]:
-    """Validate only custom host attributes
-
-    Args:
-        host_attributes:
-            The host attributes a dictionary with the attributes as keys (without any prefixes)
-            and the values as values.
-
-        errors:
-            Either `warn` or `raise`. When set to `warn`, errors will just be logged, when set to
-            `raise`, errors will lead to a ValidationError being raised.
-
-    Returns:
-        The data unchanged.
-
-    Raises:
-        ValidationError: when `errors` is set to `raise`
-
-    """
-    for name, value in host_attributes.items():
-        try:
-            attribute = host_attribute(name)
-        except KeyError as exc:
-            if errors == "raise":
-                raise ValidationError(
-                    {name: f"No such attribute, {name!r}"}, field_name=name
-                ) from exc
-
-            _logger.error("No such attribute: %s", name)
-            return host_attributes
-
-        try:
-            attribute.validate_input(value, "")
-        except MKUserError as exc:
-            if errors == "raise":
-                raise ValidationError({name: str(exc)}) from exc
-
-            _logger.error("Error validating %s: %s", name, str(exc))
-
-    return host_attributes
 
 
 class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):

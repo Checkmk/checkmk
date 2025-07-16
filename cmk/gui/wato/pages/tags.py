@@ -6,7 +6,7 @@
 to hosts and that is the basis of the rules."""
 
 import abc
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -31,7 +31,11 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    CustomHostAttrSpec,
+    PermissionName,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -51,7 +55,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.watolib.host_attributes import host_attribute
+from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -353,7 +357,7 @@ class ModeTags(ABCTagMode):
 
         self._show_customized_builtin_warning()
 
-        self._render_tag_group_list()
+        self._render_tag_group_list(config.wato_host_attrs)
         self._render_aux_tag_list()
 
     def _show_customized_builtin_warning(self):
@@ -378,7 +382,10 @@ class ModeTags(ABCTagMode):
             % ", ".join(customized)
         )
 
-    def _render_tag_group_list(self) -> None:
+    def _render_tag_group_list(
+        self,
+        host_attribute_specs: Sequence[CustomHostAttrSpec],
+    ) -> None:
         with table_element(
             "tags",
             _("Tag groups"),
@@ -395,6 +402,9 @@ class ModeTags(ABCTagMode):
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
         ) as table:
+            host_attributes = all_host_attributes(
+                host_attribute_specs, self._effective_config.get_tag_groups_by_topic()
+            )
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
@@ -407,7 +417,7 @@ class ModeTags(ABCTagMode):
                 if tag_group.help:
                     html.help(tag_group.help)
                 with html.form_context("tag_%s" % tag_group.id):
-                    tag_group_attribute = host_attribute("tag_%s" % tag_group.id)
+                    tag_group_attribute = host_attributes["tag_%s" % tag_group.id]
                     tag_group_attribute.render_input("", tag_group_attribute.default_value())
 
     def _show_tag_icons(self, tag_group, nr):

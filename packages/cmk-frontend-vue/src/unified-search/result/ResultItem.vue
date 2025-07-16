@@ -89,7 +89,7 @@ immediateWatch(
     border-radius: 4px;
     width: calc(100% - 23px);
     margin: 0;
-    background: var(--ux-theme-1);
+    background: var(--ux-theme-2);
     text-decoration: none;
     display: flex;
     flex-direction: row;

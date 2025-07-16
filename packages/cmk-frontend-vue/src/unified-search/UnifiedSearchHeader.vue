@@ -202,7 +202,6 @@ function onCtrlEnter() {
   height: 60px;
   min-height: 60px !important;
   z-index: +1;
-  background: var(--ux-theme-2);
   width: calc(100% - 40px);
   display: flex;
   flex-direction: column;
@@ -245,7 +244,7 @@ function onCtrlEnter() {
 }
 
 .unified-search-input {
-  background-color: var(--ux-theme-1);
+  background-color: var(--ux-theme-0);
   box-shadow: none;
   filter: none;
   padding: 0 35px 0 35px;

@@ -111,7 +111,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 58px);
-  background: var(--ux-theme-2);
+  background: var(--ux-theme-1);
   z-index: +1;
   left: 0;
   top: 58px;

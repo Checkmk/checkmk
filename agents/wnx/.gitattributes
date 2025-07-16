@@ -9,3 +9,8 @@
 
 # Declare files that will always have CRLF line endings on checkout.
 *.sln text eol=crlf
+
+*.cpp rules-lint-ignored=true
+*.hpp rules-lint-ignored=true
+*.h rules-lint-ignored=true
+*.cc rules-lint-ignored=true

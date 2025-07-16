@@ -573,7 +573,7 @@ def get_services_with_status(
         services_by_state[state] = {
             service_name: service_info
             for service_name, service_info in host_data.items()
-            if host_data[service_name].state == state
+            if service_info.state == state
         }
     for state, services in services_by_state.items():
         logger.debug(

@@ -866,7 +866,7 @@ class ModeEditTimeperiod(WatoMode):
             time_exceptions = exceptions_details
 
         return {
-            day: self._time_ranges_from_valuespec(time_exceptions[day])
+            day: self._time_ranges_from_valuespec(time_ranges)
             for day, time_ranges in time_exceptions.items()
             if time_ranges
         }

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Module `json` shadows a Python standard-library module
-# ruff: noqa: A005
 
 import json
 

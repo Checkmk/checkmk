@@ -26,6 +26,7 @@ ignore = [
   "E741", # ambiguous variable name 'FOO'
   # pylint doesn't complain about these
   "PLC0414", # Import alias does not rename original package
+  "PLC0415", # `import` should be at the top-level of a file
   "PLR0911", # Too many return statements
   "PLR0912", # Too many branches
   "PLR0913", # Too many arguments in function definition
@@ -35,8 +36,11 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
-  "UP031", # Use format specifiers instead of percent format
-  "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
+  "PLW1641", # Object does not implement `__hash__` method
+  "UP031",   # Use format specifiers instead of percent format
+  "UP040",   # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
+  "UP046",   # Generic class `FOO` uses `Generic` subclass instead of type parameters (NOTE: fixable via --fix --unsafe-fixes)
+  "UP047",   # Generic function `FOO` should use type parameters (NOTE: fixable via --fix --unsafe-fixes)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -81,6 +85,7 @@ ignore = [
   "UP035", # Import from `FOO` instead: `BAR`
   "UP036", # Version block is outdated for minimum Python version
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+  "UP045", # Use `X | None` for type annotations
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 "packages/cmk-plugin-apis/cmk/agent_based/v1/type_defs.py" = [

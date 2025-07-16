@@ -14,8 +14,6 @@ from cmk.agent_based.prediction_backend import (
 
 from ._checking_classes import Metric, Result, State
 
-# ruff: noqa: PLR0913
-
 
 def _do_check_levels(
     value: float,

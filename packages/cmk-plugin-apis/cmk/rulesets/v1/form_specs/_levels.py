@@ -13,7 +13,7 @@ from ._base import DefaultValue, FormSpec, Prefill
 
 
 @dataclass(frozen=True, kw_only=True)
-class PredictiveLevels[_NumberT: (int, float)]:
+class PredictiveLevels[NumberT: (int, float)]:
     """Definition for levels based on a prediction of the monitored value.
 
     Usable only in conjunction with :class:`Levels`.
@@ -41,7 +41,7 @@ class PredictiveLevels[_NumberT: (int, float)]:
     Failing to do so will prevent the backend from providing a prediction, currently leading to an
     always OK service.
     """
-    prefill_abs_diff: Prefill[tuple[_NumberT, _NumberT]]
+    prefill_abs_diff: Prefill[tuple[NumberT, NumberT]]
     """Value to pre-populate the form fields with when the levels depend on the
     absolute difference to the predicted value. If None, the backend will decide whether to
     leave the field empty or to prefill it with a canonical value."""
@@ -64,15 +64,15 @@ class LevelDirection(enum.Enum):
     LOWER = "lower"
 
 
-class _PredictiveLevelsT[_NumberT: (int, float)](TypedDict):
+class _PredictiveLevelsT[NumberT: (int, float)](TypedDict):
     period: Literal["wday", "day", "hour", "minute"]
     horizon: int
     levels: (
-        tuple[Literal["absolute"], tuple[_NumberT, _NumberT]]
+        tuple[Literal["absolute"], tuple[NumberT, NumberT]]
         | tuple[Literal["relative"], tuple[float, float]]
         | tuple[Literal["stdev"], tuple[float, float]]
     )
-    bound: tuple[_NumberT, _NumberT] | None
+    bound: tuple[NumberT, NumberT] | None
 
 
 type SimpleLevelsConfigModel[_NumberT: (int, float)] = (
@@ -97,7 +97,7 @@ class LevelsType(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class SimpleLevels[_NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[_NumberT]]):
+class SimpleLevels[NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[NumberT]]):
     """Specifies a form for configuring levels without predictive levels.
 
     This creates a FormSpec that allows to configure simple levels, i.e.
@@ -133,10 +133,10 @@ class SimpleLevels[_NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[_Num
 
     title: Title | None = None
     help_text: Help | None = None
-    migrate: Callable[[object], SimpleLevelsConfigModel[_NumberT]] | None = None
-    custom_validate: tuple[Callable[[SimpleLevelsConfigModel[_NumberT]], object], ...] | None = None
+    migrate: Callable[[object], SimpleLevelsConfigModel[NumberT]] | None = None
+    custom_validate: tuple[Callable[[SimpleLevelsConfigModel[NumberT]], object], ...] | None = None
 
-    form_spec_template: FormSpec[_NumberT]
+    form_spec_template: FormSpec[NumberT]
     """Template for the specification of the form fields of the warning and critical levels.
     If `title` or `prefill_value` are provided here, they will be ignored."""
     level_direction: LevelDirection
@@ -146,12 +146,12 @@ class SimpleLevels[_NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[_Num
         LevelsType.FIXED
     )
     """Pre-selected type of the levels (no levels or fixed levels)."""
-    prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
+    prefill_fixed_levels: Prefill[tuple[NumberT, NumberT]]
     """Value to pre-populate the form field for fixed levels with."""
 
 
 @dataclass(frozen=True, kw_only=True)
-class Levels[_NumberT: (int, float)](FormSpec[LevelsConfigModel[_NumberT]]):
+class Levels[NumberT: (int, float)](FormSpec[LevelsConfigModel[NumberT]]):
     """Specifies a form for configuring levels including predictive levels
 
     This creates a FormSpec that extends the SimpleLevels with the possibility to configure
@@ -187,10 +187,10 @@ class Levels[_NumberT: (int, float)](FormSpec[LevelsConfigModel[_NumberT]]):
 
     title: Title | None = None
     help_text: Help | None = None
-    migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None
-    custom_validate: tuple[Callable[[LevelsConfigModel[_NumberT]], object], ...] | None = None
+    migrate: Callable[[object], LevelsConfigModel[NumberT]] | None = None
+    custom_validate: tuple[Callable[[LevelsConfigModel[NumberT]], object], ...] | None = None
 
-    form_spec_template: FormSpec[_NumberT]
+    form_spec_template: FormSpec[NumberT]
     """Template for the specification of the form fields of the warning and critical levels.
     If `title` or `prefill_value` are provided here, they will be ignored."""
     level_direction: LevelDirection
@@ -198,7 +198,7 @@ class Levels[_NumberT: (int, float)](FormSpec[LevelsConfigModel[_NumberT]]):
     labels and error messages in the UI."""
     prefill_levels_type: DefaultValue[LevelsType] = DefaultValue(LevelsType.FIXED)
     """Pre-selected type of the levels (no levels, fixed levels or predictive levels)."""
-    prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
+    prefill_fixed_levels: Prefill[tuple[NumberT, NumberT]]
     """Value to pre-populate the form fields with."""
-    predictive: PredictiveLevels[_NumberT]
+    predictive: PredictiveLevels[NumberT]
     """Specification for the predictive levels."""

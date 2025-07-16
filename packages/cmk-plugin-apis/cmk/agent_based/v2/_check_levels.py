@@ -112,9 +112,9 @@ def _make_prediction_metric(name: str, value: float | None, direction: Direction
     return Metric(f"predict_lower_{name}", value)
 
 
-def _check_levels[_NumberT: (int, float)](
+def _check_levels[NumberT: (int, float)](
     value: float,
-    levels: LevelsT[_NumberT] | None,
+    levels: LevelsT[NumberT] | None,
     levels_direction: Direction,
     render_func: Callable[[float], str],
 ) -> CheckLevelsResult:
@@ -167,11 +167,11 @@ def _summarize_predictions(
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
-def check_levels[_NumberT: (int, float)](
+def check_levels[NumberT: (int, float)](
     value: float,
     *,
-    levels_upper: LevelsT[_NumberT] | None = None,
-    levels_lower: LevelsT[_NumberT] | None = None,
+    levels_upper: LevelsT[NumberT] | None = None,
+    levels_lower: LevelsT[NumberT] | None = None,
     metric_name: str | None = None,
     render_func: Callable[[float], str] | None = None,
     label: str | None = None,

@@ -123,10 +123,6 @@ def main() {
         }();
 
         stage("Test source package") {
-            sh("""
-                ${checkout_dir}/buildscripts/scripts/cleanup-source-archives.sh \
-                    "${checkout_dir}/${source_package_name}"
-            """);
             package_helper.test_package(
                 "${checkout_dir}/${source_package_name}",
                 "source",

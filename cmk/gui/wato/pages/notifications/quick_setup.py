@@ -45,6 +45,7 @@ from cmk.gui.form_specs.private.list_unique_selection import (
 from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationDialogWidget,
@@ -89,6 +90,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
     ServiceIntState,
 )
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
@@ -1961,13 +1963,16 @@ def save_and_new_action(
     match mode:
         case QuickSetupActionMode.SAVE:
             _save(all_stages_form_data)
+            result_msg = _("New notification rule successfully created!")
         case QuickSetupActionMode.EDIT:
             assert object_id is not None
             _edit(all_stages_form_data, object_id)
+            result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
     return mode_url(
-        "notification_rule_quick_setup", result=_("New notification rule successfully created!")
+        "notification_rule_quick_setup",
+        result=result_msg,
     )
 
 
@@ -1982,18 +1987,34 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
         migrate_to_event_rule(cast(NotificationQuickSetupSpec, all_stages_form_data))
     ]
     config_file.save(notifications_rules, pprint_value=active_config.wato_pprint_config)
+    add_change(
+        action_name="new-notification-rule",
+        text=_("Created new notification rule"),
+        user_id=user.id,
+        need_restart=False,
+        use_git=active_config.wato_use_git,
+    )
 
 
 def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
     config_file = NotificationRuleConfigFile()
     notification_rules = list(config_file.load_for_modification())
+    rule_nr = "N/A"
     for n, rule in enumerate(notification_rules):
         if rule["rule_id"] == object_id:
             notification_rules[n] = migrate_to_event_rule(
                 cast(NotificationQuickSetupSpec, all_stages_form_data)
             )
+            rule_nr = str(n)
             break
     config_file.save(notification_rules, pprint_value=active_config.wato_pprint_config)
+    add_change(
+        action_name="edit-notification-rule",
+        text=_("Changed notification rule #%s") % rule_nr,
+        user_id=user.id,
+        need_restart=False,
+        use_git=active_config.wato_use_git,
+    )
 
 
 def load_notifications(object_id: str) -> ParsedFormData:

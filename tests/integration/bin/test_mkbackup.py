@@ -22,11 +22,6 @@ from tests.testlib.web_session import CMKWebSession
 from cmk.utils.paths import mkbackup_lock_dir
 
 logger = logging.getLogger(__name__)
-FAILING_DISTRO = ["almalinux", "sles"]
-skipif_failing_distro = pytest.mark.skipif(
-    any(distro in os.getenv("DISTRO", "") for distro in FAILING_DISTRO),
-    reason="CMK-24644; investigating failure.",
-)
 
 
 @pytest.fixture(name="site_for_mkbackup_tests", scope="module")
@@ -126,7 +121,7 @@ def backup_lock_dir_fixture(site_for_mkbackup_tests: Site, request: pytest.Fixtu
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        site_for_mkbackup_tests.omd("status", check=True)
+        run(["omd", "status"], sudo=True)
 
     assert mkbackup_lock_dir.exists()
     backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
@@ -303,26 +298,22 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests)
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_encrypted_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
@@ -337,14 +328,12 @@ def test_mkbackup_encrypted_backup_and_restore(site_for_mkbackup_tests: Site) ->
     _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_compressed_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-compressed")
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_no_history_backup_and_restore(
     site_for_mkbackup_tests: Site, backup_path: str
@@ -369,7 +358,6 @@ def test_mkbackup_no_history_backup_and_restore(
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
-@skipif_failing_distro
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_locking(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-no-history")

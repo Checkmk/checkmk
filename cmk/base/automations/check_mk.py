@@ -1834,16 +1834,21 @@ class AutomationRestart(Automation):
         ]:
             if not checks_path.exists():
                 continue
-            this_time = self._last_modification_in_dir(checks_path)
+            this_time = self._last_modification(checks_path)
             if this_time > last_time:
                 return True
         return False
 
-    def _last_modification_in_dir(self, dir_path: Path) -> float:
-        max_time = os.stat(dir_path).st_mtime
-        for file_name in os.listdir(dir_path):
-            max_time = max(max_time, os.stat(str(dir_path) + "/" + file_name).st_mtime)
-        return max_time
+    def _last_modification(self, path: Path) -> float:
+        max_time = path.stat().st_mtime
+        return (
+            max(
+                (self._last_modification(path / name) for name in path.iterdir()),
+                default=max_time,
+            )
+            if path.is_dir()
+            else max_time
+        )
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":

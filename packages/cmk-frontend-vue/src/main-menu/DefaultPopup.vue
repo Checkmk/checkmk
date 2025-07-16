@@ -18,7 +18,7 @@ conditions defined in the file COPYING, which is part of this source code packag
   left: 0;
   min-width: 360px;
   padding-bottom: 20px;
-  background-color: rgb(32, 39, 46);
+  background-color: var(--ux-theme-1);
   border-right: 4px solid var(--success);
 }
 </style>

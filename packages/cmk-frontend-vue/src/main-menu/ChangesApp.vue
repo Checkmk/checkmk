@@ -20,6 +20,7 @@ import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
+import CmkZebra from '@/components/CmkZebra.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -804,7 +805,7 @@ onMounted(() => {
   justify-content: flex-end;
 }
 .cmk-span-changes-text {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--font-color-dimmed);
 
   font-size: 12px;
   font-style: normal;
@@ -839,7 +840,7 @@ onMounted(() => {
 }
 
 .cmk-span-site-name {
-  color: #fff;
+  color: var(---font-color);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -906,7 +907,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   align-self: stretch;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--font-color-dimmed);
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -926,7 +927,7 @@ onMounted(() => {
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--font-color-dimmed);
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -966,7 +967,7 @@ onMounted(() => {
   align-items: flex-start;
   gap: 7px;
   align-self: stretch;
-  color: #fff;
+  color: var(--font-color);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -988,7 +989,7 @@ onMounted(() => {
 }
 
 .grey-text {
-  color: rgb(150, 150, 150);
+  color: var(--font-color-dimmed);
 }
 
 .red-text {

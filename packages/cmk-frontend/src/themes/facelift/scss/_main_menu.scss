@@ -191,7 +191,7 @@
       left: 64px;
       min-width: $single-column-main-menu-width;
       padding-bottom: $mainmenu-spacing-bottom;
-      background-color: $base-color;
+      background-color: $popup-trigger-active-bg-color;
       border-right: $popup-border;
 
       &.min {

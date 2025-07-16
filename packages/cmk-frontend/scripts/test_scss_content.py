@@ -25,17 +25,20 @@ def _scss_variables(_scss_files: Iterable[Path]) -> tuple[set[str], set[str]]:
 
     definitions, usages = set(), set()
     for file_ in _scss_files:
-        with open(file_) as f:
-            for l in f:
-                if definition := variable_definition.match(l):
-                    definitions.add(definition.group(1))
+        if file_.name not in [
+            "colors.scss"
+        ]:  # ignore colors.css cause this defines the complete cmk color palette
+            with open(file_) as f:
+                for l in f:
+                    if definition := variable_definition.match(l):
+                        definitions.add(definition.group(1))
 
-                # Need to search for usages like this - after splitting away potential definitions
-                # (before a colon) - because re does not support overlapping matches, and there may
-                # be more than one variable usage per line.
-                after_colon: str = l.split(":", 1)[-1]
-                if usage := variable_usage.findall(after_colon):
-                    usages.update(usage)
+                    # Need to search for usages like this - after splitting away potential definitions
+                    # (before a colon) - because re does not support overlapping matches, and there may
+                    # be more than one variable usage per line.
+                    after_colon: str = l.split(":", 1)[-1]
+                    if usage := variable_usage.findall(after_colon):
+                        usages.update(usage)
     assert definitions
     assert usages
     return definitions, usages

@@ -89,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <DefaultPopup class="unified-search-root" @click.stop>
+  <DefaultPopup class="unified-search-root">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
     <UnifiedSearchStart
       v-if="searchUtils.query.value.length < 3"

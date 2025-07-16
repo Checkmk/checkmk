@@ -147,9 +147,12 @@ function onCtrlEnter() {
           @focus="setFocus"
           @input="onInput"
         />
-        <div v-click-outside="hideFilterSuggestions" class="unified-search-filter-suggestions">
+        <div
+          v-if="!!filterSuggestionsShown"
+          v-click-outside="hideFilterSuggestions"
+          class="unified-search-filter-suggestions"
+        >
           <CmkSuggestions
-            v-if="!!filterSuggestionsShown"
             ref="unified-search-filter-suggestions"
             role="option"
             :suggestions="filterOptions"
@@ -158,12 +161,9 @@ function onCtrlEnter() {
             :focus="filterSuggestionsShown"
             @request-close-suggestions="hideFilterSuggestions"
             @update:selected-option="handleFilterSelect"
+            @click.stop
           />
-          <CmkAlertBox
-            v-if="!!filterSuggestionsShown"
-            variant="info"
-            class="unified-search-filter-suggestions-info"
-          >
+          <CmkAlertBox variant="info" class="unified-search-filter-suggestions-info">
             {{
               t(
                 'sarch-with-regex',

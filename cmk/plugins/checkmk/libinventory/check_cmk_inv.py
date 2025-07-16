@@ -47,6 +47,7 @@ from cmk.utils.ip_lookup import (
     make_lookup_mgmt_board_ip_address,
 )
 from cmk.utils.log import console
+from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -140,6 +141,16 @@ def inventory_as_check(
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    enforced_service_table = config.EnforcedServicesTable(
+        BundledHostRulesetMatcher(
+            loading_result.loaded_config.static_checks,
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager.labels_of_host,
+        ),
+        service_name_config,
+        plugins.check_plugins,
+    )
+
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of_bare = make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ConfiguredIPLookup(
@@ -156,6 +167,7 @@ def inventory_as_check(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             config_cache.make_passive_service_name_config(),
+            enforced_service_table,
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,

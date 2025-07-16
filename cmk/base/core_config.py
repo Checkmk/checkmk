@@ -22,7 +22,7 @@ from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
@@ -60,6 +60,9 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
@@ -79,6 +82,7 @@ class MonitoringCore(abc.ABC):
             config_cache,
             hosts_config,
             service_name_config,
+            enforced_services_table,
             get_ip_stack_config,
             default_address_family,
             ip_address_of,
@@ -98,6 +102,9 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -280,6 +287,9 @@ def do_create_config(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
@@ -318,6 +328,7 @@ def do_create_config(
                 config_cache,
                 hosts_config,
                 service_name_config,
+                enforced_services_table,
                 plugins,
                 discovery_rules,
                 get_ip_stack_config,
@@ -384,6 +395,9 @@ def _create_core_config(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
@@ -412,6 +426,7 @@ def _create_core_config(
             config_cache,
             hosts_config,
             service_name_config,
+            enforced_services_table,
             plugins,
             discovery_rules,
             get_ip_stack_config,

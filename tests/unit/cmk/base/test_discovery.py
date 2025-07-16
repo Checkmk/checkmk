@@ -1501,6 +1501,7 @@ def test_commandline_discovery(
             config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
             service_name_config=service_name_config,
+            enforced_services_table=lambda hn: {},
         ),
         agent_based_plugins,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,

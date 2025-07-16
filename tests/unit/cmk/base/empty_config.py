@@ -10,6 +10,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 EMPTY_CONFIG = LoadedConfigFragment(
     discovery_rules={},
     checkgroup_parameters={},
+    static_checks={},
     service_rule_groups=set(),
     service_descriptions={},
     service_description_translation=(),

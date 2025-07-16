@@ -244,6 +244,9 @@ def _aggregate_check_table_services(
     *,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     skip_ignored: bool,
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
@@ -275,6 +278,7 @@ def _aggregate_check_table_services(
                     host_name,
                     get_autochecks,
                     configure_autochecks,
+                    enforced_services_table,
                     plugins,
                 )
                 if sfilter.keep(s)
@@ -286,13 +290,7 @@ def _aggregate_check_table_services(
                 if sfilter.keep(s)
             )
 
-    yield from (
-        svc
-        for _, svc in config_cache.enforced_services_table(
-            host_name, plugins, service_name_config
-        ).values()
-        if sfilter.keep(svc)
-    )
+    yield from (svc for _, svc in enforced_services_table(host_name).values() if sfilter.keep(svc))
 
     # NOTE: as far as I can see, we only have two cases with the filter mode.
     # Either we compute services to check, or we compute services for fetching.
@@ -321,6 +319,7 @@ def _aggregate_check_table_services(
             host_name,
             get_autochecks,
             configure_autochecks,
+            enforced_services_table,
             plugins,
         )
         if sfilter.keep(s)
@@ -392,6 +391,9 @@ def _get_services_from_cluster_nodes(
         [HostName, Sequence[AutocheckEntry]],
         Iterable[ConfiguredService],
     ],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
@@ -401,6 +403,7 @@ def _get_services_from_cluster_nodes(
             cluster,
             get_autochecks,
             configure_autochecks,
+            enforced_services_table,
             plugins,
         )
 
@@ -413,6 +416,9 @@ def _get_clustered_services(
     configure_autochecks: Callable[
         [HostName, Sequence[AutocheckEntry]],
         Iterable[ConfiguredService],
+    ],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
@@ -453,10 +459,7 @@ def _get_clustered_services(
         )
 
     yield from merge_enforced_services(
-        {
-            node_name: config_cache.enforced_services_table(node_name, plugins, service_name_config)
-            for node_name in nodes
-        },
+        {node_name: enforced_services_table(node_name) for node_name in nodes},
         # similiar to appears_on_cluster, but we don't check for ignored services
         lambda node_name, service_name, discovered_labels: (
             config_cache.effective_host(
@@ -563,6 +566,9 @@ class LoadedConfigFragment:
     folder_attributes: Mapping[str, FolderAttributesForBase]
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    static_checks: Mapping[
+        str, list[RuleSpec[list[object]]]
+    ]  # a.k.a. "enforced_services". Keep the name for consistency
     service_rule_groups: set[str]
     service_descriptions: Mapping[str, str]
     service_description_translation: Sequence[RuleSpec[Mapping[str, object]]]
@@ -710,6 +716,7 @@ def _perform_post_config_loading_actions(
         folder_attributes=folder_attributes,
         discovery_rules=discovery_settings,
         checkgroup_parameters=checkgroup_parameters,
+        static_checks=static_checks,
         service_rule_groups=service_rule_groups,
         service_descriptions=service_descriptions,
         service_description_translation=service_description_translation,
@@ -1703,6 +1710,9 @@ class ConfigCache:
         service_configurer: ServiceConfigurer,
         ip_lookup: ip_lookup.IPLookup,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
     ) -> FetcherFactory:
         return FetcherFactory(
             self,
@@ -1713,6 +1723,7 @@ class ConfigCache:
             self.ruleset_matcher,
             service_configurer,
             service_name_config,
+            enforced_services_table,
             is_cmc=self._loaded_config.monitoring_core == "cmc",
         )
 
@@ -1856,6 +1867,9 @@ class ConfigCache:
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
         hostname: HostName,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         *,
         selected_sections: SectionNameCollection,
     ) -> frozenset[SectionName]:
@@ -1871,6 +1885,7 @@ class ConfigCache:
                             plugins.check_plugins,
                             service_configurer,
                             service_name_config,
+                            enforced_services_table,
                             filter_mode=FilterMode.INCLUDE_CLUSTERED,
                             skip_ignored=True,
                         ).needed_check_names()
@@ -1921,6 +1936,9 @@ class ConfigCache:
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         *,
         use_cache: bool = True,
         filter_mode: FilterMode = FilterMode.NONE,
@@ -1937,6 +1955,7 @@ class ConfigCache:
                 hostname,
                 config_cache=self,
                 service_name_config=service_name_config,
+                enforced_services_table=enforced_services_table,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
                 get_autochecks=self.autochecks_memoizer.read,
@@ -1956,10 +1975,15 @@ class ConfigCache:
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
     ) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            self.check_table(hostname, plugins, service_configurer, service_name_config).values(),
+            self.check_table(
+                hostname, plugins, service_configurer, service_name_config, enforced_services_table
+            ).values(),
             key=lambda service: service.description,
         )
 
@@ -1969,9 +1993,14 @@ class ConfigCache:
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> Sequence[ConfiguredService]:
-        services = self._sorted_services(hostname, plugins, service_configurer, service_name_config)
+        services = self._sorted_services(
+            hostname, plugins, service_configurer, service_name_config, enforced_services_table
+        )
         if self._loaded_config.monitoring_core == "cmc":
             return services
 
@@ -3621,11 +3650,28 @@ class ConfigCache:
             )
         )
 
-    def enforced_services_table(
+
+class EnforcedServicesTable:
+    """A table of enforced services"""
+
+    def __init__(
         self,
-        hostname: HostName,
-        plugins: Mapping[CheckPluginName, CheckPlugin],
+        enforced_services_config: Callable[
+            [HostName],
+            Mapping[str, Sequence[Sequence[object]]],
+        ],
         service_name_config: PassiveServiceNameConfig,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+    ) -> None:
+        self._enforced_services_config = enforced_services_config
+        self._service_name_config = service_name_config
+        self._plugins = plugins
+        self._memoized: dict[
+            HostName, Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
+        ] = {}
+
+    def __call__(
+        self, hostname: HostName
     ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
@@ -3638,9 +3684,9 @@ class ConfigCache:
         and item.
         """
         with contextlib.suppress(KeyError):
-            return self.__enforced_services_table[hostname]
+            return self._memoized[hostname]
 
-        return self.__enforced_services_table.setdefault(
+        return self._memoized.setdefault(
             hostname,
             {
                 ServiceID(check_plugin_name, item): (
@@ -3648,14 +3694,14 @@ class ConfigCache:
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=service_name_config.make_name(
+                        description=self._service_name_config.make_name(
                             hostname,
                             check_plugin_name,
                             service_name_template=(
                                 None
                                 if (
                                     p := agent_based_register.get_check_plugin(
-                                        check_plugin_name, plugins
+                                        check_plugin_name, self._plugins
                                     )
                                 )
                                 is None
@@ -3664,7 +3710,7 @@ class ConfigCache:
                             item=item,
                         ),
                         parameters=compute_enforced_service_parameters(
-                            plugins, check_plugin_name, params
+                            self._plugins, check_plugin_name, params
                         ),
                         discovered_parameters={},
                         discovered_labels={},
@@ -3672,14 +3718,11 @@ class ConfigCache:
                         is_enforced=True,
                     ),
                 )
-                for checkgroup_name, ruleset in static_checks.items()
+                for checkgroup_name, matched_rule_values in self._enforced_services_config(
+                    hostname
+                ).items()
                 for check_plugin_name, item, params in (
-                    ConfigCache._sanitize_enforced_entry(*entry)
-                    for entry in reversed(
-                        self.ruleset_matcher.get_host_values_all(
-                            hostname, ruleset, self.label_manager.labels_of_host
-                        )
-                    )
+                    self._sanitize_enforced_entry(*entry) for entry in reversed(matched_rule_values)
                 )
             },
         )
@@ -3824,6 +3867,9 @@ class FetcherFactory:
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         *,
         is_cmc: bool,
     ) -> None:
@@ -3834,6 +3880,7 @@ class FetcherFactory:
         self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
         self._service_name_config: Final = service_name_config
+        self._enforced_services_table: Final = enforced_services_table
         self.is_cmc: Final = is_cmc
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
 
@@ -3907,6 +3954,7 @@ class FetcherFactory:
                     self._service_configurer,
                     self._service_name_config,
                     host_name,
+                    self._enforced_services_table,
                     selected_sections=fetcher_config.selected_sections,
                 ),
                 sections=plugins.snmp_sections.values(),

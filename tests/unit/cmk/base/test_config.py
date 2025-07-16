@@ -29,12 +29,10 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config
-from cmk.base.config import (
-    ConfigCache,
-)
+from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.servicename import FinalServiceNameConfig
+from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
 from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -64,7 +62,7 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -1317,9 +1315,7 @@ def test_host_config_static_checks(
     hostname: HostName,
     result: Mapping[ServiceID, tuple[str, ConfiguredService]],
 ) -> None:
-    def make_plugin(
-        name: CheckPluginName, _plugins: Mapping[CheckPluginName, CheckPluginAPI]
-    ) -> CheckPluginAPI:
+    def make_plugin(name: CheckPluginName) -> CheckPluginAPI:
         return CheckPluginAPI(
             name=name,
             sections=[],
@@ -1334,12 +1330,6 @@ def test_host_config_static_checks(
             cluster_check_function=None,
             location=LegacyPluginLocation(""),
         )
-
-    monkeypatch.setattr(
-        agent_based_register,
-        agent_based_register.get_check_plugin.__name__,
-        make_plugin,
-    )
 
     ts = Scenario()
     ts.add_host(hostname)
@@ -1360,10 +1350,25 @@ def test_host_config_static_checks(
             ],
         },
     )
+    config_cache = ts.apply(monkeypatch)
+
+    service_name_config = PassiveServiceNameConfig(
+        FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()), {}, (), lambda hn: {}
+    )
+
     assert (
-        ts.apply(monkeypatch).enforced_services_table(
-            hostname, {}, ts.config_cache.make_passive_service_name_config()
-        )
+        EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                config_cache._loaded_config.static_checks,
+                config_cache.ruleset_matcher,
+                config_cache.label_manager.labels_of_host,
+            ),
+            service_name_config,
+            {
+                pn: make_plugin(pn)
+                for pn in (CheckPluginName("checktype1"), CheckPluginName("checktype2"))
+            },
+        )(hostname)
         == result
     )
 
@@ -1657,6 +1662,7 @@ def test_get_sorted_check_table_no_cmc(
         {},
         config_cache.make_service_configurer({}, service_name_config),
         service_name_config,
+        enforced_services_table=lambda hn: {},
         service_depends_on=lambda hn, descr: {
             "description A": ["description C"],
             "description B": ["description D"],
@@ -1698,6 +1704,7 @@ def test_resolve_service_dependencies_cyclic(
             {},
             config_cache.make_service_configurer({}, service_name_config),
             service_name_config,
+            enforced_services_table=lambda hn: {},
             service_depends_on=lambda _hn, descr: {
                 "description A": ["description B"],
                 "description B": ["description D"],
@@ -3002,6 +3009,15 @@ def test_check_table_cluster_merging_enforced_and_discovered(
             {},
             config_cache.make_service_configurer({}, service_name_config),
             service_name_config,
+            EnforcedServicesTable(
+                BundledHostRulesetMatcher(
+                    config_cache._loaded_config.static_checks,
+                    config_cache.ruleset_matcher,
+                    config_cache.label_manager.labels_of_host,
+                ),
+                service_name_config,
+                {},
+            ),
         )
         == expected
     )

@@ -6,6 +6,7 @@
 import socket
 import sys
 import time
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal
@@ -23,7 +24,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
-from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.fetchers import (
     IPMIFetcher,
     PiggybackFetcher,
@@ -117,6 +118,9 @@ def print_(txt: str) -> None:
 def dump_host(
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: AgentBasedPlugins,
     hostname: HostName,
     ip_stack_config: IPStackConfig,
@@ -225,6 +229,7 @@ def dump_host(
                 config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
                 ip_address_of,
                 service_name_config,
+                enforced_services_table,
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(
@@ -288,6 +293,7 @@ def dump_host(
             plugins.check_plugins,
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             service_name_config,
+            enforced_services_table,
         ).values(),
         key=lambda s: s.description,
     ):

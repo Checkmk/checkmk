@@ -102,7 +102,9 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import (
     ConfigCache,
+    EnforcedServicesTable,
     handle_ip_lookup_failure,
+    LoadedConfigFragment,
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
@@ -151,6 +153,7 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
 )
+from cmk.checkengine.plugins._check import ConfiguredService, ServiceID
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
@@ -216,7 +219,11 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets.ruleset_matcher import (
+    BundledHostRulesetMatcher,
+    RulesetMatcher,
+    RulesetName,
+)
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -329,6 +336,15 @@ class AutomationDiscovery(DiscoveryAutomation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
+        enforced_services_table = config.EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loading_result.loaded_config.static_checks,
+                config_cache.ruleset_matcher,
+                config_cache.label_manager.labels_of_host,
+            ),
+            service_name_config,
+            plugins.check_plugins,
+        )
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(ip_lookup_config),
@@ -351,7 +367,9 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = CMKFetcher(
             config_cache,
             lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
-            config_cache.fetcher_factory(service_configurer, ip_address_of, service_name_config),
+            config_cache.fetcher_factory(
+                service_configurer, ip_address_of, service_name_config, enforced_services_table
+            ),
             plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             default_address_family=ip_lookup_config.default_address_family,
@@ -416,9 +434,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 settings=settings,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
-                enforced_services=config_cache.enforced_services_table(
-                    hostname, plugins.check_plugins, service_name_config
-                ),
+                enforced_services=enforced_services_table(hostname),
                 on_error=on_error,
             )
 
@@ -481,6 +497,15 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                     service_configurer,
                     ip_address_of,
                     service_name_config,
+                    config.EnforcedServicesTable(
+                        BundledHostRulesetMatcher(
+                            loading_result.loaded_config.static_checks,
+                            config_cache.ruleset_matcher,
+                            config_cache.label_manager.labels_of_host,
+                        ),
+                        service_name_config,
+                        plugins.check_plugins,
+                    ),
                 ),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
@@ -558,6 +583,15 @@ class AutomationDiscoveryPreview(Automation):
                 service_configurer,
                 ip_address_of_with_fallback,
                 service_name_config,
+                config.EnforcedServicesTable(
+                    BundledHostRulesetMatcher(
+                        loading_result.loaded_config.static_checks,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    service_name_config,
+                    plugins.check_plugins,
+                ),
             ),
             plugins,
             default_address_family=ip_lookup_config.default_address_family,
@@ -855,11 +889,15 @@ def _execute_discovery(
             autochecks_config=autochecks_config,
             enforced_services={
                 sid: service
-                for sid, (_ruleset_name, service) in config_cache.enforced_services_table(
-                    host_name,
-                    plugins=plugins.check_plugins,
+                for sid, (_ruleset_name, service) in EnforcedServicesTable(
+                    enforced_services_config=BundledHostRulesetMatcher(
+                        loaded_config.static_checks,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
                     service_name_config=service_name_config,
-                ).items()
+                    plugins=plugins.check_plugins,
+                )(host_name).items()
             },
             on_error=on_error,
         )
@@ -954,6 +992,15 @@ def _execute_autodiscovery(
     autochecks_config = config.AutochecksConfigurer(
         config_cache, ab_plugins.check_plugins, service_name_config
     )
+    enforced_services_table = config.EnforcedServicesTable(
+        BundledHostRulesetMatcher(
+            loading_result.loaded_config.static_checks,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+        ),
+        service_name_config,
+        ab_plugins.check_plugins,
+    )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -987,6 +1034,7 @@ def _execute_autodiscovery(
             service_configurer,
             slightly_different_ip_address_of,
             service_name_config,
+            enforced_services_table,
         ),
         ab_plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -1107,9 +1155,7 @@ def _execute_autodiscovery(
                         invalidate_host_config=config_cache.invalidate_host_config,
                         reference_time=rediscovery_reference_time,
                         oldest_queued=oldest_queued,
-                        enforced_services=config_cache.enforced_services_table(
-                            host_name, ab_plugins.check_plugins, service_name_config
-                        ),
+                        enforced_services=enforced_services_table(host_name),
                         on_error=on_error,
                     )
                     # delete the file even in error case, otherwise we might be causing the same error
@@ -1154,6 +1200,7 @@ def _execute_autodiscovery(
                     config_cache,
                     hosts_config,
                     service_name_config,
+                    enforced_services_table,
                     ip_lookup_config.ip_stack_config,
                     ip_lookup_config.default_address_family,
                     ip_address_of,
@@ -1179,6 +1226,7 @@ def _execute_autodiscovery(
                     config_cache,
                     hosts_config,
                     service_name_config,
+                    enforced_services_table,
                     ip_lookup_config.ip_stack_config,
                     ip_lookup_config.default_address_family,
                     ip_address_of,
@@ -1404,6 +1452,15 @@ class AutomationRenameHosts(Automation):
                 hosts_config = config.make_hosts_config(loading_result.loaded_config)
                 ip_lookup_config = config_cache.ip_lookup_config()
                 service_name_config = config_cache.make_passive_service_name_config()
+                enforced_services_table = config.EnforcedServicesTable(
+                    BundledHostRulesetMatcher(
+                        loading_result.loaded_config.static_checks,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    service_name_config,
+                    plugins.check_plugins,
+                )
 
                 ip_address_of = ip_lookup.ConfiguredIPLookup(
                     ip_lookup.make_lookup_ip_address(ip_lookup_config),
@@ -1416,6 +1473,7 @@ class AutomationRenameHosts(Automation):
                     edition,
                     config_cache,
                     service_name_config,
+                    enforced_services_table,
                     CoreAction.START,
                     ip_lookup_config.ip_stack_config,
                     ip_lookup_config.default_address_family,
@@ -1824,6 +1882,7 @@ class AutomationAnalyseServices(Automation):
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
         )
+        service_name_config = loading_result.config_cache.make_passive_service_name_config()
 
         return (
             AnalyseServiceResult(
@@ -1842,7 +1901,16 @@ class AutomationAnalyseServices(Automation):
             if (
                 found := self._search_service(
                     config_cache=loading_result.config_cache,
-                    service_name_config=loading_result.config_cache.make_passive_service_name_config(),
+                    enforced_services_table=config.EnforcedServicesTable(
+                        enforced_services_config=BundledHostRulesetMatcher(
+                            loading_result.loaded_config.static_checks,
+                            loading_result.config_cache.ruleset_matcher,
+                            loading_result.config_cache.label_manager.labels_of_host,
+                        ),
+                        service_name_config=service_name_config,
+                        plugins=plugins.check_plugins,
+                    ),
+                    service_name_config=service_name_config,
                     plugins=plugins,
                     host_name=host_name,
                     host_ip_stack_config=ip_lookup_config.ip_stack_config(host_name),
@@ -1853,7 +1921,6 @@ class AutomationAnalyseServices(Automation):
                         allow_empty=loading_result.config_cache.hosts_config.clusters,
                         error_handler=config.handle_ip_lookup_failure,
                     ),
-                    check_plugins=plugins.check_plugins,
                 )
             )
             else AnalyseServiceResult(
@@ -1866,6 +1933,9 @@ class AutomationAnalyseServices(Automation):
     def _search_service(
         self,
         config_cache: ConfigCache,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
+        ],
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         host_name: HostName,
@@ -1873,18 +1943,19 @@ class AutomationAnalyseServices(Automation):
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         servicedesc: str,
         ip_address_of: ip_lookup.IPLookup,
-        check_plugins: Mapping[CheckPluginName, CheckPlugin],
     ) -> _FoundService | None:
         return next(
             chain(
                 # special case. cheap to check, so check this first:
                 self._search_checkmk_discovery_service(config_cache, host_name, servicedesc),
                 self._search_enforced_checks(
-                    config_cache, service_name_config, host_name, servicedesc, check_plugins
+                    enforced_services_table(host_name).values(),
+                    servicedesc,
                 ),
                 self._search_discovered_checks(
                     config_cache,
                     service_name_config,
+                    enforced_services_table,
                     host_name,
                     servicedesc,
                     plugins.check_plugins,
@@ -1920,15 +1991,10 @@ class AutomationAnalyseServices(Automation):
 
     @staticmethod
     def _search_enforced_checks(
-        config_cache: ConfigCache,
-        service_name_config: PassiveServiceNameConfig,
-        host_name: HostName,
+        enforced_services: Iterable[tuple[str, ConfiguredService]],
         servicedesc: str,
-        check_plugins: Mapping[CheckPluginName, CheckPlugin],
     ) -> Iterable[_FoundService]:
-        for checkgroup_name, service in config_cache.enforced_services_table(
-            host_name, check_plugins, service_name_config
-        ).values():
+        for checkgroup_name, service in enforced_services:
             if service.description == servicedesc:
                 yield _FoundService(
                     service_info={
@@ -1946,6 +2012,9 @@ class AutomationAnalyseServices(Automation):
     def _search_discovered_checks(
         config_cache: ConfigCache,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
+        ],
         host_name: HostName,
         servicedesc: str,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -1956,7 +2025,11 @@ class AutomationAnalyseServices(Automation):
             check_plugins, service_name_config
         )
         table = config_cache.check_table(
-            host_name, check_plugins, service_configurer, service_name_config
+            host_name,
+            check_plugins,
+            service_configurer,
+            service_name_config,
+            enforced_services_table,
         )
         services = (
             [
@@ -2389,7 +2462,7 @@ class AutomationRestart(Automation):
         else:
             nodes = None
 
-        if plugins is None:  # TODO: do we need these?
+        if plugins is None:
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
@@ -2398,6 +2471,15 @@ class AutomationRestart(Automation):
 
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
         service_name_config = loading_result.config_cache.make_passive_service_name_config()
+        enforced_services_table = config.EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loading_result.loaded_config.static_checks,
+                loading_result.config_cache.ruleset_matcher,
+                loading_result.config_cache.label_manager.labels_of_host,
+            ),
+            service_name_config,
+            plugins.check_plugins,
+        )
         ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
         ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -2411,6 +2493,7 @@ class AutomationRestart(Automation):
             edition,
             loading_result.config_cache,
             service_name_config,
+            enforced_services_table,
             self._mode(loading_result.loaded_config.monitoring_core),
             ip_lookup_config.ip_stack_config,
             ip_lookup_config.default_address_family,
@@ -2494,6 +2577,9 @@ def _execute_silently(
     edition: cmk_version.Edition,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     action: CoreAction,
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
@@ -2517,6 +2603,7 @@ def _execute_silently(
                 config_cache,
                 hosts_config,
                 service_name_config,
+                enforced_services_table,
                 get_ip_stack_config,
                 default_address_family,
                 ip_address_of,
@@ -3040,6 +3127,7 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_agent(
                         edition,
+                        loading_result.loaded_config,
                         loading_result.config_cache,
                         (
                             service_name_config
@@ -3127,6 +3215,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         edition: cmk_version.Edition,
+        loaded_config: LoadedConfigFragment,
         config_cache: ConfigCache,
         service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
@@ -3170,7 +3259,18 @@ class AutomationDiagHost(Automation):
             ipaddress,
             ip_lookup_config.ip_stack_config(host_name),
             fetcher_factory=config_cache.fetcher_factory(
-                service_configurer, ip_address_of, service_name_config
+                service_configurer,
+                ip_address_of,
+                service_name_config,
+                config.EnforcedServicesTable(
+                    BundledHostRulesetMatcher(
+                        loaded_config.static_checks,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    service_name_config,
+                    plugins.check_plugins,
+                ),
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
@@ -3706,6 +3806,17 @@ class AutomationGetAgentOutput(Automation):
                         service_configurer,
                         ip_address_of_with_fallback,
                         service_name_config,
+                        # Enforced services are only needed for the SNMP fetcher, which is not used here.
+                        # But how to guarantee this? - Let's pass the real deal just in case.
+                        config.EnforcedServicesTable(
+                            BundledHostRulesetMatcher(
+                                loading_result.loaded_config.static_checks,
+                                config_cache.ruleset_matcher,
+                                config_cache.label_manager.labels_of_host,
+                            ),
+                            service_name_config,
+                            plugins.check_plugins,
+                        ),
                     ),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,

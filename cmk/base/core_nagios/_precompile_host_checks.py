@@ -34,9 +34,11 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
+    ConfiguredService,
     InventoryPlugin,
     LegacyPluginLocation,
     SectionPlugin,
+    ServiceID,
 )
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_special_agents
@@ -109,6 +111,9 @@ def precompile_hostchecks(
     config_path: Path,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
@@ -137,6 +142,7 @@ def precompile_hostchecks(
             host_check = dump_precompiled_hostcheck(
                 config_cache,
                 service_name_config,
+                enforced_services_table,
                 config_path,
                 hostname,
                 get_ip_stack_config,
@@ -160,6 +166,9 @@ def precompile_hostchecks(
 def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     config_path: Path,
     hostname: HostName,
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
@@ -170,7 +179,7 @@ def dump_precompiled_hostcheck(
     precompile_mode: PrecompileMode,
 ) -> str:
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
-        config_cache, service_name_config, hostname, plugins
+        config_cache, service_name_config, enforced_services_table, hostname, plugins
     )
     ip_stack_config = get_ip_stack_config(hostname)
 
@@ -234,6 +243,9 @@ def dump_precompiled_hostcheck(
 def _make_needed_plugins_locations(
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> tuple[  # we need `list` for the weird template replacement technique
@@ -241,7 +253,7 @@ def _make_needed_plugins_locations(
     list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
 ]:
     needed_agent_based_plugins = _get_needed_plugins(
-        config_cache, service_name_config, hostname, plugins
+        config_cache, service_name_config, enforced_services_table, hostname, plugins
     )
 
     if hostname in config_cache.hosts_config.clusters:
@@ -249,7 +261,9 @@ def _make_needed_plugins_locations(
         for node in config_cache.nodes(hostname):
             # we're deduplicating later.
             needed_agent_based_plugins.extend(
-                _get_needed_plugins(config_cache, service_name_config, node, plugins)
+                _get_needed_plugins(
+                    config_cache, service_name_config, enforced_services_table, node, plugins
+                )
             )
 
     needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
@@ -273,6 +287,9 @@ def _make_needed_plugins_locations(
 def _get_needed_plugins(
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     host_name: HostName,
     agent_based_plugins: AgentBasedPlugins,
 ) -> list[CheckPlugin | InventoryPlugin]:
@@ -293,6 +310,7 @@ def _get_needed_plugins(
                     agent_based_plugins.check_plugins, service_name_config
                 ),
                 service_name_config,
+                enforced_services_table,
                 filter_mode=FilterMode.INCLUDE_CLUSTERED,
                 skip_ignored=False,
             ).needed_check_names()

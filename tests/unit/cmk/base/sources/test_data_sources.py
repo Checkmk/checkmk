@@ -62,6 +62,7 @@ def _make_sources(
             config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: ipaddress,
             service_name_config=service_name_config,
+            enforced_services_table=lambda hn: {},
         ),
         snmp_fetcher_config=SNMPFetcherConfig(
             scan_config=SNMPScanConfig(

@@ -23,7 +23,7 @@ from cmk.base.core_config import MonitoringCore
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
-from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.utils import ip_lookup
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -57,6 +57,9 @@ def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -77,6 +80,7 @@ def do_reload(
         config_cache,
         hosts_config,
         service_name_config,
+        enforced_services_table,
         get_ip_stack_config,
         default_address_family,
         ip_address_of,
@@ -97,6 +101,9 @@ def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -121,6 +128,7 @@ def do_restart(
                 config_cache=config_cache,
                 hosts_config=host_config,
                 service_name_config=service_name_config,
+                enforced_services_table=enforced_services_table,
                 plugins=plugins,
                 discovery_rules=discovery_rules,
                 get_ip_stack_config=get_ip_stack_config,

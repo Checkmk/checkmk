@@ -37,7 +37,13 @@ from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    ServiceID,
+)
 from cmk.server_side_calls_backend import ActiveServiceData
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.config_path import VersionedConfigPath
@@ -73,6 +79,9 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[AddressFamily.AF_INET, AddressFamily.AF_INET6]
@@ -91,6 +100,7 @@ class NagiosCore(core_config.MonitoringCore):
         self._create_core_config(
             Path(config_path),
             service_name_config,
+            enforced_services_table,
             plugins.check_plugins,
             licensing_handler,
             passwords,
@@ -106,6 +116,7 @@ class NagiosCore(core_config.MonitoringCore):
         self._precompile_hostchecks(
             Path(config_path),
             service_name_config,
+            enforced_services_table,
             plugins,
             discovery_rules,
             get_ip_stack_config,
@@ -119,6 +130,9 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: Path,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
@@ -145,6 +159,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_path,
             self._config_cache,
             service_name_config,
+            enforced_services_table,
             plugins,
             hostnames=sorted(
                 {
@@ -167,6 +182,9 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: Path,
         service_name_config: PassiveServiceNameConfig,
+        enforced_services_table: Callable[
+            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+        ],
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
@@ -181,6 +199,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_path,
             self._config_cache,
             service_name_config,
+            enforced_services_table,
             plugins,
             discovery_rules,
             get_ip_stack_config,
@@ -239,6 +258,9 @@ def create_config(
     config_path: Path,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
@@ -261,6 +283,7 @@ def create_config(
             cfg,
             config_cache,
             service_name_config,
+            enforced_services_table,
             plugins,
             hostname,
             get_ip_stack_config(hostname),
@@ -303,6 +326,9 @@ def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     ip_stack_config: IPStackConfig,
@@ -329,6 +355,7 @@ def _create_nagios_config_host(
             cfg,
             config_cache,
             service_name_config,
+            enforced_services_table,
             plugins,
             hostname,
             ip_stack_config,
@@ -489,6 +516,9 @@ def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
@@ -500,6 +530,7 @@ def _process_services_data(
         plugins,
         config_cache.make_service_configurer(plugins, service_name_config),
         service_name_config,
+        enforced_services_table,
     )
     services_ids: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
@@ -574,6 +605,9 @@ def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     ip_stack_config: IPStackConfig,
@@ -593,6 +627,7 @@ def create_nagios_servicedefs(
         cfg,
         config_cache,
         service_name_config,
+        enforced_services_table,
         service_depends_on,
         plugins,
         hostname,

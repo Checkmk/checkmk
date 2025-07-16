@@ -8,7 +8,7 @@ from collections.abc import MutableSequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Iterable, Literal, NotRequired, TypedDict
 
 from cmk.ccc import store
 
@@ -119,37 +119,38 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
         user_id = user.ident
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     messages = [_parse_message(m) for m in store.load_object_from_file(path, default=[])]
+    updated_messages = _remove_expired(_update_validity(messages))
+    if messages != updated_messages:
+        save_gui_messages(updated_messages, user_id)
+    return updated_messages
 
-    # Delete too old messages and update security message durations
-    updated = False
-    for index, message in enumerate(messages):
-        now = time.time()
-        valid_till = message.get("valid_till")
-        valid_from = message.get("time")
-        if valid_till is not None:
+
+def _update_validity(messages: Iterable[Message]) -> list[Message]:
+    duration = active_config.user_security_notification_duration
+    update_existing_duration = duration.get("update_existing_duration")
+    max_duration = duration.get("max_duration")
+    return [
+        (
+            {**message, "valid_till": message["time"] + max_duration}
             if (
-                message.get("security")
-                and active_config.user_security_notification_duration.get(
-                    "update_existing_duration"
-                )
-                and valid_from is not None
-                and (
-                    max_duration := active_config.user_security_notification_duration.get(
-                        "max_duration"
-                    )
-                )
-                is not None
-            ):
-                message["valid_till"] = valid_from + max_duration
-                updated = True
-            if valid_till < now:
-                messages.pop(index)
-                updated = True
+                message["valid_till"] is not None
+                and message["security"]
+                and update_existing_duration
+                and max_duration is not None
+            )
+            else message
+        )
+        for message in messages
+    ]
 
-    if updated:
-        save_gui_messages(messages, user_id)
 
-    return messages
+def _remove_expired(messages: Iterable[Message]) -> list[Message]:
+    now = time.time()
+    return [
+        message
+        for message in messages
+        if (valid_till := message["valid_till"]) is None or valid_till >= now
+    ]
 
 
 def delete_gui_message(msg_id: str) -> None:

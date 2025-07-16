@@ -102,9 +102,9 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
 
     match params.namespaces:
         case ("namespace_include_patterns", namespace_patterns):
-            for pattern in namespace_patterns:
-                args.extend(["--namespace-include-patterns", pattern])
-        case ("namespace_exclude_patterns_patterns", namespace_patterns):
+            args.append("--namespace-include-patterns")
+            args.extend(namespace_patterns)
+        case ("namespace_exclude_patterns", namespace_patterns):
             args.append("--namespace-exclude-patterns")
             args.extend(namespace_patterns)
 

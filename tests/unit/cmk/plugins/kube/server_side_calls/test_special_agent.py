@@ -405,7 +405,28 @@ def test_host_labels_annotation_selection() -> None:
     ]
 
 
-def test_parse_namespace_patterns() -> None:
+@pytest.mark.parametrize(
+    "namespaces, expected_args",
+    [
+        (
+            ("namespace_include_patterns", ["default", "kube-system"]),
+            [
+                "--namespace-include-patterns",
+                "default",
+                "kube-system",
+            ],
+        ),
+        (
+            ("namespace_exclude_patterns", ["default", "kube-system"]),
+            [
+                "--namespace-exclude-patterns",
+                "default",
+                "kube-system",
+            ],
+        ),
+    ],
+)
+def test_parse_namespace_patterns(namespaces: tuple, expected_args: list[str]) -> None:
     params = {
         "cluster_name": "cluster",
         "token": Secret(1),
@@ -415,7 +436,7 @@ def test_parse_namespace_patterns() -> None:
             "proxy": NoProxy(),
         },
         "monitored_objects": ["pods"],
-        "namespaces": ("namespace_include_patterns", ["default", "kube-system"]),
+        "namespaces": namespaces,
     }
     host_config = HostConfig(name="host", ipv4_config=IPv4Config(address="11.211.3.32"))
     commands = list(special_agent_kube(params, host_config))
@@ -429,10 +450,7 @@ def test_parse_namespace_patterns() -> None:
         Secret(1).unsafe(),
         "--monitored-objects",
         "pods",
-        "--namespace-include-patterns",
-        "default",
-        "--namespace-include-patterns",
-        "kube-system",
+        *expected_args,
         "--cluster-aggregation-exclude-node-roles",
         "control-plane",
         "infra",

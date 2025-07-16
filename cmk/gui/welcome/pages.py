@@ -18,6 +18,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule
+from cmk.gui.welcome.registration import welcome_url_registry
 from cmk.shared_typing.welcome import StageInformation, WelcomePage, WelcomeUrls
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
@@ -64,6 +65,17 @@ def _get_finished_stages() -> Generator[int]:
         if user_id == user.id:
             yield 5
             break
+
+
+def make_url_from_registry(id: str) -> str | None:
+    url = welcome_url_registry.get(id)
+    if url is None:
+        return None
+    return makeuri(
+        request,
+        addvars=url.vars,
+        filename=url.filename,
+    )
 
 
 def _welcome_page(config: Config) -> None:
@@ -128,22 +140,8 @@ def _welcome_page(config: Config) -> None:
                         ],
                         filename="wato.py",
                     ),
-                    synthetic_monitoring=makeuri(
-                        request,
-                        addvars=[
-                            ("mode", "robotmk_managed_robots_overview"),
-                        ],
-                        filename="wato.py",
-                    ),
-                    opentelemetry="",
-                    # TODO: add again with CMK-24147, currently is breaks the GUI crawler
-                    # makeuri(
-                    #     request,
-                    #     addvars=[
-                    #         ("mode", "otel_collectors"),
-                    #     ],
-                    #     filename="wato.py",
-                    # ),
+                    synthetic_monitoring=make_url_from_registry("robotmk_managed_robots_overview"),
+                    opentelemetry=make_url_from_registry("otel_collectors"),
                     all_hosts=makeuri(
                         request,
                         addvars=[("view_name", "allhosts")],

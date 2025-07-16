@@ -77,21 +77,25 @@ defineProps<{
       />
     </FlexRow>
 
-    <b> {{ t('application-monitoring', 'Application monitoring') }}</b>
-    <FlexRow>
-      <CmkLinkCard
-        icon-name="synthetic-monitoring-yellow"
-        :title="t('synthetic-monitoring', 'Synthetic monitoring')"
-        :url="urls.synthetic_monitoring"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="opentelemetry"
-        :title="t('otel', 'OpenTelemetry (Beta)')"
-        :url="urls.opentelemetry"
-        :open-in-new-tab="false"
-      />
-    </FlexRow>
+    <template v-if="urls.synthetic_monitoring || urls.opentelemetry">
+      <b> {{ t('application-monitoring', 'Application monitoring') }}</b>
+      <FlexRow>
+        <CmkLinkCard
+          v-if="urls.synthetic_monitoring"
+          icon-name="synthetic-monitoring-yellow"
+          :title="t('synthetic-monitoring', 'Synthetic monitoring')"
+          :url="urls.synthetic_monitoring"
+          :open-in-new-tab="false"
+        />
+        <CmkLinkCard
+          v-if="urls.opentelemetry"
+          icon-name="opentelemetry"
+          :title="t('otel', 'OpenTelemetry (Beta)')"
+          :url="urls.opentelemetry"
+          :open-in-new-tab="false"
+        />
+      </FlexRow>
+    </template>
   </CmkAccordionStepPanelItem>
 </template>
 

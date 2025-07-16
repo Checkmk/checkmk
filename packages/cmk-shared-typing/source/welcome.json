@@ -60,8 +60,6 @@
                 "aws_quick_setup",
                 "azure_quick_setup",
                 "gcp_quick_setup",
-                "synthetic_monitoring",
-                "opentelemetry",
                 "all_hosts",
                 "main_dashboard",
                 "problem_dashboard",

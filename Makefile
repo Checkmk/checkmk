@@ -70,10 +70,6 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 		EXCLUDES+=" --exclude $${X%*/}" ; \
 	    done ; \
-	else \
-	    for F in $(DIST_ARCHIVE) non-free/packages/cmk-update-agent/{build,build-32,src} non-free/packages/cmk-update-agent/{build,build-32,src}; do \
-		EXCLUDES+=" --exclude $$F" ; \
-	    done ; \
 	fi ; \
 	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \
 	    rm -rf check-mk-$(EDITION)-$(OMD_VERSION) ; \

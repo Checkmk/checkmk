@@ -1903,7 +1903,7 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     )
 
 
-def _parse_dump(dump: bytes) -> SDRawTree:
+def _parse_dump(dump: bytes) -> object:
     try:
         return json.loads(dump.decode("utf-8"))
     except json.JSONDecodeError:

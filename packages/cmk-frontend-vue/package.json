@@ -7,17 +7,6 @@
     "npm": ">=10.9.0 <11.0.0",
     "node": ">=22.0.0 <=23.0.0"
   },
-  "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "demo": "vite --config vite.config.demo.ts",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test-eslint": "eslint --max-warnings 0 .",
-    "test-tsc": "vue-tsc --build --force",
-    "test-prettier": "prettier  --check tests/ src/ *.json *.ts *.html",
-    "prettier": "prettier --write tests/ src/ *.json *.ts *.html"
-  },
   "dependencies": {
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",

@@ -3,19 +3,21 @@
 ## Development
 
 The run script and BUILD bazel file define the entry points to this
-component.
+component, for example:
 
 ```sh
 ./run -h
 ./run --all
+bazel run :vite [-- <ARGS>]
+bazel run :vitest [-- <ARGS>]
 ```
 
 ### Trying out changes in a site
 
 #### f12
 
-f12 is working, but is using the production ready build process and therefore not
-super fast (currently six seconds)
+f12 is working, but is using the production ready build process and
+therefore not super fast (currently six seconds)
 
 #### Dev server
 
@@ -42,3 +44,18 @@ To try our reusable components outside a checkmk site, you can
 
 * run `ibazel run :vite -- --config vite.config.demo.ts`
 * surf to `http://localhost:5174/`
+
+
+### Package management
+
+If you need to change the dependencies you can do so by running pnpm
+inside bazel, for example:
+
+```sh
+bazel run -- @pnpm//:pnpm --dir $PWD install vue
+bazel run -- @pnpm//:pnpm --dir $PWD install --lockfile-only
+```
+
+Take care that you might add new dependencies to the SRCS variable in
+`BUILD`.
+

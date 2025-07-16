@@ -17,11 +17,11 @@ usage() {
     echo "  -b, --build                build"
     echo "  -d, --build-dev            build in dev mode"
     echo "  -t, --tests                run tests"
-    echo "  -F, --check-format         check for correct formatting"
-    echo "  -T, --tsc                  run tsc"
-    echo "  -E, --eslint               run eslint"
-    echo "  -a, --all                  shortcut for -b -t -F -T -E -d"
+    echo "  -F, --check-format         run format check"
+    echo "  -T, --tsc                  run type checker"
+    echo "  -E, --eslint               run linter"
     echo "  -f, --format               format sources"
+    echo "  -a, --all                  shortcut for -b -t -F -T -E -d"
     echo "  -h, --help                 show this help"
 }
 

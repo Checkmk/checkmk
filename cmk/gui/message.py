@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from datetime import datetime
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence, Set
+from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
 from pathlib import Path
 from time import time as time_time
-from typing import Any, Literal, TypedDict
+from typing import Any, Final, Literal, NotRequired, TypedDict
+
+from pydantic import TypeAdapter
 
 from cmk.ccc.store import DimSerializer, ObjectStore
 from cmk.ccc.user import UserId
@@ -22,12 +24,14 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, Config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
@@ -40,7 +44,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import AnnotatedUserId, UserSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -57,7 +61,7 @@ from cmk.gui.valuespec import (
 
 type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 type MessageDestination = (
-    Literal["all_users", "online", "admin"] | tuple[Literal["list"], Sequence[UserId]]
+    Literal["all_users", "online", "admin"] | tuple[Literal["list"], Sequence[AnnotatedUserId]]
 )
 
 
@@ -99,8 +103,19 @@ def create_message(
     )
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    cron_job_registry: CronJobRegistry,
+) -> None:
     page_registry.register(PageEndpoint("message", page_message))
+    cron_job_registry.register(
+        CronJob(
+            name="execute_user_message_spool_job",
+            callable=_execute_user_message_spool_job,
+            # Usually there are no spooled messages, and the job is very fast then.
+            interval=timedelta(seconds=30),
+        )
+    )
 
 
 _MESSAGES_FILENAME = "messages.mk"
@@ -388,7 +403,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str, users: Mapping[str, Use
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message(msg: Message, multisite_user_ids: Iterable[str]) -> None:
+def _process_message(msg: Message, multisite_user_ids: Set[str]) -> None:
     recipients, num_success, errors = send_message(msg, multisite_user_ids)
     num_recipients = len(recipients)
 
@@ -427,9 +442,11 @@ def _process_message(msg: Message, multisite_user_ids: Iterable[str]) -> None:
 
 
 def send_message(
-    msg: Message, multisite_user_ids: Iterable[str]
+    msg: Message, multisite_user_ids: Set[str]
 ) -> tuple[
-    list[UserId], dict[MessageMethod, int], dict[MessageMethod, list[tuple[UserId, Exception]]]
+    Collection[UserId],
+    Mapping[MessageMethod, int],
+    Mapping[MessageMethod, Collection[tuple[UserId, Exception]]],
 ]:
     recipients = _recipients_for(msg["dest"], multisite_user_ids)
     num_success = {method: 0 for method in msg["methods"]}
@@ -445,8 +462,8 @@ def send_message(
 
 
 def _recipients_for(
-    destination: MessageDestination, multisite_user_ids: Iterable[str]
-) -> list[UserId]:
+    destination: MessageDestination, multisite_user_ids: Set[str]
+) -> Collection[UserId]:
     match destination:
         case "all_users":
             return [UserId(s) for s in multisite_user_ids]
@@ -459,7 +476,14 @@ def _recipients_for(
                 if attr.get("automation_user", False) is False and "admin" in attr.get("roles", [])
             ]
         case ("list", user_ids):
-            return list(user_ids)
+            # Although the GUI has already validated the IDs, we need some "backend validation" here
+            # for e.g. the spool mechanism.
+            requested_user_ids = frozenset(user_ids)
+            # NOTE: It would be nice if the multisite_user_ids were a Set[UserId].
+            known_user_ids = frozenset(UserId(s) for s in multisite_user_ids)
+            if unknown_user_ids := requested_user_ids - known_user_ids:
+                logger.warning(f"ignoring unknown user ID(s) {', '.join(unknown_user_ids)}")
+            return requested_user_ids & known_user_ids
         case other:
             # assert_never(other) doesn't work here due to several mypy bugs
             raise ValueError(f"Invalid message destination {other}")
@@ -526,3 +550,50 @@ def _message_mail(user_id: UserId, msg: Message) -> bool:
         raise MKInternalError(_("Mail could not be delivered: '%s'") % exc) from exc
 
     return True
+
+
+def user_message_spool_dir() -> Path:
+    return cmk.utils.paths.var_dir / "user_messages/spool"
+
+
+class SpooledMessage(TypedDict):
+    text: str | MessageText
+    dest: MessageDestination
+    methods: Sequence[MessageMethod]
+    valid_till: NotRequired[int]
+    time: NotRequired[int]
+    security: NotRequired[bool]
+
+
+_SPOOLED_MESSAGE_ADAPTER: Final = TypeAdapter(SpooledMessage)
+
+
+def to_message(spooled: SpooledMessage) -> Message:
+    return create_message(
+        text=(
+            MessageText(content_type="text", content=text)
+            if isinstance(text := spooled["text"], str)
+            else text
+        ),
+        dest=spooled["dest"],
+        methods=spooled["methods"],
+        valid_till=spooled.get("valid_till"),
+        time=spooled.get("time"),
+        security=spooled.get("security", False),
+    )
+
+
+def _execute_user_message_spool_job(config: Config) -> None:
+    for path in sorted(
+        user_message_spool_dir().glob("[!.]*"),
+        key=lambda p: p.stat().st_mtime,
+    ):
+        try:
+            message = to_message(_SPOOLED_MESSAGE_ADAPTER.validate_json(path.read_text()))
+            logger.debug("unspooled user message from %s: %s", path, message)
+            send_message(message, config.multisite_users.keys())
+        except Exception as exc:
+            logger.warning(f"ignoring spooled user message at {path}: {exc}")
+        finally:
+            logger.debug("removing spooled user message at %s", path)
+            path.unlink()

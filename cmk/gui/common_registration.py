@@ -274,7 +274,7 @@ def register(
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
     login.register(page_registry)
-    message.register(page_registry)
+    message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)
     logwatch.register(page_registry)

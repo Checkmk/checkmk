@@ -117,7 +117,7 @@ def _parse_suseconnect_pre_v15(info: StringTable) -> Section:
     return {parsed["identifier"]: parsed}
 
 
-def parse_suseconnect(string_table: StringTable) -> Section:
+def parse(string_table: StringTable) -> Section:
     try:
         first = string_table[0][0]
     except IndexError:
@@ -131,7 +131,7 @@ def parse_suseconnect(string_table: StringTable) -> Section:
 
 agent_section_suseconnect = AgentSection(
     name="suseconnect",
-    parse_function=parse_suseconnect,
+    parse_function=parse,
 )
 
 
@@ -152,7 +152,7 @@ def get_data(section: Mapping[str, _TVal]) -> _TVal | None:
     return next((value for key, value in section.items() if "SLES" in key), None)
 
 
-def inventory_suseconnect(section: Section) -> InventoryResult:
+def inventory(section: Section) -> InventoryResult:
     if (data := get_data(section)) is None:
         return
     yield Attributes(
@@ -165,5 +165,5 @@ def inventory_suseconnect(section: Section) -> InventoryResult:
 
 inventory_plugin_suseconnect = InventoryPlugin(
     name="suseconnect",
-    inventory_function=inventory_suseconnect,
+    inventory_function=inventory,
 )

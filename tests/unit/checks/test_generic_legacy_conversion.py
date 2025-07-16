@@ -1018,7 +1018,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "supermicro_sensors",
         "supermicro_smart",
         "superstack3_sensors",
-        "suseconnect",
         "sylo",
         "sym_brightmail_queues",
         "symantec_av_progstate",

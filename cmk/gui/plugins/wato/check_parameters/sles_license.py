@@ -3,61 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    InputHint,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    SimpleLevels,
+    SingleChoice,
+    SingleChoiceElement,
+    TimeMagnitude,
+    TimeSpan,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_sles_license():
+def _parameter_rulespec_sles_license():
     return Dictionary(
-        elements=[
-            (
-                "status",
-                DropdownChoice(
-                    title=_("Status"),
-                    help=_("Status of the SLES license"),
-                    choices=[
-                        ("Registered", _("Registered")),
-                        ("Ignore", _("Do not check")),
-                    ],
-                ),
-            ),
-            (
-                "subscription_status",
-                DropdownChoice(
-                    title=_("Subscription"),
-                    help=_("Status of the SLES subscription"),
-                    choices=[
-                        ("ACTIVE", _("ACTIVE")),
-                        ("Ignore", _("Do not check")),
-                    ],
-                ),
-            ),
-            (
-                "days_left",
-                Tuple(
-                    title=_("Time until license expiration"),
-                    help=_("Remaining days until the SLES license expires"),
+        elements={
+            "status": DictElement(
+                required=False,
+                parameter_form=SingleChoice(
+                    title=Title("Status"),
+                    help_text=Help("Status of the SLES license"),
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("days")),
-                        Integer(title=_("Critical at"), unit=_("days")),
+                        SingleChoiceElement(name="Registered", title=Title("Registered")),
+                        SingleChoiceElement(name="Ignore", title=Title("Ignore")),
                     ],
                 ),
             ),
-        ],
+            "subscription_status": DictElement(
+                required=False,
+                parameter_form=SingleChoice(
+                    title=Title("Subscription"),
+                    help_text=Help("Status of the SLES subscription"),
+                    elements=[
+                        SingleChoiceElement(name="ACTIVE", title=Title("ACTIVE")),
+                        SingleChoiceElement(name="Ignore", title=Title("Ignore")),
+                    ],
+                ),
+            ),
+            "days_left": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Time until license expiration"),
+                    help_text=Help("Remaining days until the SLES license expires"),
+                    level_direction=LevelDirection.LOWER,
+                    migrate=migrate_to_float_simple_levels,
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.DAY]),
+                    prefill_fixed_levels=InputHint((14.0, 7.0)),
+                ),
+            ),
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="sles_license",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_sles_license,
-        title=lambda: _("SLES License"),
-    )
+rule_spec_sles_license = CheckParameters(
+    name="sles_license",
+    title=Title("SLES License"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_rulespec_sles_license,
+    condition=HostCondition(),
 )

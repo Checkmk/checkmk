@@ -14,8 +14,8 @@ import time_machine
 from cmk.agent_based.v2 import Attributes, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.plugins.collection.agent_based.suseconnect import (
-    inventory_suseconnect,
-    parse_suseconnect,
+    inventory,
+    parse,
     Section,
 )
 
@@ -50,7 +50,7 @@ STRING_TABLE_1: Final = [
 
 @pytest.fixture(name="section_1", scope="module")
 def _get_section_1() -> Section:
-    return parse_suseconnect(STRING_TABLE_1)
+    return parse(STRING_TABLE_1)
 
 
 def test_discovery(
@@ -89,8 +89,12 @@ def test_agent_output_parsable(
     with time_machine.travel(datetime.datetime(2020, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_suseconnect(
-                {"status": "Registered", "subscription_status": "ACTIVE", "days_left": (14, 7)},
-                parse_suseconnect(
+                {
+                    "status": "Registered",
+                    "subscription_status": "ACTIVE",
+                    "days_left": ("fixed", (14.0, 7.0)),
+                },
+                parse(
                     [
                         ["Installed Products", ""],
                         ["Advanced Systems Management Module"],
@@ -115,7 +119,7 @@ def test_agent_output_parsable(
 
 
 def test_inventory(section_1: Section) -> None:
-    assert list(inventory_suseconnect(section_1)) == [
+    assert list(inventory(section_1)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

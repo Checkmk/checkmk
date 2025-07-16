@@ -46,43 +46,47 @@
 
 
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
 
-check_info = {}
 
-
-def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
+def discover(section: Section) -> DiscoveryResult:
     if get_data(section) is not None:
-        yield None, {}
+        yield Service()
 
 
-def check_suseconnect(
-    _no_item: str, params: Mapping[str, Any], section: Section
-) -> Iterable[tuple[int, str]]:
+def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     # we assume here that the parsed data contains all required keys
 
     if (specs := get_data(section)) is None:
         return
 
     if "registration_status" in specs:
-        state, infotext = 0, "Status: %s" % specs["registration_status"]
+        state, infotext = State.OK, "Status: %s" % specs["registration_status"]
         if params["status"] != "Ignore" and params["status"] != specs["registration_status"]:
-            state = 2
-        yield state, infotext
+            state = State.CRIT
+        yield Result(state=state, summary=infotext)
 
     if "subscription_status" in specs:
-        state, infotext = 0, "Subscription: %s" % specs["subscription_status"]
+        state, infotext = State.OK, "Subscription: %s" % specs["subscription_status"]
         if (
             params["subscription_status"] != "Ignore"
             and params["subscription_status"] != specs["subscription_status"]
         ):
-            state = 2
-        yield state, infotext
+            state = State.CRIT
+        yield Result(state=state, summary=infotext)
 
     if (
         "subscription_type" in specs
@@ -90,9 +94,9 @@ def check_suseconnect(
         and "starts_at" in specs
         and "expires_at" in specs
     ):
-        yield (
-            0,
-            (
+        yield Result(
+            state=State.OK,
+            summary=(
                 "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
                 "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
             )
@@ -103,35 +107,28 @@ def check_suseconnect(
         expiration_time = time.mktime(expiration_date) - time.time()
 
         if expiration_time > 0:
-            warn, crit = params["days_left"]
-            days2seconds = 24 * 60 * 60
-
-            if expiration_time <= crit * days2seconds:
-                state = 2
-            elif expiration_time <= warn * days2seconds:
-                state = 1
-            else:
-                state = 0
-
-            infotext = "Expires in: %s" % render.timespan(expiration_time)
-            if state:
-                infotext += " (warn/crit at %d/%d days)" % (warn, crit)
-
-            yield state, infotext
+            yield from check_levels(
+                expiration_time,
+                levels_lower=params["days_left"],
+                label="Expires in",
+                render_func=render.timespan,
+            )
         else:
-            yield 2, "Expired since: %s" % render.timespan(-1.0 * expiration_time)
+            yield Result(
+                state=State.CRIT,
+                summary="Expired since: %s" % render.timespan(-1.0 * expiration_time),
+            )
 
 
-check_info["suseconnect"] = LegacyCheckDefinition(
+check_plugin_suseconnect = CheckPlugin(
     name="suseconnect",
     service_name="SLES license",
-    # section is migrated already!,
-    discovery_function=inventory_suseconnect,
-    check_function=check_suseconnect,
+    discovery_function=discover,
+    check_function=check,
     check_ruleset_name="sles_license",
     check_default_parameters={
         "status": "Registered",
         "subscription_status": "ACTIVE",
-        "days_left": (14, 7),
+        "days_left": ("fixed", (14.0, 7.0)),
     },
 )

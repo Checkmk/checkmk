@@ -1495,6 +1495,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
                     ]
 
             configure_attributes(
+                all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
                 new=new,
                 hosts={"folder": (myself := None if new else folder)},
                 for_what="folder",

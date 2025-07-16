@@ -145,7 +145,11 @@ class ModeBulkEdit(WatoMode):
             html.prevent_password_auto_completion()
             html.hidden_field("host_hash", current_host_hash)
             configure_attributes(
-                False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
+                all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+                new=False,
+                hosts={str(k): v for k, v in hosts.items()},
+                for_what="bulk",
+                parent=self._folder,
             )
             forms.end()
             html.hidden_fields()

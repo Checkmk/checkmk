@@ -360,6 +360,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             except MKUserError:
                 host_name = None
             configure_attributes(
+                all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
                 new=self._mode != "edit",
                 hosts={self._host.name(): self._host} if self._mode != "new" else {},
                 for_what="host" if not self._is_cluster() else "cluster",

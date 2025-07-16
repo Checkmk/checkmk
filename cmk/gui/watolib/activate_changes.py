@@ -3146,7 +3146,7 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
 
     if completed_process.returncode:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s")
+            _("Failed to extract sync archive [%d]: %s")
             % (completed_process.returncode, completed_process.stderr.decode())
         )
 

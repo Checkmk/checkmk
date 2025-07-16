@@ -13610,6 +13610,14 @@ msgstr "Secret du client"
 msgid "ClientID"
 msgstr "Identifiant du client"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "Identifiant du client"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Secret du client"
+
 msgid "Clients"
 msgstr "Clients"
 
@@ -23399,6 +23407,10 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Entrez le code de sortie sous la forme d'une valeur hexagonale à 10 "
@@ -24832,10 +24844,6 @@ msgstr "Réglage d'usine"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
-
-#, fuzzy
-msgid "Fail over partner"
-msgstr "États de basculement"
 
 msgid "Failed"
 msgstr "Échoué"
@@ -43465,10 +43473,6 @@ msgstr "Nom de la machine virtuelle et/ou<br>du type de collecte d'ordures"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nom de la machine virtuelle et/ou du<br>threadpool"
-
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr "Nom d'hôte ou adresse IPv4 pour le listener"
 
 msgid "Name resolution"
 msgstr "Résolution du nom"
@@ -64403,6 +64407,10 @@ msgstr "ID locataire / ID répertoire"
 msgid "TenantID"
 msgstr "ID du locataire"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "ID du locataire"
+
 msgid "Terminated containers"
 msgstr "Conteneurs terminés"
 
@@ -72151,7 +72159,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Ce plugin peut être utilisé pour collecter les informations de toutes les "
 "licences et plans de service de MS Office 365 en utilisant le module "
@@ -90245,6 +90253,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Fail over partner"
+#~ msgstr "États de basculement"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr "Nom d'hôte ou adresse IPv4 pour le listener"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"

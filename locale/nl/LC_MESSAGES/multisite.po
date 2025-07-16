@@ -13509,6 +13509,14 @@ msgstr "Geheim van de klant"
 msgid "ClientID"
 msgstr "ClientID"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ClientID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Geheim van de klant"
+
 msgid "Clients"
 msgstr "Klanten"
 
@@ -23197,6 +23205,10 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Voer de exit code in als 10-cijferige, kleine hex waarde, bijv. 0x000000."
@@ -24614,10 +24626,6 @@ msgstr "Fabrieksinstelling"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
-
-#, fuzzy
-msgid "Fail over partner"
-msgstr "Failover staten"
 
 msgid "Failed"
 msgstr "Mislukt"
@@ -43100,10 +43108,6 @@ msgstr "Naam van de virtuele machine en/of het<br>type vuilnisverzameling"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Naam van de virtuele machine en/of<br>threadpool"
-
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr "Hostnaam of IPv4 adres voor luisteraar"
 
 msgid "Name resolution"
 msgstr "Naam resolutie"
@@ -63822,6 +63826,10 @@ msgstr "Huurder ID / Directory ID"
 msgid "TenantID"
 msgstr "TenantID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "TenantID"
+
 msgid "Terminated containers"
 msgstr "Beëindigde containers"
 
@@ -71487,7 +71495,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Deze plugin kan worden gebruikt om informatie te verzamelen van alle MS "
 "Office 365 licenties en serviceplans met behulp van de MSOnline PowerShell "
@@ -89375,6 +89383,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Fail over partner"
+#~ msgstr "Failover staten"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr "Hostnaam of IPv4 adres voor luisteraar"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"

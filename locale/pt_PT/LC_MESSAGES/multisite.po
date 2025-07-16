@@ -13511,6 +13511,14 @@ msgstr "Segredo do cliente"
 msgid "ClientID"
 msgstr "ID do cliente"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ID do cliente"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Segredo do Cliente"
+
 msgid "Clients"
 msgstr "Clientes"
 
@@ -23196,6 +23204,10 @@ msgstr ""
 "correspondência entre o valor de correspondência de atributo especificado e "
 "o valor de atributo de reclamação devolvido."
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Insira o código de saída como 10 dígitos, valor hexadecimais em minúsculas, "
@@ -24607,10 +24619,6 @@ msgstr "Configuração de fábrica"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
-
-#, fuzzy
-msgid "Fail over partner"
-msgstr "Estados em falha"
 
 msgid "Failed"
 msgstr "Falha"
@@ -43095,10 +43103,6 @@ msgstr "Nome da máquina virtual e/ou tipo de recolha de lixo"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nome da máquina virtual e/ou"
-
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr "Hostname ou endereço IPv4 para o ouvinte"
 
 msgid "Name resolution"
 msgstr "Resolução do nome"
@@ -63814,6 +63818,10 @@ msgstr "Identificação do locatário / Identificação do directório"
 msgid "TenantID"
 msgstr "ID do inquilino"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "ID do inquilino"
+
 msgid "Terminated containers"
 msgstr "Contentores encerrados"
 
@@ -71435,7 +71443,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Este plugin pode ser usado para recolher informações de todas as licenças e "
 "planos de serviço do MS Office 365 usando o módulo MSOnline PowerShell."
@@ -89268,6 +89276,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Fail over partner"
+#~ msgstr "Estados em falha"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr "Hostname ou endereço IPv4 para o ouvinte"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Você realmente quer mover as agregações selecionadas?"

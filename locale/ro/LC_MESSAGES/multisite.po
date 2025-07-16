@@ -13529,6 +13529,14 @@ msgstr "Secretul clientului"
 msgid "ClientID"
 msgstr "ClientID"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ClientID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Secretul clientului"
+
 msgid "Clients"
 msgstr "Clienți"
 
@@ -23238,6 +23246,10 @@ msgstr ""
 "în care există o corespondență între valoarea de corespondență a atributului "
 "specificat și valoarea atributului de cerere returnată."
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Introduceți codul de ieșire ca valoare hexagonală de 10 cifre, cu minuscule, "
@@ -24661,9 +24673,6 @@ msgstr "Setare din fabrică"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
-
-msgid "Fail over partner"
-msgstr "Partenerul Fail over"
 
 msgid "Failed"
 msgstr "A eșuat"
@@ -43164,12 +43173,6 @@ msgstr "Numele mașinii virtuale și/sau<br>tipul de colectare a gunoiului"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Numele mașinii virtuale și/sau al<br>threadpool-ului"
-
-#, fuzzy
-msgid "Name or IP address of the host where MS SQL runs if host name fails"
-msgstr ""
-"Numele sau adresa IP a gazdei unde se execută MS SQL, în cazul în care "
-"numele de gazdă nu reușește"
 
 msgid "Name resolution"
 msgstr "Rezoluția numelui"
@@ -63974,6 +63977,10 @@ msgstr "ID-ul chiriașului / ID-ul directorului"
 msgid "TenantID"
 msgstr "TenantID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "TenantID"
+
 msgid "Terminated containers"
 msgstr "Containere terminate"
 
@@ -71694,7 +71701,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Acest plugin poate fi utilizat pentru a colecta informații despre toate "
 "licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
@@ -89571,6 +89578,15 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Fail over partner"
+#~ msgstr "Partenerul Fail over"
+
+#, fuzzy
+#~ msgid "Name or IP address of the host where MS SQL runs if host name fails"
+#~ msgstr ""
+#~ "Numele sau adresa IP a gazdei unde se execută MS SQL, în cazul în care "
+#~ "numele de gazdă nu reușește"
 
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Chiar doriți să mutați agregările selectate?"

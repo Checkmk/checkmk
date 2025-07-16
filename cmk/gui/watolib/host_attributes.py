@@ -492,18 +492,9 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
 host_attribute_registry = HostAttributeRegistry()
 
 
-def sorted_host_attributes() -> list[ABCHostAttribute]:
+def sorted_host_attributes(host_attributes: Sequence[ABCHostAttribute]) -> list[ABCHostAttribute]:
     """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-    return sorted(
-        all_host_attributes(
-            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-        ).values(),
-        key=lambda a: (a.sort_index(), a.topic().title),
-    )
-
-
-def host_attribute_choices() -> Choices:
-    return [(a.name(), a.title()) for a in sorted_host_attributes()]
+    return sorted(host_attributes, key=lambda a: (a.sort_index(), a.topic().title))
 
 
 def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
@@ -539,7 +530,13 @@ def get_sorted_host_attributes_by_topic(
 
     sorted_attributes = []
     for attr in sorted(
-        sorted_host_attributes(),
+        sorted_host_attributes(
+            list(
+                all_host_attributes(
+                    active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+                ).values()
+            )
+        ),
         key=functools.cmp_to_key(sort_host_attributes),
     ):
         if attr.topic().ident == host_attribute_topic_registry[topic_id].ident:

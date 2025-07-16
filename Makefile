@@ -68,12 +68,12 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	if [ -d .git ]; then \
 	    git rev-parse HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) non-free/packages/cmk-update-agent/{build,build-32,src} non-free/packages/cmk-update-agent/{build,build-32,src} enterprise/agents/winbuild; do \
+	    for F in $(DIST_ARCHIVE) non-free/packages/cmk-update-agent/{build,build-32,src} non-free/packages/cmk-update-agent/{build,build-32,src}; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \

@@ -809,7 +809,9 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
         if not original_data:
             return result_data
 
-        host_attributes = all_host_attributes(active_config)
+        host_attributes = all_host_attributes(
+            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        )
         tag_group_config = load_tag_config_read_only()
 
         for name, value in original_data.items():

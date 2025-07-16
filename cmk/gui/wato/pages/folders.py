@@ -1012,7 +1012,9 @@ class ModeFolder(WatoMode):
             with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
-                for attr in all_host_attributes(config).values():
+                for attr in all_host_attributes(
+                    config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
+                ).values():
                     if attr.show_in_table():
                         colspan += 1
                 if (

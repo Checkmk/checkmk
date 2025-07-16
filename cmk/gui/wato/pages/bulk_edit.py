@@ -10,6 +10,8 @@ from collections.abc import Collection, Sequence
 from hashlib import sha256
 from typing import override
 
+from cmk.utils.tags import TagGroup
+
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -18,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, CustomHostAttrSpec, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -190,7 +192,9 @@ class ModeBulkCleanup(WatoMode):
             return None
 
         user.need_permission("wato.edit_hosts")
-        to_clean = self._bulk_collect_cleaned_attributes(config)
+        to_clean = self._bulk_collect_cleaned_attributes(
+            config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
+        )
         if "contactgroups" in to_clean:
             self._folder.permissions.need_permission("write")
 
@@ -205,9 +209,13 @@ class ModeBulkCleanup(WatoMode):
 
         return redirect(self._folder.url())
 
-    def _bulk_collect_cleaned_attributes(self, config: Config) -> list[str]:
+    def _bulk_collect_cleaned_attributes(
+        self,
+        host_attributes: Sequence[CustomHostAttrSpec],
+        tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]],
+    ) -> list[str]:
         to_clean = []
-        for attrname in all_host_attributes(config).keys():
+        for attrname in all_host_attributes(host_attributes, tag_groups_by_topic).keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

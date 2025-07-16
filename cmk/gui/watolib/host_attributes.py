@@ -29,7 +29,7 @@ from cmk.utils.translations import TranslationOptionsSpec
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
@@ -499,7 +499,9 @@ host_attribute_registry = HostAttributeRegistry()
 def sorted_host_attributes() -> list[ABCHostAttribute]:
     """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
     return sorted(
-        all_host_attributes(active_config).values(),
+        all_host_attributes(
+            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        ).values(),
         key=lambda a: (a.sort_index(), a.topic().title),
     )
 
@@ -512,7 +514,9 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics: set[HostAttributeTopic] = set()
-    for attr in all_host_attributes(active_config).values():
+    for attr in all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    ).values():
         if attr.topic().ident not in [t.ident for t in needed_topics] and attr.is_visible(
             for_what, new
         ):
@@ -823,31 +827,37 @@ def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
         return None
 
 
-def all_host_attributes(config: Config) -> dict[str, ABCHostAttribute]:
+def all_host_attributes(
+    host_attributes: Sequence[CustomHostAttrSpec],
+    tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]],
+) -> dict[str, ABCHostAttribute]:
     result = (
         {ident: cls() for ident, cls in host_attribute_registry.items()}
-        | config_based_tag_group_attributes(
-            _HashableTagGroupsByTopic(config.tags.get_tag_groups_by_topic())
-        )
-        | config_based_custom_host_attribute_sync_plugins(
-            _HashableCustomHostAttrs(config.wato_host_attrs)
-        )
+        | config_based_tag_group_attributes(_HashableTagGroupsByTopic(tag_groups_by_topic))
+        | config_based_custom_host_attribute_sync_plugins(_HashableCustomHostAttrs(host_attributes))
     )
     return result
 
 
 def host_attribute(name: str) -> ABCHostAttribute:
-    return all_host_attributes(active_config)[name]
+    return all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )[name]
 
 
 # This is the counterpart of "configure_attributes". Another place which
 # is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(
-    for_what: str, new: bool, do_validate: bool = True, varprefix: str = ""
+    for_what: str,
+    new: bool,
+    do_validate: bool = True,
+    varprefix: str = "",
 ) -> HostAttributes:
     """Read attributes from HTML variables"""
     host = HostAttributes()
-    for attr in all_host_attributes(active_config).values():
+    for attr in all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    ).values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
             continue

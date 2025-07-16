@@ -1024,7 +1024,9 @@ class FolderTree:
 
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
-            self._all_host_attributes = all_host_attributes(active_config)
+            self._all_host_attributes = all_host_attributes(
+                active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+            )
         return self._all_host_attributes
 
     def _by_id(self, identifier: str) -> Folder:

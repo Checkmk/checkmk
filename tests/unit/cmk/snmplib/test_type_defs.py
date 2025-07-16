@@ -2,17 +2,21 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import json
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 
+from cmk.utils.sectionname import SectionName
+
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPBackendEnum,
+    SNMPContext,
+    SNMPContextConfig,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPVersion,
@@ -40,6 +44,42 @@ class TestSNMPHostConfig:
             snmp_backend=SNMPBackendEnum.STORED_WALK,
         )
         assert conf.deserialize(conf.serialize()) == conf
+
+    @pytest.mark.parametrize(
+        ["section_name", "expected_contexts"],
+        [
+            pytest.param(None, ["bar"], id="blank section name (e.g. for connection test)"),
+            pytest.param(SectionName("foo"), ["foo"], id="match"),
+            pytest.param(SectionName("bar"), ["bar"], id="default with identical section name"),
+            pytest.param(SectionName("foobar"), ["bar"], id="default"),
+        ],
+    )
+    def test_snmpv3_contexts_of(
+        self, section_name: SectionName, expected_contexts: Sequence[SNMPContext]
+    ) -> None:
+        conf = SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname=HostName("unittest"),
+            ipaddress=HostAddress("127.0.0.1"),
+            credentials="",
+            port=0,
+            bulkwalk_enabled=True,
+            snmp_version=SNMPVersion.V3,
+            bulk_walk_size_of=0,
+            timing={},
+            oid_range_limits={},
+            snmpv3_contexts=[
+                SNMPContextConfig(
+                    section=SectionName("foo"), contexts=["foo"], timeout_policy="stop"
+                ),
+                SNMPContextConfig(section=None, contexts=["bar"], timeout_policy="continue"),
+            ],
+            character_encoding=None,
+            snmp_backend=SNMPBackendEnum.STORED_WALK,
+        )
+
+        ctx = conf.snmpv3_contexts_of(section_name=section_name)
+        assert ctx.contexts == expected_contexts
 
 
 class TestSNMPDetectSpec:

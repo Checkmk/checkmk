@@ -1,5 +1,8 @@
 {
     "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz",
+    "mirror_urls": [
+        "https://artifacts.lan.tribe29.com/repository/upstream-archives/LLVM-19.1.7-Linux-X64.tar.xz"
+    ],
     "integrity" = "sha256-Sl7FOVGlhO02+AJA9vv4/dRrTPbH7ofMLVAY3DfK9nk=",
     "strip_prefix" = "LLVM-19.1.7-Linux-X64",
     "overlay": {

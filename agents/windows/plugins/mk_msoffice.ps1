@@ -9,7 +9,7 @@ $TenantId = ""
 $ClientSecret = ""
 
 if(-not $MK_CONFDIR) {
-    Write-Host "MK_CONFDIR is not initialized, exiting."
+    Write-Host '$env:MK_CONFDIR is not initialized, it should point to %SystemDrive%\ProgramData\checkmk\agent\config, exiting.'
     exit
 }
 

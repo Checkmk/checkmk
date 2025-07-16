@@ -2,12 +2,9 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="explicit-override, no-untyped-call, no-untyped-def"
-
 import re
 from collections.abc import Callable, Collection, Sequence
-from typing import get_args
+from typing import Any, get_args, override
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -231,7 +228,7 @@ def check_types_autocompleter(config: Config, value: str, params: dict) -> Choic
     ]
 
 
-def validate_autocompleter_data(api_request):
+def validate_autocompleter_data(api_request: dict[str, Any]) -> None:
     params = api_request.get("params")
     if params is None:
         raise MKUserError("params", _('You need to set the "%s" parameter.') % "params")
@@ -246,6 +243,7 @@ def validate_autocompleter_data(api_request):
 
 
 class PageVsAutocomplete(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)

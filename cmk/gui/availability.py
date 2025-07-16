@@ -2,9 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="no-any-return, no-untyped-call, no-untyped-def"
-
 from __future__ import annotations
 
 import functools
@@ -101,7 +98,7 @@ AVSpan = dict[str, Any]  # TODO: Improve this type
 SiteHost = tuple[SiteId, HostName]
 AVRawServices = dict[ServiceName, list[AVSpan]]
 AVRawData = dict[SiteHost, AVRawServices]
-AVEntry = Any
+AVEntry = dict[str, Any]
 AVData = list[AVEntry]
 AVTimelineSpan = tuple[int | None, str, float, CSSClass]
 AVObjectCells = list[tuple[str, str]]
@@ -185,6 +182,8 @@ AVLevels = tuple[float, float]
 
 ColumnSpec = tuple[str, str, str, str | None]
 
+SiteHostSvc = tuple[SiteId, HostName, ServiceName | None]
+
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -203,7 +202,7 @@ class AvailabilityColumns:
         self.bi = self._bi_availability_columns()
 
     def __getitem__(self, key: str) -> list[ColumnSpec]:
-        return getattr(self, key)
+        return getattr(self, key)  # type: ignore[no-any-return]
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
         return [
@@ -1512,9 +1511,9 @@ def compute_availability_groups(
 
 def object_title(what: AVObjectType, av_entry: AVEntry) -> str:
     if what == "host":
-        return av_entry["host"]
+        return str(av_entry["host"])
     # service and BI
-    return av_entry["host"] + " / " + av_entry["service"]
+    return str(av_entry["host"]) + " / " + str(av_entry["service"])
 
 
 def merge_timeline(entries: AVTimelineRows) -> None:
@@ -1594,7 +1593,7 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
-    return store.load_object_from_file(path, default={}, lock=lock)
+    return store.load_object_from_file(path, default={}, lock=lock)  # type: ignore[no-any-return]
 
 
 def update_annotations(
@@ -1653,11 +1652,13 @@ def delete_annotation(
         del entries[found]
 
 
-def get_relevant_annotations(annotations, by_host, what, avoptions):
+def get_relevant_annotations(
+    annotations: AVAnnotations, by_host: AVRawData, what: AVObjectType, avoptions: AVOptions
+) -> list[tuple[SiteHostSvc, AVAnnotationEntry]]:
     time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
 
-    annos_to_render = []
+    annos_to_render: list[tuple[SiteHostSvc, AVAnnotationEntry]] = []
     annos_rendered: set[int] = set()
 
     for site_host, avail_entries in by_host.items():
@@ -1667,7 +1668,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                     continue  # Service annotations are not relevant for host
 
                 if search_what == "host":
-                    site_host_svc = site_host[0], site_host[1], None
+                    site_host_svc: SiteHostSvc = site_host[0], site_host[1], None
                 else:
                     site_host_svc = site_host[0], site_host[1], service  # service can be None
 
@@ -1682,7 +1683,9 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
     return annos_to_render
 
 
-def get_annotation_date_render_function(annotations, avoptions):
+def get_annotation_date_render_function(
+    annotations: list[tuple[SiteHostSvc, AVAnnotationEntry]], avoptions: AVOptions
+) -> Callable[[float | None], str]:
     timestamps = list(
         itertools.chain.from_iterable(
             [(a[1]["from"], a[1]["until"]) for a in annotations] + [avoptions["range"][0]]
@@ -1695,7 +1698,12 @@ def get_annotation_date_render_function(annotations, avoptions):
     return cmk.utils.render.time_of_day
 
 
-def _annotation_affects_time_range(annotation_from, annotation_until, from_time, until_time):
+def _annotation_affects_time_range(
+    annotation_from: AVTimeStamp,
+    annotation_until: AVTimeStamp,
+    from_time: AVTimeStamp,
+    until_time: AVTimeStamp,
+) -> bool:
     return not (annotation_until < from_time or annotation_from > until_time)
 
 
@@ -2703,7 +2711,9 @@ def compute_bi_timelines(
     return timeline_containers
 
 
-def _get_timewarp_state(node_compute_result_bundle, timeline_container):
+def _get_timewarp_state(
+    node_compute_result_bundle: NodeResultBundle, timeline_container: TimelineContainer
+) -> BITreeState:
     if node_compute_result_bundle.instance is None:
         # This timeline container was unable to find any host/services for the aggregation
         # Since this timewarp info is rendered through the legacy bi tree renderer,

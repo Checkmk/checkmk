@@ -14,6 +14,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import availability, bi
 from cmk.gui.availability import (
+    AVAnnotations,
     AVData,
     AVEntry,
     AVGroups,
@@ -1035,7 +1036,13 @@ def show_bi_availability(
 #   '----------------------------------------------------------------------'
 
 
-def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
+def show_annotations(
+    annotations: AVAnnotations,
+    av_rawdata: AVRawData,
+    what: AVObjectType,
+    avoptions: AVOptions,
+    omit_service: bool,
+) -> None:
     annos_to_render = availability.get_relevant_annotations(
         annotations, av_rawdata, what, avoptions
     )
@@ -1047,7 +1054,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell("#", css=["narrow nowrap"])
             html.write_text_permissive(nr)
             table.cell("", css=["buttons"])
-            anno_vars = [
+            anno_vars: HTTPVariables = [
                 ("anno_site", site_id),
                 ("anno_host", host),
                 ("anno_service", service or ""),

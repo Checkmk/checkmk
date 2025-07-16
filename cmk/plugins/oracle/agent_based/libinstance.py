@@ -70,6 +70,7 @@ class Instance(BaseModel):
         "host_name",
         mode="before",
     )
+    @classmethod
     def empty_string_to_none(cls, v):
         if v == "":
             # ... should accept an empty string as None:

@@ -163,5 +163,6 @@ class GraphRecipe(BaseModel, frozen=True):
     specification: SerializeAsAny[GraphSpecification]
 
     @field_validator("specification", mode="before")
+    @classmethod
     def parse_specification(cls, value: Mapping[str, object]) -> GraphSpecification:
         return parse_raw_graph_specification(value)

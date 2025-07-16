@@ -135,9 +135,11 @@ class PackageID(BaseModel):
     version: PackageVersion
 
     @field_validator("name")
+    @classmethod
     def make_name(cls, value: str) -> PackageName:
         return PackageName(value)
 
     @field_validator("version")
+    @classmethod
     def make_version(cls, value: str) -> PackageVersion:
         return PackageVersion(value)

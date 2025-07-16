@@ -10,6 +10,8 @@ select = [
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes
+  "N804",   # pep8-naming: invalid-first-argument-name-for-class-method (cls)
+  "N805",   # pep8-naming: invalid-first-argument-name-for-method (self)
   "I",      # isort
   "PL",     # pylint
   "RUF100", # ruff: unused noqa

@@ -129,6 +129,7 @@ class CMKOpenApiSession(requests.Session):
         self.passwords = PasswordsAPI(self)
         self.license = LicenseAPI(self)
         self.otel_collector = OtelCollectorAPI(self)
+        self.event_console = EventConsoleAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -1316,5 +1317,25 @@ class OtelCollectorAPI(BaseAPI):
     def delete(self, ident: str) -> None:
         """Delete an OpenTelemetry collector via REST API."""
         response = self.session.delete(self.base_url + f"/objects/otel_collector_config/{ident}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class EventConsoleAPI(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/event_console/collections/all",
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def archive_events_by_params(self, filters: dict[str, Any]) -> None:
+        """Archive EC events by using 'params' filter type."""
+        body = {"filter_type": "params", "filters": filters}
+        response = self.session.post(
+            url="/domain-types/event_console/actions/delete/invoke", json=body
+        )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

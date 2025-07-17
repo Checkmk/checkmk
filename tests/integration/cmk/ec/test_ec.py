@@ -55,7 +55,9 @@ def _execute_cmd_and_validate_return_code(
     return response.stdout, response.stderr
 
 
-def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> list[ECRulePackSpec]:
+def _get_ec_rule_packs(
+    rule_id: str, title: str, state: State, match: str, limit: int = 0
+) -> list[ECRulePackSpec]:
     """EC rule to inject in the test-site"""
     rule = Rule(
         id=rule_id,
@@ -70,7 +72,7 @@ def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> li
         cancel_actions=[],
         cancel_action_phases="always",
         autodelete=False,
-        event_limit=EventLimit(action="None", limit=0),
+        event_limit=EventLimit(action="None", limit=limit),
         match=match,
         invert_matching=False,
     )

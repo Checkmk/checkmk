@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.gui import hooks
+from cmk.gui import hooks, userdb
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar._snapin._registry import SnapinRegistry
 from cmk.gui.watolib.groups import (
@@ -32,9 +32,15 @@ def _register_hooks() -> None:
     args: Sequence[tuple[str, Callable]] = (
         ("userdb-job", _auth_php._on_userdb_job),
         ("users-saved", lambda users: _auth_php._create_auth_file("users-saved", users)),
-        ("roles-saved", lambda x: _auth_php._create_auth_file("roles-saved")),
-        ("contactgroups-saved", lambda x: _auth_php._create_auth_file("contactgroups-saved")),
-        ("activate-changes", lambda x: _auth_php._create_auth_file("activate-changes")),
+        ("roles-saved", lambda x: _auth_php._create_auth_file("roles-saved", userdb.load_users())),
+        (
+            "contactgroups-saved",
+            lambda x: _auth_php._create_auth_file("contactgroups-saved", userdb.load_users()),
+        ),
+        (
+            "activate-changes",
+            lambda x: _auth_php._create_auth_file("activate-changes", userdb.load_users()),
+        ),
         ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),
     )
     for name, func in args:

@@ -41,7 +41,6 @@ from typing import Any, Literal
 from cmk.ccc import store
 
 from cmk.gui import userdb
-from cmk.gui.config import active_config
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import ClearEvent
 from cmk.gui.type_defs import Users
@@ -68,7 +67,7 @@ def _create_php_file(
     nagvis_users = copy.deepcopy(users)
 
     for user in nagvis_users.values():
-        user.setdefault("language", active_config.default_language)  # Set a language for all users
+        user.setdefault("language", "en")  # Set a language for all users
         user.pop("session_info", None)  # remove the SessionInfo object
         user.pop("automation_secret", None)
 
@@ -182,10 +181,7 @@ function permitted_maps($username) {{
     store.save_text_to_file(_auth_php(), content)
 
 
-def _create_auth_file(callee: _CalleeHooks, users: Users | None = None) -> None:
-    if users is None:
-        users = userdb.load_users()
-
+def _create_auth_file(callee: _CalleeHooks, users: Users) -> None:
     contactgroups = load_contact_group_information()
     groups = {}
     for gid, group in contactgroups.items():
@@ -200,4 +196,4 @@ def _on_userdb_job() -> None:
     # authorization of external addons might not exist when setting up a new installation
     # This is a good place to replace old api based files in the future.
     if not _auth_php().exists() or _auth_php().stat().st_size == 0:
-        _create_auth_file("page_hook")
+        _create_auth_file("page_hook", userdb.load_users())

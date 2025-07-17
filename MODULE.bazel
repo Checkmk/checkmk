@@ -687,6 +687,7 @@ use_repo(toolchains_musl, "musl_toolchains_hub")
 register_toolchains(
     "@rust_toolchains//:all",
     "@musl_toolchains_hub//:all",
+    "//bazel/toolchains/cc/gcc:host_gcc_toolchain",
     "//bazel/toolchains/cc/gcc/local:linux_x86_64",
 )
 

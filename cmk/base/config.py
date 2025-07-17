@@ -1993,82 +1993,6 @@ class ConfigCache:
 
         return resolved
 
-    def enforced_services_table(
-        self,
-        hostname: HostName,
-        plugins: Mapping[CheckPluginName, CheckPlugin],
-        service_name_config: PassiveServiceNameConfig,
-    ) -> Mapping[
-        ServiceID,
-        tuple[RulesetName, ConfiguredService],
-    ]:
-        """Return a table of enforced services
-
-        Note: We need to reverse the order of the enforced services.
-        Users assume that earlier rules have precedence over later ones.
-        Important if there are two rules for a host with the same combination of plug-in name
-        and item.
-        """
-        with contextlib.suppress(KeyError):
-            return self.__enforced_services_table[hostname]
-
-        return self.__enforced_services_table.setdefault(
-            hostname,
-            {
-                ServiceID(check_plugin_name, item): (
-                    RulesetName(checkgroup_name),
-                    ConfiguredService(
-                        check_plugin_name=check_plugin_name,
-                        item=item,
-                        description=service_name_config.make_name(
-                            self.label_manager.labels_of_host,
-                            hostname,
-                            check_plugin_name,
-                            service_name_template=(
-                                None
-                                if (
-                                    p := agent_based_register.get_check_plugin(
-                                        check_plugin_name, plugins
-                                    )
-                                )
-                                is None
-                                else p.service_name
-                            ),
-                            item=item,
-                        ),
-                        parameters=compute_enforced_service_parameters(
-                            plugins, check_plugin_name, params
-                        ),
-                        discovered_parameters={},
-                        discovered_labels={},
-                        labels={},
-                        is_enforced=True,
-                    ),
-                )
-                for checkgroup_name, ruleset in static_checks.items()
-                for check_plugin_name, item, params in (
-                    ConfigCache._sanitize_enforced_entry(*entry)
-                    for entry in reversed(
-                        self.ruleset_matcher.get_host_values_all(
-                            hostname, ruleset, self.label_manager.labels_of_host
-                        )
-                    )
-                )
-            },
-        )
-
-    @staticmethod
-    def _sanitize_enforced_entry(
-        raw_name: object,
-        raw_item: object,
-        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
-    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
-        return (
-            CheckPluginName(maincheckify(str(raw_name))),
-            None if raw_item is None else str(raw_item),
-            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
-        )
-
     def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
         def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
             if host_name in self.hosts_config.clusters:
@@ -3744,6 +3668,82 @@ class ConfigCache:
             self.host_tags.tags(host_name).get(
                 TagGroupID("site"), distributed_wato_site or omd_site()
             )
+        )
+
+    def enforced_services_table(
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_name_config: PassiveServiceNameConfig,
+    ) -> Mapping[
+        ServiceID,
+        tuple[RulesetName, ConfiguredService],
+    ]:
+        """Return a table of enforced services
+
+        Note: We need to reverse the order of the enforced services.
+        Users assume that earlier rules have precedence over later ones.
+        Important if there are two rules for a host with the same combination of plug-in name
+        and item.
+        """
+        with contextlib.suppress(KeyError):
+            return self.__enforced_services_table[hostname]
+
+        return self.__enforced_services_table.setdefault(
+            hostname,
+            {
+                ServiceID(check_plugin_name, item): (
+                    RulesetName(checkgroup_name),
+                    ConfiguredService(
+                        check_plugin_name=check_plugin_name,
+                        item=item,
+                        description=service_name_config.make_name(
+                            self.label_manager.labels_of_host,
+                            hostname,
+                            check_plugin_name,
+                            service_name_template=(
+                                None
+                                if (
+                                    p := agent_based_register.get_check_plugin(
+                                        check_plugin_name, plugins
+                                    )
+                                )
+                                is None
+                                else p.service_name
+                            ),
+                            item=item,
+                        ),
+                        parameters=compute_enforced_service_parameters(
+                            plugins, check_plugin_name, params
+                        ),
+                        discovered_parameters={},
+                        discovered_labels={},
+                        labels={},
+                        is_enforced=True,
+                    ),
+                )
+                for checkgroup_name, ruleset in static_checks.items()
+                for check_plugin_name, item, params in (
+                    ConfigCache._sanitize_enforced_entry(*entry)
+                    for entry in reversed(
+                        self.ruleset_matcher.get_host_values_all(
+                            hostname, ruleset, self.label_manager.labels_of_host
+                        )
+                    )
+                )
+            },
+        )
+
+    @staticmethod
+    def _sanitize_enforced_entry(
+        raw_name: object,
+        raw_item: object,
+        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
+    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
+        return (
+            CheckPluginName(maincheckify(str(raw_name))),
+            None if raw_item is None else str(raw_item),
+            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
         )
 
 

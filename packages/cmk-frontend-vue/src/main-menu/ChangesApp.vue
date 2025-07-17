@@ -683,7 +683,6 @@ onMounted(() => {
   height: 943px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -694,10 +693,12 @@ onMounted(() => {
   align-self: stretch;
   margin-bottom: 19px;
 }
+
 .cmk-div-buttons-container {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .cmk-div-sites-and-pending-changes-container {
@@ -878,7 +879,7 @@ onMounted(() => {
 }
 
 .collapsible-title {
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .cmk-scroll-sites-container {

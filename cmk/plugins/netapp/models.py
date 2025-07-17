@@ -170,7 +170,7 @@ class DiskModel(BaseModel):
     """
 
     uid: str
-    serial_number: str
+    serial_number: str | None = None
     model: str
     vendor: str
     container_type: str

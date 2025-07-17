@@ -235,7 +235,7 @@ def main() {
 
     smart_stage(
         name: "Upload artifacts",
-        condition: upload_to_testbuilds,
+        condition: upload_to_testbuilds && (! currentBuild.fullProjectName.contains("/cv/")),
     ) {
         dir("${deliverables_dir}") {
             /// BOM shall have a unique name, see CMK-16483

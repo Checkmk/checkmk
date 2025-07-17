@@ -56,7 +56,7 @@ def main() {
         """.stripMargin());
 
     smart_stage(
-        name: "Fetch git notes",
+        name: "Fetch git notes/werk_mail",
         condition: params.CIPARAM_GIT_FETCH_NOTES,
     ) {
         dir("${checkout_dir}") {
@@ -80,7 +80,7 @@ def main() {
                             --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) \
                             origin \
                             \$(cat .git/FETCH_HEAD | cut -f 1)
-                        git fetch origin 'refs/notes/*:refs/notes/*'
+                        git fetch origin 'refs/notes/werk_mail:refs/notes/werk_mail'
                     """);
                 }
             }

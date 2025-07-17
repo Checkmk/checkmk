@@ -12,6 +12,7 @@ import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import NamedTuple
 
 from tests.testlib.agent_dumps import (
     copy_dumps,
@@ -24,6 +25,12 @@ from tests.testlib.dcd import dcd_connector, execute_dcd_cycle
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
+
+
+class PiggybackInfo(NamedTuple):
+    datasource_id: str
+    dcd_id: str
+    piggybacked_hosts: list[str]
 
 
 @contextmanager
@@ -127,7 +134,7 @@ def piggyback_host_from_dummy_generator(
     pb_host_count: int = 10,
     pb_service_count: int = 10,
     cleanup: bool = True,
-) -> Iterator[tuple[str, list[str]]]:
+) -> Iterator[PiggybackInfo]:
     """Create a piggyback host using a dummy generator.
 
     Args:
@@ -136,6 +143,9 @@ def piggyback_host_from_dummy_generator(
         folder_name: The name of the host folder in the site which the host is created in.
         dcd_interval: The dcd interval in seconds.
         cleanup: Specifies if the dump file is cleaned up at the end.
+
+    Yields:
+        PiggybackInfo NamedTuple containing the datasource rule ID, DCD ID, and a list of piggybacked hosts.
     """
     piggybacked_hosts = [f"{host_name}-pb-{_}" for _ in range(1, pb_host_count + 1)]
     with dcd_connector(
@@ -145,7 +155,7 @@ def piggyback_host_from_dummy_generator(
         max_cache_age=60,
         validity_period=60,
         cleanup=cleanup,
-    ):
+    ) as dcd_id:
         with dummy_agent_dump_generator(
             site,
             service_count=0,
@@ -153,8 +163,8 @@ def piggyback_host_from_dummy_generator(
             pb_host_count=pb_host_count,
             pb_service_count=pb_service_count,
             rule_folder=folder_name,
-        ) as rule_id:
+        ) as datasource_id:
             with _discover_services_of_piggybacked_hosts(
                 site, host_name, piggybacked_hosts, folder_name, cleanup
             ):
-                yield rule_id, piggybacked_hosts
+                yield PiggybackInfo(datasource_id, dcd_id, piggybacked_hosts)

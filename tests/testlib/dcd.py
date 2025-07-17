@@ -24,7 +24,7 @@ def dcd_connector(
     max_cache_age: int = 60,
     validity_period: int = 60,
     cleanup: bool = True,
-) -> Iterator[None]:
+) -> Iterator[str]:
     """Create and use a DCD connector for site.
 
     Args:
@@ -38,6 +38,9 @@ def dcd_connector(
         max_cache_age: Seconds to keep hosts when piggyback source does not send data.
         validity_period: Seconds to continue consider outdated piggyback data as valid.
         cleanup: Specifies if the connector setup is cleaned up at the end.
+
+    Yields:
+        The DCD ID of the created DCD connector.
     """
     logger.info("Creating a DCD connection for piggyback hosts...")
     host_attributes = host_attributes or {
@@ -60,7 +63,7 @@ def dcd_connector(
     with site.openapi.wait_for_completion(300, "get", "activate_changes"):
         site.openapi.changes.activate(force_foreign_changes=True)
     try:
-        yield
+        yield dcd_id
     finally:
         if not cleanup:
             return

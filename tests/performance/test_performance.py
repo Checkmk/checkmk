@@ -206,14 +206,14 @@ class PerformanceTest:
         pb_host_count = 10
         with piggyback_host_from_dummy_generator(
             self.central_site, source_host_name, pb_host_count=pb_host_count
-        ) as (rule_id, piggybacked_hosts):
+        ) as piggyback_info:
             assert (
                 len(self.central_site.openapi.hosts.get_all_names([source_host_name]))
                 >= pb_host_count
             )
 
             # Recreate rule to change number of piggybacked hosts
-            self.central_site.openapi.rules.delete(rule_id)
+            self.central_site.openapi.rules.delete(piggyback_info.datasource_id)
             self.central_site.openapi.changes.activate_and_wait_for_completion()
             with dummy_agent_dump_generator(
                 self.central_site,

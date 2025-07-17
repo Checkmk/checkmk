@@ -66,7 +66,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: calc(100% - 32px);
+  width: 100%;
   border-bottom: 1px transparent;
   border-radius: 4px;
   position: relative;

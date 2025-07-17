@@ -117,6 +117,7 @@ function calcCurrentlySelectedTab(d: number, set: boolean = false) {
 
 function handleItemClick(item: UnifiedSearchResultElement) {
   searchUtils.history?.add(new HistoryEntry(searchUtils.query.value, item))
+  searchUtils.resetSearch()
   searchUtils.closeSearch()
 }
 

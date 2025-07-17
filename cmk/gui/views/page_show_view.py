@@ -170,7 +170,7 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
     # with the current mode.
     if _is_ec_unrelated_host_view(view_spec):
         # Set the value for the event host filter
-        if not request.has_var("event_host") and request.has_var("host"):
+        if not request.var("event_host") and request.has_var("host"):
             request.set_var("event_host", request.get_str_input_mandatory("host"))
 
 

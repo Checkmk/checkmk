@@ -177,7 +177,9 @@ def _get_history(
 
         if (
             history_entry := cached_delta_tree_loader.get_calculated_or_store_entry(
-                previous_tree, current_tree
+                previous_tree,
+                current_tree,
+                do_save=current.path != Path(cmk.utils.paths.inventory_output_dir, hostname),
             )
         ) is not None:
             history.append(history_entry)
@@ -288,9 +290,7 @@ class _CachedDeltaTreeLoader:
         )
 
     def get_calculated_or_store_entry(
-        self,
-        previous_tree: ImmutableTree,
-        current_tree: ImmutableTree,
+        self, previous_tree: ImmutableTree, current_tree: ImmutableTree, *, do_save: bool
     ) -> HistoryEntry | None:
         delta_tree = current_tree.difference(previous_tree)
         delta_stats = delta_tree.get_stats()
@@ -298,10 +298,11 @@ class _CachedDeltaTreeLoader:
         changed = delta_stats["changed"]
         removed = delta_stats["removed"]
         if new or changed or removed:
-            store.save_text_to_file(
-                self._path,
-                repr((new, changed, removed, serialize_delta_tree(delta_tree))),
-            )
+            if do_save:
+                store.save_text_to_file(
+                    self._path,
+                    repr((new, changed, removed, serialize_delta_tree(delta_tree))),
+                )
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None
 

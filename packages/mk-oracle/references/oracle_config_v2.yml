@@ -22,14 +22,14 @@ oracle:
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     sections: # optional, if absent will use default as defined below
     - instance: # special section
-      type: "all" # optional, default: "db", values: "all", "db", "asm"
+      affinity: "all" # optional, default: "db", values: "all", "db", "asm"
     - dataguard_stats:
     - locks:
     - logswitches:
     - longactivesessions:
     - performance:
     - processes:
-      type: "all" # optional, default "db", values: "all", "db", "asm"
+      affinity: "all" # optional, default "db", values: "all", "db", "asm"
     - recovery_area:
     - recovery_status:
     - sessions:
@@ -37,7 +37,7 @@ oracle:
     - undostat:
     - asm_diskgroup:
       is_async: yes
-      type: "asm" # optional, default: "asm", values: "all", "db", "asm"
+      affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
     - iostats:
       is_async: yes
     - jobs:

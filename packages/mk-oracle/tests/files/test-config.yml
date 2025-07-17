@@ -14,33 +14,31 @@ orasql:
       name: localhost
     authentication: 
       user: "" # mandatory
-  sections:
-  - instance:
-  - sessions:
-  - logswitches:
-  - undostat:
-  - recovery_area:
-  - processes:
-  - recovery_status:
-  - longactivesessions:
-  - dataguard_stats:
-  - performance:
-  - systemparameter:
-  - tablespaces:
-      is_async: yes
-  - rman:
-      is_async: yes
-  - jobs:
-      is_async: yes
-  - ts_quotas:
-      is_async: yes
-      disabled: yes
-  - resumable:
-      is_async: yes
-  - locks:
-      is_async: yes
-  asm_sections:
-  - instance:
-  - processes:
-  - asm_diskgroup:
-      is_async: yes
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section
+        affinity: "all" # optional, default: "db", values: "all", "db", "asm"
+      - dataguard_stats:
+      - locks:
+      - logswitches:
+      - longactivesessions:
+      - performance:
+      - processes:
+        affinity: "all" # optional, default "db", values: "all", "db", "asm"
+      - recovery_area:
+      - recovery_status:
+      - sessions:
+      - systemparameter:
+      - undostat:
+      - asm_diskgroup:
+        is_async: yes
+        affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
+      - iostats:
+        is_async: yes
+      - jobs:
+        is_async: yes
+      - resumable:
+        is_async: yes
+      - rman:
+        is_async: yes
+      - tablespaces:
+        is_async: yes

@@ -5,6 +5,7 @@
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
 use anyhow::Result;
+use log;
 
 // "tablespaces", "rman", "jobs", "ts_quotas", "resumable", "locks"
 pub mod names {
@@ -35,7 +36,7 @@ pub enum SectionKind {
     Disabled,
 }
 
-const PREDEFINED_SECTIONS: [&str; 17] = [
+const PREDEFINED_SECTIONS: [&str; 18] = [
     names::INSTANCE,
     names::SESSIONS,
     names::LOG_SWITCHES,
@@ -53,21 +54,41 @@ const PREDEFINED_SECTIONS: [&str; 17] = [
     names::JOBS,
     names::RESUMABLE,
     names::IO_STATS,
+    names::ASM_DISK_GROUP,
 ];
 
-const PREDEFINED_ASYNC_SECTIONS: [&str; 5] = [
+const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
     names::TABLESPACES,
     names::RMAN,
     names::JOBS,
     names::RESUMABLE,
     names::IO_STATS,
+    names::ASM_DISK_GROUP,
 ];
 
 #[allow(dead_code)]
 const ASM_SECTIONS: [&str; 3] = [names::INSTANCE, names::PROCESSES, names::ASM_DISK_GROUP];
 
-#[allow(dead_code)]
-const ASM_ASYNC_SECTIONS: [&str; 1] = [names::ASM_DISK_GROUP];
+#[derive(PartialEq, Debug, Clone)]
+pub enum SectionAffinity {
+    All,
+    Db,
+    Asm,
+}
+
+impl SectionAffinity {
+    pub fn from_text<T: AsRef<str>>(s: T) -> Self {
+        match s.as_ref().to_lowercase().as_str() {
+            "all" => SectionAffinity::All,
+            "asm" => SectionAffinity::Asm,
+            "db" => SectionAffinity::Db,
+            _ => {
+                log::error!("Invalid section type: {}", s.as_ref());
+                SectionAffinity::Db
+            }
+        }
+    }
+}
 
 pub struct SectionBuilder {
     name: String,
@@ -75,6 +96,7 @@ pub struct SectionBuilder {
     is_async: bool,
     is_disabled: bool,
     sql: Option<String>,
+    affinity: SectionAffinity,
 }
 
 impl SectionBuilder {
@@ -87,6 +109,7 @@ impl SectionBuilder {
             is_async,
             is_disabled: false,
             sql: None,
+            affinity: SectionAffinity::Db,
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
@@ -97,6 +120,11 @@ impl SectionBuilder {
     }
     pub fn set_async(mut self, value: bool) -> Self {
         self.is_async = value;
+        self
+    }
+
+    pub fn set_affinity(mut self, value: SectionAffinity) -> Self {
+        self.affinity = value;
         self
     }
 
@@ -122,6 +150,7 @@ impl SectionBuilder {
                 SectionKind::Sync
             },
             sql: self.sql,
+            affinity: self.affinity,
         }
     }
 }
@@ -132,6 +161,7 @@ pub struct Section {
     sep: char,
     kind: SectionKind,
     sql: Option<String>,
+    affinity: SectionAffinity,
 }
 
 impl Section {
@@ -153,6 +183,10 @@ impl Section {
 
     pub fn sql(&self) -> Option<&str> {
         self.sql.as_deref()
+    }
+
+    pub fn affinity(&self) -> &SectionAffinity {
+        &self.affinity
     }
 }
 
@@ -209,6 +243,11 @@ impl Section {
         let c = yaml.get_string(keys::SEP).and_then(|s| s.chars().next());
         let builder = SectionBuilder::new(name).sep(c);
 
+        let affinity = yaml
+            .get_string(keys::AFFINITY)
+            .map(SectionAffinity::from_text)
+            .unwrap_or(SectionAffinity::Db);
+
         if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
             builder.set_disabled()
         } else if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
@@ -216,6 +255,7 @@ impl Section {
         } else {
             builder
         }
+        .set_affinity(affinity)
         .build()
     }
 }
@@ -266,6 +306,13 @@ mod tests {
     use crate::config::yaml::test_tools::create_yaml;
     use std::collections::HashSet;
 
+    #[test]
+    fn test_section_affinity() {
+        assert_eq!(SectionAffinity::from_text("all"), SectionAffinity::All);
+        assert_eq!(SectionAffinity::from_text("ASM"), SectionAffinity::Asm);
+        assert_eq!(SectionAffinity::from_text(""), SectionAffinity::Db);
+    }
+
     fn hash_set<T: AsRef<str>>(v: &[T]) -> HashSet<String> {
         HashSet::from_iter(v.iter().map(|s| s.as_ref().to_string()))
     }
@@ -273,7 +320,7 @@ mod tests {
     pub const SECTIONS_FULL: &str = r#"
 sections:
 - aaa:
-    sep: '|'
+    sep: '.'
 - bbb:
     sep: "|ss"
 - ccc:
@@ -281,34 +328,43 @@ sections:
     sep: |
 - ddd:
     is_async: yes
+    affinity: asm
 - "eee":
     sep: "|ss"
     disabled: yes
+    affinity: all
 "#;
 
     #[test]
     fn test_sections_from_yaml_full() {
+        fn make_section_vector<'a>(s: &'a Sections, kinds: &[SectionKind]) -> Vec<(&'a str, char)> {
+            s.select(kinds)
+                .iter()
+                .map(|s| (s.name(), s.sep()))
+                .collect::<Vec<(&str, char)>>()
+        }
         let s = Sections::from_yaml(&create_yaml(SECTIONS_FULL), &Sections::default()).unwrap();
         assert_eq!(
-            s.select(&[SectionKind::Sync])
-                .iter()
-                .map(|s| (s.name(), s.sep()))
-                .collect::<Vec<(&str, char)>>(),
-            [("aaa", '|'), ("bbb", '|')]
+            make_section_vector(&s, &[SectionKind::Sync]),
+            [("aaa", '.'), ("bbb", '|')]
         );
         assert_eq!(
-            s.select(&[SectionKind::Async])
-                .iter()
-                .map(|s| s.name())
-                .collect::<Vec<&str>>(),
-            ["ccc", "ddd"]
+            make_section_vector(&s, &[SectionKind::Async]),
+            [("ccc", '|'), ("ddd", '|')]
         );
         assert_eq!(
-            s.select(&[SectionKind::Disabled])
-                .iter()
-                .map(|s| (s.name(), s.sep()))
-                .collect::<Vec<(&str, char)>>(),
+            make_section_vector(&s, &[SectionKind::Disabled]),
             [("eee", '|')]
+        );
+        let mut all = s
+            .sections()
+            .iter()
+            .map(|s| format!("{}:{:?}", s.name(), s.affinity()))
+            .collect::<Vec<String>>();
+        all.sort();
+        assert_eq!(
+            all,
+            vec!["aaa:Db", "bbb:Db", "ccc:Db", "ddd:Asm", "eee:All"]
         );
     }
 
@@ -339,7 +395,7 @@ sections:
                 .unwrap()
                 .sections()
                 .len(),
-            17
+            18
         );
     }
 

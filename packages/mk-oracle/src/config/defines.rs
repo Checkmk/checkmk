@@ -32,11 +32,11 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
-    pub const ASM_SECTIONS: &str = "asm_sections";
     pub const CACHE_AGE: &str = "cache_age";
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
     pub const SEP: &str = "sep";
+    pub const AFFINITY: &str = "affinity";
 
     pub const PIGGYBACK_HOST: &str = "piggyback_host";
     pub const DISCOVERY: &str = "discovery";

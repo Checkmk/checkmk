@@ -683,6 +683,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             fetcher_factory=config_cache.fetcher_factory(
                 config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
                 ip_address_of,
+                service_name_config,
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
@@ -2015,6 +2016,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
+            service_name_config,
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -2345,6 +2347,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
+            service_name_config,
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -2546,7 +2549,11 @@ def run_checking(
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(service_configurer, ip_address_of),
+        config_cache.fetcher_factory(
+            service_configurer,
+            ip_address_of,
+            service_name_config,
+        ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
@@ -2786,6 +2793,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
+            service_name_config,
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -3050,6 +3058,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
+            service_name_config,
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,

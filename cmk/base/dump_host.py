@@ -229,6 +229,7 @@ def dump_host(
             fetcher_factory=config_cache.fetcher_factory(
                 config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
                 ip_address_of,
+                service_name_config,
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(

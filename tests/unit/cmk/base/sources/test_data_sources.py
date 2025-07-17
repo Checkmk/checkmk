@@ -56,6 +56,7 @@ def _make_sources(
     # to test.
     ipaddress = HostAddress("127.0.0.1")
     ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
+    service_name_config = config_cache.make_passive_service_name_config()
     return make_sources(
         AgentBasedPlugins.empty(),
         hostname,
@@ -63,10 +64,9 @@ def _make_sources(
         ipaddress,
         IPStackConfig.IPv4,
         fetcher_factory=config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: ipaddress,
+            service_name_config=service_name_config,
         ),
         snmp_fetcher_config=SNMPFetcherConfig(
             scan_config=SNMPScanConfig(

@@ -153,6 +153,7 @@ def inventory_as_check(
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
+            config_cache.make_passive_service_name_config(),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,

@@ -1694,13 +1694,17 @@ class ConfigCache:
         )
 
     def fetcher_factory(
-        self, service_configurer: ServiceConfigurer, ip_lookup: ip_lookup.IPLookup
+        self,
+        service_configurer: ServiceConfigurer,
+        ip_lookup: ip_lookup.IPLookup,
+        service_name_config: PassiveServiceNameConfig,
     ) -> FetcherFactory:
         return FetcherFactory(
             self,
             ip_lookup,
             self.ruleset_matcher,
             service_configurer,
+            service_name_config,
             is_cmc=self._loaded_config.monitoring_core == "cmc",
         )
 
@@ -3806,6 +3810,7 @@ class FetcherFactory:
         ip_lookup: ip_lookup.IPLookup,
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
+        service_name_config: PassiveServiceNameConfig,
         *,
         is_cmc: bool,
     ) -> None:
@@ -3814,6 +3819,7 @@ class FetcherFactory:
         self._label_manager: Final = config_cache.label_manager
         self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
+        self._service_name_config: Final = service_name_config
         self.is_cmc: Final = is_cmc
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
 
@@ -3879,14 +3885,13 @@ class FetcherFactory:
             source_type,
             backend_override=fetcher_config.backend_override,
         )
-        passive_service_name_config = self._config_cache.make_passive_service_name_config()
         return SNMPFetcher(
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
                     plugins,
                     self._service_configurer,
-                    passive_service_name_config,
+                    self._service_name_config,
                     host_name,
                     selected_sections=fetcher_config.selected_sections,
                 ),

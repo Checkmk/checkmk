@@ -1498,13 +1498,13 @@ def test_commandline_discovery(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
+    service_name_config = config_cache.make_passive_service_name_config()
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         ),
         agent_based_plugins,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,

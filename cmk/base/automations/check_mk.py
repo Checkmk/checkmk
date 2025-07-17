@@ -336,7 +336,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(service_configurer, ip_address_of),
+            config_cache.fetcher_factory(service_configurer, ip_address_of, service_name_config),
             plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             default_address_family=ip_lookup_config.default_address_family,
@@ -461,7 +461,11 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.http_proxies,
             )
             fetcher = SpecialAgentFetcher(
-                config_cache.fetcher_factory(service_configurer, ip_address_of),
+                config_cache.fetcher_factory(
+                    service_configurer,
+                    ip_address_of,
+                    service_name_config,
+                ),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
                 file_cache_options=file_cache_options,
@@ -532,7 +536,11 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(service_configurer, ip_address_of_with_fallback),
+            config_cache.fetcher_factory(
+                service_configurer,
+                ip_address_of_with_fallback,
+                service_name_config,
+            ),
             plugins,
             default_address_family=ip_lookup_config.default_address_family,
             file_cache_options=file_cache_options,
@@ -949,7 +957,11 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(service_configurer, slightly_different_ip_address_of),
+        config_cache.fetcher_factory(
+            service_configurer,
+            slightly_different_ip_address_of,
+            service_name_config,
+        ),
         ab_plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
@@ -2976,9 +2988,13 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_agent(
                         loading_result.config_cache,
+                        (
+                            service_name_config
+                            := loading_result.config_cache.make_passive_service_name_config()
+                        ),
                         loading_result.config_cache.make_service_configurer(
                             plugins.check_plugins,
-                            loading_result.config_cache.make_passive_service_name_config(),
+                            service_name_config,
                         ),
                         plugins,
                         host_name,
@@ -3058,6 +3074,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         config_cache: ConfigCache,
+        service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
         plugins: AgentBasedPlugins,
         host_name: HostName,
@@ -3097,7 +3114,9 @@ class AutomationDiagHost(Automation):
             ip_family,
             ipaddress,
             ip_lookup_config.ip_stack_config(host_name),
-            fetcher_factory=config_cache.fetcher_factory(service_configurer, ip_address_of),
+            fetcher_factory=config_cache.fetcher_factory(
+                service_configurer, ip_address_of, service_name_config
+            ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -3573,8 +3592,9 @@ class AutomationGetAgentOutput(Automation):
 
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+        service_name_config = loading_result.config_cache.make_passive_service_name_config()
         service_configurer = loading_result.config_cache.make_service_configurer(
-            plugins.check_plugins, loading_result.config_cache.make_passive_service_name_config()
+            plugins.check_plugins, service_name_config
         )
         config_cache = loading_result.config_cache
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
@@ -3626,7 +3646,9 @@ class AutomationGetAgentOutput(Automation):
                     ipaddress,
                     ip_stack_config,
                     fetcher_factory=config_cache.fetcher_factory(
-                        service_configurer, ip_address_of_with_fallback
+                        service_configurer,
+                        ip_address_of_with_fallback,
+                        service_name_config,
                     ),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,

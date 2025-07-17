@@ -240,12 +240,12 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         )._agent_port(hostname)
         == result
     )
@@ -724,12 +724,12 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
         ],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         )._agent_port(hostname)
         == result
     )
@@ -757,12 +757,12 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         ],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         )._tcp_connect_timeout(hostname)
         == result
     )
@@ -791,12 +791,12 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         )._encryption_handling(hostname)
         is result
     )
@@ -825,12 +825,12 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(
-                {}, config_cache.make_passive_service_name_config()
-            ),
+            config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
+            service_name_config=service_name_config,
         )._symmetric_agent_encryption(hostname)
         is result
     )

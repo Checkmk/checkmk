@@ -483,7 +483,7 @@ test-unit-neb:
 	cd ../packages/neb/test && ./.f12
 
 test-unit-cmc:
-	cd ../packages/cmc/test && ./.f12
+	cd ../non-free/packages/cmc/test && ./.f12
 
 test-find-modified-lock-files:
 	scripts/find_modified_lock_files

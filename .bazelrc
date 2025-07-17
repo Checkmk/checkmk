@@ -103,7 +103,7 @@ common:debug --verbose_failures
 # test:debug ...
 
 ################################################################################
-# Example: bazel build --config clang-tidy //packages/cmc:all
+# Example: bazel build --config clang-tidy //non-free/packages/cmc:all
 ################################################################################
 
 build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
@@ -114,7 +114,7 @@ build:clang-tidy --@bazel_clang_tidy//:clang_tidy_gcc_install_dir=@gcc-linux-x86
 build:clang-tidy --@bazel_clang_tidy//:clang_tidy_additional_deps=@gcc-linux-x86_64//:toolchain_root
 
 ################################################################################
-# Example: bazel build --config=iwyu //packages/cmc:all
+# Example: bazel build --config=iwyu //non-free/packages/cmc:all
 ################################################################################
 
 build:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect

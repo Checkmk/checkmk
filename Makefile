@@ -83,7 +83,6 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    --exclude non-free \
-	    --exclude packages/cmc \
 	    --exclude tests/qa-test-data \
 	    $$EXCLUDES \
 	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
@@ -189,7 +188,7 @@ format-c:
 	packages/unixcat/run --format
 	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
-	packages/cmc/run --format
+	non-free/packages/cmc/run --format
 endif
 
 test-format-c:
@@ -197,7 +196,7 @@ test-format-c:
 	packages/unixcat/run --check-format
 	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
-	packages/cmc/run --check-format
+	non-free/packages/cmc/run --check-format
 endif
 
 format-python:

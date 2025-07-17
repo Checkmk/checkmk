@@ -130,7 +130,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_CMC_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmc/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/\\|^requirements/rust' || true"
@@ -528,7 +528,7 @@ STAGES:
 
     - NAME: "Package cmc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES
-      DIR: "packages/cmc"
+      DIR: "non-free/packages/cmc"
       COMMAND: "./run --all &> ${RESULTS}/cmc.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmc files changed"

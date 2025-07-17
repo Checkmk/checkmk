@@ -63,7 +63,7 @@ RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
 # required to run tests with bazel, requires +577MB
 # libkrb5-dev, libldap2-dev, libsasl2-dev is required to build python-ldap
 # libpq-dev is required to build psycopg2-binary
-# libpcap-dev is required to build packages/cmc
+# libpcap-dev is required to build non-free/packages/cmc
 # gawk is required to run test-agent-plugin, sw-documentation
 # python3-enchant is required to run sw-documentation
 # apache2 is required to run test-unit-omdlib

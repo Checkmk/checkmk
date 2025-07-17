@@ -393,7 +393,9 @@ onMounted(() => {
           variant="secondary"
           class="cmk-button-secondary"
           @click="() => openActivateChangesPage()"
-          >{{ t('open-full-page', 'Open full page') }}
+        >
+          <CmkIcon variant="inline" name="frameurl" />
+          {{ t('open-full-view', 'Open full view') }}
         </CmkButton>
       </div>
       <CmkDialog
@@ -778,7 +780,7 @@ onMounted(() => {
 .cmk-div-site-status-container {
   display: flex;
   width: inherit;
-  padding: 3px 16px 3px 3px;
+  padding: 0 16px 0 3px;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
@@ -800,14 +802,14 @@ onMounted(() => {
 
 .cmk-div-site-online-status {
   display: flex;
-  padding: 1px 8px;
+  padding: 0 8px;
   justify-content: center;
   align-items: center;
   gap: 10px;
 }
 
 .cmk-div-site-online-status-badge {
-  padding: 1px 5px;
+  padding: 0 5px;
 }
 
 .cmk-div-site-status-changes {
@@ -819,7 +821,6 @@ onMounted(() => {
 }
 .cmk-span-changes-text {
   color: var(--font-color-dimmed);
-
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -828,14 +829,13 @@ onMounted(() => {
 }
 .cmk-span-changes-number {
   display: flex;
-  padding: 1px 8px;
+  padding: 0 8px;
   justify-content: center;
   align-items: center;
   gap: 10px;
   border-radius: 80px;
   background: #ffc31c;
   color: #000;
-
   font-size: 10px;
   font-style: normal;
   font-weight: 700;

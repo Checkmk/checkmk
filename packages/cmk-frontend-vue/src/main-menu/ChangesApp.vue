@@ -426,7 +426,7 @@ onMounted(() => {
       <div v-if="activateChangesInProgress" class="cmk-div-activation-result-container">
         <div class="cmk-div-activation-result">
           <span class="cmk-span-activation-result-text">{{
-            t('activating-changes', 'Activting changes...')
+            t('activating-changes', 'Activating changes...')
           }}</span>
           <span class="cmk-span-activation-result-text">{{
             t(

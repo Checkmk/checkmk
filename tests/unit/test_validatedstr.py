@@ -30,8 +30,7 @@ def test_plugin_name_str() -> None:
 
 def test_plugin_name_equal() -> None:
     assert ValidatedString("Stuart") == ValidatedString("Stuart")
-    with pytest.raises(TypeError):
-        _ = ValidatedString("Stuart") == "Stuart"
+    assert ValidatedString("Stuart") != "Stuart"
 
 
 def test_copyability() -> None:
@@ -63,5 +62,4 @@ def test_plugin_name_sort() -> None:
 
 
 def test_cross_class_comparison_fails() -> None:
-    with pytest.raises(TypeError):
-        _ = ValidatedString("foo") == SectionName("foo")
+    assert ValidatedString("foo") != SectionName("foo")

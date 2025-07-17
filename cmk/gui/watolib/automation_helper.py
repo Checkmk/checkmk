@@ -37,6 +37,7 @@ class HelperExecutor(AutomationExecutor):
         timeout: int | None,
     ) -> LocalAutomationResult:
         session = requests.Session()
+        session.trust_env = False
         session.mount(AUTOMATION_HELPER_BASE_URL, _LocalAutomationAdapter())
 
         payload = AutomationPayload(

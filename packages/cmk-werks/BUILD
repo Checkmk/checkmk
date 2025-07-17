@@ -32,7 +32,7 @@ py_library(
     imports = ["."],
     visibility = [
         "//cmk:__pkg__",
-        "//omd:__pkg__",
+        "//omd:__subpackages__",
     ],
     deps = [
         "//packages/cmk-ccc:version",

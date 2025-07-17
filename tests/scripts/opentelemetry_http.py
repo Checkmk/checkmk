@@ -39,6 +39,9 @@ USERNAME = "username"
 PASSWORD = "password"
 ENCODED_CREDENTIALS = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode()).decode()
 AUTH_HEADERS = {"Authorization": f"Basic {ENCODED_CREDENTIALS}"}
+# OpenTelemetry logs configuration
+HTTP_LOG_LEVELS = ["info", "warning", "error"]
+HTTP_LOG_TEXT = "Test log level %s #%d"
 
 RESOURCE = Resource.create({"service.name": SERVICE_NAME})
 
@@ -113,12 +116,13 @@ def main():
     console_logger.info("Starting sending data to %s", ENDPOINT)
     counter = 0
 
+    log_levels = [(level, getattr(logger, level)) for level in HTTP_LOG_LEVELS]
+
     while True:
         console_logger.info(f"Counter value is {counter}.")
         if logger:
-            logger.info(f"Test log level INFO #{counter}")
-            logger.warning(f"Test log level WARNING #{counter}")
-            logger.error(f"Test log level ERROR #{counter}")
+            for level_name, log_method in log_levels:
+                log_method(HTTP_LOG_TEXT % (level_name, counter))
         otel_counter.add(1, {"label": "test_label"})
         counter += 1
         time.sleep(SLEEP_DURATION)

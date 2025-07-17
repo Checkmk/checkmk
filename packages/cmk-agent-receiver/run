@@ -134,7 +134,7 @@ run_mypy() {
 }
 
 run_ruff() {
-    bazel lint :all
+    bazel lint --aspect:interactive=false --quiet --diff --machine :all
 }
 
 run_bandit() {

@@ -1,0 +1,22 @@
+title: Hyper-V VM Integration Services
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+
+description:
+ This check monitors the integration services status of virtual machines running on a Microsoft Hyper-V cluster.
+
+ The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
+ the status of integration services for each virtual machine. It monitors various
+ guest tools services and their states (active/inactive). The check allows for
+ configurable expected states per service, with a default expectation that most
+ services should be active, except for specific services like "Guest Service Interface"
+ which is expected to be inactive by default.
+
+item:
+ The virtual machine (no specific item name as discovery yields a single service)
+
+inventory:
+ One service per virtual machine with guest tools is created, based on the presence
+ of "guest.tools.number" in the section data.

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
+import CmkAccordion from '../CmkAccordion/CmkAccordion.vue'
 import { ref } from 'vue'
 import type { CmkIconProps } from '../CmkIcon.vue'
 import CmkDropdown from '../CmkDropdown.vue'

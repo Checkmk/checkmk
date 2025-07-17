@@ -30,6 +30,7 @@ class StartupError(Exception): ...
 class JobSchedulerClient:
     def __init__(self) -> None:
         self._session = requests.Session()
+        self._session.trust_env = False
         self._session.mount(JOB_SCHEDULER_BASE_URL, _JobSchedulerAdapter())
 
     def get(self, endpoint: str) -> result.Result[requests.Response, StartupError]:

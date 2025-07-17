@@ -252,6 +252,9 @@ class Metric(_MetricTuple):
 
     Args:
         name:       The name of the metric.
+                    Empty names or names containing spaces or any of the characters
+                    ``:``, ``/`` or ``\\`` will raise an exception.
+                    Metrics with names containing ``=`` or ``'`` will silently be dropped.
         value:      The measured value.
         levels:     A pair of upper levels, ie. warn and crit. This information is only used
                     for visualization by the graphing system. It does not affect the service state.

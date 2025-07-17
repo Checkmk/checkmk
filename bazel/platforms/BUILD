@@ -11,7 +11,7 @@ selects.config_setting_group(
 )
 
 platform(
-    name = "x86_64-unknown-linux-musl",
+    name = "x86_64-linux-musl",
     constraint_values = [
         ":musl",
         "@platforms//cpu:x86_64",

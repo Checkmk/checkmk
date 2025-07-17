@@ -65,7 +65,7 @@ rust_binary(
 platform_transition_binary(
     name = "mk-oracle-musl",
     binary = ":mk-oracle",
-    platform = "//bazel/platforms:x86_64-unknown-linux-musl",
+    platform = "//bazel/platforms:x86_64-linux-musl",
     visibility = ["//visibility:public"],
 )
 

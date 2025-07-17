@@ -62,7 +62,7 @@ rust_binary(
 platform_transition_binary(
     name = "mk-sql-musl",
     binary = ":mk-sql",
-    platform = "//bazel/platforms:x86_64-unknown-linux-musl",
+    platform = "//bazel/platforms:x86_64-linux-musl",
     visibility = ["//visibility:public"],
 )
 

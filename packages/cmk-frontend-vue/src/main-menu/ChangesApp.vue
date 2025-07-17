@@ -692,6 +692,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   align-self: stretch;
+  margin-bottom: 19px;
 }
 .cmk-div-buttons-container {
   display: flex;
@@ -877,7 +878,7 @@ onMounted(() => {
 }
 
 .collapsible-title {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .cmk-scroll-sites-container {

@@ -199,10 +199,7 @@ onBeforeUnmount(() => {
           :key="tab.title"
           class="cmk-unified-search-result-tab-content"
         >
-          <CmkScrollContainer
-            max-height="calc(100vh - 300px)"
-            class="cmk-unified-search-result-tab-scroll"
-          >
+          <CmkScrollContainer max-height="calc(100vh - 300px)">
             <ResultList>
               <ResultItem
                 v-for="(item, idxe) in tab.results"
@@ -238,7 +235,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .cmk-unified-search-tab-info {
   position: absolute;
-  right: 32px;
+  right: 16px;
   margin-top: 10px;
   line-height: 14px;
   font-size: 10px;
@@ -320,10 +317,6 @@ onBeforeUnmount(() => {
 }
 
 .cmk-unified-search-result-tab-content {
-  padding-right: 8px;
-}
-
-.cmk-unified-search-result-tab-scroll {
-  padding-right: 4px;
+  padding: 0;
 }
 </style>

@@ -28,7 +28,6 @@ const model = defineModel<string | number>({ default: 1 })
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--ux-theme-2);
 }
 
 .cmk-tabs-list {
@@ -38,7 +37,7 @@ const model = defineModel<string | number>({ default: 1 })
   flex-direction: row;
   list-style-type: none;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--default-border-color);
+  border-bottom: 2px solid transparent;
   position: relative;
 }
 

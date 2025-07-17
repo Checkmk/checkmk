@@ -23,7 +23,6 @@ defineProps<CmkTabContentProps>()
 .cmk-tab-content {
   padding: 16px;
   background: var(--ux-theme-3);
-  border: 1px solid transparent;
 
   &:focus,
   &:active {

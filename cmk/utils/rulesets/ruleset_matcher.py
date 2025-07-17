@@ -38,6 +38,7 @@ tracer = trace.get_tracer()
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
+TDefaultValue = TypeVar("TDefaultValue")
 TRuleValueMapping = TypeVar("TRuleValueMapping", bound=Mapping[str, object])
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
@@ -993,6 +994,18 @@ class SingleHostRulesetMatcherMerge[TRuleValue]:
         return self.matcher.get_host_values_merged(
             host_name, self.host_ruleset, self.labels_of_host
         )
+
+
+@dataclass(frozen=True)
+class SingleHostRulesetMatcherFirst[TRuleValue, TDefaultValue]:
+    host_ruleset: Sequence[RuleSpec[TRuleValue]]
+    default: TDefaultValue
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(self, host_name: HostName) -> TRuleValue | TDefaultValue:
+        all = self.matcher.get_host_values_all(host_name, self.host_ruleset, self.labels_of_host)
+        return all[0] if all else self.default
 
 
 @dataclass(frozen=True)

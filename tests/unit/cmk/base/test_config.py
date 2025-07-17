@@ -215,7 +215,7 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
         (HostName("sub22"), "/wato/level11/level22/hosts.mk", 22),
     ],
 )
-def test_host_folder_matching(
+def test_tcp_fetcher_config_agent_ports_matching(
     monkeypatch: MonkeyPatch, hostname: HostName, host_path: str, result: int
 ) -> None:
     ts = Scenario()
@@ -233,13 +233,13 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+
     assert (
-        config_cache.fetcher_factory(
-            config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
-            service_name_config=service_name_config,
-        )._agent_port(hostname)
+        config.make_tcp_fetcher_config(
+            config_cache._loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+        ).agent_port(hostname)
         == result
     )
 
@@ -698,44 +698,13 @@ def test_is_all_special_agents_host(
 @pytest.mark.parametrize(
     "hostname, result",
     [
-        (HostName("testhost1"), 6556),
-        (HostName("testhost2"), 1337),
-    ],
-)
-def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -> None:
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_ruleset(
-        "agent_ports",
-        [
-            {
-                "id": "01",
-                "condition": {"host_name": [HostName("testhost2")]},
-                "value": 1337,
-                "options": {},
-            }
-        ],
-    )
-    config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
-    assert (
-        config_cache.fetcher_factory(
-            config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
-            service_name_config=service_name_config,
-        )._agent_port(hostname)
-        == result
-    )
-
-
-@pytest.mark.parametrize(
-    "hostname, result",
-    [
         (HostName("testhost1"), 5.0),
         (HostName("testhost2"), 12.0),
     ],
 )
-def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, result: float) -> None:
+def test_make_tcp_fetcher_config_tcp_connect_timeout(
+    monkeypatch: MonkeyPatch, hostname: HostName, result: float
+) -> None:
     ts = Scenario()
     ts.add_host(hostname)
     ts.set_ruleset(
@@ -750,13 +719,12 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
     assert (
-        config_cache.fetcher_factory(
-            config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
-            service_name_config=service_name_config,
-        )._tcp_connect_timeout(hostname)
+        config.make_tcp_fetcher_config(
+            config_cache._loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+        ).connect_timeout(hostname)
         == result
     )
 
@@ -768,7 +736,7 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         (HostName("testhost2"), TCPEncryptionHandling.TLS_ENCRYPTED_ONLY),
     ],
 )
-def test_encryption_handling(
+def test_make_tcp_fetcher_config_encryption_handling(
     monkeypatch: MonkeyPatch, hostname: HostName, result: TCPEncryptionHandling
 ) -> None:
     ts = Scenario()
@@ -784,14 +752,13 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
     assert (
-        config_cache.fetcher_factory(
-            config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
-            service_name_config=service_name_config,
-        )._encryption_handling(hostname)
-        is result
+        config.make_tcp_fetcher_config(
+            config_cache._loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+        ).parsed_encryption_handling(hostname)
+        == result
     )
 
 
@@ -802,7 +769,7 @@ def test_encryption_handling(
         (HostName("testhost2"), "my-super-secret-psk"),
     ],
 )
-def test_symmetric_agent_encryption(
+def test_make_tcp_fetcher_config_symmetric_agent_encryption(
     monkeypatch: MonkeyPatch, hostname: HostName, result: str | None
 ) -> None:
     ts = Scenario()
@@ -818,14 +785,13 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
     assert (
-        config_cache.fetcher_factory(
-            config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
-            service_name_config=service_name_config,
-        )._symmetric_agent_encryption(hostname)
-        is result
+        config.make_tcp_fetcher_config(
+            config_cache._loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+        ).symmetric_agent_encryption(hostname)
+        == result
     )
 
 

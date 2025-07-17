@@ -151,6 +151,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
     RuleSpec,
+    SingleHostRulesetMatcherFirst,
 )
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
@@ -578,7 +579,11 @@ class LoadedConfigFragment:
     shadow_hosts: ShadowHosts
     service_dependencies: Sequence[tuple]
     agent_config: Mapping[str, Sequence[RuleSpec]]
+    agent_port: int
     agent_ports: Sequence[RuleSpec[int]]
+    tcp_connect_timeout: float
+    tcp_connect_timeouts: Sequence[RuleSpec[float]]
+    encryption_handling: Sequence[RuleSpec[Mapping[str, str]]]
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     cmc_real_time_checks: RealTimeChecks | None
@@ -712,7 +717,11 @@ def _perform_post_config_loading_actions(
         shadow_hosts=shadow_hosts,
         service_dependencies=service_dependencies,
         agent_config=agent_config,
+        agent_port=agent_port,
         agent_ports=agent_ports,
+        tcp_connect_timeout=tcp_connect_timeout,
+        tcp_connect_timeouts=tcp_connect_timeouts,
+        encryption_handling=encryption_handling,
         agent_encryption=agent_encryption,
         agent_exclude_sections=agent_exclude_sections,
         cmc_real_time_checks=cmc_real_time_checks,
@@ -1690,6 +1699,9 @@ class ConfigCache:
         return FetcherFactory(
             self,
             ip_lookup,
+            make_tcp_fetcher_config(
+                self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
+            ),
             self.ruleset_matcher,
             service_configurer,
             service_name_config,
@@ -3735,12 +3747,68 @@ class ParserFactory:
         )
 
 
+def make_tcp_fetcher_config(
+    loaded_config: LoadedConfigFragment,
+    ruleset_matcher: RulesetMatcher,
+    labels_of_host: Callable[[HostName], Labels],
+) -> TCPFetcherConfig:
+    return TCPFetcherConfig(
+        agent_port=SingleHostRulesetMatcherFirst(
+            loaded_config.agent_ports,
+            loaded_config.agent_port,
+            ruleset_matcher,
+            labels_of_host,
+        ),
+        connect_timeout=SingleHostRulesetMatcherFirst(
+            loaded_config.tcp_connect_timeouts,
+            loaded_config.tcp_connect_timeout,
+            ruleset_matcher,
+            labels_of_host,
+        ),
+        encryption_handling=SingleHostRulesetMatcherFirst(
+            loaded_config.encryption_handling,
+            None,
+            ruleset_matcher,
+            labels_of_host,
+        ),
+        symmetric_agent_encryption=SingleHostRulesetMatcherFirst(
+            loaded_config.agent_encryption,
+            None,
+            ruleset_matcher,
+            labels_of_host,
+        ),
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class TCPFetcherConfig:
+    """Configuration for TCP fetchers"""
+
+    agent_port: Callable[[HostName], int]
+    connect_timeout: Callable[[HostName], float]
+    encryption_handling: Callable[[HostName], Mapping[str, object] | None]
+    symmetric_agent_encryption: Callable[[HostName], str | None]
+
+    def parsed_encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
+        if not (setting := self.encryption_handling(host_name)):
+            return TCPEncryptionHandling.ANY_AND_PLAIN
+        match setting["accept"]:
+            case "tls_encrypted_only":
+                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
+            case "any_encrypted":
+                return TCPEncryptionHandling.ANY_ENCRYPTED
+            case "any_and_plain":
+                return TCPEncryptionHandling.ANY_AND_PLAIN
+        raise ValueError("Unknown setting: %r" % setting)
+
+
 class FetcherFactory:
     # TODO: better and clearer separation between ConfigCache and this class.
     def __init__(
         self,
         config_cache: ConfigCache,
         ip_lookup: ip_lookup.IPLookup,
+        tcp_fetcher_config: TCPFetcherConfig,
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
@@ -3749,6 +3817,7 @@ class FetcherFactory:
     ) -> None:
         self._config_cache: Final = config_cache
         self._ip_lookup: Final = ip_lookup
+        self._tcp_fetcher_config: Final = tcp_fetcher_config
         self._label_manager: Final = config_cache.label_manager
         self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
@@ -3858,45 +3927,6 @@ class FetcherFactory:
             return RelayFetcher(fetcher)
         return fetcher
 
-    def _agent_port(self, host_name: HostName) -> int:
-        ports = self._ruleset_matcher.get_host_values_all(
-            host_name, agent_ports, self._label_manager.labels_of_host
-        )
-        return ports[0] if ports else agent_port
-
-    def _tcp_connect_timeout(self, host_name: HostName) -> float:
-        timeouts = self._ruleset_matcher.get_host_values_all(
-            host_name, tcp_connect_timeouts, self._label_manager.labels_of_host
-        )
-        return timeouts[0] if timeouts else tcp_connect_timeout
-
-    def _encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
-        if not (
-            settings := self._ruleset_matcher.get_host_values_all(
-                host_name, encryption_handling, self._label_manager.labels_of_host
-            )
-        ):
-            return TCPEncryptionHandling.ANY_AND_PLAIN
-        match settings[0]["accept"]:
-            case "tls_encrypted_only":
-                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
-            case "any_encrypted":
-                return TCPEncryptionHandling.ANY_ENCRYPTED
-            case "any_and_plain":
-                return TCPEncryptionHandling.ANY_AND_PLAIN
-        raise ValueError("Unknown setting: %r" % settings[0])
-
-    def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:
-        return (
-            settings[0]
-            if (
-                settings := self._ruleset_matcher.get_host_values_all(
-                    host_name, agent_encryption, self._label_manager.labels_of_host
-                )
-            )
-            else None
-        )
-
     def make_tcp_fetcher(
         self,
         host_name: HostName,
@@ -3907,11 +3937,11 @@ class FetcherFactory:
     ) -> TCPFetcher:
         return TCPFetcher(
             host_name=host_name,
-            address=(ip_address, self._agent_port(host_name)),
+            address=(ip_address, self._tcp_fetcher_config.agent_port(host_name)),
             family=host_ip_family,
-            timeout=self._tcp_connect_timeout(host_name),
-            encryption_handling=self._encryption_handling(host_name),
-            pre_shared_secret=self._symmetric_agent_encryption(host_name),
+            timeout=self._tcp_fetcher_config.connect_timeout(host_name),
+            encryption_handling=self._tcp_fetcher_config.parsed_encryption_handling(host_name),
+            pre_shared_secret=self._tcp_fetcher_config.symmetric_agent_encryption(host_name),
             tls_config=tls_config,
         )
 

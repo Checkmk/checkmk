@@ -76,6 +76,25 @@ py_binary(
     ("cse", "_saas"),
 ]]
 
+pkg_files(
+    name = "werks_pkg_cre",
+    srcs = [":werks_precompiled_cre"],
+    prefix = "share/check_mk/werks",
+    renames = {":werks_precompiled_cre": "werks"},
+)
+
+[pkg_files(
+    name = "werks_pkg_" + edition,
+    srcs = [":werks_precompiled_" + edition],
+    prefix = "share/check_mk/werks",
+    renames = {":werks_precompiled_" + edition: "werks_" + edition},
+) for edition in [
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]
+
 pkg_mklink(
     name = "changelog_link",
     link_name = "share/doc/ChangeLog",
@@ -87,12 +106,25 @@ pkg_tar(
     srcs = [
         "changelog_link",
         "changelog_pkg_cre",
+        "werks_pkg_cre",
     ] + select({
         "//bazel/cmk/edition:cre": [],
-        "//bazel/cmk/edition:cee": ["changelog_pkg_cee"],
-        "//bazel/cmk/edition:cce": ["changelog_pkg_cce"],
-        "//bazel/cmk/edition:cme": ["changelog_pkg_cme"],
-        "//bazel/cmk/edition:cse": ["changelog_pkg_cse"],
+        "//bazel/cmk/edition:cee": [
+            "changelog_pkg_cee",
+            "werks_pkg_cee",
+        ],
+        "//bazel/cmk/edition:cce": [
+            "changelog_pkg_cce",
+            "werks_pkg_cce",
+        ],
+        "//bazel/cmk/edition:cme": [
+            "changelog_pkg_cme",
+            "werks_pkg_cme",
+        ],
+        "//bazel/cmk/edition:cse": [
+            "changelog_pkg_cse",
+            "werks_pkg_cse",
+        ],
     }),
     visibility = ["@@//omd:__subpackages__"],
 )

@@ -20,23 +20,10 @@ CHECK_MK_TAROPTS := \
 	--exclude=.gitignore --exclude=.editorconfig --exclude=*.swp --exclude=.f12 \
 	--exclude=__pycache__ --exclude=*.pyc
 
-CHECK_MK_WERKS_PATH := $(CHECK_MK_WORK_DIR)/werks
-CHECK_MK_CHANGELOG_PATH := $(CHECK_MK_WORK_DIR)/ChangeLog
-
 # It is used from top-level Makefile and this makefile as an intermediate step.
 # We should end up with one central place to care for packaging our files
 # without the need to have shared logic between like this.
 include ../artifacts.make
-
-$(CHECK_MK_WERKS_PATH):
-	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	bazel build //omd/packages/changelog:run_werks_precompile_cre
-	cp $(BAZEL_BIN)/omd/packages/changelog/werks_precompiled_cre $@
-
-$(CHECK_MK_CHANGELOG_PATH):
-	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	bazel build //omd/packages/changelog:run_changelog_cre
-	cp $(BAZEL_BIN)/omd/packages/changelog/changelog_cre $@
 
 # RPM/DEB build are currently working on the same working directory and would
 # influence each other. Need to be cleaned up later
@@ -52,7 +39,7 @@ endif
 agent_plugins_py2:
 	$(MAKE) -C $(REPO_PATH)/agents/plugins/
 
-$(CHECK_MK_BUILD): $(CHECK_MK_WERKS_PATH) $(CHECK_MK_CHANGELOG_PATH)
+$(CHECK_MK_BUILD):
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(REPO_PATH)/locale/compile_mo_files
 	$(MAKE) -C $(REPO_PATH)/bin
@@ -87,9 +74,6 @@ ifeq ($(filter $(EDITION),saas),)
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent_plugins_py2
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
-	install -m 644 $(CHECK_MK_WERKS_PATH) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	rm $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/__init__.py
@@ -104,7 +88,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
-	install -m 644 $(CHECK_MK_CHANGELOG_PATH) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	tar -c -C $(REPO_PATH)/doc $(CHECK_MK_TAROPTS) \
 	    --exclude plugin-api \
 	    --exclude  treasures\

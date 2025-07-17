@@ -29,8 +29,7 @@ def test_plugin_name_str() -> None:
 
 def test_plugin_name_equal() -> None:
     assert CheckPluginName("Stuart") == CheckPluginName("Stuart")
-    with pytest.raises(TypeError):
-        _ = CheckPluginName("Stuart") == "Stuart"
+    assert CheckPluginName("Stuart") != "Stuart"
 
 
 def test_copyability() -> None:
@@ -62,5 +61,4 @@ def test_plugin_name_sort() -> None:
 
 
 def test_cross_class_comparison_fails() -> None:
-    with pytest.raises(TypeError):
-        _ = CheckPluginName("foo") == SectionName("foo")
+    assert CheckPluginName("foo") != SectionName("foo")

@@ -140,6 +140,7 @@ class ModeBulkDiscovery(WatoMode):
                     self._bulk_size,
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
+                    use_git=config.wato_use_git,
                 )
             ).is_error():
                 raise result.error

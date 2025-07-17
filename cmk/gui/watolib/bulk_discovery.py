@@ -29,7 +29,6 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -258,6 +257,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with job_interface.gui_context(), store.locked(self.lock_file):
@@ -270,6 +270,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 job_interface,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
 
     def _do_execute(
@@ -282,6 +283,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
@@ -295,7 +297,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         result_queue: mp.Queue[_DiscoveryTaskResult | None] = mp.Queue()
         result_processing_thread = threading.Thread(
             target=copy_request_context(self._process_discovery_results),
-            args=(result_queue, len(tasks_by_site), job_interface, pprint_value),
+            args=(result_queue, len(tasks_by_site), job_interface, pprint_value, use_git),
         )
 
         def run(site_tasks: list[DiscoveryTask]) -> None:
@@ -421,6 +423,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         n_task_threads: int,
         job_interface: BackgroundProcessInterface,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         remaining_threads = n_task_threads
         while True:
@@ -441,6 +444,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                         result.result,
                         job_interface,
                         pprint_value=pprint_value,
+                        use_git=use_git,
                     )
                 except Exception as exc:
                     self._process_discovery_error(
@@ -456,6 +460,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
@@ -467,7 +472,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(
-                    hosts[hostname], response.hosts[hostname], pprint_value=pprint_value
+                    hosts[hostname],
+                    response.hosts[hostname],
+                    pprint_value=pprint_value,
+                    use_git=use_git,
                 )
                 job_interface.send_progress_update(
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
@@ -478,7 +486,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels += result.host_labels
 
     def _process_discovery_result_for_host(
-        self, host: Host, result: DiscoveryReport, *, pprint_value: bool
+        self, host: Host, result: DiscoveryReport, *, pprint_value: bool, use_git: bool
     ) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
@@ -517,7 +525,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             site_id=host.site_id(),
             diff_text=result.diff_text,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
         if not host.locked():
@@ -547,6 +555,7 @@ def start_bulk_discovery(
     *,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> result.Result[None, AlreadyRunningError | StartupError]:
     """Start a bulk discovery job with the given options
 
@@ -585,6 +594,7 @@ def start_bulk_discovery(
                 tasks=tasks,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             ),
         ),
         InitialStatusArgs(
@@ -603,6 +613,7 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     tasks: Sequence[DiscoveryTask]
     pprint_value: bool
     debug: bool
+    use_git: bool
 
 
 def bulk_discovery_job_entry_point(
@@ -616,6 +627,7 @@ def bulk_discovery_job_entry_point(
         job_interface,
         pprint_value=args.pprint_value,
         debug=args.debug,
+        use_git=args.use_git,
     )
 
 

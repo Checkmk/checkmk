@@ -852,7 +852,7 @@ _cleanup_obsolete_legacy_files() {
     # These files are from pre 2.4.0p8.
     # They do no harm, but are irritating when debugging.
     # Let's just remove them.
-    rm -f "${1}.*"
+    rm -f "${1}."*
 }
 
 _cleanup_leftover_files() {

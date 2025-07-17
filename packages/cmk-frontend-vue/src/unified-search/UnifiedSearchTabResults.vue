@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="cmk-unified-search-result-tabs">
     <div v-if="tabbedResults.length > 0" class="cmk-unified-search-tab-info">
-      <span>{{ t('hit', 'Hit') }}</span>
+      <span>{{ t('press', 'Press') }}</span>
       <CmkChip size="small" :content="t('ctrl', 'Ctrl')"></CmkChip>+<CmkChip
         class="arrow-key left"
         size="small"

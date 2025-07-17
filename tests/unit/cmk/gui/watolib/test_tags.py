@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 from cmk.utils import tags
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.gui.watolib.tags
+import cmk.gui.nagvis._hosttags
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -90,7 +90,7 @@ def test_tag_config_load(request_context: None, test_cfg: tags.TagConfig) -> Non
 
 @pytest.mark.usefixtures("test_cfg")
 def test_tag_config_save(mocker: MockerFixture) -> None:
-    export_mock = mocker.patch.object(cmk.gui.watolib.tags, "_export_hosttags_to_php")
+    export_mock = mocker.patch.object(cmk.gui.nagvis._hosttags, "_export_hosttags_to_php")
 
     config_file = TagConfigFile()
     base_config_mock = mocker.patch.object(config_file, "_save_base_config")

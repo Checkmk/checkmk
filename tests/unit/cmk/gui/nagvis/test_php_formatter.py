@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.watolib.php_formatter import format_php
+from cmk.gui.nagvis._php_formatter import format_php
 
 
 class _EvulToStr:

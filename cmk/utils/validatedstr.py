@@ -49,7 +49,7 @@ class ValidatedString:
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
-            raise TypeError(f"cannot compare {self!r} and {other!r}")
+            return False
         return self._value == other._value
 
     def __lt__(self, other: ValidatedString) -> bool:

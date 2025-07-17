@@ -58,6 +58,7 @@ function handleFilterSelect(selected: string | null): void {
     searchUtils.search?.initSearch(selected)
     searchUtils.input.setFocus()
   }
+  selectedFilter.value = null
   searchUtils.shortCuts.enable()
 }
 

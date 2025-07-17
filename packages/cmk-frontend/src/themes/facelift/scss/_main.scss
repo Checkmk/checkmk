@@ -353,6 +353,11 @@ div.foldable_wrapper {
   }
 
   div.foldable_header {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    background-color: $headline-color;
+
     &[onclick] {
       cursor: pointer;
     }

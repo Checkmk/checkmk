@@ -331,6 +331,9 @@ table.data {
     text-align: left;
     vertical-align: middle;
     background-color: $odd-tr-bg-color;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 
     &.center {
       text-align: center;
@@ -492,6 +495,17 @@ table.data {
   }
 }
 
+// Table headers inside foldable containers should stack below the foldable header
+div.foldable_wrapper {
+  --foldable-header-height: #{$spacing-double + $spacing-half};
+
+  table.data {
+    th {
+      top: var(--foldable-header-height);
+    }
+  }
+}
+
 table.data .popup_menu,
 body.main table.data .popup_menu {
   color: $font-color;
@@ -510,6 +524,9 @@ table.groupheader {
   @include table-header-mixin;
   width: 100%;
   margin: 0 0 $h3-margin-bottom;
+  position: sticky;
+  top: 0;
+  z-index: 15;
 
   td {
     text-align: left;
@@ -527,14 +544,27 @@ table.groupheader {
       text-decoration: underline;
     }
   }
-
-  &:not(:first-child) {
-    margin-top: 2 * $spacing;
-  }
 }
 
-tr.groupheader:not(:first-child) table.groupheader {
-  margin-top: 2 * $spacing;
+table.data {
+  --group-header-height: 24px;
+  td.groupheader {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    padding: 0;
+  }
+
+  /* When group headers are present, table headers need to stick below them */
+  &:has(tr.groupheader) th,
+  tr.groupheader ~ tr th {
+    top: var(--group-header-height);
+  }
+
+  /* When preceded by a separate group header table, adjust table header position */
+  table.groupheader + & th {
+    top: var(--group-header-height);
+  }
 }
 
 tr.data.grouped_row_header {

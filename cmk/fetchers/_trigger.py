@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Sized
+from collections.abc import Mapping, Sized
 from functools import partial
-from typing import final, TypeVar
+from typing import final, Self, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
@@ -49,8 +49,21 @@ class FetcherTrigger(abc.ABC):
     def _trigger(
         self, fetcher: Fetcher[_TRawData], mode: Mode
     ) -> result.Result[_TRawData, Exception]:
-        """Abstract method to be implemented by subclasses to trigger the fetcher."""
-        raise NotImplementedError("Subclasses must implement this method.")
+        raise NotImplementedError()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FetcherTrigger):
+            return NotImplemented
+        return type(self) is type(other) and self.serialized_params() == other.serialized_params()
+
+    @abc.abstractmethod
+    def serialized_params(self) -> Mapping[str, str]:
+        raise NotImplementedError()
+
+    @classmethod
+    @abc.abstractmethod
+    def from_params(cls, params: Mapping[str, str]) -> Self:
+        raise NotImplementedError()
 
 
 class PlainFetcherTrigger(FetcherTrigger):
@@ -61,3 +74,12 @@ class PlainFetcherTrigger(FetcherTrigger):
     ) -> result.Result[_TRawData, Exception]:
         with fetcher:
             return fetcher.fetch(mode)
+
+    def serialized_params(self) -> Mapping[str, str]:
+        """Return an empty mapping as there are no parameters to serialize."""
+        return {}
+
+    @classmethod
+    def from_params(cls, params: Mapping[str, str]) -> Self:
+        """Create a PlainFetcherTrigger from serialized parameters."""
+        return cls(**params)

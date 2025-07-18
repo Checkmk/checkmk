@@ -70,9 +70,11 @@ def test_do_create_config_nagios(
     ip_lookup_config = core_scenario.ip_lookup_config()
     core_config.do_create_config(
         create_core(
+            cmk_version.Edition.CEE,
             core_scenario.ruleset_matcher,
             core_scenario.label_manager,
             replace(EMPTY_CONFIG, monitoring_core="nagios"),
+            core_scenario.host_tags.tags,
         ),
         core_scenario,
         core_scenario.hosts_config,
@@ -116,9 +118,11 @@ def test_do_create_config_nagios_collects_passwords(
 
     core_config.do_create_config(
         create_core(
+            cmk_version.Edition.CEE,
             core_scenario.ruleset_matcher,
             core_scenario.label_manager,
             replace(EMPTY_CONFIG, monitoring_core="nagios"),
+            core_scenario.host_tags.tags,
         ),
         core_scenario,
         core_scenario.hosts_config,

@@ -2,15 +2,19 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Callable, Mapping
 from typing import assert_never
 
 from cmk.base.config import LoadedConfigFragment
 from cmk.base.core_config import MonitoringCore
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.tags import TagGroupID, TagID
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:
@@ -24,9 +28,11 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
 
 
 def create_core(
+    edition: Edition,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
     loaded_config: LoadedConfigFragment,
+    host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
@@ -38,7 +44,8 @@ def create_core(
             )
 
             return CmcPb(
-                get_licensing_handler_type(), make_cmc_config(matcher, label_manager, loaded_config)
+                get_licensing_handler_type(),
+                make_cmc_config(edition, matcher, label_manager, loaded_config, host_tags),
             )
         case "nagios":
             from cmk.base.core_nagios import NagiosCore

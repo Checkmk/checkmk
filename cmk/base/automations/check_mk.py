@@ -1115,9 +1115,11 @@ def _execute_autodiscovery(
         return discovery_results, False
 
     core = create_core(
+        edition,
         loading_result.config_cache.ruleset_matcher,
         loading_result.config_cache.label_manager,
         loading_result.loaded_config,
+        loading_result.config_cache.host_tags.tags,
     )
     with config.set_use_core_config(
         autochecks_dir=autochecks_dir,
@@ -1336,6 +1338,7 @@ class AutomationRenameHosts(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
         if plugins is None:
@@ -1395,6 +1398,7 @@ class AutomationRenameHosts(Automation):
                 ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
                 _execute_silently(
+                    edition,
                     config_cache,
                     service_name_config,
                     CoreAction.START,
@@ -2353,6 +2357,7 @@ class AutomationRestart(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RestartResult:
+        edition = cmk_version.edition(omd_root)
         if args:
             nodes = {HostName(hn) for hn in args}
         else:
@@ -2377,6 +2382,7 @@ class AutomationRestart(Automation):
         ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
         return _execute_silently(
+            edition,
             loading_result.config_cache,
             service_name_config,
             self._mode(loading_result.loaded_config.monitoring_core),
@@ -2459,6 +2465,7 @@ automations.register(AutomationReload())
 
 
 def _execute_silently(
+    edition: cmk_version.Edition,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     action: CoreAction,
@@ -2489,9 +2496,11 @@ def _execute_silently(
                 ip_address_of,
                 ip_address_of_mgmt,
                 create_core(
+                    edition,
                     config_cache.ruleset_matcher,
                     config_cache.label_manager,
                     loaded_config,
+                    config_cache.host_tags.tags,
                 ),
                 plugins,
                 action=action,

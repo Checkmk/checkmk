@@ -1521,6 +1521,7 @@ def _make_configured_bake_on_restart(
 def mode_update() -> None:
     from cmk.base.core_config import do_create_config
 
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()
     loading_result = load_config(plugins)
 
@@ -1538,9 +1539,11 @@ def mode_update() -> None:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(
+                    edition,
                     loading_result.config_cache.ruleset_matcher,
                     loading_result.config_cache.label_manager,
                     loading_result.loaded_config,
+                    loading_result.config_cache.host_tags.tags,
                 ),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
@@ -1604,6 +1607,7 @@ modes.register(
 
 
 def mode_restart(args: Sequence[HostName]) -> None:
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
@@ -1627,9 +1631,11 @@ def mode_restart(args: Sequence[HostName]) -> None:
         ip_address_of,
         ip_address_of_mgmt,
         create_core(
+            edition,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,
             loading_result.loaded_config,
+            loading_result.config_cache.host_tags.tags,
         ),
         plugins,
         hosts_to_update=set(args) if args else None,
@@ -1680,6 +1686,7 @@ modes.register(
 
 
 def mode_reload(args: Sequence[HostName]) -> None:
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
@@ -1703,9 +1710,11 @@ def mode_reload(args: Sequence[HostName]) -> None:
         ip_address_of,
         ip_address_of_mgmt,
         create_core(
+            edition,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,
             loading_result.loaded_config,
+            loading_result.config_cache.host_tags.tags,
         ),
         plugins,
         hosts_to_update=set(args) if args else None,

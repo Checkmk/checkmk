@@ -18,7 +18,7 @@ from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
-from cmk.fetchers import Fetcher, FetcherTrigger, Mode, PiggybackFetcher
+from cmk.fetchers import Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils.tags import TagGroupID, TagID
@@ -26,7 +26,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 
-class _MockFetcherTrigger(FetcherTrigger):
+class _MockFetcherTrigger(PlainFetcherTrigger):
     def __init__(self, payload: bytes) -> None:
         super().__init__()
         self._payload = payload

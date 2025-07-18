@@ -12789,6 +12789,13 @@ msgstr ""
 "implémentation SNMP. Vous pouvez utiliser cette règle pour désactiver Inline "
 "SNMP pour ces hôtes."
 
+msgid ""
+"Checkmk has identified and attempted to redact sensitive information in the "
+"crash report. It is advised that you manually review the content of this "
+"report and ensure any additional sensitive data is removed before sharing "
+"the crash report."
+msgstr ""
+
 msgid "Checkmk helper usage"
 msgstr "Utilisation de l'aide Checkmk"
 

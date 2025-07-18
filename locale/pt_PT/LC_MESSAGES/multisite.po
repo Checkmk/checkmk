@@ -12726,6 +12726,13 @@ msgstr ""
 "SNMP. Pode utilizar esta regra para desativar o SNMP em linha para estes "
 "anfitriões."
 
+msgid ""
+"Checkmk has identified and attempted to redact sensitive information in the "
+"crash report. It is advised that you manually review the content of this "
+"report and ensure any additional sensitive data is removed before sharing "
+"the crash report."
+msgstr ""
+
 msgid "Checkmk helper usage"
 msgstr "Checkmk utilização do helper"
 

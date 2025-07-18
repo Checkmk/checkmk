@@ -12604,6 +12604,13 @@ msgstr ""
 "ci sono dispositivi SNMP che hanno problemi con questa implementazione SNMP. "
 "Puoi usare questa regola per disabilitare Inline SNMP per questi host."
 
+msgid ""
+"Checkmk has identified and attempted to redact sensitive information in the "
+"crash report. It is advised that you manually review the content of this "
+"report and ensure any additional sensitive data is removed before sharing "
+"the crash report."
+msgstr ""
+
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
 

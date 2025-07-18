@@ -12739,6 +12739,13 @@ msgstr ""
 "Puteți utiliza această regulă pentru a dezactiva Inline SNMP pentru aceste "
 "gazde."
 
+msgid ""
+"Checkmk has identified and attempted to redact sensitive information in the "
+"crash report. It is advised that you manually review the content of this "
+"report and ensure any additional sensitive data is removed before sharing "
+"the crash report."
+msgstr ""
+
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 

@@ -4,16 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any
+from collections.abc import Iterable
 
 from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
+from cmk.gui.visuals.filter.components import (
+    Checkbox,
+    Dropdown,
+    FilterComponent,
+    Hidden,
+    HorizontalGroup,
+    TextInput,
+)
 
 from ._compiler import is_part_of_aggregation
 from ._packs import aggregation_group_choices, get_aggregation_group_trees
@@ -117,14 +124,16 @@ class _FilterAggrGroup(Filter):
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        htmlvar = self.htmlvars[0]
-        html.dropdown(htmlvar, self._options(), deflt=value.get(htmlvar, ""))
-
-    @staticmethod
-    def _options() -> Choices:
-        empty_choices: Choices = [("", "")]
-        return empty_choices + list(aggregation_group_choices())
+    def components(self) -> Iterable[FilterComponent]:
+        choices = {
+            "": "",
+        }
+        for key, title in aggregation_group_choices():
+            choices[key] = title
+        yield Dropdown(
+            id=self.htmlvars[0],
+            choices=choices,
+        )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
@@ -151,51 +160,33 @@ class _FilterAggrGroupTree(Filter):
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        htmlvar = self.htmlvars[0]
-        html.dropdown(htmlvar, self._options(), deflt=value.get(htmlvar, ""))
+    def components(self) -> Iterable[FilterComponent]:
+        yield Dropdown(
+            id=self.htmlvars[0],
+            choices=self._options(),
+        )
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
     @staticmethod
-    def _options() -> Choices:
-        def _build_tree(group, parent, path):
-            this_node = group[0]
-            path = path + (this_node,)
-            child = parent.setdefault(this_node, {"__path__": path})
-            children = group[1:]
-            if children:
-                child = child.setdefault("__children__", {})
-                _build_tree(children, child, path)
+    def _options() -> dict[str, str]:
+        """Get the available options in the format key -> title."""
 
-        def _build_selection(selection, tree, index):
-            index += 1
-            for _unused, sub_tree in tree.items():
-                selection.append(_get_selection_entry(sub_tree, index, True))
-                _build_selection(selection, sub_tree.get("__children__", {}), index)
+        def _iter_entries() -> Iterable[tuple[str, str]]:
+            yield "", ""  # Default entry
+            for group in get_aggregation_group_trees():
+                group_path = group.split("/")
+                for idx, group_name in enumerate(group_path):
+                    key = "/".join(group_path[: idx + 1])
+                    if idx == 0:
+                        title = group_name
+                    else:
+                        title = ("\u00a0" * 6 * idx) + "\u2514\u2500 " + group_name
 
-        def _get_selection_entry(tree, index, prefix=None):
-            path = tree["__path__"]
-            if prefix:
-                title_prefix = ("\u00a0" * 6 * index) + "\u2514\u2500 "
-            else:
-                title_prefix = ""
-            return ("/".join(path), title_prefix + path[index])
+                    yield key, title
 
-        tree: dict[str, Any] = {}
-        for group in get_aggregation_group_trees():
-            _build_tree(group.split("/"), tree, tuple())
-
-        selection: Choices = []
-        index = 0
-        for _unused, sub_tree in tree.items():
-            selection.append(_get_selection_entry(sub_tree, index))
-            _build_selection(selection, sub_tree.get("__children__", {}), index)
-
-        empty: Choices = [("", "")]
-
-        return empty + selection
+        return dict(_iter_entries())
 
 
 class _BIFrozenAggregations(Filter):
@@ -212,12 +203,16 @@ class _BIFrozenAggregations(Filter):
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.checkbox(
-            self.htmlvars[0], deflt=bool(value.get(self.htmlvars[0], True)), label=_("Show frozen")
+    def components(self) -> Iterable[FilterComponent]:
+        yield Checkbox(
+            id=self.htmlvars[0],
+            label=_("Show frozen"),
+            default_value=True,
         )
-        html.checkbox(
-            self.htmlvars[1], deflt=bool(value.get(self.htmlvars[1], True)), label=_("Show dynamic")
+        yield Checkbox(
+            id=self.htmlvars[1],
+            label=_("Show dynamic"),
+            default_value=True,
         )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
@@ -270,8 +265,8 @@ class BITextFilter(Filter):
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""))
+    def components(self) -> Iterable[FilterComponent]:
+        yield TextInput(id=self.htmlvars[0])
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
@@ -310,8 +305,8 @@ class _FilterAggrHosts(Filter):
             ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
+    def components(self) -> Iterable[FilterComponent]:
+        yield TextInput(id=self.htmlvars[1])
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1])
@@ -349,11 +344,9 @@ class _FilterAggrService(Filter):
             ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text_permissive(_("Host") + ": ")
-        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
-        html.write_text_permissive(_("Service") + ": ")
-        html.text_input(self.htmlvars[2], default_value=value.get(self.htmlvars[2], ""))
+    def components(self) -> Iterable[FilterComponent]:
+        yield TextInput(id=self.htmlvars[1], label=_("Host") + ": ")
+        yield TextInput(id=self.htmlvars[2], label=_("Service") + ": ")
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
@@ -393,28 +386,27 @@ class BIStatusFilter(Filter):
     def _filter_used(self, value: FilterHTTPVariables) -> FilterHeader:
         return value.get(self.prefix + "_filled", "")
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.hidden_field(self.prefix + "_filled", "1", add_var=True)
-        checkbox_default = not self._filter_used(value)  # everything by default
-
-        for varend, text in self._options():
-            if self.code != "a" and varend == "n":
-                continue  # no unset for read and effective state
-            if varend == "n":
-                html.br()
-            var = self.prefix + varend
-            html.checkbox(var, deflt=bool(value.get(var, checkbox_default)), label=text)
-
-    @staticmethod
-    def _options() -> list[tuple[str, str]]:
-        return [
-            ("0", _("OK")),
-            ("1", _("WARN")),
-            ("2", _("CRIT")),
-            ("3", _("UNKN")),
-            ("-1", _("PEND")),
-            ("n", _("no assumed state set")),
-        ]
+    def components(self) -> Iterable[FilterComponent]:
+        yield Hidden(id=self.prefix + "_filled", value="1")
+        yield HorizontalGroup(
+            components=[
+                Checkbox(id=self.prefix + var_suffix, label=text, default_value=True)
+                for var_suffix, text in [
+                    ("0", _("OK")),
+                    ("1", _("WARN")),
+                    ("2", _("CRIT")),
+                    ("3", _("UNKN")),
+                    ("-1", _("PEND")),
+                ]
+            ],
+        )
+        # "n" should be below the others, and only exists for "assumed state"
+        if self.code == "a":
+            yield Checkbox(
+                id=self.prefix + "n",
+                label=_("no assumed state set"),
+                default_value=True,
+            )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})

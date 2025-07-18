@@ -8,7 +8,6 @@ from functools import partial
 
 from cmk.gui import query_filters
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
@@ -26,6 +25,7 @@ from cmk.gui.visuals.filter import (
     InputTextFilter,
     RegexFilter,
 )
+from cmk.gui.visuals.filter.components import Dropdown, FilterComponent
 
 from .defines import action_whats, phase_names, syslog_priorities
 
@@ -334,20 +334,18 @@ class FilterECServiceLevelRange(Filter):
         choices = sorted(active_config.mkeventd_service_levels[:])
         return [("", "")] + [(str(x[0]), f"{x[0]} - {x[1]}") for x in choices]
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        selection = self._options()
-        html.open_div(class_="service_level min")
-        html.write_text_permissive("From")
-        html.dropdown(
-            self.lower_bound_varname, selection, deflt=value.get(self.lower_bound_varname, "")
+    def components(self) -> Iterable[FilterComponent]:
+        choices = dict(self._options())
+        yield Dropdown(
+            id=self.lower_bound_varname,
+            choices=choices,
+            label="From",
         )
-        html.close_div()
-        html.open_div(class_="service_level max")
-        html.write_text_permissive("To")
-        html.dropdown(
-            self.upper_bound_varname, selection, deflt=value.get(self.upper_bound_varname, "")
+        yield Dropdown(
+            id=self.upper_bound_varname,
+            choices=choices,
+            label="To",
         )
-        html.close_div()
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # NOTE: We need this special case only because our construction of the

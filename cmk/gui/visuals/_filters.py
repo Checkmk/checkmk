@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
 import re
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
@@ -22,7 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import (
-    Choices,
+    ChoiceMapping,
     ColumnName,
     FilterHeader,
     FilterHTTPVariables,
@@ -34,14 +33,11 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocom
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import LabelGroups
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (
     AjaxDropdownFilter,
-    checkbox_row,
     CheckboxRowFilter,
-    display_filter_radiobuttons,
     DualListFilter,
     Filter,
     FilterGroupCombo,
@@ -53,6 +49,18 @@ from .filter import (
     RegexFilter,
 )
 from .filter import filter_registry as global_filter_registry
+from .filter.components import (
+    Checkbox,
+    CheckboxGroup,
+    Dropdown,
+    FilterComponent,
+    HorizontalGroup,
+    LabelGroupFilterComponent,
+    RadioButton,
+    StaticText,
+    TagFilterComponent,
+    TextInput,
+)
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
@@ -319,16 +327,14 @@ class IPAddressFilter(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(
-            self.query_filter.request_vars[0], value.get(self.query_filter.request_vars[0], "")
+    def components(self) -> Iterable[FilterComponent]:
+        yield TextInput(
+            id=self.query_filter.request_vars[0],
         )
-        html.br()
-        display_filter_radiobuttons(
-            varname=self.query_filter.request_vars[1],
-            options=query_filters.ip_match_options(),
-            default="yes",
-            value=value,
+        yield RadioButton(
+            id=self.query_filter.request_vars[1],
+            choices=dict(query_filters.ip_match_options()),
+            default_value="yes",
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -677,11 +683,15 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
             ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        checkbox_row(self.svc_problems, value, "Service states: ")
-
-        html.br()
-        checkbox_row(self.host_problems, value, "Host states: ")
+    def components(self) -> Iterable[FilterComponent]:
+        yield CheckboxGroup(
+            choices=dict(self.svc_problems),
+            label="Service states: ",
+        )
+        yield CheckboxGroup(
+            choices=dict(self.host_problems),
+            label="Host states: ",
+        )
 
 
 def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> None:
@@ -1280,10 +1290,15 @@ class _FilterLogState(CheckboxRowFilter):
             ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        checkbox_row(self.host_states, value, "Hosts: ")
-        html.br()
-        checkbox_row(self.service_states, value, "Services: ")
+    def components(self) -> Iterable[FilterComponent]:
+        yield CheckboxGroup(
+            choices=dict(self.host_states),
+            label="Hosts: ",
+        )
+        yield CheckboxGroup(
+            choices=dict(self.service_states),
+            label="Services: ",
+        )
 
 
 class TagFilter(Filter):
@@ -1305,73 +1320,11 @@ class TagFilter(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        operators: Choices = [
-            ("is", "="),
-            ("isnot", "≠"),
-        ]
-
-        html.open_table()
-        # Show at least three rows of tag filters (hard coded self.query_filter.count) and add more
-        # rows if respective values are given via the URL.
-        # E.g. links from the virtual host tree snap-in may contain multiple tag filter values
-        num = 0
-        while num < self.query_filter.count or value.get(
-            "%s_%d_grp" % (self.query_filter.var_prefix, num)
-        ):
-            prefix = "%s_%d" % (self.query_filter.var_prefix, num)
-            num += 1
-            html.open_tr()
-            html.open_td()
-            grp_value = value.get(prefix + "_grp", "")
-            grp_choices = [(grp_value, grp_value)] if grp_value else []
-            html.dropdown(
-                prefix + "_grp",
-                grp_choices,
-                grp_value,
-                style="width: 129px;",
-                class_=["ajax-vals"],
-                data_autocompleter=json.dumps(
-                    AutocompleterConfig(
-                        ident="tag_groups",
-                        strict=True,
-                    ).config
-                ),
-            )
-
-            html.close_td()
-            html.open_td()
-            html.dropdown(
-                prefix + "_op",
-                operators,
-                deflt=value.get(prefix + "_op", "is"),
-                style="width:36px",
-                ordered=True,
-                class_=["op"],
-            )
-            html.close_td()
-            html.open_td()
-
-            current_value = value.get(prefix + "_val", "")
-            choices = [(current_value, current_value)] if current_value else []
-            html.dropdown(
-                prefix + "_val",
-                choices,
-                current_value,
-                style="width: 129px;",
-                class_=["ajax-vals"],
-                data_autocompleter=json.dumps(
-                    AutocompleterConfig(
-                        ident="tag_groups_opt",
-                        strict=True,
-                        dynamic_params_callback_name="tag_group_options_autocompleter",
-                    ).config
-                ),
-            )
-
-            html.close_td()
-            html.close_tr()
-        html.close_table()
+    def components(self) -> Iterable[FilterComponent]:
+        yield TagFilterComponent(
+            display_rows=self.query_filter.count,
+            variable_prefix=self.query_filter.var_prefix,
+        )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -1396,20 +1349,42 @@ class _FilterHostAuxTags(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             negate_varname = varname + "_neg"
             html.dropdown(
-                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
+                varname,
+                self._options().items(),
+                deflt=value.get(varname, ""),
+                ordered=True,
+                class_=["neg"],
             )
             html.open_nobr()
             html.checkbox(negate_varname, bool(value.get(negate_varname)), label=_("negate"))
             html.close_nobr()
 
+    def components(self) -> Iterable[FilterComponent]:
+        for num in range(self.query_filter.count):
+            varname = "%s_%d" % (self.query_filter.var_prefix, num)
+            negate_varname = varname + "_neg"
+            yield HorizontalGroup(
+                components=[
+                    Dropdown(
+                        id=varname,
+                        choices=self._options(),
+                    ),
+                    Checkbox(id=negate_varname, default_value=False, label=_("negate")),
+                ]
+            )
+
     @staticmethod
-    def _options() -> Choices:
-        aux_tag_choices: Choices = [("", "")]
-        return aux_tag_choices + list(active_config.tags.aux_tag_list.get_choices())
+    def _options() -> ChoiceMapping:
+        aux_tag_choices = {"": ""}
+        aux_tag_choices.update(active_config.tags.aux_tag_list.get_choices())
+        # Sort the choices by their label
+        return dict(sorted(aux_tag_choices.items(), key=lambda x: x[1]))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -1432,13 +1407,10 @@ class LabelGroupFilter(Filter):
             link_columns=[],
         )
 
-    def _valuespec(self):
-        return LabelGroups()
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        self._valuespec().render_input(
-            self.query_filter.ident,
-            self.query_filter.parse_value(value),
+    def components(self) -> Iterable[FilterComponent]:
+        yield LabelGroupFilterComponent(
+            id=self.query_filter.ident,
+            object_type=self.query_filter.object_type,
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -1521,7 +1493,7 @@ class CustomAttributeFilter(Filter):
         ident: str,
         title: str | LazyString,
         info: str,
-        choice_func: Callable[[], Choices],
+        choice_func: Callable[[], ChoiceMapping],
     ):
         super().__init__(
             ident=ident,
@@ -1540,28 +1512,25 @@ class CustomAttributeFilter(Filter):
     def value_varname(self, ident):
         return "%s_value" % ident
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown(
-            self.name_varname(self.ident),
-            self._options(self._custom_attribute_choices()),
-            deflt=value.get(self.name_varname(self.ident), ""),
+    def components(self) -> Iterable[FilterComponent]:
+        yield Dropdown(
+            id=self.name_varname(self.ident),
+            choices=self._options(),
         )
-        html.text_input(
-            self.value_varname(self.ident),
-            default_value=value.get(self.value_varname(self.ident), ""),
+        yield TextInput(
+            id=self.value_varname(self.ident),
         )
 
-    @staticmethod
-    def _options(custom_attribute_choices: Choices) -> Choices:
-        choices: Choices = [("", "")]
-        choices += custom_attribute_choices
+    def _options(self) -> ChoiceMapping:
+        choices = {"": ""}
+        choices.update(self._custom_attribute_choices())
         return choices
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if not value.get(self.name_varname(self.ident)):
             return ""
 
-        items = {k: v for k, v in self._custom_attribute_choices() if k is not None}
+        items = self._custom_attribute_choices()
         attribute_id = value[self.name_varname(self.ident)]
         if attribute_id not in items:
             raise MKUserError(
@@ -1576,18 +1545,20 @@ class CustomAttributeFilter(Filter):
         validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
-def _service_attribute_choices() -> Choices:
-    choices: Choices = []
-    for ident, attr_spec in active_config.custom_service_attributes.items():
-        choices.append((ident, attr_spec["title"]))
-    return sorted(choices, key=lambda x: x[1])
+def _service_attribute_choices() -> ChoiceMapping:
+    return {
+        ident: attr_spec["title"]
+        for ident, attr_spec in sorted(
+            active_config.custom_service_attributes.items(), key=lambda item: item[1]["title"]
+        )
+    }
 
 
-def _host_attribute_choices() -> Choices:
-    choices: Choices = []
-    for attr_spec in active_config.wato_host_attrs:
-        choices.append((attr_spec["name"], attr_spec["title"]))
-    return sorted(choices, key=lambda x: x[1])
+def _host_attribute_choices() -> ChoiceMapping:
+    return {
+        attr_spec["name"]: attr_spec["title"]
+        for attr_spec in sorted(active_config.wato_host_attrs, key=lambda x: x["title"])
+    }
 
 
 def register_custom_attribute_filters(filter_registry: FilterRegistry) -> None:
@@ -1684,9 +1655,9 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             link_columns=link_columns,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        return html.write_text_permissive(
-            _(
+    def components(self) -> Iterable[FilterComponent]:
+        yield StaticText(
+            text=_(
                 "Used in the host and service problems graphs of the main dashboard. Not intended "
                 "for any other purposes."
             )

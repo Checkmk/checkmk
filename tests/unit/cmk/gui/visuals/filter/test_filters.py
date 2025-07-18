@@ -19,18 +19,10 @@ from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
-from cmk.gui.wato.filters import FilterWatoFolder
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import deserialize_tree
 from tests.unit.cmk.web_test_app import SetConfig
-
-
-# mock_livestatus does not support Stats queries at the moment. We need to mock the function away
-# for the "wato_folder" filter test to pass.
-@pytest.fixture(name="mock_wato_folders")
-def fixture_mock_wato_folders(monkeypatch):
-    monkeypatch.setattr(FilterWatoFolder, "_fetch_folders", lambda s: {""})
 
 
 @pytest.fixture(name="live")

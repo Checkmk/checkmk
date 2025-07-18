@@ -2,16 +2,18 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterable
 
 from cmk.gui.view import View
 from cmk.gui.views.page_show_view import _get_needed_regular_columns
 from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.filter.components import FilterComponent
 
 
 def test_get_needed_regular_columns(view: View) -> None:
     class SomeFilter(Filter):
-        def display(self, value):
-            return
+        def components(self) -> Iterable[FilterComponent]:
+            return []
 
         def columns_for_filter_table(self, context):
             return ["some_column"]

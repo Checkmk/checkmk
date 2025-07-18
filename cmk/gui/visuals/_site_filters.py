@@ -3,21 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import partial
 
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui.config import active_config, Config
-from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Choices, FilterHTTPVariables, Row
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import AutocompleterRegistry, DualListChoice
+from cmk.gui.valuespec import AutocompleterRegistry
 
 from .filter import Filter, FilterRegistry
+from .filter.components import DualList, DynamicDropdown, FilterComponent
 
 
 def register(
@@ -81,21 +80,12 @@ class SiteFilter(Filter):
         self.query_filter = query_filter
         self._heading_info = heading_info
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        choices = [(current_value, current_value)] if current_value else []
-
-        html.dropdown(
-            self.query_filter.request_vars[0],
-            choices,
-            current_value,
-            style="width: 250px;",
-            class_=["ajax-vals"],
-            data_autocompleter=json.dumps(
-                AutocompleterConfig(
-                    ident="sites",
-                    strict=self.query_filter.ident == "site",
-                ).config
+    def components(self) -> Iterable[FilterComponent]:
+        yield DynamicDropdown(
+            id=self.query_filter.request_vars[0],
+            autocompleter=AutocompleterConfig(
+                ident="sites",
+                strict=self.query_filter.ident == "site",
             ),
         )
 
@@ -132,9 +122,11 @@ class MultipleSitesFilter(SiteFilter):
     def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        sites_vs = DualListChoice(choices=self._site_choices(active_config), rows=4)
-        sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
+    def components(self) -> Iterable[FilterComponent]:
+        yield DualList(
+            id=self.query_filter.request_vars[0],
+            choices=dict(self._site_choices(active_config)),
+        )
 
 
 def sites_autocompleter(

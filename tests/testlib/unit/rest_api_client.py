@@ -3303,6 +3303,18 @@ class AcknowledgeClient(RestApiClient):
         )
 
 
+class VisualFilterClient(RestApiClient):
+    domain: DomainType = "visual_filter"
+    default_version = APIVersion.UNSTABLE
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3355,6 +3367,7 @@ class ClientRegistry:
     BackgroundJob: BackgroundJobClient
     Acknowledge: AcknowledgeClient
     OtelConfigClient: OtelConfigClient
+    VisualFilterClient: VisualFilterClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3399,4 +3412,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
+        VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
     )

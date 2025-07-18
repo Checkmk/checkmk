@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 
-from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import FilterHTTPVariables, Row
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.filter.components import FilterComponent, Slider
 
 
 @dataclass
@@ -42,32 +42,13 @@ class FilterRange(Filter):
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self._filter_range_config.column: row[self._filter_range_config.column]}
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        filter_value = str(value.get(self._filter_range_config.column))
-        actual_value = (
-            filter_value if filter_value.isnumeric() else self._filter_range_config.default
-        )
-        html.add_form_var(self._filter_range_config.column)
-        html.open_table()
-        html.tr("", id_=self._filter_range_config.column, css=["range_input"])
-        html.close_table()
-        html.javascript(
-            "cmk.nodevis.utils.render_input_range(cmk.d3.select(%s), %s, %s)"
-            % (
-                json.dumps(f"#{self._filter_range_config.column}"),
-                json.dumps(
-                    {
-                        "id": self._filter_range_config.column,
-                        "title": "",
-                        "step": self._filter_range_config.step,
-                        "min": self._filter_range_config.min,
-                        "max": self._filter_range_config.max,
-                        "default_value": self._filter_range_config.default,
-                    },
-                ),
-                json.dumps(actual_value),
-            ),
-            data_cmk_execute_after_replace="",
+    def components(self) -> Iterable[FilterComponent]:
+        yield Slider(
+            id=self._filter_range_config.column,
+            min_value=self._filter_range_config.min,
+            max_value=self._filter_range_config.max,
+            step=self._filter_range_config.step,
+            default_value=self._filter_range_config.default,
         )
 
     def _update_label(self) -> str:

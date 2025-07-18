@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Literal
 
 import livestatus
 
 from cmk.gui import query_filters, sites
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
@@ -24,7 +22,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 
-from ._base import checkbox_component, Filter
+from ._base import Filter
+from .components import Checkbox, DynamicDropdown, FilterComponent, HorizontalGroup
 
 
 class AjaxDropdownFilter(Filter):
@@ -67,27 +66,24 @@ class AjaxDropdownFilter(Filter):
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        choices = [(current_value, current_value)] if current_value else []
-        varname = self.query_filter.request_vars[0]
-
-        html.dropdown(
-            varname,
-            choices,
-            current_value,
-            style="width: 250px;",
-            class_=["ajax-vals"],
-            data_autocompleter=json.dumps(self.autocompleter.config),
+    def components(self) -> Iterable[FilterComponent]:
+        dropdown = DynamicDropdown(
+            id=self.query_filter.request_vars[0],
+            autocompleter=self.autocompleter,
+            has_validation=bool(self._validate_value),
         )
-
         if self.query_filter.negateable:
-            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
-
-        if self._validate_value:
-            html.javascript(
-                f"cmk.valuespecs.init_on_change_validation('{varname}', '{self.ident}');"
+            yield HorizontalGroup(
+                components=[
+                    dropdown,
+                    Checkbox(
+                        id=self.query_filter.request_vars[1],
+                        label=_("negate"),
+                    ),
+                ]
             )
+        else:
+            yield dropdown
 
     def validate_value(self, value: FilterHTTPVariables) -> None:
         if self._validate_value:

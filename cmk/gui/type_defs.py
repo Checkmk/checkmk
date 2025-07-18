@@ -44,6 +44,7 @@ ChoiceText = str
 ChoiceId = str | None
 Choice = tuple[ChoiceId, ChoiceText]
 Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
+ChoiceMapping = Mapping[str, ChoiceText]
 
 
 class TrustedCertificateAuthorities(TypedDict):

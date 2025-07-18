@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import partial
 
 from cmk.gui import query_filters
@@ -17,12 +17,18 @@ from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, Visu
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
-    display_filter_radiobuttons,
     DualListFilter,
     Filter,
     FilterNumberRange,
     FilterOption,
     InputTextFilter,
+)
+from cmk.gui.visuals.filter.components import (
+    Checkbox,
+    FilterComponent,
+    HorizontalGroup,
+    RadioButton,
+    TextInput,
 )
 
 from ._tree import InventoryPath
@@ -181,11 +187,27 @@ class FilterInvtableVersion(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
         html.write_text_permissive(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
         html.write_text_permissive(" &nbsp; ")
         html.write_text_permissive(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
+
+    def components(self) -> Iterable[FilterComponent]:
+        yield HorizontalGroup(
+            components=[
+                TextInput(
+                    id=self.htmlvars[0],
+                    label=_("Min.&nbsp;Version:"),
+                ),
+                TextInput(
+                    id=self.htmlvars[1],
+                    label=_("Max.&nbsp;Version:"),
+                ),
+            ]
+        )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
@@ -351,20 +373,21 @@ class FilterInvHasSoftwarePackage(Filter):
         return bool(value.get(self._varprefix + "name"))
 
     def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
         html.text_input(
             varname=self._varprefix + "name",
             default_value=value.get(self._varprefix + "name", ""),
         )
         html.br()
-        display_filter_radiobuttons(
-            varname=self._varprefix + "match",
-            options=[
-                ("exact", _("exact match")),
-                ("regex", _("regular expression, substring match")),
-            ],
-            default="exact",
-            value=value,
-        )
+        RadioButton(
+            id=self._varprefix + "match",
+            choices={
+                "exact": _("exact match"),
+                "regex": _("regular expression, substring match"),
+            },
+            default_value="exact",
+        ).render_html(self.ident, value)
         html.br()
         html.open_span(class_="min_max_row")
         html.write_text_permissive(_("Min.&nbsp;Version: "))
@@ -386,6 +409,34 @@ class FilterInvHasSoftwarePackage(Filter):
             self._varprefix + "negate",
             False,
             label=_("Negate: find hosts <b>not</b> having this package"),
+        )
+
+    def components(self) -> Iterable[FilterComponent]:
+        yield TextInput(id=self._varprefix + "name")
+        yield RadioButton(
+            id=self._varprefix + "match",
+            choices={
+                "exact": _("exact match"),
+                "regex": _("regular expression, substring match"),
+            },
+            default_value="exact",
+        )
+        yield HorizontalGroup(
+            components=[
+                TextInput(
+                    id=self._varprefix + "version_from",
+                    label=_("Min.&nbsp;Version:"),
+                ),
+                TextInput(
+                    id=self._varprefix + "version_to",
+                    label=_("Max.&nbsp;Version:"),
+                ),
+            ]
+        )
+        yield Checkbox(
+            id=self._varprefix + "negate",
+            label=_("Negate: find hosts <b>not</b> having this package"),
+            default_value=False,
         )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:

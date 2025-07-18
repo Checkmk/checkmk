@@ -4,18 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 
 from livestatus import lq_logic
 
 from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _l
-from cmk.gui.type_defs import Choices, ColumnName, FilterHeader, FilterHTTPVariables
+from cmk.gui.i18n import _, _l
+from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import Filter, FilterRegistry
+from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
 
@@ -94,10 +94,10 @@ class FilterWatoFolder(Filter):
         if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
 
-    def choices(self) -> Choices:
+    def choices(self) -> ChoiceMapping:
         self.check_wato_data_update()
         allowed_folders = self._fetch_folders()
-        return [entry for entry in self.selection if entry[0] in allowed_folders]
+        return {k: v for k, v in self.selection if k in allowed_folders}
 
     def _fetch_folders(self) -> set[str]:
         # Note: Setup Folders that the user has not permissions to must not be visible.
@@ -120,8 +120,12 @@ class FilterWatoFolder(Filter):
                 allowed_folders.add(subfolder)
         return allowed_folders
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown(self.ident, self.choices(), deflt=value.get(self.htmlvars[0], ""))
+    def components(self) -> Iterable[FilterComponent]:
+        yield Dropdown(
+            id=self.ident,
+            choices=self.choices(),
+            default_value="",  # root folder
+        )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
@@ -164,9 +168,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
     # for data
     def valuespec(self) -> ValueSpec:
-        # Drop Main directory represented by empty string, because it means
-        # don't filter after any folder due to recursive folder filtering.
-        choices = [(name, folder) for name, folder in self.choices() if name]
+        choices = [(name, folder) for name, folder in self.choices().items()]
         return DualListChoice(choices=choices, rows=4, enlarge_active=True)
 
     def _to_list(self, value: FilterHTTPVariables) -> list[str]:
@@ -174,8 +176,19 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
             return folders.split("|")
         return []
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        self.valuespec().render_input(self.ident, self._to_list(value))
+    def choices(self) -> ChoiceMapping:
+        # Drop Main directory represented by empty string, because it means
+        # don't filter after any folder due to recursive folder filtering.
+        return {name: folder for name, folder in super().choices().items() if name}
+
+    def components(self) -> Iterable[FilterComponent]:
+        if choices := self.choices():
+            yield DualList(
+                id=self.ident,
+                choices=choices,
+            )
+        else:
+            yield StaticText(text=_("There are no elements for selection."))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()

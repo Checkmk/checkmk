@@ -22,7 +22,18 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DualListChoice
+
+from .components import (
+    Checkbox,
+    CheckboxGroup,
+    Dropdown,
+    DualList,
+    FilterComponent,
+    HorizontalGroup,
+    RadioButton,
+    StaticText,
+    TextInput,
+)
 
 
 class Filter(abc.ABC):
@@ -84,8 +95,14 @@ class Filter(abc.ABC):
         user in single site setups."""
         return True
 
-    @abc.abstractmethod
     def display(self, value: FilterHTTPVariables) -> None:
+        for component in self.components():
+            component.render_html(self.ident, value)
+
+    @abc.abstractmethod
+    def components(self) -> Iterable[FilterComponent]:
+        """Return the components of this filter. These will be used to render the filter and
+        to provide the filter's API representation."""
         raise NotImplementedError()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -146,12 +163,11 @@ class FilterOption(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.query_filter.request_vars[0],
-            options=self.query_filter.options,
-            default=str(self.query_filter.ignore),
-            value=value,
+    def components(self) -> Iterable[FilterComponent]:
+        yield RadioButton(
+            id=self.query_filter.request_vars[0],
+            choices=dict(self.query_filter.options),
+            default_value=str(self.query_filter.ignore),
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -160,16 +176,6 @@ class FilterOption(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return self.query_filter.filter_table(context, rows)
-
-
-def display_filter_radiobuttons(
-    *, varname: str, options: list[tuple[str, str]], default: str, value: FilterHTTPVariables
-) -> None:
-    pick = value.get(varname, default)
-    html.begin_radio_group(horizontal=True)
-    for state, text in options:
-        html.radiobutton(varname, state, pick == state, text + " &nbsp; ")
-    html.end_radio_group()
 
 
 def recover_pre_2_1_range_filter_request_vars(
@@ -212,6 +218,8 @@ class FilterNumberRange(Filter):  # type is int
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
         html.write_text_permissive(_("From:") + "&nbsp;")
         html.text_input(
             self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
@@ -225,6 +233,23 @@ class FilterNumberRange(Filter):  # type is int
         )
         if self.unit:
             html.write_text_permissive(" %s " % self.unit)
+
+    def components(self) -> Iterable[FilterComponent]:
+        unit = f" {self.unit} " if self.unit else None
+        yield HorizontalGroup(
+            components=[
+                TextInput(
+                    id=self.query_filter.request_vars[0],
+                    label=_("From:"),
+                    suffix=unit,
+                ),
+                TextInput(
+                    id=self.query_filter.request_vars[1],
+                    label=_("To:"),
+                    suffix=unit,
+                ),
+            ]
+        )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -262,6 +287,8 @@ class FilterTime(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
@@ -279,6 +306,23 @@ class FilterTime(Filter):
             html.close_td()
             html.close_tr()
         html.close_table()
+
+    def components(self) -> Iterable[FilterComponent]:
+        for what, what_label in [("from", _("From")), ("until", _("Until"))]:
+            var_prefix = self.ident + "_" + what
+            yield HorizontalGroup(
+                components=[
+                    TextInput(
+                        id=var_prefix,
+                        label=what_label + ":",
+                    ),
+                    Dropdown(
+                        id=var_prefix + "_range",
+                        choices=dict(query_filters.time_filter_options()),
+                        default_value="3600",
+                    ),
+                ]
+            )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -323,14 +367,20 @@ class InputTextFilter(Filter):
         )
         self._show_heading = show_heading
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        html.text_input(
-            self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
-        )
-
+    def components(self) -> Iterable[FilterComponent]:
+        text_input = TextInput(id=self.query_filter.request_vars[0])
         if self.query_filter.negateable:
-            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
+            yield HorizontalGroup(
+                components=[
+                    text_input,
+                    Checkbox(
+                        id=self.query_filter.request_vars[1],
+                        label=_("negate"),
+                    ),
+                ]
+            )
+        else:
+            yield text_input
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.query_filter.column]}
@@ -345,18 +395,6 @@ class InputTextFilter(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
-
-
-def checkbox_row(
-    options: list[tuple[str, str]], value: FilterHTTPVariables, title: str | None = None
-) -> None:
-    html.begin_checkbox_group()
-    if title:
-        html.write_text_permissive(title)
-    checkbox_default = not any(value.values())
-    for var, text in options:
-        html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
-    html.end_checkbox_group()
 
 
 class CheckboxRowFilter(Filter):
@@ -380,8 +418,8 @@ class CheckboxRowFilter(Filter):
         )
         self.query_filter = query_filter
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        checkbox_row(self.query_filter.options, value)
+    def components(self) -> Iterable[FilterComponent]:
+        yield CheckboxGroup(choices=dict(self.query_filter.options))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -415,15 +453,21 @@ class DualListFilter(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.open_div(class_="multigroup")
-        DualListChoice(choices=self._options(self.info), rows=4, enlarge_active=True).render_input(
-            self.query_filter.request_vars[0], self.query_filter.selection(value)
-        )
+    def components(self) -> Iterable[FilterComponent]:
+        choices = dict(self._options(self.info))
+        if not choices:
+            yield StaticText(text=_("There are no elements for selection."))
+            return
 
+        yield DualList(
+            id=self.query_filter.request_vars[0],
+            choices=choices,
+        )
         if self.query_filter.negateable:
-            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
-        html.close_div()
+            yield Checkbox(
+                id=self.query_filter.request_vars[1],
+                label=_("negate"),
+            )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)

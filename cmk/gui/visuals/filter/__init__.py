@@ -6,9 +6,7 @@
 from ._ajax_dropdown import AjaxDropdownFilter as AjaxDropdownFilter
 from ._ajax_dropdown import FilterGroupCombo as FilterGroupCombo
 from ._base import checkbox_component as checkbox_component
-from ._base import checkbox_row as checkbox_row
 from ._base import CheckboxRowFilter as CheckboxRowFilter
-from ._base import display_filter_radiobuttons as display_filter_radiobuttons
 from ._base import DualListFilter as DualListFilter
 from ._base import Filter as Filter
 from ._base import FilterNumberRange as FilterNumberRange

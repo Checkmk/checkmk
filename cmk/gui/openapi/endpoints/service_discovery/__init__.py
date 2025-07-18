@@ -741,7 +741,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
         update_changed_service_labels=options["update_service_labels"],
         update_changed_service_parameters=options["update_service_parameters"],
     )
-    hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
+    hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"], active_config.sites)
     if (
         result := start_bulk_discovery(
             job,

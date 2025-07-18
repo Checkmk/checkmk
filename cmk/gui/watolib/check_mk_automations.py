@@ -11,10 +11,8 @@ import cmk.ccc.version as cmk_version
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
@@ -23,7 +21,6 @@ from cmk.gui.watolib.automations import (
     check_mk_remote_automation_serialized,
     get_local_automation_failure_message,
     LocalAutomationConfig,
-    make_automation_config,
     MKAutomationException,
     RemoteAutomationConfig,
 )
@@ -147,7 +144,7 @@ def local_discovery(
     debug: bool,
 ) -> results.ServiceDiscoveryResult:
     return discovery(
-        site_id=omd_site(),
+        automation_config=LocalAutomationConfig(),
         mode=mode,
         host_names=host_names,
         scan=scan,
@@ -159,7 +156,7 @@ def local_discovery(
 
 
 def discovery(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     mode: DiscoverySettings,
     host_names: Iterable[HostName],
     *,
@@ -172,7 +169,7 @@ def discovery(
     return _deserialize(
         _automation_serialized(
             "service-discovery",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[
                 *(("@scan",) if scan else ()),
                 *(("@raiseerrors",) if raise_errors else ()),
@@ -595,6 +592,8 @@ def diag_special_agent(
 def ping_host(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     ping_host_input: results.PingHostInput,
+    *,
+    debug: bool,
 ) -> results.PingHostResult:
     return _deserialize(
         _automation_serialized(
@@ -604,10 +603,10 @@ def ping_host(
             stdin_data=ping_host_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.PingHostResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -633,6 +632,8 @@ def diag_host(
 def diag_cmk_agent(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     diag_cmk_agent_input: results.DiagCmkAgentInput,
+    *,
+    debug: bool,
 ) -> results.DiagCmkAgentResult:
     return _deserialize(
         _automation_serialized(
@@ -642,10 +643,10 @@ def diag_cmk_agent(
             stdin_data=diag_cmk_agent_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.DiagCmkAgentResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

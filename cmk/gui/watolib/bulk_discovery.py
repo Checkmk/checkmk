@@ -10,6 +10,8 @@ from typing import Literal, NamedTuple, NewType, override
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.resulttype as result
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 from cmk.ccc import store
@@ -46,6 +48,11 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.config_domain_name import (
@@ -66,12 +73,14 @@ IgnoreErrors = NewType("IgnoreErrors", bool)
 
 class DiscoveryHost(NamedTuple):
     site_id: str
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig
     folder_path: str
     host_name: str
 
 
 class DiscoveryTask(NamedTuple):
     site_id: SiteId
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig
     folder_path: str
     host_names: list
 
@@ -364,7 +373,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         for task in site_tasks:
             try:
                 result = discovery(
-                    task.site_id,
+                    task.automation_config,
                     mode,
                     task.host_names,
                     scan=do_scan,
@@ -534,14 +543,23 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         return _("discovery successful")
 
 
-def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> list[DiscoveryHost]:
+def prepare_hosts_for_discovery(
+    hostnames: Sequence[str], site_configs: SiteConfigurations
+) -> list[DiscoveryHost]:
     hosts_to_discover = []
     for host_name in hostnames:
         host = Host.host(HostName(host_name))
         if host is None:
             raise MKUserError(None, _("The host '%s' does not exist") % host_name)
         host.permissions.need_permission("write")
-        hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
+        hosts_to_discover.append(
+            DiscoveryHost(
+                site_id := host.site_id(),
+                make_automation_config(site_configs[site_id]),
+                host.folder().path(),
+                host_name,
+            )
+        )
     return hosts_to_discover
 
 
@@ -642,13 +660,20 @@ def _create_tasks_from_hosts(
     current_site_and_folder = None
     tasks: list[DiscoveryTask] = []
 
-    for site_id, folder_path, host_name in sorted(hosts_to_discover):
+    for site_id, automation_config, folder_path, host_name in sorted(hosts_to_discover):
         if (
             not tasks
             or (site_id, folder_path) != current_site_and_folder
             or len(tasks[-1].host_names) >= bulk_size
         ):
-            tasks.append(DiscoveryTask(SiteId(site_id), folder_path, [host_name]))
+            tasks.append(
+                DiscoveryTask(
+                    SiteId(site_id),
+                    automation_config,
+                    folder_path,
+                    [host_name],
+                )
+            )
         else:
             tasks[-1].host_names.append(host_name)
         current_site_and_folder = site_id, folder_path

@@ -937,6 +937,7 @@ class PageAjaxPingHost(AjaxPage):
                 ip_or_dns_name=unquote(ip_or_dns_name),
                 base_cmd=cmd,
             ),
+            debug=config.debug,
         )
         return {
             "status_code": result.return_code,
@@ -956,6 +957,7 @@ class PageAjaxDiagCmkAgent(AjaxPage):
                 agent_port=api_request["agent_port"],
                 timeout=api_request["timeout"],
             ),
+            debug=config.debug,
         )
 
         return {

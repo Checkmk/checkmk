@@ -9,6 +9,10 @@ common:linux --disk_cache=~/.cache/bazel_disk_cache/
 # reading WORKSPACE is disabled by default for Bazel 8
 common --enable_workspace
 
+# enable visibility checking for config_settings
+common --incompatible_enforce_config_setting_visibility
+common --incompatible_config_setting_private_default_visibility
+
 # with rules_proto_grpc (5.0.1) we run into
 # >>> Error in resolve_tools: Pass an executable or tools argument to ctx.actions.run
 # without

@@ -35,12 +35,14 @@ string_flag(
 config_setting(
     name = "gpl_repo",
     flag_values = {":repo_license": "gpl"},
+    visibility = ["//:__subpackages__"],
 )
 
 config_setting(
     # We really mean the license here, editions are handled differently!
     name = "gpl+enterprise_repo",
     flag_values = {":repo_license": "gpl+enterprise"},
+    visibility = ["//:__subpackages__"],
 )
 
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.

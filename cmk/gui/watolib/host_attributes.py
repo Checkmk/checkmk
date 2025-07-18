@@ -497,7 +497,7 @@ def sorted_host_attributes(host_attributes: Sequence[ABCHostAttribute]) -> list[
     return sorted(host_attributes, key=lambda a: (a.sort_index(), a.topic().title))
 
 
-def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
+def sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics: set[HostAttributeTopic] = set()
@@ -518,7 +518,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(
+def sorted_host_attributes_by_topic(
     topic_id: str,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses

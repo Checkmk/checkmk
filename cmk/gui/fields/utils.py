@@ -12,8 +12,8 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.base import BaseSchema as BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.host_attributes import (
-    get_sorted_host_attribute_topics,
-    get_sorted_host_attributes_by_topic,
+    sorted_host_attribute_topics,
+    sorted_host_attributes_by_topic,
 )
 from cmk.gui.watolib.tags import load_tag_config
 from cmk.utils.livestatus_helpers import tables
@@ -71,8 +71,8 @@ def collect_attributes(
     #   We want to get all the topics, so we don't miss any attributes. We filter them later.
     #   new=True may also be new=False, it doesn't matter in this context.
     result = []
-    for topic_id, topic_title in get_sorted_host_attribute_topics("always", new=True):
-        for attr in get_sorted_host_attributes_by_topic(topic_id):
+    for topic_id, topic_title in sorted_host_attribute_topics("always", new=True):
+        for attr in sorted_host_attributes_by_topic(topic_id):
             if object_type == "folder" and not attr.show_in_folder():
                 continue
 

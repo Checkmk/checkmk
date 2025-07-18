@@ -12,8 +12,8 @@ from cmk.gui.form_specs.private.cascading_single_choice_extended import (
 from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
-    get_sorted_host_attribute_topics,
-    get_sorted_host_attributes_by_topic,
+    sorted_host_attribute_topics,
+    sorted_host_attributes_by_topic,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -30,8 +30,8 @@ def create_host_attributes_selection(
     exclude_host_attributes: Sequence[str] | None = None,
 ) -> ListExtended[tuple[str, object]]:
     attribute_choices: list[CascadingSingleChoiceElementExtended[Any]] = []
-    for topic, topic_title in get_sorted_host_attribute_topics(for_what="host", new=False):
-        for attr in get_sorted_host_attributes_by_topic(topic):
+    for topic, topic_title in sorted_host_attribute_topics(for_what="host", new=False):
+        for attr in sorted_host_attributes_by_topic(topic):
             if not isinstance(attr, ABCHostAttributeValueSpec):
                 continue
 

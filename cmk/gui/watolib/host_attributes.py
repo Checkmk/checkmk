@@ -23,7 +23,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.fields import String
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
@@ -830,6 +829,7 @@ def all_host_attributes(
 # This is the counterpart of "configure_attributes". Another place which
 # is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(
+    host_attributes: Mapping[str, ABCHostAttribute],
     for_what: str,
     new: bool,
     do_validate: bool = True,
@@ -837,9 +837,7 @@ def collect_attributes(
 ) -> HostAttributes:
     """Read attributes from HTML variables"""
     host = HostAttributes()
-    for attr in all_host_attributes(
-        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-    ).values():
+    for attr in host_attributes.values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
             continue

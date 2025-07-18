@@ -6,7 +6,7 @@
 
 import abc
 import copy
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, overload
 from urllib.parse import unquote
@@ -63,7 +63,11 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.host_attributes import collect_attributes
+from cmk.gui.watolib.host_attributes import (
+    all_host_attributes,
+    collect_attributes,
+    HostAttributes,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
@@ -167,7 +171,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _is_cluster(self) -> bool:
         return self._host.is_cluster()
 
-    def _get_cluster_nodes(self):
+    def _get_cluster_nodes(self, attributes: HostAttributes) -> Sequence[HostName] | None:
         if not self._is_cluster():
             return None
 
@@ -181,7 +185,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             Host(
                 folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST)),
                 self._host.name(),
-                collect_attributes("cluster", new=False),
+                attributes,
                 [],
             ).tag_groups()
         )
@@ -513,13 +517,19 @@ class ModeEditHost(ABCHostMode):
             )
             return None
 
-        attributes = collect_attributes("host" if not self._is_cluster() else "cluster", new=False)
+        attributes = collect_attributes(
+            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+            "host" if not self._is_cluster() else "cluster",
+            new=False,
+        )
         host = Host.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
-        host.edit(attributes, self._get_cluster_nodes(), pprint_value=config.wato_pprint_config)
+        host.edit(
+            attributes, self._get_cluster_nodes(attributes), pprint_value=config.wato_pprint_config
+        )
         self._host = folder.load_host(self._host.name())
 
         if request.var("_save"):
@@ -770,8 +780,12 @@ class CreateHostMode(ABCHostMode):
         if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
 
-        attributes = collect_attributes(self._host_type_name(), new=True)
-        cluster_nodes = self._get_cluster_nodes()
+        attributes = collect_attributes(
+            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+            self._host_type_name(),
+            new=True,
+        )
+        cluster_nodes = self._get_cluster_nodes(attributes)
         try:
             hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
         except MKUserError:

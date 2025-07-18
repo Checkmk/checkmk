@@ -1432,7 +1432,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
         title = TextInput().from_html_vars("title")
         TextInput(allow_empty=False).validate_value(title, "title")
 
-        attributes = collect_attributes("folder", new=self._is_new)
+        attributes = collect_attributes(
+            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+            "folder",
+            new=self._is_new,
+        )
         self._save(
             title,
             attributes,

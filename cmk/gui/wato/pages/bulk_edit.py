@@ -87,7 +87,14 @@ class ModeBulkEdit(WatoMode):
 
         user.need_permission("wato.edit_hosts")
 
-        changed_attributes = collect_attributes("bulk", new=False)
+        changed_attributes = collect_attributes(
+            all_host_attributes(
+                config.wato_host_attrs,
+                config.tags.get_tag_groups_by_topic(),
+            ),
+            "bulk",
+            new=False,
+        )
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
             host = self._folder.load_host(host_name)

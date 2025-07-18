@@ -1132,7 +1132,11 @@ def _search_folder_from_request() -> SearchFolder | None:
         search_criteria = {
             ".name": request.var("host_search_host"),
             **collect_attributes(
-                "host_search", new=False, do_validate=False, varprefix="host_search_"
+                tree.all_host_attributes(),
+                "host_search",
+                new=False,
+                do_validate=False,
+                varprefix="host_search_",
             ),
         }
         return SearchFolder(tree, base_folder, search_criteria)

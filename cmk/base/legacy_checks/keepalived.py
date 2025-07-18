@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import ipaddress
 from collections.abc import Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -14,13 +15,14 @@ check_info = {}
 
 def hex2ip(hexstr):
     """
-    Can parse strings in this form:
-    17 20 16 00 00 01
+    Converts a hex string (with or without spaces) to an IP address.
+    Supports both IPv4 and IPv6.
+
+    Examples:
+        "C0 A8 01 01" => "192.168.1.1"
+        "20 01 0D B8 00 00 00 00 00 00 00 00 00 00 00 01" => "2001:db8::1"
     """
-    hexstr = hexstr.replace(" ", "")
-    blocks = ("".join(block) for block in zip(*[iter(hexstr)] * 2))
-    int_blocks = (int(block, 16) for block in blocks)
-    return ".".join(str(block) for block in int_blocks)
+    return str(ipaddress.ip_address(bytes.fromhex(hexstr.replace(" ", ""))))
 
 
 def inventory_keepalived(info):

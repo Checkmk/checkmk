@@ -184,7 +184,7 @@ def _regex_cache(pattern: str, flags: int) -> re.Pattern[str]:
     try:
         return re.compile(pattern, flags=flags)
     except Exception as e:
-        raise RuntimeError("Invalid regular expression '%s': %s" % (pattern, e))
+        raise RuntimeError(f"Invalid regular expression '{pattern}': {e}")
 
 
 def _output_snmp_check_plugins(

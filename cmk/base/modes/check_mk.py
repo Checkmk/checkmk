@@ -737,7 +737,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             )
             host_sections = parse_raw_data(
                 make_parser(
-                    config_cache.parser_factory(),
+                    config.make_parser_config(
+                        loading_result.loaded_config,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager,
+                    ),
                     source_info.hostname,
                     source_info.fetcher_type,
                     persisted_section_dir=make_persisted_section_dir(
@@ -2043,7 +2047,9 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config, ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2340,7 +2346,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         CheckPluginName,
     )
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2496,6 +2504,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
     loading_result = load_config(plugins)
     return run_checking(
+        loading_result.loaded_config,
         plugins,
         loading_result.config_cache,
         config.make_hosts_config(loading_result.loaded_config),
@@ -2512,6 +2521,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
 
 # also used in precompiled host checks!
 def run_checking(
+    loaded_config: config.LoadedConfigFragment,
     plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
@@ -2584,7 +2594,9 @@ def run_checking(
         password_store_file=password_store_file,
     )
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logger,
@@ -2829,7 +2841,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -3051,7 +3065,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
 
     plugins = load_checks()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
-    config_cache = config.load(discovery_rulesets).config_cache
+    loading_result = config.load(discovery_rulesets)
+    config_cache = loading_result.config_cache
     service_name_config = (
         config_cache.make_passive_service_name_config()
     )  # not obvious to me why/if we *really* need this
@@ -3063,7 +3078,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
 
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

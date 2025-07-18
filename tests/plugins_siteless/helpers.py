@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import pprint
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 
 import cmk.ccc.resulttype as result
@@ -19,7 +19,7 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache, ParserFactory
+from cmk.base.sources import ParserConfig
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
@@ -28,7 +28,7 @@ from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
-from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, ConfiguredService
 from cmk.checkengine.submitters import (
     FormattedSubmittee,
     Submitter,
@@ -37,6 +37,7 @@ from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from tests.testlib.common.repo import qa_test_data_path
 
 LOGGER = logging.getLogger(__name__)
@@ -74,9 +75,9 @@ def get_raw_data(dump_path: Path) -> OK:
     return result.OK(fetched_data)
 
 
-def parser(factory: ParserFactory) -> CMKParser:
+def parser(config: ParserConfig) -> CMKParser:
     return CMKParser(
-        factory=factory,
+        config=config,
         selected_sections=NO_SELECTION,
         keep_outdated=False,
         logger=logging.getLogger("cmk.base.checking"),
@@ -153,7 +154,9 @@ class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
 def discover_services(
     hostname: HostName,
     agent_data_filename: str,
-    config_cache: ConfigCache,
+    parser_config: ParserConfig,
+    ruleset_matcher: RulesetMatcher,
+    check_plugin_ignored: Callable[[HostName, CheckPluginName], bool],
     agent_based_plugins: AgentBasedPlugins,
     source_info: SourceInfo,
 ) -> Sequence[ConfiguredService]:
@@ -162,8 +165,8 @@ def discover_services(
 
     commandline_discovery(
         hostname,
-        clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
-        parser=parser(config_cache.parser_factory()),
+        clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
+        parser=parser(parser_config),
         fetcher=_fetcher(),
         section_plugins=SectionPluginMapper(
             {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
@@ -181,7 +184,7 @@ def discover_services(
             check_plugins=agent_based_plugins.check_plugins,
         ),
         run_plugin_names=EVERYTHING,
-        ignore_plugin=config_cache.check_plugin_ignored,
+        ignore_plugin=check_plugin_ignored,
         arg_only_new=False,
         only_host_labels=False,
         on_error=OnError.RAISE,

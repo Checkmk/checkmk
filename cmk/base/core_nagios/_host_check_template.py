@@ -99,6 +99,7 @@ def main() -> int:
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return run_checking(
+            loading_result.loaded_config,
             plugins,
             loading_result.config_cache,
             hosts_config,

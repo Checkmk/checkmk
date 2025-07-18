@@ -1486,7 +1486,9 @@ def test_commandline_discovery(
 
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            config_cache._loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),

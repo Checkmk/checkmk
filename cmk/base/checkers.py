@@ -36,7 +36,7 @@ from cmk.base.sources import (
     FetcherFactory,
     make_parser,
     make_sources,
-    ParserFactory,
+    ParserConfig,
     SNMPFetcherConfig,
     Source,
     SpecialAgentSource,
@@ -186,13 +186,13 @@ def _do_fetch(
 class CMKParser:
     def __init__(
         self,
-        factory: ParserFactory,
+        config: ParserConfig,
         *,
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
-        self.factory: Final = factory
+        self.config: Final = config
         self.selected_sections: Final = selected_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
@@ -215,7 +215,7 @@ class CMKParser:
         for source, raw_data in fetched:
             source_result = parse_raw_data(
                 make_parser(
-                    self.factory,
+                    self.config,
                     source.hostname,
                     source.fetcher_type,
                     persisted_section_dir=make_persisted_section_dir(

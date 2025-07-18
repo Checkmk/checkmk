@@ -1042,3 +1042,32 @@ class SingleServiceRulesetMatcherMerge[TRuleValue]:
             self.service_ruleset,
             self.labels_of_host,
         )
+
+
+@dataclass(frozen=True)
+class SingleServiceRulesetMatcherFirst[TRuleValue, TDefaultValue]:
+    host_ruleset: Sequence[RuleSpec[TRuleValue]]
+    default: TDefaultValue
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> TRuleValue | TDefaultValue:
+        all = self.matcher.get_service_values_all(
+            host_name, service_name, service_labels, self.host_ruleset, self.labels_of_host
+        )
+        return all[0] if all else self.default
+
+
+@dataclass(frozen=True)
+class BundledHostRulesetMatcher[TRuleValue]:
+    host_rulesets: Mapping[RulesetName, Sequence[RuleSpec[TRuleValue]]]
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+
+    def __call__(self, host_name: HostName) -> Mapping[RulesetName, Sequence[TRuleValue]]:
+        return {
+            rn: self.matcher.get_host_values_all(host_name, host_ruleset, self.labels_of_host)
+            for rn, host_ruleset in self.host_rulesets.items()
+        }

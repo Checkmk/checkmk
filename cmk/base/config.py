@@ -12,7 +12,6 @@ import copy
 import dataclasses
 import enum
 import itertools
-import logging
 import numbers
 import os
 import pickle
@@ -49,7 +48,7 @@ from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.sources import SNMPFetcherConfig
+from cmk.base.sources import ParserConfig, SNMPFetcherConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -70,12 +69,8 @@ from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import (
-    AgentParser,
-    AgentRawDataSectionElem,
     NO_SELECTION,
     SectionNameCollection,
-    SectionStore,
-    SNMPParser,
 )
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
@@ -127,7 +122,6 @@ from cmk.snmplib import (  # these are required in the modules' namespace to loa
     SNMPContextConfig,
     SNMPCredentials,
     SNMPHostConfig,
-    SNMPRawDataElem,
     SNMPTiming,
     SNMPVersion,
 )
@@ -152,7 +146,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
     RuleSpec,
+    SingleHostRulesetMatcher,
     SingleHostRulesetMatcherFirst,
+    SingleHostRulesetMatcherMerge,
+    SingleServiceRulesetMatcherFirst,
 )
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
@@ -577,15 +574,22 @@ class LoadedConfigFragment:
     clusters: Mapping[HostAddress, Sequence[HostAddress]]
     shadow_hosts: ShadowHosts
     service_dependencies: Sequence[tuple]
+    fallback_agent_output_encoding: str
     agent_config: Mapping[str, Sequence[RuleSpec]]
     agent_port: int
     agent_ports: Sequence[RuleSpec[int]]
     tcp_connect_timeout: float
     tcp_connect_timeouts: Sequence[RuleSpec[float]]
     encryption_handling: Sequence[RuleSpec[Mapping[str, str]]]
+    piggyback_translation: Sequence[RuleSpec[Mapping[str, object]]]
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     cmc_real_time_checks: RealTimeChecks | None
+    snmp_check_interval: list[
+        RuleSpec[
+            tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]
+        ]
+    ]
     apply_bake_revision: bool
     bake_agents_on_restart: bool
     agent_bakery_logging: int | None
@@ -715,15 +719,18 @@ def _perform_post_config_loading_actions(
         clusters=clusters,
         shadow_hosts=shadow_hosts,
         service_dependencies=service_dependencies,
+        fallback_agent_output_encoding=fallback_agent_output_encoding,
         agent_config=agent_config,
         agent_port=agent_port,
         agent_ports=agent_ports,
         tcp_connect_timeout=tcp_connect_timeout,
         tcp_connect_timeouts=tcp_connect_timeouts,
         encryption_handling=encryption_handling,
+        piggyback_translation=piggyback_translation,
         agent_encryption=agent_encryption,
         agent_exclude_sections=agent_exclude_sections,
         cmc_real_time_checks=cmc_real_time_checks,
+        snmp_check_interval=snmp_check_interval,
         agent_bakery_logging=agent_bakery_logging,
         apply_bake_revision=apply_bake_revision,
         bake_agents_on_restart=bake_agents_on_restart,
@@ -1704,9 +1711,6 @@ class ConfigCache:
             service_name_config,
             is_cmc=self._loaded_config.monitoring_core == "cmc",
         )
-
-    def parser_factory(self) -> ParserFactory:
-        return ParserFactory(self, self.ruleset_matcher)
 
     def summary_config(self, host_name: HostName, source_id: str) -> SummaryConfig:
         return SummaryConfig(
@@ -3029,7 +3033,7 @@ class ConfigCache:
             if not values:
                 continue
 
-            value: float = values[0]
+            value: float | None = values[0]
             if value is None:
                 continue
 
@@ -3716,49 +3720,38 @@ def make_fetcher_trigger(
             return PlainFetcherTrigger()
 
 
-class ParserFactory:
-    # TODO: better and clearer separation between ConfigCache and this class.
-    def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
-        self._config_cache: Final = config_cache
-        self._label_manager: Final = config_cache.label_manager
-        self._ruleset_matcher: Final = ruleset_matcher_
+def make_parser_config(
+    loaded_config: LoadedConfigFragment,
+    ruleset_matcher: RulesetMatcher,
+    label_manager: LabelManager,
+) -> ParserConfig:
+    check_interval_config = SingleServiceRulesetMatcherFirst(
+        extra_service_conf.get("check_interval", ()),
+        SERVICE_CHECK_INTERVAL,
+        ruleset_matcher,
+        label_manager.labels_of_host,
+    )
 
-    def make_agent_parser(
-        self,
-        host_name: HostName,
-        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
-        *,
-        keep_outdated: bool,
-        logger: logging.Logger,
-    ) -> AgentParser:
-        return AgentParser(
+    def _check_mk_check_interval(host_name: HostName) -> float:
+        """Return the check interval for a host"""
+        return check_interval_config(
             host_name,
-            section_store,
-            keep_outdated=keep_outdated,
-            host_check_interval=self._config_cache.check_mk_check_interval(host_name),
-            translation=get_piggyback_translations(
-                self._ruleset_matcher, self._label_manager.labels_of_host, host_name
-            ),
-            encoding_fallback=fallback_agent_output_encoding,
-            logger=logger,
+            "Check_MK",
+            label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),
         )
 
-    def make_snmp_parser(
-        self,
-        host_name: HostName,
-        section_store: SectionStore[SNMPRawDataElem],
-        *,
-        keep_outdated: bool,
-        logger: logging.Logger,
-    ) -> SNMPParser:
-        return SNMPParser(
-            host_name,
-            section_store,
-            persist_periods=self._config_cache.snmp_fetch_intervals(host_name),
-            host_check_interval=self._config_cache.check_mk_check_interval(host_name),
-            keep_outdated=keep_outdated,
-            logger=logger,
-        )
+    return ParserConfig(
+        fallback_agent_output_encoding=loaded_config.fallback_agent_output_encoding,
+        check_interval=_check_mk_check_interval,
+        snmp_fetch_intervals=SingleHostRulesetMatcher(
+            loaded_config.snmp_check_interval,
+            ruleset_matcher,
+            label_manager.labels_of_host,
+        ),
+        piggyback_translations=SingleHostRulesetMatcherMerge(
+            loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
+        ),
+    )
 
 
 def make_tcp_fetcher_config(

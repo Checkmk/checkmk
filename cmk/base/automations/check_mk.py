@@ -202,6 +202,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -324,7 +325,11 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryReport] = {}
 
         parser = CMKParser(
-            config_cache.parser_factory(),
+            config.make_parser_config(
+                loading_result.loaded_config,
+                config_cache.ruleset_matcher,
+                config_cache.label_manager,
+            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
@@ -612,6 +617,9 @@ def _get_discovery_preview(
         log.setup_console_logging()
 
         check_preview = _execute_discovery(
+            loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager,
             host_name,
             default_address_family,
             get_ip_stack_config,
@@ -620,7 +628,6 @@ def _get_discovery_preview(
             ip_address,
             fetcher,
             file_cache_options,
-            loaded_config,
             service_name_config,
             config_cache,
             plugins=plugins,
@@ -743,6 +750,9 @@ def _make_compute_check_parameters_of_autocheck(
 
 
 def _execute_discovery(
+    loaded_config: config.LoadedConfigFragment,
+    ruleset_matcher: RulesetMatcher,
+    label_manager: LabelManager,
     host_name: HostName,
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -753,20 +763,19 @@ def _execute_discovery(
     ip_address: HostAddress | None,
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
-    loaded_config: config.LoadedConfigFragment,
     service_name_config: PassiveServiceNameConfig,
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
     hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
-        config_cache.ruleset_matcher,
-        config_cache.label_manager.labels_of_host,
+        ruleset_matcher,
+        label_manager.labels_of_host,
         loaded_config.discovery_rules,
     )
     checking_config = CheckingConfig(
-        config_cache.ruleset_matcher,
-        config_cache.label_manager.labels_of_host,
+        ruleset_matcher,
+        label_manager.labels_of_host,
         loaded_config.checkgroup_parameters,
         loaded_config.service_rule_groups,
     )
@@ -775,7 +784,7 @@ def _execute_discovery(
     )
     logger = logging.getLogger("cmk.base.discovery")
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logger,
@@ -949,7 +958,9 @@ def _execute_autodiscovery(
     ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -3720,7 +3731,11 @@ class AutomationGetAgentOutput(Automation):
                     )
                     host_sections = parse_raw_data(
                         make_parser(
-                            config_cache.parser_factory(),
+                            config.make_parser_config(
+                                loading_result.loaded_config,
+                                config_cache.ruleset_matcher,
+                                config_cache.label_manager,
+                            ),
                             source_info.hostname,
                             source_info.fetcher_type,
                             persisted_section_dir=make_persisted_section_dir(

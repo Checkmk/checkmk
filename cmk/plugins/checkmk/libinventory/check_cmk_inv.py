@@ -175,7 +175,11 @@ def inventory_as_check(
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(
-        config_cache.parser_factory(),
+        config.make_parser_config(
+            loading_result.loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager,
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

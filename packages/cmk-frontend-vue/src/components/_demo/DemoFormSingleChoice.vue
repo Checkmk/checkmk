@@ -18,7 +18,6 @@ function getSingleChoiceSpec(): SingleChoice {
     type: 'single_choice',
     title: '',
     help: '',
-    i18n_base: { required: 'required' },
     validators: [],
     no_elements_text: '',
     frozen: false,

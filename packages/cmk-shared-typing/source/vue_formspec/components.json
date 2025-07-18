@@ -24,16 +24,6 @@
             },
             "required": ["type", "title", "help", "validators"]
         },
-        "i18n_base": {
-            "type": "object",
-            "title": "i18nFormSpecBase",
-            "properties": {
-                "required": {
-                    "type": "string"
-                }
-            },
-            "required": ["required"]
-        },
         "integer": {
             "type": "object",
             "allOf": [
@@ -55,18 +45,9 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": [
-                        "type",
-                        "label",
-                        "unit",
-                        "input_hint",
-                        "i18n_base"
-                    ]
+                    "required": ["type", "label", "unit", "input_hint"]
                 }
             ]
         },
@@ -91,18 +72,9 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": [
-                        "type",
-                        "label",
-                        "unit",
-                        "input_hint",
-                        "i18n_base"
-                    ]
+                    "required": ["type", "label", "unit", "input_hint"]
                 }
             ]
         },
@@ -161,9 +133,6 @@
                                     "$ref": "#/$defs/autocompleter"
                                 }
                             ]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -171,8 +140,7 @@
                         "placeholder",
                         "input_hint",
                         "field_size",
-                        "autocompleter",
-                        "i18n_base"
+                        "autocompleter"
                     ]
                 }
             ],
@@ -237,17 +205,9 @@
                                 "no_password_store_choices",
                                 "password_choice_invalid"
                             ]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": [
-                        "type",
-                        "password_store_choices",
-                        "i18n",
-                        "i18n_base"
-                    ]
+                    "required": ["type", "password_store_choices", "i18n"]
                 }
             ]
         },
@@ -433,9 +393,6 @@
                         },
                         "additional_static_elements": {
                             "type": ["object", "null"]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -443,8 +400,7 @@
                         "static_elements_key",
                         "additional_static_elements",
                         "no_elements_text",
-                        "groups",
-                        "i18n_base"
+                        "groups"
                     ]
                 }
             ],
@@ -509,9 +465,6 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -520,8 +473,7 @@
                         "label",
                         "input_hint",
                         "frozen",
-                        "elements",
-                        "i18n_base"
+                        "elements"
                     ]
                 }
             ]
@@ -715,9 +667,6 @@
                             "title": "CascadingSingleChoiceLayout",
                             "enum": ["vertical", "horizontal", "button_group"],
                             "default": "vertical"
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -726,8 +675,7 @@
                         "no_elements_text",
                         "label",
                         "input_hint",
-                        "layout",
-                        "i18n_base"
+                        "layout"
                     ]
                 }
             ]
@@ -1072,12 +1020,9 @@
                             "items": {
                                 "$ref": "#/$defs/topic"
                             }
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "elements", "i18n_base"]
+                    "required": ["type", "elements"]
                 }
             ]
         },
@@ -1347,9 +1292,6 @@
                                 "permanent_change_warning",
                                 "permanent_change_warning_dismiss"
                             ]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -1358,8 +1300,7 @@
                         "config_entity_type",
                         "config_entity_type_specifier",
                         "elements",
-                        "allow_editing_existing_elements",
-                        "i18n_base"
+                        "allow_editing_existing_elements"
                     ]
                 }
             ]
@@ -1525,17 +1466,9 @@
                                 "or_operator",
                                 "nor_operator"
                             ]
-                        },
-                        "i18n_base": {
-                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": [
-                        "type",
-                        "condition_groups",
-                        "i18n",
-                        "i18n_base"
-                    ]
+                    "required": ["type", "condition_groups", "i18n"]
                 }
             ]
         },

@@ -12,7 +12,6 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue
 from .._utils import (
-    base_i18n_form_spec,
     compute_input_hint,
     compute_validators,
     get_prefill_default,
@@ -70,7 +69,6 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FallbackModel]):
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
                 input_hint=input_hint_str,
-                i18n_base=base_i18n_form_spec(),
             ),
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )

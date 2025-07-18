@@ -54,7 +54,6 @@ const catalog = ref<Catalog>({
             title: 'dict title',
             validators: [],
             help: 'dict help',
-            i18n_base: { required: 'required' },
             no_elements_text: 'no_text',
             additional_static_elements: {},
             elements: [
@@ -71,7 +70,6 @@ const catalog = ref<Catalog>({
                   title: 'string title',
                   help: 'some string help',
                   field_size: 'MEDIUM',
-                  i18n_base: { required: 'required' },
                   autocompleter: null,
                   validators: []
                 } as String
@@ -82,8 +80,7 @@ const catalog = ref<Catalog>({
         } as TopicElement
       ]
     } as Topic
-  ],
-  i18n_base: { required: 'required' }
+  ]
 })
 </script>
 

@@ -24,7 +24,6 @@ from .._type_defs import (
     RawFrontendData,
 )
 from .._utils import (
-    base_i18n_form_spec,
     create_validation_error,
     get_title_and_help,
     localize,
@@ -140,7 +139,6 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
             help=help_text,
             elements=[],
             validators=[],
-            i18n_base=base_i18n_form_spec(),
         )
         for topic_name, topic in self.form_spec.elements.items():
             vue_value[topic_name] = {}

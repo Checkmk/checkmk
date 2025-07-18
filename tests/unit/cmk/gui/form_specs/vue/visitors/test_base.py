@@ -56,7 +56,6 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
                 input_hint=None,
                 field_size=VueTypes.StringFieldSize.SMALL,
                 autocompleter=None,
-                i18n_base=VueTypes.I18nFormSpecBase(required=""),
             ),
             frontend_value,
         )

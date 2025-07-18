@@ -34,10 +34,6 @@ def localize(localizable: SupportsLocalize | None) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
 
 
-def base_i18n_form_spec() -> shared_type_defs.I18nFormSpecBase:
-    return shared_type_defs.I18nFormSpecBase(required=_("required"))
-
-
 def optional_validation(
     validators: Sequence[Callable[[ModelT], object]], raw_value: Any
 ) -> list[str]:

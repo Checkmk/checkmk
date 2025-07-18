@@ -19,7 +19,6 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue
 from .._utils import (
-    base_i18n_form_spec,
     compute_title_input_hint,
     compute_validators,
     get_prefill_default,
@@ -121,7 +120,6 @@ class SingleChoiceEditableVisitor(
                     ),
                     permanent_change_warning_dismiss=_("Do not show again"),
                 ),
-                i18n_base=base_i18n_form_spec(),
             ),
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )

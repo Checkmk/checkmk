@@ -87,7 +87,6 @@ function getInteger(name: string, options?: Partial<Omit<Integer, 'type'>>): Int
     label: getLabel(name),
     input_hint: '',
     unit: 'unit',
-    i18n_base: { required: 'i18n required' },
     ...(options || {})
   }
 }
@@ -99,7 +98,6 @@ function getFloat(name: string, options?: Partial<Omit<Float, 'type'>>): Float {
     label: getLabel(name),
     input_hint: getInputHint(name),
     unit: 'unit',
-    i18n_base: { required: 'i18n required' },
     ...options
   }
 }
@@ -109,7 +107,6 @@ function getString(name: string, options?: Partial<Omit<String, 'type'>>): Strin
     type: 'string',
     ...getFormSpecDefaults(name),
     label: getLabel(name),
-    i18n_base: { required: 'i18n required' },
     input_hint: getInputHint(name),
     field_size: 'MEDIUM',
     autocompleter: null,
@@ -142,7 +139,6 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
     groups: [],
     no_elements_text: 'i18n no elements text',
     additional_static_elements: null,
-    i18n_base: { required: 'i18n required' },
     ...options
   }
 }
@@ -175,7 +171,6 @@ function getDictionaryTwoColumns(
     groups: [],
     no_elements_text: 'i18n no elements text',
     additional_static_elements: null,
-    i18n_base: { required: 'i18n required' },
     ...options
   }
 }
@@ -227,7 +222,6 @@ function getSingleChoice(
     no_elements_text: 'i18n no elements text',
     frozen: false,
     input_hint: getInputHint(name),
-    i18n_base: { required: 'i18n required' },
     ...options
   }
 }
@@ -257,7 +251,6 @@ function getCascadingSingleChoice(
       }
     ],
     layout: 'vertical',
-    i18n_base: { required: 'i18n required' },
     ...options
   }
 }
@@ -330,7 +323,6 @@ function getPassword(name: string, options?: Partial<Omit<Password, 'type'>>): P
         name: 'name one'
       }
     ],
-    i18n_base: { required: 'i18n required' },
     i18n: {
       choose_password_type: 'i18n choose_password_type',
       choose_password_from_store: 'i18n choose_password_from_store',
@@ -449,7 +441,6 @@ function getSingleChoiceEditable(
     config_entity_type_specifier: 'config_entity_type_specifier',
     elements: [{ name: 'one', title: 'one title' }],
     allow_editing_existing_elements: true,
-    i18n_base: { required: 'i18n required' },
     i18n: {
       slidein_save_button: 'i18n slidein_save_button',
       slidein_cancel_button: 'i18n slidein_cancel_button',
@@ -551,7 +542,6 @@ function getConditionChoices(
       or_operator: 'i18n or_operator',
       nor_operator: 'i18n nor_operator'
     },
-    i18n_base: { required: 'required' },
     ...options
   }
 }

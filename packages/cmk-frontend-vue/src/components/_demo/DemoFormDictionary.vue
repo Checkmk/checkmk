@@ -81,9 +81,6 @@ const dictionarySpec = computed(
                   ],
                   frozen: false,
                   help: 'The prefix is automatically added to each service to be able to organize it. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option.',
-                  i18n_base: {
-                    required: 'required'
-                  },
                   input_hint: 'Please choose',
                   label: '',
                   no_elements_text: '',
@@ -102,9 +99,6 @@ const dictionarySpec = computed(
                   autocompleter: null,
                   field_size: 'MEDIUM',
                   help: 'The name is the individual part of the used service name. Choose a human readable and unique title to be able to find your service later in Checkmk.',
-                  i18n_base: {
-                    required: 'required'
-                  },
                   input_hint: 'My service name',
                   label: null,
                   title: 'Name',
@@ -124,9 +118,6 @@ const dictionarySpec = computed(
             ],
             groups: [],
             help: '',
-            i18n_base: {
-              required: 'required'
-            },
             layout: 'one_column',
             no_elements_text: '(no parameters)',
             title: 'Service name',
@@ -144,9 +135,6 @@ const dictionarySpec = computed(
             autocompleter: null,
             field_size: 'MEDIUM',
             help: 'A second string to showcase root level groups.',
-            i18n_base: {
-              required: 'required'
-            },
             input_hint: null,
             label: null,
             title: 'Some string',
@@ -159,9 +147,6 @@ const dictionarySpec = computed(
       ],
       groups: [],
       help: '',
-      i18n_base: {
-        required: 'required'
-      },
       no_elements_text: '(no parameters)',
       title: '',
       type: dictType.value,

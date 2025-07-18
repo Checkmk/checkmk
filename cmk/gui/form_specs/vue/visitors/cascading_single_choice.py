@@ -20,7 +20,6 @@ from .._type_defs import (
     RawFrontendData,
 )
 from .._utils import (
-    base_i18n_form_spec,
     compute_label,
     compute_title_input_hint,
     compute_validators,
@@ -98,7 +97,6 @@ class CascadingSingleChoiceVisitor(
                 title=title,
                 label=compute_label(self.form_spec.label),
                 help=help_text,
-                i18n_base=base_i18n_form_spec(),
                 elements=vue_elements,
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 validators=build_vue_validators(compute_validators(self.form_spec)),

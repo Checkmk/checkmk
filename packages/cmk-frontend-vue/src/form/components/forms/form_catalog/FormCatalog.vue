@@ -80,7 +80,6 @@ function isGroupedTopic(topic: Topic): boolean {
               v-model:data="data[topic.name]!"
               :elements="topic.elements as unknown as TopicGroup[]"
               :backend-validation="elementValidation[topic.name]!"
-              :i18n-base="props.spec.i18n_base"
             />
           </template>
           <template v-else>
@@ -88,7 +87,6 @@ function isGroupedTopic(topic: Topic): boolean {
               v-model:data="data[topic.name]!"
               :elements="topic.elements as unknown as TopicElement[]"
               :backend-validation="elementValidation[topic.name]!"
-              :i18n-base="props.spec.i18n_base"
             />
           </template>
         </tbody>

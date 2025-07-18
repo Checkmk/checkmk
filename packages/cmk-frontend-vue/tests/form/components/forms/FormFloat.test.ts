@@ -21,7 +21,6 @@ const spec: FormSpec.Float = {
   type: 'float',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: validators,
   label: 'fooLabel',
   unit: 'fooUnit',

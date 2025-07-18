@@ -4,10 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type {
-  TopicElement,
-  I18NFormSpecBase
-} from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import { useId } from '@/form/utils'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
@@ -20,7 +17,6 @@ import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 const props = defineProps<{
   elements: TopicElement[]
   backendValidation: ValidationMessages
-  i18nBase: I18NFormSpecBase
 }>()
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })

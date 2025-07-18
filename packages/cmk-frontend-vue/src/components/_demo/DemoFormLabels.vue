@@ -27,7 +27,6 @@ const spec = computed<Labels>(() => ({
   type: 'labels',
   title: 'some title',
   help: 'some help',
-  i18n_base: { required: 'required' },
   i18n: {
     remove_label: 'i18n remove_label',
     add_some_labels: 'Add some labels',

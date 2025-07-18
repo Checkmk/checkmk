@@ -12,7 +12,6 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from .._utils import (
-    base_i18n_form_spec,
     compute_input_hint,
     compute_label,
     get_prefill_default,
@@ -60,7 +59,6 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
                 input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),
                 autocompleter=self.form_spec.autocompleter,
-                i18n_base=base_i18n_form_spec(),
             ),
             (
                 parsed_value.fallback_value

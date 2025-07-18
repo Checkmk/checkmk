@@ -22,7 +22,6 @@ const spec: FormSpec.String = {
   title: 'fooTitle',
   help: 'fooHelp',
   label: 'fooLabel',
-  i18n_base: { required: 'required' },
   validators: validators,
   input_hint: 'fooInputHint',
   autocompleter: null,
@@ -126,9 +125,6 @@ test('FormString with autocompleter loads value', async () => {
             }
           },
           fetch_method: 'ajax_vs_autocomplete'
-        },
-        i18n_base: {
-          required: 'required'
         }
       },
       data: 'some value',

@@ -21,7 +21,6 @@ from .._type_defs import (
     RawFrontendData,
 )
 from .._utils import (
-    base_i18n_form_spec,
     compute_title_input_hint,
     compute_validators,
     create_validation_error,
@@ -186,7 +185,6 @@ class SingleChoiceVisitor(
                 frozen=self.form_spec.frozen and isinstance(parsed_value, _ValidValue),
                 input_hint=input_hint or _("Please choose"),
                 no_elements_text=localize(self.form_spec.no_elements_text),
-                i18n_base=base_i18n_form_spec(),
             ),
             parsed_value.fallback_value.value
             if isinstance(parsed_value, InvalidValue)

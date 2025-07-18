@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type {
   Dictionary,
   DictionaryElement,
-  I18NFormSpecBase,
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'
@@ -17,7 +16,6 @@ import { useFormEditDispatcher } from '@/form/private'
 const props = defineProps<{
   elements: TopicGroup[]
   backendValidation: ValidationMessages
-  i18nBase: I18NFormSpecBase
 }>()
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })
@@ -32,7 +30,6 @@ function convertToDictionarySpec(topicGroup: TopicGroup): Dictionary {
     validators: [],
     groups: [],
     no_elements_text: '',
-    i18n_base: props.i18nBase,
     elements: topicGroup.elements.map((element): DictionaryElement => {
       return {
         name: element.name,

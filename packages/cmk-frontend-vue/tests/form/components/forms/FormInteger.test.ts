@@ -21,7 +21,6 @@ const spec: FormSpec.Integer = {
   type: 'integer',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: validators,
   label: 'fooLabel',
   unit: 'fooUnit',

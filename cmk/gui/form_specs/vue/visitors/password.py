@@ -15,7 +15,6 @@ from cmk.utils.password_store import ad_hoc_password_id
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData
 from .._utils import (
-    base_i18n_form_spec,
     compute_validators,
     create_validation_error,
     get_title_and_help,
@@ -121,7 +120,6 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
                     ),
                     password_choice_invalid=_("Password does not exist or using not permitted."),
                 ),
-                i18n_base=base_i18n_form_spec(),
             ),
             value,
         )

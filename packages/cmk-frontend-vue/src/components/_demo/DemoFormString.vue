@@ -92,9 +92,6 @@ const spec: String = {
       }
     },
     fetch_method: 'ajax_vs_autocomplete'
-  },
-  i18n_base: {
-    required: 'required'
   }
 }
 

@@ -71,7 +71,6 @@ const api: API<ObjectId, ObjectId> = {
       title: 'dict title',
       validators: [],
       help: 'dict help',
-      i18n_base: { required: 'required' },
       no_elements_text: 'no_text',
       additional_static_elements: null,
       elements: [
@@ -86,7 +85,6 @@ const api: API<ObjectId, ObjectId> = {
             title: 'string title',
             help: 'some string help',
             label: null,
-            i18n_base: { required: 'required' },
             validators: [],
             input_hint: null,
             autocompleter: null,

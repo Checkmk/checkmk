@@ -22,7 +22,6 @@ from .._type_defs import (
     RawFrontendData,
 )
 from .._utils import (
-    base_i18n_form_spec,
     compute_validators,
     get_title_and_help,
     localize,
@@ -162,7 +161,6 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                 elements=elements_keyspec,
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
-                i18n_base=base_i18n_form_spec(),
             ),
             vue_values,
         )

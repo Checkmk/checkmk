@@ -15,7 +15,6 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from .._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     get_title_and_help,
@@ -166,7 +165,6 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fal
             shared_type_defs.ConditionChoices(
                 title=title,
                 help=help_text,
-                i18n_base=base_i18n_form_spec(),
                 condition_groups=conditions,
                 validators=build_vue_validators(self.form_spec.custom_validate or []),
                 i18n=shared_type_defs.ConditionChoicesI18n(

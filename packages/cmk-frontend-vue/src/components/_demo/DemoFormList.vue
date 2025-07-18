@@ -26,7 +26,6 @@ const spec = ref<List>({
     title: 'some title',
     help: 'some help',
     label: null,
-    i18n_base: { required: 'required' },
     validators: [],
     input_hint: null,
     field_size: 'SMALL',

@@ -16,9 +16,6 @@ const spec = ref<Metric>({
   title: 'Metric',
   help: '',
   validators: [],
-  i18n_base: {
-    required: 'required'
-  },
   label: null,
   input_hint: '(Select metric)',
   field_size: 'MEDIUM',

@@ -22,7 +22,6 @@ async function loadSpec() {
     type: 'single_choice_editable',
     title: 'some title',
     help: 'some help',
-    i18n_base: { required: 'required' },
     validators: [],
     elements: [],
     config_entity_type: 'notification_parameter',

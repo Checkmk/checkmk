@@ -34,7 +34,6 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
             title: 'dict title',
             validators: [],
             help: 'dict help',
-            i18n_base: { required: 'required' },
             elements: [
               {
                 name: 'element_ident',
@@ -47,7 +46,6 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
                   title: 'string title',
                   label: 'string label',
                   help: 'some string help',
-                  i18n_base: { required: 'required' },
                   validators: [],
                   input_hint: null,
                   autocompleter: null,

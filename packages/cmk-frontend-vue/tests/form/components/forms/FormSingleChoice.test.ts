@@ -13,7 +13,6 @@ const spec: FormSpec.SingleChoice = {
   title: 'fooTitle',
   input_hint: 'some input hint',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   no_elements_text: 'no_text',
   elements: [
     { name: 'choice1', title: 'Choice 1' },

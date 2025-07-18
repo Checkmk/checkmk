@@ -491,7 +491,13 @@ def test_legacy_register_rulegroup_without_defaults(
     ],
 )
 def test_host_attribute_topics(for_what: str) -> None:
-    assert attrs.sorted_host_attribute_topics(for_what=for_what, new=False) == [
+    assert attrs.sorted_host_attribute_topics(
+        all_host_attributes(
+            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        ),
+        for_what=for_what,
+        new=False,
+    ) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),
         ("monitoring_agents", "Monitoring agents"),
@@ -503,7 +509,13 @@ def test_host_attribute_topics(for_what: str) -> None:
 
 @pytest.mark.usefixtures("load_config")
 def test_host_attribute_topics_for_folders() -> None:
-    assert attrs.sorted_host_attribute_topics("folder", new=False) == [
+    assert attrs.sorted_host_attribute_topics(
+        all_host_attributes(
+            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        ),
+        "folder",
+        new=False,
+    ) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),
         ("monitoring_agents", "Monitoring agents"),
@@ -575,12 +587,15 @@ def test_host_attributes(for_what: str, new: bool) -> None:
     if new:
         del topics["meta_data"]
 
-    current_topics = attrs.sorted_host_attribute_topics(for_what, new)
+    host_attributes = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    current_topics = attrs.sorted_host_attribute_topics(host_attributes, for_what, new)
 
     assert sorted(topics.keys()) == sorted(dict(current_topics).keys())
 
     for topic_id, _title in current_topics:
-        names = [a.name() for a in attrs.sorted_host_attributes_by_topic(topic_id)]
+        names = [a.name() for a in attrs.sorted_host_attributes_by_topic(host_attributes, topic_id)]
         assert names == topics.get(topic_id, []), (
             "Expected attributes not specified for topic %r" % topic_id
         )

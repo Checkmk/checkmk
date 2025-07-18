@@ -497,13 +497,13 @@ def sorted_host_attributes(host_attributes: Sequence[ABCHostAttribute]) -> list[
     return sorted(host_attributes, key=lambda a: (a.sort_index(), a.topic().title))
 
 
-def sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
+def sorted_host_attribute_topics(
+    host_attributes: Mapping[str, ABCHostAttribute], for_what: str, new: bool
+) -> list[tuple[str, str]]:
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics: set[HostAttributeTopic] = set()
-    for attr in all_host_attributes(
-        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-    ).values():
+    for attr in host_attributes.values():
         if attr.topic().ident not in [t.ident for t in needed_topics] and attr.is_visible(
             for_what, new
         ):
@@ -519,6 +519,7 @@ def sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, st
 
 
 def sorted_host_attributes_by_topic(
+    host_attributes: Mapping[str, ABCHostAttribute],
     topic_id: str,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
@@ -530,13 +531,7 @@ def sorted_host_attributes_by_topic(
 
     sorted_attributes = []
     for attr in sorted(
-        sorted_host_attributes(
-            list(
-                all_host_attributes(
-                    active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-                ).values()
-            )
-        ),
+        sorted_host_attributes(list(host_attributes.values())),
         key=functools.cmp_to_key(sort_host_attributes),
     ):
         if attr.topic().ident == host_attribute_topic_registry[topic_id].ident:

@@ -9,9 +9,11 @@ from typing import Any, Literal, NamedTuple, TypeVar
 
 from cmk import fields
 from cmk.ccc.version import Edition
+from cmk.gui.config import active_config
 from cmk.gui.fields.base import BaseSchema as BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.host_attributes import (
+    all_host_attributes,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
@@ -71,8 +73,11 @@ def collect_attributes(
     #   We want to get all the topics, so we don't miss any attributes. We filter them later.
     #   new=True may also be new=False, it doesn't matter in this context.
     result = []
-    for topic_id, topic_title in sorted_host_attribute_topics("always", new=True):
-        for attr in sorted_host_attributes_by_topic(topic_id):
+    host_attributes = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    for topic_id, topic_title in sorted_host_attribute_topics(host_attributes, "always", new=True):
+        for attr in sorted_host_attributes_by_topic(host_attributes, topic_id):
             if object_type == "folder" and not attr.show_in_folder():
                 continue
 

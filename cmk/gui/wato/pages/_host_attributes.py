@@ -24,6 +24,7 @@ from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
+    all_host_attributes,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
@@ -89,9 +90,12 @@ def configure_attributes(
     show_more_mode = user.show_mode != "default_show_less"
     is_cse = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
 
-    for topic_id, topic_title in sorted_host_attribute_topics(for_what, new):
+    host_attributes = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    for topic_id, topic_title in sorted_host_attribute_topics(host_attributes, for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
-        topic_attributes = sorted_host_attributes_by_topic(topic_id)
+        topic_attributes = sorted_host_attributes_by_topic(host_attributes, topic_id)
 
         single_edit_host = _get_single_host(hosts)
 

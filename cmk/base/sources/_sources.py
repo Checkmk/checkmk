@@ -16,12 +16,12 @@ from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import (
+    Fetcher,
     IPMIFetcher,
     NoFetcher,
     NoFetcherError,
     PiggybackFetcher,
     ProgramFetcher,
-    SNMPFetcher,
     SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
@@ -76,7 +76,7 @@ class FetcherFactory(Protocol):
         *,
         source_type: SourceType,
         fetcher_config: SNMPFetcherConfig,
-    ) -> SNMPFetcher: ...
+    ) -> Fetcher: ...
 
     def make_ipmi_fetcher(
         self,
@@ -152,7 +152,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> SNMPFetcher:
+    def fetcher(self) -> Fetcher:
         return self.factory.make_snmp_fetcher(
             self.plugins,
             self.host_name,
@@ -211,7 +211,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> SNMPFetcher:
+    def fetcher(self) -> Fetcher:
         return self.factory.make_snmp_fetcher(
             self.plugins,
             self.host_name,

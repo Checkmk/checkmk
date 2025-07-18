@@ -94,6 +94,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import (
+    Fetcher,
     IPMICredentials,
     IPMIFetcher,
     PiggybackFetcher,
@@ -3871,7 +3872,7 @@ class FetcherFactory:
         *,
         source_type: SourceType,
         fetcher_config: SNMPFetcherConfig,
-    ) -> SNMPFetcher:
+    ) -> Fetcher:
         snmp_config = self._config_cache.make_snmp_config(
             host_name,
             host_ip_family,

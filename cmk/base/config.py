@@ -3855,6 +3855,10 @@ class FetcherFactory:
             for name in (checking_sections | disabled_sections)
         }
 
+    def _is_relay_host(self, host_name: HostName) -> bool:
+        # TODO: This is a temporary criteria, and should be replaced by a proper host attribute
+        return "relay" in self._config_cache.label_manager.labels_of_host(host_name)
+
     def make_snmp_fetcher(
         self,
         plugins: AgentBasedPlugins,
@@ -3872,7 +3876,7 @@ class FetcherFactory:
             source_type,
             backend_override=fetcher_config.backend_override,
         )
-        return SNMPFetcher(
+        fetcher = SNMPFetcher(
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
@@ -3898,6 +3902,15 @@ class FetcherFactory:
             stored_walk_path=fetcher_config.stored_walk_path,
             walk_cache_path=fetcher_config.walk_cache_path,
         )
+        if self._is_relay_host(host_name):
+            # TODO: if the FetcherFactory is properly separated from ConfigCache,
+            # we can add a CCE specific subclass that does this.
+            from cmk.fetchers.cce.relay import (  # type: ignore[import-not-found,unused-ignore]
+                RelayFetcher,
+            )
+
+            return RelayFetcher(fetcher)
+        return fetcher
 
     def _agent_port(self, host_name: HostName) -> int:
         ports = self._ruleset_matcher.get_host_values_all(

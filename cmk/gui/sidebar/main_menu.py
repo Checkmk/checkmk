@@ -377,7 +377,10 @@ class MainMenuPopupRenderer:
         html.open_li(class_="multilevel_item")
         html.open_a(
             href="javascript:void(0);",
-            onclick="cmk.popup_menu.main_menu_show_all_items('%s')" % multilevel_topic_id,
+            onclick="""
+cmk.popup_menu.main_menu_show_all_items('%s');
+oncontextmenu = e => e.preventDefault();"""
+            % multilevel_topic_id,
             title=_("Show entries for %s") % multilevel_topic.title,
         )
         if user.get_attribute("icons_per_item"):

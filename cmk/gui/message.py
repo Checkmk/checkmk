@@ -108,8 +108,8 @@ def register(
     page_registry.register(PageEndpoint("message", page_message))
     cron_job_registry.register(
         CronJob(
-            name="execute_user_message_spool_job",
-            callable=_execute_user_message_spool_job,
+            name="execute_user_messages_spool_job",
+            callable=_execute_user_messages_spool_job,
             # Usually there are no spooled messages, and the job is very fast then.
             interval=timedelta(seconds=30),
         )
@@ -550,10 +550,6 @@ def _message_mail(user_id: UserId, msg: Message) -> bool:
     return True
 
 
-def user_message_spool_dir() -> Path:
-    return cmk.utils.paths.var_dir / "user_messages/spool"
-
-
 class SpooledMessage(TypedDict):
     text: str | MessageText
     dest: MessageDestination
@@ -581,9 +577,9 @@ def to_message(spooled: SpooledMessage) -> Message:
     )
 
 
-def _execute_user_message_spool_job(config: Config) -> None:
+def _execute_user_messages_spool_job(config: Config) -> None:
     for path in sorted(
-        user_message_spool_dir().glob("[!.]*"),
+        cmk.utils.paths.user_messages_spool_dir.glob("[!.]*"),
         key=lambda p: p.stat().st_mtime,
     ):
         try:

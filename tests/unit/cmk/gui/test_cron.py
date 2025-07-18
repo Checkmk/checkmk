@@ -14,7 +14,7 @@ def test_registered_jobs() -> None:
         "execute_housekeeping_job",
         "rebuild_folder_lookup_cache",
         "execute_userdb_job",
-        "execute_user_message_spool_job",
+        "execute_user_messages_spool_job",
         "execute_user_profile_cleanup_job",
         "execute_network_scan_job",
         "execute_activation_cleanup_job",

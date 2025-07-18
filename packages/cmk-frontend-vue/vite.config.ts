@@ -5,8 +5,9 @@
  */
 import path from 'node:path'
 import { type RollupLog } from 'rollup'
-import { defineConfig, type UserConfig } from 'vite'
+import { defineConfig, type UserConfig, type PluginOption } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -73,6 +74,13 @@ export default defineConfig(({ command }) => {
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
+      plugins: [
+        ...(resultBuild.plugins ?? []),
+        VueDevTools({
+          componentInspector: true,
+          appendTo: /main\.ts$/
+        })
+      ],
       test: {
         // enable jest-like global test APIs
         globals: true,

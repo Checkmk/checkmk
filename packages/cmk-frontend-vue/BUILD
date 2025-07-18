@@ -44,6 +44,7 @@ SRCS = [
     ":node_modules/sanitize-html",
     ":node_modules/typescript-eslint",
     ":node_modules/vite",
+    ":node_modules/vite-plugin-vue-devtools",
     ":node_modules/vitest",
     ":node_modules/vitest-fail-on-console",
     ":node_modules/vue",

@@ -1,4 +1,3 @@
-datamodel-code-generator==0.26.1  # Locked to 0.26.1 since 0.26.3 handled const strings differently which broke inheritance. CMK-23465
 pymongo<4.9  # 4.9 has no pymongo.database.Database anymore CMK-23463
 # TODO: replace pysnmp-lextudio with the non-suffix pysnmp package. pysnmp-lextudio is deprecated:
 # https://pypi.org/project/pysnmp-lextudio/

@@ -1595,9 +1595,6 @@
             ]
         },
         "components": {
-            "discriminator": {
-                "propertyName": "type"
-            },
             "oneOf": [
                 {
                     "$ref": "#/$defs/integer"
@@ -1689,8 +1686,7 @@
                 {
                     "$ref": "#/$defs/time_specific"
                 }
-            ],
-            "required": ["type"]
+            ]
         }
     }
 }

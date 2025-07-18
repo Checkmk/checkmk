@@ -159,9 +159,9 @@ azure-identity==1.23.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-azure-storage-blob==12.25.1 \
-    --hash=sha256:1f337aab12e918ec3f1b638baada97550673911c4ceed892acc8e4e891b74167 \
-    --hash=sha256:4f294ddc9bc47909ac66b8934bd26b50d2000278b10ad82cc109764fdc6e0e3b
+azure-storage-blob==12.26.0 \
+    --hash=sha256:5dd7d7824224f7de00bfeb032753601c982655173061e242f13be6e26d78d71f \
+    --hash=sha256:8c5631b8b22b4f53ec5fff2f3bededf34cfef111e2af613ad42c9e6de00a77fe
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -973,9 +973,9 @@ jsonpointer==3.0.0 \
     #   -c requirements.txt
     #   jsonpatch
     #   redfish
-jsonschema==4.24.0 \
-    --hash=sha256:0b4e8069eb12aedfa881333004bccaec24ecef5a8a6a4b6df142b2cc9599d196 \
-    --hash=sha256:a462455f19f5faf404a7902952b6f0e3ce868f3ee09a359b05eca6673bd8412d
+jsonschema==4.24.1 \
+    --hash=sha256:6b916866aa0b61437785f1277aa2cbd63512e8d4b47151072ef13292049b4627 \
+    --hash=sha256:fe45a130cc7f67cd0d67640b4e7e3e2e666919462ae355eda238296eafeb4b5d
     # via
     #   -c requirements.txt
     #   openapi-schema-validator
@@ -2532,9 +2532,9 @@ robotframework==7.3.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-roman==5.0 \
-    --hash=sha256:6e1246c0aa9338aa5603e8bf4960f76d5047be1878d8d1ceb0d2c452b5b890e2 \
-    --hash=sha256:cb35293c1c4046105fd899194f4f2985f78c955a8b05937f7ab93f3be1660697
+roman==5.1 \
+    --hash=sha256:3a86572e9bc9183e771769601189e5fa32f1620ffeceebb9eca836affb409986 \
+    --hash=sha256:bf595d8a9bc4a8e8b1dfa23e1d4def0251b03b494786df6b8c3d3f1635ce285a
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

@@ -66,6 +66,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
 }
 /* groovylint-enable ParameterCount */
 
+/* groovylint-disable ParameterCount */
 def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
     println("""
         ||== upload_via_rsync() ================================================
@@ -92,6 +93,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
         """);
     }
 }
+/* groovylint-enable ParameterCount */
 
 def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     println("""

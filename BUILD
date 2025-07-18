@@ -76,7 +76,7 @@ refresh_compile_commands(
     # exclude_headers = "all",
     targets = {
         # target: build-flags
-        "//packages/cmc:all": "",
+        "//non-free/packages/cmc:all": "",
         "//packages/livestatus:all": "",
         "//packages/neb:all": "",
         "//packages/unixcat:all": "",

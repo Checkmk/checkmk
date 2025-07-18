@@ -10,6 +10,8 @@ mod common;
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
+use mk_oracle::ora_sql::system;
+use mk_oracle::types::SqlQuery;
 
 use crate::common::tools::{
     platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
@@ -124,14 +126,15 @@ fn test_local_connection() {
         Some(Role::SysDba),
         &endpoint.host,
         endpoint.port,
-        InstanceName::from(endpoint.instance.clone()),
+        InstanceName::from(&endpoint.instance),
     );
 
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
     assert!(r.is_ok());
     let result = task.query(
-        r"
+        &SqlQuery::from(
+            r"
     select upper(i.INSTANCE_NAME)
         ||'|'|| 'sys_time_model'
         ||'|'|| S.STAT_NAME
@@ -140,6 +143,8 @@ fn test_local_connection() {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
+        ),
+        "",
     );
     assert!(result.is_ok());
     let rows = result.unwrap();
@@ -172,7 +177,8 @@ fn test_remote_mini_connection() {
     println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
     let result = task.query(
-        r"
+        &SqlQuery::from(
+            r"
     select upper(i.INSTANCE_NAME)
         ||'|'|| 'sys_time_model'
         ||'|'|| S.STAT_NAME
@@ -181,6 +187,8 @@ fn test_remote_mini_connection() {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
+        ),
+        "",
     );
     assert!(result.is_ok());
     let rows = result.unwrap();
@@ -189,4 +197,35 @@ fn test_remote_mini_connection() {
     assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
     assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
     assert_eq!(rows.len(), 2);
+}
+
+#[test]
+fn test_remote_mini_connection_version() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
+    assert!(r.is_ok());
+    add_runtime_to_path();
+    let endpoint = r.unwrap();
+
+    let config = make_mini_config(
+        &Credentials {
+            user: endpoint.user,
+            password: endpoint.pwd,
+        },
+        AuthType::Standard,
+        &endpoint.host,
+    );
+
+    let mut task = backend::make_task(&config.endpoint()).unwrap();
+    task.connect()
+        .expect("Connect failed, check environment variables");
+
+    let version = system::get_version(&task, &InstanceName::from(&endpoint.instance))
+        .unwrap()
+        .unwrap();
+    assert!(version.starts_with("2"));
+    assert!(
+        system::get_version(&task, &InstanceName::from("no-such-db"))
+            .unwrap()
+            .is_none()
+    );
 }

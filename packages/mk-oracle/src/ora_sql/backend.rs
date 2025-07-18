@@ -8,10 +8,10 @@ use crate::config::{
     ora_sql::Endpoint,
 };
 use crate::ora_sql::types::Target;
-use crate::types::{Credentials, InstanceName};
+use crate::types::{Credentials, InstanceName, SqlQuery};
 use anyhow::Context;
 use anyhow::Result;
-
+use oracle::sql_type::FromSql;
 use oracle::{Connection, Connector, Privilege};
 
 #[derive(Debug)]
@@ -23,7 +23,10 @@ trait OraDbEngine {
     fn connect(&mut self, target: &Target) -> Result<()>;
 
     #[allow(dead_code)]
-    fn query(&self, query: &str) -> Result<Vec<String>>;
+    fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
+
+    #[allow(dead_code)]
+    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>>;
 }
 
 impl OraDbEngine for StdEngine {
@@ -51,32 +54,47 @@ impl OraDbEngine for StdEngine {
 
         Ok(())
     }
-    fn query(&self, query: &str) -> Result<Vec<String>> {
+    fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
         let conn = self
             .connection
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
-        let rows = conn.query(query, &[])?;
+        let rows = conn.query(query.as_str(), &[])?;
         // Process rows if needed
         let result: Vec<String> = rows
-            .map(|row| row_to_string(&row, ""))
+            .map(|row| row_to_string(&row, sep))
             .collect::<Vec<String>>();
+
+        Ok(result)
+    }
+    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
+        let conn = self
+            .connection
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
+        let rows = conn.query(query.as_str(), &[])?;
+        // Process rows if needed
+        let result = rows
+            .map(|row| row_to_vector(&row))
+            .collect::<Vec<Vec<String>>>();
 
         Ok(result)
     }
 }
 
 fn row_to_string(row: &oracle::Result<oracle::Row>, sep: &str) -> String {
-    use oracle::sql_type::FromSql;
+    row_to_vector(row).join(sep)
+}
+
+fn row_to_vector(row: &oracle::Result<oracle::Row>) -> Vec<String> {
     if let Ok(r) = row {
         r.sql_values()
             .iter()
             .map(|s| String::from_sql(s))
             .map(|s| s.unwrap_or_else(|e| format!("Error: {}", e)))
             .collect::<Vec<String>>()
-            .join(sep)
     } else {
-        format!("Error: {}", row.as_ref().err().unwrap())
+        vec![format!("Error: {}", row.as_ref().err().unwrap())]
     }
 }
 
@@ -98,7 +116,10 @@ impl OraDbEngine for SqlPlusEngine {
     fn connect(&mut self, _target: &Target) -> Result<()> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
-    fn query(&self, _query: &str) -> Result<Vec<String>> {
+    fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
+        anyhow::bail!("Sql*Plus engine is not implemented yet")
+    }
+    fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
 }
@@ -109,8 +130,12 @@ impl OraDbEngine for JdbcEngine {
     fn connect(&mut self, _target: &Target) -> Result<()> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
-    fn query(&self, _query: &str) -> Result<Vec<String>> {
+    fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
         anyhow::bail!("Jdbc engine is not implemented yet")
+    }
+
+    fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
+        anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
 }
 #[derive(Debug)]
@@ -149,8 +174,12 @@ impl Task {
         Ok(())
     }
 
-    pub fn query(&self, query: &str) -> Result<Vec<String>> {
-        self.engine.query(query)
+    pub fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
+        self.engine.query(query, sep)
+    }
+
+    pub fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
+        self.engine.query_table(query)
     }
 
     pub fn target(&self) -> &Target {

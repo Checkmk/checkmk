@@ -71,7 +71,7 @@ authentication:
         };
         assert_eq!(
             target.make_connection_string(),
-            "localhost:1521/my_service:dedicated/orcl"
+            "localhost:1521/my_service:dedicated/ORCL"
         );
         let target = Target {
             host: HostName::from("localhost".to_owned()),
@@ -90,6 +90,6 @@ authentication:
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML)).unwrap(),
         };
-        assert_eq!(target.make_connection_string(), "localhost:1521/orcl");
+        assert_eq!(target.make_connection_string(), "localhost:1521/ORCL");
     }
 }

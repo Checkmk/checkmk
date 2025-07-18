@@ -76,7 +76,10 @@ impl Connection {
                 .map(PathBuf::from),
             service_name: conn.get_string(keys::SERVICE_NAME).map(ServiceName::from),
             service_type: conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from),
-            instance: conn.get_string(keys::INSTANCE).map(InstanceName::from),
+            instance: conn
+                .get_string(keys::INSTANCE)
+                .as_deref()
+                .map(InstanceName::from),
             port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
                 log::debug!("no port specified, using default");
                 defaults::CONNECTION_PORT
@@ -172,6 +175,11 @@ connection:
 
     #[test]
     fn test_connection_full() {
+        assert_eq!(&InstanceName::from("alice").to_string(), "ALICE");
+        assert_eq!(
+            &InstanceName::from(&("alice".to_string())).to_string(),
+            "ALICE"
+        );
         assert_eq!(
             Connection::from_yaml(&create_yaml(data::CONNECTION_FULL))
                 .unwrap()

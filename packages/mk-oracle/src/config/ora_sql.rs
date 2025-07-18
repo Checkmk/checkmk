@@ -184,9 +184,9 @@ impl Config {
         &self.sections
     }
 
-    pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
+    pub fn is_instance_allowed(&self, name: &impl AsRef<str>) -> bool {
         self.discovery
-            .is_instance_allowed(&InstanceName::from(name.to_string()))
+            .is_instance_allowed(&InstanceName::from(name.as_ref()))
     }
 }
 
@@ -274,8 +274,16 @@ impl Discovery {
         }
         Ok(Some(Self {
             detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT),
-            include: discovery.get_string_vector(keys::INCLUDE, &[]),
-            exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
+            include: discovery
+                .get_string_vector(keys::INCLUDE, &[])
+                .into_iter()
+                .map(|x| x.to_uppercase())
+                .collect(),
+            exclude: discovery
+                .get_string_vector(keys::EXCLUDE, &[])
+                .into_iter()
+                .map(|x| x.to_uppercase())
+                .collect(),
         }))
     }
     pub fn detect(&self) -> bool {
@@ -343,7 +351,7 @@ impl CustomInstance {
         let name = InstanceName::from(
             yaml.get_string(keys::SID)
                 .context("Bad/Missing sid in instance")?
-                .to_uppercase(),
+                .as_str(),
         );
         let (auth, conn) = CustomInstance::ensure_auth_and_conn(yaml, main_auth, main_conn, &name)?;
         Ok(Self {
@@ -636,8 +644,8 @@ piggyback:
             .unwrap()
             .unwrap();
         assert!(!discovery.detect());
-        assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
-        assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
+        assert_eq!(discovery.include(), &vec!["A".to_string(), "B".to_string()]);
+        assert_eq!(discovery.exclude(), &vec!["C".to_string(), "D".to_string()]);
     }
 
     #[test]

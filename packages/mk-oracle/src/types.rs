@@ -25,12 +25,18 @@ pub struct MaxConnections(pub u32);
 #[derive(PartialEq, From, Debug, Clone)]
 pub struct MaxQueries(pub u32);
 
-#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
+#[derive(PartialEq, Debug, Display, Clone, Default, Into, Hash, Eq)]
 pub struct InstanceName(String);
 
 impl From<&str> for InstanceName {
     fn from(s: &str) -> Self {
-        Self(s.to_string())
+        Self(s.to_string().to_uppercase())
+    }
+}
+
+impl From<&String> for InstanceName {
+    fn from(s: &String) -> Self {
+        Self(s.clone().to_uppercase())
     }
 }
 
@@ -96,4 +102,28 @@ pub struct HostName(String);
 pub struct Credentials {
     pub user: String,
     pub password: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, From)]
+pub struct SqlQuery(pub String);
+impl From<&str> for SqlQuery {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl SqlQuery {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_instance_name() {
+        assert_eq!(&InstanceName::from("teST").to_string(), "TEST");
+    }
 }

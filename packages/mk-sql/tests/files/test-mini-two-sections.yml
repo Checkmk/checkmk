@@ -3,6 +3,8 @@ mssql:
   main: # mandatory, to be used if no specific config
     authentication: # mandatory
       username: "f" # mandatory
+    connection:
+      hostname: "et-pos-pdb"
     sections:
       - instance:
       - databases:

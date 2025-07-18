@@ -106,7 +106,7 @@ const elementRequired = computed(() => {
       suggestions: remainingGroups.map(([name, value]) => ({ name, title: value.title }))
     }"
     :input-hint="spec.i18n.select_condition_group_to_add"
-    :required-text="elementRequired ? spec.i18n_base.required : ''"
+    :required="elementRequired"
     :no-elements-text="spec.i18n.no_more_condition_groups_to_add"
     :label="spec.i18n.select_condition_group_to_add"
     @update:selected-option="addElement"

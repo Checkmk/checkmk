@@ -30,8 +30,8 @@ const defaultEmpty8 = ref<string | null>(null)
     :options="{ type: 'fixed', suggestions: [{ name: 'init', title: 'single element' }] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>Labeled dropdown</h2>
   <label for="labeled-dropdown">some label</label>
@@ -47,8 +47,8 @@ const defaultEmpty8 = ref<string | null>(null)
     component-id="labeled-dropdown"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>two elements, selected</h2>
   <CmkDropdown
@@ -63,8 +63,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>two elements, empty selection</h2>
   <CmkDropdown
@@ -101,8 +101,8 @@ const defaultEmpty8 = ref<string | null>(null)
     :options="{ type: 'filtered', suggestions: [] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>many elements, filtered, empty selection</h2>
   <CmkDropdown
@@ -118,8 +118,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>callback, filtered, empty selection</h2>
   <CmkDropdown
@@ -145,8 +145,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>Queried dropdown with unselectable</h2>
   <CmkDropdown
@@ -164,8 +164,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>Queried dropdown with unselectable as first element</h2>
   <CmkDropdown
@@ -183,8 +183,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <h2>element names that are very very long</h2>
   <CmkDropdown
@@ -202,8 +202,8 @@ const defaultEmpty8 = ref<string | null>(null)
     }"
     input-hint="long names"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
 
   <h1>CmkDropdownButton</h1>

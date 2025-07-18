@@ -87,7 +87,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           }}<FormRequired
             v-if="!rendersRequiredLabelItself(element.parameter_form)"
             :spec="element.parameter_form"
-            :i18n-required="props.i18nBase.required"
             :space="'before'"
           />
         </label>

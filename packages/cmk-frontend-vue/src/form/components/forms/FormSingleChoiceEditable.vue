@@ -128,9 +128,9 @@ const { ErrorBoundary, error } = useErrorBoundary()
       }"
       :input-hint="spec.i18n.no_selection"
       :no-elements-text="spec.i18n.no_objects"
-      :required-text="spec.i18n_base.required"
       :label="spec.title"
       class="fsce__dropdown"
+      required
     />
     <template v-if="spec.allow_editing_existing_elements">
       <FormButton

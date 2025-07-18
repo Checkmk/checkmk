@@ -42,8 +42,8 @@ const componentId = useId()
       :disabled="spec.frozen"
       :component-id="componentId"
       :no-elements-text="props.spec.no_elements_text || ''"
-      :required-text="props.spec.i18n_base.required"
       :label="props.spec.label || props.spec.title"
+      required
     />
   </div>
   <FormValidation :validation="validation"></FormValidation>

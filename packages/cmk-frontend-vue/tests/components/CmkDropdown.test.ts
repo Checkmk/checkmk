@@ -297,7 +297,7 @@ test('dropdown option immediate focus and filtering', async () => {
   expect(selectedOption).toBe('option1')
 })
 
-test('dropdown shows required if requiredText is passed', async () => {
+test('dropdown shows required if required is passed', async () => {
   render(CmkDropdown, {
     props: {
       options: {
@@ -309,16 +309,16 @@ test('dropdown shows required if requiredText is passed', async () => {
       },
       selectedOption: null,
       inputHint: 'Select an option',
-      requiredText: 'required',
+      required: true,
       label: 'some aria label'
     }
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  expect(dropdown.textContent).toBe('Select an option (required)')
+  expect(dropdown.textContent).toBe('Select an option(required)')
 })
 
-test('dropdown does not show required if requiredText is not passed', async () => {
+test('dropdown does not show required if required is not passed', async () => {
   render(CmkDropdown, {
     props: {
       options: {

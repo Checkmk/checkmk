@@ -128,7 +128,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
                     v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
                     :spec="dict_element.dict_config.parameter_form"
-                    :i18n-required="spec.i18n_base.required"
                     :space="'before'"
                   />
                 </span>

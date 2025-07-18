@@ -39,11 +39,7 @@ const componentId = useId()
 <template>
   <template v-if="props.spec.label">
     <FormLabel :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
-    <FormRequired
-      :spec="props.spec"
-      :i18n-required="props.spec.i18n_base.required"
-      :space="'after'"
-    />
+    <FormRequired :spec="props.spec" :space="'after'" />
   </template>
   <input
     v-if="!spec.autocompleter"

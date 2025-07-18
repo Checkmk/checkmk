@@ -43,8 +43,8 @@ onMounted(() => {
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <br /><br /><br />
   <label>Size: </label>
@@ -60,8 +60,8 @@ onMounted(() => {
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <br /><br /><br />
 
@@ -78,8 +78,8 @@ onMounted(() => {
       }"
       input-hint="some input hint"
       no-results-hint="no results hint"
-      required-text="required"
       label="some label"
+      required
     />
     <br /><br /><br />
 
@@ -96,8 +96,8 @@ onMounted(() => {
         }"
         input-hint="some input hint"
         no-results-hint="no results hint"
-        required-text="required"
         label="some label"
+        required
       />
       <br /><br /><br />
 

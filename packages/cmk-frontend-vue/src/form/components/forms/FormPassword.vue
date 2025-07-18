@@ -114,8 +114,8 @@ const passwordStoreOptions = computed(() => {
       v-else
       v-model:selected-option="passwordStoreChoice"
       :options="{ type: 'fixed', suggestions: passwordStoreOptions }"
-      :required-text="props.spec.i18n_base.required"
       :label="props.spec.i18n.choose_password_from_store"
+      required
     />
   </template>
   <FormValidation :validation="validation"></FormValidation>

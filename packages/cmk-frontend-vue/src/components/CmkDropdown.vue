@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, useTemplateRef, nextTick, ref } from 'vue'
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
-import FormRequired from '@/form/private/FormRequired.vue'
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import CmkDropdownButton from './CmkDropdownButton.vue'
 import CmkSuggestions from './CmkSuggestions.vue'
 import { type Suggestions } from './CmkSuggestions.vue'
@@ -25,7 +25,7 @@ const {
   disabled = false,
   componentId = null,
   noElementsText = '',
-  requiredText = '',
+  required = false,
   startOfGroup = false,
   width,
   options,
@@ -37,7 +37,7 @@ const {
   disabled?: boolean
   componentId?: string | null
   noElementsText?: string
-  requiredText?: string
+  required?: boolean
   label: string
   startOfGroup?: boolean
   width?: 'wide' | 'default'
@@ -161,9 +161,7 @@ const truncatedButtonLabel = computed(() =>
     >
       <span class="cmk-dropdown--text"
         >{{ truncatedButtonLabel
-        }}<template v-if="requiredText !== '' && selectedOption === null">
-          {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
-        /></template>
+        }}<CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
         <template v-if="!buttonLabel">&nbsp;</template>
       </span>
       <ArrowDown

@@ -147,9 +147,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             suggestions: spec.elements
           }"
           :no-elements-text="spec.no_elements_text"
-          :required-text="props.spec.i18n_base.required"
           :input-hint="props.spec.input_hint || ''"
           :label="props.spec.label || props.spec.title"
+          required
         />
       </template>
       <template v-if="activeElement !== null">

@@ -26,8 +26,8 @@ const variantSelected = ref<'standard' | 'borderless'>('standard')
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    required-text="required"
     label="some label"
+    required
   />
   <br /><br /><br />
   <CmkLinkCard

@@ -78,7 +78,7 @@ test('FormConditionChoices shows required', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'select group' })
-  expect(dropdown.textContent).toBe('select group (required)')
+  expect(dropdown.textContent).toBe('select group(required)')
 })
 
 test('FormConditionChoices does not show required without validator', async () => {

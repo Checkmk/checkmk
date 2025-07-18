@@ -42,7 +42,7 @@ const classes = computed(() => [
   <a :href="url" :target="openInNewTab ? '_blank' : ''" class="cmk-link-card" :class="classes">
     <CmkIcon v-if="iconName" :name="iconName" size="xxlarge" class="cmk-link-card__icon" />
     <div class="cmk-link-card__text-area">
-      <CmkHeading type="h2" class="cmk-link-card__heading">{{ title }}</CmkHeading>
+      <CmkHeading type="h4" class="cmk-link-card__heading">{{ title }}</CmkHeading>
       <CmkParagraph :v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
     <CmkIcon v-if="openInNewTab" name="export_link" class="cmk-link-card__export-icon" />

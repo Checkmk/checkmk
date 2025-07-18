@@ -34,7 +34,7 @@ async function copyToClipboard() {
 </script>
 
 <template>
-  <CmkHeading v-if="title" type="h2" class="cmk-code__heading">{{ title }}</CmkHeading>
+  <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
   <div class="code_wrapper">
     <div class="code_container">
       <pre>

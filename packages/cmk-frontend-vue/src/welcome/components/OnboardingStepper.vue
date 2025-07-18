@@ -35,7 +35,7 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps, p
 </script>
 
 <template>
-  <CmkHeading type="h2">
+  <CmkHeading type="h4">
     {{ t('first-steps', 'First steps with Checkmk') }}
   </CmkHeading>
   <CmkSpace />

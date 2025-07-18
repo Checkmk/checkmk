@@ -18,7 +18,7 @@ defineProps<{
 </script>
 
 <template>
-  <CmkHeading type="h2">
+  <CmkHeading type="h4">
     {{ t('resources', 'Resources') }}
   </CmkHeading>
   <CmkSpace />

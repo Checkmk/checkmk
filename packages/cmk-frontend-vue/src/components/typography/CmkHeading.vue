@@ -10,7 +10,9 @@ const propsCva = cva('cmk-heading', {
   variants: {
     type: {
       h1: 'cmk-heading--h1',
-      h2: 'cmk-heading--h2'
+      h2: 'cmk-heading--h2',
+      h3: 'cmk-heading--h3',
+      h4: 'cmk-heading--h4'
     }
   },
   defaultVariants: {
@@ -24,11 +26,11 @@ export interface CmkHeadingProps {
   type?: HeadingType
 }
 
-const props = defineProps<CmkHeadingProps>()
+defineProps<CmkHeadingProps>()
 </script>
 
 <template>
-  <component :is="props.type" :class="propsCva({ type })">
+  <component :is="type || 'h1'" :class="propsCva({ type })">
     <slot />
   </component>
 </template>
@@ -45,6 +47,14 @@ const props = defineProps<CmkHeadingProps>()
 }
 
 .cmk-heading--h2 {
+  font-size: var(--font-size-xlarge);
+}
+
+.cmk-heading--h3 {
+  font-size: var(--font-size-large);
+}
+
+.cmk-heading--h4 {
   font-size: var(--font-size-normal);
 }
 </style>

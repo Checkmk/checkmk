@@ -75,7 +75,7 @@ watch(model, (newValue) => {
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
   <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
-  <CmkHeading type="h2" class="heading">
+  <CmkHeading type="h4" class="heading">
     {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
   </CmkHeading>
   <CmkTabs v-model="openedTab">
@@ -116,7 +116,7 @@ watch(model, (newValue) => {
           :title="tab.registration_msg"
           :code_txt="tab.registration_cmd"
         />
-        <CmkHeading type="h2">
+        <CmkHeading type="h4">
           {{
             t(
               'agent-download-finish-msg',

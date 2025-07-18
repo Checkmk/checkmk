@@ -22,7 +22,7 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 
 <template>
   <div class="steps-progress-bar">
-    <CmkHeading type="h2">{{ t('your-progress', 'Your progress') }}</CmkHeading>
+    <CmkHeading type="h4">{{ t('your-progress', 'Your progress') }}</CmkHeading>
     <div class="steps-progress-bar__content">
       <CmkParagraph>
         {{ completedSteps }}/{{ totalSteps }}

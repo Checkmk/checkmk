@@ -12,9 +12,13 @@ defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
-  <CmkHeading type="h1"> Heading1 </CmkHeading>
-  <CmkHeading type="h2"> Heading2 </CmkHeading>
-  <CmkParagraph> Paragraph </CmkParagraph>
+  <CmkHeading> Default Heading </CmkHeading>
+  <CmkHeading type="h1"> Heading 1 </CmkHeading>
+  <CmkHeading type="h2"> Heading 2 </CmkHeading>
+  <CmkHeading type="h3"> Heading 3 </CmkHeading>
+  <CmkHeading type="h4"> Heading 4 </CmkHeading>
+  <CmkParagraph> Paragraph 1 </CmkParagraph>
+  <CmkParagraph> Paragraph 2 </CmkParagraph>
 </template>
 
 <style scoped></style>

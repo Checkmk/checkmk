@@ -10,19 +10,33 @@ import argparse
 import sys
 from contextlib import suppress
 from pathlib import Path
+from typing import Literal
 
+from cmk.ccc import store
 from cmk.ccc.version import Edition
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
 from cmk.gui.openapi.spec.spec_generator._core import _make_spec, populate_spec
 
+OutputFormat = Literal["yaml", "dict"]
 
-def build_yaml_spec(output_file: Path, version: APIVersion = APIVersion.V1) -> None:
+
+def build_spec(
+    output_file: Path, version: APIVersion = APIVersion.V1, format: OutputFormat = "yaml"
+) -> None:
     spec = _make_spec(version)
     populate_spec(version, spec, "doc", set(), "checkmk")
 
-    c = spec.to_yaml()
+    if format == "yaml":
+        Path(output_file).write_text(spec.to_yaml())
 
-    Path(output_file).write_text(c)
+    elif format == "dict":
+        store.save_object_to_file(
+            Path(output_file),
+            spec.to_dict(),
+            pprint_value=False,
+        )
+
+    raise ValueError(f"`{format}` format not supported")
 
 
 def list_versions(args: argparse.Namespace) -> None:
@@ -85,7 +99,7 @@ def process_version(args: argparse.Namespace) -> None:
     _import_cse_endpoints()
 
     version = APIVersion.from_string(args.version)
-    build_yaml_spec(args.out, version)
+    build_spec(args.out, version, args.format)
 
 
 if __name__ == "__main__":
@@ -105,6 +119,9 @@ if __name__ == "__main__":
     process_parser = subparsers.add_parser("generate", help="Generate spec for specific version")
     process_parser.add_argument("--version", help="Must be a published versions", required=True)
     process_parser.add_argument("--out", help="Target file", required=True)
+    process_parser.add_argument(
+        "--format", help="The output format", default="yaml", choices=["yaml", "dict"]
+    )
     process_parser.set_defaults(callback=process_version)
 
     args = parser.parse_args()

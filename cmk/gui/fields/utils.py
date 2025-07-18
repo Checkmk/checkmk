@@ -4,20 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
-from collections.abc import Callable, Mapping
-from typing import Any, Literal, NamedTuple, TypeVar
+from collections.abc import Mapping
+from typing import Any
 
-from cmk import fields
 from cmk.ccc.version import Edition
-from cmk.gui.config import active_config
 from cmk.gui.fields.base import BaseSchema as BaseSchema
-from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.host_attributes import (
-    all_host_attributes,
-    sorted_host_attribute_topics,
-    sorted_host_attributes_by_topic,
-)
-from cmk.gui.watolib.tags import load_tag_config
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
     And,
@@ -30,139 +21,6 @@ from cmk.utils.livestatus_helpers.expressions import (
     UnaryExpression,
 )
 from cmk.utils.livestatus_helpers.types import Column, Table
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
-
-
-class Attr(NamedTuple):
-    name: str
-    mandatory: bool
-    section: str
-    description: str
-    enum: list[TagID | None] | None = None
-    field: fields.Field | None = None
-    allow_none: bool = False
-
-
-ObjectType = Literal["host", "folder", "cluster"]
-ObjectContext = Literal["create", "update", "view"]
-
-
-def collect_attributes(
-    object_type: ObjectType,
-    context: ObjectContext,
-) -> list[Attr]:
-    """Collect all host attributes for a specific object type
-    (host, folder or cluster) and context (create, update or view).
-
-    """
-    something = TypeVar("something")
-
-    def _ensure(optional: something | None) -> something:
-        if optional is None:
-            raise ValueError
-        return optional
-
-    T = typing.TypeVar("T")
-
-    def maybe_call(func: Callable[[], T] | None) -> T | None:
-        if func is None:
-            return None
-        return func()
-
-    # NOTE:
-    #   We want to get all the topics, so we don't miss any attributes. We filter them later.
-    #   new=True may also be new=False, it doesn't matter in this context.
-    result = []
-    host_attributes = all_host_attributes(
-        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-    )
-    for topic_id, topic_title in sorted_host_attribute_topics(host_attributes, "always", new=True):
-        for attr in sorted_host_attributes_by_topic(host_attributes, topic_id):
-            if object_type == "folder" and not attr.show_in_folder():
-                continue
-
-            if context in ["create", "update"] and not attr.openapi_editable():
-                continue
-
-            help_text: str = strip_tags(attr.help()) or ""
-            # TODO: what to do with attr.depends_on_tags()?
-            attr_entry = Attr(
-                name=attr.name(),
-                description=help_text,
-                section=topic_title,
-                mandatory=attr.is_mandatory(),
-                field=maybe_call(getattr(attr, "openapi_field", None)),
-            )
-            result.append(attr_entry)
-
-    # This function is called during import time by the host_attributes_field factory. But to make
-    # this work as expected the registration of all host attributes have to be done prior to that
-    # call. This is ensured by using the right import order. However, this is some kind of an
-    # implicit dependency and broke multiple times now. So we add this check here to get additional
-    # help. The hope is that this points us faster to the source of a future issue that would
-    # otherwise be uncovered by a unit test case with a hard to understand error message later.
-    #
-    # We can not check the full collection of expected attributes here, so the easiest is to apply
-    # some critical level of attributes we expect to have as first line of defense.
-    if len(result) < 9:
-        raise RuntimeError(
-            "Are we missing some host attributes? "
-            f"Found the following: {[r.name for r in result]!r}"
-        )
-
-    tag_config = load_tag_config()
-    tag_config += BuiltinTagConfig()
-
-    def _format(tag_id: str | None) -> str:
-        if tag_id is None:
-            return "`null`"
-        return f'`"{tag_id}"`'
-
-    tag_group: TagGroup
-    for tag_group in tag_config.tag_groups:
-        tag_name = _ensure(f"tag_{tag_group.id}")
-        section = tag_group.topic or "No topic"
-        mandatory = False
-        field = None
-
-        allowed_ids = [tag.id for tag in tag_group.tags]
-        if tag_group.is_checkbox_tag_group:
-            allowed_ids.insert(0, None)
-
-        if context == "view":
-            result.append(
-                Attr(
-                    name=tag_name,
-                    section=section,
-                    mandatory=mandatory,
-                    description="" if tag_group.help is None else tag_group.help,
-                    allow_none=None in allowed_ids,
-                    field=field,
-                )
-            )
-            continue
-
-        description: list[str] = []
-        if tag_group.help:
-            description.append(tag_group.help)
-
-        if tag_group.tags:
-            description.append("Choices:")
-            for tag in tag_group.tags:
-                description.append(f" * {_format(tag.id)}: {tag.title}")
-
-        result.append(
-            Attr(
-                name=tag_name,
-                section=section,
-                mandatory=mandatory,
-                description="\n\n".join(description),
-                enum=allowed_ids,
-                allow_none=None in allowed_ids,
-                field=field,
-            )
-        )
-    return result
 
 
 def tree_to_expr(

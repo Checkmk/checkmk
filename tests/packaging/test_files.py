@@ -10,13 +10,34 @@ import logging
 import os
 import re
 import subprocess
+from collections.abc import Sequence
 from datetime import date
 from functools import cache
 from pathlib import Path, PosixPath
+from typing import NamedTuple
 
 import pytest
 
 LOGGER = logging.getLogger()
+
+
+def _get_package_dependencies(package_path: str) -> Sequence[str]:
+    if package_path.endswith(".deb"):
+        return [
+            dep.strip()
+            for dep in [
+                line
+                for line in subprocess.check_output(
+                    ["dpkg", "-I", package_path], encoding="utf-8"
+                ).splitlines()
+                if "Depends:" in line
+            ][0]
+            .split("Depends:")[1]
+            .split(",")
+        ]
+    if package_path.endswith(".rpm"):
+        return subprocess.check_output(["rpm", "-qpR", package_path], encoding="utf-8").splitlines()
+    raise NotImplementedError(f"Unsupported package type for dependency extraction: {package_path}")
 
 
 def _get_omd_version(cmk_version: str, package_path: str) -> str:
@@ -542,3 +563,53 @@ def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
             assert _file_exists_in_package(
                 package_path, cmk_version, f"share/check_mk/agents/plugins/{filename}"
             ), f"File {filename} is missing in {package_path}"
+
+
+class UnwantedDependency(NamedTuple):
+    dependency: str
+    reason: str
+
+    def printable(self) -> str:
+        return f"Unwanted dependency '{self.dependency}': {self.reason}"
+
+
+def test_unwanted_package_dependencies(package_path: str) -> None:
+    """
+    This test should ensure that our deb/rpm packages do not depend on unwanted packages.
+    Background information:
+    * depending on the used installation mechanism, needed dependencies will be installed automatically
+    * in some case this may break an existing configuration or there are other reasons why we do not want to depend on a package
+    * so this test should ensure/remind us to not add unwanted dependencies to our packages
+    """
+    if package_path.endswith(".tar.gz"):
+        pytest.skip(
+            "Skipping test for source package as it is more interessting for the install-able packages."
+        )
+
+    unwanted_dependencies = [
+        UnwantedDependency(
+            dependency="sendmail",
+            reason="The installation of sendmail would e.g. overwrite existing mail configuration. For details see discussions in https://jira.lan.tribe29.com/browse/BETA-84",
+        ),
+        UnwantedDependency(
+            dependency="git",
+            reason="git is only needed for track the WATO config and only used by power users",
+        ),
+        UnwantedDependency(
+            dependency="ipmitool",
+            reason="impitool is only needed by power users",
+        ),
+    ]
+    package_dependencies = _get_package_dependencies(package_path)
+
+    actual_unwanted_dependencies: list[UnwantedDependency] = []
+    for unwanted in unwanted_dependencies:
+        for p in package_dependencies:
+            # Check for the substring and not exact match bc version definition might break
+            # exact matching, e.g.: rpmlib(CompressedFileNames) <= 3.0.4-1
+            if unwanted.dependency in p:
+                actual_unwanted_dependencies.append(unwanted)
+
+    assert not actual_unwanted_dependencies, "\n" + "\n".join(
+        [u.printable() for u in actual_unwanted_dependencies]
+    )

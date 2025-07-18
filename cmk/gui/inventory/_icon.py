@@ -63,10 +63,10 @@ def _has_inventory_history(host_name: HostName) -> bool:
     inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
     for directory in [inv_paths.archive_host(host_name), inv_paths.delta_cache_host(host_name)]:
         try:
-            is_empty = any(directory.iterdir())
+            has_history_entries = any(directory.iterdir())
         except FileNotFoundError:
-            is_empty = True
-        if not is_empty:
+            has_history_entries = False
+        if has_history_entries:
             return True
     return False
 

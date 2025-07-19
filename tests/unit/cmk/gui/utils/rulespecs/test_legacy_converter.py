@@ -36,12 +36,10 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
-from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
-from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
-from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
+from cmk.gui.watolib.password_store import IndividualOrStoredPassword
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -779,7 +777,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.Password(),
             legacy_valuespecs.Transform(
-                legacy_page_groups.IndividualOrStoredPassword(allow_empty=False),
+                IndividualOrStoredPassword(allow_empty=False),
             ),
             id="minimal Password",
         ),
@@ -789,7 +787,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help text"),
             ),
             legacy_valuespecs.Transform(
-                legacy_page_groups.IndividualOrStoredPassword(
+                IndividualOrStoredPassword(
                     title=_("password title"),
                     help=_("help text"),
                     allow_empty=False,
@@ -1109,7 +1107,7 @@ def test_cascading_singe_choice_prefill_selection_conversion(
         pytest.param(
             legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
             api_v1.rule_specs.Topic.APPLICATIONS,
-            legacy_wato_groups.RulespecGroupCheckParametersApplications,
+            legacy_rulespec_groups.RulespecGroupCheckParametersApplications,
             id="CheckParametersApplications",
         ),
     ],
@@ -1152,7 +1150,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.CheckParameterRulespecWithItem(
                 check_group_name="test_rulespec",
-                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(
                     title=_("item title"), allow_empty=False
@@ -1189,7 +1187,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.CheckParameterRulespecWithoutItem(
                 check_group_name="test_rulespec",
-                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
                 parameter_valuespec=lambda: legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
@@ -1336,7 +1334,7 @@ def test_convert_to_legacy_rulespec_group(
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.ActiveChecks("test_rulespec"),
                 group=_to_generated_builtin_sub_group(
-                    legacy_wato_groups.RulespecGroupActiveChecks,
+                    legacy_rulespec_groups.RulespecGroupActiveChecks,
                     "Applications",
                     lambda x: x,
                 ),
@@ -1358,7 +1356,7 @@ def test_convert_to_legacy_rulespec_group(
             legacy_rulespecs.HostRulespec(
                 name="test_rulespec",
                 group=_to_generated_builtin_sub_group(
-                    legacy_cmk_config_groups.RulespecGroupAgent,
+                    legacy_rulespec_groups.RulespecGroupAgent,
                     "Applications",
                     lambda x: x,
                 ),
@@ -1494,7 +1492,7 @@ def test_convert_to_legacy_rulespec_group(
             legacy_rulespecs.ServiceRulespec(
                 name="test_rulespec",
                 item_type="service",
-                group=legacy_wato_groups.RulespecGroupCheckParametersVirtualization,
+                group=legacy_rulespec_groups.RulespecGroupCheckParametersVirtualization,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
@@ -1533,7 +1531,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.SpecialAgents("test_rulespec"),
-                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
+                group=legacy_rulespec_groups.RulespecGroupVMCloudContainer,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="first",
@@ -1550,7 +1548,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.SpecialAgents("gcp"),
-                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
+                group=legacy_rulespec_groups.RulespecGroupVMCloudContainer,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="first",

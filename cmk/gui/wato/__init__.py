@@ -80,6 +80,64 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameterRegistry as NotificationParameterRegistry,
 )
 from cmk.gui.watolib.notification_parameter import register_notification_parameters
+from cmk.gui.watolib.rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersApplications as RulespecGroupCheckParametersApplications,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersDiscovery as RulespecGroupCheckParametersDiscovery,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersEnvironment as RulespecGroupCheckParametersEnvironment,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersHardware as RulespecGroupCheckParametersHardware,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersNetworking as RulespecGroupCheckParametersNetworking,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersOperatingSystem as RulespecGroupCheckParametersOperatingSystem,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersPrinters as RulespecGroupCheckParametersPrinters,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersStorage as RulespecGroupCheckParametersStorage,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsApps as RulespecGroupDatasourceProgramsApps,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsCloud as RulespecGroupDatasourceProgramsCloud,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsCustom as RulespecGroupDatasourceProgramsCustom,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsHardware as RulespecGroupDatasourceProgramsHardware,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDatasourceProgramsTesting as RulespecGroupDatasourceProgramsTesting,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupDiscoveryCheckParameters as RulespecGroupDiscoveryCheckParameters,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
+)
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer,
+)
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
 
@@ -94,58 +152,6 @@ from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
 from ._permissions import PERMISSION_SECTION_WATO as PERMISSION_SECTION_WATO
-from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersApplications as RulespecGroupCheckParametersApplications,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersDiscovery as RulespecGroupCheckParametersDiscovery,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersEnvironment as RulespecGroupCheckParametersEnvironment,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersHardware as RulespecGroupCheckParametersHardware,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersNetworking as RulespecGroupCheckParametersNetworking,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersOperatingSystem as RulespecGroupCheckParametersOperatingSystem,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersPrinters as RulespecGroupCheckParametersPrinters,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersStorage as RulespecGroupCheckParametersStorage,
-)
-from ._rulespec_groups import (
-    RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
-)
-from ._rulespec_groups import RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms
-from ._rulespec_groups import (
-    RulespecGroupDatasourceProgramsApps as RulespecGroupDatasourceProgramsApps,
-)
-from ._rulespec_groups import (
-    RulespecGroupDatasourceProgramsCloud as RulespecGroupDatasourceProgramsCloud,
-)
-from ._rulespec_groups import (
-    RulespecGroupDatasourceProgramsCustom as RulespecGroupDatasourceProgramsCustom,
-)
-from ._rulespec_groups import (
-    RulespecGroupDatasourceProgramsHardware as RulespecGroupDatasourceProgramsHardware,
-)
-from ._rulespec_groups import RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS
-from ._rulespec_groups import (
-    RulespecGroupDatasourceProgramsTesting as RulespecGroupDatasourceProgramsTesting,
-)
-from ._rulespec_groups import (
-    RulespecGroupDiscoveryCheckParameters as RulespecGroupDiscoveryCheckParameters,
-)
-from ._rulespec_groups import (
-    RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
-)
-from ._rulespec_groups import RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer
 from .pages import IndividualOrStoredPassword as IndividualOrStoredPassword
 from .pages import (
     MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,

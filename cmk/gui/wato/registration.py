@@ -43,7 +43,6 @@ from . import (
     _omd_configuration,
     _permissions,
     _pre_21_plugin_api,
-    _rulespec_groups,
     _snapins,
     _tracing,
     filters,
@@ -126,7 +125,6 @@ def register(
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
     _main_modules.register(main_module_registry)
-    _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()
     _check_mk_configuration.register(
         config_variable_registry,

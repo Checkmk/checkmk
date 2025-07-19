@@ -85,7 +85,9 @@ from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupAgent,
     RulespecGroupAgentSNMP,
+    RulespecGroupDiscoveryCheckParameters,
     RulespecGroupHostsMonitoringRulesHostChecks,
     RulespecGroupHostsMonitoringRulesNotifications,
     RulespecGroupHostsMonitoringRulesVarious,
@@ -115,7 +117,6 @@ from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
 from ._http_proxy import HTTPProxyInput
-from ._rulespec_groups import RulespecGroupDiscoveryCheckParameters
 
 
 def register(
@@ -212,7 +213,6 @@ def register(
     config_variable_registry.register(ConfigVariableInventoryCheckAutotrigger)
     rulespec_group_registry.register(RulespecGroupAgentCMKAgent)
     rulespec_group_registry.register(RulespecGroupMonitoringConfigurationInventoryAndCMK)
-    rulespec_group_registry.register(RulespecGroupAgent)
     rulespec_group_registry.register(RulespecGroupAgentGeneralSettings)
     rulespec_registry.register(HostGroupsRulespec)
     rulespec_registry.register(ServiceGroupsRulespec)
@@ -4840,20 +4840,6 @@ ExtraServiceConfEscapePluginOutput = ServiceRulespec(
     name=RuleGroup.ExtraServiceConf("_ESCAPE_PLUGIN_OUTPUT"),
     valuespec=_valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT,
 )
-
-
-class RulespecGroupAgent(RulespecGroup):
-    @property
-    def name(self) -> str:
-        return "agent"
-
-    @property
-    def title(self) -> str:
-        return _("Access to agents")
-
-    @property
-    def help(self):
-        return _("Settings concerning the connection to the Checkmk and SNMP agents")
 
 
 class RulespecGroupAgentGeneralSettings(RulespecSubGroup):

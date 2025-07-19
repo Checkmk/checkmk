@@ -34,8 +34,6 @@ from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
-from cmk.gui.wato._check_mk_configuration import RulespecGroupAgent
 from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
@@ -141,14 +139,14 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.ActiveCheck():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato_groups.RulespecGroupActiveChecks,
+                legacy_rulespec_groups.RulespecGroupActiveChecks,
                 localizer,
                 config_scope_prefix=RuleGroup.ActiveChecks,
             )
         case ruleset_api_v1.rule_specs.AgentAccess():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                RulespecGroupAgent,
+                legacy_rulespec_groups.RulespecGroupAgent,
                 localizer,
             )
         case ruleset_api_v1.rule_specs.AgentConfig():
@@ -184,7 +182,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.DiscoveryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato_groups.RulespecGroupDiscoveryCheckParameters,
+                legacy_rulespec_groups.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
         case ruleset_api_v1.rule_specs.Service():
@@ -211,7 +209,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.SpecialAgent():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato_groups.RulespecGroupDatasourcePrograms,
+                legacy_rulespec_groups.RulespecGroupDatasourcePrograms,
                 localizer,
                 config_scope_prefix=RuleGroup.SpecialAgents,
             )
@@ -486,11 +484,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
     match topic_to_convert:
         case ruleset_api_v1.rule_specs.Topic.APPLICATIONS:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersApplications
+                return legacy_rulespec_groups.RulespecGroupCheckParametersApplications
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupDatasourceProgramsApps
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupDatasourceProgramsApps
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
                 and RulespecGroupMonitoringAgentsAgentPlugins is not None
@@ -512,8 +510,8 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupVMCloudContainer
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupVMCloudContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Cloud", localizer)
         case ruleset_api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT:
             if (
@@ -534,14 +532,14 @@ def _get_builtin_legacy_sub_group_with_main_group(
         case ruleset_api_v1.rule_specs.Topic.GENERAL:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupMonitoringConfigurationVarious
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupDatasourceProgramsCustom
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupDatasourceProgramsCustom
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupHostsMonitoringRules:
                 return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesVarious
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDiscoveryCheckParameters:
-                return legacy_wato_groups.RulespecGroupCheckParametersDiscovery
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDiscoveryCheckParameters:
+                return legacy_rulespec_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.rule_specs.Topic.ENVIRONMENTAL:
             if (
@@ -550,7 +548,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersEnvironment
+                return legacy_rulespec_groups.RulespecGroupCheckParametersEnvironment
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesEnvironment
             return _to_generated_builtin_sub_group(legacy_main_group, "Environmental", localizer)
@@ -568,7 +566,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersNetworking
+                return legacy_rulespec_groups.RulespecGroupCheckParametersNetworking
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesNetworking
             return _to_generated_builtin_sub_group(legacy_main_group, "Networking", localizer)
@@ -597,11 +595,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersOperatingSystem
+                return legacy_rulespec_groups.RulespecGroupCheckParametersOperatingSystem
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupDatasourceProgramsOS
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupDatasourceProgramsOS
             return _to_generated_builtin_sub_group(legacy_main_group, "Operating System", localizer)
         case ruleset_api_v1.rule_specs.Topic.PERIPHERALS:
             if (
@@ -610,7 +608,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersPrinters
+                return legacy_rulespec_groups.RulespecGroupCheckParametersPrinters
             return _to_generated_builtin_sub_group(legacy_main_group, "Peripherals", localizer)
         case ruleset_api_v1.rule_specs.Topic.POWER:
             return _to_generated_builtin_sub_group(legacy_main_group, "Power", localizer)
@@ -621,11 +619,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersHardware
+                return legacy_rulespec_groups.RulespecGroupCheckParametersHardware
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesHardware
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupDatasourceProgramsHardware
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupDatasourceProgramsHardware
             return _to_generated_builtin_sub_group(legacy_main_group, "Server hardware", localizer)
         case ruleset_api_v1.rule_specs.Topic.STORAGE:
             if (
@@ -634,7 +632,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersStorage
+                return legacy_rulespec_groups.RulespecGroupCheckParametersStorage
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesStorage
             return _to_generated_builtin_sub_group(legacy_main_group, "Storage", localizer)
@@ -654,11 +652,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
             ):
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
-                return legacy_wato_groups.RulespecGroupCheckParametersVirtualization
+                return legacy_rulespec_groups.RulespecGroupCheckParametersVirtualization
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
-            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
-                return legacy_wato_groups.RulespecGroupDatasourceProgramsContainer
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
+                return legacy_rulespec_groups.RulespecGroupDatasourceProgramsContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Virtualization", localizer)
         case ruleset_api_v1.rule_specs.Topic.WINDOWS:
             if (

@@ -15,7 +15,10 @@ check_info = {}
 
 
 def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:
-    for item, value, in info:
+    for (
+        item,
+        value,
+    ) in info:
         try:
             value = int(value)
         except ValueError:

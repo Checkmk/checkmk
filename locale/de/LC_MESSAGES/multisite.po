@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-07-17 17:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -5257,6 +5257,10 @@ msgstr "Aggregationsgruppenbaum"
 
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
+
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Aggregationsname"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -11580,6 +11584,10 @@ msgstr "Parameter für Benachrichtigung #%s geändert"
 #, python-format
 msgid "Changed notification parameter %d"
 msgstr "Benachrichtigungsparameter %d geändert"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
+msgstr "Benachrichtigungsregel %d geändert"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -23786,6 +23794,10 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
+#, fuzzy
+msgid "Extension package enabled and active."
+msgstr "Erweiterungspaket installiert."
+
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
 
@@ -23798,9 +23810,6 @@ msgstr ""
 "Erweiterungspaket installiert, aber Regelsatzmigration fehlgeschlagen. Sie "
 "können dieses MKP deaktivieren und die vollständige Fehlermeldung sehen, "
 "indem Sie diesen Befehl auf der Kommandozeile ausführen: %s"
-
-msgid "Extension package installed."
-msgstr "Erweiterungspaket installiert."
 
 msgid "Extension packages"
 msgstr "Erweiterungspakete"
@@ -54794,6 +54803,16 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
 
 msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
+msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -58163,6 +58182,10 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Jemand vor 1.6"
+
+#, python-format
+msgid "Something went wrong: %s"
+msgstr ""
 
 msgid "Sometime before 1.6"
 msgstr "Irgendwann vor 1.6"
@@ -65530,8 +65553,14 @@ msgstr ""
 "Komponenten eines Rack-Servers als Gerät) im letzten Prüfintervall.Der "
 "mögliche Bereich liegt zwischen 0% und 100%"
 
-#, python-format
-msgid "The package is now enabled, but could not be installed on this site: %s"
+#, fuzzy, python-format
+msgid "The package is now enabled, but could not be activated on this site: %s"
+msgstr ""
+"Das Paket ist jetzt aktiviert, konnte aber nicht auf dieser Instanz "
+"installiert werden: %s"
+
+#, fuzzy
+msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Das Paket ist jetzt aktiviert, konnte aber nicht auf dieser Instanz "
 "installiert werden: %s"
@@ -66421,6 +66450,14 @@ msgstr ""
 
 msgid "The site of the status host does not exist."
 msgstr "Die Instanz des Status-Host existiert nicht."
+
+#, python-format
+msgid "The site version is %s, but this package requires a version below %s."
+msgstr ""
+
+#, python-format
+msgid "The site version is %s, but this package requires at least %s."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -72904,6 +72941,12 @@ msgstr ""
 "signieren</i> verwenden.<br>Aktivieren Sie diese Option nur, wenn Sie "
 "tatsächlich auf das erwähnte Downgrade-Problem stoßen. Dies sollte bei "
 "automatischen Updates über den Agent Updater nicht der Fall sein."
+
+msgid ""
+"To enable the package anyway, use the `mkp` command on the command line. Its "
+"`enable` option provides you with a flag to disable all version checks. This "
+"might result in crashes or other unexpected behavior."
+msgstr ""
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "
@@ -84755,6 +84798,10 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
+#, fuzzy
+msgid "average"
+msgstr "Durchschnitt"
+
 msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
@@ -85621,6 +85668,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
+#, fuzzy
+msgid "latest"
+msgstr "Test"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -85706,6 +85757,10 @@ msgstr "trifft auf regulären Ausdruck zu"
 
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
+
+#, fuzzy
+msgid "max"
+msgstr "Maximum"
 
 msgid "max. duration"
 msgstr "max. Dauer"
@@ -86411,6 +86466,10 @@ msgstr "streng"
 
 msgid "sub categories"
 msgstr "Unterkategorien"
+
+#, fuzzy
+msgid "sum"
+msgstr "Summe"
 
 msgid "synchronization"
 msgstr "Synchronisierung"

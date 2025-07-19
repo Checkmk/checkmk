@@ -5357,6 +5357,10 @@ msgstr "Gruppo di aggregazione ad albero"
 msgid "Aggregation groups"
 msgstr "Gruppi di aggregazione"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Nome dell'aggregazione"
+
 msgid "Aggregation name"
 msgstr "Nome dell'aggregazione"
 
@@ -11901,6 +11905,10 @@ msgstr "Regola di notifica modificata %d"
 
 #, fuzzy, python-format
 msgid "Changed notification parameter %d"
+msgstr "Regola di notifica modificata %d"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
 msgstr "Regola di notifica modificata %d"
 
 #, python-format
@@ -24368,6 +24376,10 @@ msgstr "Perfdata estesi"
 msgid "Extension"
 msgstr "Estensione"
 
+#, fuzzy
+msgid "Extension package enabled and active."
+msgstr "File del pacchetto di estensione"
+
 msgid "Extension package files"
 msgstr "File del pacchetto di estensione"
 
@@ -24377,10 +24389,6 @@ msgid ""
 "this mkp and see the complete error message running this command on the "
 "command line: %s"
 msgstr ""
-
-#, fuzzy
-msgid "Extension package installed."
-msgstr "File del pacchetto di estensione"
 
 msgid "Extension packages"
 msgstr "Pacchetti di estensione"
@@ -56721,6 +56729,16 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
 msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
+msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -60141,6 +60159,10 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Qualcuno prima del 1.6"
+
+#, python-format
+msgid "Something went wrong: %s"
+msgstr ""
 
 msgid "Sometime before 1.6"
 msgstr "Qualche tempo prima della 1.6"
@@ -67455,8 +67477,14 @@ msgstr ""
 "componenti di un server rack come dispositivo) nell'ultimo intervallo di "
 "controllo"
 
-#, python-format
-msgid "The package is now enabled, but could not be installed on this site: %s"
+#, fuzzy, python-format
+msgid "The package is now enabled, but could not be activated on this site: %s"
+msgstr ""
+"Il pacchetto è ora abilitato, ma non è stato possibile installarlo su questo "
+"sito: %s"
+
+#, fuzzy
+msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Il pacchetto è ora abilitato, ma non è stato possibile installarlo su questo "
 "sito: %s"
@@ -68317,6 +68345,14 @@ msgstr "Il sito è segnato come morto. Non cerca di replicare."
 
 msgid "The site of the status host does not exist."
 msgstr "Il sito dell'host di stato non esiste."
+
+#, python-format
+msgid "The site version is %s, but this package requires a version below %s."
+msgstr ""
+
+#, python-format
+msgid "The site version is %s, but this package requires at least %s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -74692,6 +74728,12 @@ msgid ""
 "or always use <i>Bake and sign</i>.<br>Only activate this option when "
 "actually running into the mentioned downgrading problem. This should not be "
 "the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
+"To enable the package anyway, use the `mkp` command on the command line. Its "
+"`enable` option provides you with a flag to disable all version checks. This "
+"might result in crashes or other unexpected behavior."
 msgstr ""
 
 msgid ""
@@ -87168,6 +87210,10 @@ msgstr "app autenticatore"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Media"
+
 msgid "avg. duration"
 msgstr "durata media"
 
@@ -88054,6 +88100,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notifica"
 
+#, fuzzy
+msgid "latest"
+msgstr "test"
+
 msgid "latin1"
 msgstr "latino1"
 
@@ -88140,6 +88190,10 @@ msgstr "corrisponde a una delle regex"
 
 msgid "matches regex"
 msgstr "corrisponde a regex"
+
+#, fuzzy
+msgid "max"
+msgstr "massimo"
 
 msgid "max. duration"
 msgstr "durata massima"
@@ -88852,6 +88906,10 @@ msgstr "Limitare tutti"
 
 msgid "sub categories"
 msgstr "sottocategorie"
+
+#, fuzzy
+msgid "sum"
+msgstr "Somma"
 
 msgid "synchronization"
 msgstr "sincronizzazione"

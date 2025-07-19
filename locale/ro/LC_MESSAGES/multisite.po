@@ -5404,6 +5404,10 @@ msgstr "Arborele grupului de agregare"
 msgid "Aggregation groups"
 msgstr "Grupuri de agregare"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Denumire agregare"
+
 msgid "Aggregation name"
 msgstr "Denumire agregare"
 
@@ -12029,6 +12033,10 @@ msgstr "Regula de notificare modificată %d"
 
 #, fuzzy, python-format
 msgid "Changed notification parameter %d"
+msgstr "Regula de notificare modificată %d"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
 msgstr "Regula de notificare modificată %d"
 
 #, python-format
@@ -24638,6 +24646,10 @@ msgstr "Date de performanță extinse"
 msgid "Extension"
 msgstr "Extensie"
 
+#, fuzzy
+msgid "Extension package enabled and active."
+msgstr "Fișiere de pachete de extensie"
+
 msgid "Extension package files"
 msgstr "Fișiere de pachete de extensie"
 
@@ -24647,10 +24659,6 @@ msgid ""
 "this mkp and see the complete error message running this command on the "
 "command line: %s"
 msgstr ""
-
-#, fuzzy
-msgid "Extension package installed."
-msgstr "Fișiere de pachete de extensie"
 
 msgid "Extension packages"
 msgstr "Pachete de extensie"
@@ -57270,6 +57278,16 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr "Selectați dintr-o listă de nume de gazde cunoscute de Checkmk"
 
 msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
+msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -60779,6 +60797,10 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Cineva înainte de 1.6"
+
+#, python-format
+msgid "Something went wrong: %s"
+msgstr ""
 
 msgid "Sometime before 1.6"
 msgstr "Cu ceva timp înainte de 1.6"
@@ -68195,8 +68217,13 @@ msgstr ""
 "ale unui server rack ca dispozitiv) în ultimul interval de "
 "verificare.Intervalul posibil este de la 0% la 100%."
 
-#, python-format
-msgid "The package is now enabled, but could not be installed on this site: %s"
+#, fuzzy, python-format
+msgid "The package is now enabled, but could not be activated on this site: %s"
+msgstr ""
+"Pachetul este acum activat, dar nu a putut fi instalat pe acest site: %s."
+
+#, fuzzy
+msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Pachetul este acum activat, dar nu a putut fi instalat pe acest site: %s."
 
@@ -69062,6 +69089,14 @@ msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
 
 msgid "The site of the status host does not exist."
 msgstr "Site-ul gazdei de stare nu există."
+
+#, python-format
+msgid "The site version is %s, but this package requires a version below %s."
+msgstr ""
+
+#, python-format
+msgid "The site version is %s, but this package requires at least %s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -75555,6 +75590,12 @@ msgstr ""
 "sign</i>.<br>Activați această opțiune numai atunci când vă confruntați "
 "efectiv cu problema de downgrade menționată. Acest lucru nu ar trebui să se "
 "întâmple în cazul actualizărilor automate prin agent updater."
+
+msgid ""
+"To enable the package anyway, use the `mkp` command on the command line. Its "
+"`enable` option provides you with a flag to disable all version checks. This "
+"might result in crashes or other unexpected behavior."
+msgstr ""
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "
@@ -88118,6 +88159,10 @@ msgstr "aplicație autentificator"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Media"
+
 msgid "avg. duration"
 msgstr "durata medie"
 
@@ -89012,6 +89057,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notificare"
 
+#, fuzzy
+msgid "latest"
+msgstr "test"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -89098,6 +89147,10 @@ msgstr "se potrivește cu unul dintre regex"
 
 msgid "matches regex"
 msgstr "se potrivește cu regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maxim"
 
 msgid "max. duration"
 msgstr "durata maximă"
@@ -89828,6 +89881,10 @@ msgstr "Restricționează toate"
 
 msgid "sub categories"
 msgstr "subcategorii"
+
+#, fuzzy
+msgid "sum"
+msgstr "Suma"
 
 msgid "synchronization"
 msgstr "sincronizare"

@@ -5393,6 +5393,10 @@ msgstr "Boom van de aggregatiegroep"
 msgid "Aggregation groups"
 msgstr "Aggregatiegroepen"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Aggregatienaam"
+
 msgid "Aggregation name"
 msgstr "Naam aggregatie"
 
@@ -12003,6 +12007,10 @@ msgstr "Gewijzigde meldingsregel %d"
 
 #, fuzzy, python-format
 msgid "Changed notification parameter %d"
+msgstr "Gewijzigde meldingsregel %d"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
 msgstr "Gewijzigde meldingsregel %d"
 
 #, python-format
@@ -24568,6 +24576,10 @@ msgstr "Uitgebreide perfagegevens"
 msgid "Extension"
 msgstr "Uitbreiding"
 
+#, fuzzy
+msgid "Extension package enabled and active."
+msgstr "Uitbreiding pakketbestanden"
+
 msgid "Extension package files"
 msgstr "Uitbreiding pakketbestanden"
 
@@ -24577,10 +24589,6 @@ msgid ""
 "this mkp and see the complete error message running this command on the "
 "command line: %s"
 msgstr ""
-
-#, fuzzy
-msgid "Extension package installed."
-msgstr "Uitbreiding pakketbestanden"
 
 msgid "Extension packages"
 msgstr "Uitbreidingspakketten"
@@ -57181,6 +57189,16 @@ msgstr ""
 msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -60627,6 +60645,10 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Iemand voor 1.6"
+
+#, python-format
+msgid "Something went wrong: %s"
+msgstr ""
 
 msgid "Sometime before 1.6"
 msgstr "Ergens voor 1.6"
@@ -68002,8 +68024,14 @@ msgstr ""
 "componenten van een rekserver als apparaat) in het laatste controle-"
 "interval. Het mogelijke bereik is van 0% tot 100%"
 
-#, python-format
-msgid "The package is now enabled, but could not be installed on this site: %s"
+#, fuzzy, python-format
+msgid "The package is now enabled, but could not be activated on this site: %s"
+msgstr ""
+"Het pakket is nu ingeschakeld, maar kon niet worden geïnstalleerd op deze "
+"site: %s"
+
+#, fuzzy
+msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Het pakket is nu ingeschakeld, maar kon niet worden geïnstalleerd op deze "
 "site: %s"
@@ -68866,6 +68894,14 @@ msgstr "De site is gemarkeerd als dood. Ik probeer niet te repliceren."
 
 msgid "The site of the status host does not exist."
 msgstr "De site van de status host bestaat niet."
+
+#, python-format
+msgid "The site version is %s, but this package requires a version below %s."
+msgstr ""
+
+#, python-format
+msgid "The site version is %s, but this package requires at least %s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -75271,6 +75307,12 @@ msgid ""
 "or always use <i>Bake and sign</i>.<br>Only activate this option when "
 "actually running into the mentioned downgrading problem. This should not be "
 "the case for automatic updates via agent updater."
+msgstr ""
+
+msgid ""
+"To enable the package anyway, use the `mkp` command on the command line. Its "
+"`enable` option provides you with a flag to disable all version checks. This "
+"might result in crashes or other unexpected behavior."
 msgstr ""
 
 msgid ""
@@ -87897,6 +87939,10 @@ msgstr "Authenticatie"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Gemiddeld"
+
 msgid "avg. duration"
 msgstr "gemiddelde duur"
 
@@ -88798,6 +88844,10 @@ msgstr "laserFout"
 msgid "last notification"
 msgstr "laatste mededeling"
 
+#, fuzzy
+msgid "latest"
+msgstr "testen"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -88885,6 +88935,10 @@ msgstr "overeenkomt met een van regex"
 
 msgid "matches regex"
 msgstr "komt overeen met regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maximum"
 
 msgid "max. duration"
 msgstr "max. duur"
@@ -89609,6 +89663,10 @@ msgstr "Beperk alle"
 
 msgid "sub categories"
 msgstr "subcategorieën"
+
+#, fuzzy
+msgid "sum"
+msgstr "Som"
 
 msgid "synchronization"
 msgstr "synchronisatie"

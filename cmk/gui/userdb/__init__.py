@@ -16,7 +16,6 @@ from ._check_credentials import (
 )
 from ._connections import (
     active_connections,
-    active_connections_by_type,
     ACTIVE_DIR,
     ActivePlugins,
     builtin_connections,
@@ -128,7 +127,6 @@ from .user_attributes import show_mode_choices, validate_start_url
 
 __all__ = [
     "active_connections",
-    "active_connections_by_type",
     "add_internal_attributes",
     "ActivePlugins",
     "ACTIVE_DIR",

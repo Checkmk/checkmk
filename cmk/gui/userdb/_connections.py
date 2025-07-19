@@ -217,10 +217,6 @@ def get_connection(connection_id: str | None) -> UserConnector | None:
     return connections_with_id[0] if connections_with_id else None
 
 
-def active_connections_by_type(connection_type: str) -> list[dict[str, Any]]:
-    return [c for c in connections_by_type(connection_type) if not c["disabled"]]
-
-
 def connections_by_type(connection_type: str) -> list[dict[str, Any]]:
     return [c for c in _get_connection_configs() if c["type"] == connection_type]
 
@@ -230,9 +226,9 @@ def clear_user_connection_cache() -> None:
 
 
 def active_connections() -> list[tuple[str, UserConnector]]:
-    enabled_configs = [cfg for cfg in _get_connection_configs() if not cfg["disabled"]]  #
+    enabled_configs = [cfg for cfg in _get_connection_configs() if not cfg["disabled"]]
     return [
-        (connection_id, connection)  #
+        (connection_id, connection)
         for connection_id, connection in _get_connections_for(enabled_configs)
         if connection.is_enabled()
     ]

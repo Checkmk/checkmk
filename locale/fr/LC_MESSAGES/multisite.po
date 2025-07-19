@@ -5459,6 +5459,10 @@ msgstr "Arbre du groupe d'agrégation"
 msgid "Aggregation groups"
 msgstr "Groupes d'agrégation"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Nom de l'agrégation"
+
 msgid "Aggregation name"
 msgstr "Nom de l'agrégation"
 
@@ -12046,6 +12050,10 @@ msgstr "Modification de la règle de notification %d"
 
 #, fuzzy, python-format
 msgid "Changed notification parameter %d"
+msgstr "Modification de la règle de notification %d"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
 msgstr "Modification de la règle de notification %d"
 
 #, python-format
@@ -57247,6 +57255,16 @@ msgstr ""
 msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -88154,6 +88172,9 @@ msgstr "Ajouter Application d'Authentification"
 msgid "auto"
 msgstr "auto"
 
+msgid "average"
+msgstr "moyenne"
+
 msgid "avg. duration"
 msgstr "durée moyenne"
 
@@ -89068,6 +89089,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "dernière notification"
 
+#, fuzzy
+msgid "latest"
+msgstr "tests"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -89155,6 +89180,10 @@ msgstr "correspond à l'une des expressions rationnelles"
 
 msgid "matches regex"
 msgstr "correspond à un regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maximum"
 
 msgid "max. duration"
 msgstr "durée max"
@@ -89890,6 +89919,10 @@ msgstr "Restreindre tous"
 
 msgid "sub categories"
 msgstr "sous-catégories"
+
+#, fuzzy
+msgid "sum"
+msgstr "Somme"
 
 msgid "synchronization"
 msgstr "synchronisation"
@@ -91652,9 +91685,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #, fuzzy
 #~ msgid "Your IT monitoring platform"
 #~ msgstr "Votre machine de surveillance"
-
-#~ msgid "average"
-#~ msgstr "moyenne"
 
 #~ msgid "graphs"
 #~ msgstr "graphiques"

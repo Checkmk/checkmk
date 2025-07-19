@@ -5375,6 +5375,10 @@ msgstr "Gruppo di aggregazione ad albero"
 msgid "Aggregation groups"
 msgstr "Gruppi di aggregazione"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Nome dell'aggregazione"
+
 msgid "Aggregation name"
 msgstr "Nome dell'aggregazione"
 
@@ -11855,6 +11859,10 @@ msgstr "Regola di notifica modificata %d"
 
 #, fuzzy, python-format
 msgid "Changed notification parameter %d"
+msgstr "Regola di notifica modificata %d"
+
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
 msgstr "Regola di notifica modificata %d"
 
 #, python-format
@@ -56275,6 +56283,16 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
 msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+
+msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -86549,6 +86567,9 @@ msgstr "app autenticatore"
 msgid "auto"
 msgstr "auto"
 
+msgid "average"
+msgstr "media"
+
 msgid "avg. duration"
 msgstr "durata media"
 
@@ -87450,6 +87471,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notifica"
 
+#, fuzzy
+msgid "latest"
+msgstr "test"
+
 msgid "latin1"
 msgstr "latino1"
 
@@ -87536,6 +87561,10 @@ msgstr "corrisponde a una delle regex"
 
 msgid "matches regex"
 msgstr "corrisponde a regex"
+
+#, fuzzy
+msgid "max"
+msgstr "massimo"
 
 msgid "max. duration"
 msgstr "durata massima"
@@ -88259,6 +88288,10 @@ msgstr "Limitare tutti"
 
 msgid "sub categories"
 msgstr "sottocategorie"
+
+#, fuzzy
+msgid "sum"
+msgstr "Somma"
 
 msgid "synchronization"
 msgstr "sincronizzazione"
@@ -89995,9 +90028,6 @@ msgstr "Usa SSL per la connessione."
 #~ msgstr ""
 #~ "Se si desidera continuare a utilizzare Checkmk, acquistare una licenza "
 #~ "con supporto %s o contattare il team commerciale di Checkmk al numero %s."
-
-#~ msgid "average"
-#~ msgstr "media"
 
 #~ msgid "graphs"
 #~ msgstr "grafici"

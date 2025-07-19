@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-07-17 18:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -5285,6 +5285,10 @@ msgstr "Aggregationsgruppenbaum"
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Aggregationsname"
+
 msgid "Aggregation name"
 msgstr "Aggregationsname"
 
@@ -6535,9 +6539,9 @@ msgid ""
 msgstr ""
 "Eine optionale URL, die auf die Dokumentation oder eine andere Seite "
 "verweist. Diese wird als Symbol angezeigt und öffnet beim Anklicken eine "
-"neue Seite. Sie können entweder globale URLs (beginnend mit <tt>http://</tt>)"
-", absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs (die "
-"relativ zu <tt>check_mk/</tt> sind) verwenden."
+"neue Seite. Sie können entweder globale URLs (beginnend mit <tt>http://</"
+"tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
+"(die relativ zu <tt>check_mk/</tt> sind) verwenden."
 
 #, python-format
 msgid ""
@@ -11714,6 +11718,10 @@ msgstr "Parameter für Benachrichtigung #%s geändert"
 msgid "Changed notification parameter %d"
 msgstr "Benachrichtigungsregel %d geändert"
 
+#, fuzzy, python-format
+msgid "Changed notification rule #%s"
+msgstr "Benachrichtigungsregel %d geändert"
+
 #, python-format
 msgid "Changed notification rule %d"
 msgstr "Benachrichtigungsregel %d geändert"
@@ -14108,7 +14116,8 @@ msgid "Configuration of individual Eventlogs"
 msgstr "Konfiguration von bestimmten Ereignisprotokollen"
 
 msgid "Configuration of managed robots for Synthetic Monitoring."
-msgstr "Konfiguration von verwalteten Robotern für das synthetische Monitoring."
+msgstr ""
+"Konfiguration von verwalteten Robotern für das synthetische Monitoring."
 
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
@@ -31770,8 +31779,8 @@ msgstr ""
 "Wenn diese Einstellung von deaktiviert auf aktiviert gesetzt wird, müssen "
 "alle Benutzer mit dieser Rolle eine Zwei-Faktor-Authentifizierung einstellen "
 "und werden aus allen laufenden Sitzungen ausgeloggt, wenn sie Zwei-Faktor "
-"nicht aktiviert haben. Die Option \"Zwei-Faktor-Authentifizierung erzwingen\""
-" in den globalen Einstellungen überschreibt diese Einstellung."
+"nicht aktiviert haben. Die Option \"Zwei-Faktor-Authentifizierung "
+"erzwingen\" in den globalen Einstellungen überschreibt diese Einstellung."
 
 msgid "If value is a tuple it has to have length of two."
 msgstr "Wenn der Wert ein Tupel ist, muss er die Länge zwei haben."
@@ -55469,6 +55478,16 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 #, fuzzy
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Host-Namen, die Checkmk bekannt sind"
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -85429,6 +85448,9 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
+msgid "average"
+msgstr "Durchschnitt"
+
 msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
@@ -86318,6 +86340,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
+#, fuzzy
+msgid "latest"
+msgstr "Test"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -86403,6 +86429,10 @@ msgstr "trifft auf regulären Ausdruck zu"
 
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
+
+#, fuzzy
+msgid "max"
+msgstr "Maximum"
 
 msgid "max. duration"
 msgstr "max. Dauer"
@@ -87128,6 +87158,10 @@ msgstr "verbiete alle"
 
 msgid "sub categories"
 msgstr "Unterkategorien"
+
+#, fuzzy
+msgid "sum"
+msgstr "Summe"
 
 msgid "synchronization"
 msgstr "Synchronisierung"
@@ -88959,9 +88993,6 @@ msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
 #~ msgstr ""
 #~ "Ihre Lizenz wurde ausgesetzt. Bitte kontaktieren Sie das Checkmk-"
 #~ "Vertriebsteam unter %s. "
-
-#~ msgid "average"
-#~ msgstr "Durchschnitt"
 
 #~ msgid "graphs"
 #~ msgstr "Graphen"

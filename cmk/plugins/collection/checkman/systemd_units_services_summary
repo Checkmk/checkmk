@@ -3,16 +3,15 @@ agents: linux
 catalog: os/ps
 license: GPLv2
 distribution: check_mk
-description:
- This check gives a summary of the linux services provided by
- the command 'systemctl --all'.
- The check reports the number of all services and for each service
- type, i.e. 'active', 'inactive', 'failed' and other ones.
- The state mapping is configurable, by default  active and inactive
- states are OK, failed and all others are CRIT.
+description: This check gives a summary of the linux services provided by
+  the command 'systemctl --all'.
+  The check reports the number of all services and for each service
+  type, i.e. 'active', 'inactive', 'failed' and other ones.
+  The state mapping is configurable, by default  active and inactive
+  states are OK, failed and all others are CRIT.
+  Note that by default, failed systemd services that are disabled do not result in CRIT.
+  This is configurable so that such services do trigger a CRIT.
 
-item:
- The fixed statement {{Summary}}
+item: The fixed statement {{Summary}}
 
-discovery:
- One summary service is created.
+discovery: One summary service is created.

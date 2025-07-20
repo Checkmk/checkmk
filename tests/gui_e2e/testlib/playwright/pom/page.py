@@ -120,7 +120,7 @@ class CmkPage(LocatorHelper):
         """
         logger.info("Activate changes")
         try:
-            self.main_menu.changes_menu("Open full page").click()
+            self.main_menu.changes_menu("Open full view").click()
             self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
             self.activate_selected()
             self.expect_success_state()

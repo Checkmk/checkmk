@@ -768,7 +768,8 @@ def check_systemd_units_summary(
     sum_failed = sum(
         s.active_status == "failed"
         for s in units
-        if s not in services_organised["excluded"] and s not in services_organised["disabled"]
+        if s not in services_organised["excluded"]
+        and (params["disabled_critical"] is True or s not in services_organised["disabled"])
     )
 
     yield Result(
@@ -797,6 +798,7 @@ def check_systemd_units_summary(
 
 
 CHECK_DEFAULT_PARAMETERS_SUMMARY = {
+    "disabled_critical": False,
     "states": {
         "active": 0,
         "inactive": 0,

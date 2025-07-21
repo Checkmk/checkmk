@@ -22,15 +22,16 @@ defineProps<{
 
 <style scoped>
 .cmk-accordion-item-state-indicator {
-  margin-left: 8px;
+  width: 16px;
+  height: 16px;
   &:after {
     border-color: var(--help-text-font-color);
     border-style: solid;
-    border-width: 1px 1px 0 0;
+    border-width: 2px 2px 0 0;
     content: '';
     display: inline-block;
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     position: relative;
     transform: rotate(45deg);
     top: -3px;

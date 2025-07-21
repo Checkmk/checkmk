@@ -10,6 +10,7 @@ import CmkChip from '../CmkChip.vue'
 import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import { computed } from 'vue'
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
+import CmkHeading from '../typography/CmkHeading.vue'
 
 export interface CmkAccordionStepPanelItemProps {
   accomplished?: boolean | undefined
@@ -37,10 +38,14 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
         <CmkIcon v-if="props.accomplished" name="checkmark"></CmkIcon>
         <span v-if="!props.accomplished">{{ props.step.toString() }}</span></CmkBadge
       >
-      <b class="cmk-step-panel-item-title">
+      <CmkAccordionItemStateIndicator
+        v-if="!disabled"
+        :value="value"
+        class="cmk-accordion-item-state-indicator"
+      />
+      <CmkHeading type="h3">
         {{ title }}
-        <CmkAccordionItemStateIndicator v-if="!disabled" :value="value" />
-      </b>
+      </CmkHeading>
       <CmkChip
         v-if="props.info"
         size="small"
@@ -56,17 +61,16 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
 
 <style scoped>
 .cmk-step-panel-item-indicator {
-  margin: 0 8px 0 0;
+  margin: 0 6px 0 0;
   font-weight: normal;
 }
 
-.cmk-step-panel-item-title {
-  flex-grow: 2;
-  text-align: left;
+.cmk-accordion-item-state-indicator {
+  margin-right: 4px;
 }
 
 .cmk-step-panel-item-info {
-  margin: 0 0 0 8px;
   font-weight: normal;
+  margin-left: auto;
 }
 </style>

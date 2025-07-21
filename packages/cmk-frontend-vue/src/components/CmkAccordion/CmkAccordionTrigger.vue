@@ -40,7 +40,7 @@ function toggle() {
 
 <style scoped>
 .cmk-accordion-trigger-button {
-  padding: 8px 16px;
+  padding: 20px;
   margin: 0;
   left: 0;
   top: 0;

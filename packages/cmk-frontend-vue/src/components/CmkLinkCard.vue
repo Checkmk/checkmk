@@ -52,7 +52,7 @@ const classes = computed(() => [
 <style scoped>
 .cmk-link-card--standard {
   background-color: var(--ux-theme-1);
-  border: 1px solid var(--default-border-color);
+  border: 1px solid var(--ux-theme-6);
 }
 .cmk-link-card--borderless {
   background-color: var(--ux-theme-2);

@@ -2,12 +2,16 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, override
+
 from cmk import fields
+from cmk.ccc import version
 from cmk.gui import fields as gui_fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.attributes import HostContactGroup
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import CustomHostAttributesAndTagGroups
+from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.watolib.builtin_attributes import (
     HostAttributeAdditionalIPv4Addresses,
     HostAttributeAdditionalIPv6Addresses,
@@ -31,6 +35,7 @@ from cmk.gui.watolib.builtin_attributes import (
     HostAttributeWaitingForDiscovery,
 )
 from cmk.gui.watolib.groups import HostAttributeContactGroups
+from cmk.utils import paths
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID
 
 built_in_tag_group_config = BuiltinTagConfig()
@@ -41,6 +46,28 @@ def _get_valid_tag_ids(built_in_tag_group_id: TagGroupID) -> list[str | None]:
     assert tag_group is not None
 
     return [None if tag_id is None else str(tag_id) for tag_id in tag_group.get_tag_ids()]
+
+
+class RelayField(fields.String):
+    """A field representing the relay address."""
+
+    default_error_messages = {
+        "edition_not_supported": "Relay field not supported in this edition.",
+    }
+
+    def __init__(self, **kwargs: Any):
+        self._supported_editions = {version.Edition.CME, version.Edition.CCE, version.Edition.CSE}
+        kwargs["description"] = edition_field_description(
+            description=kwargs["description"],
+            supported_editions=self._supported_editions,
+        )
+        super().__init__(**kwargs)
+
+    @override
+    def _validate(self, value: str) -> None:
+        if version.edition(paths.omd_root) not in self._supported_editions:
+            raise self.make_error("edition_not_supported")
+        super()._validate(value)
 
 
 class BaseHostTagGroup(BaseSchema):
@@ -103,6 +130,9 @@ class BaseHostAttribute(BaseSchema):
     locked_by = HostAttributeLockedBy().openapi_field()
     locked_attributes = HostAttributeLockedAttributes().openapi_field()
     inventory_failed = HostAttributeDiscoveryFailed().openapi_field()
+    relay = RelayField(
+        description="The name/address of the relay through which this host is monitored, if not empty."
+    )
 
 
 class HostCreateAttribute(BaseHostAttribute, BaseHostTagGroup, CustomHostAttributesAndTagGroups):

@@ -145,6 +145,8 @@ class BuiltInHostAttributes(TypedDict, total=False):
     bake_agent_package: bool
     # Enterprise editions only
     cmk_agent_connection: Literal["push-agent", "pull-agent"]
+    # Cloud editions only
+    relay: bool
 
 
 class BuiltInHostTagGroups(TypedDict, total=False):

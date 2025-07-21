@@ -308,8 +308,8 @@ class Request(
     request_timeout = 110
 
     # TODO investigate why there are so many form_parts
-    max_form_parts = 20000
-    max_form_memory_size = 20 * 1024 * 1024
+    max_form_parts = 200000
+    max_form_memory_size = 200 * 1024 * 1024
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

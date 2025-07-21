@@ -83,7 +83,7 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
-from cmk.fetchers import Fetcher, get_raw_data, Mode, SNMPScanConfig, TLSConfig
+from cmk.fetchers import Fetcher, FetcherTrigger, Mode, SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
@@ -139,7 +139,12 @@ class CheckerConfig(Protocol):  # protocol for now.
 
 
 def _fetch_all(
-    sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
+    trigger: FetcherTrigger,
+    sources: Iterable[Source],
+    *,
+    simulation: bool,
+    file_cache_options: FileCacheOptions,
+    mode: Mode,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -150,6 +155,7 @@ def _fetch_all(
     console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
     return [
         _do_fetch(
+            trigger,
             source.source_info(),
             source.file_cache(simulation=simulation, file_cache_options=file_cache_options),
             source.fetcher(),
@@ -160,6 +166,7 @@ def _fetch_all(
 
 
 def _do_fetch(
+    trigger: FetcherTrigger,
     source_info: SourceInfo,
     file_cache: FileCache,
     fetcher: Fetcher,
@@ -172,7 +179,7 @@ def _do_fetch(
 ]:
     console.debug(f"  Source: {source_info}")
     with CPUTracker(console.debug) as tracker:
-        raw_data = get_raw_data(file_cache, fetcher, mode)
+        raw_data = trigger.get_raw_data(file_cache, fetcher, mode)
     return source_info, raw_data, tracker.duration
 
 
@@ -289,6 +296,7 @@ def _summarize_host_sections(
 class SpecialAgentFetcher:
     def __init__(
         self,
+        trigger: FetcherTrigger,
         factory: FetcherFactory,
         *,
         # alphabetically sorted
@@ -296,6 +304,7 @@ class SpecialAgentFetcher:
         cmds: Iterator[SpecialAgentCommandLine],
         file_cache_options: FileCacheOptions,
     ) -> None:
+        self.trigger: Final = trigger
         self.factory: Final = factory
         self.agent_name: Final = agent_name
         self.cmds: Final = cmds
@@ -314,6 +323,7 @@ class SpecialAgentFetcher:
         file_cache_path = cmk.utils.paths.data_source_cache_dir
 
         return _fetch_all(
+            self.trigger,
             [
                 SpecialAgentSource(
                     self.factory,
@@ -337,6 +347,7 @@ class CMKFetcher:
     def __init__(
         self,
         config_cache: ConfigCache,
+        make_trigger: Callable[[HostName], FetcherTrigger],
         factory: FetcherFactory,
         plugins: AgentBasedPlugins,
         *,
@@ -359,6 +370,7 @@ class CMKFetcher:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.make_trigger: Final = make_trigger
         self.default_address_family: Final = default_address_family
         self.factory: Final = factory
         self.plugins: Final = plugins
@@ -431,6 +443,7 @@ class CMKFetcher:
         )
         passwords = password_store.load(self.password_store_file)
         return _fetch_all(
+            self.make_trigger(host_name),
             itertools.chain.from_iterable(
                 make_sources(
                     self.plugins,

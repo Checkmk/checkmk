@@ -66,7 +66,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.fetchers import Mode
+from cmk.fetchers import Mode, PlainFetcherTrigger
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
@@ -1494,6 +1494,7 @@ def test_commandline_discovery(
     service_name_config = config_cache.make_passive_service_name_config()
     fetcher = CMKFetcher(
         config_cache,
+        lambda hn: PlainFetcherTrigger(),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),

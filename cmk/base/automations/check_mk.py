@@ -32,6 +32,7 @@ import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -142,8 +143,8 @@ from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
-    get_raw_data,
     Mode,
+    PlainFetcherTrigger,
     ProgramFetcher,
     SNMPScanConfig,
     TCPEncryptionHandling,
@@ -271,6 +272,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ServiceDiscoveryResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         force_snmp_cache_refresh, args = _extract_directive("@scan", args)
         _prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
@@ -329,6 +331,9 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
+            lambda hn: config.make_fetcher_trigger(
+                edition, hn, config_cache.label_manager.labels_of_host
+            ),
             config_cache.fetcher_factory(service_configurer, ip_address_of, service_name_config),
             plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
@@ -454,6 +459,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.http_proxies,
             )
             fetcher = SpecialAgentFetcher(
+                PlainFetcherTrigger(),  # no relay support yet
                 config_cache.fetcher_factory(
                     service_configurer,
                     ip_address_of,
@@ -499,6 +505,7 @@ class AutomationDiscoveryPreview(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ServiceDiscoveryPreviewResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         prevent_fetching, args = _extract_directive("@nofetch", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
         host_name = HostName(args[0])
@@ -529,6 +536,9 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
+            lambda hn: config.make_fetcher_trigger(
+                edition, hn, config_cache.label_manager.labels_of_host
+            ),
             config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of_with_fallback,
@@ -868,8 +878,9 @@ class AutomationAutodiscovery(DiscoveryAutomation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> AutodiscoveryResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         with redirect_stdout(open(os.devnull, "w")):
-            result = _execute_autodiscovery(plugins, loading_result)
+            result = _execute_autodiscovery(edition, plugins, loading_result)
 
         return AutodiscoveryResult(*result)
 
@@ -899,6 +910,7 @@ def _make_configured_bake_on_restart_callback(
 
 
 def _execute_autodiscovery(
+    edition: cmk_version.Edition,
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
@@ -952,6 +964,9 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
+        lambda hn: config.make_fetcher_trigger(
+            edition, hn, config_cache.label_manager.labels_of_host
+        ),
         config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -2879,7 +2894,7 @@ class AutomationDiagCmkAgent(Automation):
         )
 
         state, output = 0, ""
-        raw_data = get_raw_data(
+        raw_data = PlainFetcherTrigger().get_raw_data(
             file_cache=NoCache(
                 path_template="/dev/null",
                 max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),
@@ -2925,6 +2940,7 @@ class AutomationDiagHost(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> DiagHostResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         ipaddress = HostAddress(ipaddress)
@@ -2985,6 +3001,7 @@ class AutomationDiagHost(Automation):
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
+                        edition,
                         loading_result.config_cache,
                         (
                             service_name_config
@@ -3071,6 +3088,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
+        edition: cmk_version.Edition,
         config_cache: ConfigCache,
         service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
@@ -3105,6 +3123,9 @@ class AutomationDiagHost(Automation):
             on_error=OnError.RAISE,
             missing_sys_description=config_cache.missing_sys_description(host_name),
             oid_cache_dir=oid_cache_dir,
+        )
+        trigger = config.make_fetcher_trigger(
+            edition, host_name, config_cache.label_manager.labels_of_host
         )
         for source in sources.make_sources(
             plugins,
@@ -3180,7 +3201,7 @@ class AutomationDiagHost(Automation):
                     tls_config=tls_config,
                 )
 
-            raw_data = get_raw_data(
+            raw_data = trigger.get_raw_data(
                 source.file_cache(
                     simulation=config.simulation_mode,
                     file_cache_options=file_cache_options,
@@ -3585,6 +3606,7 @@ class AutomationGetAgentOutput(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> GetAgentOutputResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         hostname = HostName(args[0])
         ty = args[1]
 
@@ -3608,6 +3630,9 @@ class AutomationGetAgentOutput(Automation):
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
+        trigger = config.make_fetcher_trigger(
+            edition, hostname, config_cache.label_manager.labels_of_host
+        )
 
         success = True
         output = ""
@@ -3689,7 +3714,7 @@ class AutomationGetAgentOutput(Automation):
                     if source_info.fetcher_type is FetcherType.SNMP:
                         continue
 
-                    raw_data = get_raw_data(
+                    raw_data = trigger.get_raw_data(
                         source.file_cache(
                             simulation=config.simulation_mode, file_cache_options=file_cache_options
                         ),

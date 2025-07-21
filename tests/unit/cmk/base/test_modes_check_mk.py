@@ -11,10 +11,21 @@ import cmk.ccc.resulttype as result
 from cmk.base import config
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.fetchers import PiggybackFetcher
+from cmk.fetchers import Fetcher, FetcherTrigger, Mode, PiggybackFetcher
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
+
+
+class _MockFetcherTrigger(FetcherTrigger):
+    def __init__(self, payload: bytes) -> None:
+        super().__init__()
+        self._payload = payload
+
+    def _trigger(self, fetcher: Fetcher, mode: Mode) -> result.Result:
+        if isinstance(fetcher, PiggybackFetcher):
+            return result.OK(b"")
+        return result.OK(self._payload)
 
 
 class TestModeDumpAgent:
@@ -64,11 +75,9 @@ class TestModeDumpAgent:
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
         monkeypatch.setattr(
-            check_mk,
-            "get_raw_data",
-            lambda _file_cache, fetcher, _mode: (
-                result.OK(b"") if isinstance(fetcher, PiggybackFetcher) else result.OK(raw_data)
-            ),
+            check_mk.config,  # type: ignore[attr-defined]
+            "make_fetcher_trigger",
+            lambda *args: _MockFetcherTrigger(raw_data),
         )
 
     @pytest.fixture

@@ -12,6 +12,7 @@ from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -119,6 +120,7 @@ def main(
     )
 
     return inventory_as_check(
+        cmk_version.edition(cmk.utils.paths.omd_root),
         parameters,
         args.hostname,
         load_plugins_from_index(VersionedConfigPath.LATEST_CONFIG)
@@ -128,7 +130,10 @@ def main(
 
 
 def inventory_as_check(
-    parameters: HWSWInventoryParameters, hostname: HostName, plugins: AgentBasedPlugins
+    edition: cmk_version.Edition,
+    parameters: HWSWInventoryParameters,
+    hostname: HostName,
+    plugins: AgentBasedPlugins,
 ) -> ServiceState:
     loading_result = config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
     config_cache = loading_result.config_cache
@@ -146,6 +151,9 @@ def inventory_as_check(
 
     fetcher = CMKFetcher(
         config_cache,
+        lambda hn: config.make_fetcher_trigger(
+            edition, hn, config_cache.label_manager.labels_of_host
+        ),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

@@ -95,9 +95,11 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import (
     Fetcher,
+    FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
     PiggybackFetcher,
+    PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcher,
     SNMPSectionMeta,
@@ -3700,6 +3702,21 @@ def access_globally_cached_config_cache() -> ConfigCache:
 def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
     """Create a new ConfigCache and set it in the cache manager"""
     cache_manager.obtain_cache("config_cache")["cache"] = config_cache
+
+
+def make_fetcher_trigger(
+    edition: cmk_version.Edition, host_name: HostName, labels_of_host: Callable[[HostName], Labels]
+) -> FetcherTrigger:
+    match edition:
+        case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
+            # TODO: This is a temporary criteria, and should be replaced by a proper host attribute
+            return (
+                PlainFetcherTrigger()  # TODO: Implement RelayFetcherTrigger
+                if "relay" in labels_of_host(host_name)
+                else PlainFetcherTrigger()
+            )
+        case cmk_version.Edition.CEE | cmk_version.Edition.CRE:
+            return PlainFetcherTrigger()
 
 
 class ParserFactory:

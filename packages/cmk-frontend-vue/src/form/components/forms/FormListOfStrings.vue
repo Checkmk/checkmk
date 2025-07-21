@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeMount, ref, watch } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
 import type { ListOfStrings } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import {
   groupIndexedValidations,
   type ValidationMessages

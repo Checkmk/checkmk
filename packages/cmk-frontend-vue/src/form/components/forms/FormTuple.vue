@@ -10,7 +10,7 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { ref, watch } from 'vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import HelpText from '@/components/HelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { capitalizeFirstLetter } from '@/lib/utils'

@@ -10,7 +10,7 @@ import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import HelpText from '@/components/HelpText.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import type {
   CascadingSingleChoice,

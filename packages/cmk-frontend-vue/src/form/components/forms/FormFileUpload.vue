@@ -8,7 +8,7 @@ import type { FileUpload } from 'cmk-shared-typing/typescript/vue_formspec_compo
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import { useId } from '@/form/utils'
 import CmkButton from '@/components/CmkButton.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{

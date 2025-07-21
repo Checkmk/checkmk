@@ -19,7 +19,7 @@ import FormRequired from '@/form/private/FormRequired.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import FormIndent from '@/components/CmkIndent.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { getElementsInGroupsFromProps, toggleElement, titleRequired } from './_groups'
 

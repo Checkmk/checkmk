@@ -10,7 +10,7 @@ import CmkList from '@/components/CmkList'
 import formListActions from '@/form/components/forms/utils/formListActions'
 import type { ListUniqueSelection } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useFormEditDispatcher } from '@/form/private'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 const props = defineProps<{
   spec: ListUniqueSelection

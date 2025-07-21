@@ -8,7 +8,7 @@ import type { Integer } from 'cmk-shared-typing/typescript/vue_formspec_componen
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { useId } from '@/form/utils'
 import FormLabel from '@/form/private/FormLabel.vue'
 

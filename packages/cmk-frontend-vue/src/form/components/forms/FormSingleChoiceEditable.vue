@@ -8,7 +8,7 @@ import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingl
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { onMounted, ref, toRaw } from 'vue'

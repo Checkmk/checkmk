@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
 import type { SimplePassword } from 'cmk-shared-typing/typescript/vue_formspec_components'

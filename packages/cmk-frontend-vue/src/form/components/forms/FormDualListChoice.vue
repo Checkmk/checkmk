@@ -8,7 +8,7 @@ import { type Ref } from 'vue'
 import { useValidation, type ValidationMessages } from '../utils/validation'
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import FormValidation from '@/form/components/FormValidation.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import type {
   DualListChoice,
   MultipleChoiceElement

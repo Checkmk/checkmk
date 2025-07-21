@@ -35,5 +35,15 @@
             "action": "fill",
             "value": "test"
         }
+    ],
+    "Hosts to be monitored": [
+        {
+            "locator": "form[id='form_rule_editor'] table:has-text('Value') button.cmk-dropdown-button",
+            "action": "click"
+        },
+        {
+            "locator": "ul.cmk-suggestions li[role='option']:has-text('Positive match')",
+            "action": "click"
+        }
     ]
 }

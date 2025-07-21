@@ -101,7 +101,11 @@ def main():
     args = parser.parse_args()
 
     meter, meter_provider = setup_metrics()
-    logger, logger_provider = setup_logging() if args.enable_logs else (None, None)
+    if args.enable_logs:
+        logger, logger_provider = setup_logging()
+        log_levels = [(level, getattr(logger, level)) for level in HTTP_LOG_LEVELS]
+    else:
+        logger, logger_provider = None, None
 
     success_shutdown_handler = shutdown_handler(meter_provider, logger_provider)
     signal.signal(signal.SIGINT, success_shutdown_handler)
@@ -115,8 +119,6 @@ def main():
 
     console_logger.info("Starting sending data to %s", ENDPOINT)
     counter = 0
-
-    log_levels = [(level, getattr(logger, level)) for level in HTTP_LOG_LEVELS]
 
     while True:
         console_logger.info(f"Counter value is {counter}.")

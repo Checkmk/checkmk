@@ -63,7 +63,7 @@ class UnifiedSearch:
                 for topic, results in monitoring_results_by_topic
             )
         )
-        search_results = sorted(itertools.chain(setup_results, monitoring_results))
+        search_results = [*setup_results, *monitoring_results]
 
         result_counts = UnifiedSearchResultCounts(
             total=len(search_results),

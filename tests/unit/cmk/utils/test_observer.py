@@ -85,7 +85,7 @@ def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
     )
 
 
-@pytest.mark.xfail(reason="CMK-24595: investigate failure / flake.")
+@pytest.mark.skip(reason="CMK-24874: migrate as integration test(s).")
 def test_fetcher_memory_obeserver_vm_size():
     mibs_to_bytes = 2**20
     memory_assigned = mibs_to_bytes * 50  # 50 MiBs

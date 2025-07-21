@@ -1004,8 +1004,8 @@ class SingleHostRulesetMatcherFirst[TRuleValue, TDefaultValue]:
     labels_of_host: Callable[[HostName], Labels]
 
     def __call__(self, host_name: HostName) -> TRuleValue | TDefaultValue:
-        all = self.matcher.get_host_values_all(host_name, self.host_ruleset, self.labels_of_host)
-        return all[0] if all else self.default
+        all_ = self.matcher.get_host_values_all(host_name, self.host_ruleset, self.labels_of_host)
+        return all_[0] if all_ else self.default
 
 
 @dataclass(frozen=True)

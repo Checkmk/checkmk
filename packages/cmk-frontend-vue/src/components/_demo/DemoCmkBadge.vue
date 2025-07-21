@@ -32,10 +32,10 @@ defineProps<{ screenshotMode: boolean }>()
         </td>
         <td>
           <div class="flex">
-            <CmkBadge size="small">1</CmkBadge>
-            <CmkBadge size="small" color="success">1</CmkBadge>
-            <CmkBadge size="small" color="warning">1</CmkBadge>
-            <CmkBadge size="small" color="danger">1</CmkBadge>
+            <CmkBadge type="outline" size="small">1</CmkBadge>
+            <CmkBadge type="outline" size="small" color="success">1</CmkBadge>
+            <CmkBadge type="outline" size="small" color="warning">1</CmkBadge>
+            <CmkBadge type="outline" size="small" color="danger">1</CmkBadge>
           </div>
         </td>
         <td>
@@ -52,21 +52,23 @@ defineProps<{ screenshotMode: boolean }>()
         <td>
           <div class="flex">
             <CmkBadge type="fill">online</CmkBadge>
-            <CmkBadge type="fill" color="success"
-              ><CmkIcon size="large" name="checkmark"></CmkIcon
-            ></CmkBadge>
+            <CmkBadge type="fill" color="success">
+              <CmkIcon size="large" name="checkmark"></CmkIcon>
+            </CmkBadge>
             <CmkBadge type="fill" color="warning">a</CmkBadge>
-            <CmkBadge type="fill" color="danger"
-              ><CmkIcon size="small" name="check"></CmkIcon
-            ></CmkBadge>
+            <CmkBadge type="fill" color="danger">
+              <CmkIcon size="small" name="check"></CmkIcon>
+            </CmkBadge>
           </div>
         </td>
         <td>
           <div class="flex">
             <CmkBadge>1</CmkBadge>
-            <CmkBadge color="success">Ok</CmkBadge>
-            <CmkBadge color="warning">a</CmkBadge>
-            <CmkBadge color="danger"><CmkIcon size="small" name="check"></CmkIcon></CmkBadge>
+            <CmkBadge type="outline" color="success">Ok</CmkBadge>
+            <CmkBadge type="outline" color="warning">a</CmkBadge>
+            <CmkBadge type="outline" color="danger">
+              <CmkIcon size="small" name="check"></CmkIcon>
+            </CmkBadge>
           </div>
         </td>
         <td>
@@ -96,10 +98,10 @@ defineProps<{ screenshotMode: boolean }>()
         </td>
         <td>
           <div class="flex">
-            <CmkBadge size="large">1</CmkBadge>
-            <CmkBadge size="large" color="success">yes</CmkBadge>
-            <CmkBadge size="large" color="warning">2</CmkBadge>
-            <CmkBadge size="large" color="danger">33</CmkBadge>
+            <CmkBadge type="outline" size="large">1</CmkBadge>
+            <CmkBadge type="outline" size="large" color="success">yes</CmkBadge>
+            <CmkBadge type="outline" size="large" color="warning">2</CmkBadge>
+            <CmkBadge type="outline" size="large" color="danger">33</CmkBadge>
           </div>
         </td>
         <td>

@@ -13,9 +13,12 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
 from cmk.utils.tags import TagGroupID, TagID
@@ -231,3 +234,24 @@ class HostAddressConverter:
                     raise ValueError(f"IPv6 address '{value}' is not allowed.")
 
         return address
+
+
+@dataclass(slots=True)
+class UserRoleIdConverter:
+    type PermissionType = Literal["wato.users", "wato.edit"]
+
+    permission_type: PermissionType = "wato.users"
+
+    def should_exist(self, user_role: str) -> RoleID:
+        self._verify_user_permissions()
+        if not role_exists(RoleID(user_role)):
+            raise ValueError(f"The role should exist but it doesn't: '{user_role}'")
+        return RoleID(user_role)
+
+    def _verify_user_permissions(self) -> None:
+        # TODO: clean this up (CMK-17068)
+        load_dynamic_permissions()
+        user.need_permission("wato.users")
+
+        if self.permission_type == "wato.edit":
+            user.need_permission("wato.edit")

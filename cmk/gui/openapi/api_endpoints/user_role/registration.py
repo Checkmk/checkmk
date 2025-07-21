@@ -7,6 +7,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 
 from .endpoint_family import USER_ROLE_FAMILY
 from .list_user_roles import ENDPOINT_LIST_USER_ROLES
+from .show_user_role import ENDPOINT_SHOW_USER_ROLE
 
 
 def register(
@@ -21,5 +22,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_LIST_USER_ROLES,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_SHOW_USER_ROLE,
         ignore_duplicates=ignore_duplicates,
     )

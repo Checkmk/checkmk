@@ -48,7 +48,8 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
       </CmkHeading>
       <CmkChip
         v-if="props.info"
-        size="small"
+        size="medium"
+        variant="fill"
         :content="props.info"
         class="cmk-step-panel-item-info"
       ></CmkChip>

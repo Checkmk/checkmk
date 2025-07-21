@@ -197,7 +197,7 @@ BEGIN
       CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
       CAST(type AS NVARCHAR(128)) AS type,
       CAST(machine_name AS NVARCHAR(128)) AS machine_name,
-      CAST(''True'' AS NVARCHAR(12))as is_primary_replica,
+      CAST(''1'' AS NVARCHAR(12)) AS is_primary_replica,
       CAST(''1'' AS NVARCHAR(12)) AS is_local,
       CAST('''' AS NVARCHAR(12)) AS replica_id,
       CAST(sys.databases.name AS NVARCHAR(MAX)) AS database_name
@@ -221,8 +221,8 @@ BEGIN
                      AS last_backup_date,
       CAST(b.type AS NVARCHAR(MAX)) AS type,
       CAST(b.machine_name AS NVARCHAR(MAX)) AS machine_name,
-      ISNULL(CONVERT(NVARCHAR(40), rep.is_primary_replica), '''') AS is_primary_replica,
-      rep.is_local,
+      CAST(rep.is_primary_replica AS NVARCHAR(12)) AS is_primary_replica, -- bit: null, 0,  1
+      CAST(rep.is_local AS NVARCHAR(12)) AS is_local,                     -- bit: null, 0,  1
       ISNULL(CONVERT(NVARCHAR(40), rep.replica_id), '''') AS replica_id,
       CAST(db.name AS NVARCHAR(MAX)) AS database_name
     FROM
@@ -230,14 +230,14 @@ BEGIN
       LEFT OUTER JOIN sys.databases db ON CAST(b.database_name AS NVARCHAR(MAX)) = CAST(db.name AS NVARCHAR(MAX))
       LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id
     WHERE
-      (rep.is_local is null or rep.is_local = 1)
-      AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'')
+      (is_local is null or is_local = ''1'')
+      AND (is_primary_replica is null or is_primary_replica = ''1'')
       AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
     GROUP BY
       type,
-      rep.replica_id,
-      rep.is_primary_replica,
-      rep.is_local,
+      replica_id,
+      is_primary_replica,
+      is_local,
       CAST(db.name AS NVARCHAR(MAX)),
       CAST(b.machine_name AS NVARCHAR(MAX)),
       rep.synchronization_state,

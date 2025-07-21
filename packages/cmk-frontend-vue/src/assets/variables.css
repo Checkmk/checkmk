@@ -141,6 +141,7 @@
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: rgb(183, 180, 180);
+    --default-form-element-placeholder-color: rgba(30, 38, 46, 0.5);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
     --default-button-emphasis-color: rgb(13, 141, 91);
@@ -195,9 +196,10 @@
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);
     --default-table-th-color: var(--ux-theme-2);
-    --default-form-element-bg-color: var(--ux-theme-5);
+    --default-form-element-bg-color: var(--color-midnight-grey-50);
     --default-form-element-bg-color-disabled: var(--ux-theme-3);
-    --default-form-element-border-color: rgb(69, 77, 89);
+    --default-form-element-border-color: var(--color-mid-grey-60);
+    --default-form-element-placeholder-color: rgba(255, 255, 255, 0.5);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
     --default-button-emphasis-color: rgb(19, 211, 137);

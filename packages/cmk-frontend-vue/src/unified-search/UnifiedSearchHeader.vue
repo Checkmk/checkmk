@@ -263,16 +263,20 @@ function onCtrlEnter() {
 }
 
 .unified-search-input {
-  background-color: var(--ux-theme-0);
+  background-color: var(--default-form-element-bg-color);
   box-shadow: none;
   filter: none;
   padding: 0 35px 0 35px;
   width: 100%;
   border-radius: 4px;
-  border: 1px solid transparent;
+  border: 1px solid var(--default-form-element-border-color);
   line-height: 15px;
   height: 27px;
   position: relative;
+
+  &::placeholder {
+    color: var(--default-form-element-placeholder-color);
+  }
 }
 
 .unified-search-filter-suggestions {

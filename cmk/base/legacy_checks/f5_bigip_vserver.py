@@ -98,8 +98,9 @@ def parse_f5_bigip_vserver(string_table):
 
 
 def inventory_f5_bigip_vserver(parsed):
-    for name in parsed:
-        yield name, {}
+    for name, vserver in parsed.items():
+        if vserver["status"] in ("1", "4"):  # Green and Blue
+            yield name, {}
 
 
 _AGGREGATION_KEYS = {

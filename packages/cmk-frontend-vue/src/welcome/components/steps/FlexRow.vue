@@ -15,8 +15,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <style scoped>
 .flex-row {
   margin-top: var(--spacing-half);
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing);
 }
 </style>

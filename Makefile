@@ -65,12 +65,10 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
-
 	git rev-parse HEAD > COMMIT ; \
 	for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 		EXCLUDES+=" --exclude $${X%*/}" ; \
 	done ; \
-
 	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \
 	    rm -rf check-mk-$(EDITION)-$(OMD_VERSION) ; \
 	fi ; \

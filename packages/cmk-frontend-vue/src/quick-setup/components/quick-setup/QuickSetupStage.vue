@@ -7,10 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkLabel from '@/components/CmkLabel.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import type { QuickSetupStageProps } from './quick_setup_types'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const props = defineProps<QuickSetupStageProps>()
 
@@ -32,14 +33,14 @@ const onClickGoTo = computed(() =>
     @click="(_mouse_event) => onClickGoTo"
   >
     <div class="qs-stage__content">
-      <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
+      <CmkHeading class="qs-stage__title" :type="'h2'" @click="onClickGoTo">{{ title }}</CmkHeading>
 
       <CmkCollapsible :open="isCompleted && !!recapContent">
         <component :is="recapContent" />
       </CmkCollapsible>
 
       <CmkCollapsible :open="!isCompleted && !!sub_title">
-        <CmkLabel variant="subtitle">{{ sub_title }}</CmkLabel>
+        <CmkParagraph class="qs-stage__subtitle">{{ sub_title }}</CmkParagraph>
       </CmkCollapsible>
 
       <CmkCollapsible :open="isOpen">
@@ -120,6 +121,14 @@ const onClickGoTo = computed(() =>
       background-color: var(--success-dimmed);
     }
   }
+}
+
+.qs-stage__title {
+  margin: 2px 0;
+}
+
+.qs-stage__subtitle {
+  margin-bottom: var(--spacing);
 }
 
 .qs-stage__loading {

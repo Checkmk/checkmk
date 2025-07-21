@@ -13,6 +13,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 <template>
   <CmkHeading> Default Heading </CmkHeading>
+  <CmkHeading @click="console.log('foo')"> Clickable Heading </CmkHeading>
   <CmkHeading type="h1"> Heading 1 </CmkHeading>
   <CmkHeading type="h2"> Heading 2 </CmkHeading>
   <CmkHeading type="h3"> Heading 3 </CmkHeading>

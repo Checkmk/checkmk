@@ -12,8 +12,8 @@ import type {
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkDropdown from '../CmkDropdown.vue'
-import CmkLabel from '../CmkLabel.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -166,7 +166,7 @@ const dataRequired = ref<Record<string, unknown>>({})
 
 <template>
   <p>
-    <CmkLabel>Dictionary type:</CmkLabel>
+    <CmkHeading>Dictionary type:</CmkHeading>
     <CmkDropdown
       v-model:selected-option="dictType"
       :options="{ type: 'fixed', suggestions: DICT_TYPES }"
@@ -174,7 +174,7 @@ const dataRequired = ref<Record<string, unknown>>({})
     />
   </p>
   <p>
-    <CmkLabel>Dictionary top level group:</CmkLabel>
+    <CmkHeading>Dictionary top level group:</CmkHeading>
     <CmkDropdown
       v-model:selected-option="topLevelGroup"
       :options="{ type: 'fixed', suggestions: GROUP_OPTIONS }"
@@ -182,7 +182,7 @@ const dataRequired = ref<Record<string, unknown>>({})
     />
   </p>
   <p>
-    <CmkLabel>Dictionary element group:</CmkLabel>
+    <CmkHeading>Dictionary element group:</CmkHeading>
     <CmkDropdown
       v-model:selected-option="childGroup"
       :options="{ type: 'fixed', suggestions: GROUP_OPTIONS }"

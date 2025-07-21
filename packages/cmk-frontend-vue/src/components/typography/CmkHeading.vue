@@ -24,13 +24,17 @@ export type HeadingType = VariantProps<typeof propsCva>['type']
 
 export interface CmkHeadingProps {
   type?: HeadingType
+  onClick?: (() => void) | null
 }
 
 defineProps<CmkHeadingProps>()
 </script>
 
 <template>
-  <component :is="type || 'h1'" :class="propsCva({ type })">
+  <component
+    :is="type || 'h1'"
+    :class="[propsCva({ type }), { 'cmk-heading--clickable': onClick!! }]"
+  >
     <slot />
   </component>
 </template>
@@ -56,5 +60,9 @@ defineProps<CmkHeadingProps>()
 
 .cmk-heading--h4 {
   font-size: var(--font-size-normal);
+}
+
+.cmk-heading--clickable {
+  cursor: pointer;
 }
 </style>

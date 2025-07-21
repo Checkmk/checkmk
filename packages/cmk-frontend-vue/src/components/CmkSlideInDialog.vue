@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import { DialogClose, DialogTitle } from 'radix-vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkLabel from '@/components/CmkLabel.vue'
+import CmkHeading from './typography/CmkHeading.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
@@ -27,7 +27,7 @@ const emit = defineEmits(['close'])
 <template>
   <CmkSlideIn :open="open" @close="emit('close')">
     <DialogTitle v-if="header" class="slide-in__title">
-      <CmkLabel variant="title">{{ header.title }}</CmkLabel>
+      <CmkHeading type="h1">{{ header.title }}</CmkHeading>
       <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
         <CmkIcon :aria-label="t('close-slidein', 'Close')" name="close" size="xsmall" />
       </DialogClose>

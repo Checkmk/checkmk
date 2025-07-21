@@ -51,9 +51,10 @@ def main() {
                 condition: run_condition,
                 raiseOnError: true,
             ) {
+                def this_job_parameters = job_parameters + [stringParam(name: "EDITION", value: edition)];
                 smart_build(
                     job: "${branch_base_folder}/nightly-${edition}/build-cmk-deliverables-no-cache",
-                    parameters: job_parameters,
+                    parameters: this_job_parameters,
                 );
             }
         }]

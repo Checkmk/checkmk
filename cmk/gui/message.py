@@ -111,7 +111,7 @@ def register(
             name="execute_user_messages_spool_job",
             callable=_execute_user_messages_spool_job,
             # Usually there are no spooled messages, and the job is very fast then.
-            interval=timedelta(seconds=30),
+            interval=timedelta(minutes=1),
         )
     )
 

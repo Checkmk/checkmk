@@ -20,7 +20,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
+from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (  # type: ignore[attr-defined]
     BaseHostAttribute,
     BaseHostTagGroup,
 )

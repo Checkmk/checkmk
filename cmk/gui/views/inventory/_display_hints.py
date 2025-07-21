@@ -26,7 +26,13 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.utils.structured_data import SDKey, SDPath
 
-from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunction, SortFunction
+from .registry import (
+    inv_paint_funtions,
+    InventoryHintSpec,
+    InvValue,
+    PaintFunction,
+    SortFunction,
+)
 
 
 @dataclass(frozen=True)
@@ -309,7 +315,7 @@ def _parse_legacy_display_hints(
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AttributeDisplayHint:
     title: str
     short_title: str
@@ -327,7 +333,7 @@ class AttributeDisplayHint:
 OrderedAttributeDisplayHints: TypeAlias = Mapping[SDKey, AttributeDisplayHint]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ColumnDisplayHint:
     title: str
     short_title: str
@@ -353,7 +359,7 @@ class ColumnDisplayHint:
 OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NodeDisplayHint:
     path: SDPath
     title: str
@@ -442,33 +448,33 @@ class DisplayHints:
             return self._nodes_by_path[abc_path]
         title = path[-1].replace("_", " ").title()
         return NodeDisplayHint(
-            path,
-            title,
-            title,
-            _make_long_title(
+            path=path,
+            title=title,
+            short_title=title,
+            long_title=_make_long_title(
                 self.get_node_hint(path[:-1]).title if path[:-1] else "",
                 title,
             ),
-            "",
-            {},
-            {},
-            "",
-            True,
+            icon="",
+            attributes={},
+            columns={},
+            table_view_name="",
+            table_is_show_more=True,
         )
 
 
 inv_display_hints = DisplayHints(
     {
         (): NodeDisplayHint(
-            (),
-            str(_l("Inventory tree")),
-            str(_l("Inventory tree")),
-            str(_l("Inventory tree")),
-            "",
-            {},
-            {},
-            "",
-            True,
+            path=(),
+            title=str(_l("Inventory tree")),
+            short_title=str(_l("Inventory tree")),
+            long_title=str(_l("Inventory tree")),
+            icon="",
+            attributes={},
+            columns={},
+            table_view_name="",
+            table_is_show_more=True,
         )
     }
 )
@@ -478,17 +484,17 @@ def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> Non
     for hint in _parse_legacy_display_hints(legacy_hints):
         inv_display_hints.add(
             NodeDisplayHint(
-                hint.path,
-                hint.title,
-                hint.short_title,
-                _make_long_title(
+                path=hint.path,
+                title=hint.title,
+                short_title=hint.short_title,
+                long_title=_make_long_title(
                     inv_display_hints.get_node_hint(hint.path[:-1]).title if hint.path[:-1] else "",
                     hint.title,
                 ),
-                hint.icon,
-                hint.attributes,
-                hint.columns,
-                hint.table_view_name,
-                hint.table_is_show_more,
+                icon=hint.icon,
+                attributes=hint.attributes,
+                columns=hint.columns,
+                table_view_name=hint.table_view_name,
+                table_is_show_more=hint.table_is_show_more,
             )
         )

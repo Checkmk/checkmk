@@ -176,58 +176,166 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 # The single attribute hints are not checked here
                 attributes={
                     SDKey("arch"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("max_speed"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("model"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("type"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("threads"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("smt_threads"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("cpu_max_capa"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("cpus"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("logical_cpus"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("cores"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("cores_per_cpu"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("threads_per_cpu"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("cache_size"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("bus_speed"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("voltage"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("sharing_mode"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("implementation_mode"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                     SDKey("entitlement"): AttributeDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        data_type="",
+                        is_show_more=False,
                     ),
                 },
                 columns={},
@@ -252,25 +360,60 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 # The single column hints are not checked here
                 columns={
                     SDKey("id"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("creation"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("size"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("labels"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("amount_containers"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("repotags"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("repodigests"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                 },
                 table_view_name="invdockerimages",
@@ -371,22 +514,52 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 # The single column hints are not checked here
                 columns={
                     SDKey("id"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("creation"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("name"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("labels"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("status"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                     SDKey("image"): ColumnDisplayHint(
-                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                        title="",
+                        short_title="",
+                        long_title="",
+                        paint_function=lambda *args: ("", ""),
+                        sort_function=lambda *args: 0,
+                        filter_class=FilterInvtableText,
                     ),
                 },
                 table_view_name="invdockercontainers",

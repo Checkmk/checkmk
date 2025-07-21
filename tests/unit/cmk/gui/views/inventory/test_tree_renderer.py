@@ -132,19 +132,44 @@ def test_sort_table_rows_displayhint(
             attributes={},
             columns={
                 SDKey("sid"): ColumnDisplayHint(
-                    "SID", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="SID",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
-                    "Changed", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Changed",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
-                    "Foo", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Foo",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
-                    "Flashback", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Flashback",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("other"): ColumnDisplayHint(
-                    "Other", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Other",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
             },
             table_view_name="",
@@ -404,19 +429,44 @@ def test_sort_delta_table_rows_displayhint(
             attributes={},
             columns={
                 SDKey("sid"): ColumnDisplayHint(
-                    "SID", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="SID",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
-                    "Changed", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Changed",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
-                    "Foo", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Foo",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
-                    "Flashback", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Flashback",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
                 SDKey("other"): ColumnDisplayHint(
-                    "Other", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                    title="Other",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    filter_class=FilterInvtableText,
                 ),
             },
             table_view_name="",
@@ -492,16 +542,40 @@ def test_sort_attributes_pairs_displayhint(
             long_title="",
             attributes={
                 SDKey("a"): AttributeDisplayHint(
-                    "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="A",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("b"): AttributeDisplayHint(
-                    "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="B",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("d"): AttributeDisplayHint(
-                    "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="D",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("c"): AttributeDisplayHint(
-                    "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="C",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
             },
             columns={},
@@ -567,16 +641,40 @@ def test_sort_delta_attributes_pairs_displayhint(
             long_title="",
             attributes={
                 SDKey("a"): AttributeDisplayHint(
-                    "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="A",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("b"): AttributeDisplayHint(
-                    "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="B",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("d"): AttributeDisplayHint(
-                    "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="D",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
                 SDKey("c"): AttributeDisplayHint(
-                    "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                    title="C",
+                    short_title="",
+                    long_title="",
+                    paint_function=inv_paint_generic,
+                    sort_function=lambda *args: 0,
+                    data_type="",
+                    is_show_more=False,
                 ),
             },
             columns={},

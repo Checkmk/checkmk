@@ -5,8 +5,6 @@ cc_library = rule(
     cfg = _transition_platform,
     parent = native.cc_library,
     attrs = {
-        "platform": attr.label(
-            default = "//bazel/platforms:x86_64-linux-gcc-hermetic",
-        ),
+        "platform": attr.label(default = "@platforms//host"),
     },
 )

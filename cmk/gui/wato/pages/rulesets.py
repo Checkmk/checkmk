@@ -176,7 +176,13 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
-from ...form_specs.vue import DEFAULT_VALUE, RawDiskData, RawFrontendData
+from ...form_specs.vue import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+)
 from ._rule_conditions import DictHostTagCondition
 
 _DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"
@@ -2292,12 +2298,16 @@ class ABCEditRuleMode(WatoMode):
         with html.form_context("rule_editor", method="POST"):
             self._page_form(debug=config.debug)
 
-    def _get_rule_value(self) -> RawDiskData | RawFrontendData:
+    def _get_rule_value(self) -> IncomingData:
         if request.has_var(self._vue_field_id()):
             return RawFrontendData(
                 json.loads(request.get_str_input_mandatory(self._vue_field_id()))
             )
-        return RawDiskData(self._rule.value)
+        return (
+            self._rule.value
+            if isinstance(self._rule.value, DefaultValue)
+            else RawDiskData(self._rule.value)
+        )
 
     @property
     def folder(self) -> Folder:

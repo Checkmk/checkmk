@@ -11,6 +11,12 @@ from cmk.gui.utils.roles import get_role_permissions
 from .models.response_models import UserRoleExtensionsModel, UserRoleModel
 
 PERMISSIONS = permissions.Perm("wato.users")
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        PERMISSIONS,
+    ]
+)
 
 
 def serialize_role(role: UserRole) -> UserRoleModel:

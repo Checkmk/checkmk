@@ -12,6 +12,7 @@ from pydantic import PlainValidator
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -247,6 +248,12 @@ class UserRoleIdConverter:
         if not role_exists(RoleID(user_role)):
             raise ValueError(f"The role should exist but it doesn't: '{user_role}'")
         return RoleID(user_role)
+
+    def should_be_custom_and_should_exist(self, user_role: str) -> RoleID:
+        role_id = self.should_exist(user_role)
+        if role_id in builtin_role_ids:
+            raise ValueError(f"The role should be a custom role but it's not: '{user_role}'")
+        return role_id
 
     def _verify_user_permissions(self) -> None:
         # TODO: clean this up (CMK-17068)

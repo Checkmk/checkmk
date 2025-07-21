@@ -42,6 +42,7 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
 from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
+from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -181,6 +182,7 @@ def create_userrole(params: Mapping[str, Any]) -> Response:
     ],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    removed_in_version=APIVersion.UNSTABLE,
 )
 def delete_userrole(params: Mapping[str, Any]) -> Response:
     """Delete a user role"""

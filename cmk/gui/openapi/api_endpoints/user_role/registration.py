@@ -5,6 +5,7 @@
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
+from .delete_user_role import ENDPOINT_DELETE_USER_ROLE
 from .endpoint_family import USER_ROLE_FAMILY
 from .list_user_roles import ENDPOINT_LIST_USER_ROLES
 from .show_user_role import ENDPOINT_SHOW_USER_ROLE
@@ -26,5 +27,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_SHOW_USER_ROLE,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_DELETE_USER_ROLE,
         ignore_duplicates=ignore_duplicates,
     )

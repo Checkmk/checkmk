@@ -49,8 +49,11 @@ impl Default for Config {
 
 impl Config {
     pub fn from_string<T: AsRef<str>>(source: T) -> Result<Option<Self>> {
-        YamlLoader::load_from_str(source.as_ref())?
-            .first()
+        log::error!("ddddddddddddddddddddddddddd");
+        let r = source.as_ref();
+
+        let y = YamlLoader::load_from_str(r)?;
+        y.first()
             .and_then(|e| Config::from_yaml(e).transpose())
             .transpose()
     }
@@ -60,11 +63,8 @@ impl Config {
         if root.is_badvalue() {
             return Ok(None);
         }
-        let default_config = Config {
-            auth: Authentication::default(),
+        let default_config = Config::default();
 
-            ..Default::default()
-        };
         let config = Config::parse_main_from_yaml(root, &default_config)?;
         match config {
             Some(mut c) => {
@@ -89,7 +89,7 @@ impl Config {
             bail!("main key is absent");
         }
 
-        let auth = Authentication::from_yaml(main).unwrap_or_else(|_| default.auth.clone());
+        let auth = Authentication::from_yaml(main)?.unwrap_or_else(|| default.auth.clone());
         let conn = Connection::from_yaml(main)?.unwrap_or_else(|| default.conn().clone());
         let options = Options::from_yaml(main)?.unwrap_or_else(|| default.options().clone());
         let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
@@ -372,7 +372,7 @@ impl CustomInstance {
         main_conn: &Connection,
         sid: &InstanceName,
     ) -> Result<(Authentication, Connection)> {
-        let auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
+        let auth = Authentication::from_yaml(yaml)?.unwrap_or(main_auth.clone());
         let conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
 
         let instance_host = calc_real_host(&conn);
@@ -462,6 +462,7 @@ mod tests {
     use super::*;
     use crate::config::authentication::AuthType;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::types::{MaxConnections, MaxQueries};
     mod data {
         /// copied from tests/files/test-config.yaml
         pub const TEST_CONFIG: &str = r#"
@@ -473,12 +474,14 @@ oracle:
     authentication:
       username: "foo"
       password: "bar"
-      type: "standard" # optional, default: "os", values: standard, kerberos
+      role: "sysdba" # optional, default: empty, values: sysdba, sysasm, ...
+      type: "standard" # mandatory, default: "standard", values: standard, wallet
     connection: # optional
       hostname: "localhost" # optional(default: "localhost")
-      point: "XE" # optional(default: "")
-      port: 1521 # optional(default: 1521)
-      timeout: 5 # optional(default: 5)
+      port: 1521 # optional, default: 1521
+      timeout: 11 # optional, default 5
+      tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
+      oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     sections: # optional
     - instance:  # special section
     - databases:
@@ -551,7 +554,7 @@ oracle:
         authentication: # optional
           username: "f"
           password: "b"
-          type: "sql_server"
+          type: "standard"
   "#;
         pub const DISCOVERY_FULL: &str = r#"
 discovery:
@@ -636,6 +639,16 @@ piggyback:
     fn test_config_inheritance() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.configs.len(), 3);
+    }
+
+    #[test]
+    fn test_config_all() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        assert_eq!(c.options().max_connections(), MaxConnections::from(5));
+        assert_eq!(c.options().max_queries(), MaxQueries::from(16));
+        let auth = c.auth();
+        assert_eq!(auth.username(), "foo");
+        assert_eq!(auth.password(), Some("bar"));
     }
 
     #[test]
@@ -750,6 +763,7 @@ authentication:
     type: "standard"
   "#,
         ))
+        .unwrap()
         .unwrap();
         let instance = CustomInstance::from_yaml(
             &create_yaml(data::CUSTOM_INSTANCE),

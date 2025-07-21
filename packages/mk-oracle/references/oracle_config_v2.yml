@@ -13,7 +13,7 @@ oracle:
       username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
       password: "bar" # optional
       role: "sysdba" # optional, default: empty, values: sysdba, sysasm, ...
-      type: "sql_server" # mandatory, default: "sql_server", values: sql_server, wallet
+      type: "standard" # mandatory, default: "standard", values: standard, wallet
     connection: # optional
       hostname: "localhost" # optional, default: "localhost"
       port: 1521 # optional, default: 1521

@@ -120,10 +120,10 @@ impl Default for Authentication {
     }
 }
 impl Authentication {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let auth = yaml.get(keys::AUTHENTICATION);
         if auth.is_badvalue() {
-            anyhow::bail!("authentication is missing");
+            return Ok(None);
         }
 
         let auth_type = AuthType::try_from(
@@ -133,14 +133,14 @@ impl Authentication {
         )?;
         let role = Role::from_yaml(auth);
         if auth_type == AuthType::Os {
-            Ok(Self {
+            Ok(Some(Self {
                 username: String::new(),
                 password: None,
                 auth_type,
                 role,
-            })
+            }))
         } else {
-            Ok(Self {
+            Ok(Some(Self {
                 username: auth
                     .get_string(keys::USERNAME)
                     .map(_extract_username_if_env_var)
@@ -150,7 +150,7 @@ impl Authentication {
                     .map(_extract_password_if_env_var),
                 auth_type,
                 role,
-            })
+            }))
         }
     }
     pub fn username(&self) -> &str {
@@ -271,7 +271,9 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL))
+            .unwrap()
+            .unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some("bar"));
         assert_eq!(a.auth_type(), &AuthType::Standard);
@@ -298,6 +300,7 @@ authentication:
         for (role, expected) in test_set {
             let a =
                 Authentication::from_yaml(&create_yaml(AUTHENTICATION_FIRST.to_string() + role))
+                    .unwrap()
                     .unwrap();
             assert_eq!(a.role(), expected);
         }
@@ -321,7 +324,9 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml_mini() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI))
+            .unwrap()
+            .unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
         assert_eq!(a.auth_type(), &AuthType::Standard);
@@ -329,7 +334,9 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml_integrated() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_OS)).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_OS))
+            .unwrap()
+            .unwrap();
         assert_eq!(a.username(), "");
         assert_eq!(a.password(), None);
         assert_eq!(a.auth_type(), &AuthType::Os);

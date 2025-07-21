@@ -78,7 +78,7 @@ pub mod values {
 pub mod defaults {
     use super::values;
     pub const MAX_CONNECTIONS: u32 = 6;
-    pub const MAX_QUERIES: u32 = 64;
+    pub const MAX_QUERIES: u32 = 16;
 
     pub const AUTH_TYPE: &str = values::STANDARD;
     pub const MODE: &str = values::PORT;

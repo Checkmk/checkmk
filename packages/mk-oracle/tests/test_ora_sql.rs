@@ -91,7 +91,9 @@ authentication:
   username: "$CI_ORA2_DB_TEST"
   password: "$CI_ORA2_DB_TEST"
 "#;
-    let a = Authentication::from_yaml(&create_yaml(AUTHENTICATION_ENV_VAR)).unwrap();
+    let a = Authentication::from_yaml(&create_yaml(AUTHENTICATION_ENV_VAR))
+        .unwrap()
+        .unwrap();
     assert_ne!(a.username(), "$CI_ORA2_DB_TEST");
     assert!(a.password().is_some());
     assert_ne!(a.password(), Some("$CI_ORA2_DB_TEST"));

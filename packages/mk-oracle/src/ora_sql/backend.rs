@@ -265,7 +265,7 @@ mod tests {
     use super::*;
     use crate::config::ora_sql::Config;
 
-    fn make_config_with_auth_type(auth_type: &str) -> Config {
+    fn make_config_with_auth_type(auth_type: &str) -> Result<Config> {
         const BASE: &str = r#"
 ---
 oracle:
@@ -280,28 +280,31 @@ oracle:
        instance: XE
        timeout: 1
 "#;
-        Config::from_string(BASE.replace("type_tag", auth_type))
-            .unwrap()
-            .unwrap()
+        let s = Config::from_string(BASE.replace("type_tag", auth_type))?.unwrap();
+        Ok(s)
     }
 
     #[test]
     fn test_create_client_from_config_for_error() {
         let c = make_config_with_auth_type("bad");
-        let task = make_task(&c.endpoint());
-        assert!(task.is_ok());
+        assert!(c.is_err());
     }
 
     #[test]
     fn test_create_client_from_config_correct() {
-        let config = make_config_with_auth_type("standard");
+        let config = make_config_with_auth_type("standard").unwrap();
         assert!(make_task(&config.endpoint()).is_ok());
     }
 
     #[test]
     fn test_obtain_credentials_from_config() {
-        assert!(obtain_config_credentials(make_config_with_auth_type("os").auth()).is_none());
-        assert!(obtain_config_credentials(make_config_with_auth_type("kerberos").auth()).is_some());
-        assert!(obtain_config_credentials(make_config_with_auth_type("standard").auth()).is_some());
+        assert!(
+            obtain_config_credentials(make_config_with_auth_type("os").unwrap().auth()).is_none()
+        );
+        assert!(make_config_with_auth_type("kerberos").is_err());
+        assert!(
+            obtain_config_credentials(make_config_with_auth_type("standard").unwrap().auth())
+                .is_some()
+        );
     }
 }

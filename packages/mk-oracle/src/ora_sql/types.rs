@@ -67,7 +67,9 @@ authentication:
             service_type: Some(ServiceType::from("dedicated")),
             service_name: Some(ServiceName::from("my_service")),
             port: Port(1521),
-            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML)).unwrap(),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
         };
         assert_eq!(
             target.make_connection_string(),
@@ -79,7 +81,9 @@ authentication:
             service_type: None,
             service_name: None,
             port: Port(1521),
-            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML)).unwrap(),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
         };
         assert_eq!(target.make_connection_string(), "localhost:1521");
         let target = Target {
@@ -88,7 +92,9 @@ authentication:
             service_type: None,
             service_name: None,
             port: Port(1521),
-            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML)).unwrap(),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
         };
         assert_eq!(target.make_connection_string(), "localhost:1521/ORCL");
     }

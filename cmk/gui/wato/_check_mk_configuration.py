@@ -5618,6 +5618,11 @@ ServiceDescriptionTranslationRulespec = HostRulespec(
     group=RulespecGroupAgentGeneralSettings,
     name="service_description_translation",
     valuespec=_valuespec_service_description_translation,
+    # A NOTE on the match type:
+    # I'm adding "first" here now, because it makes the default explicit.
+    # However: the match type seems to be "first" for "case", and "accumulated" for "mapping" and "regex".
+    # We are accumulating in a way that forgets the order of the rules :-(
+    match_type="first",
 )
 
 

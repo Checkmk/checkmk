@@ -70,8 +70,6 @@ class FinalServiceNameConfig:
         for rule in rules[::-1]:
             if "case" in rule:
                 translations["case"] = rule["case"]
-            if "drop_domain" in rule:
-                translations["drop_domain"] = rule["drop_domain"]
             if "regex" in rule:
                 translations["regex"] = list(
                     set(translations.get("regex", [])) | set(rule["regex"])

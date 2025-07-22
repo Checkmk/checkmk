@@ -94,7 +94,6 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import (
-    Fetcher,
     FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
@@ -3710,11 +3709,13 @@ def make_fetcher_trigger(
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
             # TODO: This is a temporary criteria, and should be replaced by a proper host attribute
-            return (
-                PlainFetcherTrigger()  # TODO: Implement RelayFetcherTrigger
-                if "relay" in labels_of_host(host_name)
-                else PlainFetcherTrigger()
-            )
+            if "relay" in labels_of_host(host_name):
+                from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
+                    RelayFetcherTrigger,
+                )
+
+                return RelayFetcherTrigger()
+            return PlainFetcherTrigger()
         case cmk_version.Edition.CEE | cmk_version.Edition.CRE:
             return PlainFetcherTrigger()
 
@@ -3887,10 +3888,6 @@ class FetcherFactory:
             for name in (checking_sections | disabled_sections)
         }
 
-    def _is_relay_host(self, host_name: HostName) -> bool:
-        # TODO: This is a temporary criteria, and should be replaced by a proper host attribute
-        return "relay" in self._config_cache.label_manager.labels_of_host(host_name)
-
     def make_snmp_fetcher(
         self,
         plugins: AgentBasedPlugins,
@@ -3900,7 +3897,7 @@ class FetcherFactory:
         *,
         source_type: SourceType,
         fetcher_config: SNMPFetcherConfig,
-    ) -> Fetcher:
+    ) -> SNMPFetcher:
         snmp_config = self._config_cache.make_snmp_config(
             host_name,
             host_ip_family,
@@ -3934,14 +3931,6 @@ class FetcherFactory:
             stored_walk_path=fetcher_config.stored_walk_path,
             walk_cache_path=fetcher_config.walk_cache_path,
         )
-        if self._is_relay_host(host_name):
-            # TODO: if the FetcherFactory is properly separated from ConfigCache,
-            # we can add a CCE specific subclass that does this.
-            from cmk.fetchers.cce.relay import (  # type: ignore[import-not-found,unused-ignore]
-                RelayFetcher,
-            )
-
-            return RelayFetcher(fetcher)
         return fetcher
 
     def make_tcp_fetcher(

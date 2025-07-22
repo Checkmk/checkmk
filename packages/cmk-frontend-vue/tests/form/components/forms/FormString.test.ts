@@ -70,6 +70,31 @@ test('FormString checks validators', async () => {
   screen.getByText('String length must be between 1 and 20')
 })
 
+test('FormString with autocompleter renders backend validation messages', async () => {
+  const specWithAutocompleter: FormSpec.String = {
+    ...spec,
+    autocompleter: {
+      data: { ident: '', params: {} },
+      fetch_method: 'ajax_vs_autocomplete'
+    }
+  }
+  render(FormString, {
+    props: {
+      spec: specWithAutocompleter,
+      data: 'fooData',
+      backendValidation: [
+        {
+          location: [],
+          message: 'Backend error message',
+          replacement_value: 'some_replacement_value'
+        }
+      ]
+    }
+  })
+
+  await screen.findByText('Backend error message')
+})
+
 test('FormString renders backend validation messages', async () => {
   render(FormString, {
     props: {

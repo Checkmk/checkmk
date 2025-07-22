@@ -11,7 +11,7 @@ import { type Suggestion } from '@/components/suggestions'
 import CmkList from '@/components/CmkList'
 import { onBeforeUpdate, ref, watch } from 'vue'
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
-import { inputSizes } from '../utils/sizes'
+import { inputSizes } from '@/components/user-input/sizes'
 import FormLabelsLabel from './FormLabelsLabel.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 

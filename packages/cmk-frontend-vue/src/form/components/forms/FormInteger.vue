@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Integer } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { useId } from '@/form/utils'
 import FormLabel from '@/form/private/FormLabel.vue'
 
@@ -32,31 +32,12 @@ const componentId = useId()
     <FormLabel :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
     <FormRequired :spec="props.spec" :space="'after'" />
   </template>
-  <input
+  <CmkInput
     :id="componentId"
     v-model="value"
-    :placeholder="spec.input_hint || ''"
+    :type="'number'"
+    :placeholder="props.spec.input_hint || ''"
     :aria-label="props.spec.label || props.spec.title"
-    class="number no-spinner"
-    step="any"
-    type="number"
+    :external-errors="validation"
   />
-  <span v-if="spec.unit"><CmkSpace size="small" />{{ spec.unit }}</span>
-  <FormValidation :validation="validation"></FormValidation>
 </template>
-
-<style scoped>
-.no-spinner::-webkit-outer-spin-button,
-.no-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input.number {
-  width: 5.8ex;
-}
-
-.no-spinner[type='number'] {
-  -moz-appearance: textfield;
-}
-</style>

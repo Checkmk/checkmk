@@ -16,7 +16,7 @@ from cmk.gui.config import builtin_role_ids
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.permissions import load_dynamic_permissions
+from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.userroles import role_exists, RoleID
@@ -263,6 +263,12 @@ class UserRoleIdConverter:
             raise ValueError(f"The role should not exist but it does: '{user_role}'")
         return role_id
 
+    def should_be_builtin(self, user_role: str) -> RoleID:
+        self._verify_user_permissions()
+        if user_role not in builtin_role_ids:
+            raise ValueError(f"The role should be a built-in role but it's not: '{user_role}'")
+        return RoleID(user_role)
+
     def _verify_user_permissions(self) -> None:
         # TODO: clean this up (CMK-17068)
         load_dynamic_permissions()
@@ -270,3 +276,21 @@ class UserRoleIdConverter:
 
         if self.permission_type == "wato.edit":
             user.need_permission("wato.edit")
+
+
+class PermissionsConverter:
+    @staticmethod
+    def validate(value: dict[str, str]) -> dict[str, str]:
+        _validation_errors = []
+        for key, val in value.items():
+            if key not in permission_registry:
+                _validation_errors.append(f"The specified permission name doesn't exist: {key}")
+            if val not in ["yes", "no", "default"]:
+                _validation_errors.append(
+                    f"Invalid permission value: {val}.  Only 'yes', 'no', and 'default' are allowed."
+                )
+
+        if _validation_errors:
+            raise ValueError("Validation errors found:\n" + "\n".join(_validation_errors))
+
+        return value

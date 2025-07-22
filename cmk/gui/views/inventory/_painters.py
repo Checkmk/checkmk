@@ -122,12 +122,12 @@ class PainterInventoryTree(Painter):
             return "", ""
 
         tree_renderer = TreeRenderer(
-            row["site"],
-            row["host_name"],
-            inv_display_hints,
-            theme,
-            self.request,
-            self._painter_options.get("show_internal_tree_paths"),
+            site_id=row["site"],
+            host_name=row["host_name"],
+            hints=inv_display_hints,
+            theme=theme,
+            request=self.request,
+            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
@@ -204,12 +204,12 @@ class PainterInvhistDelta(Painter):
             return "", ""
 
         tree_renderer = TreeRenderer(
-            row["site"],
-            row["host_name"],
-            inv_display_hints,
-            theme,
-            self.request,
-            self._painter_options.get("show_internal_tree_paths"),
+            site_id=row["site"],
+            host_name=row["host_name"],
+            hints=inv_display_hints,
+            theme=theme,
+            request=self.request,
+            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
@@ -460,12 +460,12 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
         return "", ""
 
     tree_renderer = TreeRenderer(
-        row["site"],
-        row["host_name"],
-        inv_display_hints,
-        theme,
-        request,
-        painter_options.get("show_internal_tree_paths"),
+        site_id=row["site"],
+        host_name=row["host_name"],
+        hints=inv_display_hints,
+        theme=theme,
+        request=request,
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
 
     with output_funnel.plugged():

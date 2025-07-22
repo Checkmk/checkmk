@@ -365,12 +365,12 @@ def ajax_inv_render_tree(config: Config) -> None:
             return
 
     TreeRenderer(
-        site_id,
-        host_name,
-        inv_display_hints,
-        gui_theme,
-        http_request,
-        show_internal_tree_paths,
+        site_id=site_id,
+        host_name=host_name,
+        hints=inv_display_hints,
+        theme=gui_theme,
+        request=http_request,
+        show_internal_tree_paths=show_internal_tree_paths,
     ).show(tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
 
 
@@ -385,6 +385,7 @@ def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
 class TreeRenderer:
     def __init__(
         self,
+        *,
         site_id: SiteId,
         host_name: HostName,
         hints: DisplayHints,

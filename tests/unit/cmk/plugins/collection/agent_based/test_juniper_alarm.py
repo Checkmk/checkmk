@@ -28,9 +28,9 @@ def test_discover_juniper_alarm() -> None:
         pytest.param(
             STRING_TABLE_UNKNOWN,
             [
-                Result(state=State.UNKNOWN, summary="Status: unhandled alarm type '7'"),
+                Result(state=State.CRIT, summary="Status: off-line, not running"),
             ],
-            id="Unknown alarm type",
+            id="Critical status off-line",
         ),
         pytest.param(
             STRING_TABLE_OK,

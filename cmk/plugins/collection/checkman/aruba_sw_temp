@@ -1,0 +1,19 @@
+title: Aruba Switch 6100 Series: Temperature
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of Aruba 6100 devices.
+
+ The device defines the thresholds for low and high temperature by itself.
+ The default WARN thresholds are set to 5% below/above the device sensor's CRIT levels.
+ When sensor is in 'fault' state, this check is in WARN state.
+
+ The check uses the arubaWiredTempSensorEntry-MIB.
+
+item:
+ The sensor name.
+
+discovery:
+ One service is created for each temperature sensor.

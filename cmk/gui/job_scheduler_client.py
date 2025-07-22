@@ -4,40 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disable-error-code="no-untyped-def"
 
-import socket
-from typing import Final, override
+from typing import Final
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.connection import HTTPConnection
-from urllib3.connectionpool import HTTPConnectionPool
 
 import cmk.ccc.resulttype as result
 from cmk.gui.i18n import _
+from cmk.gui.utils.unixsocket_http import make_session as make_unixsocket_session
 from cmk.utils import paths
-
-JOB_SCHEDULER_HOST: Final = "localhost"
-JOB_SCHEDULER_BASE_URL: Final = "http://local-ui-job-scheduler"
-JOB_SCHEDULER_ENDPOINT: Final = f"{JOB_SCHEDULER_BASE_URL}/automation"
-JOB_SCHEDULER_SOCKET: Final = "tmp/run/ui-job-scheduler.sock"
 
 
 class StartupError(Exception): ...
 
 
 class JobSchedulerClient:
+    _SOCKET_PATH = paths.omd_root.joinpath("tmp/run/ui-job-scheduler.sock")
+    _BASE_URL: Final = "http://local-ui-job-scheduler"
+
     def __init__(self) -> None:
-        self._session = requests.Session()
-        self._session.trust_env = False
-        self._session.mount(JOB_SCHEDULER_BASE_URL, _JobSchedulerAdapter())
+        self._session = make_unixsocket_session(
+            self._SOCKET_PATH,
+            self._BASE_URL,
+        )
 
     def get(self, endpoint: str) -> result.Result[requests.Response, StartupError]:
-        return self._request("GET", f"{JOB_SCHEDULER_BASE_URL}/{endpoint}")
+        return self._request("GET", f"{self._BASE_URL}/{endpoint}")
 
     def post(
         self, endpoint: str, json: dict[str, object]
     ) -> result.Result[requests.Response, StartupError]:
-        return self._request("POST", f"{JOB_SCHEDULER_BASE_URL}/{endpoint}", json)
+        return self._request("POST", f"{self._BASE_URL}/{endpoint}", json)
 
     def _request(
         self, method: str, url: str, json: dict[str, object] | None = None
@@ -53,7 +49,7 @@ class JobSchedulerClient:
                         "please make sure that all site services are started. "
                         "Tried to connect via <tt>%s</tt>. Reported error was: %s."
                     )
-                    % (paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET), e)
+                    % (self._SOCKET_PATH, e)
                 )
             )
         except requests.RequestException as e:
@@ -67,27 +63,3 @@ class JobSchedulerClient:
             )
 
         return result.OK(response)
-
-
-class _JobSchedulerConnection(HTTPConnection):
-    def __init__(self) -> None:
-        super().__init__(JOB_SCHEDULER_HOST)
-
-    @override
-    def connect(self) -> None:
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.connect(str(paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET)))
-
-
-class _JobSchedulerConnectionPool(HTTPConnectionPool):
-    def __init__(self) -> None:
-        super().__init__(JOB_SCHEDULER_HOST)
-
-    def _new_conn(self) -> _JobSchedulerConnection:
-        return _JobSchedulerConnection()
-
-
-class _JobSchedulerAdapter(HTTPAdapter):
-    @override
-    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
-        return _JobSchedulerConnectionPool()

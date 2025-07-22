@@ -20,7 +20,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request
+from cmk.gui.http import request as http_request
 from cmk.gui.i18n import _
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
@@ -321,15 +322,15 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree(config: Config) -> None:
-    site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    host_name = request.get_validated_type_input_mandatory(HostName, "host")
+    site_id = SiteId(http_request.get_ascii_input_mandatory("site"))
+    host_name = http_request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(site_id, host_name)
 
-    raw_path = request.get_ascii_input_mandatory("raw_path", "")
-    show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
+    raw_path = http_request.get_ascii_input_mandatory("raw_path", "")
+    show_internal_tree_paths = bool(http_request.var("show_internal_tree_paths"))
 
     tree: ImmutableTree | ImmutableDeltaTree
-    if tree_id := request.get_ascii_input_mandatory("tree_id", ""):
+    if tree_id := http_request.get_ascii_input_mandatory("tree_id", ""):
         tree, corrupted_history_files = inventory.load_delta_tree(
             HistoryStore(cmk.utils.paths.omd_root),
             host_name,
@@ -368,7 +369,7 @@ def ajax_inv_render_tree(config: Config) -> None:
         host_name,
         inv_display_hints,
         gui_theme,
-        request,
+        http_request,
         show_internal_tree_paths,
     ).show(tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
 
@@ -388,14 +389,14 @@ class TreeRenderer:
         host_name: HostName,
         hints: DisplayHints,
         theme: Theme,
-        request_: Request,
+        request: Request,
         show_internal_tree_paths: bool,
     ) -> None:
         self._site_id = site_id
         self._host_name = host_name
         self._hints = hints
         self._theme = theme
-        self._request = request_
+        self._request = request
         self._show_internal_tree_paths = show_internal_tree_paths
 
     def _get_header(self, title: str, key_info: str) -> HTML:

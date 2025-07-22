@@ -24,6 +24,7 @@ class MigrateAzureStorage(UpdateAction):
         )
 
 
+# REMOVE_WITH_CMK_2_6
 update_action_registry.register(
     # Sort index is chosen such that this action is executed before "rulesets".
     # But this is only a weak requirement.

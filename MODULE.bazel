@@ -98,7 +98,13 @@ types.requirements(
 use_repo(types, "cmk_types")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
-bazel_dep(name = "protobuf", version = "28.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
+)
+
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 
 register_toolchains("//bazel/toolchains/cc:linux_gcc13")

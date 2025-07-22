@@ -53,7 +53,7 @@ redis==6.1.1 # needed by GUI (caching)
 fido2==1.2.0 # used for GUI 2fa webauthn
 opsgenie-sdk==2.1.5 # needed by opsgenie_issues
 tenacity==9.0.0 # used by opsgenie-sdk
-protobuf==5.28.3 # pinning is done in bazel in order to get the matching protobuf version from @com_google_protobuf
+protobuf==5.29.5 # pinning is done in bazel in order to get the matching protobuf version from @com_google_protobuf
 pysmb==1.2.9.1 # used by SMB share special agent
 google-cloud-monitoring==2.24.0 # used by the gcp special agent
 google-cloud-asset==3.28.0 # used by the gcp special agent

@@ -581,6 +581,11 @@ def test_unwanted_package_dependencies(package_path: str) -> None:
     * in some case this may break an existing configuration or there are other reasons why we do not want to depend on a package
     * so this test should ensure/remind us to not add unwanted dependencies to our packages
     """
+    if package_path.endswith(".cma"):
+        pytest.skip(
+            "Skipping test for cma package - it is based on another distro (at time of writing: debian-12)"
+        )
+
     if package_path.endswith(".tar.gz"):
         pytest.skip(
             "Skipping test for source package as it is more interessting for the install-able packages."

@@ -5572,7 +5572,7 @@ AgentConfigOnlyFrom = HostRulespec(
 def _valuespec_piggyback_translation():
     return HostnameTranslation(
         title=_("Host name translation for piggybacked hosts"),
-        help=_(
+        help_txt=_(
             "Some agents or agent plug-ins send data not only for the queried host but also "
             'for other hosts "piggyback" with their own data. This is the case '
             "for the vSphere special agent and the SAP R/3 plugin, for example. The host names "
@@ -5595,7 +5595,7 @@ PiggybackTranslation = HostRulespec(
 def _valuespec_service_description_translation():
     return ServiceDescriptionTranslation(
         title=_("Translation of service names"),
-        help=_(
+        help_txt=_(
             "Within this ruleset service names can be translated similar to the ruleset "
             "<tt>Host name translation for piggybacked hosts</tt>. Services such as "
             "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "

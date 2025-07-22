@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Literal
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -19,49 +18,42 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+type _LocalizedStr = str
+
 
 # NOTE: When changing this keep it in sync with cmk.utils.translations.translate_hostname()
-def HostnameTranslation(**kwargs: Any) -> Dictionary:
-    help_txt = kwargs.get("help")
-    title = kwargs.get("title")
+def HostnameTranslation(
+    *, title: _LocalizedStr, help_txt: _LocalizedStr | None = None
+) -> Dictionary:
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=[_get_drop_domain_element()] + translation_elements("host"),
+        elements=[_get_drop_domain_element(), *translation_elements()],
     )
 
 
-def ServiceDescriptionTranslation(**kwargs: Any) -> Dictionary:
-    help_txt = kwargs.get("help")
-    title = kwargs.get("title")
+def ServiceDescriptionTranslation(title: _LocalizedStr, help_txt: _LocalizedStr) -> Dictionary:
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=translation_elements("service"),
+        elements=translation_elements(),
     )
 
 
-def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
-    if what == "host":
-        singular = "hostname"
-        plural = "hostnames"
-
-    elif what == "service":
-        singular = "service name"
-        plural = "service names"
-
-    else:
-        raise MKGeneralException("No translations found for %s." % what)
-
-    return [
+def translation_elements() -> tuple[
+    tuple[Literal["case"], DropdownChoice],
+    tuple[Literal["regex"], MigrateNotUpdated],
+    tuple[Literal["mapping"], ListOf],
+]:
+    return (
         (
             "case",
             DropdownChoice(
                 title=_("Case translation"),
                 choices=[
                     (None, _("Do not convert case")),
-                    ("upper", _("Convert %s to upper case") % plural),
-                    ("lower", _("Convert %s to lower case") % plural),
+                    ("upper", _("Convert to upper case")),
+                    ("lower", _("Convert to lower case")),
                 ],
             ),
         ),
@@ -97,11 +89,10 @@ def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
                         "You can add any number of expressions here which are executed succesively until the first match. "
                         "Please specify a regular expression in the first field. This expression should at "
                         "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                        "In the second field you specify the translated %s and can refer to the first matched "
-                        "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
-                        ""
-                    )
-                    % singular,
+                        "In the second field you specify the desired outcome of the translation. "
+                        "You can refer to the first matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on,"
+                        " for example <tt>\\1.example.org</tt>. "
+                    ),
                     add_label=_("Add expression"),
                     movable=False,
                 ),
@@ -115,29 +106,29 @@ def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
                     orientation="horizontal",
                     elements=[
                         TextInput(
-                            title=_("Original %s") % singular,
+                            title=_("Original name"),
                             size=30,
                             allow_empty=False,
                         ),
                         TextInput(
-                            title=_("Translated %s") % singular,
+                            title=_("Translated name"),
                             size=30,
                             allow_empty=False,
                         ),
                     ],
                 ),
-                title=_("Explicit %s mapping") % singular,
+                title=_("Explicit name mapping"),
                 help=_(
                     "If case conversion and regular expression do not work for all cases then you can "
-                    "specify explicity pairs of origin {0} and translated {0} here. This "
+                    "specify explicit pairs of original and translated names here. This "
                     "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
                     "expression conversion (if that matches)."
-                ).format(singular),
+                ),
                 add_label=_("Add new mapping"),
                 movable=False,
             ),
         ),
-    ]
+    )
 
 
 def _get_drop_domain_element() -> tuple[str, ValueSpec]:

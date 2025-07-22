@@ -24,10 +24,10 @@ class TranslationOptions(TypedDict, total=False):
 # Similar to TranslationOptions, but not the same. This aims to
 # cover exactly the structure that is configured with the valuespec.
 class TranslationOptionsSpec(TypedDict):
-    case: Literal["lower", "upper"] | None
+    case: NotRequired[Literal["lower", "upper"] | None]
     drop_domain: NotRequired[bool]
-    mapping: list[tuple[str, str]]
-    regex: list[tuple[str, str]]
+    mapping: NotRequired[list[tuple[str, str]]]
+    regex: NotRequired[list[tuple[str, str]]]
 
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:

@@ -4312,7 +4312,7 @@ ConfigVariableHostnameTranslation = ConfigVariable(
     ident="hostname_translation",
     valuespec=lambda: HostnameTranslation(
         title=_("Host name translation for incoming messages"),
-        help=_(
+        help_txt=_(
             "When the Event Console receives a message than the host name "
             "that is contained in that message will be translated using "
             "this configuration. This can be used for unifying host names "

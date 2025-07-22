@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-17 17:35+0000\n"
+"PO-Revision-Date: 2025-07-21 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5258,9 +5258,8 @@ msgstr "Aggregationsgruppenbaum"
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
 
-#, fuzzy
 msgid "Aggregation method"
-msgstr "Aggregationsname"
+msgstr "Aggregationsmethode"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -8724,7 +8723,7 @@ msgid "Backend Conn. retry"
 msgstr "Backend-Verbindungsversuch"
 
 msgid "Backend Conn. reuses"
-msgstr "Backend-Verbindung wiederverwendet"
+msgstr "Wiederverwendungen der Backend-Verbindung"
 
 msgid "Backend Conn. success"
 msgstr "Erfolgreiche Backend-Verbindung"
@@ -11585,9 +11584,9 @@ msgstr "Parameter für Benachrichtigung #%s geändert"
 msgid "Changed notification parameter %d"
 msgstr "Benachrichtigungsparameter %d geändert"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Changed notification rule #%s"
-msgstr "Benachrichtigungsregel %d geändert"
+msgstr "Benachrichtigungsregel #%s geändert"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -17056,7 +17055,7 @@ msgid "Data directory"
 msgstr "Datenverzeichnis"
 
 msgid "Data egress"
-msgstr "Daten-Egress"
+msgstr "Datenabgang"
 
 msgid "Data files"
 msgstr "Datendateien"
@@ -21298,7 +21297,7 @@ msgstr "Jeder Service überwacht Robot Framework tests.\n"
 msgid ""
 "Each tag group will create one drop-down choice in the host configuration."
 msgstr ""
-"Jede Merkmal-Gruppe erstellt eine Drop-down-Auswahl in der Host-"
+"Jede Merkmalsgruppe erstellt eine Drop-down-Auswahl in der Host-"
 "Konfiguration."
 
 msgid "Each tag key must be unique and cannot be used multiple times."
@@ -21767,7 +21766,7 @@ msgid ""
 "Either disable persistent connections or carefully review maximum number of "
 "Apache processes and possible Livestatus connections."
 msgstr ""
-"Deaktivieren Sie entweder dauerhafte Verbindungen oder überprüfen Sie "
+"Entweder deaktivieren Sie dauerhafte Verbindungen oder Sie überprüfen "
 "sorgfältig die maximale Anzahl von Apache-Prozessen und möglichen Livestatus-"
 "Verbindungen."
 
@@ -23794,9 +23793,8 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
-#, fuzzy
 msgid "Extension package enabled and active."
-msgstr "Erweiterungspaket installiert."
+msgstr "Erweiterungspaket aktiviert und aktiv."
 
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
@@ -52773,10 +52771,10 @@ msgid "Restrict severity to at worst"
 msgstr "Schränke Schweregrad ein auf höchstens"
 
 msgid "Restrict single values"
-msgstr "schränke auf Einzelwerte ein"
+msgstr "Schränke auf Einzelwerte ein"
 
 msgid "Restrict source hosts"
-msgstr "Quell-Hosts einschränken"
+msgstr "Schränke auf Quell-Hosts ein"
 
 msgid "Restrict subcategories"
 msgstr "Schränke auf Unterkategorien ein"
@@ -54811,6 +54809,14 @@ msgid ""
 "<br><br>Aggregations occur only over the set of most recent data points per "
 "replica since the last check"
 msgstr ""
+"Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
+"aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
+"der Replik genommen. Mit dieser Einstellung können Sie alternative "
+"Aggregationsmethoden (min, max, sum, average) wählen, die auf alle letzten "
+"Stichproben unterschiedlicher Replikate für denselben Host angewendet werden "
+"(z. B. gleicher service.name, unterschiedliche service.instance.id)"
+".<br><br>Aggregationen erfolgen nur über den Satz der jüngsten Datenpunkte "
+"pro Replikat seit der letzten Überprüfung"
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -58185,7 +58191,7 @@ msgstr "Jemand vor 1.6"
 
 #, python-format
 msgid "Something went wrong: %s"
-msgstr ""
+msgstr "Etwas ist schief gelaufen: %s"
 
 msgid "Sometime before 1.6"
 msgstr "Irgendwann vor 1.6"
@@ -65156,9 +65162,9 @@ msgstr ""
 "Der Name des Automatisierungskontos das für die BI-Aggregation über HTTP "
 "verwendet werden soll. Hinweis: Sie können auch Anmeldeinformationen für ein "
 "Standardbenutzerkonto festlegen, obwohl es nicht empfohlen wird. Die "
-"Verwendung der Anmeldeinformationen eines Standardbenutzers erfordert "
-"ebenfalls eine gültige Authentifizierungsmethode, die in den optionalen "
-"Parametern festgelegt wird."
+"Verwendung der Anmeldeinformationen eines Standardbenutzers erfordert zudem "
+"eine gültige Authentifizierungsmethode, die in den optionalen Parametern "
+"festgelegt wird."
 
 msgid "The name of the cluster resource as shown in the service name."
 msgstr ""
@@ -65553,17 +65559,14 @@ msgstr ""
 "Komponenten eines Rack-Servers als Gerät) im letzten Prüfintervall.Der "
 "mögliche Bereich liegt zwischen 0% und 100%"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The package is now enabled, but could not be activated on this site: %s"
 msgstr ""
-"Das Paket ist jetzt aktiviert, konnte aber nicht auf dieser Instanz "
-"installiert werden: %s"
+"Das Paket ist jetzt aktiviert, konnte aber auf dieser Instanz nicht "
+"aktiviert werden: %s"
 
-#, fuzzy
 msgid "The package is now enabled, but not active on this site:"
-msgstr ""
-"Das Paket ist jetzt aktiviert, konnte aber nicht auf dieser Instanz "
-"installiert werden: %s"
+msgstr "Das Paket ist jetzt aktiviert, ist aber auf dieser Instanz nicht aktiv:"
 
 msgid "The pager address is optional "
 msgstr "Pager Adresse ist optional "
@@ -66454,10 +66457,12 @@ msgstr "Die Instanz des Status-Host existiert nicht."
 #, python-format
 msgid "The site version is %s, but this package requires a version below %s."
 msgstr ""
+"Die Instanz-Version ist %s, aber dieses Paket erfordert eine Version älter "
+"als %s."
 
 #, python-format
 msgid "The site version is %s, but this package requires at least %s."
-msgstr ""
+msgstr "Die Instanz-Version ist %s, aber dieses Paket erfordert mindestens %s."
 
 #, python-format
 msgid ""
@@ -72947,6 +72952,10 @@ msgid ""
 "`enable` option provides you with a flag to disable all version checks. This "
 "might result in crashes or other unexpected behavior."
 msgstr ""
+"Um das Paket trotzdem zu aktivieren, verwenden Sie den Befehl `mkp` auf der "
+"Kommandozeile. Dessen Option `enable` gibt Ihnen die Möglichkeit, alle "
+"Versionsprüfungen zu deaktivieren. Dies kann zu Abstürzen oder anderem "
+"unerwarteten Verhalten führen."
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "
@@ -84798,7 +84807,6 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
-#, fuzzy
 msgid "average"
 msgstr "Durchschnitt"
 
@@ -85668,9 +85676,8 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
-#, fuzzy
 msgid "latest"
-msgstr "Test"
+msgstr "letzter"
 
 msgid "latin1"
 msgstr "latin1"
@@ -85758,7 +85765,6 @@ msgstr "trifft auf regulären Ausdruck zu"
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
 
-#, fuzzy
 msgid "max"
 msgstr "Maximum"
 
@@ -86467,7 +86473,6 @@ msgstr "streng"
 msgid "sub categories"
 msgstr "Unterkategorien"
 
-#, fuzzy
 msgid "sum"
 msgstr "Summe"
 

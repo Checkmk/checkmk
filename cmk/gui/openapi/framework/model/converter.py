@@ -245,14 +245,22 @@ class UserRoleIdConverter:
 
     def should_exist(self, user_role: str) -> RoleID:
         self._verify_user_permissions()
-        if not role_exists(RoleID(user_role)):
+        role_id = RoleID(user_role)
+        if not role_exists(role_id):
             raise ValueError(f"The role should exist but it doesn't: '{user_role}'")
-        return RoleID(user_role)
+        return role_id
 
     def should_be_custom_and_should_exist(self, user_role: str) -> RoleID:
         role_id = self.should_exist(user_role)
         if role_id in builtin_role_ids:
             raise ValueError(f"The role should be a custom role but it's not: '{user_role}'")
+        return role_id
+
+    def should_not_exist(self, user_role: str) -> RoleID:
+        self._verify_user_permissions()
+        role_id = RoleID(user_role)
+        if role_exists(role_id):
+            raise ValueError(f"The role should not exist but it does: '{user_role}'")
         return role_id
 
     def _verify_user_permissions(self) -> None:

@@ -251,16 +251,16 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 os.kill(pid, signal.SIGHUP)
             except ProcessLookupError:
                 # ESRCH: PID in pidfiles does not exist: No reload needed.
-                pass
+                logger.warning("Did not reload liveproxyd (PID not found)")
             except FileNotFoundError:
                 # ENOENT: No liveproxyd running: No reload needed.
-                pass
+                logger.warning("Did not reload liveproxyd (Missing PID file)")
             except ValueError:
                 # ignore empty pid file (may happen during locking in
                 # cmk.ccc.daemon.lock_with_pid_file().  We are in the
                 # situation where the livstatus proxy is in early phase of the
                 # startup. The configuration is loaded later -> no reload needed
-                pass
+                logger.warning("Did not reload liveproxyd (Empty PID file)")
 
         except Exception as e:
             logger.exception("error reloading liveproxyd")

@@ -678,6 +678,35 @@ def _make_rrd_data_getter(
     return get_rrd_data
 
 
+def update_predictive_levels(metric_name: str, levels: tuple) -> tuple:
+    match levels:
+        case ("cmk_postprocessed", "predictive_levels", dict() as lvl):
+            return (
+                "cmk_postprocessed",
+                "predictive_levels",
+                {**lvl, "__reference_metric__": metric_name},
+            )
+        case _:
+            return levels
+
+
+def _special_processing_hack_for_predictive_otel_metrics(
+    params: Mapping[str, object],
+) -> Mapping[str, object]:
+    match params:
+        case {"metrics": ("multi_metrics", list() as metrics)}:
+            for metric in metrics:
+                metric["levels_lower"] = update_predictive_levels(
+                    metric["metric_name"], metric["levels_lower"]
+                )
+                metric["levels_upper"] = update_predictive_levels(
+                    metric["metric_name"], metric["levels_upper"]
+                )
+            return {"metrics": ("multi_metrics", metrics)}
+        case _:
+            return params
+
+
 def _compute_final_check_parameters(
     host_name: HostName,
     service: ConfiguredService,
@@ -685,8 +714,14 @@ def _compute_final_check_parameters(
     logger: logging.Logger,
 ) -> Parameters:
     params = service.parameters.evaluate(timeperiod_active)
+
     if not _needs_postprocessing(params):
         return Parameters(params)
+
+    # We have this special case for the otel plugin, where we want to have predictive levels,
+    # but don't know the metric names ahead of time.
+    if service.check_plugin_name == CheckPluginName("otel_metrics"):
+        params = _special_processing_hack_for_predictive_otel_metrics(params)
 
     # Most of the following are only needed for individual plugins, actually.
     # We delay every computation until needed.

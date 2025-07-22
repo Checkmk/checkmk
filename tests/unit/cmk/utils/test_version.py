@@ -98,6 +98,9 @@ class TestVersion:
     def test_version_without_rc_stable_daily(self) -> None:
         assert Version.from_str("1.2.3-2023.12.24").version_without_rc == "1.2.3-2023.12.24"
 
+    def test_version_without_rc_stable_daily_and_edition(self) -> None:
+        assert Version.from_str("1.2.3-2023.12.24.cce").version_without_rc == "1.2.3-2023.12.24"
+
     def test_version_rc_aware_master(self) -> None:
         assert Version.from_str("1984.04.01").version_rc_aware == "1984.04.01"
 
@@ -142,6 +145,10 @@ class TestVersion:
             (
                 Version.from_str("1.2.3-2024.09.09"),
                 "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=9, day=9)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
+            ),
+            (
+                Version.from_str("1.2.3-2023.12.24.cce"),
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2023, month=12, day=24)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
                 Version.from_str("2.2.0p5-rc1"),

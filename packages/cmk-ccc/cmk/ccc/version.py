@@ -226,6 +226,7 @@ class Version:
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
+    _PAT_EDITION = r"(?:\.(%s))" % "|".join(map(lambda x: x.short, Edition))  # e.g. ".cre"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
     )  # e.g. "2.1.0p17-rc3+security"
@@ -235,7 +236,7 @@ class Version:
     #    Keep old variant in the parser for now for compatibility.
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?")
+    _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?{_PAT_EDITION}?")
 
     @classmethod
     def from_str(cls, raw: str) -> Self:

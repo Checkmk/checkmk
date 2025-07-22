@@ -30,14 +30,14 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
     <template #header>
       <CmkBadge
         size="medium"
-        color="success"
-        type="fill"
+        :color="props.accomplished ? 'success' : 'default'"
+        :type="props.accomplished ? 'fill' : 'outline'"
         shape="circle"
         class="cmk-step-panel-item-indicator"
       >
         <CmkIcon v-if="props.accomplished" name="checkmark"></CmkIcon>
-        <span v-if="!props.accomplished">{{ props.step.toString() }}</span></CmkBadge
-      >
+        <span v-if="!props.accomplished">{{ props.step.toString() }}</span>
+      </CmkBadge>
       <CmkAccordionItemStateIndicator
         v-if="!disabled"
         :value="value"
@@ -63,7 +63,7 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
 <style scoped>
 .cmk-step-panel-item-indicator {
   margin: 0 6px 0 0;
-  font-weight: normal;
+  font-weight: 700;
 }
 
 .cmk-accordion-item-state-indicator {

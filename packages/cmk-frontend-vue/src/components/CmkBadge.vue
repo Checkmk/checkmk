@@ -60,7 +60,7 @@ defineProps<CmkBadgeProps>()
 <style scoped>
 .cmk-badge {
   border-radius: 99999px;
-  border: 1px solid var(--custom-scroll-bar-thumb-color);
+  border: 2px solid var(--custom-scroll-bar-thumb-color);
   color: var(--custom-scroll-bar-thumb-color);
   text-align: center;
   margin: 4px;

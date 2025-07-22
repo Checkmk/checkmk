@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
         }"
         :html="searchUtils.highlightQuery(q)"
         :focus="isFocused(idx + recentlyViewed.length)"
-        @click="
+        @click.stop="
           () => {
             searchUtils.input?.setValue(q)
           }

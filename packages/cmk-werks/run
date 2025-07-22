@@ -120,12 +120,6 @@ run_unit_tests() {
 }
 
 run_check_format() {
-    bazel lint \
-        --aspect:interactive=false \
-        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
-        --diff \
-        --quiet \
-        :all
     bazel run //:format.check "$PWD"
 }
 
@@ -134,7 +128,7 @@ run_mypy() {
 }
 
 run_ruff() {
-    bazel lint --aspect:interactive=false --quiet --diff --machine :all
+    bazel lint --aspect:interactive=false --quiet --diff :all
 }
 
 run_bandit() {
@@ -162,11 +156,6 @@ run_semgrep() {
 }
 
 run_format() {
-    bazel lint \
-        --aspect:interactive=false \
-        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
-        --fix \
-        :all
     bazel run //:format "$PWD"
 }
 

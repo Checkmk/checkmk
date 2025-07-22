@@ -23,7 +23,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.theme import Theme
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
@@ -367,7 +367,7 @@ def ajax_inv_render_tree(config: Config) -> None:
         site_id,
         host_name,
         inv_display_hints,
-        theme,
+        gui_theme,
         request,
         show_internal_tree_paths,
     ).show(tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
@@ -387,14 +387,14 @@ class TreeRenderer:
         site_id: SiteId,
         host_name: HostName,
         hints: DisplayHints,
-        theme_: Theme,
+        theme: Theme,
         request_: Request,
         show_internal_tree_paths: bool,
     ) -> None:
         self._site_id = site_id
         self._host_name = host_name
         self._hints = hints
-        self._theme = theme_
+        self._theme = theme
         self._request = request_
         self._show_internal_tree_paths = show_internal_tree_paths
 

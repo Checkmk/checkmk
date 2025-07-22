@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia"""
 
-__version__ = "2.3.0p35"
+__version__ = "2.3.0p36"
 
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 

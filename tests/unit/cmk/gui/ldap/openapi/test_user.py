@@ -12,7 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import UserObject
+from cmk.gui.type_defs import UserObjectValue
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.watolib.users import default_sites, edit_users
 from cmk.utils import paths
@@ -93,7 +93,7 @@ def test_edit_ldap_user_with_locked_attributes(
     clients: ClientRegistry,
 ) -> None:
     name = UserId("foo")
-    user_object: UserObject = {
+    user_object: dict[UserId, UserObjectValue] = {
         name: {
             "attributes": {
                 "ui_theme": None,

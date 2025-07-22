@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObjectValue, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
@@ -835,7 +835,7 @@ class ModeEditUser(WatoMode):
             user_attrs[name] = value  # type: ignore[literal-required]
 
         # Generate user "object" to update
-        user_object: UserObject = {
+        user_object: dict[UserId, UserObjectValue] = {
             self._user_id: {
                 "attributes": user_attrs,
                 "is_new_user": self._is_new_user,

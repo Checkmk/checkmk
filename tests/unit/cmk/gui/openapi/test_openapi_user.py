@@ -29,12 +29,9 @@ from cmk.gui.openapi.endpoints.user_config import (
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import CustomUserAttrSpec, UserObject
+from cmk.gui.type_defs import CustomUserAttrSpec, UserObjectValue
 from cmk.gui.userdb import ConnectorType, UserRole
-from cmk.gui.watolib.custom_attributes import (
-    save_custom_attrs_to_mk_file,
-    update_user_custom_attrs,
-)
+from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import default_sites, edit_users
 from cmk.utils import paths
@@ -140,7 +137,7 @@ def test_openapi_user_minimal_settings(
         time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
         SuperUserContext(),
     ):
-        user_object: UserObject = {
+        user_object: dict[UserId, UserObjectValue] = {
             UserId("user"): {
                 "attributes": {
                     "ui_theme": None,
@@ -298,7 +295,7 @@ def test_openapi_user_internal_with_notifications(
 ) -> None:
     name = UserId(_random_string(10))
 
-    user_object: UserObject = {
+    user_object: dict[UserId, UserObjectValue] = {
         name: {
             "attributes": {
                 "ui_theme": None,
@@ -504,7 +501,7 @@ def test_openapi_user_internal_auth_handling(
 
     name = UserId("foo")
 
-    user_object: UserObject = {
+    user_object: dict[UserId, UserObjectValue] = {
         name: {
             "attributes": {
                 "ui_theme": None,
@@ -653,7 +650,7 @@ def test_managed_global_internal(
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
 
-    user_object: UserObject = {
+    user_object: dict[UserId, UserObjectValue] = {
         UserId("user"): {
             "attributes": {
                 "ui_theme": None,
@@ -739,7 +736,7 @@ def test_managed_idle_internal(
     # this test uses the internal mechanics of the user endpoint
     username, _secret = with_automation_user
 
-    user_object: UserObject = {
+    user_object: dict[UserId, UserObjectValue] = {
         UserId("user"): {
             "attributes": {
                 "ui_theme": None,

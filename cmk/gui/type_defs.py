@@ -11,16 +11,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import (
-    Annotated,
-    Any,
-    Literal,
-    NamedTuple,
-    NewType,
-    NotRequired,
-    override,
-    TypedDict,
-)
+from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
 
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
@@ -257,8 +248,6 @@ class UserObjectValue(TypedDict):
     attributes: UserSpec
     is_new_user: bool
 
-
-UserObject = dict[UserId, UserObjectValue]
 
 AnnotatedUserId = Annotated[
     UserId,

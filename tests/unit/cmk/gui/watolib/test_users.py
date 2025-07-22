@@ -12,7 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config
-from cmk.gui.type_defs import UserObject, UserSpec
+from cmk.gui.type_defs import UserObjectValue, UserSpec
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.users import default_sites, delete_users, edit_users
@@ -142,7 +142,9 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
 )
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_only_affected_sites_require_activation_when_adding_users(
-    sites: list[SiteId], changed_users: UserObject, expected_changed_sites: list[SiteId]
+    sites: list[SiteId],
+    changed_users: dict[UserId, UserObjectValue],
+    expected_changed_sites: list[SiteId],
 ) -> None:
     edit_users(changed_users, default_sites, use_git=False)
     all_users = userdb.load_users()

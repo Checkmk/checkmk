@@ -18,7 +18,7 @@ from cmk.gui import hooks, site_config, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, UserObject, Users, UserSpec
+from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, UserObjectValue, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -112,7 +112,9 @@ def delete_users(
         userdb.save_users(all_users, datetime.now())
 
 
-def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn, *, use_git: bool) -> None:
+def edit_users(
+    changed_users: dict[UserId, UserObjectValue], sites: _UserAssociatedSitesFn, *, use_git: bool
+) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)

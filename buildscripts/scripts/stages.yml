@@ -303,6 +303,7 @@ STAGES:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-license-headers-junit.xml --color=no"
           PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
       COMMAND: "make test-license-headers"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
@@ -314,6 +315,7 @@ STAGES:
       ENV_VARS:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-requirements-junit.xml --color=no"
       COMMAND: "make test-requirements"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "Requirements files not changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-requirements-junit.xml"
@@ -332,6 +334,7 @@ STAGES:
           trap "rm -f $CHANGED_FILES_REL_FILE" EXIT
           make test-file-content
       TEXT_ON_SKIP: "No files changed"
+      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality.file_content/"
@@ -343,6 +346,7 @@ STAGES:
       ENV_VARS:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
       COMMAND: "make test-werks"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
@@ -354,6 +358,7 @@ STAGES:
       ENV_VARS:
           CHANGED_WERK_FILES: "${CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS}"
       COMMAND: "./scripts/run-uvenv python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
 
@@ -361,6 +366,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT
       DIR: ""
       GIT_FETCH_NOTES: true
+      BAZEL_LOCKS_AMOUNT: 1
       COMMAND: |
           scripts/run-uvenv python3 -m cmk.werks.utils collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
@@ -378,6 +384,7 @@ STAGES:
       ENV_VARS:
           RUFF_OUTPUT_FORMAT: "pylint"
       COMMAND: "make test-ruff &> ${RESULTS}/ruff.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "Neither pyproject.toml nor Python files changed"
       RESULT_CHECK_TYPE: "PYLINT"
       RESULT_CHECK_FILE_PATTERN: "results/ruff.txt"
@@ -399,6 +406,7 @@ STAGES:
       ENV_VARS:
           BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
       COMMAND: "make test-bandit"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
@@ -466,6 +474,7 @@ STAGES:
           GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.xml"
       COMMAND: "make --quiet test-lint-groovy"
       TEXT_ON_SKIP: "No Groovy files changed"
+      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "GROOVY"
       RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.xml"
 
@@ -474,12 +483,14 @@ STAGES:
       DIR: "tests"
       COMMAND: "make test-agent-plugin > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: "No agent files changed"
+      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
     - NAME: "Software Documentation Generation"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
       COMMAND: "make sw-documentation &> ${RESULTS}/sw-documentation.txt"
       TEXT_ON_SKIP: "No SW Documentation files changed"
+      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
     - NAME: "TOML Format"
@@ -714,6 +725,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES
       DIR: "packages/cmk-frontend"
       COMMAND: "./run --all &> ${RESULTS}/cmk-frontend.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
 

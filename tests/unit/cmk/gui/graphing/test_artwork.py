@@ -13,6 +13,7 @@ import time_machine
 from cmk.gui.graphing._artwork import (
     _areastack,
     _compute_graph_t_axis,
+    _compute_labels_from_api,
     _compute_v_axis_min_max,
     _halfstep_interpolation,
     _t_axis_labels_seconds,
@@ -27,6 +28,7 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
+from cmk.gui.graphing._formatter import AutoPrecision, DecimalFormatter, Label
 from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
@@ -927,3 +929,191 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
     curves: Sequence[LayoutedCurve], result: Sequence[LayoutedCurve]
 ) -> None:
     assert list(order_graph_curves_for_legend_and_mouse_hover(curves)) == result
+
+
+@pytest.mark.parametrize(
+    "min_y, max_y, mirrored, expected",
+    [
+        pytest.param(
+            1,
+            5,
+            False,
+            [
+                Label(
+                    position=1.0,
+                    text="1 s",
+                ),
+                Label(
+                    position=2.0,
+                    text="2 s",
+                ),
+                Label(
+                    position=3.0,
+                    text="3 s",
+                ),
+                Label(
+                    position=4.0,
+                    text="4 s",
+                ),
+                Label(
+                    position=5.0,
+                    text="5 s",
+                ),
+            ],
+            id="pos,pos",
+        ),
+        pytest.param(
+            -5,
+            5,
+            False,
+            [
+                Label(
+                    position=-2.0,
+                    text="-2 s",
+                ),
+                Label(
+                    position=-4.0,
+                    text="-4 s",
+                ),
+                Label(
+                    position=0,
+                    text="0",
+                ),
+                Label(
+                    position=2.0,
+                    text="2 s",
+                ),
+                Label(
+                    position=4.0,
+                    text="4 s",
+                ),
+            ],
+            id="neg,pos",
+        ),
+        pytest.param(
+            -5,
+            -1,
+            False,
+            [
+                Label(
+                    position=-1.0,
+                    text="-1 s",
+                ),
+                Label(
+                    position=-2.0,
+                    text="-2 s",
+                ),
+                Label(
+                    position=-3.0,
+                    text="-3 s",
+                ),
+                Label(
+                    position=-4.0,
+                    text="-4 s",
+                ),
+                Label(
+                    position=-5.0,
+                    text="-5 s",
+                ),
+            ],
+            id="neg,neg",
+        ),
+        pytest.param(
+            1,
+            5,
+            True,
+            [
+                Label(
+                    position=1.0,
+                    text="1 s",
+                ),
+                Label(
+                    position=2.0,
+                    text="2 s",
+                ),
+                Label(
+                    position=3.0,
+                    text="3 s",
+                ),
+                Label(
+                    position=4.0,
+                    text="4 s",
+                ),
+                Label(
+                    position=5.0,
+                    text="5 s",
+                ),
+            ],
+            id="mirrored,pos,pos",
+        ),
+        pytest.param(
+            -5,
+            5,
+            True,
+            [
+                Label(
+                    position=-2.0,
+                    text="2 s",
+                ),
+                Label(
+                    position=-4.0,
+                    text="4 s",
+                ),
+                Label(
+                    position=0,
+                    text="0",
+                ),
+                Label(
+                    position=2.0,
+                    text="2 s",
+                ),
+                Label(
+                    position=4.0,
+                    text="4 s",
+                ),
+            ],
+            id="mirrored,neg,pos",
+        ),
+        pytest.param(
+            -5,
+            -1,
+            True,
+            [
+                Label(
+                    position=-1.0,
+                    text="-1 s",
+                ),
+                Label(
+                    position=-2.0,
+                    text="-2 s",
+                ),
+                Label(
+                    position=-3.0,
+                    text="-3 s",
+                ),
+                Label(
+                    position=-4.0,
+                    text="-4 s",
+                ),
+                Label(
+                    position=-5.0,
+                    text="-5 s",
+                ),
+            ],
+            id="mirrored,neg,neg",
+        ),
+    ],
+)
+def test__compute_labels_from_api(
+    min_y: float, max_y: float, mirrored: bool, expected: Sequence[Label]
+) -> None:
+    assert (
+        _compute_labels_from_api(
+            DecimalFormatter("s", AutoPrecision(digits=2)),
+            SizeEx(10),
+            mirrored=mirrored,
+            min_y=min_y,
+            max_y=max_y,
+        )
+        == expected
+    )

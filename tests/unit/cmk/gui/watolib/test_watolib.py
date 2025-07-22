@@ -124,7 +124,6 @@ def test_registered_configvars() -> None:
         "inventory_check_autotrigger",
         "inventory_check_interval",
         "inventory_check_severity",
-        "inventory_housekeeping",
         "log_logon_failures",
         "lock_on_logon_failures",
         "log_level",

@@ -87,7 +87,7 @@ immediateWatch(
 
   .result-item-handler {
     padding: 10px;
-    width: calc(100% - 20px);
+    width: calc(100% - 22px);
     margin: 0;
     background: var(--default-bg-color);
     text-decoration: none;
@@ -99,6 +99,7 @@ immediateWatch(
     display: flex;
     flex-direction: row;
     box-sizing: content-box;
+    border: 1px solid var(--default-bg-color);
 
     &:hover {
       background-color: var(--ux-theme-5);

@@ -600,7 +600,7 @@ def _compute_labels_from_api(
                 )
             )
         case False, True:
-            if mirrored or abs_min_y == abs_max_y:
+            if mirrored:
                 labels = formatter.render_y_labels(
                     min_y=0,
                     max_y=max(abs_min_y, abs_max_y),
@@ -634,7 +634,7 @@ def _compute_labels_from_api(
             )
         case False, False:
             return [
-                Label(-1 * l.position, l.text)
+                Label(-1 * l.position, f"-{l.text}")
                 for l in formatter.render_y_labels(
                     min_y=min(abs_min_y, abs_max_y),
                     max_y=max(abs_min_y, abs_max_y),

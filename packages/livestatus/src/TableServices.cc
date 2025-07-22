@@ -213,7 +213,8 @@ void TableServices::addColumns(Table *table, const ICore &core,
         prefix + "state_type", "Type of the current state (0: soft, 1: hard)",
         offsets, [](const row_type &row) { return row.state_type(); }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
-        prefix + "check_type", "Type of check (0: active, 1: passive)", offsets,
+        prefix + "check_type",
+        "Type of check (0: active, 1: passive, 2: shadow)", offsets,
         [](const row_type &row) { return row.check_type(); }));
     table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "acknowledged",

@@ -219,7 +219,8 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         "Type of acknowledgement (0: none, 1: normal, 2: sticky)", offsets,
         [](const row_type &row) { return row.acknowledgement_type(); }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
-        prefix + "check_type", "Type of check (0: active, 1: passive)", offsets,
+        prefix + "check_type",
+        "Type of check (0: active, 1: passive, 2: shadow)", offsets,
         [](const row_type &row) { return row.check_type(); }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "last_state", "State before last state change", offsets,

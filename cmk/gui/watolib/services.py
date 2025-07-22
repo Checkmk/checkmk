@@ -1278,10 +1278,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     def discover(self, action: DiscoveryAction, *, raise_errors: bool, debug: bool) -> None:
         """Target function of the background job"""
         sys.stdout.write("Starting job...\n")
-        self._pre_discovery_preview = self._get_discovery_preview(
-            prevent_fetching=action not in (DiscoveryAction.TABULA_RASA, DiscoveryAction.REFRESH),
-            debug=debug,
-        )
+        self._pre_discovery_preview = self._get_discovery_preview(debug=debug)
 
         if action == DiscoveryAction.REFRESH:
             self._jobstatus_store.update({"title": _("Refresh")})
@@ -1343,9 +1340,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         elif (last_result := self._load_last_preview()) is not None:
             check_table_created, result = last_result
         else:
-            check_table_created, result = self._get_discovery_preview(
-                prevent_fetching=True, debug=debug
-            )
+            check_table_created, result = self._get_discovery_preview(debug=debug)
 
         return DiscoveryResult(
             job_status=dict(job_status),
@@ -1360,14 +1355,12 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             sources=result.source_results,
         )
 
-    def _get_discovery_preview(
-        self, *, prevent_fetching: bool, debug: bool
-    ) -> tuple[int, ServiceDiscoveryPreviewResult]:
+    def _get_discovery_preview(self, *, debug: bool) -> tuple[int, ServiceDiscoveryPreviewResult]:
         return (
             int(time.time()),
             local_discovery_preview(
                 self.host_name,
-                prevent_fetching=prevent_fetching,
+                prevent_fetching=False,
                 raise_errors=False,
                 debug=debug,
             ),

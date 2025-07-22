@@ -568,9 +568,7 @@ class LoadedConfigFragment:
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     service_rule_groups: set[str]
     service_descriptions: Mapping[str, str]
-    service_description_translation: Sequence[
-        RuleSpec[cmk.utils.translations.TranslationOptionsSpec]
-    ]
+    service_description_translation: Sequence[RuleSpec[Mapping[str, object]]]
     use_new_descriptions_for: Container[str]
     monitoring_core: Literal["nagios", "cmc"]
     nagios_illegal_chars: str
@@ -1264,11 +1262,9 @@ def get_piggyback_translations(
     matcher: RulesetMatcher, labels_of_host: Callable[[HostName], Labels], hostname: HostName
 ) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
-    rules = matcher.get_host_values_all(hostname, piggyback_translation, labels_of_host)
-    translations: cmk.utils.translations.TranslationOptions = {}
-    for rule in rules[::-1]:
-        translations.update(rule)
-    return translations
+    return cmk.utils.translations.parse_translation_options(
+        matcher.get_host_values_merged(hostname, piggyback_translation, labels_of_host)
+    )
 
 
 def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:

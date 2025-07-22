@@ -21,7 +21,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
-from cmk.utils.translations import TranslationOptions, TranslationOptionsSpec
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -58,9 +57,9 @@ check_max_cachefile_age = 0  # per default do not use cache files when checking
 cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
-piggyback_translation: list[RuleSpec[TranslationOptions]] = []
+piggyback_translation: Sequence[RuleSpec[Mapping[str, object]]] = []
 # Ruleset for translating service names
-service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
+service_description_translation: Sequence[RuleSpec[Mapping[str, object]]] = []
 simulation_mode = False
 fake_dns: str | None = None
 perfdata_format: Literal["pnp", "standard"] = "pnp"

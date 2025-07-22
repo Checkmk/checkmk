@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ipaddress
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import cast, Literal, NotRequired, TypedDict
 
 from cmk.ccc.hostaddress import HostName
@@ -19,6 +19,28 @@ class TranslationOptions(TypedDict, total=False):
     drop_domain: bool
     mapping: Iterable[tuple[str, str]]
     regex: Iterable[tuple[str, str]]
+
+
+def _parse_case(raw_case: object) -> Literal["lower", "upper"] | None:
+    match raw_case:
+        case "lower" | "upper" | None as case_value:
+            return case_value
+    raise (ValueError if isinstance(raw_case, str) else TypeError)(raw_case)
+
+
+def _parse_list_of_tuples(raw: object) -> Iterable[tuple[str, str]]:
+    if not isinstance(raw, Iterable):
+        raise TypeError(raw)
+    return [(str(a), str(b)) for a, b in raw]
+
+
+def parse_translation_options(raw: Mapping[str, object]) -> TranslationOptions:
+    return TranslationOptions(
+        case=_parse_case(raw.get("case")),
+        drop_domain=bool(raw.get("drop_domain")),
+        mapping=_parse_list_of_tuples(raw.get("mapping", [])),
+        regex=_parse_list_of_tuples(raw.get("regex", [])),
+    )
 
 
 # Similar to TranslationOptions, but not the same. This aims to

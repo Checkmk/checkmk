@@ -18,6 +18,7 @@ class FixIstalledLibFiles(PreUpdateAction):
         convert_manifests(cmk.utils.paths.installed_packages_dir, logger, dry_run=True)
 
 
+# REMOVE_WITH_CMK_2_6
 pre_update_action_registry.register(
     FixIstalledLibFiles(
         name="fix_installed_lib_files",

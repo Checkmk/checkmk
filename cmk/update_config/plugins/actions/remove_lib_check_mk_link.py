@@ -11,14 +11,15 @@ from cmk.update_config.plugins.lib.remove_lib_check_mk_link import convert_manif
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-class FixIstalledLibFiles(UpdateAction):
+class FixInstalledLibFiles(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         convert_manifests(cmk.utils.paths.installed_packages_dir, logger, dry_run=False)
 
 
+# REMOVE_WITH_CMK_2_6
 update_action_registry.register(
-    FixIstalledLibFiles(
+    FixInstalledLibFiles(
         name="fix_installed_lib_files",
         title="Fix installed MKPs with files in local/lib/check_mk",
         sort_index=100,  # don't care

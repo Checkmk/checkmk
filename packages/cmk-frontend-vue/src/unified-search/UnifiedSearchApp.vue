@@ -19,7 +19,11 @@ import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import { Api } from '@/lib/api-client'
 import DefaultPopup from '@/main-menu/DefaultPopup.vue'
 import UnifiedSearchTabResults from './UnifiedSearchTabResults.vue'
-import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
+import {
+  initSearchUtils,
+  provideSearchUtils,
+  type UnifiedSearchQueryLike
+} from './providers/search-utils'
 import {
   UnifiedSearchProvider,
   type UnifiedSearchProviderIdentifier
@@ -69,19 +73,34 @@ searchUtils.history = searchHistoryService
 provideSearchUtils(searchUtils)
 
 searchUtils.onResetSearch(() => {
-  searchUtils.query.value = ''
   searchResult.value = undefined
-  searchUtils.input.setFocus()
 })
 
 searchUtils.onCloseSearch(() => {
   cmk.popup_menu.close_popup()
 })
 
-searchUtils.shortCuts.onEscape(() => {
-  searchUtils.resetSearch()
-  searchUtils.closeSearch()
+searchUtils.input.onSetQuery((query?: UnifiedSearchQueryLike) => {
+  if (query && query.input !== '/') {
+    search.initSearch(query)
+  }
 })
+
+searchUtils.shortCuts.onEscape(() => {
+  if (searchUtils.input.suggestionsActive.value === false) {
+    searchUtils.resetSearch()
+    searchUtils.closeSearch()
+  }
+})
+
+function showTabResults(): boolean {
+  return (
+    typeof searchResult.value !== 'undefined' &&
+    (search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
+      searchUtils.query.toQueryLike()
+    )
+  )
+}
 
 onMounted(() => {
   searchUtils.shortCuts.enable()
@@ -92,14 +111,11 @@ onMounted(() => {
   <DefaultPopup class="unified-search-root">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
     <UnifiedSearchStart
-      v-if="searchUtils.query.value.length < 3"
+      v-if="!showTabResults()"
       :history-result="searchResult?.get('search-history') as SearchHistorySearchResult"
     >
     </UnifiedSearchStart>
-    <UnifiedSearchTabResults
-      v-if="searchResult && searchUtils.query.value.length >= 3"
-      :unified-result="searchResult"
-    >
+    <UnifiedSearchTabResults v-if="!!showTabResults()" :unified-result="searchResult">
     </UnifiedSearchTabResults>
     <UnifiedSearchFooter></UnifiedSearchFooter>
   </DefaultPopup>

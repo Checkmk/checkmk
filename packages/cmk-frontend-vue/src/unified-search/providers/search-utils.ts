@@ -3,16 +3,43 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { inject, provide, type InjectionKey, type Ref, ref } from 'vue'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { inject, provide, type InjectionKey, ref } from 'vue'
 import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
 import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 
-const query = ref<string>('')
+export interface UnifiedSearchQueryLike {
+  input: string
+  filters: FilterOption[]
+}
+
+export interface FilterOption {
+  type: 'provider' | 'inline'
+  value: string
+  title: string
+  notAvailableFor?: string[]
+}
+
+const queryInput = ref<string>('')
+const queryFilters = ref<FilterOption[]>([])
+
+const suggestionsActive = ref<boolean>(false)
+const query = {
+  input: queryInput,
+  filters: queryFilters,
+  toQueryLike: (): UnifiedSearchQueryLike => {
+    return {
+      input: queryInput.value,
+      filters: queryFilters.value
+    }
+  }
+}
 const shortcuts = new KeyShortcutService(window)
 const shortCutEventIds = ref<string[]>([])
-const callbacks: { [key: string]: { id: string; cb: (query?: string) => void }[] } = {}
+const callbacks: { [key: string]: { id: string; cb: (...args: any) => void }[] } = {}
 
 function ensureKey(key: string) {
   if (!callbacks[key]) {
@@ -20,17 +47,17 @@ function ensureKey(key: string) {
   }
 }
 
-function pushCallBack(key: string, cb: (query?: string) => void) {
+function pushCallBack(key: string, cb: (...args: any) => void) {
   ensureKey(key)
   const id = crypto.randomUUID()
   callbacks[key]?.push({ id, cb })
   return id
 }
 
-function dispatchCallback(key: string, query?: string) {
+function dispatchCallback(key: string, ...args: any) {
   ensureKey(key)
   callbacks[key]?.forEach((c) => {
-    c.cb(query)
+    c.cb(...args)
   })
 }
 
@@ -44,12 +71,28 @@ function removeShortCuts(ids: string[]) {
   }
 }
 
-function setValue(query?: string) {
-  dispatchCallback('setValue', query)
+function setQuery(query?: UnifiedSearchQueryLike) {
+  dispatchCallback('setQuery', query)
 }
 
-function onSetValue(cb: typeof setValue): string {
-  return pushCallBack('setValue', cb)
+function onSetQuery(cb: typeof setQuery): string {
+  return pushCallBack('setQuery', cb)
+}
+
+function setInputValue(query?: string, noSet?: boolean) {
+  dispatchCallback('setInputValue', query, noSet)
+}
+
+function onSetInputValue(cb: typeof setInputValue): string {
+  return pushCallBack('setInputValue', cb)
+}
+
+function setFilterValue(query?: FilterOption[], noSet?: boolean) {
+  dispatchCallback('setFilterValue', query, noSet)
+}
+
+function onSetFilterValue(cb: typeof setFilterValue): string {
+  return pushCallBack('setFilterValue', cb)
 }
 
 function setFocus() {
@@ -66,6 +109,14 @@ function setBlur() {
 
 function onSetBlur(cb: typeof setBlur): string {
   return pushCallBack('setBlur', cb)
+}
+
+function emptyBackspace() {
+  dispatchCallback('setEmptyBackspace')
+}
+
+function onEmptyBackspace(cb: typeof emptyBackspace): string {
+  return pushCallBack('setEmptyBackspace', cb)
 }
 
 function resetSearch() {
@@ -166,7 +217,7 @@ function disableShortCuts() {
 }
 
 function highlightQuery(s: string): string {
-  return s.replace(new RegExp(query.value, 'ig'), `<span class="highlight-query">$&</span>`)
+  return s.replace(new RegExp(query.input.value, 'ig'), `<span class="highlight-query">$&</span>`)
 }
 
 function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): string[] {
@@ -192,12 +243,19 @@ export interface SearchShortCuts {
 }
 
 export interface SearchInputUtils {
-  setValue: typeof setValue
-  onSetValue: typeof onSetValue
+  setQuery: typeof setQuery
+  onSetQuery: typeof onSetQuery
+  setInputValue: typeof setInputValue
+  onSetInputValue: typeof onSetInputValue
+  setFilterValue: typeof setFilterValue
+  onSetFilterValue: typeof onSetFilterValue
   setFocus: typeof setFocus
   onSetFocus: typeof onSetFocus
   setBlur: typeof setBlur
   onSetBlur: typeof onSetBlur
+  emptyBackspace: typeof emptyBackspace
+  onEmptyBackspace: typeof onEmptyBackspace
+  suggestionsActive: typeof suggestionsActive
 }
 
 export interface InitSearchUtils {
@@ -206,8 +264,8 @@ export interface InitSearchUtils {
   closeSearch: typeof closeSearch
   onCloseSearch: typeof onCloseSearch
   shortCuts: SearchShortCuts
+  query: typeof query
   input: SearchInputUtils
-  query: Ref<string>
 }
 
 export interface SearchUtils extends InitSearchUtils {
@@ -237,16 +295,23 @@ export function initSearchUtils(): SearchUtils {
       onEscape,
       onCtrlEnter
     },
-    query: query,
     highlightQuery: highlightQuery,
     breadcrumb,
+    query: query,
     input: {
-      setValue,
-      onSetValue,
+      setQuery,
+      onSetQuery,
+      setFilterValue,
+      onSetFilterValue,
+      setInputValue,
+      onSetInputValue,
       setFocus,
       onSetFocus,
       setBlur,
-      onSetBlur
+      onSetBlur,
+      emptyBackspace,
+      onEmptyBackspace,
+      suggestionsActive
     }
   }
 }

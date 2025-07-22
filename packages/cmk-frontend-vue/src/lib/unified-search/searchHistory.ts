@@ -6,20 +6,21 @@
 import type { Ref } from 'vue'
 import usePersistentRef from '../usePersistentRef'
 import type { UnifiedSearchResultElement } from './providers/unified'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
 
 export class HistoryEntry {
   public hitCount = 1
   public date = Date.now()
 
   constructor(
-    public query: string,
+    public query: UnifiedSearchQueryLike,
     public element: UnifiedSearchResultElement
   ) {}
 }
 
 export class SearchHistoryService {
   private entries: Ref<HistoryEntry[]>
-  private queries: Ref<string[]>
+  private queries: Ref<UnifiedSearchQueryLike[]>
 
   constructor(public searchId: string) {
     this.entries = usePersistentRef<HistoryEntry[]>(
@@ -28,7 +29,11 @@ export class SearchHistoryService {
       'local'
     )
 
-    this.queries = usePersistentRef<string[]>('search-queries-'.concat(this.searchId), [], 'local')
+    this.queries = usePersistentRef<UnifiedSearchQueryLike[]>(
+      'search-queries-'.concat(this.searchId),
+      [],
+      'local'
+    )
   }
   public getEntries(
     provider: string | null = null,
@@ -41,7 +46,7 @@ export class SearchHistoryService {
       .slice(0, limit ? limit - 1 : limit)
   }
 
-  public getQueries(limit?: number): string[] {
+  public getQueries(limit?: number): UnifiedSearchQueryLike[] {
     return this.queries.value
       .filter((value, index, array) => {
         return array.indexOf(value) === index
@@ -66,7 +71,7 @@ export class SearchHistoryService {
       entries.push(historyEntry)
     }
 
-    queries.push(historyEntry.query)
+    queries.push(historyEntry.query as UnifiedSearchQueryLike)
     this.queries.value = queries
     this.entries.value = entries
   }
@@ -85,7 +90,7 @@ export class SearchHistoryService {
       delete entries[idx]
     }
 
-    idx = queries.indexOf(historyEntry.query)
+    idx = queries.indexOf(historyEntry.query as UnifiedSearchQueryLike)
     if (idx !== -1) {
       queries.splice(idx, 1)
     }
@@ -102,9 +107,9 @@ export class SearchHistoryService {
     this.queries.value = []
   }
 
-  private getCopy(): [HistoryEntry[], string[]] {
+  private getCopy(): [HistoryEntry[], UnifiedSearchQueryLike[]] {
     const entries: HistoryEntry[] = []
-    const queries: string[] = []
+    const queries: UnifiedSearchQueryLike[] = []
     return [entries.concat(this.entries.value), queries.concat(this.queries.value)]
   }
 }

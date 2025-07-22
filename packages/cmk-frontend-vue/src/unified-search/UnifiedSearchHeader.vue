@@ -7,177 +7,149 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkChip from '@/components/CmkChip.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
-import useClickOutside from '@/lib/useClickOutside'
-import { nextTick, ref, useTemplateRef } from 'vue'
-import { getSearchUtils } from './providers/search-utils'
-import type { Suggestions } from '@/components/CmkSuggestions.vue'
-import CmkSuggestions from '@/components/CmkSuggestions.vue'
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import { useTemplateRef } from 'vue'
+import { getSearchUtils, type FilterOption } from './providers/search-utils'
+
+import CmkButton from '@/components/CmkButton.vue'
+import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 
 interface CmkWindow extends Window {
   main: Window
 }
 
 const { t } = usei18n('unified-search-app')
+
 const searchUtils = getSearchUtils()
 const searchInput = useTemplateRef('unified-search-input')
-const ctrlEnterHelpShown = ref<boolean>(false)
-const filterSuggestionsRef = useTemplateRef('unified-search-filter-suggestions')
-
-const filterSuggestionsShown = ref<boolean>(false)
-const filterOptions = ref<Suggestions>({
-  type: 'fixed',
-  suggestions: [
-    { name: 'h:', title: 'h: Host' },
-    { name: 's:', title: 's: Service' },
-    { name: 'hg:', title: 'hg: Host group' },
-    { name: 'sg:', title: 'sg: Service group' },
-    { name: 'ad:', title: 'ad: Address' },
-    { name: 'al:', title: 'al: Alias' },
-    { name: 'tg:', title: 'tg: Host tag' },
-    {
-      name: 'hl:',
-      title: 'hl: Host label (e.g. hl: cmk/os_family:linux)'
-    },
-    {
-      name: 'sl:',
-      title: 'sl: Service label (e.g. sl: cmk/os_family:linux)'
-    },
-    {
-      name: 'st:',
-      title: 'st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])'
-    }
-  ]
+searchUtils.onResetSearch(() => {
+  searchUtils.query.filters.value = []
+  searchUtils.query.input.value = ''
+  setFocus()
 })
-const selectedFilter = ref<string | null>(null)
-const vClickOutside = useClickOutside()
-function handleFilterSelect(selected: string | null): void {
-  hideFilterSuggestions()
-  if (selected) {
-    searchUtils.query.value = selected
-    searchUtils.search?.initSearch(selected)
-    searchUtils.input.setFocus()
-  }
-  selectedFilter.value = null
-  searchUtils.shortCuts.enable()
-}
-
-function showFilterSuggestions(): void {
-  filterSuggestionsShown.value = true
-
-  void nextTick(() => {
-    filterSuggestionsRef.value?.focus()
-  })
-}
-
-function hideFilterSuggestions() {
-  filterSuggestionsShown.value = false
-  searchUtils.input.setValue('')
-  searchUtils.input.setFocus()
-}
 
 searchUtils.input?.onSetFocus(setFocus)
 function setFocus() {
   if (searchInput.value) {
     searchInput.value.focus()
     searchInput.value.selectionStart = searchInput.value.selectionEnd =
-      searchUtils.query.value.length
+      searchUtils.query.input.value.length
   }
 }
 
-searchUtils.input?.onSetBlur(setBlur)
-function setBlur() {
+searchUtils.input?.onSetBlur(() => {
   searchInput.value?.blur()
-}
+})
 
-searchUtils.input?.onSetValue(setValue)
-function setValue(query?: string) {
-  if (typeof query === 'string') {
-    searchUtils.query.value = query
-    searchUtils.search?.initSearch(query)
+searchUtils.input?.onSetInputValue((input?: string, noSet?: boolean) => {
+  if (!noSet) {
+    if (typeof input === 'string') {
+      searchUtils.query.input.value = input
+    } else {
+      searchUtils.query.input.value = ''
+    }
   }
+  setQuery()
+})
 
-  toggleCtrlEnterHelp()
-}
-
-function toggleCtrlEnterHelp() {
-  if (searchUtils.query.value.length > 0) {
-    ctrlEnterHelpShown.value = true
-  } else {
-    ctrlEnterHelpShown.value = false
+searchUtils.input?.onSetFilterValue((fo?: FilterOption[], noSet?: boolean) => {
+  if (!noSet) {
+    if (Array.isArray(fo)) {
+      searchUtils.query.filters.value = fo
+    } else {
+      searchUtils.query.filters.value = []
+    }
   }
+  setQuery()
+})
+
+function setQuery() {
+  searchUtils.input.setQuery(searchUtils.query.toQueryLike())
 }
 
 function onInput(e: Event) {
-  if (searchUtils.query.value.indexOf('/') === 0) {
-    searchUtils.shortCuts.disable()
-    showFilterSuggestions()
-    return
+  searchUtils.input.setInputValue((e.target as HTMLInputElement).value)
+}
+
+function checkEmptyBackspace(e: KeyboardEvent) {
+  if (e.key === 'Backspace') {
+    if (searchUtils.query.input.value === '') {
+      searchUtils.input.emptyBackspace()
+    }
   }
-
-  searchUtils.search?.onInput(e)
-  searchUtils.query.value = (e.target as HTMLInputElement).value
-
-  toggleCtrlEnterHelp()
 }
 
 searchUtils.shortCuts.onCtrlEnter(onCtrlEnter)
 function onCtrlEnter() {
-  if (searchUtils.query.value.length > 0) {
-    ;(top!.frames as CmkWindow).main.location.href = 'search_open.py?q='.concat(
-      searchUtils.query.value
-    )
-    searchUtils.closeSearch()
+  if (isMonitoringSearch()) {
+    if (searchUtils.query.input.value.length > 0) {
+      ;(top!.frames as CmkWindow).main.location.href = 'search_open.py?q='.concat(
+        searchUtils.query.input.value
+      )
+      searchUtils.closeSearch()
+    }
   }
+}
+
+function isMonitoringSearch(): boolean {
+  return searchUtils.query.filters.value.findIndex((f) => f.value === 'setup') === -1
+}
+
+function handleDelTagItem(tag: FilterOption) {
+  const filters = searchUtils.query.filters.value.slice(0)
+  filters.splice(searchUtils.query.filters.value.findIndex((f) => f.value === tag.value))
+  searchUtils.input.setFilterValue(filters)
+  searchUtils.input.setFocus()
 }
 </script>
 
 <template>
   <div class="unified-search-header">
     <div class="unified-search-input-panel">
-      <div class="unified-search-input-wrapper">
+      <div class="unified-search-input-wrapper" @click="searchUtils.input.setFocus">
         <CmkIcon class="unified-search-icon" name="search" size="medium"></CmkIcon>
-        <input
-          id="unified-search-input"
-          ref="unified-search-input"
-          v-model="searchUtils.query.value"
-          class="unified-search-input"
-          :placeholder="
-            t('search-accross', 'Search across Checkmk – type \'/\' for filter options')
-          "
-          @focus="setFocus"
-          @input="onInput"
-        />
-        <div
-          v-if="!!filterSuggestionsShown"
-          v-click-outside="hideFilterSuggestions"
-          class="unified-search-filter-suggestions"
-        >
-          <CmkSuggestions
-            ref="unified-search-filter-suggestions"
-            role="option"
-            :suggestions="filterOptions"
-            :selected-option="selectedFilter"
-            class="unified-search-filter-suggestions-list"
-            :focus="filterSuggestionsShown"
-            @request-close-suggestions="hideFilterSuggestions"
-            @update:selected-option="handleFilterSelect"
-            @click.stop
-          />
-          <CmkAlertBox variant="info" class="unified-search-filter-suggestions-info">
-            {{
-              t(
-                'sarch-with-regex',
-                'Search with regular expressions for menu entries, hosts, services or host and service groups.'
-              )
-            }}
-            <br />
+        <div class="unified-search-input-tag-root">
+          <div
+            v-for="filterOption in searchUtils.query.filters.value"
+            :key="['tag-', filterOption.type, filterOption.value].join('-')"
+            :value="filterOption.value"
+            class="unified-search-input-tag"
+            :class="[{ provider: filterOption.type === 'provider' }]"
+          >
+            <span>{{ filterOption.value }}</span>
+            <CmkButton
+              class="unified-search-input-tag-dismiss"
+              @click.stop="
+                () => {
+                  handleDelTagItem(filterOption)
+                }
+              "
+            >
+              <CmkIcon
+                name="close"
+                size="xsmall"
+                class="unified-search-input-tag-dismiss-icon"
+              ></CmkIcon
+            ></CmkButton>
+          </div>
 
-            {{ t('asterrisk-sub', "Note that for simplicity '*' will be substituted with '.*'.") }}
-          </CmkAlertBox>
+          <input
+            id="unified-search-input"
+            ref="unified-search-input"
+            v-model="searchUtils.query.input.value"
+            class="unified-search-input"
+            :placeholder="
+              t('search-accross', 'Search across Checkmk – type \'/\' for filter options')
+            "
+            @input="onInput"
+            @keydown.delete="checkEmptyBackspace"
+          />
+          <UnifiedSearchFilters></UnifiedSearchFilters>
         </div>
+
         <CmkIcon
-          v-if="searchUtils.query.value.length > 0"
+          v-if="
+            searchUtils.query.input.value.length > 0 || searchUtils.query.filters.value.length > 0
+          "
           class="unified-search-reset"
           name="close"
           size="small"
@@ -185,7 +157,7 @@ function onCtrlEnter() {
         ></CmkIcon>
       </div>
 
-      <div class="unified-search-info-item">
+      <div v-if="isMonitoringSearch()" class="unified-search-info-item">
         <span>{{ t('press', 'Press') }}</span>
         <CmkChip size="small" :content="t('ctrl', 'Ctrl')"></CmkChip>+<CmkChip
           class="arrow-key enter"
@@ -193,7 +165,7 @@ function onCtrlEnter() {
           content=""
         ></CmkChip
         ><br />
-        <span>{{ t('to-view-matching-service', 'to view matching service') }}</span>
+        <span>{{ t('to-view-matching-service', 'to view matching services') }}</span>
       </div>
     </div>
   </div>
@@ -262,7 +234,7 @@ function onCtrlEnter() {
   position: relative;
 }
 
-.unified-search-input {
+.unified-search-input-tag-root {
   background-color: var(--default-form-element-bg-color);
   box-shadow: none;
   filter: none;
@@ -273,10 +245,65 @@ function onCtrlEnter() {
   line-height: 15px;
   height: 27px;
   position: relative;
+  display: flex;
+  align-items: center;
 
-  &::placeholder {
-    color: var(--default-form-element-placeholder-color);
+  &:focus-within {
+    border: 1px solid var(--success);
   }
+}
+
+.unified-search-input-tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-yellow-80);
+  border-radius: 4px;
+  height: 20px;
+  padding: 0px 4px;
+  margin-right: 4px;
+
+  .unified-search-input-tag-dismiss {
+    background: transparent;
+    border: 0;
+    margin: 0 0 0 4px;
+    height: 16px;
+    max-width: 16px;
+    overflow: hidden;
+    border-radius: 4px;
+    padding: 0;
+    width: 16px;
+    font-size: 10px;
+
+    &:hover {
+      background: var(--color-yellow-60);
+    }
+
+    .unified-search-input-tag-dismiss-icon {
+      margin-top: 2px;
+    }
+  }
+
+  &.provider {
+    color: inherit;
+    background: var(--success-dimmed-2);
+
+    .unified-search-input-tag-dismiss {
+      &:hover {
+        background: var(--success);
+      }
+    }
+  }
+}
+
+.unified-search-input {
+  background: transparent;
+  border: 0;
+  width: auto;
+  line-height: 15px;
+  height: 27px;
+  padding: 0;
+  margin-left: 8px;
+  flex-grow: 5;
 }
 
 .unified-search-filter-suggestions {
@@ -294,17 +321,19 @@ function onCtrlEnter() {
   padding: 0 8px 16px 8px;
 }
 
-.unified-search-filter-suggestions-info {
-  border: 1px solid var(--ux-theme-6);
-  border-top: 0;
-  margin: 0;
-  font-style: italic;
-  color: var(--help-text-font-color);
-}
+.unified-search-input {
+  background: transparent;
+  border: 0;
+  width: auto;
+  line-height: 15px;
+  height: 27px;
+  padding: 0;
+  margin-left: 8px;
+  flex-grow: 5;
 
-.unified-search-input:focus,
-.unified-search-input:active {
-  border: 1px solid var(--success);
+  &::placeholder {
+    color: var(--default-form-element-placeholder-color);
+  }
 }
 
 .unified-search-icon {
@@ -314,9 +343,10 @@ function onCtrlEnter() {
 }
 
 .unified-search-reset {
-  margin-left: -25px;
   opacity: 0.6;
   margin-right: 3px;
   cursor: pointer;
+  position: absolute;
+  right: 8px;
 }
 </style>

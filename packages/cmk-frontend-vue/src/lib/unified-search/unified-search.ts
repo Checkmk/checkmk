@@ -6,6 +6,7 @@
 
 import { ref, type Ref } from 'vue'
 import { type Api } from '../api-client'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
 
 export interface LegacySearchResult {
   result_code: number
@@ -44,14 +45,18 @@ export abstract class SearchProvider {
     public id: string,
     public title?: string,
     public sort: number = 0,
-    public minInputlength: number = 2
+    public minInputlength: number = 3
   ) {
     if (!this.title) {
       this.title = this.id
     }
   }
 
-  abstract search(input: string): Promise<unknown>
+  abstract search(query: UnifiedSearchQueryLike): Promise<unknown>
+
+  public shouldExecuteSearch(query: UnifiedSearchQueryLike): boolean {
+    return query.input.length >= this.minInputlength
+  }
 
   public injectApi(api: Api): void {
     this.api = api
@@ -65,10 +70,13 @@ export abstract class SearchProvider {
     throw new Error('api not set')
   }
 
-  public initSearch<T>(input: string, callback: (input: string) => Promise<T | Error>): Promise<T> {
+  public initSearch<T>(
+    query: UnifiedSearchQueryLike,
+    callback: (query: UnifiedSearchQueryLike) => Promise<T | Error>
+  ): Promise<T> {
     this.searchActive.value = true
     return new Promise((resolve) => {
-      void callback(input)
+      void callback(query)
         .catch((e) => {
           resolve(e)
         })
@@ -104,17 +112,20 @@ export class UnifiedSearch {
     return this.providers
   }
 
-  public search(input: string): UnifiedSearchResult {
+  public getProviderIds(): string[] {
+    return this.providers.map((p) => p.id)
+  }
+
+  public search(query: UnifiedSearchQueryLike): UnifiedSearchResult {
     const usr = new UnifiedSearchResult(this.id)
     for (const provider of this.providers) {
       usr.registerProviderResult({
         provider: provider.id,
-        result:
-          input.length >= provider.minInputlength
-            ? provider.initSearch(input, provider.search.bind(provider))
-            : new Promise((resolve) => {
-                resolve(null)
-              })
+        result: provider.shouldExecuteSearch(query)
+          ? provider.initSearch(query, provider.search.bind(provider))
+          : new Promise((resolve) => {
+              resolve(null)
+            })
       })
     }
     return usr
@@ -124,12 +135,11 @@ export class UnifiedSearch {
     this.onSearchCallback = callback
   }
 
-  public onInput(e: Event) {
-    const input = e.target as HTMLInputElement
-    this.initSearch(input.value)
+  public onInput(query: UnifiedSearchQueryLike) {
+    this.initSearch(query)
   }
 
-  public initSearch(query: string) {
+  public initSearch(query: UnifiedSearchQueryLike) {
     this.lastSearchInput = Date.now()
     setTimeout(() => {
       const now = Date.now()

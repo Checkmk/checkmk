@@ -11,7 +11,7 @@ import { onBeforeUnmount, ref } from 'vue'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 import type { SearchHistorySearchResult } from '@/lib/unified-search/providers/history'
-import { getSearchUtils } from './providers/search-utils'
+import { getSearchUtils, type UnifiedSearchQueryLike } from './providers/search-utils'
 import {
   providerIcons,
   type UnifiedSearchResultElement
@@ -22,7 +22,7 @@ const { t } = usei18n('unified-search-app')
 const maxRecentlyViewed = 5
 const maxRecentlySearched = 5
 const recentlyViewed = ref<HistoryEntry[]>([])
-const recentlySearches = ref<string[]>([])
+const recentlySearches = ref<UnifiedSearchQueryLike[]>([])
 
 const searchUtils = getSearchUtils()
 
@@ -44,29 +44,31 @@ function toggleUp() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (set) {
-    currentlySelected.value = d
-  } else {
-    currentlySelected.value += d
-  }
+  if (searchUtils.input.suggestionsActive.value === false) {
+    if (set) {
+      currentlySelected.value = d
+    } else {
+      currentlySelected.value += d
+    }
 
-  if (
-    currentlySelected.value === -1 ||
-    currentlySelected.value > recentlyViewed.value.length + recentlySearches.value.length - 1
-  ) {
-    currentlySelected.value = -1
-    searchUtils.input?.setFocus()
-    return
-  }
+    if (
+      currentlySelected.value === -1 ||
+      currentlySelected.value > recentlyViewed.value.length + recentlySearches.value.length - 1
+    ) {
+      currentlySelected.value = -1
+      searchUtils.input?.setFocus()
+      return
+    }
 
-  if (currentlySelected.value < 0) {
-    currentlySelected.value += recentlyViewed.value.length + recentlySearches.value.length + 1
-    return
+    if (currentlySelected.value < 0) {
+      currentlySelected.value += recentlyViewed.value.length + recentlySearches.value.length + 1
+      return
+    }
   }
 }
 
 function handleItemClick(item: UnifiedSearchResultElement) {
-  searchUtils.history?.add(new HistoryEntry(searchUtils.query.value, item))
+  searchUtils.history?.add(new HistoryEntry(searchUtils.query.toQueryLike(), item))
   searchUtils.closeSearch()
 }
 
@@ -83,14 +85,16 @@ immediateWatch(
       const res = await newHistoryResult.result
       if (res) {
         recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
-        recentlySearches.value = res.queries.filter((q) => q !== '').slice(0, maxRecentlySearched)
+        recentlySearches.value = res.queries
+          .filter((q) => q.input !== '')
+          .slice(0, maxRecentlySearched)
         return
       }
     }
 
     recentlyViewed.value = searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
     recentlySearches.value =
-      searchUtils.history?.getQueries(maxRecentlySearched).filter((q) => q !== '') || []
+      searchUtils.history?.getQueries(maxRecentlySearched).filter((q) => q.input !== '') || []
   }
 )
 
@@ -161,17 +165,19 @@ onBeforeUnmount(() => {
       <ResultItem
         v-for="(q, idx) in recentlySearches"
         ref="recently-searched-item"
-        :key="q"
+        :key="q.input"
         :idx="idx"
-        :title="q"
+        :title="q.input"
+        :breadcrumb="q.filters.map((f) => f.value)"
         :icon="{
           name: 'history'
         }"
-        :html="searchUtils.highlightQuery(q)"
+        :html="searchUtils.highlightQuery(q.input)"
         :focus="isFocused(idx + recentlyViewed.length)"
         @click.stop="
           () => {
-            searchUtils.input?.setValue(q)
+            searchUtils.input.setInputValue(q.input)
+            searchUtils.input.setFilterValue(q.filters)
           }
         "
       ></ResultItem>

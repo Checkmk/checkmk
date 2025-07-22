@@ -68,55 +68,59 @@ function toggleLeft() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (set) {
-    currentlySelected.value = d
-  } else {
-    currentlySelected.value += d
-  }
+  if (searchUtils.input.suggestionsActive.value === false) {
+    if (set) {
+      currentlySelected.value = d
+    } else {
+      currentlySelected.value += d
+    }
 
-  const curTabResLength = tabbedResults.value[parseInt(tabModel.value)]?.results?.length || 0
+    const curTabResLength = tabbedResults.value[parseInt(tabModel.value)]?.results?.length || 0
 
-  if (currentlySelected.value === -1 || currentlySelected.value > curTabResLength - 1) {
-    currentlySelected.value = -1
-    searchUtils.input?.setFocus()
-    return
-  }
+    if (currentlySelected.value === -1 || currentlySelected.value > curTabResLength - 1) {
+      currentlySelected.value = -1
+      searchUtils.input?.setFocus()
+      return
+    }
 
-  if (currentlySelected.value < -1) {
-    currentlySelected.value = curTabResLength - 1
+    if (currentlySelected.value < -1) {
+      currentlySelected.value = curTabResLength - 1
+    }
   }
 }
 
 function calcCurrentlySelectedTab(d: number, set: boolean = false) {
-  if (set) {
-    currentlySelectedTab.value = d
-  } else {
-    currentlySelectedTab.value += d
-  }
+  if (searchUtils.input.suggestionsActive.value === false) {
+    if (set) {
+      currentlySelectedTab.value = d
+    } else {
+      currentlySelectedTab.value += d
+    }
 
-  if (tabbedResults.value[currentlySelectedTab.value]?.count === 0) {
-    calcCurrentlySelectedTab(d)
-    return
-  }
+    if (tabbedResults.value[currentlySelectedTab.value]?.count === 0) {
+      calcCurrentlySelectedTab(d)
+      return
+    }
 
-  if (currentlySelectedTab.value === -1) {
-    currentlySelectedTab.value = tabbedResults.value.length - 1
-  }
+    if (currentlySelectedTab.value === -1) {
+      currentlySelectedTab.value = tabbedResults.value.length - 1
+    }
 
-  if (currentlySelectedTab.value >= tabbedResults.value.length) {
-    currentlySelectedTab.value = 0
-  }
+    if (currentlySelectedTab.value >= tabbedResults.value.length) {
+      currentlySelectedTab.value = 0
+    }
 
-  tabModel.value = currentlySelectedTab.value.toString()
-  searchUtils.input.setBlur()
-  currentlySelected.value = -1
-  setTimeout(() => {
-    toggleDown()
-  }, 0)
+    tabModel.value = currentlySelectedTab.value.toString()
+    searchUtils.input.setBlur()
+    currentlySelected.value = -1
+    setTimeout(() => {
+      toggleDown()
+    }, 0)
+  }
 }
 
 function handleItemClick(item: UnifiedSearchResultElement) {
-  searchUtils.history?.add(new HistoryEntry(searchUtils.query.value, item))
+  searchUtils.history?.add(new HistoryEntry(searchUtils.query.toQueryLike(), item))
   searchUtils.resetSearch()
   searchUtils.closeSearch()
 }
@@ -174,9 +178,6 @@ onBeforeUnmount(() => {
       ></CmkChip
       >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip><br />
       <span>{{ t('to-nav-tabs', 'to navigate between tabs') }}</span>
-    </div>
-    <div v-if="tabbedResults.length === 0" class="cmk-unified-search-result-empty">
-      {{ t('no-results', 'No results found. ¯\\_(ツ)_/¯') }}
     </div>
     <CmkTabs v-if="tabbedResults.length > 0" v-model="tabModel">
       <template #tabs>

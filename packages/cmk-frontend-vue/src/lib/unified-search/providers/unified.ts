@@ -5,6 +5,7 @@
  */
 import type { CmkIconProps } from '@/components/CmkIcon.vue'
 import { SearchProvider, type SearchProviderResult } from '../unified-search'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
 
 export const providerIcons: { [key: string]: CmkIconProps } = {
   monitoring: {
@@ -53,9 +54,33 @@ export class UnifiedSearchProvider extends SearchProvider {
     super('unified')
   }
 
-  public async search(input: string): Promise<UnifiedSearchResultResponse> {
+  public override shouldExecuteSearch(query: UnifiedSearchQueryLike): boolean {
+    if (query.input.indexOf('/') === 0) {
+      return false
+    }
+    const { q } = this.renderQuery(query)
+    return q.length >= this.minInputlength
+  }
+
+  public async search(query: UnifiedSearchQueryLike): Promise<UnifiedSearchResultResponse> {
+    const { q, provider } = this.renderQuery(query)
+
     return this.getApi().get(
-      'ajax_unified_search.py?q='.concat(input)
+      'ajax_unified_search.py?q='.concat(q).concat(provider)
     ) as Promise<UnifiedSearchResultResponse>
+  }
+
+  protected renderQuery(query: UnifiedSearchQueryLike): { q: string; provider: string } {
+    const providers = []
+
+    for (const f of query.filters) {
+      if (f.type === 'provider') {
+        providers.push(f.value)
+      }
+    }
+
+    const provider = providers.length > 0 ? '&provider='.concat(providers.join(',')) : ''
+
+    return { q: query.input, provider }
   }
 }

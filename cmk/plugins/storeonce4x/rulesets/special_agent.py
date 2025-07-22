@@ -59,8 +59,10 @@ def _migrate_cert(params: object) -> Mapping[str, object]:
                 **{str(k): v for k, v in rest.items()},
             }
         case dict():
-            return {**params, "ignore_tls": False}
-    raise TypeError(f"Invalid parameters: {params!r}")
+            if "ignore_tls" not in params:
+                params["ignore_tls"] = False
+            return params
+    raise ValueError(f"Invalid parameters: {params!r}")
 
 
 rule_spec_special_agent_storeonce4x = SpecialAgent(

@@ -726,7 +726,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "jolokia_metrics_on_disk",
         "jolokia_metrics_off_heap",
         "jolokia_metrics_writer",
-        "juniper_alarm",
         "juniper_bgp_state",
         "juniper_fru",
         "juniper_fru_fan",

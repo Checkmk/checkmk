@@ -31,6 +31,16 @@ _STATE_MAP = {
     "4": Result(state=State.CRIT, summary="Status: alert, failed, not working (major)"),
     "5": Result(state=State.OK, summary="Status: OK, online as an active primary"),
     "6": Result(state=State.WARN, summary="Status: alarm, offline, not running (minor)"),
+    "7": Result(state=State.CRIT, summary="Status: off-line, not running"),
+    "8": Result(state=State.OK, summary="Status: entering state of ok, good, normally working"),
+    "9": Result(
+        state=State.WARN, summary="Status: entering state of alarm, warning, marginally working"
+    ),
+    "10": Result(state=State.CRIT, summary="Status: entering state of alert, failed, not working"),
+    "11": Result(
+        state=State.OK, summary="Status: entering state of ok, on-line as an active primary"
+    ),
+    "12": Result(state=State.WARN, summary="Status: entering state of off-line, not running"),
 }
 
 

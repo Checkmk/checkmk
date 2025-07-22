@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
@@ -45,8 +46,12 @@ class MigrateAzureStorage(PreUpdateAction):
             raise MKUserError(None, "Failed to migrate azure_storageaccounts")
 
 
-# REMOVE_WITH_CMK_2_6
 pre_update_action_registry.register(
     # Sort index is chosen such that this action is executed before "rulesets"
-    MigrateAzureStorage(name="azure-storage", title="Migrate Azure Storage", sort_index=29)
+    MigrateAzureStorage(
+        name="azure-storage",
+        title="Migrate Azure Storage",
+        sort_index=29,
+        expiry_version=ExpiryVersion.NEVER,
+    )
 )

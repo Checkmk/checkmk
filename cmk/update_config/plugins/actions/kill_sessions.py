@@ -8,6 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui import userdb
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -37,5 +38,6 @@ update_action_registry.register(
         name="terminate_user_sessions",
         title="Terminating all existing user sessions",
         sort_index=100,  # I am not aware of any constrains
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

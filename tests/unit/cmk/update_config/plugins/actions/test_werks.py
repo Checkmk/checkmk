@@ -11,6 +11,7 @@ import pytest
 from pydantic import TypeAdapter
 
 import cmk.utils.werks
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.werks import load_unacknowledged_werks, UnacknowledgedWerks
 from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
 
@@ -82,7 +83,9 @@ def test_version_of_werk_keeps_first_incompatible_version(
         (compiled_werks_dir / "werks").write_bytes(adapter.dump_json(werks, by_alias=True))
 
     def update_config() -> None:
-        UnacknowledgedWerks(name="name", title="title", sort_index=2)(
+        UnacknowledgedWerks(
+            name="name", title="title", sort_index=2, expiry_version=ExpiryVersion.NEVER
+        )(
             Logger(__name__),
             acknowledged_werks_mk=acknowledge_werks_file,
             unacknowledged_werks_json=unacknowledged_werks_file,

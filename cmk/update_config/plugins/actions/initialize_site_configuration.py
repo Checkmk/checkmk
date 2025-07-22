@@ -8,6 +8,7 @@ from typing import override
 
 from cmk.gui.watolib.sample_config import ConfigGeneratorLocalSiteConnection
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -27,5 +28,6 @@ update_action_registry.register(
         # Needs to run before "Create precompiled host and folder files". Otherwise the sites
         # attribute will be missing.
         sort_index=2,
+        expiry_version=ExpiryVersion.CMK_260,
     )
 )

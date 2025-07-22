@@ -6,6 +6,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.validate_config import validate_mk_files
 
@@ -40,6 +41,7 @@ update_action_registry.register(
         name="validate_config_files",
         title="Validating configuration files",
         sort_index=998,  # Should be run after any mk file modifications.
+        expiry_version=ExpiryVersion.NEVER,
         continue_on_failure=True,
     )
 )

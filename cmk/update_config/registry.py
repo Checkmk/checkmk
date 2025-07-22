@@ -8,6 +8,7 @@ from logging import Logger
 from typing import Final, override
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 
@@ -20,6 +21,7 @@ class UpdateAction(ABC):
         name: str,
         title: str,
         sort_index: int,
+        expiry_version: ExpiryVersion,
         continue_on_failure: bool = True,
     ) -> None:
         """
@@ -54,11 +56,7 @@ class PreUpdateAction(ABC):
     """Base class for all pre-update actions"""
 
     def __init__(
-        self,
-        *,
-        name: str,
-        title: str,
-        sort_index: int,
+        self, *, name: str, title: str, sort_index: int, expiry_version: ExpiryVersion
     ) -> None:
         """
         :param name: the internal name of the pre-update action, has to be unique

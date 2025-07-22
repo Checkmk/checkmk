@@ -12,6 +12,7 @@ from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 from cmk.mkp_tool import Manifest, PackageID
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
@@ -102,5 +103,6 @@ pre_update_action_registry.register(
         name="ui_extensions",
         title="UI extensions",
         sort_index=GUI_PLUGINS_PREACTION_SORT_INDEX,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

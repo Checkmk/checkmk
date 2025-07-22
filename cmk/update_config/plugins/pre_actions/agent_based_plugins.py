@@ -11,6 +11,7 @@ from typing import override
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.urls import werk_reference_url, WerkReference
 from cmk.mkp_tool import Manifest, PackageID
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
@@ -109,5 +110,6 @@ pre_update_action_registry.register(
         name="agent_based_plugins",
         title="Agent based plugins",
         sort_index=AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

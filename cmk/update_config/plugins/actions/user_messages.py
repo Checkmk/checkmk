@@ -8,6 +8,7 @@ from typing import override
 
 from cmk.ccc.store import DimSerializer, ObjectStore
 from cmk.gui.message import all_messages_paths
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -45,5 +46,6 @@ update_action_registry.register(
         name="migrate_user_messages",
         title="Migrate user messages",
         sort_index=100,  # don't care
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

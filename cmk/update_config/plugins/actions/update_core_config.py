@@ -8,6 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc.site import get_omd_config
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.paths import omd_root
 
@@ -27,5 +28,6 @@ update_action_registry.register(
         name="update_core_config",
         title="Update core config",
         sort_index=999,  # Run at the end
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

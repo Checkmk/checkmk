@@ -11,7 +11,7 @@ from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
-from cmk.update_config.lib import format_warning
+from cmk.update_config.lib import ExpiryVersion, format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -95,5 +95,6 @@ update_action_registry.register(
         name="rulesets",
         title="Rulesets",
         sort_index=30,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

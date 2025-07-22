@@ -8,6 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.visuals._store import _CombinedVisualsCache
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils import paths as paths_utils
 
@@ -45,5 +46,6 @@ update_action_registry.register(
         name="version_specific_caches",
         title="Cleanup version specific caches",
         sort_index=50,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

@@ -8,6 +8,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -36,11 +37,11 @@ class CleanUpSiteAttributes(UpdateAction):
         )
 
 
-# REMOVE_WITH_CMK_2_6
 update_action_registry.register(
     CleanUpSiteAttributes(
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )
 )

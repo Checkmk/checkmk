@@ -9,6 +9,7 @@ from typing import override
 
 import cmk.utils.paths
 from cmk.agent_based.prediction_backend import PredictionInfo
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.prediction import PredictionData, PredictionStore
 
@@ -47,5 +48,6 @@ update_action_registry.register(
         name="remove_unreadable_predictions",
         title="Remove unreadable prediction files",
         sort_index=101,  # can run whenever
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

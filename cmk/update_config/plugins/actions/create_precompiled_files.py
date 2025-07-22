@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -32,5 +33,6 @@ update_action_registry.register(
         name="create_precompiled_files",
         title="Create precompiled host and folder files",
         sort_index=5,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

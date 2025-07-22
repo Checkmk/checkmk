@@ -9,6 +9,7 @@ from typing import override
 from cmk.agent_based.legacy import find_plugin_files
 from cmk.base.config import load_and_convert_legacy_checks
 from cmk.gui.exceptions import MKUserError
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
@@ -52,5 +53,6 @@ pre_update_action_registry.register(
         name="legacy_check_plugins",
         title="Legacy check plug-ins",
         sort_index=0,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

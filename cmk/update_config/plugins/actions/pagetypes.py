@@ -12,6 +12,7 @@ from cmk.gui.pagetypes import (
     OverridableInstances,
     PagetypeTopics,
 )
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)
@@ -38,6 +39,7 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
             name=name,
             title=title,
             sort_index=sort_index,
+            expiry_version=ExpiryVersion.NEVER,
             continue_on_failure=continue_on_failure,
         )
         self._updater = updater

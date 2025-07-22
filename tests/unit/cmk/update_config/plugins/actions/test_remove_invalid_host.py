@@ -15,6 +15,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.remove_invalid_host import RemoveInvalidHost
 
 
@@ -42,6 +43,7 @@ def test_remove_invalid_host(with_admin_login: UserId, load_config: None) -> Non
         name="remove_invalid_host",
         title="Remove invalid host",
         sort_index=155,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     root = folder_tree().root_folder()

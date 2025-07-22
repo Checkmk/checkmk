@@ -18,6 +18,7 @@ from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
@@ -223,5 +224,6 @@ pre_update_action_registry.register(
         name="rulesets",
         title="Rulesets",
         sort_index=10,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

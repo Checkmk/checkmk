@@ -22,6 +22,7 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
@@ -46,6 +47,7 @@ update_action_registry.register(
         name="global_settings",
         title="Global settings",
         sort_index=20,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )
 

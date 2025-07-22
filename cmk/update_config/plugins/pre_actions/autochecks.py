@@ -19,6 +19,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 from cmk.utils.log import VERBOSE
 
+from ...lib import ExpiryVersion
 from ..lib.autochecks import rewrite_yielding_errors
 
 
@@ -81,5 +82,6 @@ pre_update_action_registry.register(
         name="autochecks",
         title="Autochecks",
         sort_index=AUTOCHECK_REWRITE_PREACTION_SORT_INDEX,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

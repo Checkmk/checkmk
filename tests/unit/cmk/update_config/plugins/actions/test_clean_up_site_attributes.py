@@ -11,6 +11,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.clean_up_site_attributes import (
     CleanUpSiteAttributes,
 )
@@ -49,6 +50,7 @@ def test_clean_up_missing_alias() -> None:
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert site_mgmt.load_sites()[SiteId("abc")]["alias"] == "abc"
@@ -87,6 +89,7 @@ def test_clean_up_missing_socket() -> None:
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert site_mgmt.load_sites()[SiteId("abc")]["socket"] == ("local", None)
@@ -125,6 +128,7 @@ def test_clean_up_missing_url_prefix() -> None:
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert site_mgmt.load_sites()[SiteId("abc")]["url_prefix"] == "../"
@@ -162,6 +166,7 @@ def test_clean_up_missing_id() -> None:
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert site_mgmt.load_sites()[SiteId("abc")]["id"] == "abc"

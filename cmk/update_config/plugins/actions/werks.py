@@ -7,6 +7,7 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.werks import load as load_werks
 from cmk.utils.werks.acknowledgement import load_acknowledgements, write_unacknowledged_werks
@@ -84,5 +85,6 @@ update_action_registry.register(
         name="store_unacknowledged_werks",
         title="Storing unacknowledged werks",
         sort_index=41,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

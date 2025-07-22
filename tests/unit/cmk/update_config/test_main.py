@@ -14,6 +14,7 @@ from pytest_mock import MockerFixture
 
 import cmk.utils.paths
 from cmk.update_config import main, registry
+from cmk.update_config.lib import ExpiryVersion
 
 
 @pytest.fixture(autouse=True)
@@ -67,7 +68,9 @@ def test_main_calls_config_updater(
 
 class MockUpdateAction(registry.UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
-        super().__init__(name=name, title=title, sort_index=sort_index)
+        super().__init__(
+            name=name, title=title, sort_index=sort_index, expiry_version=ExpiryVersion.NEVER
+        )
         self.calls = 0
 
     @override

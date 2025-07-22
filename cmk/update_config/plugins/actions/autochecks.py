@@ -6,6 +6,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.autochecks import rewrite_yielding_errors
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -23,5 +24,6 @@ update_action_registry.register(
         name="autochecks",
         title="Autochecks",
         sort_index=40,
+        expiry_version=ExpiryVersion.NEVER,
     )
 )

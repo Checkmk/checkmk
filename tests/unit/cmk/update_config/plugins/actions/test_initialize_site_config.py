@@ -10,6 +10,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.initialize_site_configuration import (
     InitializeSiteConfiguration,
 )
@@ -33,6 +34,7 @@ def test_initialize_missing_file() -> None:
         name="initialize_site_configuration",
         title="Initialize site configuration",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert sites_mk.exists()
@@ -51,6 +53,7 @@ sites.update({})""")
         name="initialize_site_configuration",
         title="Initialize site configuration",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     site_mgmt = site_management_registry["site_management"]
@@ -68,6 +71,7 @@ def test_initialize_missing_file_not_touch_existing_file() -> None:
         name="initialize_site_configuration",
         title="Initialize site configuration",
         sort_index=30,
+        expiry_version=ExpiryVersion.CMK_260,
     )(logging.getLogger())
 
     assert sites_mk.read_text() == "sites.update({'x': {}})"

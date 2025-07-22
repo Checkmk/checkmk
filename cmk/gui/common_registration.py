@@ -96,7 +96,10 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
-from cmk.gui.watolib.host_attributes import HostAttributeRegistry, HostAttributeTopicRegistry
+from cmk.gui.watolib.host_attributes import (
+    HostAttributeRegistry,
+    HostAttributeTopicRegistry,
+)
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
 from cmk.gui.watolib.hosts_and_folders import FolderValidatorsRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
@@ -188,6 +191,7 @@ def register(
         row_post_processor_registry,
     )
     inventory.register(
+        config_variable_registry,
         page_registry,
         visual_info_registry,
         filter_registry,

@@ -28,6 +28,7 @@ from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
     inv_display_hints,
+    load_inventory_ui_plugins,
     NodeDisplayHint,
     OrderedColumnDisplayHintsOfView,
     PAINT_FUNCTION_NAME_PREFIX,
@@ -279,7 +280,7 @@ def _register_table_view(table: TableWithView) -> None:
 
 
 def register_table_views_and_columns() -> None:
-    register_display_hints(inventory_displayhints)
+    register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
     painter_options = PainterOptions.get_instance()
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:

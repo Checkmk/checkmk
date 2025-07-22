@@ -7,8 +7,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, TypeAlias
+from typing import assert_never, Literal, TypeAlias
 
+import cmk.ccc.debug
+from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui import inventory
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
@@ -24,7 +26,17 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
-from cmk.utils.structured_data import SDKey, SDPath
+from cmk.gui.log import logger
+from cmk.gui.utils.html import HTML
+from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_alpha import entry_point_prefixes
+from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
+from cmk.inventory_ui.v1_alpha import Node as NodeFromAPI
+from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 from .registry import (
     inv_paint_funtions,
@@ -33,6 +45,217 @@ from .registry import (
     PaintFunction,
     SortFunction,
 )
+
+# TODO API: style
+
+
+def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
+    discovered_plugins: DiscoveredPlugins[NodeFromAPI] = discover_all_plugins(
+        PluginGroup.INVENTORY_UI,
+        entry_point_prefixes(),
+        raise_errors=cmk.ccc.debug.enabled(),
+    )
+    for exc in discovered_plugins.errors:
+        logger.error(exc)
+    return discovered_plugins
+
+
+def _find_icon(path: SDPath) -> str:
+    if path == (SDNodeName("hardware"),):
+        return "hardware"
+    if path == (SDNodeName("software"),):
+        return "software"
+    if path == (SDNodeName("software"), SDNodeName("packages")):
+        return "packages"
+    if path == (SDNodeName("software"), SDNodeName("applications"), SDNodeName("docker")):
+        return "docker"
+    if path == (SDNodeName("networking"),):
+        return "networking"
+    return ""
+
+
+def _make_str(title_or_label: TitleFromAPI | LabelFromAPI | str) -> str:
+    return (
+        title_or_label.localize(lambda v: v)
+        if isinstance(title_or_label, (TitleFromAPI | LabelFromAPI))
+        else title_or_label
+    )
+
+
+class _RenderBool:
+    def __init__(self, field_from_api: BoolFieldFromAPI) -> None:
+        self._field = field_from_api
+
+    def __call__(self, value: int | float | str | bool | None) -> tuple[str, str | HTML]:
+        if value is None:
+            return "", ""
+        if not isinstance(value, bool):
+            raise ValueError(value)
+        return "", _make_str(self._field.render_true if value else self._field.render_false)
+
+
+class _RenderChoice:
+    def __init__(self, field_from_api: ChoiceFieldFromAPI) -> None:
+        self._field = field_from_api
+
+    def __call__(self, value: int | float | str | bool | None) -> tuple[str, str | HTML]:
+        if value is None:
+            return "", ""
+        if not isinstance(value, (int | float | str)):
+            raise ValueError(value)
+        return (
+            "",
+            f"{value} (%s)" % _("No such value")
+            if (rendered := self._field.mapping.get(value)) is None
+            else _make_str(rendered),
+        )
+
+
+def _make_paint_function(
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+) -> PaintFunction:
+    match field_from_api:
+        case BoolFieldFromAPI():
+            return _RenderBool(field_from_api)
+        case NumberFieldFromAPI():
+            return lambda v: ("", str(v))  # TODO
+        case TextFieldFromAPI():
+            return lambda v: ("", str(v))  # TODO
+        case ChoiceFieldFromAPI():
+            return _RenderChoice(field_from_api)
+        case other:
+            assert_never(other)
+
+
+def _make_sort_function(
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+) -> SortFunction:
+    match field_from_api:
+        case BoolFieldFromAPI():
+            return _cmp_inv_generic
+        case NumberFieldFromAPI():
+            return _cmp_inv_generic
+        case TextFieldFromAPI():
+            return _cmp_inv_generic  # TODO
+        case ChoiceFieldFromAPI():
+            return _cmp_inv_generic  # TODO
+        case other:
+            assert_never(other)
+
+
+def _parse_attr_field_from_api(
+    path: SDPath,
+    node_ident: str,
+    node_title: str,
+    key: str,
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+) -> AttributeDisplayHint:
+    inventory_path = inventory.InventoryPath(
+        path=path,
+        source=inventory.TreeSource.attributes,
+        key=SDKey(key),
+    )
+    name = _make_attr_name(node_ident, key)
+    title = _make_str(field_from_api.title)
+    long_title = _make_long_title(node_title, title)
+    is_show_more = True
+    return AttributeDisplayHint(
+        name=name,
+        title=title,
+        short_title=title,
+        long_title=long_title,
+        paint_function=_make_paint_function(field_from_api),
+        sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
+        filter=FilterInvText(  # TODO
+            ident=name,
+            title=long_title,
+            inventory_path=inventory_path,
+            is_show_more=is_show_more,
+        ),
+    )
+
+
+def _parse_col_field_from_api(
+    node_title: str,
+    key: str,
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+) -> ColumnDisplayHint:
+    title = _make_str(field_from_api.title)
+    return ColumnDisplayHint(
+        title=title,
+        short_title=title,
+        long_title=_make_long_title(node_title, title),
+        paint_function=_make_paint_function(field_from_api),
+    )
+
+
+def _parse_col_field_from_api_of_view(
+    table_view_name: str,
+    node_title: str,
+    key: str,
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+) -> ColumnDisplayHintOfView:
+    name = _make_col_name(table_view_name, key)
+    title = _make_str(field_from_api.title)
+    long_title = _make_long_title(node_title, title)
+    return ColumnDisplayHintOfView(
+        name=name,
+        title=title,
+        short_title=title,
+        long_title=long_title,
+        paint_function=_make_paint_function(field_from_api),
+        sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
+        filter=FilterInvtableText(  # TODO
+            inv_info=table_view_name,
+            ident=name,
+            title=long_title,
+        ),
+    )
+
+
+def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
+    path = tuple(SDNodeName(e) for e in node.path)
+    parent_title = inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else ""
+    name = _make_node_name(path)
+    title = _make_str(node.title)
+    table: Table | TableWithView
+    if node.table.view is None:
+        table = Table(
+            columns={
+                SDKey(k): _parse_col_field_from_api(title, k, v)
+                for k, v in node.table.columns.items()
+            },
+        )
+    else:
+        table_view_name = _parse_view_name(node.table.view.name)
+        long_title = _make_long_title(parent_title, _make_str(node.table.view.title))
+        if node.table.view.group is not None:
+            # TODO CMK-25037
+            long_title = f"{long_title} (_make_str(node.table.view.group))"
+        table = TableWithView(
+            columns={
+                SDKey(k): _parse_col_field_from_api_of_view(table_view_name, title, k, v)
+                for k, v in node.table.columns.items()
+            },
+            name=table_view_name,
+            path=path,
+            long_title=long_title,
+            icon="",
+            is_show_more=True,
+        )
+    return NodeDisplayHint(
+        name=name,
+        path=path,
+        title=title,
+        short_title=title,
+        long_title=_make_long_title(parent_title, title),
+        icon=_find_icon(path),
+        attributes={
+            SDKey(k): _parse_attr_field_from_api(path, name, title, k, v)
+            for k, v in node.attributes.items()
+        },
+        table=table,
+    )
 
 
 @dataclass(frozen=True)
@@ -84,7 +307,7 @@ def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunct
     return "str", inv_paint_funtions["inv_paint_generic"]["func"]
 
 
-def _make_sort_function(legacy_hint: InventoryHintSpec) -> SortFunction:
+def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFunction:
     return _decorate_sort_function(legacy_hint.get("sort", _cmp_inv_generic))
 
 
@@ -211,7 +434,7 @@ def _parse_attribute_hint(
         ),
         long_title=long_title,
         paint_function=paint_function,
-        sort_function=_make_sort_function(legacy_hint),
+        sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_make_attribute_filter(
             path=path,
             key=key,
@@ -375,7 +598,7 @@ def _parse_column_hint_of_view(
         ),
         long_title=long_title,
         paint_function=paint_function,
-        sort_function=_make_sort_function(legacy_hint),
+        sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_column_display_hint_filter_class(
             table_view_name, name, long_title, legacy_hint.get("filter")
         ),
@@ -606,6 +829,8 @@ class DisplayHints:
         }
 
     def add(self, node_hint: NodeDisplayHint) -> None:
+        if node_hint.path in self._nodes_by_path:
+            return
         self._nodes_by_path[node_hint.path] = node_hint
 
     def __iter__(self) -> Iterator[NodeDisplayHint]:
@@ -647,6 +872,11 @@ class DisplayHints:
 inv_display_hints = DisplayHints()
 
 
-def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> None:
+def register_display_hints(
+    plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
+) -> None:
+    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
+        inv_display_hints.add(_parse_node_from_api(node))
+
     for hint in _parse_legacy_display_hints(legacy_hints):
         inv_display_hints.add(hint)

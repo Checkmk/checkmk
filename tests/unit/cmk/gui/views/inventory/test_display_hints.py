@@ -21,6 +21,8 @@ from cmk.gui.views.inventory._display_hints import (
     _get_related_legacy_hints,
     _parse_view_name,
     _RelatedLegacyHints,
+    _RenderBool,
+    _RenderChoice,
     AttributeDisplayHint,
     ColumnDisplayHint,
     ColumnDisplayHintOfView,
@@ -37,6 +39,10 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
+from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
+from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 
@@ -1236,3 +1242,22 @@ def test_make_attribute_displayhint_from_hint(
 )
 def test__parse_view_name(view_name: str, expected_view_name: str) -> None:
     assert _parse_view_name(view_name) == expected_view_name
+
+
+def test_render_bool() -> None:
+    bool_field = BoolFieldFromAPI(
+        TitleFromAPI("A title"),
+        render_true=LabelFromAPI("It's true"),
+        render_false=LabelFromAPI("It's false"),
+    )
+    assert _RenderBool(bool_field)(True) == ("", "It's true")
+    assert _RenderBool(bool_field)(False) == ("", "It's false")
+
+
+def test_render_choice() -> None:
+    choice_field = ChoiceFieldFromAPI(
+        TitleFromAPI("A title"),
+        mapping={1: LabelFromAPI("One")},
+    )
+    assert _RenderChoice(choice_field)(1) == ("", "One")
+    assert _RenderChoice(choice_field)(2) == ("", "2 (No such value)")

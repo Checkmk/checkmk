@@ -7,7 +7,7 @@
 
 :root {
   /* Colors */
-  --success: rgb(19, 211, 137);
+  --success: var(--color-corporate-green-50);
   --success-dimmed: rgb(17 188 122);
   --success-dimmed-2: rgb(13 141 91);
 
@@ -26,8 +26,6 @@
   --default-help-icon-bg-color: rgb(6, 103, 193);
   --default-help-icon-bg-color-hover: rgb(56, 133, 205);
   --scrollbar-color: rgb(78, 93, 105);
-  --color-corporate-green-60: rgb(19, 190, 146);
-  --color-digital-green-50: rgb(102, 255, 204);
 
   /* Fonts */
   --font-size-xxlarge: 18px;

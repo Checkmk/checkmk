@@ -36,6 +36,7 @@ class CleanUpSiteAttributes(UpdateAction):
         )
 
 
+# REMOVE_WITH_CMK_2_6
 update_action_registry.register(
     CleanUpSiteAttributes(
         name="clean_up_site_attributes",

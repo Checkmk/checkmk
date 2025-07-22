@@ -205,6 +205,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
             "dell_compellent_folder",
             "dell_hw_info",
         },
+        ".1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.*": {"aruba_sw_temp"},
     }
 
     for section in agent_based_plugins.snmp_sections.values():

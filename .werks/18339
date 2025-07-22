@@ -7,6 +7,6 @@ Edition: cre
 Level: 1
 Version: 2.2.0p45
 
-Fore more recent version of Meinberg LANTIME devices, the "LANTIME Refclock x" service was not discovered, ifthe numeric type ID of the clock was not known to the check plugin.
+For more recent version of Meinberg LANTIME devices, the "LANTIME Refclock x" service was not discovered, if the numeric type ID of the clock was not known to the check plugin.
 
 This is fixed by adding the these values to the list of known clock types: rsc1000, gns182, gns182uc, gsr190, gen182, cpe182, fdm182, fdm182m, pzf182, pzf183, bpe8nnn, n2x185, anz141, msf182, rel1002, gns183, gxl183, m3t.

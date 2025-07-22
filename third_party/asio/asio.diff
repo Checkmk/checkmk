@@ -1,7 +1,7 @@
-diff -Nur asio-1.24.0.orig/include/asio/basic_socket_streambuf.hpp asio-1.24.0/include/asio/basic_socket_streambuf.hpp
---- asio-1.24.0.orig/include/asio/basic_socket_streambuf.hpp	2022-08-13 03:20:41.000000000 +0200
-+++ asio-1.24.0/include/asio/basic_socket_streambuf.hpp	2022-11-21 13:14:41.987704435 +0100
-@@ -247,7 +247,7 @@
+diff -Nur asio-1.34.2.orig/include/asio/basic_socket_streambuf.hpp asio-1.34.2/include/asio/basic_socket_streambuf.hpp
+--- asio-1.34.2.orig/include/asio/basic_socket_streambuf.hpp	2025-03-03 22:59:27.022198391 +0100
++++ asio-1.34.2/include/asio/basic_socket_streambuf.hpp	2025-07-22 12:57:40.050065274 +0200
+@@ -174,7 +174,7 @@
    virtual ~basic_socket_streambuf()
    {
      if (pptr() != pbase())

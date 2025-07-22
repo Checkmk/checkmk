@@ -2,7 +2,7 @@ load("//bazel/rules:local_archive.bzl", "local_archive")
 
 def asio_workspace():
     # Newer versions available from https://registry.bazel.build/modules/asio
-    version_str = "1.24.0-patched"
+    version_str = "1.34.2-patched"
     filename = "asio-" + version_str
     local_archive(
         name = "asio",

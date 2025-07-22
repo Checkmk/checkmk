@@ -23,7 +23,7 @@
     <ProjectGuid>{343045B4-F20A-4E48-AB2F-83E1C22C9710}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
-    <AsioVersion>asio-1.24.0-patched</AsioVersion>
+    <AsioVersion>asio-1.34.2-patched</AsioVersion>
     <FmtVersion>fmt-11.1.4</FmtVersion>
     <SimpleIniVersion>simpleini-2af65fc</SimpleIniVersion>
     <YamlCpp>yaml-cpp-0.8.0</YamlCpp>

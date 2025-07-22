@@ -24,7 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>watest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <AsioVersion>asio-1.24.0-patched</AsioVersion>
+    <AsioVersion>asio-1.34.2-patched</AsioVersion>
     <FmtVersion>fmt-11.1.4</FmtVersion>
     <GoogleTest>googletest-e90fe24856-patched</GoogleTest>
     <YamlCpp>yaml-cpp-0.8.0</YamlCpp>

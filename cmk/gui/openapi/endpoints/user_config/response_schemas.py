@@ -67,14 +67,6 @@ class ConcreteUserInterfaceAttributes(BaseSchema):
         enum=["hide", "show"],
         example="hide",
     )
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    mega_menu_icons = fields.String(
-        required=False,
-        description="Deprecated - use `main_menu_icons` instead.",
-        enum=["topic", "entry"],
-        example="topic",
-        deprecated=True,
-    )
     main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "

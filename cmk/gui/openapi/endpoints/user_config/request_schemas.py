@@ -8,7 +8,6 @@ from collections.abc import MutableMapping
 from typing import Any
 
 import marshmallow
-from marshmallow import pre_load
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
@@ -16,7 +15,6 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.utils import mutually_exclusive_fields
 from cmk.gui.type_defs import DismissableWarning
 from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -201,14 +199,6 @@ class UserInterfaceAttributes(BaseSchema):
         enum=["hide", "show"],
         load_default="hide",
     )
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    mega_menu_icons = fields.String(
-        required=False,
-        description="Deprecated - use `main_menu_icons` instead.",
-        enum=["topic", "entry"],
-        load_default="topic",
-        deprecated=True,
-    )
     main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "
@@ -231,20 +221,6 @@ class UserInterfaceAttributes(BaseSchema):
         example="show_icon",
         load_default="show_icon",
     )
-
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    @pre_load
-    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        params = {key: value for key, value in data.items() if value is not None}
-        if params:
-            data["main_menu_icons"] = mutually_exclusive_fields(
-                str,
-                params,
-                "mega_menu_icons",
-                "main_menu_icons",
-                default="topic",
-            )
-        return data
 
 
 DISMISSABLE_WARNINGS: list[DismissableWarning] = [
@@ -416,7 +392,6 @@ class CreateUser(CustomUserAttributes):
             "sidebar_position": "right",
             "navigation_bar_icons": "hide",
             "main_menu_icons": "topic",
-            "mega_menu_icons": "topic",  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             "show_mode": "default",
             "contextual_help_icon": "show_icon",
         },
@@ -449,13 +424,6 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         "respective titles",
         enum=["hide", "show"],
     )
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    mega_menu_icons = fields.String(
-        required=False,
-        description="Deprecated - use `main_menu_icons` instead.",
-        enum=["topic", "entry"],
-        deprecated=True,
-    )
     main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "
@@ -476,20 +444,6 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         example="show_icon",
         load_default="show_icon",
     )
-
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    @pre_load
-    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        params = {key: value for key, value in data.items() if value is not None}
-        if params:
-            data["main_menu_icons"] = mutually_exclusive_fields(
-                str,
-                params,
-                "mega_menu_icons",
-                "main_menu_icons",
-                default="topic",
-            )
-        return data
 
 
 class UpdateUser(CustomUserAttributes):

@@ -9,9 +9,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # LDAP API Schema Example
-# Hint: the alias is always added to the response, so we need to add it for response testing, but not for request schema
-# TODO: DEPRECATED(18295) remove "mega_menu_icons"
-def ldap_api_schema(ldap_id: str, include_mega_menu_icons: bool = False) -> dict:
+def ldap_api_schema(ldap_id: str) -> dict:
     return {
         "general_properties": {
             "id": ldap_id,
@@ -68,12 +66,6 @@ def ldap_api_schema(ldap_id: str, include_mega_menu_icons: bool = False) -> dict
             },
             "email_address": {"state": "enabled", "attribute_to_sync": "mail"},
             "main_menu_icons": {"state": "enabled", "attribute_to_sync": "icons_per_item"},
-            # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-            **(
-                {"mega_menu_icons": {"state": "enabled", "attribute_to_sync": "icons_per_item"}}
-                if include_mega_menu_icons
-                else {}
-            ),
             "navigation_bar_icons": {
                 "state": "enabled",
                 "attribute_to_sync": "nav_hide_icons_title",
@@ -242,9 +234,6 @@ def test_get_ldap_connection_min_config(clients: ClientRegistry) -> None:
             "disable_notifications": {"state": "disabled"},
             "email_address": {"state": "disabled"},
             "main_menu_icons": {"state": "disabled"},
-            "mega_menu_icons": {
-                "state": "disabled"
-            },  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             "navigation_bar_icons": {"state": "disabled"},
             "pager": {"state": "disabled"},
             "show_mode": {"state": "disabled"},
@@ -273,19 +262,7 @@ def test_get_ldap_connections(clients: ClientRegistry) -> None:
     cnx4 = ldap_api_schema(ldap_id="LDAP_4")
     clients.LdapConnection.create(ldap_data=cnx4)
     resp = clients.LdapConnection.get_all()
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    assert resp.json["value"][3]["extensions"] == ldap_api_schema(
-        ldap_id="LDAP_4", include_mega_menu_icons=True
-    )
-
-
-# TODO: DEPRECATED(18295) remove "mega_menu_icons"
-def test_create_ldap_connection_with_field_and_alias_in_request(clients: ClientRegistry) -> None:
-    create_ldap_connections(clients)
-    clients.LdapConnection.create(
-        ldap_data=ldap_api_schema(ldap_id="LDAP_1", include_mega_menu_icons=True),
-        expect_ok=False,
-    ).assert_status_code(400)
+    assert resp.json["value"][3]["extensions"] == cnx4
 
 
 def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
@@ -334,24 +311,7 @@ def test_edit_ldap_connection(clients: ClientRegistry) -> None:
     edited_ldap_3 = ldap_api_schema(ldap_id="LDAP_3")
     clients.LdapConnection.edit(ldap_connection_id="LDAP_3", ldap_data=edited_ldap_3)
     resp = clients.LdapConnection.get_all()
-
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    assert resp.json["value"][2]["extensions"] == ldap_api_schema(
-        ldap_id="LDAP_3", include_mega_menu_icons=True
-    )
-
-
-# TODO: DEPRECATED(18295) remove "mega_menu_icons"
-def test_edit_ldap_connection_using_mega_menu_icons_alias(clients: ClientRegistry) -> None:
-    create_ldap_connections(clients)
-    request = ldap_api_schema(ldap_id="LDAP_3")
-    # Use the alias "mega_menu_icons" instead of "main_menu_icons"
-    request["sync_plugins"]["mega_menu_icons"] = request["sync_plugins"].pop("main_menu_icons")
-    clients.LdapConnection.edit(ldap_connection_id="LDAP_3", ldap_data=request)
-    resp = clients.LdapConnection.get_all()
-    assert resp.json["value"][2]["extensions"] == ldap_api_schema(
-        ldap_id="LDAP_3", include_mega_menu_icons=True
-    )
+    assert resp.json["value"][2]["extensions"] == edited_ldap_3
 
 
 def test_edit_ldap_connection_that_doesnt_exist(clients: ClientRegistry) -> None:

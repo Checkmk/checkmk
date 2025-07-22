@@ -678,7 +678,6 @@ class APISyncPlugins(TypedDict, total=False):
     disable_notifications: SYNC_ATTRIBUTE
     email_address: SYNC_ATTRIBUTE
     main_menu_icons: SYNC_ATTRIBUTE
-    mega_menu_icons: SYNC_ATTRIBUTE  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     navigation_bar_icons: SYNC_ATTRIBUTE
     pager: SYNC_ATTRIBUTE
     show_mode: SYNC_ATTRIBUTE
@@ -1051,9 +1050,6 @@ class SyncPlugins:
             config.pop("disable_notifications", None)
         )
         ap["email"] = sync_attribute_to_internal(config.pop("email_address", None))
-        # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-        # This value was copied already to main_menu_icons. Skip it.
-        config.pop("mega_menu_icons", None)
         ap["icons_per_item"] = sync_attribute_to_internal(config.pop("main_menu_icons", None))
         ap["nav_hide_icons_title"] = sync_attribute_to_internal(
             config.pop("navigation_bar_icons", None)

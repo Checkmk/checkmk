@@ -119,7 +119,6 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
         "interface_options": {
             "interface_theme": "default",
             "main_menu_icons": "topic",
-            "mega_menu_icons": "topic",  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -374,10 +373,6 @@ def test_update_user_auth_options(
 
     user_data = resp.json["extensions"]
     user_data.pop("auth_option", None)
-
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    # Hint Response != Request >> all responses contain alias AND field.
-    user_data["interface_options"].pop("mega_menu_icons", None)
 
     if test_data is not None:
         user_data.update(test_data)
@@ -723,7 +718,6 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
         "interface_options": {
             "interface_theme": "default",
             "main_menu_icons": "topic",
-            "mega_menu_icons": "topic",  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -785,9 +779,6 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             fullname="Mathias Kettner",
             customer="global",
             auth_option={"auth_type": "password", "password": "password1234"},
-            interface_options={
-                "mega_menu_icons": "entry"
-            },  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             disable_login=False,
             idle_timeout={"option": "global"},
             roles=["user"],
@@ -816,8 +807,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
         "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
-            "main_menu_icons": "entry",  # TODO reset to "topic" (CMK-23667, Werk#18295)
-            "mega_menu_icons": "entry",  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
+            "main_menu_icons": "topic",
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -825,60 +815,6 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
         },
         "start_url": "default_start_url",
     }
-
-
-# TODO: DEPRECATED(18295) remove "mega_menu_icons"
-@managedtest
-def test_openapi_user_update_fails_because_alias_and_field_set(clients: ClientRegistry) -> None:
-    # this test uses the internal mechanics of the user endpoint
-    username = "cmkuser"
-    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
-        clients.User.create(
-            username=username,
-            fullname="Mathias Kettner",
-            customer="global",
-            auth_option={"auth_type": "password", "password": "password1234"},
-            interface_options={"mega_menu_icons": "entry"},
-            disable_login=False,
-            idle_timeout={"option": "global"},
-            roles=["user"],
-            disable_notifications={"disable": False},
-            pager_address="",
-            language="en",
-        )
-
-    clients.User.edit(
-        username=username,
-        interface_options={"mega_menu_icons": "entry", "main_menu_icons": "topic"},
-        expect_ok=False,
-    ).assert_status_code(400)
-
-
-# TODO: DEPRECATED(18295) remove "mega_menu_icons"
-@managedtest
-def test_openapi_user_create_fails_because_alias_and_field_set(
-    clients: ClientRegistry,
-) -> None:
-    # this test uses the internal mechanics of the user endpoint
-    username = "cmkuser"
-    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
-        clients.User.create(
-            username=username,
-            fullname="Mathias Kettner",
-            customer="global",
-            auth_option={"auth_type": "password", "password": "password1234"},
-            interface_options={
-                "mega_menu_icons": "entry",
-                "main_menu_icons": "topic",
-            },  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-            disable_login=False,
-            idle_timeout={"option": "global"},
-            roles=["user"],
-            disable_notifications={"disable": False},
-            pager_address="",
-            language="en",
-            expect_ok=False,
-        ).assert_status_code(400)
 
 
 @managedtest
@@ -995,8 +931,6 @@ def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:
     assert interface_options["sidebar_position"] == "left"
     assert interface_options["navigation_bar_icons"] == "show"
     assert interface_options["main_menu_icons"] == "entry"
-    # TODO: DEPRECATED(18295) remove "mega_menu_icons"
-    assert interface_options["mega_menu_icons"] == "entry"
     assert interface_options["show_mode"] == "enforce_show_more"
 
     resp = clients.User.edit(username=username, interface_options={"interface_theme": "light"})

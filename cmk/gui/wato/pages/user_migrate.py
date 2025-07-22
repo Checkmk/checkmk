@@ -25,7 +25,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import ActionResult, PermissionName, Users
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb import connections_by_type, ConnectorType, get_connection, get_user_attributes
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -233,7 +233,7 @@ class ModeUserMigrate(WatoMode):
     ) -> tuple[list[str], list[str]]:
         users_with_warning: list[str] = []
         users_migrated: list[str] = []
-        all_users: Users = userdb.load_users()
+        all_users = userdb.load_users()
         for username in _get_selected_users():
             user_id = UserId(username)
             if username not in all_users:

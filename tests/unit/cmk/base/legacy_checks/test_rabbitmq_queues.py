@@ -93,6 +93,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                 "msg_upper": (1, 10),
                 "msg_ready_upper": (1, 10),
                 "msg_unack_upper": (1, 10),
+                "msg_publish_upper": (1, 10),
                 "msg_publish_rate_upper": (0.1, 0.5),
                 "abs_memory": (10240, 51200),
             },
@@ -107,7 +108,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                     "Messages unacknowledged: 5 (warn/crit at 1/10)",
                     [("messages_unacknowledged", 5, 1, 10)],
                 ),
-                (0, "Messages published: 5", [("messages_publish", 5, None, None)]),
+                (1, "Messages published: 5 (warn/crit at 1/10)", [("messages_publish", 5, 1, 10)]),
                 (
                     1,
                     # TODO: output is not rendered as float
@@ -132,6 +133,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                 "msg_lower": (20, 10),
                 "msg_ready_lower": (20, 10),
                 "msg_unack_lower": (20, 10),
+                "msg_publish_lower": (20, 10),
                 "msg_publish_rate_lower": (0.5, 0.1),
             },
             [
@@ -153,7 +155,11 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                     "Messages unacknowledged: 5 (warn/crit below 20/10)",
                     [("messages_unacknowledged", 5, None, None)],
                 ),
-                (0, "Messages published: 5", [("messages_publish", 5, None, None)]),
+                (
+                    2,
+                    "Messages published: 5 (warn/crit below 20/10)",
+                    [("messages_publish", 5, None, None)],
+                ),
                 (
                     1,
                     "Rate: 0 1/s (warn/crit below 0 1/s/0 1/s)",

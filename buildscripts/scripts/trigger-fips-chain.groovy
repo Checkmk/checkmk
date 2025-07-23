@@ -14,7 +14,6 @@ def main() {
         "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
-
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"

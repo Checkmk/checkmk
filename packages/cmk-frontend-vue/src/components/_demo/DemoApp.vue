@@ -44,7 +44,7 @@ async function setCss(name: 'cmk' | 'none') {
   if (name === 'none') {
     url = ''
   } else {
-    url = (await import(`~cmk-frontend/src/themes/${selectedTheme.value}/theme.scss?url`)).default
+    url = (await import(`~cmk-frontend/themes/${selectedTheme.value}/theme.css?url`)).default
   }
   ;(document.getElementById('cmk-theming-stylesheet') as HTMLLinkElement).href = url
 }

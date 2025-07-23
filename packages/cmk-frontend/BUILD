@@ -1,4 +1,3 @@
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
@@ -54,26 +53,15 @@ BUILD_DEPS = [
     ":node_modules/webpack-remove-empty-scripts",
 ]
 
-# FIXME(frans): this is a dirty hack - cmk-frontend-vue should
-# not access files that belong to cmk-frontend
-copy_to_bin(
-    name = "src",
-    srcs = glob(
-        [
-            "**/*.svg",
-            "**/*.png",
-        ],
-        exclude = ["node_modules/**/*.svg"],
-    ),
-    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
-)
-
 webpack_bundle(
     name = "dist",
     srcs = SRCS,
     chdir = package_name(),
     node_modules = ":node_modules",
     output_dir = True,
+    # TODO: This is only done for the theme.css and icons.
+    # cmk-frontend-vue should not access files that belong to cmk-frontend
+    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
     webpack_config = ":webpack.config.js",
     deps = BUILD_DEPS,
 )

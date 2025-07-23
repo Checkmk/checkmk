@@ -49,57 +49,57 @@
   --form-field-height: 21px;
 
   /* Icons that are only defined for facelift, so without dark variant */
-  --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
-  --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
-  --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
-  --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
-  --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
-  --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.svg');
-  --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
-  --icon-alert-warn: url('~cmk-frontend/src/themes/facelift/images/icon_alert_warn.png');
-  --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
-  --icon-about-checkmk: url('~cmk-frontend/src/themes/facelift/images/icon_about_checkmk.svg');
-  --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
-  --icon-cross: url('~cmk-frontend/src/themes/facelift/images/icon_cross.svg');
-  --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
-  --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
-  --icon-pending-task: url('~cmk-frontend/src/themes/facelift/images/icon_pending_task.svg');
-  --icon-sparkle: url('~cmk-frontend/src/themes/facelift/images/icon_sparkle.svg');
-  --icon-history: url('~cmk-frontend/src/themes/facelift/images/icon_topic_history.png');
-  --icon-main-setup-active: url('~cmk-frontend/src/themes/facelift/images/icon_main_setup_active.svg');
-  --icon-main-monitoring-active: url('~cmk-frontend/src/themes/facelift/images/icon_main_monitoring_active.svg');
+  --icon-checkmark: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
+  --icon-crit-problem: url('~cmk-frontend/themes/facelift/images/icon_crit_problem.svg');
+  --icon-back: url('~cmk-frontend/themes/facelift/images/icon_back.png');
+  --icon-continue: url('~cmk-frontend/themes/facelift/images/icon_continue.png');
+  --icon-save-to-services: url('~cmk-frontend/themes/facelift/images/icon_save_to_services.svg');
+  --icon-insertdate: url('~cmk-frontend/themes/facelift/images/icon_insertdate.svg');
+  --icon-alert-crit: url('~cmk-frontend/themes/facelift/images/icon_alert_crit.svg');
+  --icon-alert-warn: url('~cmk-frontend/themes/facelift/images/icon_alert_warn.png');
+  --icon-alert-up: url('~cmk-frontend/themes/facelift/images/icon_alert_up.png');
+  --icon-about-checkmk: url('~cmk-frontend/themes/facelift/images/icon_about_checkmk.svg');
+  --icon-check: url('~cmk-frontend/themes/facelift/images/icon_check.svg');
+  --icon-cross: url('~cmk-frontend/themes/facelift/images/icon_cross.svg');
+  --icon-save: url('~cmk-frontend/themes/facelift/images/icon_save.svg');
+  --icon-cancel: url('~cmk-frontend/themes/facelift/images/icon_cancel.svg');
+  --icon-pending-task: url('~cmk-frontend/themes/facelift/images/icon_pending_task.svg');
+  --icon-sparkle: url('~cmk-frontend/themes/facelift/images/icon_sparkle.svg');
+  --icon-history: url('~cmk-frontend/themes/facelift/images/icon_topic_history.png');
+  --icon-main-setup-active: url('~cmk-frontend/themes/facelift/images/icon_main_setup_active.svg');
+  --icon-main-monitoring-active: url('~cmk-frontend/themes/facelift/images/icon_main_monitoring_active.svg');
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
-  --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
-  --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');
-  --icon-edit: url('~cmk-frontend/src/themes/facelift/images/icon_edit.svg');
-  --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
+  --icon-info: url('~cmk-frontend/themes/facelift/images/icon_info.svg');
+  --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');
+  --icon-edit: url('~cmk-frontend/themes/facelift/images/icon_edit.svg');
+  --icon-load-graph: url('~cmk-frontend/themes/facelift/images/load_graph.png');
 
-  --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
-  --icon-connection-tests: url('~cmk-frontend/src/themes/facelift/images/icon_connection_tests.svg');
-  --icon-validation-error: url('~cmk-frontend/src/themes/facelift/images/icon_validation_error.png');
+  --icon-help-activated: url('~cmk-frontend/themes/facelift/images/icon_help_activated.svg');
+  --icon-connection-tests: url('~cmk-frontend/themes/facelift/images/icon_connection_tests.svg');
+  --icon-validation-error: url('~cmk-frontend/themes/facelift/images/icon_validation_error.png');
 
-  --icon-checkmk-logo-min: url('~cmk-frontend/src/themes/facelift/images/icon_checkmk_logo_min.svg');
-  --icon-rulesets: url('~cmk-frontend/src/themes/facelift/images/icon_rulesets.svg');
-  --icon-backup: url('~cmk-frontend/src/themes/facelift/images/icon_backup.svg');
-  --icon-contactgroups: url('~cmk-frontend/src/themes/facelift/images/icon_contactgroups.svg');
-  --icon-licensing: url('~cmk-frontend/src/themes/facelift/images/icon_licensing.svg');
-  --icon-sites: url('~cmk-frontend/src/themes/facelift/images/icon_sites.svg');
-  --icon-folder: url('~cmk-frontend/src/themes/facelift/images/icon_folder.svg');
-  --icon-networking: url('~cmk-frontend/src/themes/facelift/images/icon_networking.svg');
-  --icon-aws-logo: url('~cmk-frontend/src/themes/facelift/images/icon_aws_logo.svg');
-  --icon-azure-vms: url('~cmk-frontend/src/themes/facelift/images/icon_azure_vms.svg');
-  --icon-gcp: url('~cmk-frontend/src/themes/facelift/images/icon_gcp.svg');
-  --icon-synthetic-monitoring-yellow: url('~cmk-frontend/src/themes/facelift/images/icon_synthetic_monitoring_yellow.svg');
-  --icon-opentelemetry: url('~cmk-frontend/src/themes/facelift/images/icon_opentelemetry.svg');
-  --icon-dashboard: url('~cmk-frontend/src/themes/facelift/images/icon_dashboard.svg');
-  --icon-dashboard-problems: url('~cmk-frontend/src/themes/facelift/images/icon_dashboard_problems.svg');
-  --icon-svc-problems: url('~cmk-frontend/src/themes/facelift/images/icon_svc_problems.svg');
-  --icon-timeperiods: url('~cmk-frontend/src/themes/facelift/images/icon_timeperiods.svg');
-  --icon-hostgroups: url('~cmk-frontend/src/themes/facelift/images/icon_hostgroups.svg');
-  --icon-notifications: url('~cmk-frontend/src/themes/facelift/images/icon_notifications.svg');
-  --icon-analysis: url('~cmk-frontend/src/themes/facelift/images/icon_analysis.svg');
-  --icon-new: url('~cmk-frontend/src/themes/facelift/images/icon_new.svg');
-  --icon-copied: url('~cmk-frontend/src/themes/facelift/images/icon_copied.svg');
+  --icon-checkmk-logo-min: url('~cmk-frontend/themes/facelift/images/icon_checkmk_logo_min.svg');
+  --icon-rulesets: url('~cmk-frontend/themes/facelift/images/icon_rulesets.svg');
+  --icon-backup: url('~cmk-frontend/themes/facelift/images/icon_backup.svg');
+  --icon-contactgroups: url('~cmk-frontend/themes/facelift/images/icon_contactgroups.svg');
+  --icon-licensing: url('~cmk-frontend/themes/facelift/images/icon_licensing.svg');
+  --icon-sites: url('~cmk-frontend/themes/facelift/images/icon_sites.svg');
+  --icon-folder: url('~cmk-frontend/themes/facelift/images/icon_folder.svg');
+  --icon-networking: url('~cmk-frontend/themes/facelift/images/icon_networking.svg');
+  --icon-aws-logo: url('~cmk-frontend/themes/facelift/images/icon_aws_logo.svg');
+  --icon-azure-vms: url('~cmk-frontend/themes/facelift/images/icon_azure_vms.svg');
+  --icon-gcp: url('~cmk-frontend/themes/facelift/images/icon_gcp.svg');
+  --icon-synthetic-monitoring-yellow: url('~cmk-frontend/themes/facelift/images/icon_synthetic_monitoring_yellow.svg');
+  --icon-opentelemetry: url('~cmk-frontend/themes/facelift/images/icon_opentelemetry.svg');
+  --icon-dashboard: url('~cmk-frontend/themes/facelift/images/icon_dashboard.svg');
+  --icon-dashboard-problems: url('~cmk-frontend/themes/facelift/images/icon_dashboard_problems.svg');
+  --icon-svc-problems: url('~cmk-frontend/themes/facelift/images/icon_svc_problems.svg');
+  --icon-timeperiods: url('~cmk-frontend/themes/facelift/images/icon_timeperiods.svg');
+  --icon-hostgroups: url('~cmk-frontend/themes/facelift/images/icon_hostgroups.svg');
+  --icon-notifications: url('~cmk-frontend/themes/facelift/images/icon_notifications.svg');
+  --icon-analysis: url('~cmk-frontend/themes/facelift/images/icon_analysis.svg');
+  --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
+  --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
 }
 
 @layer theme {
@@ -123,17 +123,17 @@
     --font-color-dimmed: var(--grey-4-dimmed);
 
     /* Icons */
-    --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
-    --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
-    --icon-folder-blue: url('~cmk-frontend/src/themes/facelift/images/icon_folder_blue.svg');
-    --icon-drag: url('~cmk-frontend/src/themes/facelift/images/icon_drag.svg');
+    --icon-main-help: url('~cmk-frontend/themes/facelift/images/icon_main_help.svg');
+    --icon-close: url('~cmk-frontend/themes/facelift/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/themes/facelift/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/themes/facelift/images/icon_drag.svg');
 
-    --icon-info-circle: url('~cmk-frontend/src/themes/facelift/images/icon_info_circle.svg');
-    --icon-tree-closed: url('~cmk-frontend/src/themes/facelift/images/tree_closed.svg');
-    --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action.svg');
-    --icon-checkmark-plus: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark_plus.svg');
-    --icon-export-link: url('~cmk-frontend/src/themes/facelift/images/icon_export_link.svg');
-    --icon-reload: url('~cmk-frontend/src/themes/facelift/images/icon_reload_cmk.svg');
+    --icon-info-circle: url('~cmk-frontend/themes/facelift/images/icon_info_circle.svg');
+    --icon-tree-closed: url('~cmk-frontend/themes/facelift/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/themes/facelift/images/icon_search_action.svg');
+    --icon-checkmark-plus: url('~cmk-frontend/themes/facelift/images/icon_checkmark_plus.svg');
+    --icon-export-link: url('~cmk-frontend/themes/facelift/images/icon_export_link.svg');
+    --icon-reload: url('~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -181,18 +181,18 @@
     --font-color-dimmed: var(--white-dimmed);
 
     /* Icons */
-    --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
-    --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
-    --icon-folder-blue: url('~cmk-frontend/src/themes/modern-dark/images/icon_folder_blue.svg');
-    --icon-drag: url('~cmk-frontend/src/themes/modern-dark/images/icon_drag.svg');
+    --icon-main-help: url('~cmk-frontend/themes/modern-dark/images/icon_main_help.svg');
+    --icon-close: url('~cmk-frontend/themes/modern-dark/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/themes/modern-dark/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/themes/modern-dark/images/icon_drag.svg');
 
-    --icon-info-circle: url('~cmk-frontend/src/themes/modern-dark/images/icon_info_circle.svg');
-    --icon-tree-closed: url('~cmk-frontend/src/themes/modern-dark/images/tree_closed.svg');
-    --icon-search: url('~cmk-frontend/src/themes/modern-dark/images/icon_search_action.svg');
-    --icon-checkmark-plus: url('~cmk-frontend/src/themes/modern-dark/images/icon_checkmark_plus.svg');
-    --icon-export-link: url('~cmk-frontend/src/themes/modern-dark/images/icon_export_link.svg');
-    --icon-frameurl: url('~cmk-frontend/src/themes/facelift/images/icon_frameurl.svg');
-    --icon-reload: url('~cmk-frontend/src/themes/modern-dark/images/icon_reload_cmk.svg');
+    --icon-info-circle: url('~cmk-frontend/themes/modern-dark/images/icon_info_circle.svg');
+    --icon-tree-closed: url('~cmk-frontend/themes/modern-dark/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/themes/modern-dark/images/icon_search_action.svg');
+    --icon-checkmark-plus: url('~cmk-frontend/themes/modern-dark/images/icon_checkmark_plus.svg');
+    --icon-export-link: url('~cmk-frontend/themes/modern-dark/images/icon_export_link.svg');
+    --icon-frameurl: url('~cmk-frontend/themes/facelift/images/icon_frameurl.svg');
+    --icon-reload: url('~cmk-frontend/themes/modern-dark/images/icon_reload_cmk.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

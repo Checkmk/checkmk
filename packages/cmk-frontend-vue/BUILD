@@ -24,7 +24,7 @@ SRCS = [
     "vite.config.demo.ts",
     "vite.config.ts",
     "src/components/_demo/index.html",
-    "//packages/cmk-frontend:src",
+    "//packages/cmk-frontend:dist",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",

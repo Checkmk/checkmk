@@ -78,7 +78,7 @@ def check_rabbitmq_queues(item, params, parsed):
         ("messages", "Total number of messages", "msg"),
         ("messages_ready", "Messages ready", "msg_ready"),
         ("messages_unacknowledged", "Messages unacknowledged", "msg_unack"),
-        ("messages_publish", "Messages published", "msg_publish_upper"),
+        ("messages_publish", "Messages published", "msg_publish"),
         ("messages_publish_rate", "Rate", "msg_publish_rate"),
     ]:
         msg_value = data.get(msg_key)

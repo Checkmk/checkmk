@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
     }
 
     // Execute the actual program that needs access to the socket.
-    ::execv((std::filesystem::path{argv[0]}.parent_path() / "mkeventd").c_str(),
+    ::execv((std::filesystem::path(std::getenv("OMD_ROOT")) / "bin" / "mkeventd").c_str(),
             argv);
     perror("Cannot execute mkeventd");
 }

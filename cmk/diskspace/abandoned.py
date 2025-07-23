@@ -97,16 +97,25 @@ def _do_cleanup_central_site(
         verbose(f"Failed to get site hosts ({e}). Skipping abandoned host files cleanup")
         return
 
-    cleaned_up = _cleanup_host_directories(
-        time.time(),
-        retention_time,
-        local_site_hosts,
-        f"{omd_root}/var/pnp4nagios/perfdata",
-    ) | _cleanup_host_directories(
-        time.time(),
-        retention_time,
-        local_site_hosts,
-        f"{omd_root}/var/check_mk/rrd",
+    cleaned_up = (
+        _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            all_hosts,
+            f"{omd_root}/var/check_mk/inventory_archive",
+        )
+        | _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            local_site_hosts,
+            f"{omd_root}/var/pnp4nagios/perfdata",
+        )
+        | _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            local_site_hosts,
+            f"{omd_root}/var/check_mk/rrd",
+        )
     )
 
     # The invocation `cmk-update-agent register --hostname myhost ...` will unconditionally create
@@ -132,16 +141,25 @@ def _do_cleanup_central_site(
 def _do_cleanup_remote_site(
     omd_root: Path, retention_time: int, local_site_hosts: set[str]
 ) -> None:
-    cleaned_up_non_local_hosts = _cleanup_host_directories(
-        time.time(),
-        retention_time,
-        local_site_hosts,
-        f"{omd_root}/var/pnp4nagios/perfdata",
-    ) | _cleanup_host_directories(
-        time.time(),
-        retention_time,
-        local_site_hosts,
-        f"{omd_root}/var/check_mk/rrd",
+    cleaned_up_non_local_hosts = (
+        _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            local_site_hosts,
+            f"{omd_root}/var/check_mk/inventory_archive",
+        )
+        | _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            local_site_hosts,
+            f"{omd_root}/var/pnp4nagios/perfdata",
+        )
+        | _cleanup_host_directories(
+            time.time(),
+            retention_time,
+            local_site_hosts,
+            f"{omd_root}/var/check_mk/rrd",
+        )
     )
 
     if cleaned_up_non_local_hosts:

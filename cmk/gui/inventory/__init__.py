@@ -15,11 +15,10 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfoRegistry
-from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec
-from ._housekeeping import ConfigVariableInventoryHousekeeping, InventoryHousekeeping
+from ._housekeeping import InventoryHousekeeping
 from ._icon import InventoryHistoryIcon, InventoryIcon
 from ._openapi import register as openapi_register
 from ._rulespec import RulespecGroupInventory
@@ -35,10 +34,7 @@ from ._tree import (
     TreeSource,
     verify_permission,
 )
-from ._valuespecs import (
-    vs_element_inventory_visible_raw_path,
-    vs_inventory_path_or_keys_help,
-)
+from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from ._visuals import VisualInfoInventoryHistory
 from ._webapi import page_host_inv_api
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
@@ -62,7 +58,6 @@ __all__ = [
 
 
 def register(
-    config_variable_registry: ConfigVariableRegistry,
     page_registry: PageRegistry,
     visual_info_registry: VisualInfoRegistry,
     filter_registry: FilterRegistry,
@@ -75,13 +70,12 @@ def register(
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
-    config_variable_registry.register(ConfigVariableInventoryHousekeeping)
     page_registry.register(PageEndpoint("host_inv_api", page_host_inv_api))
     cron_job_registry.register(
         CronJob(
             name="execute_inventory_housekeeping_job",
             callable=InventoryHousekeeping(cmk.utils.paths.omd_root),
-            interval=timedelta(hours=24),
+            interval=timedelta(hours=12),
         )
     )
     visual_info_registry.register(VisualInfoInventoryHistory)

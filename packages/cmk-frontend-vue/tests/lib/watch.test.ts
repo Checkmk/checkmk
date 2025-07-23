@@ -9,7 +9,6 @@ import { h, onErrorCaptured, defineComponent, type Component } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 function wrapWithErrorCapture(component: Component) {
-  // eslint-disable-next-line vue/one-component-per-file
   return defineComponent({
     setup() {
       onErrorCaptured(() => {
@@ -24,7 +23,7 @@ function wrapWithErrorCapture(component: Component) {
 }
 
 test('support async callback function in immediateWatch', async () => {
-  // eslint-disable-next-line vue/one-component-per-file,@typescript-eslint/naming-convention
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const InnerComponent = defineComponent({
     props: {},
     setup() {

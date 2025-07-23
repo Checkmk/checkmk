@@ -132,5 +132,12 @@ export default [
     rules: {
       'vue/no-bare-strings-in-template': 'off'
     }
+  },
+
+  {
+    files: ['tests/**/*'],
+    rules: {
+      'vue/one-component-per-file': 'off'
+    }
   }
 ]

@@ -16,7 +16,7 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-from typing import Any, ClassVar, NoReturn
+from typing import Any, ClassVar, NoReturn, Self
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler, TypeAdapter
 from pydantic_core import CoreSchema, PydanticOmit
@@ -59,6 +59,20 @@ class ApiOmitted:
 
     def __bool__(self) -> bool:
         return False
+
+    @staticmethod
+    def to_optional[T](value: "T | ApiOmitted") -> T | None:
+        """Convert a value to None if it is ApiOmitted, otherwise return the value."""
+        if isinstance(value, ApiOmitted):
+            return None
+        return value
+
+    @classmethod
+    def from_optional[T](cls, value: T | None) -> T | Self:
+        """Convert None to ApiOmitted, otherwise return the value."""
+        if value is None:
+            return cls()
+        return value
 
 
 def json_dump_without_omitted[T](

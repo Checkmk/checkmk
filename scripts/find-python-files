@@ -38,7 +38,7 @@ get_candidates_from_filesystem() {
         SEARCH+=" non-free/cmk-update-agent"
         SEARCH+=" omd/packages/enterprise/alert_handlers"
         SEARCH+=" omd/packages/enterprise/bin"
-        SEARCH+=" packages/cmc/test"
+        SEARCH+=" non-free/packages/cmc/test"
     fi
     SEARCH+=" locale"
     SEARCH+=" notifications"

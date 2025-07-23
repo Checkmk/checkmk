@@ -9,7 +9,7 @@ def main() {
         docker_image_from_alias("IMAGE_TESTING").inside() {
             test_jenkins_helper.execute_test([
                 name: "test-cmc",
-                cmd: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 packages/cmc/run --clean --all",
+                cmd: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 non-free/packages/cmc/run --clean --all",
                 output_file: "cmc.txt",
             ]);
 

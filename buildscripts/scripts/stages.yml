@@ -146,7 +146,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/' || true"
 
     - NAME: CHANGED_CMC_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmc/' || true"
 
     - NAME: CHANGED_CMK_AGENT_BASED_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
@@ -445,8 +445,8 @@ STAGES:
 
     - NAME: 'Package cmc'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/cmc'
-      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
+      DIR: 'non-free/packages/cmc'
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
       TEXT_ON_SKIP: 'No cmc files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"

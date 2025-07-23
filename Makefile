@@ -120,7 +120,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    --exclude non-free \
-	    --exclude packages/cmc \
+	    --exclude non-free/packages/cmc \
 	    --exclude tests/qa-test-data \
 	    $$EXCLUDES \
 	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
@@ -161,7 +161,7 @@ setversion:
 ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/cmk-update-agent/cmk_update_agent.py
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
-	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
+	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' non-free/packages/cmc/CMakeLists.txt
 endif
 
 $(OPENAPI_SPEC): $(shell find cmk/gui/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
@@ -365,7 +365,7 @@ format-c:
 	packages/unixcat/run --format
 	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
-	packages/cmc/run --format
+	non-free/packages/cmc/run --format
 endif
 
 test-format-c:
@@ -373,7 +373,7 @@ test-format-c:
 	packages/unixcat/run --check-format
 	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
-	packages/cmc/run --check-format
+	non-free/packages/cmc/run --check-format
 endif
 
 format-python:

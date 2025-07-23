@@ -31,6 +31,8 @@ from cmk.agent_based.v2 import (
 # "state": "running", "type": "classic"}
 
 
+DEFAULT_VHOST = "/"
+
 DEFAULT_PARAMETERS = {
     "msg_upper": ("no_levels", None),
     "msg_lower": ("no_levels", None),
@@ -51,6 +53,7 @@ class QueueProperties:
     type: str | None = None
     state: str | None = None
     node: str | None = None
+    vhost: str | None = None
     messages: int | None = None
     messages_ready: int | None = None
     messages_unacknowledged: int | None = None
@@ -70,12 +73,15 @@ def parse_rabbitmq_queues(string_table: StringTable) -> Section:
             queue = json.loads(queue_json)
 
             if (queue_name := queue.get("name")) is not None:
+                if (vhost := queue.get("vhost")) is not None:
+                    queue_name = queue_name if vhost == DEFAULT_VHOST else f"{vhost}/{queue_name}"
                 parsed.setdefault(
                     queue_name,
                     QueueProperties(
                         type=queue.get("type"),
                         state=queue.get("state"),
                         node=queue.get("node"),
+                        vhost=queue.get("vhost"),
                         messages=queue.get("messages"),
                         messages_ready=queue.get("messages_ready"),
                         messages_unacknowledged=queue.get("messages_unacknowledged"),
@@ -115,6 +121,9 @@ def check_rabbitmq_queues(item: str, params: Mapping[str, Any], section: Section
 
     if data.node is not None:
         yield Result(state=State.OK, summary="Running on node: %s" % data.node)
+
+    if data.vhost is not None:
+        yield Result(state=State.OK, summary="Running on vhost: %s" % data.vhost)
 
     for value, msg_key, infotext, param_key in [
         (data.messages, "messages", "Total number of messages", "msg"),

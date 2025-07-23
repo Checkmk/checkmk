@@ -25,6 +25,24 @@ from cmk.plugins.rabbitmq.agent_based.queues import (
             [Service(item="my_queue")],
             id="single_queue",
         ),
+        pytest.param(
+            [
+                [
+                    '{ "name": "my_queue", "node": "rabbit@my-rabbit", "state": "stopped", "type": "classic", "vhost": "/"}',
+                ]
+            ],
+            [Service(item="my_queue")],
+            id="default_vhost",
+        ),
+        pytest.param(
+            [
+                [
+                    '{ "name": "my_queue", "node": "rabbit@my-rabbit", "state": "stopped", "type": "classic", "vhost": "my_vhost"}',
+                ]
+            ],
+            [Service(item="my_vhost/my_queue")],
+            id="non-default_vhost",
+        ),
     ],
 )
 def test_discover_rabbitmq_queues(string_table: StringTable, expected: list[Service]) -> None:
@@ -73,7 +91,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list[Serv
         pytest.param(
             [
                 [
-                    '{"memory": 9816, "messages": 0, "messages_ready": 0, "messages_unacknowledged": 0, "name": "my_queue", "node": "rabbit@my-rabbit", "state": "stopped", "type": "classic"}',
+                    '{"memory": 9816, "messages": 0, "messages_ready": 0, "messages_unacknowledged": 0, "name": "my_queue", "node": "rabbit@my-rabbit", "state": "stopped", "type": "classic", "vhost": "/"}',
                 ]
             ],
             {},
@@ -81,6 +99,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list[Serv
                 Result(state=State.OK, summary="Type: Classic"),
                 Result(state=State.OK, summary="Is running: stopped"),
                 Result(state=State.OK, summary="Running on node: rabbit@my-rabbit"),
+                Result(state=State.OK, summary="Running on vhost: /"),
                 Result(state=State.OK, summary="Total number of messages: 0"),
                 Metric("messages", 0.0),
                 Result(state=State.OK, summary="Messages ready: 0"),

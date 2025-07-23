@@ -1,0 +1,158 @@
+module(
+    name = "ape",
+    version = "1.0.1",
+    bazel_compatibility = [
+        ">=7.4.0",
+    ],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "toolchain_utils", version = "1.0.2")
+bazel_dep(name = "download_utils", version = "1.0.1")
+bazel_dep(name = "rules_license", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.0.0")
+
+bazel_dep(name = "hermetic_cc_toolchain", version = "3.1.0", dev_dependency = True)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
+python.toolchain(
+    configure_coverage_tool = True,
+    # TODO: need hermetic `chmod`/`id`: https://github.com/bazelbuild/rules_python/pull/2024
+    ignore_root_user_error = True,
+    python_version = "3.13",
+)
+
+download_archive = use_repo_rule("@download_utils//download/archive:defs.bzl", "download_archive")
+
+download_archive(
+    name = "zig-0.11.0-arm64-darwin",
+    srcs = [
+        "entrypoint",
+        "zig",
+    ],
+    integrity = "sha256-xuv5J7sTpwfXQmdHSp9VMnTmSQb9Ib8cdaIL3oyt97I=",
+    links = {
+        "zig-macos-aarch64-0.11.0/zig": "zig",
+        "zig": "entrypoint",
+    },
+    urls = [
+        "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/zig/0.11.0/zig-macos-aarch64-0.11.0.tar.xz",
+        "https://ziglang.org/download/0.11.0/zig-macos-aarch64-0.11.0.tar.xz",
+    ],
+)
+
+select = use_repo_rule("@toolchain_utils//toolchain/local/select:defs.bzl", "toolchain_local_select")
+
+select(
+    name = "zig",
+    map = {
+        "@zig-0.11.0-arm64-darwin": "arm64-darwin",
+    },
+)
+
+download_file = use_repo_rule("@download_utils//download/file:defs.bzl", "download_file")
+
+download_file(
+    name = "ape-m1.c",
+    executable = False,
+    integrity = "sha256-eK954gq7s/malzVZWbWb1YlJVkBkrbdU8DAuurtL96M=",
+    output = "ape-m1.c",
+    patches = [
+        "//:ape-m1.patch",
+    ],
+    urls = [
+        "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/4.0.2/ape-m1.c",
+        "https://raw.githubusercontent.com/jart/cosmopolitan/4.0.2/ape/ape-m1.c",
+    ],
+)
+
+compile = use_repo_rule("//ape/compile:repository.bzl", "compile")
+
+compile(
+    name = "ape-arm64.macho",
+    srcs = ["@ape-m1.c"],
+    links = {
+        "entrypoint": "binary",
+    },
+    output = "binary",
+    target = "{cpu}-macos-none",
+    zig = "@zig//:entrypoint",
+)
+
+pe = use_repo_rule("//ape/pe:repository.bzl", "pe")
+
+pe(
+    name = "ape.pe",
+    links = {
+        "entrypoint": "binary",
+    },
+    output = "binary",
+)
+
+select(
+    name = "launcher",
+    map = {
+        "@ape-arm64.elf": "arm64-linux",
+        "@ape-x86_64.elf": "amd64-linux",
+        "@ape-x86_64.macho": "amd64-darwin",
+        "@ape-arm64.macho": "arm64-darwin",
+        "@ape.pe": "windows",
+    },
+)
+
+resolved = use_repo_rule("@toolchain_utils//toolchain/resolved:defs.bzl", "toolchain_resolved")
+
+resolved(
+    name = "resolved-ape",
+    toolchain_type = "//ape/toolchain/ape:type",
+)
+
+register_toolchains("//ape/toolchain/...")
+
+cosmos = use_extension("//ape/cosmos:defs.bzl", "ape_cosmos")
+cosmos.upload(
+    template = "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/{version}/{name}",
+)
+
+# TODO: enable this when we have unauthenticated access to `gitlab.arm.com` generic package registry (see #6)
+# cosmos.url(
+#     template = "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/{version}/{name}",
+# )
+cosmos.url(
+    template = "https://cosmo.zip/pub/cosmos/v/{version}/bin/{name}",
+)
+cosmos.download(
+    lock = "//ape/cosmos:4.0.2.json",
+    version = "4.0.2",
+)
+cosmos.download(
+    lock = "//ape/cosmos:3.9.2.json",
+    version = "3.9.2",
+)
+cosmos.download(
+    lock = "//ape/cosmos:3.7.1.json",
+    version = "3.7.1",
+)
+cosmos.download(
+    lock = "//ape/cosmos:3.3.1.json",
+    version = "3.3.1",
+)
+cosmos.download(
+    lock = "//ape/cosmos:3.2.4.json",
+    version = "3.2.4",
+)
+
+# https://github.com/ahgamut/superconfigure/issues/38
+cosmos.override(
+    basename = "pigz",
+    version = "3.2.4",
+)
+cosmos.use(
+    aliases = True,
+    bootstrap = True,
+    metadata = True,
+    upload = True,
+)
+use_repo(cosmos, "aliases", "ape-aarch64.elf", "ape-arm64.elf", "ape-x86_64.elf", "ape-x86_64.macho", "assimilate", "assimilate-aarch64.elf", "assimilate-x86_64.elf", "assimilate-x86_64.macho", "metadata", "upload")

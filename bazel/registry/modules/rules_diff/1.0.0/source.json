@@ -1,0 +1,6 @@
+{
+    "url": "https://gitlab.arm.com/bazel/rules_diff/-/releases/v1.0.0/downloads/src.tar.gz",
+    "mirror_urls": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/gitlab.arm.com/bazel/rules_diff/-/releases/v1.0.0/downloads/src.tar.gz"],
+    "integrity": "sha512-lePz2MCqbZ8sL59K7BccT80oj2tR+YxTjYKc5WTuYngWaT4V6dod83YZ/m0thPWtCmfCeQxldwY3h/SkY1JWnQ==",
+    "strip_prefix": "rules_diff-v1.0.0"
+}

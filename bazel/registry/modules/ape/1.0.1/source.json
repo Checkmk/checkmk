@@ -1,0 +1,6 @@
+{
+  "url": "https://gitlab.arm.com/bazel/ape/-/releases/v1.0.1/downloads/src.tar.gz",
+  "mirror_urls": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/ape-v1.0.1.tar.gz"],
+  "integrity": "sha512-YHlfxYHiCxzrifn5ywADS59XhmTk5u0rW/1fPepfk1C6/bXn3uwSADixLkvee6rAP9u2sulmHX0igt5F5+eqTA==",
+  "strip_prefix": "ape-v1.0.1"
+}

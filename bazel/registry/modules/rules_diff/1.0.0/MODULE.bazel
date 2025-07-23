@@ -1,0 +1,31 @@
+module(
+    name = "rules_diff",
+    version = "1.0.0",
+    bazel_compatibility = [
+        ">=7.1.0",
+    ],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "toolchain_utils", version = "1.0.2")
+bazel_dep(name = "ape", version = "1.0.1")
+bazel_dep(name = "rules_license", version = "1.0.0")
+
+cosmos = use_extension("@ape//ape/cosmos:defs.bzl", "ape_cosmos")
+use_repo(cosmos, cosmos = "diff")
+
+export = use_extension("@toolchain_utils//toolchain/export:defs.bzl", "toolchain_export")
+export.symlink(
+    name = "diff",
+    target = "@cosmos",
+)
+use_repo(export, "diff")
+
+resolved = use_repo_rule("@toolchain_utils//toolchain/resolved:defs.bzl", "toolchain_resolved")
+
+resolved(
+    name = "resolved-diff",
+    toolchain_type = "//diff/toolchain/diff:type",
+)
+
+register_toolchains("//diff/toolchain/...")

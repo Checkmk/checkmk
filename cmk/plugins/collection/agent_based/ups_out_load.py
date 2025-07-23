@@ -34,7 +34,10 @@ Section = dict[str, UpsPowerVoltage]
 def int_or_zero(value: str) -> int:
     if value == "":
         return 0
-    return int(value)
+    try:
+        return int(value)
+    except ValueError:
+        return 0
 
 
 def parse_ups_load(string_table: Sequence[StringTable]) -> Section:

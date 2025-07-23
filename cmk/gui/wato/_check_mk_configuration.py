@@ -3778,18 +3778,26 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
             ),
         ),
     ]
+    if edition(cmk.utils.paths.omd_root) is Edition.CSE:
+        return choices
 
-    if (
-        user.may("wato.add_or_modify_executables")
-        and edition(cmk.utils.paths.omd_root) is not Edition.CSE
-    ):
-        choices.append(("custom", _("Use a custom check plug-in..."), PluginCommandLine()))
-
+    choices.append(
+        (
+            "custom",
+            _("Use a custom check plug-in..."),
+            PluginCommandLine(read_only=not user.may("wato.add_or_modify_executables")),
+        )
+    )
     return choices
 
 
-def PluginCommandLine() -> ValueSpec:
+def PluginCommandLine(read_only: bool = False) -> ValueSpec:
     def _validate_custom_check_command_line(value, varprefix):
+        if read_only:
+            raise MKUserError(
+                varprefix,
+                _("You are not allowed to change the command line of a custom check plug-in."),
+            )
         if "--pwstore=" in value:
             raise MKUserError(
                 varprefix, _("You are not allowed to use passwords from the password store here.")
@@ -3805,6 +3813,7 @@ def PluginCommandLine() -> ValueSpec:
         )
         + monitoring_macro_help(),
         size="max",
+        read_only=read_only,
         validate=_validate_custom_check_command_line,
     )
 

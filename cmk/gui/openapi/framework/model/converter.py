@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ipaddress
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -47,6 +47,34 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
         func=_with_type_check,
         json_schema_input_type=input_type,
     )
+
+
+@dataclass(slots=True)
+class RegistryConverter[T]:
+    registry_or_getter: Mapping[str, T] | Callable[[], Mapping[str, T]]
+    custom_error_message: str | None = None
+
+    @property
+    def _registry(self) -> Mapping[str, T]:
+        if not isinstance(self.registry_or_getter, Mapping):
+            self.registry_or_getter = self.registry_or_getter()
+
+        return self.registry_or_getter
+
+    def validate(self, value: str) -> str:
+        """Validates that the given value is in the registry."""
+        if value not in self._registry:
+            raise ValueError(
+                self.custom_error_message
+                or f"Value {value!r} is not allowed, valid options are: {', '.join(sorted(self._registry))}"
+            )
+
+        return value
+
+    def value(self, value: str) -> T:
+        """Returns the value from the registry."""
+        self.validate(value)
+        return self._registry[value]
 
 
 @dataclass(slots=True)

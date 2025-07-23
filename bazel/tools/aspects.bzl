@@ -4,8 +4,8 @@ load("@cmk_types//:types.bzl", "types")
 load("@rules_mypy//mypy:mypy.bzl", "mypy")
 
 mypy_aspect = mypy(
-    mypy_cli = "@@//bazel/tools:mypy_cli",
-    mypy_ini = "@@//:pyproject.toml",
+    mypy_cli = Label("@//bazel/tools:mypy_cli"),
+    mypy_ini = Label("@//:pyproject.toml"),
     suppression_tags = ["no-mypy"],
     color = False,
     # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
@@ -26,8 +26,6 @@ mypy_aspect = mypy(
 )
 
 ruff = lint_ruff_aspect(
-    binary = "@multitool//tools/ruff",
-    configs = [
-        "@@//:pyproject.toml",
-    ],
+    binary = Label("@multitool//tools/ruff"),
+    configs = [Label("@//:pyproject.toml")],
 )

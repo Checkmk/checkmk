@@ -3,6 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
 # <<<rabbitmq_queues>>>
 # {"memory": 14332, "message_stats": {"publish": 1, "publish_details": {"rate":
 # 0.0}}, "messages": 1, "messages_ready": 1, "messages_unacknowledged": 0,
@@ -13,114 +31,143 @@
 # "state": "running", "type": "classic"}
 
 
-# mypy: disable-error-code="var-annotated"
+DEFAULT_PARAMETERS = {
+    "msg_upper": ("no_levels", None),
+    "msg_lower": ("no_levels", None),
+    "msg_ready_upper": ("no_levels", None),
+    "msg_ready_lower": ("no_levels", None),
+    "msg_unack_upper": ("no_levels", None),
+    "msg_unack_lower": ("no_levels", None),
+    "msg_publish_upper": ("no_levels", None),
+    "msg_publish_lower": ("no_levels", None),
+    "msg_publish_rate_upper": ("no_levels", None),
+    "msg_publish_rate_lower": ("no_levels", None),
+    "abs_memory": ("no_levels", None),
+}
 
-import json
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+@dataclass(frozen=True)
+class QueueProperties:
+    type: str | None = None
+    state: str | None = None
+    node: str | None = None
+    messages: int | None = None
+    messages_ready: int | None = None
+    messages_unacknowledged: int | None = None
+    memory: int | None = None
+    messages_publish: int | None = None
+    messages_publish_rate: float | None = None
 
-check_info = {}
+
+Section = Mapping[str, QueueProperties]
 
 
-def parse_rabbitmq_queues(string_table):
-    parsed = {}
+def parse_rabbitmq_queues(string_table: StringTable) -> Section:
+    parsed: dict[str, QueueProperties] = {}
 
     for queues in string_table:
         for queue_json in queues:
             queue = json.loads(queue_json)
 
-            queue_name = queue.get("name")
-            if queue_name is not None:
+            if (queue_name := queue.get("name")) is not None:
                 parsed.setdefault(
                     queue_name,
-                    {
-                        "type": queue.get("type"),
-                        "state": queue.get("state"),
-                        "node": queue.get("node"),
-                        "messages": queue.get("messages"),
-                        "messages_ready": queue.get("messages_ready"),
-                        "messages_unacknowledged": queue.get("messages_unacknowledged"),
-                        "memory": queue.get("memory"),
-                        "messages_publish": queue.get("message_stats", {}).get("publish"),
-                        "messages_publish_rate": queue.get("message_stats", {})
+                    QueueProperties(
+                        type=queue.get("type"),
+                        state=queue.get("state"),
+                        node=queue.get("node"),
+                        messages=queue.get("messages"),
+                        messages_ready=queue.get("messages_ready"),
+                        messages_unacknowledged=queue.get("messages_unacknowledged"),
+                        memory=queue.get("memory"),
+                        messages_publish=queue.get("message_stats", {}).get("publish"),
+                        messages_publish_rate=queue.get("message_stats", {})
                         .get("publish_details", {})
                         .get("rate"),
-                    },
+                    ),
                 )
 
     return parsed
 
 
-def check_rabbitmq_queues(item, params, parsed):
-    if not (data := parsed.get(item)):
-        return
-
-    queue_type = data.get("type")
-    if queue_type is not None:
-        yield 0, "Type: %s" % queue_type.title()
-
-    queue_state = data.get("state")
-    if queue_state is not None:
-        state = 0
-        if not queue_state:
-            state = 2
-        yield (
-            state,
-            "Is running: %s" % str(queue_state).replace("True", "yes").replace("False", "no"),
-        )
-
-    queue_node = data.get("node")
-    if queue_node is not None:
-        yield 0, "Running on node: %s" % queue_node
-
-    for msg_key, infotext, param_key in [
-        ("messages", "Total number of messages", "msg"),
-        ("messages_ready", "Messages ready", "msg_ready"),
-        ("messages_unacknowledged", "Messages unacknowledged", "msg_unack"),
-        ("messages_publish", "Messages published", "msg_publish"),
-        ("messages_publish_rate", "Rate", "msg_publish_rate"),
-    ]:
-        msg_value = data.get(msg_key)
-        if msg_value is None:
-            continue
-
-        unit = ""
-        if "rate" in msg_key:
-            unit = "1/s"
-
-        msg_levels_upper = params.get("%s_upper" % param_key, (None, None))
-        msg_levels_lower = params.get("%s_lower" % param_key, (None, None))
-
-        yield check_levels(
-            msg_value,
-            msg_key,
-            msg_levels_upper + msg_levels_lower,
-            human_readable_func=int,
-            unit=unit,
-            infoname=infotext,
-        )
-
-    queue_memory = data.get("memory")
-    if queue_memory is not None:
-        yield check_levels(
-            queue_memory,
-            "mem_lnx_total_used",
-            params.get("abs_memory"),
-            human_readable_func=render.bytes,
-            infoname="Memory used",
-        )
-
-
-def discover_rabbitmq_queues(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["rabbitmq_queues"] = LegacyCheckDefinition(
+agent_section_rabbitmq_queues = AgentSection(
     name="rabbitmq_queues",
     parse_function=parse_rabbitmq_queues,
+)
+
+
+def check_rabbitmq_queues(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
+        return
+
+    if data.type is not None:
+        yield Result(state=State.OK, summary="Type: %s" % data.type.title())
+
+    if data.state is not None:
+        state = State.OK
+        if not data.state:
+            state = State.CRIT
+        yield Result(
+            state=state,
+            summary="Is running: %s"
+            % str(data.state).replace("True", "yes").replace("False", "no"),
+        )
+
+    if data.node is not None:
+        yield Result(state=State.OK, summary="Running on node: %s" % data.node)
+
+    for value, msg_key, infotext, param_key in [
+        (data.messages, "messages", "Total number of messages", "msg"),
+        (data.messages_ready, "messages_ready", "Messages ready", "msg_ready"),
+        (
+            data.messages_unacknowledged,
+            "messages_unacknowledged",
+            "Messages unacknowledged",
+            "msg_unack",
+        ),
+        (data.messages_publish, "messages_publish", "Messages published", "msg_publish"),
+    ]:
+        if value is None:
+            continue
+
+        yield from check_levels(
+            value,
+            levels_upper=params[f"{param_key}_upper"],
+            levels_lower=params[f"{param_key}_lower"],
+            metric_name=msg_key,
+            render_func=lambda v: str(int(v)),
+            label=infotext,
+        )
+
+    if data.messages_publish_rate is not None:
+        yield from check_levels(
+            data.messages_publish_rate,
+            levels_upper=params["msg_publish_rate_upper"],
+            levels_lower=params["msg_publish_rate_lower"],
+            metric_name="messages_publish_rate",
+            render_func=lambda v: f"{v:.0f} 1/s",
+            label="Rate",
+        )
+
+    if data.memory is not None:
+        yield from check_levels(
+            data.memory,
+            metric_name="mem_lnx_total_used",
+            levels_upper=params["abs_memory"],
+            render_func=render.bytes,
+            label="Memory used",
+        )
+
+
+def discover_rabbitmq_queues(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+check_plugin_rabbitmq_queues = CheckPlugin(
+    name="rabbitmq_queues",
     service_name="RabbitMQ Queue %s",
     discovery_function=discover_rabbitmq_queues,
     check_function=check_rabbitmq_queues,
     check_ruleset_name="rabbitmq_queues",
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

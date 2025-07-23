@@ -3,9 +3,10 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.base.legacy_checks.rabbitmq_queues import (
     check_rabbitmq_queues,
+    DEFAULT_PARAMETERS,
     discover_rabbitmq_queues,
     parse_rabbitmq_queues,
 )
@@ -21,12 +22,12 @@ from cmk.base.legacy_checks.rabbitmq_queues import (
                     '{"memory": 68036, "messages": 0, "messages_ready": 0, "messages_unacknowledged": 0, "name": "my_queue", "node": "rabbit@my-rabbit", "state": "stopped", "type": "quorum"}'
                 ]
             ],
-            [("my_queue", {})],
+            [Service(item="my_queue")],
             id="single_queue",
         ),
     ],
 )
-def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> None:
+def test_discover_rabbitmq_queues(string_table: StringTable, expected: list[Service]) -> None:
     parsed = parse_rabbitmq_queues(string_table)
     assert expected == list(discover_rabbitmq_queues(parsed))
 
@@ -44,7 +45,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
             # TODO: test case was added to ensure same functionality as before migration to new API
             # but it should be re-evaluated if this output makes sense. It seems to assume a boolean
             # state, but the possible queue state are "running", "stopped", etc.
-            [(2, "Is running: ")],
+            [Result(state=State.CRIT, summary="Is running: ")],
             id="empty_state",
         ),
         pytest.param(
@@ -55,13 +56,17 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
             ],
             {},
             [
-                (0, "Type: Quorum"),
-                (0, "Is running: stopped"),
-                (0, "Running on node: rabbit@my-rabbit"),
-                (0, "Total number of messages: 0", [("messages", 0, None, None)]),
-                (0, "Messages ready: 0", [("messages_ready", 0, None, None)]),
-                (0, "Messages unacknowledged: 0", [("messages_unacknowledged", 0, None, None)]),
-                (0, "Memory used: 66.4 KiB", [("mem_lnx_total_used", 68036, None, None)]),
+                Result(state=State.OK, summary="Type: Quorum"),
+                Result(state=State.OK, summary="Is running: stopped"),
+                Result(state=State.OK, summary="Running on node: rabbit@my-rabbit"),
+                Result(state=State.OK, summary="Total number of messages: 0"),
+                Metric("messages", 0.0),
+                Result(state=State.OK, summary="Messages ready: 0"),
+                Metric("messages_ready", 0.0),
+                Result(state=State.OK, summary="Messages unacknowledged: 0"),
+                Metric("messages_unacknowledged", 0.0),
+                Result(state=State.OK, summary="Memory used: 66.4 KiB"),
+                Metric("mem_lnx_total_used", 68036.0),
             ],
             id="quorum_queue_stopped",
         ),
@@ -73,13 +78,17 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
             ],
             {},
             [
-                (0, "Type: Classic"),
-                (0, "Is running: stopped"),
-                (0, "Running on node: rabbit@my-rabbit"),
-                (0, "Total number of messages: 0", [("messages", 0, None, None)]),
-                (0, "Messages ready: 0", [("messages_ready", 0, None, None)]),
-                (0, "Messages unacknowledged: 0", [("messages_unacknowledged", 0, None, None)]),
-                (0, "Memory used: 9.59 KiB", [("mem_lnx_total_used", 9816, None, None)]),
+                Result(state=State.OK, summary="Type: Classic"),
+                Result(state=State.OK, summary="Is running: stopped"),
+                Result(state=State.OK, summary="Running on node: rabbit@my-rabbit"),
+                Result(state=State.OK, summary="Total number of messages: 0"),
+                Metric("messages", 0.0),
+                Result(state=State.OK, summary="Messages ready: 0"),
+                Metric("messages_ready", 0.0),
+                Result(state=State.OK, summary="Messages unacknowledged: 0"),
+                Metric("messages_unacknowledged", 0.0),
+                Result(state=State.OK, summary="Memory used: 9.59 KiB"),
+                Metric("mem_lnx_total_used", 9816.0),
             ],
             id="classic_queue_stopped",
         ),
@@ -90,36 +99,32 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                 ]
             ],
             {
-                "msg_upper": (1, 10),
-                "msg_ready_upper": (1, 10),
-                "msg_unack_upper": (1, 10),
-                "msg_publish_upper": (1, 10),
-                "msg_publish_rate_upper": (0.1, 0.5),
-                "abs_memory": (10240, 51200),
+                "msg_upper": ("fixed", (1, 10)),
+                "msg_ready_upper": ("fixed", (1, 10)),
+                "msg_unack_upper": ("fixed", (1, 10)),
+                "msg_publish_upper": ("fixed", (1, 10)),
+                "msg_publish_rate_upper": ("fixed", (0.1, 0.5)),
+                "abs_memory": ("fixed", (10240, 51200)),
             },
             [
-                (0, "Type: Classic"),
-                (0, "Is running: running"),
-                (0, "Running on node: rabbit@my-rabbit"),
-                (1, "Total number of messages: 5 (warn/crit at 1/10)", [("messages", 5, 1, 10)]),
-                (1, "Messages ready: 5 (warn/crit at 1/10)", [("messages_ready", 5, 1, 10)]),
-                (
-                    1,
-                    "Messages unacknowledged: 5 (warn/crit at 1/10)",
-                    [("messages_unacknowledged", 5, 1, 10)],
+                Result(state=State.OK, summary="Type: Classic"),
+                Result(state=State.OK, summary="Is running: running"),
+                Result(state=State.OK, summary="Running on node: rabbit@my-rabbit"),
+                Result(state=State.WARN, summary="Total number of messages: 5 (warn/crit at 1/10)"),
+                Metric("messages", 5.0, levels=(1.0, 10.0)),
+                Result(state=State.WARN, summary="Messages ready: 5 (warn/crit at 1/10)"),
+                Metric("messages_ready", 5.0, levels=(1.0, 10.0)),
+                Result(state=State.WARN, summary="Messages unacknowledged: 5 (warn/crit at 1/10)"),
+                Metric("messages_unacknowledged", 5.0, levels=(1.0, 10.0)),
+                Result(state=State.WARN, summary="Messages published: 5 (warn/crit at 1/10)"),
+                Metric("messages_publish", 5.0, levels=(1.0, 10.0)),
+                Result(state=State.WARN, summary="Rate: 0 1/s (warn/crit at 0 1/s/0 1/s)"),
+                Metric("messages_publish_rate", 0.15, levels=(0.1, 0.5)),
+                Result(
+                    state=State.WARN,
+                    summary="Memory used: 16.4 KiB (warn/crit at 10.0 KiB/50.0 KiB)",
                 ),
-                (1, "Messages published: 5 (warn/crit at 1/10)", [("messages_publish", 5, 1, 10)]),
-                (
-                    1,
-                    # TODO: output is not rendered as float
-                    "Rate: 0 1/s (warn/crit at 0 1/s/0 1/s)",
-                    [("messages_publish_rate", 0.15, 0.1, 0.5)],
-                ),
-                (
-                    1,
-                    "Memory used: 16.4 KiB (warn/crit at 10.0 KiB/50.0 KiB)",
-                    [("mem_lnx_total_used", 16780, 10240, 51200)],
-                ),
+                Metric("mem_lnx_total_used", 16780.0, levels=(10240.0, 51200.0)),
             ],
             id="WARN for upper levels",
         ),
@@ -130,44 +135,33 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list) -> 
                 ]
             ],
             {
-                "msg_lower": (20, 10),
-                "msg_ready_lower": (20, 10),
-                "msg_unack_lower": (20, 10),
-                "msg_publish_lower": (20, 10),
-                "msg_publish_rate_lower": (0.5, 0.1),
+                "msg_lower": ("fixed", (20, 10)),
+                "msg_ready_lower": ("fixed", (20, 10)),
+                "msg_unack_lower": ("fixed", (20, 10)),
+                "msg_publish_lower": ("fixed", (20, 10)),
+                "msg_publish_rate_lower": ("fixed", (0.5, 0.1)),
             },
             [
-                (0, "Type: Classic"),
-                (0, "Is running: running"),
-                (0, "Running on node: rabbit@my-rabbit"),
-                (
-                    2,
-                    "Total number of messages: 5 (warn/crit below 20/10)",
-                    [("messages", 5, None, None)],
+                Result(state=State.OK, summary="Type: Classic"),
+                Result(state=State.OK, summary="Is running: running"),
+                Result(state=State.OK, summary="Running on node: rabbit@my-rabbit"),
+                Result(
+                    state=State.CRIT, summary="Total number of messages: 5 (warn/crit below 20/10)"
                 ),
-                (
-                    2,
-                    "Messages ready: 5 (warn/crit below 20/10)",
-                    [("messages_ready", 5, None, None)],
+                Metric("messages", 5.0),
+                Result(state=State.CRIT, summary="Messages ready: 5 (warn/crit below 20/10)"),
+                Metric("messages_ready", 5.0),
+                Result(
+                    state=State.CRIT, summary="Messages unacknowledged: 5 (warn/crit below 20/10)"
                 ),
-                (
-                    2,
-                    "Messages unacknowledged: 5 (warn/crit below 20/10)",
-                    [("messages_unacknowledged", 5, None, None)],
-                ),
-                (
-                    2,
-                    "Messages published: 5 (warn/crit below 20/10)",
-                    [("messages_publish", 5, None, None)],
-                ),
-                (
-                    1,
-                    "Rate: 0 1/s (warn/crit below 0 1/s/0 1/s)",
-                    [("messages_publish_rate", 0.15, None, None)],
-                ),
-                (0, "Memory used: 16.4 KiB", [("mem_lnx_total_used", 16780, None, None)]),
+                Metric("messages_unacknowledged", 5.0),
+                Result(state=State.CRIT, summary="Messages published: 5 (warn/crit below 20/10)"),
+                Metric("messages_publish", 5.0),
+                Result(state=State.WARN, summary="Rate: 0 1/s (warn/crit below 0 1/s/0 1/s)"),
+                Metric("messages_publish_rate", 0.15),
+                Result(state=State.OK, summary="Memory used: 16.4 KiB"),
+                Metric("mem_lnx_total_used", 16780.0),
             ],
-            id="CRIT for lower levels",
         ),
     ],
 )
@@ -175,4 +169,6 @@ def test_check_rabbitmq_queues(
     string_table: StringTable, params: Mapping[str, Any], expected: CheckResult
 ) -> None:
     parsed = parse_rabbitmq_queues(string_table)
-    assert expected == list(check_rabbitmq_queues("my_queue", params, parsed))
+    assert expected == list(
+        check_rabbitmq_queues("my_queue", {**DEFAULT_PARAMETERS, **params}, parsed)
+    )

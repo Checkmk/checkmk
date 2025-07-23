@@ -3,139 +3,142 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DictElement,
+    Dictionary,
+    Float,
+    IECMagnitude,
+    InputHint,
+    Integer,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
+    SimpleLevels,
 )
-from cmk.gui.valuespec import Dictionary, Filesize, Float, Integer, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_rabbitmq_queues():
+def _parameter_form_rabbitmq_queues() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "msg_upper",
-                Tuple(
-                    title=_("Upper level for total number of messages"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="messages"),
-                        Integer(title=_("Critical at"), unit="messages"),
-                    ],
+        elements={
+            "msg_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper level for total number of messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_lower",
-                Tuple(
-                    title=_("Lower level for total number of messages"),
-                    elements=[
-                        Integer(title=_("Warning below"), unit="messages"),
-                        Integer(title=_("Critical below"), unit="messages"),
-                    ],
+            "msg_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Lower level for total number of messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_ready_upper",
-                Tuple(
-                    title=_("Upper level for total number of ready messages"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="messages"),
-                        Integer(title=_("Critical at"), unit="messages"),
-                    ],
+            "msg_ready_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper level for total number of ready messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_ready_lower",
-                Tuple(
-                    title=_("Lower level for total number of ready messages"),
-                    elements=[
-                        Integer(title=_("Warning below"), unit="messages"),
-                        Integer(title=_("Critical below"), unit="messages"),
-                    ],
+            "msg_ready_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Lower level for total number of ready messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_unack_upper",
-                Tuple(
-                    title=_("Upper level for total number of unacknowledged messages"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="messages"),
-                        Integer(title=_("Critical at"), unit="messages"),
-                    ],
+            "msg_unack_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper level for total number of unacknowledged messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_unack_lower",
-                Tuple(
-                    title=_("Lower level for total number of unacknowledged messages"),
-                    elements=[
-                        Integer(title=_("Warning below"), unit="messages"),
-                        Integer(title=_("Critical below"), unit="messages"),
-                    ],
+            "msg_unack_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Lower level for total number of unacknowledged messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_publish_upper",
-                Tuple(
-                    title=_("Upper level for total number of published messages"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="messages"),
-                        Integer(title=_("Critical at"), unit="messages"),
-                    ],
+            "msg_publish_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper level for total number of published messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_publish_lower",
-                Tuple(
-                    title=_("Lower level for total number of published messages"),
-                    elements=[
-                        Integer(title=_("Warning below"), unit="messages"),
-                        Integer(title=_("Critical below"), unit="messages"),
-                    ],
+            "msg_publish_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Lower level for total number of published messages"),
+                    form_spec_template=Integer(unit_symbol="messages"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "msg_publish_rate_upper",
-                Tuple(
-                    title=_("Upper level for published message rate"),
-                    elements=[
-                        Float(title=_("Warning at"), unit="1/s"),
-                        Float(title=_("Critical at"), unit="1/s"),
-                    ],
+            "msg_publish_rate_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper level for published message rate"),
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
+                    migrate=migrate_to_float_simple_levels,
                 ),
             ),
-            (
-                "msg_publish_rate_lower",
-                Tuple(
-                    title=_("Lower level for published message rate"),
-                    elements=[
-                        Float(title=_("Warning below"), unit="1/s"),
-                        Float(title=_("Critical below"), unit="1/s"),
-                    ],
+            "msg_publish_rate_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Lower level for published message rate"),
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
+                    migrate=migrate_to_float_simple_levels,
                 ),
             ),
-            (
-                "abs_memory",
-                Tuple(
-                    title=_("Absolute levels for used memory"),
-                    elements=[
-                        Filesize(title=_("Warning at")),
-                        Filesize(title=_("Critical at")),
-                    ],
+            "abs_memory": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Absolute levels for used memory"),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="rabbitmq_queues",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Queue name")),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_rabbitmq_queues,
-        title=lambda: _("RabbitMQ queues"),
-    )
+rule_spec_rabbitmq_queues = CheckParameters(
+    name="rabbitmq_queues",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_rabbitmq_queues,
+    condition=HostAndItemCondition(item_title=Title("Queue name")),
+    title=Title("RabbitMQ queues"),
 )

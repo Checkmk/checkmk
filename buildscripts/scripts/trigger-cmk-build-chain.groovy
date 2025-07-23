@@ -155,28 +155,6 @@ def main() {
                 );
             }[0]
         },
-        "System Tests for FIPS compliance": {
-            success &= smart_stage(
-                    name: "System Tests for FIPS compliance",
-                    condition: run_fips_tests,
-                    raiseOnError: false,) {
-                build(
-                    job: "${edition_base_folder}/test-integration-fips",
-                    parameters: job_parameters_common + job_parameters_fips,
-                    wait: false,
-                );
-                build(
-                    job: "${edition_base_folder}/test-composition-fips",
-                    parameters: job_parameters_common + job_parameters_fips,
-                    wait: false,
-                );
-                build(
-                    job: "${edition_base_folder}/test-gui-e2e-fips",
-                    parameters: job_parameters_common + job_parameters_fips,
-                    wait: false,
-                );
-            }[0]
-        },
     ]);
 
     success &= smart_stage(

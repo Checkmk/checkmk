@@ -22,13 +22,22 @@ const spec = ref<BooleanChoice>({
 })
 const dataTrue = ref<boolean>(true)
 const dataFalse = ref<boolean>(false)
+const dataFalse2 = ref<boolean>(false)
+
+const backendValidation = [
+  { location: [], message: 'some backend validation', replacement_value: true }
+]
 </script>
 
 <template>
   <h2>checked</h2>
   <FormBooleanChoice v-model:data="dataTrue" :spec="spec" :backend-validation="[]" />
-  <code>&nbsp;{{ dataTrue }}</code>
   <h2>unchecked</h2>
   <FormBooleanChoice v-model:data="dataFalse" :spec="spec" :backend-validation="[]" />
-  <code>&nbsp;{{ dataFalse }}</code>
+  <h2>With backend error filling true</h2>
+  <FormBooleanChoice
+    v-model:data="dataFalse2"
+    :spec="spec"
+    :backend-validation="backendValidation"
+  />
 </template>

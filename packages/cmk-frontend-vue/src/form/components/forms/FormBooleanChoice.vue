@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { BooleanChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
@@ -23,10 +22,5 @@ const [validation, value] = useValidation<boolean>(
 </script>
 
 <template>
-  <span class="checkbox form-boolean-choice">
-    <CmkCheckbox v-model="value" :label="spec.label ?? ''" />
-  </span>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkCheckbox v-model="value" :label="spec.label ?? ''" :external-errors="validation" />
 </template>
-
-<style scoped></style>

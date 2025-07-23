@@ -8,7 +8,6 @@ import sys
 from collections.abc import Collection, Iterable, Sequence
 from enum import Enum
 
-import requests
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
@@ -328,11 +327,8 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
 def _aggregates_ids(connection: HostConnection, args: Args) -> Collection:
     # wee need to retrieve the uuid of the aggregates via the CLI passthrough
     # because the REST API does not return, per design, the uuid of the root aggregates
-    response = requests.get(
+    response = connection.session.get(
         url=f"{connection.origin}/api/private/cli/aggr?fields=uuid",
-        headers=connection.headers,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
-        auth=(connection.username, connection.password),
         timeout=args.timeout,
     )
 
@@ -598,11 +594,8 @@ def fetch_temperatures(
 
 
 def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.AlertModel]:
-    response = requests.get(
+    response = connection.session.get(
         url=f"{connection.origin}/api/private/support/alerts",
-        headers=connection.headers,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
-        auth=(connection.username, connection.password),
         timeout=args.timeout,
     )
 

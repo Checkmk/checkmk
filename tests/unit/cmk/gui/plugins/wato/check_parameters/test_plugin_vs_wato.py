@@ -394,16 +394,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortigate_antivirus",
-            RuleGroup.CheckgroupParameters("fortigate_antivirus"),
-        ),
-        (
-            "check",
-            "fortigate_ips",
-            RuleGroup.CheckgroupParameters("fortigate_ips"),
-        ),
-        (
-            "check",
             "fortigate_ipsecvpn",
             RuleGroup.CheckgroupParameters("ipsecvpn"),
         ),

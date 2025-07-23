@@ -100,7 +100,7 @@ register.check_plugin(
     discovery_function=discover_fortigate_antivirus_ips,
     check_function=check_fortigate_antivirus_ips,
     check_ruleset_name="fortigate_antivirus",
-    check_default_parameters={"detections": (100, 300)},
+    check_default_parameters={"detections": (100.0, 300.0)},
 )
 
 register.check_plugin(
@@ -109,5 +109,5 @@ register.check_plugin(
     discovery_function=discover_fortigate_antivirus_ips,
     check_function=check_fortigate_antivirus_ips,
     check_ruleset_name="fortigate_ips",
-    check_default_parameters={"detections": (100, 300)},
+    check_default_parameters={"detections": (100.0, 300.0)},
 )

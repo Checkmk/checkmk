@@ -105,7 +105,8 @@ def main(argv=None):
             "name,"
             "node,"
             "type,"
-            "state",
+            "state,"
+            "vhost",
         ),
     ]
 

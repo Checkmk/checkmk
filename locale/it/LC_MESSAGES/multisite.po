@@ -5357,10 +5357,6 @@ msgstr "Gruppo di aggregazione ad albero"
 msgid "Aggregation groups"
 msgstr "Gruppi di aggregazione"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Nome dell'aggregazione"
-
 msgid "Aggregation name"
 msgstr "Nome dell'aggregazione"
 
@@ -24757,6 +24753,10 @@ msgstr "Fallita l'esecuzione del test %s: %s"
 #, python-format
 msgid "Failed to extract %s"
 msgstr "Fallita l'estrazione di %s"
+
+#, fuzzy, python-format
+msgid "Failed to extract sync archive [%d]: %s"
+msgstr "Fallita la creazione dell'archivio di sincronizzazione [%d]: %s"
 
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
@@ -56729,16 +56729,6 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
 msgid ""
-"Select how multiple data points from replicas of the same service should be "
-"aggregated. By default, the latest value independent of replica is taken. "
-"With this setting, you can choose alternative aggregation methods (min, max, "
-"sum, average) to apply over all the latest samples of differing replicas for "
-"the same host (e.g. same service.name, different service.instance.id)."
-"<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
-msgstr ""
-
-msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -87210,10 +87200,6 @@ msgstr "app autenticatore"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
-msgid "average"
-msgstr "Media"
-
 msgid "avg. duration"
 msgstr "durata media"
 
@@ -88100,10 +88086,6 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notifica"
 
-#, fuzzy
-msgid "latest"
-msgstr "test"
-
 msgid "latin1"
 msgstr "latino1"
 
@@ -88190,10 +88172,6 @@ msgstr "corrisponde a una delle regex"
 
 msgid "matches regex"
 msgstr "corrisponde a regex"
-
-#, fuzzy
-msgid "max"
-msgstr "massimo"
 
 msgid "max. duration"
 msgstr "durata massima"
@@ -88728,10 +88706,6 @@ msgstr "richiedono un'interfaccia che ordina il più basso in ordine alfabetico"
 msgid "require primary interface to be active"
 msgstr "richiede che l'interfaccia primaria sia attiva"
 
-#, fuzzy
-msgid "required"
-msgstr "Porta richiesta"
-
 msgid "reset"
 msgstr "resettare"
 
@@ -88906,10 +88880,6 @@ msgstr "Limitare tutti"
 
 msgid "sub categories"
 msgstr "sottocategorie"
-
-#, fuzzy
-msgid "sum"
-msgstr "Somma"
 
 msgid "synchronization"
 msgstr "sincronizzazione"
@@ -89266,6 +89236,30 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Aggregation method"
+#~ msgstr "Nome dell'aggregazione"
+
+#, fuzzy
+#~ msgid "average"
+#~ msgstr "Media"
+
+#, fuzzy
+#~ msgid "latest"
+#~ msgstr "test"
+
+#, fuzzy
+#~ msgid "max"
+#~ msgstr "massimo"
+
+#, fuzzy
+#~ msgid "required"
+#~ msgstr "Porta richiesta"
+
+#, fuzzy
+#~ msgid "sum"
+#~ msgstr "Somma"
 
 #, fuzzy
 #~ msgid "Community translated languages"

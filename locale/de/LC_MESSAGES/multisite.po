@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-21 19:35+0000\n"
+"PO-Revision-Date: 2025-07-22 17:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5257,9 +5257,6 @@ msgstr "Aggregationsgruppenbaum"
 
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
-
-msgid "Aggregation method"
-msgstr "Aggregationsmethode"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -24149,6 +24146,10 @@ msgstr "Fehler beim Ausführen des Tests %s: %s"
 #, python-format
 msgid "Failed to extract %s"
 msgstr "Extrahieren von %s fehlgeschlagen"
+
+#, python-format
+msgid "Failed to extract sync archive [%d]: %s"
+msgstr "Extrahieren des Sync-Archivs [%d] fehlgeschlagen: %s"
 
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
@@ -46917,7 +46918,7 @@ msgid "PGs Stale + Undersized + Peered"
 msgstr "PGs Stale + Undersized + Peered"
 
 msgid "PGs Stale+active + Undersized"
-msgstr "PGs Stale+active + Undersized"
+msgstr "PGs Stale + Active + Undersized"
 
 msgid "PGs Undersized + Degraded + Peered"
 msgstr "PGs Undersized + Degraded + Peered"
@@ -54799,24 +54800,6 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
-
-msgid ""
-"Select how multiple data points from replicas of the same service should be "
-"aggregated. By default, the latest value independent of replica is taken. "
-"With this setting, you can choose alternative aggregation methods (min, max, "
-"sum, average) to apply over all the latest samples of differing replicas for "
-"the same host (e.g. same service.name, different service.instance.id)."
-"<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
-msgstr ""
-"Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
-"aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
-"der Replik genommen. Mit dieser Einstellung können Sie alternative "
-"Aggregationsmethoden (min, max, sum, average) wählen, die auf alle letzten "
-"Stichproben unterschiedlicher Replikate für denselben Host angewendet werden "
-"(z. B. gleicher service.name, unterschiedliche service.instance.id)"
-".<br><br>Aggregationen erfolgen nur über den Satz der jüngsten Datenpunkte "
-"pro Replikat seit der letzten Überprüfung"
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -65566,7 +65549,8 @@ msgstr ""
 "aktiviert werden: %s"
 
 msgid "The package is now enabled, but not active on this site:"
-msgstr "Das Paket ist jetzt aktiviert, ist aber auf dieser Instanz nicht aktiv:"
+msgstr ""
+"Das Paket ist jetzt aktiviert, ist aber auf dieser Instanz nicht aktiv:"
 
 msgid "The pager address is optional "
 msgstr "Pager Adresse ist optional "
@@ -84807,9 +84791,6 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
-msgid "average"
-msgstr "Durchschnitt"
-
 msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
@@ -85676,9 +85657,6 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
-msgid "latest"
-msgstr "letzter"
-
 msgid "latin1"
 msgstr "latin1"
 
@@ -85764,9 +85742,6 @@ msgstr "trifft auf regulären Ausdruck zu"
 
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
-
-msgid "max"
-msgstr "Maximum"
 
 msgid "max. duration"
 msgstr "max. Dauer"
@@ -86305,9 +86280,6 @@ msgstr ""
 msgid "require primary interface to be active"
 msgstr "primäre Schnittstelle muss aktiv sein"
 
-msgid "required"
-msgstr "erforderlich"
-
 msgid "reset"
 msgstr "zurücksetzen"
 
@@ -86472,9 +86444,6 @@ msgstr "streng"
 
 msgid "sub categories"
 msgstr "Unterkategorien"
-
-msgid "sum"
-msgstr "Summe"
 
 msgid "synchronization"
 msgstr "Synchronisierung"
@@ -86836,6 +86805,42 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Aggregation method"
+#~ msgstr "Aggregationsmethode"
+
+#~ msgid ""
+#~ "Select how multiple data points from replicas of the same service should "
+#~ "be aggregated. By default, the latest value independent of replica is "
+#~ "taken. With this setting, you can choose alternative aggregation methods "
+#~ "(min, max, sum, average) to apply over all the latest samples of "
+#~ "differing replicas for the same host (e.g. same service.name, different "
+#~ "service.instance.id).<br><br>Aggregations occur only over the set of most "
+#~ "recent data points per replica since the last check"
+#~ msgstr ""
+#~ "Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
+#~ "aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig "
+#~ "von der Replik genommen. Mit dieser Einstellung können Sie alternative "
+#~ "Aggregationsmethoden (min, max, sum, average) wählen, die auf alle "
+#~ "letzten Stichproben unterschiedlicher Replikate für denselben Host "
+#~ "angewendet werden (z. B. gleicher service.name, unterschiedliche "
+#~ "service.instance.id).<br><br>Aggregationen erfolgen nur über den Satz der "
+#~ "jüngsten Datenpunkte pro Replikat seit der letzten Überprüfung"
+
+#~ msgid "average"
+#~ msgstr "Durchschnitt"
+
+#~ msgid "latest"
+#~ msgstr "letzter"
+
+#~ msgid "max"
+#~ msgstr "Maximum"
+
+#~ msgid "required"
+#~ msgstr "erforderlich"
+
+#~ msgid "sum"
+#~ msgstr "Summe"
 
 #~ msgid "Community translated languages"
 #~ msgstr "Community-übersetzte Sprachen"

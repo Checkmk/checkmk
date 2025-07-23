@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type {
   BooleanChoice,

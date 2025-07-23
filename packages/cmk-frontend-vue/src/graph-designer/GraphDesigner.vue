@@ -43,7 +43,7 @@ import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'
 import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
 import { type GraphRenderer } from '@/graph-designer/graph'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
   graph_id: string

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 import type { String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import { passthrough, http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'

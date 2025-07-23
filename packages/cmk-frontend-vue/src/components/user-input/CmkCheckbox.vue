@@ -6,7 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 import CmkHtml from '@/components/CmkHtml.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import HelpText from '@/components/HelpText.vue'
+
+defineOptions({ inheritAttrs: false })
 
 const value = defineModel<boolean>({ required: false, default: false })
 
@@ -14,13 +17,14 @@ interface CmkCheckboxProps {
   label?: string
   padding?: 'top' | 'bottom' | 'both'
   help?: string
+  externalErrors?: string[]
 }
 
 const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
 </script>
 
 <template>
-  <span class="cmk-checkbox__container">
+  <span class="cmk-checkbox__container" v-bind="$attrs">
     <label
       class="cmk-checkbox"
       :class="{
@@ -43,6 +47,7 @@ const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
       ></span>
     </label>
   </span>
+  <CmkInlineValidation :validation="externalErrors"></CmkInlineValidation>
 </template>
 
 <style scoped>

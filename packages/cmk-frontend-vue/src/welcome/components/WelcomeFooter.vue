@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, watch } from 'vue'
 import axios from 'axios'
 import usei18n from '@/lib/i18n'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const props = defineProps<{

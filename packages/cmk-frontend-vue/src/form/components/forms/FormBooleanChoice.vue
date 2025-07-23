@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { BooleanChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
   spec: BooleanChoice

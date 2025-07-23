@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import { useId } from '@/form/utils'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import { onMounted, ref, watch } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'

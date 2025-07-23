@@ -10,7 +10,7 @@ import type {
   CheckboxListChoice,
   MultipleChoiceElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
   spec: CheckboxListChoice

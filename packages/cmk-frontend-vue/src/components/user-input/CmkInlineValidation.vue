@@ -7,12 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from '@/components/CmkIcon.vue'
 
 const props = defineProps<{
-  validation: Array<string>
+  validation: Array<string> | undefined
 }>()
 </script>
 
 <template>
-  <div v-if="props.validation.length > 0" class="cmk-validation">
+  <div v-if="props.validation !== undefined && props.validation.length > 0" class="cmk-validation">
     <CmkIcon name="alert_crit" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>

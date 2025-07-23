@@ -14,14 +14,6 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 echo "Installing to $ROOT/lib/nagios/plugins"
-make
-
-RSYNC_OPTS="-rlD
-           --exclude=.*.swp
-           --exclude=Makefile
-           --exclude=*.cc"
-
-# shellcheck disable=SC2086
-rsync $RSYNC_OPTS ./ "$ROOT/lib/nagios/plugins"
-# shellcheck disable=SC2086
-rsync $RSYNC_OPTS --delete-after ./ "$ROOT/share/doc/check_mk/treasures/active_checks"
+bazel_target=":pkg_tar"
+bazel build "${bazel_target}"
+sudo tar --dereference -xvf "$(bazel info workspace)/$(bazel cquery --output=files ${bazel_target})" -C "$ROOT"/

@@ -42,8 +42,6 @@ agent_plugins_py2:
 $(CHECK_MK_BUILD):
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(REPO_PATH)/locale/compile_mo_files
-	$(MAKE) -C $(REPO_PATH)/bin
-	$(MAKE) -C $(REPO_PATH)/active_checks
 	$(MAKE) -C $(REPO_PATH)/doc/plugin-api html
 	$(TOUCH) $@
 
@@ -142,13 +140,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    windows/plugins \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/bin
-	tar -c -C $(REPO_PATH)/bin \
-	    $(CHECK_MK_TAROPTS) \
-	    --exclude Makefile \
-	    --exclude *.cc \
-	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/bin
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3
 	tar -c -C $(REPO_PATH) \
 	    $(CHECK_MK_TAROPTS) \
@@ -187,11 +178,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
-	tar -c -C $(REPO_PATH)/active_checks \
-	    $(CHECK_MK_TAROPTS) \
-	    --exclude Makefile \
-	    --exclude *.cc \
-	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 
 	# Install localizations
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale

@@ -48,6 +48,8 @@ file_from_flag(
     extension = "tar.xz",
     package_dir_file = ":omd_root_dir",
     deps = [
+               "//bin:pkg_tar",
+               "//active_checks:pkg_tar",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",

@@ -5422,10 +5422,6 @@ msgstr "Arborele grupului de agregare"
 msgid "Aggregation groups"
 msgstr "Grupuri de agregare"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Denumire agregare"
-
 msgid "Aggregation name"
 msgstr "Denumire agregare"
 
@@ -24844,6 +24840,10 @@ msgstr "Nu a reușit să execute testul %s: %s."
 #, python-format
 msgid "Failed to extract %s"
 msgstr "Nu a reușit să extragă %s"
+
+#, fuzzy, python-format
+msgid "Failed to extract sync archive [%d]: %s"
+msgstr "Nu s-a reușit crearea arhivei de sincronizare [%d]: %s."
 
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
@@ -56815,16 +56815,6 @@ msgid "Select from a list of service names known to Checkmk"
 msgstr "Selectați dintr-o listă de nume de gazde cunoscute de Checkmk"
 
 msgid ""
-"Select how multiple data points from replicas of the same service should be "
-"aggregated. By default, the latest value independent of replica is taken. "
-"With this setting, you can choose alternative aggregation methods (min, max, "
-"sum, average) to apply over all the latest samples of differing replicas for "
-"the same host (e.g. same service.name, different service.instance.id)."
-"<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
-msgstr ""
-
-msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
@@ -87494,9 +87484,6 @@ msgstr "aplicație autentificator"
 msgid "auto"
 msgstr "auto"
 
-msgid "average"
-msgstr "medie"
-
 msgid "avg. duration"
 msgstr "durata medie"
 
@@ -88406,10 +88393,6 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notificare"
 
-#, fuzzy
-msgid "latest"
-msgstr "test"
-
 msgid "latin1"
 msgstr "latin1"
 
@@ -88496,10 +88479,6 @@ msgstr "se potrivește cu unul dintre regex"
 
 msgid "matches regex"
 msgstr "se potrivește cu regex"
-
-#, fuzzy
-msgid "max"
-msgstr "maxim"
 
 msgid "max. duration"
 msgstr "durata maximă"
@@ -89242,10 +89221,6 @@ msgstr "Restricționează toate"
 msgid "sub categories"
 msgstr "subcategorii"
 
-#, fuzzy
-msgid "sum"
-msgstr "Suma"
-
 msgid "synchronization"
 msgstr "sincronizare"
 
@@ -89611,6 +89586,25 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Aggregation method"
+#~ msgstr "Denumire agregare"
+
+#~ msgid "average"
+#~ msgstr "medie"
+
+#, fuzzy
+#~ msgid "latest"
+#~ msgstr "test"
+
+#, fuzzy
+#~ msgid "max"
+#~ msgstr "maxim"
+
+#, fuzzy
+#~ msgid "sum"
+#~ msgstr "Suma"
 
 #~ msgid "Fail over partner"
 #~ msgstr "Partenerul Fail over"

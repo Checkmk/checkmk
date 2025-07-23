@@ -5411,10 +5411,6 @@ msgstr "Boom van de aggregatiegroep"
 msgid "Aggregation groups"
 msgstr "Aggregatiegroepen"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Aggregatienaam"
-
 msgid "Aggregation name"
 msgstr "Naam aggregatie"
 
@@ -24797,6 +24793,10 @@ msgstr "Mislukt bij het uitvoeren van de test %s: %s"
 #, python-format
 msgid "Failed to extract %s"
 msgstr "Mislukt uitpakken %s"
+
+#, fuzzy, python-format
+msgid "Failed to extract sync archive [%d]: %s"
+msgstr "Kan geen sync-archief aanmaken [%d]: %s"
 
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
@@ -56746,16 +56746,6 @@ msgstr ""
 msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
-msgid ""
-"Select how multiple data points from replicas of the same service should be "
-"aggregated. By default, the latest value independent of replica is taken. "
-"With this setting, you can choose alternative aggregation methods (min, max, "
-"sum, average) to apply over all the latest samples of differing replicas for "
-"the same host (e.g. same service.name, different service.instance.id)."
-"<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
-msgstr ""
-
 #, fuzzy
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -87299,9 +87289,6 @@ msgstr "Authenticatie"
 msgid "auto"
 msgstr "auto"
 
-msgid "average"
-msgstr "gemiddelde"
-
 msgid "avg. duration"
 msgstr "gemiddelde duur"
 
@@ -88218,10 +88205,6 @@ msgstr "laserFout"
 msgid "last notification"
 msgstr "laatste mededeling"
 
-#, fuzzy
-msgid "latest"
-msgstr "testen"
-
 msgid "latin1"
 msgstr "latin1"
 
@@ -88309,10 +88292,6 @@ msgstr "overeenkomt met een van regex"
 
 msgid "matches regex"
 msgstr "komt overeen met regex"
-
-#, fuzzy
-msgid "max"
-msgstr "maximum"
 
 msgid "max. duration"
 msgstr "max. duur"
@@ -89049,10 +89028,6 @@ msgstr "Beperk alle"
 msgid "sub categories"
 msgstr "subcategorieën"
 
-#, fuzzy
-msgid "sum"
-msgstr "Som"
-
 msgid "synchronization"
 msgstr "synchronisatie"
 
@@ -89416,6 +89391,25 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Aggregation method"
+#~ msgstr "Aggregatienaam"
+
+#~ msgid "average"
+#~ msgstr "gemiddelde"
+
+#, fuzzy
+#~ msgid "latest"
+#~ msgstr "testen"
+
+#, fuzzy
+#~ msgid "max"
+#~ msgstr "maximum"
+
+#, fuzzy
+#~ msgid "sum"
+#~ msgstr "Som"
 
 #, fuzzy
 #~ msgid "Fail over partner"

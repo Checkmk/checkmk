@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.base.legacy_checks.rabbitmq_queues import (
+from cmk.plugins.rabbitmq.agent_based.queues import (
     check_rabbitmq_queues,
     DEFAULT_PARAMETERS,
     discover_rabbitmq_queues,

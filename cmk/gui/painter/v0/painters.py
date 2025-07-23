@@ -5400,6 +5400,7 @@ class PainterHostDockerNode(Painter):
                 ("view_name", "host"),
                 ("host", node),
             ],
+            html_text=node,
         )
         return "", content
 

@@ -45,7 +45,7 @@ pub fn get_utc_now() -> Result<u64> {
 pub fn get_modified_age<P: AsRef<Path>>(path: P) -> Result<u64> {
     let modified = get_modified_utc_time(path)?;
     let now = get_utc_now()?;
-    Ok(if now >= modified { now - modified } else { 0 })
+    Ok(now.saturating_sub(modified))
 }
 
 #[cfg(test)]

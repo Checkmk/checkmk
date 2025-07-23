@@ -1,0 +1,14 @@
+Title: Host check command: crash when using "Use a custom check plug-in" option
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1753255863
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+When setting the "Use a custom check plug-in" option for the Host check command ruleset
+and then logging in as a normal monitoring user without the permission to configure this
+option, this would lead to a crash to both the UI and the REST API.
+
+Now this option is still being display but not editable by users without permission.

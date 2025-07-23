@@ -18,12 +18,16 @@ def test_saas_quick_setup_hides_explicit_email_addresses(dashboard_page: Dashboa
     notification_rule_page.ensure_guided_mode()
     notification_rule_page.main_area.check_page_title("Add notification rule")
 
-    notification_rule_page.goto_next_qs_stage()  # Move to step 2 (Filter for hosts/services)
-    notification_rule_page.goto_next_qs_stage()  # Move to step 3 (Notification method (plug-in))
+    # Move to step 2 (Filter for hosts/services)
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
+
+    # Move to step 3 (Notification method (plug-in))
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=2)
 
     notification_rule_page.select_notification_effect("Suppress all previous")
 
-    notification_rule_page.goto_next_qs_stage()  # Move to step 4 (Recipient)
+    # Move to step 4 (Recipient)
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=3)
     dropdown = notification_rule_page.select_recipient_dropdown(0)
     dropdown.click()
     explicit_email_option = notification_rule_page.select_recipient_option(
@@ -39,12 +43,16 @@ def test_non_saas_quick_setup_shows_explicit_email_addresses(dashboard_page: Das
     notification_rule_page.ensure_guided_mode()
     notification_rule_page.main_area.check_page_title("Add notification rule")
 
-    notification_rule_page.goto_next_qs_stage()  # Move to step 2 (Filter for hosts/services)
-    notification_rule_page.goto_next_qs_stage()  # Move to step 3 (Notification method (plug-in))
+    # Move to step 2 (Filter for hosts/services)
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
+
+    # Move to step 3 (Notification method (plug-in))
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=2)
 
     notification_rule_page.select_notification_effect("Suppress all previous")
 
-    notification_rule_page.goto_next_qs_stage()  # Move to step 4 (Recipient)
+    # Move to step 4 (Recipient)
+    notification_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=3)
     dropdown = notification_rule_page.select_recipient_dropdown(0)
     dropdown.click()
     explicit_email_option = notification_rule_page.select_recipient_option(

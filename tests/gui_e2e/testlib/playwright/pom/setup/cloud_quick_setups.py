@@ -13,6 +13,7 @@ from playwright.sync_api import expect, Locator, Page
 from tests.gui_e2e.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.setup.quick_setup import GOTO_NEXT_STAGE, QuickSetupPage
 from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 
 logger = logging.getLogger(__name__)
@@ -101,7 +102,7 @@ class PasswordType(DropdownOptions):
     FROM_PASSWORD_STORE = "From password store"
 
 
-class BaseQuickSetupAddNewConfiguration(CmkPage):
+class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
     """Base class for adding quick setup configuration pages."""
 
     class FolderDetails:
@@ -113,11 +114,6 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
     @property
     @abstractmethod
     def suffix(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def page_title(self) -> str:
         pass
 
     @abstractmethod
@@ -196,14 +192,15 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
             f'div[class*="form-dictionary"]:has(span > span:has-text("{name}"))'
         )
 
-    def _button_proceed_from_stage(self, button_text: str) -> Locator:
+    def click_test_configuration_button(self) -> None:
         # TODO: change to access via .get_by_role("button", name="<buttonId>")
         #  after an id has been added
-        return (
+        test_configuration_button = (
             self.main_area.locator()
-            .get_by_label("Go to the next stage")
-            .get_by_text(button_text, exact=True)
+            .get_by_label(GOTO_NEXT_STAGE)
+            .get_by_text("Test configuration", exact=True)
         )
+        test_configuration_button.click()
 
     def _select_folder(self, folder_path: str) -> None:
         main_area = self.main_area.locator()
@@ -293,26 +290,15 @@ class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
 
     suffix = "aws"
     page_title = "Add Amazon Web Services (AWS) configuration"
+    _go_to_next_stage_buttons_text = {
+        1: "Configure host and regions",
+        2: "Configure services to monitor",
+        3: "Review and test configuration",
+    }
 
     @override
     def list_configuration_page(self) -> AWSConfigurationList:
         return AWSConfigurationList(self.page)
-
-    @property
-    def button_proceed_from_stage_one(self) -> Locator:
-        return self._button_proceed_from_stage("Configure host and regions")
-
-    @property
-    def button_proceed_from_stage_two(self) -> Locator:
-        return self._button_proceed_from_stage("Configure services to monitor")
-
-    @property
-    def button_proceed_from_stage_three(self) -> Locator:
-        return self._button_proceed_from_stage("Review and test configuration")
-
-    @property
-    def button_proceed_from_stage_four(self) -> Locator:
-        return self._button_proceed_from_stage("Test configuration")
 
     # stage-2
     def regions_to_monitor_table(
@@ -401,26 +387,15 @@ class GCPAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
 
     suffix = "gcp"
     page_title = "Add Google Cloud Platform (GCP) configuration"
+    _go_to_next_stage_buttons_text = {
+        1: "Configure host",
+        2: "Configure services to monitor",
+        3: "Review and test configuration",
+    }
 
     @override
     def list_configuration_page(self) -> GCPConfigurationList:
         return GCPConfigurationList(self.page)
-
-    @property
-    def button_proceed_from_stage_one(self) -> Locator:
-        return self._button_proceed_from_stage("Configure host")
-
-    @property
-    def button_proceed_from_stage_two(self) -> Locator:
-        return self._button_proceed_from_stage("Configure services to monitor")
-
-    @property
-    def button_proceed_from_stage_three(self) -> Locator:
-        return self._button_proceed_from_stage("Review and test configuration")
-
-    @property
-    def button_proceed_from_stage_four(self) -> Locator:
-        return self._button_proceed_from_stage("Test configuration")
 
     # stage-3
     def check_service(self, service: str, check: bool) -> None:
@@ -486,26 +461,15 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
 
     suffix = "azure"
     page_title = "Add Microsoft Azure configuration"
+    _go_to_next_stage_buttons_text = {
+        1: "Configure host and authority",
+        2: "Configure services to monitor",
+        3: "Review and test configuration",
+    }
 
     @override
     def list_configuration_page(self) -> AzureConfigurationList:
         return AzureConfigurationList(self.page)
-
-    @property
-    def button_proceed_from_stage_one(self) -> Locator:
-        return self._button_proceed_from_stage("Configure host and authority")
-
-    @property
-    def button_proceed_from_stage_two(self) -> Locator:
-        return self._button_proceed_from_stage("Configure services to monitor")
-
-    @property
-    def button_proceed_from_stage_three(self) -> Locator:
-        return self._button_proceed_from_stage("Review and test configuration")
-
-    @property
-    def button_proceed_from_stage_four(self) -> Locator:
-        return self._button_proceed_from_stage("Test configuration")
 
     @property
     def authority_dropdown(self) -> DropdownHelper[Authority]:

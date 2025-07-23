@@ -350,6 +350,14 @@ class AddNotificationRule(BaseNotificationPage):
     """
 
     page_title = "Add notification rule"
+    _go_to_next_stage_buttons_text = {
+        1: "Next step: Specify host/services",
+        2: "Next step: Notification method (plug-in)",
+        3: "Next step: Recipient",
+        4: "Next step: Sending conditions",
+        5: "Next step: General properties",
+        6: "Next step: Review all settings",
+    }
 
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)

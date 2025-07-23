@@ -99,17 +99,8 @@ def test_minimal_configuration(
         client_id="my_client_id",
         secret="my_secret",
     )
-    azure_qs_config_page.button_proceed_from_stage_one.click()
-    # wait for stage transition animation
-    azure_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_two,
-        message="Expected stage 2 button to be enabled after proceeding to stage 2!",
-    ).to_be_enabled()
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_one,
-        message="Expected stage 1 button to be hidden after proceeding to stage 2!",
-    ).not_to_be_visible()
+
+    azure_qs_config_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
 
     # Stage 2
     azure_qs_config_page.specify_stage_two_details(
@@ -117,36 +108,17 @@ def test_minimal_configuration(
         site_name=test_site.id,
     )
 
-    azure_qs_config_page.button_proceed_from_stage_two.click()
-    # wait for stage transition animation
-    azure_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_three,
-        message="Expected stage 3 button to be enabled after proceeding to stage 3!",
-    ).to_be_enabled()
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_two,
-        message="Expected stage 2 button to be hidden after proceeding to stage 3!",
-    ).not_to_be_visible()
+    azure_qs_config_page.validate_button_text_and_goto_next_qs_stage(current_stage=2)
 
     # Stage 3
     azure_qs_config_page.specify_stage_three_details(
         services_to_monitor=QuickSetupMultiChoice([], ["Load Balancer"]),
     )
-    azure_qs_config_page.button_proceed_from_stage_three.click()
-    # wait for stage transition animation
-    azure_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_four,
-        message="Expected stage 4 button to be enabled after proceeding to stage 4!",
-    ).to_be_enabled()
-    expect(
-        azure_qs_config_page.button_proceed_from_stage_three,
-        message="Expected stage 3 button to be hidden after proceeding to stage 4!",
-    ).not_to_be_visible()
+
+    azure_qs_config_page.validate_button_text_and_goto_next_qs_stage(current_stage=3)
 
     # Stage 4
-    azure_qs_config_page.button_proceed_from_stage_four.click()
+    azure_qs_config_page.click_test_configuration_button()
 
     # Save stage
     expect(

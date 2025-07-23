@@ -25,6 +25,7 @@ class QuickSetupPage(CmkPage):
     """Base class for Quick Setup pages."""
 
     page_title = ""
+    _go_to_next_stage_buttons_text: dict[int, str]
 
     @abstractmethod
     def navigate(self) -> None:
@@ -70,6 +71,16 @@ class QuickSetupPage(CmkPage):
 
         return -1
 
+    @property
+    def go_to_next_stage_button(self) -> Locator:
+        """Return the button to go to the next stage in the Quick Setup."""
+        return self.active_stage.get_by_label(GOTO_NEXT_STAGE)
+
+    @property
+    def go_to_prev_stage_button(self) -> Locator:
+        """Return the button to go to the previous stage in the Quick Setup."""
+        return self.active_stage.get_by_label(GOTO_PREV_STAGE)
+
     def ensure_guided_mode(self) -> None:
         if self.is_overview_mode:
             self.guided_mode_button.click()
@@ -94,13 +105,36 @@ class QuickSetupPage(CmkPage):
             logger.debug("Wait for animation to complete")
             self.active_stage.element_handle().wait_for_element_state("stable")
 
-    def goto_next_qs_stage(self, is_last_stage: bool = False) -> None:
-        with self.wait_for_active_stage_change(is_last_stage):
-            self.active_stage.get_by_label(GOTO_NEXT_STAGE).click()
+    def validate_go_to_next_stage_button_text(self, *, current_stage: int) -> None:
+        expected_text = self._go_to_next_stage_buttons_text[current_stage]
+        expect(
+            self.go_to_next_stage_button,
+            message=(
+                f"Expected the '{GOTO_NEXT_STAGE}' button text to be '{expected_text}'"
+                f";got '{self.go_to_next_stage_button.text_content()}'"
+            ),
+        ).to_have_text(expected_text)
 
-    def goto_prev_qs_stage(self) -> None:
+    def validate_go_to_prev_stage_button_text(self, expected_text: str = "Back") -> None:
+        expect(
+            self.go_to_prev_stage_button,
+            message=(
+                f"Expected the '{GOTO_PREV_STAGE}' button text to be '{expected_text}'"
+                f"; got '{self.go_to_prev_stage_button.text_content()}'"
+            ),
+        ).to_have_text(expected_text)
+
+    def validate_button_text_and_goto_next_qs_stage(
+        self, *, current_stage: int, is_last_stage: bool = False
+    ) -> None:
+        self.validate_go_to_next_stage_button_text(current_stage=current_stage)
+        with self.wait_for_active_stage_change(is_last_stage):
+            self.go_to_next_stage_button.click()
+
+    def validate_button_text_and_goto_prev_qs_stage(self) -> None:
+        self.validate_go_to_prev_stage_button_text()
         with self.wait_for_active_stage_change():
-            self.active_stage.get_by_label(GOTO_PREV_STAGE).click()
+            self.go_to_prev_stage_button.click()
 
     def save_and_test(self) -> None:
         self.main_area.locator(".qs-save-stage__content").get_by_label("Save").first.click()

@@ -58,7 +58,7 @@ def test_add_new_notification_rule(
     logger.info(
         "Skip stage '%s' and go to '%s'", STAGE_TRIGGERING_EVENTS, STAGE_FILTER_HOSTS_SERVICES
     )
-    add_rule_page.goto_next_qs_stage()
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
 
     logger.info("Set Hosts on Host filters to '%s'", test_site.id)
     add_rule_page.expand_host_filters()
@@ -67,7 +67,7 @@ def test_add_new_notification_rule(
     add_rule_page.select_host_from_dropdown_list(host_name).click()
 
     logger.info("Go to stage '%s'", STAGE_NOTIFICATION_METHOD)
-    add_rule_page.goto_next_qs_stage()
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=2)
 
     logger.info("Create new html email parameter")
     add_rule_page.create_html_parameter_using_slide_in()
@@ -91,7 +91,7 @@ def test_add_new_notification_rule(
     add_rule_page.save_editor_slide_in()
 
     logger.info("Go to stage '%s'", STAGE_RECIPIENT)
-    add_rule_page.goto_next_qs_stage()
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=3)
 
     logger.info("Change recipient to all users with email address")
     add_rule_page.set_recipient(index=0, recipient_option_name="All users with an email address")
@@ -99,14 +99,14 @@ def test_add_new_notification_rule(
     logger.info(
         "Skip stage '%s' and go to '%s'", STAGE_SENDING_CONDITIONS, STAGE_GENERAL_PROPERTIES
     )
-    add_rule_page.goto_next_qs_stage()
-    add_rule_page.goto_next_qs_stage()
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=4)
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=5)
 
     logger.info("Set rule description")
     add_rule_page.description_text_field.fill(expected_notification_subject)
 
     logger.info("Go to review settings and save")
-    add_rule_page.goto_next_qs_stage(is_last_stage=True)
+    add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=6, is_last_stage=True)
     add_rule_page.save_and_test()
 
     logger.info("Disable the default notification rule")

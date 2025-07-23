@@ -968,7 +968,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "rabbitmq_nodes_mem",
         "rabbitmq_nodes_uptime",
         "rabbitmq_nodes_gc",
-        "rabbitmq_queues",
         "rabbitmq_vhosts",
         "raritan_emx",
         "raritan_emx_fan",

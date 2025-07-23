@@ -29,7 +29,7 @@ _GLOBAL_EXCLUDES = (
 
 _PERMISSIONS = (
     # globbing pattern | check function | explicit excludes | exclude patterns
-    ("active_checks/*", is_executable, ("BUILD", "check_mkevents.cc"), ()),
+    ("active_checks/*", is_executable, ("Makefile", "check_mkevents.cc"), ()),
     ("agents/check_mk_agent.*", is_executable, ("check_mk_agent.spec",), ()),
     (
         "agents/plugins/*",
@@ -38,7 +38,7 @@ _PERMISSIONS = (
         ("*.checksum", "*.pyc", "*_2.py"),
     ),
     ("notifications/*", is_executable, ("README", "debug"), ()),
-    ("bin/*", is_executable, ("BUILD", "mkevent.cc", "mkeventd_open514.cc"), ()),
+    ("bin/*", is_executable, ("Makefile", "mkevent.cc", "mkeventd_open514.cc"), ()),
     # Enterprise specific
     ("omd/packages/enterprise/bin/*", is_executable, (), ()),
     (

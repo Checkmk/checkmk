@@ -13,9 +13,29 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-bazel_target=":pkg_tar"
-bazel build "${bazel_target}"
-sudo tar --dereference -xvf "$(bazel info workspace)/$(bazel cquery --output=files ${bazel_target})" -C "$ROOT"/
+make
+sudo install -m 755 \
+    apply_unsign_msi_patch.sh \
+    check_mk \
+    cmk-automation-helper \
+    cmk-compute-api-spec \
+    cmk-passwd \
+    cmk-piggyback-hub \
+    cmk-ui-job-scheduler \
+    cmk-ui-job-scheduler-health \
+    cmk-update-config \
+    cmk-update-license-usage \
+    cmk-validate-config \
+    cmk-validate-plugins \
+    cmk-transform-inventory-trees \
+    init-redis \
+    livedump \
+    mkbackup \
+    mkevent \
+    mkeventd \
+    mkeventd_open514 \
+    post-rename-site \
+    "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
 sudo chown root:omd "$ROOT"/bin/mkeventd_open514
 sudo chmod 750 "$ROOT"/bin/mkeventd_open514

@@ -393,6 +393,16 @@ def _get_expected_paths(
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
             "etc/password_store.secret",
+            "etc/check_mk/apache.d/wato/global.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "etc/check_mk/diskspace.d/wato/global.mk",
+            "etc/check_mk/multisite.d/wato/ca-certificates.mk",
+            "etc/check_mk/rrdcached.d/wato/global.mk",
+            "etc/omd/global.mk",
+            "etc/check_mk/dcd.d/wato/global.mk",
+            "etc/check_mk/mknotifyd.d/wato/global.mk",
+            "etc/check_mk/mkeventd.d/wato/global.mk",
+            "etc/check_mk/otel_collector.d/wato/global.mk",
         ]
 
         if with_local:

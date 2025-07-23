@@ -31,6 +31,10 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.inventory.config import (
+    InvHousekeepingParams,
+    InvHousekeepingParamsDefaultCombined,
+)
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import (
@@ -199,6 +203,15 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     or []
                 ),
             },
+            "inventory_housekeeping": InvHousekeepingParams(
+                for_hosts=[],
+                default=InvHousekeepingParamsDefaultCombined(
+                    strategy="and",
+                    file_age=400,
+                    number_of_history_entries=100,
+                ),
+                abandoned_file_age=30 * 86400,
+            ),
         }
 
         return settings

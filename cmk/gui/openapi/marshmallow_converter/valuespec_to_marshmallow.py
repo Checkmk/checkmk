@@ -491,6 +491,7 @@ def valuespec_none(
 
 @match_on(valuespec._CAorCAChain)
 @match_on(valuespec.Alternative)
+@match_on(valuespec.TextOrRegExp)
 def valuespec_alternative(
     vs_instance: valuespec.Alternative,
     name: str | None,

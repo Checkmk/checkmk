@@ -9,7 +9,7 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 
 import cmk.utils.paths
-from cmk.inventory import transform_inventory_trees
+from cmk.inventory.transformation import transform_inventory_trees
 
 
 def _parse_arguments(argv: Sequence[str]) -> Namespace:

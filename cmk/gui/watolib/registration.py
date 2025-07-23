@@ -54,7 +54,11 @@ from .config_domain_name import (
 from .config_hostname import config_hostname_autocompleter
 from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
-from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
+from .host_attributes import (
+    ABCHostAttribute,
+    HostAttributeRegistry,
+    HostAttributeTopicRegistry,
+)
 from .host_label_sync import AutomationDiscoveredHostLabelSync
 from .host_match_item_generator import MatchItemGeneratorHosts
 from .host_rename import (

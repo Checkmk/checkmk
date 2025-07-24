@@ -62,7 +62,7 @@ def main() {
 
     success &= smart_stage(
             name: "Run GUI End-to-End tests on FIPS",
-            condition: build_image,
+            condition: true,
             raiseOnError: false,) {
         smart_build(
             job: "${branch_base_folder}/fips/test-gui-e2e-fips ",

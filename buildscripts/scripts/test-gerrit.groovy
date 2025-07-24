@@ -173,6 +173,7 @@ def main() {
                     analyse_mapping["${item.NAME}"] << [
                         pattern: "${item.RESULT_CHECK_FILE_PATTERN}",
                     ];
+                    update_result_table(current_description, analyse_mapping);
                 }
 
                 smart_stage(
@@ -183,6 +184,7 @@ def main() {
                     analyse_mapping["${item.NAME}"] << [
                         unique_parser_name: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
                     ];
+                    update_result_table(current_description, analyse_mapping);
 
                     // ensure the parser and publisher are able to find the files
                     dir("${checkout_dir}") {

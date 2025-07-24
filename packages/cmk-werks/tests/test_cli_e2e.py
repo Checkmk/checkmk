@@ -64,7 +64,7 @@ repo = "{repo_url}"
     repo.index.commit("initial commit")
     repo.create_remote("origin", f"git@{repo_url}")
     branch = repo.create_head(branch_name)
-    repo.head.reference = branch  # type: ignore[misc]
+    repo.head.reference = branch
     return repo
 
 

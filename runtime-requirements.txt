@@ -531,9 +531,9 @@ dnspython==2.7.0 \
     #   -c requirements.txt
     #   exchangelib
     #   python-active-directory
-docstring-parser==0.16 \
-    --hash=sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e \
-    --hash=sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637
+docstring-parser==0.17.0 \
+    --hash=sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912 \
+    --hash=sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -701,9 +701,9 @@ gitdb==4.0.12 \
     # via
     #   -c requirements.txt
     #   gitpython
-gitpython==3.1.44 \
-    --hash=sha256:9e0e10cda9bed1ee64bc9a6de50e7e38a9c9943241cd7f585f6df3ed28011110 \
-    --hash=sha256:c87e30b26253bf5418b01b0660f818967f3c503193838337fe5e573331249269
+gitpython==3.1.45 \
+    --hash=sha256:85b0ee964ceddf211c41b9f27a49086010a190fd8132a24e21f362a4b36a791c \
+    --hash=sha256:8908cb2e02fb3b93b7eb0f2827125cb699869470432cc885f019b8fd0fccff77
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -719,9 +719,9 @@ google-api-core[grpc]==2.25.1 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-google-api-python-client==2.176.0 \
-    --hash=sha256:2b451cdd7fd10faeb5dd20f7d992f185e1e8f4124c35f2cdcc77c843139a4cf1 \
-    --hash=sha256:e22239797f1d085341e12cd924591fc65c56d08e0af02549d7606092e6296510
+google-api-python-client==2.177.0 \
+    --hash=sha256:9ffd2b57d68f5afa7e6ac64e2c440534eaa056cbb394812a62ff94723c31b50e \
+    --hash=sha256:f2f50f11105ab883eb9b6cf38ec54ea5fd4b429249f76444bec90deba5be79b3
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -973,9 +973,9 @@ jsonpointer==3.0.0 \
     #   -c requirements.txt
     #   jsonpatch
     #   redfish
-jsonschema==4.24.1 \
-    --hash=sha256:6b916866aa0b61437785f1277aa2cbd63512e8d4b47151072ef13292049b4627 \
-    --hash=sha256:fe45a130cc7f67cd0d67640b4e7e3e2e666919462ae355eda238296eafeb4b5d
+jsonschema==4.25.0 \
+    --hash=sha256:24c2e8da302de79c8b9382fee3e76b355e44d2a4364bb207159ce10b517bd716 \
+    --hash=sha256:e63acf5c11762c0e6672ffb61482bdf57f0876684d8d249c0fe2d730d48bc55f
     # via
     #   -c requirements.txt
     #   openapi-schema-validator
@@ -1208,9 +1208,9 @@ meraki==2.0.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-msal==1.32.3 \
-    --hash=sha256:5eea038689c78a5a70ca8ecbe1245458b55a857bd096efb6989c69ba15985d35 \
-    --hash=sha256:b2798db57760b1961b142f027ffb7c8169536bf77316e99a0df5c4aaebb11569
+msal==1.33.0 \
+    --hash=sha256:836ad80faa3e25a7d71015c990ce61f704a87328b1e73bcbb0623a18cbf17510 \
+    --hash=sha256:c0cd41cecf8eaed733ee7e3be9e040291eba53b0f262d3ae9c58f38b04244273
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -2461,9 +2461,9 @@ referencing==0.36.2 \
     #   jsonschema
     #   jsonschema-path
     #   jsonschema-specifications
-reportlab==4.4.2 \
-    --hash=sha256:58e11be387457928707c12153b7e41e52533a5da3f587b15ba8f8fd0805c6ee2 \
-    --hash=sha256:fc6283048ddd0781a9db1d671715990e6aa059c8d40ec9baf34294c4bd583a36
+reportlab==4.4.3 \
+    --hash=sha256:073b0975dab69536acd3251858e6b0524ed3e087e71f1d0d1895acb50acf9c7b \
+    --hash=sha256:df905dc5ec5ddaae91fc9cb3371af863311271d555236410954961c5ee6ee1b5
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -2965,9 +2965,9 @@ snmpsim-lextudio==1.1.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-starlette==0.47.1 \
-    --hash=sha256:5e11c9f5c7c3f24959edbf2dffdc01bba860228acf657129467d8a7468591527 \
-    --hash=sha256:aef012dd2b6be325ffa16698f9dc533614fb1cebd593a906b90dc1025529a79b
+starlette==0.47.2 \
+    --hash=sha256:6ae9aa5db235e4846decc1e7b79c4f346adf41e9777aebeb49dfd09bbd7023d8 \
+    --hash=sha256:c5847e96134e5c5371ee9fac6fdf1a67336d5815e09eb2a01fdb57a351ef915b
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in

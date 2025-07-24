@@ -60,5 +60,5 @@ ENDPOINT_LIST_USER_ROLES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=USER_ROLE_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=list_user_roles_v1)},
+    versions={APIVersion.V1: EndpointHandler(handler=list_user_roles_v1)},
 )

@@ -35,7 +35,6 @@ from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import edition_field_description, tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.groups_io import load_group_information
@@ -1437,32 +1436,6 @@ class UserRoleID(base.String):
                 raise self.make_error("should_be_custom", role=value)
 
 
-class PermissionField(base.String):
-    default_error_messages = {
-        "invalid_permission": "The specified permission name doesn't exist: {value!r}",
-    }
-
-    def __init__(
-        self,
-        required: bool = True,
-        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(
-            example="general.edit_profile",
-            description="The name of a permission",
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-        if value not in permission_registry:
-            raise self.make_error("invalid_permission", value=value)
-
-
 class Username(base.String):
     default_error_messages = {
         "should_exist": "Username missing: {username!r}",
@@ -1620,7 +1593,6 @@ __all__ = [
     "PasswordEditableBy",
     "PasswordIdent",
     "PasswordShare",
-    "PermissionField",
     "PythonString",
     "query_field",
     "SiteField",

@@ -36,7 +36,6 @@ from cmk.gui.openapi.endpoints import (
     site_management,
     time_periods,
     user_config,
-    user_role,
     version,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -93,7 +92,6 @@ def register(
     site_management.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     time_periods.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     user_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    user_role.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     version.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     spec_generator_job.register(job_registry)
     quick_setup.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

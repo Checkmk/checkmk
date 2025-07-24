@@ -50,5 +50,5 @@ ENDPOINT_CREATE_USER_ROLE = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=USER_ROLE_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=create_user_role_v1)},
+    versions={APIVersion.V1: EndpointHandler(handler=create_user_role_v1)},
 )

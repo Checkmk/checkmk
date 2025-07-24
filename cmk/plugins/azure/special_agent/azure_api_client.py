@@ -13,8 +13,7 @@ import requests
 
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 
-# TODO: improve logger
-LOGGER = logging.getLogger()  # root logger for now
+LOGGER = logging.getLogger("azure_api_client")
 
 
 class ApiError(RuntimeError):
@@ -280,6 +279,7 @@ class BaseAsyncApiClient(BaseApiClient):
         if not uri:
             raise ValueError("No URI provided")
 
+        LOGGER.debug("Querying uri: %r", uri)
         response = await self._handle_ratelimit_async(
             method,
             uri,
@@ -288,7 +288,7 @@ class BaseAsyncApiClient(BaseApiClient):
             params=params,
         )
         json_data = await response.json()
-        LOGGER.debug("response: %r", json_data)
+        LOGGER.debug("API response: %r", json_data)
 
         if (error := json_data.get("error")) is not None:
             raise _make_exception(error)

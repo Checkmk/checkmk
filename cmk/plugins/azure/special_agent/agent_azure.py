@@ -11,7 +11,6 @@ https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/freque
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import datetime
 import enum
@@ -39,17 +38,17 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     get_mgmt_authority_urls,
     NoConsumptionAPIError,
 )
-from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
-Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
-# TODO: improve logger
-LOGGER = logging.getLogger()  # root logger for now
+LOGGER = logging.getLogger("agent_azure")
 
 AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
@@ -278,22 +277,8 @@ def _chunks(list_: Sequence[T], length: int = 50) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
-def parse_arguments(argv: Sequence[str]) -> Args:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="""Verbose mode (for even more output use -vvv)""",
-    )
-    parser.add_argument(
-        "--vcrtrace",
-        action=vcrtrace(filter_post_data_parameters=[("client_secret", "****")]),
-    )
+def parse_arguments(argv: Sequence[str] | None) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "--dump-config",
         action="store_true",
@@ -416,34 +401,12 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         "executed.",
     )
 
+    # I'm not sure this is still needed
+    if argv is None:
+        password_store.replace_passwords()
+        argv = sys.argv[1:]
+
     args = parser.parse_args(argv)
-
-    # LOGGING
-    if args.verbose and args.verbose >= 3:
-        # this will show third party log messages as well
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
-        lvl = logging.DEBUG
-    elif args.verbose and args.verbose == 2:
-        # be verbose, but silence msrest, urllib3 and requests_oauthlib
-        fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
-        lvl = logging.DEBUG
-        logging.getLogger("msrest").setLevel(logging.WARNING)
-        logging.getLogger("urllib3").setLevel(logging.WARNING)
-        logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)
-    elif args.verbose:
-        fmt = "%(levelname)s: %(funcName)s: %(message)s"
-        lvl = logging.INFO
-    else:
-        fmt = "%(levelname)s: %(message)s"
-        lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)
-
-    # V-VERBOSE INFO
-    for key, value in vars(args).items():
-        if key == "secret":
-            value = "****"
-        LOGGER.debug("argparse: %s = %r", key, value)
-
     return args
 
 
@@ -1522,6 +1485,8 @@ def write_to_agent_info_section(message: str, component: str, status: int) -> No
 
 
 def write_exception_to_agent_info_section(exception, component):
+    LOGGER.warning("Writing exception for component %s:\n %s", component, exception)
+
     # those exceptions are quite noisy. try to make them more concise:
     msg = str(exception).split("Trace ID", 1)[0]
     msg = msg.split(":", 2)[-1].strip(" ,")
@@ -1703,7 +1668,6 @@ async def process_usage_details(
     except Exception as exc:
         if args.debug:
             raise
-        LOGGER.warning("%s", exc)
         write_exception_to_agent_info_section(exc, "Usage client")
         write_usage_section([], monitored_groups, args.tag_key_pattern)
 
@@ -2066,6 +2030,7 @@ async def main_subscription(
 
 async def _get_subscriptions(args: Args) -> set[str]:
     if args.subscriptions:
+        LOGGER.info("Using subscriptions from command line: %s", args.subscriptions)
         return set(args.subscriptions)
 
     if args.all_subscriptions:
@@ -2082,8 +2047,9 @@ async def _get_subscriptions(args: Args) -> set[str]:
                 full_uri="https://management.azure.com/subscriptions",
                 params={"api-version": "2022-12-01"},
             )
-
-            return {item["subscriptionId"] for item in response.get("value", [])}
+            subscriptions = {item["subscriptionId"] for item in response.get("value", [])}
+            LOGGER.info("Using subscriptions from API: %s", subscriptions)
+            return subscriptions
 
     return set()  # no subscriptions
 
@@ -2124,18 +2090,42 @@ async def main_async(args: Args, selector: Selector) -> int:
     return 0
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    if argv is None:
-        password_store.replace_passwords()
-        argv = sys.argv[1:]
+def _setup_logging(verbose: int) -> None:
+    logging.basicConfig(
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG)
+    )
 
-    args = parse_arguments(argv)
+    if verbose == 2:
+        # if verbose >= 3, be verbose (show all messages from other modules)
+        # if verbose == 2, be verbose, but silence msrest, urllib3 and requests_oauthlib
+        # for the others, keep the logging level as set
+        logging.getLogger("msrest").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+        logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)
+
+
+def _debug_args(args: Args) -> None:
+    # debug args
+    # secret is required, so no risks in adding it here if not present
+    args_dict = vars(args) | {"secret": "****"}
+    for key, value in args_dict.items():
+        LOGGER.debug("argparse: %s = %r", key, value)
+
+
+def agent_azure_main(args: Args) -> int:
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
 
+    _setup_logging(args.verbose)
+    _debug_args(args)
+
     return asyncio.run(main_async(args, selector))
+
+
+def main() -> int:
+    return special_agent_main(parse_arguments, agent_azure_main)
 
 
 if __name__ == "__main__":

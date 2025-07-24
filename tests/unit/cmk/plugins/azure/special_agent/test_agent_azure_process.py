@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import argparse
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -14,7 +15,6 @@ import pytest
 from cmk.plugins.azure.special_agent.agent_azure import (
     _collect_resources,
     _get_resource_health_sections,
-    Args,
     AzureResource,
     AzureSection,
     get_group_labels,
@@ -37,6 +37,8 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     BaseAsyncApiClient,
 )
 from cmk.utils.http_proxy_config import NoProxyConfig
+
+Args = argparse.Namespace
 
 
 class MockBaseAsyncApiClient(BaseAsyncApiClient):

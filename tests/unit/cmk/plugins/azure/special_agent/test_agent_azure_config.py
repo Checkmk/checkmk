@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import logging
 from collections.abc import Sequence
 
 import pytest
 
 from cmk.plugins.azure.special_agent.agent_azure import (
-    Args,
+    _debug_args,
     AzureResource,
     ExplicitConfig,
     parse_arguments,
@@ -17,6 +18,8 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagBasedConfig,
     TagsImportPatternOption,
 )
+
+Args = argparse.Namespace
 
 ARGV = [
     "--authority",
@@ -83,6 +86,7 @@ ARGS = Args(
                 "argparse: dump_config = False",
                 "argparse: timeout = 10",
                 "argparse: piggyback_vms = 'grouphost'",
+                "argparse: authority = 'global'",
                 "argparse: subscriptions = ['subscription-id']",
                 "argparse: all_subscriptions = False",
                 "argparse: client = 'client-id'",
@@ -94,7 +98,6 @@ ARGS = Args(
                 "argparse: require_tag_value = [['tag2', 'value2']]",
                 "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
-                "argparse: authority = 'global'",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
             ],
@@ -109,6 +112,8 @@ def test_parse_arguments(
 ) -> None:
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args
+    # also test debug_args
+    _debug_args(args)
     assert caplog.messages == expected_log
 
 

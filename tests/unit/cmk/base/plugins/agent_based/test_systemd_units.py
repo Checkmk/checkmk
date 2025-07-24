@@ -1275,7 +1275,7 @@ def test_check_systemd_units_sockets(
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
-                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.OK, notice="Ignored: 1"),
             ],
             id="Failed, but ignored service",
@@ -1316,7 +1316,7 @@ def test_check_systemd_units_sockets(
             [
                 Result(state=State.OK, summary="Total: 2"),
                 Result(state=State.OK, summary="Disabled: 0"),
-                Result(state=State.CRIT, summary="Failed: 2"),
+                Result(state=State.CRIT, summary="Failed: 1"),
                 Result(
                     state=State.CRIT,
                     summary="1 service failed (zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100)",
@@ -1351,7 +1351,7 @@ def test_check_systemd_units_sockets(
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 1"),
-                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, summary="Failed: 0"),
             ],
             id="One failed, but disabled",
         ),

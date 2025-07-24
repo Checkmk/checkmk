@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-07-23 14:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -5284,6 +5284,9 @@ msgstr "Aggregationsgruppenbaum"
 
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
+
+msgid "Aggregation method"
+msgstr "Aggregationsmethode"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -16444,6 +16447,10 @@ msgstr "Benutzerdefinierte Benachrichtigungstabelle von Benutzer %s"
 
 msgid "Custom notification table of this user"
 msgstr "Benutzerdefinierte Benachrichtigungstabelle dieses Benutzers"
+
+#, fuzzy
+msgid "Custom port"
+msgstr "Benutzerdefinierter Host"
 
 msgid "Custom probe state"
 msgstr "Individueller Zustand der Messung"
@@ -48771,8 +48778,8 @@ msgstr "Bitte geben Sie mindestens eine Adresse an"
 
 msgid "Please specify at least one \"Open telemetry hosts creation option\""
 msgstr ""
-"Bitte geben Sie mindestens eine "
-"\"Option für die Erstellung von OpenTelemetry-Hosts\" an"
+"Bitte geben Sie mindestens eine \"Option für die Erstellung von "
+"OpenTelemetry-Hosts\" an"
 
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "Bitte mindestens eine \"Option für die Piggyback-Erzeugung\" angeben"
@@ -53124,7 +53131,8 @@ msgid "Run agent as non-root user (Linux) (deprecated)"
 msgstr "Agent als Nicht-Root-Benutzer laufen lassen (Linux) (veraltet)"
 
 msgid "Run agent as non-root, set agent user"
-msgstr "Agent als nicht-root-Benutzer laufen lassen, Agenten-Benutzer festlegen"
+msgstr ""
+"Agent als nicht-root-Benutzer laufen lassen, Agenten-Benutzer festlegen"
 
 msgid "Run agent as root, set agent controller user"
 msgstr ""
@@ -54502,6 +54510,24 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+"Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
+"aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
+"der Replik genommen. Mit dieser Einstellung können Sie alternative "
+"Aggregationsmethoden (min, max, sum, average) wählen, die auf alle letzten "
+"Stichproben unterschiedlicher Replikate für denselben Host angewendet werden "
+"(z. B. gleicher service.name, unterschiedliche service.instance.id)."
+"<br><br>Aggregationen erfolgen nur über den Satz der jüngsten Datenpunkte "
+"pro Replikat seit der letzten Überprüfung"
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -84679,6 +84705,9 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
+msgid "average"
+msgstr "Durchschnitt"
+
 msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
@@ -85568,6 +85597,9 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
+msgid "latest"
+msgstr "letzter"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -85653,6 +85685,9 @@ msgstr "trifft auf regulären Ausdruck zu"
 
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
+
+msgid "max"
+msgstr "Maximum"
 
 msgid "max. duration"
 msgstr "max. Dauer"
@@ -86379,6 +86414,9 @@ msgstr "verbiete alle"
 msgid "sub categories"
 msgstr "Unterkategorien"
 
+msgid "sum"
+msgstr "Summe"
+
 msgid "synchronization"
 msgstr "Synchronisierung"
 
@@ -86744,39 +86782,6 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
-
-#~ msgid "Aggregation method"
-#~ msgstr "Aggregationsmethode"
-
-#~ msgid ""
-#~ "Select how multiple data points from replicas of the same service should "
-#~ "be aggregated. By default, the latest value independent of replica is "
-#~ "taken. With this setting, you can choose alternative aggregation methods "
-#~ "(min, max, sum, average) to apply over all the latest samples of "
-#~ "differing replicas for the same host (e.g. same service.name, different "
-#~ "service.instance.id).<br><br>Aggregations occur only over the set of most "
-#~ "recent data points per replica since the last check"
-#~ msgstr ""
-#~ "Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
-#~ "aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig "
-#~ "von der Replik genommen. Mit dieser Einstellung können Sie alternative "
-#~ "Aggregationsmethoden (min, max, sum, average) wählen, die auf alle "
-#~ "letzten Stichproben unterschiedlicher Replikate für denselben Host "
-#~ "angewendet werden (z. B. gleicher service.name, unterschiedliche "
-#~ "service.instance.id).<br><br>Aggregationen erfolgen nur über den Satz der "
-#~ "jüngsten Datenpunkte pro Replikat seit der letzten Überprüfung"
-
-#~ msgid "average"
-#~ msgstr "Durchschnitt"
-
-#~ msgid "latest"
-#~ msgstr "letzter"
-
-#~ msgid "max"
-#~ msgstr "Maximum"
-
-#~ msgid "sum"
-#~ msgstr "Summe"
 
 #~ msgid "Fail over partner"
 #~ msgstr "Failover-Partner"

@@ -51,7 +51,7 @@ class MasterControlSnapin(SidebarSnapin):
         finally:
             sites.live().set_prepend_site(False)
 
-        for site_id, site_alias in user_sites.sorted_sites():
+        for site_id, site_alias in user_sites.sorted_sites(config.sites):
             container: ContextManager[bool] = (
                 foldable_container(
                     treename="master_control",

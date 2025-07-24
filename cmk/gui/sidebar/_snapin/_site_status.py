@@ -46,7 +46,7 @@ class SiteStatus(SidebarSnapin):
 
         sites.update_site_states_from_dead_sites()
 
-        for sitename, _sitealias in user_sites.sorted_sites():
+        for sitename, _sitealias in user_sites.sorted_sites(config.sites):
             site = config.sites[sitename]
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
@@ -149,7 +149,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
         new_state = request.var("_new_state")
 
-        for sitename, _sitealias in user_sites.sorted_sites():
+        for sitename, _sitealias in user_sites.sorted_sites(config.sites):
             current_state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
             # Enable all disabled sites

@@ -13,12 +13,12 @@ from cmk.gui.logged_in import user as global_user
 from cmk.gui.site_config import enabled_sites, is_replication_enabled, site_is_local
 
 
-def sorted_sites() -> list[tuple[SiteId, str]]:
+def sorted_sites(site_configs: SiteConfigurations) -> list[tuple[SiteId, str]]:
     return sorted(
         [
             (site_id, s["alias"])
             for site_id, s in global_user.authorized_sites(
-                unfiltered_sites=enabled_sites(active_config.sites)
+                unfiltered_sites=enabled_sites(site_configs)
             ).items()
         ],
         key=lambda k: k[1].lower(),

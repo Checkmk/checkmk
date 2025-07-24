@@ -1300,9 +1300,15 @@ class ActivateChanges:
     def get_all_data_required_for_activation_popout(self) -> ActivationChangesSummary:
         self.load()
 
+        changes_that_require_activation: list[tuple[str, ChangeSpec]] = [
+            (change_id, change)
+            for change_id, change in self._all_changes
+            if not change["has_been_activated"]
+        ]
+
         # Count changes per affected site
         site_change_counter: Counter = Counter()
-        for _change_id, change in self._all_changes:
+        for _change_id, change in changes_that_require_activation:
             for site in change["affected_sites"]:
                 site_change_counter[site] += 1
 
@@ -1340,7 +1346,7 @@ class ActivateChanges:
                     if affects_all_sites(change)
                     else ", ".join(sorted(change["affected_sites"])),
                 )
-                for _, change in self._all_changes
+                for _, change in changes_that_require_activation
             ],
         )
 

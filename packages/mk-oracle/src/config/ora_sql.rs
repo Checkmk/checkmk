@@ -311,6 +311,7 @@ impl Discovery {
 #[derive(PartialEq, Debug, Clone)]
 pub enum Mode {
     Port,
+    Special,
 }
 
 impl Mode {
@@ -325,6 +326,7 @@ impl TryFrom<&str> for Mode {
     fn try_from(str: &str) -> Result<Self> {
         match str::to_ascii_lowercase(str).as_ref() {
             values::PORT => Ok(Mode::Port),
+            values::SPECIAL => Ok(Mode::Special),
             _ => Err(anyhow!("unsupported mode")),
         }
     }
@@ -516,12 +518,12 @@ oracle:
     - tablespaces_xxxz1222:
       is_async: yes
     cache_age: 501 # optional(default:600)
-    piggyback_host: "my_pb_host"
+    piggyback_host: "some_pb_host"
     discovery: # optional
-      detect: true # optional(default:yes)
+      detect: false # optional(default:yes)
       include: ["foo", "bar", "INST2"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
-    mode: "port" # optional(default:"port")
+    mode: "special" # optional(default:"port")
     instances: # optional
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
@@ -666,6 +668,15 @@ piggyback:
         let sections = c.sections();
         assert_eq!(sections.cache_age(), 501);
         assert_eq!(sections.sections().len(), 21);
+        assert_eq!(c.piggyback_host(), Some("some_pb_host"));
+        assert!(!c.discovery().detect);
+        let instances = c.instances();
+        assert_eq!(instances.len(), 2);
+        assert_eq!(c.mode, Mode::Special);
+        /*
+        mode: "port" # optional(default:"port")
+        instances: # optional
+        */
     }
 
     #[test]

@@ -73,6 +73,7 @@ pub mod values {
 
     /// Mode::Port
     pub const PORT: &str = "port";
+    pub const SPECIAL: &str = "special";
 }
 
 pub mod defaults {

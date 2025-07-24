@@ -1,6 +1,6 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:xcomp/cc.bzl", "cc_binary", "cc_test")
 
 cc_binary(
     name = "unixcat",
@@ -12,6 +12,7 @@ cc_binary(
     linkopts = [
         "-pthread",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//packages/livestatus:livestatus_poller",
     ],

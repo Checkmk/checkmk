@@ -1,6 +1,6 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "livestatus_poller",
@@ -20,7 +20,8 @@ cc_library(
         "-std=c++20",
     ],
     strip_include_prefix = "include/",
-    visibility = ["//visibility:public"],
+    tags = ["manual"],
+    visibility = ["//:__subpackages__"],
 )
 
 cc_library(
@@ -28,7 +29,8 @@ cc_library(
     hdrs = glob(["include/livestatus/*.h"]),
     copts = ["-std=c++20"],
     strip_include_prefix = "include/",
-    visibility = ["//visibility:public"],
+    tags = ["manual"],
+    visibility = ["//:__subpackages__"],
     deps = ["@asio"],
 )
 
@@ -50,7 +52,11 @@ cc_library(
         "ASIO_DISABLE_CONCEPTS",
         "ASIO_NO_DEPRECATED",
     ],
-    visibility = ["//visibility:public"],
+    tags = ["manual"],
+    visibility = [
+        # Should rather be private
+        "//packages/neb:__pkg__",
+    ],
     deps = [
         ":livestatus_headers",
         ":livestatus_poller",

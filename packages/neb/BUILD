@@ -1,7 +1,7 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
-load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
 define_from_flag(
     name = "cmk_version_define",
@@ -15,6 +15,7 @@ cc_library(
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
     strip_include_prefix = "include/",
+    tags = ["manual"],
     deps = [":cmk_version_define"],
 )
 
@@ -28,7 +29,10 @@ cc_library(
         ],
     ),
     strip_include_prefix = "third_party/include/",
-    tags = ["no-clang-tidy"],
+    tags = [
+        "manual",
+        "no-clang-tidy",
+    ],
 )
 
 cc_library(
@@ -68,6 +72,7 @@ cc_library(
         "-std=c++20",
     ],
     strip_include_prefix = "include/",
+    tags = ["manual"],
     deps = [
         ":neb_nagios_headers",
         ":neb_version",

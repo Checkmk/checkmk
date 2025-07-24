@@ -25,6 +25,7 @@ import {
 } from '@/lib/unified-search/providers/unified'
 import CmkChip from '@/components/CmkChip.vue'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
+import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
 
 const { t } = usei18n('unified-search-app')
 
@@ -68,7 +69,7 @@ function toggleLeft() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (searchUtils.input.suggestionsActive.value === false) {
+  if (searchUtils.input.suggestionsActive.value === false && searchResultNotEmpty()) {
     if (set) {
       currentlySelected.value = d
     } else {
@@ -90,7 +91,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
 }
 
 function calcCurrentlySelectedTab(d: number, set: boolean = false) {
-  if (searchUtils.input.suggestionsActive.value === false) {
+  if (searchUtils.input.suggestionsActive.value === false && searchResultNotEmpty()) {
     if (set) {
       currentlySelectedTab.value = d
     } else {
@@ -165,11 +166,19 @@ immediateWatch(
 onBeforeUnmount(() => {
   searchUtils.shortCuts.remove(scCallbackIds.value)
 })
+
+function searchResultNotEmpty(): boolean {
+  return (
+    typeof tabbedResults.value[0] !== 'undefined' &&
+    typeof tabbedResults.value[0].results !== 'undefined' &&
+    tabbedResults.value[0].results.length > 0
+  )
+}
 </script>
 
 <template>
-  <div class="cmk-unified-search-result-tabs">
-    <div v-if="tabbedResults.length > 0" class="cmk-unified-search-tab-info">
+  <div v-if="searchResultNotEmpty()" class="cmk-unified-search-result-tabs">
+    <div class="cmk-unified-search-tab-info">
       <span>{{ t('press', 'Press') }}</span>
       <CmkChip size="small" :content="t('ctrl', 'Ctrl')"></CmkChip>+<CmkChip
         class="arrow-key left"
@@ -179,7 +188,7 @@ onBeforeUnmount(() => {
       >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip><br />
       <span>{{ t('to-nav-tabs', 'to navigate between tabs') }}</span>
     </div>
-    <CmkTabs v-if="tabbedResults.length > 0" v-model="tabModel">
+    <CmkTabs v-model="tabModel">
       <template #tabs>
         <CmkTab
           v-for="(tab, idx) in tabbedResults"
@@ -232,6 +241,7 @@ onBeforeUnmount(() => {
       </template>
     </CmkTabs>
   </div>
+  <UnifiedSearchEmptyResults v-if="!searchResultNotEmpty()"></UnifiedSearchEmptyResults>
 </template>
 
 <style scoped>

@@ -8,14 +8,11 @@ import usei18n from '@/lib/i18n'
 import ResultList from './result/ResultList.vue'
 import ResultItem from './result/ResultItem.vue'
 import { onBeforeUnmount, ref } from 'vue'
-import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 import type { SearchHistorySearchResult } from '@/lib/unified-search/providers/history'
 import { getSearchUtils, type UnifiedSearchQueryLike } from './providers/search-utils'
-import {
-  providerIcons,
-  type UnifiedSearchResultElement
-} from '@/lib/unified-search/providers/unified'
+import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
+import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 
 const { t } = usei18n('unified-search-app')
 
@@ -67,11 +64,6 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   }
 }
 
-function handleItemClick(item: UnifiedSearchResultElement) {
-  searchUtils.history?.add(new HistoryEntry(searchUtils.query.toQueryLike(), item))
-  searchUtils.closeSearch()
-}
-
 const isFocused = (i: number): boolean => currentlySelected.value === i
 
 const props = defineProps<{
@@ -85,16 +77,13 @@ immediateWatch(
       const res = await newHistoryResult.result
       if (res) {
         recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
-        recentlySearches.value = res.queries
-          .filter((q) => q.input !== '')
-          .slice(0, maxRecentlySearched)
+        recentlySearches.value = res.queries.slice(0, maxRecentlySearched)
         return
       }
     }
 
     recentlyViewed.value = searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
-    recentlySearches.value =
-      searchUtils.history?.getQueries(maxRecentlySearched).filter((q) => q.input !== '') || []
+    recentlySearches.value = searchUtils.history?.getQueries(maxRecentlySearched) || []
   }
 )
 
@@ -104,48 +93,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="recentlyViewed.length > 0" class="recently-viewed">
-    <h2>
-      {{ t('recently-viewed', 'Recently viewed') }}
-      <button
-        @click="
-          () => {
-            searchUtils.history?.resetEntries()
-            recentlyViewed = []
-          }
-        "
-      >
-        {{ t('clear-all', 'Clear all') }}
-      </button>
-    </h2>
-    <ResultList>
-      <ResultItem
-        v-for="(item, idx) in recentlyViewed"
-        ref="recently-viewed-item"
-        :key="item.element.url"
-        :idx="idx"
-        :title="item.element.title"
-        :context="item.element.context"
-        :icon="providerIcons[item.element.provider]"
-        :url="item.element.url"
-        :html="searchUtils.highlightQuery(item.element.title)"
-        :provider="item.element.provider"
-        :topic="item.element.topic"
-        :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"
-        :focus="isFocused(idx)"
-        @keypress.enter="
-          () => {
-            handleItemClick(item.element)
-          }
-        "
-        @click="
-          () => {
-            handleItemClick(item.element)
-          }
-        "
-      ></ResultItem>
-    </ResultList>
-  </div>
+  <UnifiedSearchRecentlyViewed
+    :focus="currentlySelected"
+    :history-entries="recentlyViewed"
+  ></UnifiedSearchRecentlyViewed>
 
   <div v-if="recentlySearches.length > 0" class="recent-searches">
     <h2>

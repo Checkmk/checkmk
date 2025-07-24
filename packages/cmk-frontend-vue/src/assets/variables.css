@@ -132,6 +132,7 @@
     --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action.svg');
     --icon-checkmark-plus: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark_plus.svg');
     --icon-export-link: url('~cmk-frontend/src/themes/facelift/images/icon_export_link.svg');
+    --icon-reload: url('~cmk-frontend/src/themes/facelift/images/icon_reload_cmk.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -190,6 +191,7 @@
     --icon-checkmark-plus: url('~cmk-frontend/src/themes/modern-dark/images/icon_checkmark_plus.svg');
     --icon-export-link: url('~cmk-frontend/src/themes/modern-dark/images/icon_export_link.svg');
     --icon-frameurl: url('~cmk-frontend/src/themes/facelift/images/icon_frameurl.svg');
+    --icon-reload: url('~cmk-frontend/src/themes/modern-dark/images/icon_reload_cmk.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

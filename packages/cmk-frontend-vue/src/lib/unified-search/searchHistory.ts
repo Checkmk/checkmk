@@ -48,6 +48,7 @@ export class SearchHistoryService {
 
   public getQueries(limit?: number): UnifiedSearchQueryLike[] {
     return this.queries.value
+      .filter((q) => q.input !== '')
       .filter((value, index, array) => {
         return array.indexOf(value) === index
       })

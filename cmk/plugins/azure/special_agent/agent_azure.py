@@ -242,6 +242,10 @@ class FetchedResource(Enum):
     vaults = ("Microsoft.RecoveryServices/vaults", "vaults")
     app_gateways = ("Microsoft.Network/applicationGateways", "applicationgateways")
     load_balancers = ("Microsoft.Network/loadBalancers", "loadbalancers")
+    virtual_network_gateways = (
+        "Microsoft.Network/virtualNetworkGateways",
+        "virtualnetworkgateways",
+    )
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -1095,9 +1099,13 @@ async def get_remote_peerings(
         if subscription != mgmt_client.subscription:
             continue
 
-        peering_view = await mgmt_client.vnet_peering_view(
-            group, providers, vnet_id, vnet_peering_id
+        peering_view = await mgmt_client.get_async(
+            f"resourceGroups/{group}/providers/{providers}/virtualNetworks/{vnet_id}/virtualNetworkPeerings/{vnet_peering_id}",
+            params={
+                "api-version": "2024-10-01",
+            },
         )
+
         vnet_peering = {
             **filter_keys(peering_view, peering_keys),
             **filter_keys(peering_view["properties"], peering_keys),
@@ -1113,11 +1121,20 @@ async def get_vnet_gw_health(mgmt_client: MgmtApiClient, resource: Mapping) -> M
     _, group, providers, vnet_gw = get_params_from_azure_id(
         resource["id"], resource_types=["providers", "virtualNetworkGateways"]
     )
-    health_view = await mgmt_client.vnet_gateway_health(group, providers, vnet_gw)
+
+    health_view = await mgmt_client.get_async(
+        f"resourceGroups/{group}/providers/{providers}/virtualNetworkGateways/{vnet_gw}/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
+        params={
+            "api-version": "2025-04-01",
+        },
+    )
+
     return filter_keys(health_view["properties"], health_keys)
 
 
-async def process_virtual_net_gw(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
+async def process_virtual_net_gw(
+    api_client: MgmtApiClient, resource: AzureResource
+) -> AzureSection:
     gw_keys = (
         "bgpSettings",
         "disableIPSecReplayProtection",
@@ -1127,14 +1144,31 @@ async def process_virtual_net_gw(mgmt_client: MgmtApiClient, resource: AzureReso
         "enableBgp",
     )
 
-    gw_view = await mgmt_client.vnet_gateway_view(resource.info["group"], resource.info["name"])
+    gw_view = await api_client.get_async(
+        f"resourceGroups/{resource.info['group']}/providers/Microsoft.Network/virtualNetworkGateways/{resource.info['name']}",
+        params={
+            "api-version": "2024-05-01",
+        },
+    )
+
     resource.info["specific_info"] = filter_keys(gw_view["properties"], gw_keys)
 
-    resource.info["properties"] = {}
-    resource.info["properties"]["remote_vnet_peerings"] = await get_remote_peerings(
-        mgmt_client, gw_view
+    vnet_peerings, vnet_health = await asyncio.gather(
+        get_remote_peerings(api_client, gw_view),
+        get_vnet_gw_health(api_client, gw_view),
     )
-    resource.info["properties"]["health"] = await get_vnet_gw_health(mgmt_client, gw_view)
+    resource.info["properties"] = {
+        "remote_vnet_peerings": vnet_peerings,
+        "health": vnet_health,
+    }
+
+    section = AzureSection(
+        FetchedResource.virtual_network_gateways.section,
+        resource.piggytargets,
+    )
+    section.add(resource.dumpinfo())
+
+    return section
 
 
 class MetricCache(DataCache):
@@ -1870,18 +1904,15 @@ async def process_single_resources(
 ) -> Sequence[Section]:
     sections = []
     tasks = set()
-    for resource_id, resource in monitored_resources_by_id.items():
+    for _resource_id, resource in monitored_resources_by_id.items():
         resource_type = resource.info["type"]
         if resource_type in BULK_QUERIED_RESOURCES:
             continue
 
-        # TODO: convert to real async:
-        elif resource_type == "Microsoft.Network/virtualNetworkGateways":
-            await process_virtual_net_gw(mgmt_client, resource)
-        # ----
-
         if resource_type == FetchedResource.vaults.type:
             tasks.add(process_vault(mgmt_client, resource))
+        elif resource_type == FetchedResource.virtual_network_gateways.type:
+            tasks.add(process_virtual_net_gw(mgmt_client, resource))
         else:
             # simple sections without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:

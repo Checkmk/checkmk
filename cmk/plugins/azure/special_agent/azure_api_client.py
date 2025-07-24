@@ -348,26 +348,6 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         return ",".join(sorted(retry_names))
 
-    async def vnet_gateway_view(self, group, name):
-        url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
-        return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
-
-    async def vnet_peering_view(self, group, providers, vnet_id, vnet_peering_id):
-        url = "resourceGroups/{}/providers/{}/virtualNetworks/{}/virtualNetworkPeerings/{}"
-        return await self.get_async(
-            url.format(group, providers, vnet_id, vnet_peering_id),
-            params={"api-version": "2022-01-01"},
-        )
-
-    async def vnet_gateway_health(self, group, providers, vnet_gw):
-        url = (
-            "resourceGroups/{}/providers/{}/virtualNetworkGateways/{}/providers/"
-            "Microsoft.ResourceHealth/availabilityStatuses/current"
-        )
-        return await self.get_async(
-            url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
-        )
-
     # TODO: extract
     async def metrics(self, region, resource_ids, params):
         if self._regional_url is None:

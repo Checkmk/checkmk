@@ -41,6 +41,7 @@ from cmk.gui.openapi.endpoints import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
 from .api_endpoints.host_config import registration as api_host_config
+from .api_endpoints.password import registration as api_password
 from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -80,9 +81,7 @@ def register(
     host_internal.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     host_tag_group.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     notification_rules.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    password.register(
-        endpoint_family_registry, endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
-    )
+    password.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     parent_scan.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     rule.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     ruleset.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
@@ -101,6 +100,11 @@ def register(
         versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
     )
     api_user_role.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
+    api_password.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
         ignore_duplicates=ignore_duplicate_endpoints,

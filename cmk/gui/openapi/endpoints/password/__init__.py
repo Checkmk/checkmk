@@ -17,7 +17,7 @@ from cmk.gui.openapi.endpoints.utils import (
     update_customer_info,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
-from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily, EndpointFamilyRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -268,12 +268,10 @@ def serialize_password(ident: str, details: Password) -> DomainObject:
 
 
 def register(
-    endpoint_family_registry: EndpointFamilyRegistry,
     endpoint_registry: EndpointRegistry,
     *,
     ignore_duplicates: bool,
 ) -> None:
-    endpoint_family_registry.register(PASSWORD_FAMILY, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(create_password, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(update_password, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(delete_password, ignore_duplicates=ignore_duplicates)

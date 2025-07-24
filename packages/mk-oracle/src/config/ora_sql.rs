@@ -49,7 +49,6 @@ impl Default for Config {
 
 impl Config {
     pub fn from_string<T: AsRef<str>>(source: T) -> Result<Option<Self>> {
-        log::error!("ddddddddddddddddddddddddddd");
         let r = source.as_ref();
 
         let y = YamlLoader::load_from_str(r)?;

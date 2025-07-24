@@ -5404,6 +5404,10 @@ msgstr "Arborele grupului de agregare"
 msgid "Aggregation groups"
 msgstr "Grupuri de agregare"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Denumire agregare"
+
 msgid "Aggregation name"
 msgstr "Denumire agregare"
 
@@ -17051,6 +17055,10 @@ msgstr "Tabel de notificare personalizat pentru utilizatorul %s"
 msgid "Custom notification table of this user"
 msgstr "Tabel de notificare personalizat al acestui utilizator"
 
+#, fuzzy
+msgid "Custom port"
+msgstr "Gazdă personalizată"
+
 msgid "Custom probe state"
 msgstr "Starea sondei personalizate"
 
@@ -20736,9 +20744,6 @@ msgstr ""
 
 msgid "Do not bake a generic agent package for this folder."
 msgstr "Nu pregătiți un pachet de agent generic pentru acest dosar."
-
-msgid "Do not check"
-msgstr "Nu verificați"
 
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
@@ -27086,10 +27091,23 @@ msgstr "Generarea unui raport în cadrul unei sarcini de lucru în fundal"
 msgid "Generate report preview in background job"
 msgstr "Generarea previzualizării rapoartelor în cadrul unei sarcini de fundal"
 
+#, fuzzy
+msgid "Generate service labels"
+msgstr "Actualizarea etichetelor de serviciu"
+
+msgid ""
+"Generate service labels based on matching conditions. All matching entries "
+"will add to the list of service labels."
+msgstr ""
+
 msgid "Generate service labels for created groups"
 msgstr "Generarea de etichete de serviciu pentru grupurile create"
 
 msgid "Generate service labels for discovered interfaces"
+msgstr "Generarea de etichete de serviciu pentru interfețele descoperite"
+
+#, fuzzy
+msgid "Generate service labels for discovered matching interfaces"
 msgstr "Generarea de etichete de serviciu pentru interfețele descoperite"
 
 msgid ""
@@ -40673,6 +40691,10 @@ msgstr "Potrivire"
 msgid "Matching Criteria"
 msgstr "Criterii de potrivire"
 
+#, fuzzy
+msgid "Matching conditions"
+msgstr "Specificați condițiile de potrivire"
+
 msgid "Matching criteria"
 msgstr "Criterii de potrivire"
 
@@ -41768,10 +41790,6 @@ msgstr "Migrarea utilizatorilor către o altă conexiune"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "A migrat %d %s la conectorul '%s': %s."
-
-#, fuzzy
-msgid "Migrated Parents"
-msgstr "Migrarea utilizatorilor"
 
 msgid "Migrating"
 msgstr "Migrarea"
@@ -57276,6 +57294,16 @@ msgstr "Selectați dintr-o listă de măsurători cunoscute de Checkmk"
 #, fuzzy
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Selectați dintr-o listă de nume de gazde cunoscute de Checkmk"
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -88149,6 +88177,10 @@ msgstr "aplicație autentificator"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Media"
+
 msgid "avg. duration"
 msgstr "durata medie"
 
@@ -89043,6 +89075,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "ultima notificare"
 
+#, fuzzy
+msgid "latest"
+msgstr "test"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -89129,6 +89165,10 @@ msgstr "se potrivește cu unul dintre regex"
 
 msgid "matches regex"
 msgstr "se potrivește cu regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maxim"
 
 msgid "max. duration"
 msgstr "durata maximă"
@@ -89856,6 +89896,10 @@ msgstr "Restricționează toate"
 msgid "sub categories"
 msgstr "subcategorii"
 
+#, fuzzy
+msgid "sum"
+msgstr "Suma"
+
 msgid "synchronization"
 msgstr "sincronizare"
 
@@ -90217,29 +90261,16 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
-#, fuzzy
-#~ msgid "Aggregation method"
-#~ msgstr "Denumire agregare"
+#~ msgid "Do not check"
+#~ msgstr "Nu verificați"
 
 #, fuzzy
-#~ msgid "average"
-#~ msgstr "Media"
-
-#, fuzzy
-#~ msgid "latest"
-#~ msgstr "test"
-
-#, fuzzy
-#~ msgid "max"
-#~ msgstr "maxim"
+#~ msgid "Migrated Parents"
+#~ msgstr "Migrarea utilizatorilor"
 
 #, fuzzy
 #~ msgid "required"
 #~ msgstr "Port necesar"
-
-#, fuzzy
-#~ msgid "sum"
-#~ msgstr "Suma"
 
 #, fuzzy
 #~ msgid "Community translated languages"

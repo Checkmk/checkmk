@@ -5393,6 +5393,10 @@ msgstr "Boom van de aggregatiegroep"
 msgid "Aggregation groups"
 msgstr "Aggregatiegroepen"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Aggregatienaam"
+
 msgid "Aggregation name"
 msgstr "Naam aggregatie"
 
@@ -17037,6 +17041,10 @@ msgstr "Aangepaste meldingentabel voor gebruiker %s"
 msgid "Custom notification table of this user"
 msgstr "Aangepaste meldingentabel van deze gebruiker"
 
+#, fuzzy
+msgid "Custom port"
+msgstr "Aangepaste gastheer"
+
 msgid "Custom probe state"
 msgstr "Aangepaste sondestatus"
 
@@ -20698,9 +20706,6 @@ msgstr ""
 
 msgid "Do not bake a generic agent package for this folder."
 msgstr "Bak geen algemeen agentpakket voor deze map."
-
-msgid "Do not check"
-msgstr "Niet controleren"
 
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
@@ -27026,10 +27031,23 @@ msgstr "Rapport genereren in achtergrondtaak"
 msgid "Generate report preview in background job"
 msgstr "Genereer rapportvoorbeeld in achtergrondtaak"
 
+#, fuzzy
+msgid "Generate service labels"
+msgstr "Overeenkomende dienst labels"
+
+msgid ""
+"Generate service labels based on matching conditions. All matching entries "
+"will add to the list of service labels."
+msgstr ""
+
 msgid "Generate service labels for created groups"
 msgstr "Aanmaken van service labels voor aangemaakte groepen"
 
 msgid "Generate service labels for discovered interfaces"
+msgstr "Genereer dienstlabels voor ontdekte interfaces"
+
+#, fuzzy
+msgid "Generate service labels for discovered matching interfaces"
 msgstr "Genereer dienstlabels voor ontdekte interfaces"
 
 msgid ""
@@ -40596,6 +40614,10 @@ msgstr "Passend bij"
 msgid "Matching Criteria"
 msgstr "Bijbehorende criteria"
 
+#, fuzzy
+msgid "Matching conditions"
+msgstr "Specificeer overeenstemmende voorwaarden"
+
 msgid "Matching criteria"
 msgstr "Bijbehorende criteria"
 
@@ -41697,10 +41719,6 @@ msgstr "Gebruikers migreren naar een andere verbinding"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Gemigreerd %d %s naar connector '%s': %s"
-
-#, fuzzy
-msgid "Migrated Parents"
-msgstr "Gebruikers migreren"
 
 #, fuzzy
 msgid "Migrating"
@@ -57187,6 +57205,16 @@ msgid "Select from a list of metrics known to Checkmk"
 msgstr ""
 
 msgid "Select from a list of service names known to Checkmk"
+msgstr ""
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
 msgstr ""
 
 #, fuzzy
@@ -87929,6 +87957,10 @@ msgstr "Authenticatie"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Gemiddeld"
+
 msgid "avg. duration"
 msgstr "gemiddelde duur"
 
@@ -88830,6 +88862,10 @@ msgstr "laserFout"
 msgid "last notification"
 msgstr "laatste mededeling"
 
+#, fuzzy
+msgid "latest"
+msgstr "testen"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -88917,6 +88953,10 @@ msgstr "overeenkomt met een van regex"
 
 msgid "matches regex"
 msgstr "komt overeen met regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maximum"
 
 msgid "max. duration"
 msgstr "max. duur"
@@ -89638,6 +89678,10 @@ msgstr "Beperk alle"
 msgid "sub categories"
 msgstr "subcategorieën"
 
+#, fuzzy
+msgid "sum"
+msgstr "Som"
+
 msgid "synchronization"
 msgstr "synchronisatie"
 
@@ -89997,29 +90041,16 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
-#, fuzzy
-#~ msgid "Aggregation method"
-#~ msgstr "Aggregatienaam"
+#~ msgid "Do not check"
+#~ msgstr "Niet controleren"
 
 #, fuzzy
-#~ msgid "average"
-#~ msgstr "Gemiddeld"
-
-#, fuzzy
-#~ msgid "latest"
-#~ msgstr "testen"
-
-#, fuzzy
-#~ msgid "max"
-#~ msgstr "maximum"
+#~ msgid "Migrated Parents"
+#~ msgstr "Gebruikers migreren"
 
 #, fuzzy
 #~ msgid "required"
 #~ msgstr "Vereiste poort"
-
-#, fuzzy
-#~ msgid "sum"
-#~ msgstr "Som"
 
 #, fuzzy
 #~ msgid "Community translated languages"

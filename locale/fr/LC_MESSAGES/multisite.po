@@ -5426,6 +5426,10 @@ msgstr "Arbre du groupe d'agrégation"
 msgid "Aggregation groups"
 msgstr "Groupes d'agrégation"
 
+#, fuzzy
+msgid "Aggregation method"
+msgstr "Nom de l'agrégation"
+
 msgid "Aggregation name"
 msgstr "Nom de l'agrégation"
 
@@ -17156,6 +17160,10 @@ msgstr "Tableau de notification personnalisé pour l'utilisateur %s"
 msgid "Custom notification table of this user"
 msgstr "Table de notification personnalisée de cet utilisateur"
 
+#, fuzzy
+msgid "Custom port"
+msgstr "Hôte personnalisé"
+
 msgid "Custom probe state"
 msgstr "État de la sonde personnalisé"
 
@@ -20849,9 +20857,6 @@ msgstr ""
 
 msgid "Do not bake a generic agent package for this folder."
 msgstr "Ne créez pas de paquet d'agent générique pour ce dossier."
-
-msgid "Do not check"
-msgstr "Ne pas vérifier"
 
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Ne pas vérifier l'âge des tables jamais analysées/vidées"
@@ -27231,10 +27236,23 @@ msgstr "Générer un rapport en tâche de fond"
 msgid "Generate report preview in background job"
 msgstr "Générer un aperçu du rapport en tâche de fond"
 
+#, fuzzy
+msgid "Generate service labels"
+msgstr "Faire correspondre les étiquettes de service"
+
+msgid ""
+"Generate service labels based on matching conditions. All matching entries "
+"will add to the list of service labels."
+msgstr ""
+
 msgid "Generate service labels for created groups"
 msgstr "Générer des étiquettes de service pour les groupes créés"
 
 msgid "Generate service labels for discovered interfaces"
+msgstr "Générer des étiquettes de service pour les interfaces découvertes"
+
+#, fuzzy
+msgid "Generate service labels for discovered matching interfaces"
 msgstr "Générer des étiquettes de service pour les interfaces découvertes"
 
 msgid ""
@@ -40907,6 +40925,10 @@ msgstr "Correspondant"
 msgid "Matching Criteria"
 msgstr "Critères d'appariement"
 
+#, fuzzy
+msgid "Matching conditions"
+msgstr "Spécifier les conditions de correspondance"
+
 msgid "Matching criteria"
 msgstr "Critères d'appariement"
 
@@ -42014,10 +42036,6 @@ msgstr "Migrer les utilisateurs vers une autre connexion"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Migration de %d %s vers le connecteur '%s' : %s"
-
-#, fuzzy
-msgid "Migrated Parents"
-msgstr "Migrer les utilisateurs"
 
 #, fuzzy
 msgid "Migrating"
@@ -57663,6 +57681,16 @@ msgid "Select from a list of metrics known to Checkmk"
 msgstr ""
 
 msgid "Select from a list of service names known to Checkmk"
+msgstr ""
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
 msgstr ""
 
 #, fuzzy
@@ -88751,6 +88779,10 @@ msgstr "Ajouter Application d'Authentification"
 msgid "auto"
 msgstr "auto"
 
+#, fuzzy
+msgid "average"
+msgstr "Moyenne"
+
 msgid "avg. duration"
 msgstr "durée moyenne"
 
@@ -89648,6 +89680,10 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "dernière notification"
 
+#, fuzzy
+msgid "latest"
+msgstr "tests"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -89735,6 +89771,10 @@ msgstr "correspond à l'une des expressions rationnelles"
 
 msgid "matches regex"
 msgstr "correspond à un regex"
+
+#, fuzzy
+msgid "max"
+msgstr "maximum"
 
 msgid "max. duration"
 msgstr "durée max"
@@ -90453,6 +90493,10 @@ msgstr "Restreindre tous"
 msgid "sub categories"
 msgstr "sous-catégories"
 
+#, fuzzy
+msgid "sum"
+msgstr "Somme"
+
 msgid "synchronization"
 msgstr "synchronisation"
 
@@ -90812,29 +90856,16 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
-#, fuzzy
-#~ msgid "Aggregation method"
-#~ msgstr "Nom de l'agrégation"
+#~ msgid "Do not check"
+#~ msgstr "Ne pas vérifier"
 
 #, fuzzy
-#~ msgid "average"
-#~ msgstr "Moyenne"
-
-#, fuzzy
-#~ msgid "latest"
-#~ msgstr "tests"
-
-#, fuzzy
-#~ msgid "max"
-#~ msgstr "maximum"
+#~ msgid "Migrated Parents"
+#~ msgstr "Migrer les utilisateurs"
 
 #, fuzzy
 #~ msgid "required"
 #~ msgstr "Port requis"
-
-#, fuzzy
-#~ msgid "sum"
-#~ msgstr "Somme"
 
 #, fuzzy
 #~ msgid "Community translated languages"

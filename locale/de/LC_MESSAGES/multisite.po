@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-22 17:35+0000\n"
+"PO-Revision-Date: 2025-07-23 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5257,6 +5257,9 @@ msgstr "Aggregationsgruppenbaum"
 
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
+
+msgid "Aggregation method"
+msgstr "Aggregationsmethode"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -16499,6 +16502,10 @@ msgstr "Benutzerdefinierte Benachrichtigungstabelle von Benutzer %s"
 msgid "Custom notification table of this user"
 msgstr "Benutzerdefinierte Benachrichtigungstabelle dieses Benutzers"
 
+#, fuzzy
+msgid "Custom port"
+msgstr "Benutzerdefinierter Host"
+
 msgid "Custom probe state"
 msgstr "Individueller Zustand der Messung"
 
@@ -20031,9 +20038,6 @@ msgstr ""
 
 msgid "Do not bake a generic agent package for this folder."
 msgstr "Backen Sie kein allgemeines Agentenpaket für diesen Ordner."
-
-msgid "Do not check"
-msgstr "Nicht überprüfen"
 
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen nicht überprüfen"
@@ -26170,10 +26174,23 @@ msgstr "Erstelle Report in Hintergrund-Prozess"
 msgid "Generate report preview in background job"
 msgstr "Erstelle die Report Vorschau in einem Hintergrund-Prozess"
 
+#, fuzzy
+msgid "Generate service labels"
+msgstr "Service-Labels aktualisieren"
+
+msgid ""
+"Generate service labels based on matching conditions. All matching entries "
+"will add to the list of service labels."
+msgstr ""
+
 msgid "Generate service labels for created groups"
 msgstr "Erzeuge Service-Labels für erstellte Gruppen"
 
 msgid "Generate service labels for discovered interfaces"
+msgstr "Erzeuge Service-Labels für erkannte Schnittstellen"
+
+#, fuzzy
+msgid "Generate service labels for discovered matching interfaces"
 msgstr "Erzeuge Service-Labels für erkannte Schnittstellen"
 
 msgid ""
@@ -39102,6 +39119,10 @@ msgstr "Übereinstimmend"
 msgid "Matching Criteria"
 msgstr "Zutreffendes Suchkriterium"
 
+#, fuzzy
+msgid "Matching conditions"
+msgstr "Übereinstimmende Bedingungen spezifizieren"
+
 msgid "Matching criteria"
 msgstr "Zutreffendes Suchkriterium"
 
@@ -40156,9 +40177,6 @@ msgstr "Benutzer auf eine andere Verbindung migrieren"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "%d %s auf Connector '%s': %s migriert"
-
-msgid "Migrated Parents"
-msgstr "Migrierte Parents"
 
 msgid "Migrating"
 msgstr "Migration"
@@ -53387,7 +53405,7 @@ msgstr ""
 "Services zugewiesen werden."
 
 msgid "Rules to configure the behavior of monitored hosts."
-msgstr "Regeln um das Verhalten von überwachten Hosts zu konfigurieren."
+msgstr "Regeln, um das Verhalten von überwachten Hosts zu konfigurieren."
 
 msgid ""
 "Rules to set up [wato_services#enforced_services|enforced services]. "
@@ -54800,6 +54818,24 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
+
+msgid ""
+"Select how multiple data points from replicas of the same service should be "
+"aggregated. By default, the latest value independent of replica is taken. "
+"With this setting, you can choose alternative aggregation methods (min, max, "
+"sum, average) to apply over all the latest samples of differing replicas for "
+"the same host (e.g. same service.name, different service.instance.id)."
+"<br><br>Aggregations occur only over the set of most recent data points per "
+"replica since the last check"
+msgstr ""
+"Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
+"aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
+"der Replik genommen. Mit dieser Einstellung können Sie alternative "
+"Aggregationsmethoden (min, max, sum, average) wählen, die auf alle letzten "
+"Stichproben unterschiedlicher Replikate für denselben Host angewendet werden "
+"(z. B. gleicher service.name, unterschiedliche service.instance.id)."
+"<br><br>Aggregationen erfolgen nur über den Satz der jüngsten Datenpunkte "
+"pro Replikat seit der letzten Überprüfung"
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -84791,6 +84827,9 @@ msgstr "Authenticator-App"
 msgid "auto"
 msgstr "automatisch"
 
+msgid "average"
+msgstr "Durchschnitt"
+
 msgid "avg. duration"
 msgstr "durchschnittl. Dauer"
 
@@ -85657,6 +85696,9 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "letzte Benachrichtigung"
 
+msgid "latest"
+msgstr "letzter"
+
 msgid "latin1"
 msgstr "latin1"
 
@@ -85742,6 +85784,9 @@ msgstr "trifft auf regulären Ausdruck zu"
 
 msgid "matches regex"
 msgstr "trifft auf Ausdruck zu"
+
+msgid "max"
+msgstr "Maximum"
 
 msgid "max. duration"
 msgstr "max. Dauer"
@@ -86445,6 +86490,9 @@ msgstr "streng"
 msgid "sub categories"
 msgstr "Unterkategorien"
 
+msgid "sum"
+msgstr "Summe"
+
 msgid "synchronization"
 msgstr "Synchronisierung"
 
@@ -86806,41 +86854,14 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
-#~ msgid "Aggregation method"
-#~ msgstr "Aggregationsmethode"
+#~ msgid "Do not check"
+#~ msgstr "Nicht überprüfen"
 
-#~ msgid ""
-#~ "Select how multiple data points from replicas of the same service should "
-#~ "be aggregated. By default, the latest value independent of replica is "
-#~ "taken. With this setting, you can choose alternative aggregation methods "
-#~ "(min, max, sum, average) to apply over all the latest samples of "
-#~ "differing replicas for the same host (e.g. same service.name, different "
-#~ "service.instance.id).<br><br>Aggregations occur only over the set of most "
-#~ "recent data points per replica since the last check"
-#~ msgstr ""
-#~ "Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
-#~ "aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig "
-#~ "von der Replik genommen. Mit dieser Einstellung können Sie alternative "
-#~ "Aggregationsmethoden (min, max, sum, average) wählen, die auf alle "
-#~ "letzten Stichproben unterschiedlicher Replikate für denselben Host "
-#~ "angewendet werden (z. B. gleicher service.name, unterschiedliche "
-#~ "service.instance.id).<br><br>Aggregationen erfolgen nur über den Satz der "
-#~ "jüngsten Datenpunkte pro Replikat seit der letzten Überprüfung"
-
-#~ msgid "average"
-#~ msgstr "Durchschnitt"
-
-#~ msgid "latest"
-#~ msgstr "letzter"
-
-#~ msgid "max"
-#~ msgstr "Maximum"
+#~ msgid "Migrated Parents"
+#~ msgstr "Migrierte Parents"
 
 #~ msgid "required"
 #~ msgstr "erforderlich"
-
-#~ msgid "sum"
-#~ msgstr "Summe"
 
 #~ msgid "Community translated languages"
 #~ msgstr "Community-übersetzte Sprachen"

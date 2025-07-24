@@ -435,19 +435,28 @@ def flask_app(
     yield from create_flask_app()
 
 
+@pytest.fixture(name="base_without_version")
+def fixture_base_without_version() -> str:
+    return "/NO_SITE/check_mk/api"
+
+
 @pytest.fixture(name="base")
-def fixture_base() -> str:
-    return "/NO_SITE/check_mk/api/1.0"
+def fixture_base(base_without_version: str) -> str:
+    return f"{base_without_version}/1.0"
 
 
 @pytest.fixture()
-def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
-    return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+def api_client(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base_without_version: str
+) -> RestApiClient:
+    return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base_without_version)
 
 
 @pytest.fixture()
-def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
-    return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base_without_version: str) -> ClientRegistry:
+    return get_client_registry(
+        WebTestAppRequestHandler(aut_user_auth_wsgi_app), base_without_version
+    )
 
 
 @pytest.fixture(name="fresh_app_instance", scope="function")

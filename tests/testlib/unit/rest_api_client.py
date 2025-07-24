@@ -18,12 +18,23 @@ import pprint
 import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, NotRequired, Self, TYPE_CHECKING, TypedDict
+from typing import (
+    Any,
+    cast,
+    ClassVar,
+    Literal,
+    NoReturn,
+    NotRequired,
+    Self,
+    TYPE_CHECKING,
+    TypedDict,
+)
 
 from cmk.ccc import version
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
 from cmk.gui.type_defs import DismissableWarning
@@ -328,6 +339,8 @@ class RestApiClient:
     Please feel free to shuffle or convert function arguments if you believe it will increase the usability of the client.
     """
 
+    default_version: ClassVar[APIVersion] = APIVersion.V1
+
     def __init__(self, request_handler: RequestHandler, url_prefix: str):
         self.request_handler = request_handler
         self._url_prefix = url_prefix
@@ -340,6 +353,7 @@ class RestApiClient:
         self,
         method: HTTPMethod,
         url: str,
+        *,
         body: JSON | None = None,
         query_params: Mapping[str, Any] | None = None,
         headers: Mapping[str, str] | None = None,
@@ -348,6 +362,7 @@ class RestApiClient:
         url_is_complete: bool = False,
         use_default_headers: bool = True,
         redirect_timeout_seconds: int = 60,
+        api_version: APIVersion | None = None,
     ) -> Response:
         default_headers: Mapping[str, str] = {
             **(JSON_HEADERS if use_default_headers else {}),
@@ -355,7 +370,7 @@ class RestApiClient:
         }
 
         if not url_is_complete:
-            url = self._url_prefix + url
+            url = f"{self._url_prefix}/{(api_version or self.default_version).value}{url}"
 
         req_body = None if body is None else json.dumps(body)
         resp = self.request_handler.request(
@@ -3228,6 +3243,7 @@ class BrokerConnectionClient(RestApiClient):
 
 class OtelConfigClient(RestApiClient):
     domain: API_DOMAIN = "otel_collector_config"
+    default_version = APIVersion.UNSTABLE
 
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(

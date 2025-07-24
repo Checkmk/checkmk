@@ -7,6 +7,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from .list_passwords import ENDPOINT_LIST_PASSWORDS
+from .show_password import ENDPOINT_SHOW_PASSWORD
 
 
 def register(
@@ -18,5 +19,9 @@ def register(
     endpoint_family_registry.register(PASSWORD_FAMILY, ignore_duplicates=ignore_duplicates)
     versioned_endpoint_registry.register(
         ENDPOINT_LIST_PASSWORDS,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_SHOW_PASSWORD,
         ignore_duplicates=ignore_duplicates,
     )

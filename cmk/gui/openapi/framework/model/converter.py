@@ -19,6 +19,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
@@ -294,3 +295,11 @@ class PermissionsConverter:
             raise ValueError("Validation errors found:\n" + "\n".join(_validation_errors))
 
         return value
+
+
+class PasswordConverter:
+    @staticmethod
+    def exists(ident: str) -> str:
+        if ident not in load_passwords():
+            raise ValueError(f'Password "{ident}" is not known.')
+        return ident

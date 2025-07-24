@@ -8,8 +8,6 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import NewType
 
-from marshmallow import ValidationError
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
@@ -122,23 +120,23 @@ def validate_new_alias(old_alias: str, new_alias: str) -> None:
     if old_alias != new_alias:
         existing_aliases = {role.alias: role_id for role_id, role in get_all_roles().items()}
         if role_id := existing_aliases.get(new_alias):
-            raise ValidationError(_("This alias is already used in the role %s.") % role_id)
+            raise ValueError(_("This alias is already used in the role %s.") % role_id)
 
 
 def validate_new_roleid(old_roleid: str, new_roleid: str) -> None:
     existing_role: UserRole = get_role(RoleID(old_roleid))
     if not new_roleid:
-        raise ValidationError(_("You have to provide a role ID."))
+        raise ValueError(_("You have to provide a role ID."))
 
     if old_roleid != new_roleid:
         if existing_role.builtin:
-            raise ValidationError(_("The ID of a built-in user role cannot be changed"))
+            raise ValueError(_("The ID of a built-in user role cannot be changed"))
 
         if new_roleid in get_all_roles():
-            raise ValidationError(_("The ID is already used by another role"))
+            raise ValueError(_("The ID is already used by another role"))
 
         if not re.match("^[-a-z0-9A-Z_]*$", new_roleid):
-            raise ValidationError(
+            raise ValueError(
                 _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
             )
 

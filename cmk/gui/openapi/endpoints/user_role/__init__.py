@@ -34,8 +34,6 @@ For example, useful for public status monitors hanging on a wall.
 from collections.abc import Mapping
 from typing import Any
 
-from marshmallow import ValidationError
-
 from cmk.gui.config import active_config
 from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.http import Response
@@ -225,14 +223,14 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
     if new_alias := body.get("new_alias", userrole_to_edit.alias):
         try:
             userroles.validate_new_alias(userrole_to_edit.alias, new_alias)
-        except ValidationError as exc:
+        except ValueError as exc:
             return problem(status=400, title="Invalid alias", detail=str(exc))
         userrole_to_edit.alias = new_alias
 
     if new_roleid := body.get("new_role_id"):
         try:
             userroles.validate_new_roleid(userrole_to_edit.name, new_roleid)
-        except ValidationError as exc:
+        except ValueError as exc:
             return problem(status=400, title="Invalid role id", detail=str(exc))
         userrole_to_edit.name = new_roleid
 

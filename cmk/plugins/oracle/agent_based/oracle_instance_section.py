@@ -148,7 +148,7 @@ def _parse_agent_line(line: Sequence[str]) -> InvalidData | GeneralError | Insta
 
     if instance.pdb:
         assert instance.popenmode is not None
-        instance.logins = "RESTRICTED" if str(instance.prestricted).lower() == "no" else "ALLOWED"
+        instance.logins = "RESTRICTED" if str(instance.prestricted).lower() == "yes" else "ALLOWED"
         instance.openmode = instance.popenmode
         instance.up_seconds = instance.pup_seconds
 

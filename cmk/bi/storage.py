@@ -137,7 +137,7 @@ class LookupStore:
         return bool(self._redis_client.exists(lookup_key))
 
     @contextmanager
-    def get_aggregation_lookup_lock(self) -> Generator:
+    def get_aggregation_lookup_lock(self) -> Generator[None, None, None]:
         lock = self._redis_client.lock(self._lookup_key_lock)
         try:
             lock.acquire()

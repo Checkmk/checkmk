@@ -1112,7 +1112,7 @@ class ActivateChanges:
         active_changes: dict[str, ChangeSpec] = {}
         pending_changes: dict[str, ChangeSpec] = {}
 
-        for site_id in activation_sites():
+        for site_id in activation_sites(active_config.sites):
             site_changes = SiteChanges(site_id).read()
             self._changes_by_site[site_id] = site_changes
 
@@ -1158,7 +1158,7 @@ class ActivateChanges:
     @staticmethod
     def _get_number_of_pending_changes(count_limit: int | None = None) -> int:
         changes_counter = 0
-        for site_id in activation_sites():
+        for site_id in activation_sites(active_config.sites):
             changes = SiteChanges(site_id).read()
             changes_counter += len(
                 list(change for change in changes if not has_been_activated(change))
@@ -1183,7 +1183,7 @@ class ActivateChanges:
         return PendingChangesInfo(number=number_of_changes, message=message)
 
     def discard_changes_forbidden(self):
-        for site_id in set(activation_sites()):
+        for site_id in set(activation_sites(active_config.sites)):
             for change in SiteChanges(site_id).read():
                 if change.get("prevent_discard_changes", False):
                     return True
@@ -1214,7 +1214,9 @@ class ActivateChanges:
 
     def dirty_sites(self) -> list[tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
-        return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
+        return [
+            s for s in activation_sites(active_config.sites).items() if self._changes_of_site(s[0])
+        ]
 
     def _site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
         return site_is_local(site) or "secret" in site
@@ -1333,7 +1335,7 @@ class ActivateChanges:
                     if site.get("disabled")
                     else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
                 )
-                for site_id, site in activation_sites().items()
+                for site_id, site in activation_sites(active_config.sites).items()
             ],
             pendingChanges=[
                 PendingChangesSummary(
@@ -1363,7 +1365,9 @@ def is_foreign_change(change: ChangeSpec) -> bool:
 
 
 def affects_all_sites(change: ChangeSpec) -> bool:
-    return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
+    return not set(change["affected_sites"]).symmetric_difference(
+        set(activation_sites(active_config.sites))
+    )
 
 
 def _add_peer_to_peer_connections(
@@ -1397,7 +1401,7 @@ def _add_peer_to_peer_connections(
 def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
     return {
         site_id: site_config
-        for site_id, site_config in activation_sites().items()
+        for site_id, site_config in activation_sites(active_config.sites).items()
         if site_config.get("replication")
     }
 
@@ -1701,7 +1705,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites: Sequence[SiteId]) -> Sequence[SiteId]:
         for site_id in sites:
-            if site_id not in activation_sites():
+            if site_id not in activation_sites(active_config.sites):
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
 
         return sites

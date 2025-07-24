@@ -65,10 +65,10 @@ def get_event_console_site_choices() -> list[tuple[SiteId, str]]:
 
 
 def get_activation_site_choices() -> list[tuple[SiteId, str]]:
-    return site_choices(activation_sites())
+    return site_choices(activation_sites(active_config.sites))
 
 
-def activation_sites() -> SiteConfigurations:
+def activation_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
     """Returns sites that are affected by Setup changes
 
     These sites are shown on activation page and get change entries
@@ -76,9 +76,7 @@ def activation_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {
             site_id: site
-            for site_id, site in global_user.authorized_sites(
-                unfiltered_sites=active_config.sites
-            ).items()
+            for site_id, site in global_user.authorized_sites(unfiltered_sites=site_configs).items()
             if site_is_local(site) or is_replication_enabled(site)
         }
     )

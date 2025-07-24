@@ -113,7 +113,7 @@ class ActivateChangesWriter:
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = activation_sites().keys()
+            sites = activation_sites(active_config.sites).keys()
 
         change_id = self._new_change_id()
 

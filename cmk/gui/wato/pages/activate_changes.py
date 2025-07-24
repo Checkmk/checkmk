@@ -13,7 +13,7 @@ import tarfile
 from collections.abc import Collection, Iterator
 from typing import Literal
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.gui.watolib.changes as _changes
 from cmk.ccc.hostaddress import HostName
@@ -258,7 +258,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             [d.get_domain_request([]) for d in ABCConfigDomain.enabled_domains()]
         )
 
-        for site_id in activation_sites():
+        for site_id in activation_sites(config.sites):
             self.confirm_site_changes(site_id)
 
         request_index_rebuild()
@@ -549,7 +549,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         self._show_license_validity()
 
-        self._activation_status()
+        self._activation_status(activation_sites(config.sites))
 
         if self.has_pending_changes():
             _change_table(self._pending_changes, _("Pending changes"))
@@ -684,7 +684,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     ActivationState.WARNING,
                 )
 
-    def _activation_status(self) -> None:
+    def _activation_status(self, activation_sites: SiteConfigurations) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),
@@ -693,7 +693,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
-            for site_id, site in sort_sites(activation_sites()):
+            for site_id, site in sort_sites(activation_sites):
                 table.row()
 
                 site_status, status = self._get_site_status(site_id, site)
@@ -826,7 +826,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def _get_selected_sites(self) -> list[SiteId | str]:
         return [
             "site_%s" % site_id
-            for site_id, site in sort_sites(activation_sites())
+            for site_id, site in sort_sites(activation_sites(active_config.sites))
             if len(self._changes_of_site(site_id))
             and self._can_activate_all(site_id)
             and self._is_active_site(

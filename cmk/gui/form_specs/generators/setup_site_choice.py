@@ -42,7 +42,7 @@ def _compute_site_choices() -> Sequence[SingleChoiceElementExtended[str]]:
             name=choice[0],
             title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
         )
-        for choice in site_choices(activation_sites())
+        for choice in site_choices(activation_sites(active_config.sites))
     ]
 
 

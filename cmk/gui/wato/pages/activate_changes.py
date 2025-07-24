@@ -164,7 +164,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
     def __init__(self) -> None:
         self._value: dict = {}
         super().__init__()
-        super().load()
+        super().load(list(active_config.sites))
 
     def title(self) -> str:
         return _("Revert changes")
@@ -383,7 +383,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def __init__(self) -> None:
         self._value: dict = {}
         super().__init__()
-        super().load()
+        super().load(list(active_config.sites))
         self._license_usage_report_validity = get_license_usage_report_validity()
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
@@ -991,7 +991,7 @@ class PageAjaxStartActivation(AjaxPage):
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.load()
+        manager.load(list(config.sites))
         affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
@@ -1042,7 +1042,7 @@ class PageAjaxActivationState(AjaxPage):
             raise MKUserError("activation_id", _('Missing parameter "%s".') % "activation_id")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.load()
+        manager.load(list(config.sites))
         manager.load_activation(activation_id)
 
         return manager.get_state()

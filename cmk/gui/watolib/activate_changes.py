@@ -334,7 +334,8 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
     manager = ActivateChangesManager()
-    manager.load()
+    # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
+    manager.load(list(active_config.sites))
 
     if not manager.is_sync_needed(site_id):
         return
@@ -395,7 +396,7 @@ def clear_site_replication_status(site_id: SiteId) -> None:
     except FileNotFoundError:
         pass  # Not existant -> OK
 
-    ActivateChanges().confirm_site_changes(site_id)
+    ActivateChanges.confirm_site_changes(site_id)
 
 
 def _site_replication_status_path(site_id: SiteId) -> Path:
@@ -1103,16 +1104,13 @@ class ActivateChanges:
         self._pending_changes: list[tuple[str, ChangeSpec]] = []
         super().__init__()
 
-    def load(self) -> None:
-        self._load_changes()
-
-    def _load_changes(self) -> None:
+    def load(self, sites: Sequence[SiteId]) -> None:
         self._changes_by_site = {}
 
         active_changes: dict[str, ChangeSpec] = {}
         pending_changes: dict[str, ChangeSpec] = {}
 
-        for site_id in activation_sites(active_config.sites):
+        for site_id in sites:
             site_changes = SiteChanges(site_id).read()
             self._changes_by_site[site_id] = site_changes
 
@@ -1151,14 +1149,17 @@ class ActivateChanges:
 
             self._changes_by_site_until[site_id] = changes
 
-    def confirm_site_changes(self, site_id):
+    @staticmethod
+    def confirm_site_changes(site_id: SiteId) -> None:
         SiteChanges(site_id).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     @staticmethod
-    def _get_number_of_pending_changes(count_limit: int | None = None) -> int:
+    def _get_number_of_pending_changes(
+        sites: Sequence[SiteId], count_limit: int | None = None
+    ) -> int:
         changes_counter = 0
-        for site_id in activation_sites(active_config.sites):
+        for site_id in sites:
             changes = SiteChanges(site_id).read()
             changes_counter += len(
                 list(change for change in changes if not has_been_activated(change))
@@ -1177,9 +1178,14 @@ class ActivateChanges:
             return _("%d changes") % number_of_changes
         return None
 
-    def get_pending_changes_info(self, count_limit: int | None = None) -> PendingChangesInfo:
-        number_of_changes = self._get_number_of_pending_changes(count_limit=count_limit)
-        message = self._make_changes_message(number_of_changes)
+    @staticmethod
+    def get_pending_changes_info(
+        sites: Sequence[SiteId], count_limit: int | None = None
+    ) -> PendingChangesInfo:
+        number_of_changes = ActivateChanges._get_number_of_pending_changes(
+            sites, count_limit=count_limit
+        )
+        message = ActivateChanges._make_changes_message(number_of_changes)
         return PendingChangesInfo(number=number_of_changes, message=message)
 
     def discard_changes_forbidden(self):
@@ -1298,8 +1304,10 @@ class ActivateChanges:
     def get_changes_to_activate(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site_until[site_id]
 
-    def get_all_data_required_for_activation_popout(self) -> ActivationChangesSummary:
-        self.load()
+    def get_all_data_required_for_activation_popout(
+        self, sites: Sequence[SiteId]
+    ) -> ActivationChangesSummary:
+        self.load(sites)
 
         changes_that_require_activation: list[tuple[str, ChangeSpec]] = [
             (change_id, change)
@@ -2308,7 +2316,7 @@ def _sync_and_activate(
         setthreadtitle("cmk-activate-changes")
 
         activate_changes = ActivateChanges()
-        activate_changes.load()
+        activate_changes.load(list(active_config.sites))
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
 
         if is_free():
@@ -2742,16 +2750,16 @@ def _update_links_for_agent_receiver() -> None:
 
 
 def confirm_all_local_changes() -> None:
-    ActivateChanges().confirm_site_changes(omd_site())
+    ActivateChanges.confirm_site_changes(omd_site())
 
 
 def has_pending_changes() -> bool:
-    return ActivateChanges().get_pending_changes_info().has_changes()
+    return ActivateChanges.get_pending_changes_info(list(active_config.sites)).has_changes()
 
 
 def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) -> str:
     if changes_info is None:
-        changes_info = ActivateChanges().get_pending_changes_info()
+        changes_info = ActivateChanges.get_pending_changes_info(list(active_config.sites))
 
     if changes_info.has_changes():
         n_changes = changes_info.number
@@ -2769,7 +2777,7 @@ def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) 
 
 def get_pending_changes() -> dict[str, ActivationChange]:
     changes = ActivateChanges()
-    changes.load()
+    changes.load(list(active_config.sites))
     return {
         change_id: ActivationChange(
             id=ac["id"],
@@ -2974,7 +2982,7 @@ def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id
 
     # Make sure there are no local changes we would lose!
     changes = cmk.gui.watolib.activate_changes.ActivateChanges()
-    changes.load()
+    changes.load(list(sites))
     pending = list(reversed(changes.grouped_changes()))
     if pending:
         message = _(
@@ -3631,7 +3639,8 @@ def activate_changes_start(
     """
 
     changes = ActivateChanges()
-    changes.load()
+    # TODO: So far we used active_config.sites. Would it be enough to use the passed sites?
+    changes.load(list(active_config.sites))
 
     _raise_for_license_block()
 
@@ -3653,7 +3662,8 @@ def activate_changes_start(
             )
 
     manager = ActivateChangesManager()
-    manager.load()
+    # TODO: So far we used active_config.sites. Would it be enough to use the passed sites?
+    manager.load(list(active_config.sites))
 
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)

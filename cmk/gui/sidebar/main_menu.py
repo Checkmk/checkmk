@@ -182,14 +182,16 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
     def page(self, config: Config) -> PageResult:
         return {
             "number_of_pending_changes": len(
-                ActivateChanges().get_all_data_required_for_activation_popout()["pendingChanges"]
+                ActivateChanges().get_all_data_required_for_activation_popout(list(config.sites))[
+                    "pendingChanges"
+                ]
             )
         }
 
 
 class PageAjaxSitesAndChanges(AjaxPage):
     def page(self, config: Config) -> PageResult:
-        return ActivateChanges().get_all_data_required_for_activation_popout()
+        return ActivateChanges().get_all_data_required_for_activation_popout(list(config.sites))
 
 
 class PopUpMessage(TypedDict):

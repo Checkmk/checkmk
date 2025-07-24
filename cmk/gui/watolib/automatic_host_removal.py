@@ -97,7 +97,7 @@ def execute_host_removal_job(config: Config) -> None:
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")
-        _activate_changes(hosts_to_be_removed, debug=config.debug)
+        _activate_changes(list(config.sites), hosts_to_be_removed, debug=config.debug)
 
         _LOGGER.info("Host removal background job finished")
     except RedisConnectionError as e:
@@ -243,13 +243,15 @@ def _should_delete_host(
     return False
 
 
-def _activate_changes(sites: Collection[SiteId], *, debug: bool) -> None:
+def _activate_changes(
+    all_sites: Sequence[SiteId], sites: Collection[SiteId], *, debug: bool
+) -> None:
     _LOGGER_BACKGROUND_JOB.debug("Activating changes for %d site(s)", len(sites))
 
     # workaround until CMK-13093 is fixed
     folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
-    manager.load()
+    manager.load(all_sites)
     with SuperUserContext():
         activation_id = manager.start(
             sites=list(sites),

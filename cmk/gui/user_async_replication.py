@@ -40,6 +40,8 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
     html.h3(_("Replication States"))
     html.open_div(id_="profile_repl")
     num_replsites = 0
+    changes_manager = ActivateChanges()
+    changes_manager.load(sites)
     for site_id in sites:
         site = active_config.sites[site_id]
         if "secret" not in site:
@@ -54,8 +56,6 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
         html.open_div(class_="site", id_="site-%s" % site_id)
         html.div("", title=status_txt, class_=["icon", "repl_status", icon])
         if start_sync:
-            changes_manager = ActivateChanges()
-            changes_manager.load()
             estimated_duration = changes_manager.get_activation_time(
                 site_id, ACTIVATION_TIME_PROFILE_SYNC
             )

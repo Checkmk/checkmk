@@ -465,7 +465,7 @@ def rename_hosts_job_entry_point(
         )  # Already activates the changes!
 
         for site_id in group_renamings_by_site(renamings):
-            ActivateChanges().confirm_site_changes(site_id)
+            ActivateChanges.confirm_site_changes(site_id)
 
         action_txt = "".join(["<li>%s</li>" % a for a in actions])
         message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
@@ -554,7 +554,7 @@ class ModeRenameHost(WatoMode):
 
     def action(self, config: Config) -> ActionResult:
         renamed_host_site = self._host.site_id()
-        if ActivateChanges().get_pending_changes_info().has_changes():
+        if ActivateChanges.get_pending_changes_info(list(config.sites)).has_changes():
             raise MKUserError(
                 "newname",
                 _(

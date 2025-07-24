@@ -76,7 +76,7 @@ def render_wato(config: Config, mini: bool) -> None:
     else:
         show_main_menu(treename="wato", menu=menu, show_item_icons=True)
 
-    pending_info = ActivateChanges().get_pending_changes_info(count_limit=10)
+    pending_info = ActivateChanges.get_pending_changes_info(list(config.sites), count_limit=10)
     if pending_info.has_changes():
         assert pending_info.message is not None  # only for mypy, semantically useless
         footnotelinks([(pending_info.message, "wato.py?mode=changelog")])

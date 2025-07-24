@@ -21,6 +21,8 @@ from flask import g, send_from_directory
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
+from livestatus import LivestatusTestingError
+
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc import crash_reporting, store
@@ -697,6 +699,11 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 title="An exception occurred.",
                 detail=str(exc),
             )
+
+        except LivestatusTestingError as exc:
+            if self.testing:
+                raise  # this makes it easier to read incorrect expected queries in tests
+            response = crash_report_response(exc)
 
         except Exception as exc:
             if self.debug and not self.testing:

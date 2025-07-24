@@ -3704,12 +3704,13 @@ def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
 
 
 def make_fetcher_trigger(
-    edition: cmk_version.Edition, host_name: HostName, labels_of_host: Callable[[HostName], Labels]
+    edition: cmk_version.Edition,
+    host_name: HostName,
+    host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
 ) -> FetcherTrigger:
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
-            # TODO: This is a temporary criteria, and should be replaced by a proper host attribute
-            if "relay" in labels_of_host(host_name):
+            if "relay" in host_tags(host_name):
                 from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
                     RelayFetcherTrigger,
                 )

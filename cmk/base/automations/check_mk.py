@@ -336,9 +336,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            lambda hn: config.make_fetcher_trigger(
-                edition, hn, config_cache.label_manager.labels_of_host
-            ),
+            lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
             config_cache.fetcher_factory(service_configurer, ip_address_of, service_name_config),
             plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
@@ -541,9 +539,7 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            lambda hn: config.make_fetcher_trigger(
-                edition, hn, config_cache.label_manager.labels_of_host
-            ),
+            lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
             config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of_with_fallback,
@@ -972,9 +968,7 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(
-            edition, hn, config_cache.label_manager.labels_of_host
-        ),
+        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
         config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -3132,9 +3126,7 @@ class AutomationDiagHost(Automation):
             missing_sys_description=config_cache.missing_sys_description(host_name),
             oid_cache_dir=oid_cache_dir,
         )
-        trigger = config.make_fetcher_trigger(
-            edition, host_name, config_cache.label_manager.labels_of_host
-        )
+        trigger = config.make_fetcher_trigger(edition, host_name, config_cache.host_tags.tags)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3638,9 +3630,7 @@ class AutomationGetAgentOutput(Automation):
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
-        trigger = config.make_fetcher_trigger(
-            edition, hostname, config_cache.label_manager.labels_of_host
-        )
+        trigger = config.make_fetcher_trigger(edition, hostname, config_cache.host_tags.tags)
 
         success = True
         output = ""

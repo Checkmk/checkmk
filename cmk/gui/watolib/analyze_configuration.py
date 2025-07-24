@@ -256,7 +256,7 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
 
 class _TestResult(TypedDict):
     state: Literal[0, 1]
-    ac_test_results: Sequence[ACTestResult]
+    ac_test_results: list[ACTestResult]
     error: str
 
 

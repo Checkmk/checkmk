@@ -348,7 +348,7 @@ const numberOfForeignChanges = computed((): number => {
 function siteRequiresAttention(site: Site): boolean {
   return (
     site.changes > 0 ||
-    !!(site.lastActivationStatus && site.lastActivationStatus.state !== 'success') ||
+    (site.lastActivationStatus && ['error', 'warning'].includes(site.lastActivationStatus.state)) ||
     site.onlineStatus !== 'online' ||
     recentlyActivatedSites.value.includes(site.siteId)
   )

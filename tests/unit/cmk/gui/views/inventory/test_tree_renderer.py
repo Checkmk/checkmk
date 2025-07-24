@@ -124,6 +124,7 @@ def test_sort_table_rows_displayhint(
 ) -> None:
     items_sorter = _SDItemsSorter(
         NodeDisplayHint(
+            ident="inv",
             path=(),
             icon="",
             title="",
@@ -132,6 +133,7 @@ def test_sort_table_rows_displayhint(
             attributes={},
             columns={
                 SDKey("sid"): ColumnDisplayHint(
+                    ident="sid",
                     title="SID",
                     short_title="",
                     long_title="",
@@ -140,6 +142,7 @@ def test_sort_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
+                    ident="changed",
                     title="Changed",
                     short_title="",
                     long_title="",
@@ -148,6 +151,7 @@ def test_sort_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
+                    ident="foo",
                     title="Foo",
                     short_title="",
                     long_title="",
@@ -156,6 +160,7 @@ def test_sort_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
+                    ident="flashback",
                     title="Flashback",
                     short_title="",
                     long_title="",
@@ -164,6 +169,7 @@ def test_sort_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("other"): ColumnDisplayHint(
+                    ident="other",
                     title="Other",
                     short_title="",
                     long_title="",
@@ -421,6 +427,7 @@ def test_sort_delta_table_rows_displayhint(
 ) -> None:
     delta_items_sorter = _SDDeltaItemsSorter(
         NodeDisplayHint(
+            ident="inv",
             path=(),
             icon="",
             title="",
@@ -429,6 +436,7 @@ def test_sort_delta_table_rows_displayhint(
             attributes={},
             columns={
                 SDKey("sid"): ColumnDisplayHint(
+                    ident="sid",
                     title="SID",
                     short_title="",
                     long_title="",
@@ -437,6 +445,7 @@ def test_sort_delta_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
+                    ident="changed",
                     title="Changed",
                     short_title="",
                     long_title="",
@@ -445,6 +454,7 @@ def test_sort_delta_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
+                    ident="foo",
                     title="Foo",
                     short_title="",
                     long_title="",
@@ -453,6 +463,7 @@ def test_sort_delta_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
+                    ident="flashback",
                     title="Flashback",
                     short_title="",
                     long_title="",
@@ -461,6 +472,7 @@ def test_sort_delta_table_rows_displayhint(
                     filter_class=FilterInvtableText,
                 ),
                 SDKey("other"): ColumnDisplayHint(
+                    ident="other",
                     title="Other",
                     short_title="",
                     long_title="",
@@ -535,6 +547,7 @@ def test_sort_attributes_pairs_displayhint(
 ) -> None:
     items_sorter = _SDItemsSorter(
         NodeDisplayHint(
+            ident="inv",
             path=(),
             icon="",
             title="",
@@ -542,6 +555,7 @@ def test_sort_attributes_pairs_displayhint(
             long_title="",
             attributes={
                 SDKey("a"): AttributeDisplayHint(
+                    ident="inv_a",
                     title="A",
                     short_title="",
                     long_title="",
@@ -551,6 +565,7 @@ def test_sort_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("b"): AttributeDisplayHint(
+                    ident="inv_b",
                     title="B",
                     short_title="",
                     long_title="",
@@ -560,6 +575,7 @@ def test_sort_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("d"): AttributeDisplayHint(
+                    ident="inv_d",
                     title="D",
                     short_title="",
                     long_title="",
@@ -569,6 +585,7 @@ def test_sort_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("c"): AttributeDisplayHint(
+                    ident="inv_c",
                     title="C",
                     short_title="",
                     long_title="",
@@ -634,6 +651,7 @@ def test_sort_delta_attributes_pairs_displayhint(
 ) -> None:
     delta_items_sorter = _SDDeltaItemsSorter(
         NodeDisplayHint(
+            ident="inv",
             path=(),
             icon="",
             title="",
@@ -641,6 +659,7 @@ def test_sort_delta_attributes_pairs_displayhint(
             long_title="",
             attributes={
                 SDKey("a"): AttributeDisplayHint(
+                    ident="inv_a",
                     title="A",
                     short_title="",
                     long_title="",
@@ -650,6 +669,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("b"): AttributeDisplayHint(
+                    ident="inv_c",
                     title="B",
                     short_title="",
                     long_title="",
@@ -659,6 +679,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("d"): AttributeDisplayHint(
+                    ident="inv_d",
                     title="D",
                     short_title="",
                     long_title="",
@@ -668,6 +689,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     is_show_more=False,
                 ),
                 SDKey("c"): AttributeDisplayHint(
+                    ident="inv_c",
                     title="C",
                     short_title="",
                     long_title="",
@@ -710,6 +732,7 @@ def test__replace_title_placeholders(
     assert (
         _replace_title_placeholders(
             NodeDisplayHint(
+                ident="",
                 path=abc_path,
                 icon="",
                 title=title,

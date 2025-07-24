@@ -120,12 +120,25 @@ def _make_long_title(parent_title: str, title: str) -> str:
     return parent_title + " ➤ " + title if parent_title else title
 
 
+def _make_node_ident(path: SDPath) -> str:
+    return "_".join(["inv"] + list(path))
+
+
+def _make_attr_ident(node_ident: str, key: SDKey | str) -> str:
+    return f"{node_ident}_{key}"
+
+
+def _make_col_ident(table_view_name: str, key: SDKey | str) -> str:
+    return f"{table_view_name}_{key}" if table_view_name else ""
+
+
 def _parse_attribute_hint(
-    node_title: str, key: str, legacy_hint: InventoryHintSpec
+    node_ident: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
     title = _make_title_function(legacy_hint)(key)
     return AttributeDisplayHint(
+        ident=_make_attr_ident(node_ident, key),
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -186,6 +199,7 @@ def _parse_column_display_hint_filter_class(
 
 
 def _parse_column_hint(
+    table_view_name: str,
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
@@ -193,6 +207,7 @@ def _parse_column_hint(
     _data_type, paint_function = _get_paint_function(legacy_hint)
     title = _make_title_function(legacy_hint)(key)
     return ColumnDisplayHint(
+        ident=_make_col_ident(table_view_name, key),
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -220,6 +235,7 @@ def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> 
 
 @dataclass(frozen=True)
 class _NodeDisplayHint:
+    ident: str
     path: SDPath
     title: str
     short_title: str
@@ -238,21 +254,24 @@ def _parse_node_hint(
     table_key_order: Sequence[str],
     columns: Mapping[str, InventoryHintSpec],
 ) -> _NodeDisplayHint:
+    ident = _make_node_ident(path)
     title = _make_title_function(legacy_hint)(path[-1] if path else "")
+    table_view_name = "" if "*" in path else _parse_view_name(legacy_hint.get("view", ""))
     return _NodeDisplayHint(
+        ident=ident,
         path=path,
         title=title,
         short_title=title,
         icon=legacy_hint.get("icon", ""),
         attributes={
-            SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
+            SDKey(key): _parse_attribute_hint(ident, title, key, attributes.get(key, {}))
             for key in _complete_key_order(attributes_key_order, set(attributes))
         },
         columns={
-            SDKey(key): _parse_column_hint(title, key, columns.get(key, {}))
+            SDKey(key): _parse_column_hint(table_view_name, title, key, columns.get(key, {}))
             for key in _complete_key_order(table_key_order, set(columns))
         },
-        table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view", "")),
+        table_view_name=table_view_name,
         table_is_show_more=legacy_hint.get("is_show_more", True),
     )
 
@@ -317,6 +336,7 @@ def _parse_legacy_display_hints(
 
 @dataclass(frozen=True, kw_only=True)
 class AttributeDisplayHint:
+    ident: str
     title: str
     short_title: str
     long_title: str
@@ -335,6 +355,7 @@ OrderedAttributeDisplayHints: TypeAlias = Mapping[SDKey, AttributeDisplayHint]
 
 @dataclass(frozen=True, kw_only=True)
 class ColumnDisplayHint:
+    ident: str
     title: str
     short_title: str
     long_title: str
@@ -361,6 +382,7 @@ OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
 
 @dataclass(frozen=True, kw_only=True)
 class NodeDisplayHint:
+    ident: str
     path: SDPath
     title: str
     short_title: str
@@ -372,10 +394,6 @@ class NodeDisplayHint:
     table_is_show_more: bool
 
     @property
-    def ident(self) -> str:
-        return "_".join(["inv"] + list(self.path))
-
-    @property
     def long_inventory_title(self) -> str:
         return _("Inventory node: %s") % self.long_title
 
@@ -383,13 +401,11 @@ class NodeDisplayHint:
     def long_inventory_table_title(self) -> str:
         return _("Inventory table: %s") % self.long_title
 
-    def attribute_ident(self, key: SDKey) -> str:
-        return f"{self.ident}_{key}"
-
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
             title = key.replace("_", " ").title()
             return AttributeDisplayHint(
+                ident=_make_attr_ident(self.ident, key),
                 title=title,
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
@@ -401,13 +417,11 @@ class NodeDisplayHint:
 
         return hint if (hint := self.attributes.get(SDKey(key))) else _default()
 
-    def column_ident(self, key: SDKey) -> str:
-        return f"{self.table_view_name}_{key}" if self.table_view_name else ""
-
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         def _default() -> ColumnDisplayHint:
             title = key.replace("_", " ").title()
             return ColumnDisplayHint(
+                ident=_make_col_ident(self.table_view_name, key),
                 title=title,
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
@@ -448,6 +462,7 @@ class DisplayHints:
             return self._nodes_by_path[abc_path]
         title = path[-1].replace("_", " ").title()
         return NodeDisplayHint(
+            ident=_make_node_ident(path),
             path=path,
             title=title,
             short_title=title,
@@ -466,6 +481,7 @@ class DisplayHints:
 inv_display_hints = DisplayHints(
     {
         (): NodeDisplayHint(
+            ident=_make_node_ident(()),
             path=(),
             title=str(_l("Inventory tree")),
             short_title=str(_l("Inventory tree")),
@@ -484,6 +500,7 @@ def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> Non
     for hint in _parse_legacy_display_hints(legacy_hints):
         inv_display_hints.add(
             NodeDisplayHint(
+                ident=hint.ident,
                 path=hint.path,
                 title=hint.title,
                 short_title=hint.short_title,

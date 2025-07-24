@@ -140,6 +140,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             (),
             NodeDisplayHint(
+                ident="inv",
                 path=(),
                 icon="",
                 title="Inventory tree",
@@ -155,6 +156,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ("hardware",),
             NodeDisplayHint(
                 path=(SDNodeName("hardware"),),
+                ident="inv_hardware",
                 icon="hardware",
                 title="Hardware",
                 short_title="Hardware",
@@ -169,6 +171,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ("hardware", "cpu"),
             NodeDisplayHint(
                 path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                ident="inv_hardware_cpu",
                 icon="",
                 title="Processor",
                 short_title="Processor",
@@ -176,6 +179,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 # The single attribute hints are not checked here
                 attributes={
                     SDKey("arch"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_arch",
                         title="",
                         short_title="",
                         long_title="",
@@ -185,6 +189,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("max_speed"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_max_speed",
                         title="",
                         short_title="",
                         long_title="",
@@ -194,6 +199,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("model"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_model",
                         title="",
                         short_title="",
                         long_title="",
@@ -203,6 +209,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("type"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_type",
                         title="",
                         short_title="",
                         long_title="",
@@ -212,6 +219,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("threads"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_threads",
                         title="",
                         short_title="",
                         long_title="",
@@ -221,6 +229,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("smt_threads"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_smt_threads",
                         title="",
                         short_title="",
                         long_title="",
@@ -230,6 +239,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("cpu_max_capa"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_cpu_max_capa",
                         title="",
                         short_title="",
                         long_title="",
@@ -239,6 +249,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("cpus"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_cpus",
                         title="",
                         short_title="",
                         long_title="",
@@ -248,6 +259,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("logical_cpus"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_logical_cpus",
                         title="",
                         short_title="",
                         long_title="",
@@ -257,6 +269,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("cores"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_cores",
                         title="",
                         short_title="",
                         long_title="",
@@ -266,6 +279,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("cores_per_cpu"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_cores_per_cpu",
                         title="",
                         short_title="",
                         long_title="",
@@ -275,6 +289,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("threads_per_cpu"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_threads_per_cpu",
                         title="",
                         short_title="",
                         long_title="",
@@ -284,6 +299,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("cache_size"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_cache_size",
                         title="",
                         short_title="",
                         long_title="",
@@ -293,6 +309,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("bus_speed"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_bus_speed",
                         title="",
                         short_title="",
                         long_title="",
@@ -302,6 +319,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("voltage"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_voltage",
                         title="",
                         short_title="",
                         long_title="",
@@ -311,6 +329,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("sharing_mode"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_sharing_mode",
                         title="",
                         short_title="",
                         long_title="",
@@ -320,6 +339,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("implementation_mode"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_implementation_mode",
                         title="",
                         short_title="",
                         long_title="",
@@ -329,6 +349,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         is_show_more=False,
                     ),
                     SDKey("entitlement"): AttributeDisplayHint(
+                        ident="inv_hardware_cpu_entitlement",
                         title="",
                         short_title="",
                         long_title="",
@@ -346,6 +367,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("software", "applications", "docker", "images"),
             NodeDisplayHint(
+                ident="inv_software_applications_docker_images",
                 path=(
                     SDNodeName("software"),
                     SDNodeName("applications"),
@@ -360,6 +382,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 # The single column hints are not checked here
                 columns={
                     SDKey("id"): ColumnDisplayHint(
+                        ident="invdockerimages_id",
                         title="",
                         short_title="",
                         long_title="",
@@ -368,6 +391,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("creation"): ColumnDisplayHint(
+                        ident="invdockerimages_creation",
                         title="",
                         short_title="",
                         long_title="",
@@ -376,6 +400,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("size"): ColumnDisplayHint(
+                        ident="invdockerimages_size",
                         title="",
                         short_title="",
                         long_title="",
@@ -384,6 +409,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("labels"): ColumnDisplayHint(
+                        ident="invdockerimages_labels",
                         title="",
                         short_title="",
                         long_title="",
@@ -392,6 +418,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("amount_containers"): ColumnDisplayHint(
+                        ident="invdockerimages_amount_containers",
                         title="",
                         short_title="",
                         long_title="",
@@ -400,6 +427,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("repotags"): ColumnDisplayHint(
+                        ident="invdockerimages_repotags",
                         title="",
                         short_title="",
                         long_title="",
@@ -408,6 +436,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("repodigests"): ColumnDisplayHint(
+                        ident="invdockerimages_repodigests",
                         title="",
                         short_title="",
                         long_title="",
@@ -423,6 +452,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("path", "to", "node"),
             NodeDisplayHint(
+                ident="inv_path_to_node",
                 path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 icon="",
                 title="Node",
@@ -439,7 +469,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
 def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint) -> None:
     node_hint = inv_display_hints.get_node_hint(path)
 
-    assert node_hint.ident == "_".join(("inv",) + node_hint.path)
+    assert node_hint.ident == expected_node_hint.ident
     assert node_hint.icon == expected_node_hint.icon
     assert node_hint.title == expected_node_hint.title
     assert node_hint.long_title == expected_node_hint.long_title
@@ -458,6 +488,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
         (
             ".foo.bar.",
             NodeDisplayHint(
+                ident="invfoo_bar",
                 path=(SDNodeName("foo"), SDNodeName("bar")),
                 icon="",
                 title="Bar",
@@ -472,6 +503,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
         (
             ".foo.bar:",
             NodeDisplayHint(
+                ident="invfoo_bar",
                 path=(SDNodeName("foo"), SDNodeName("bar")),
                 icon="",
                 title="Bar",
@@ -486,6 +518,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
         (
             ".software.",
             NodeDisplayHint(
+                ident="invsoftware",
                 path=(SDNodeName("software"),),
                 icon="software",
                 title="Software",
@@ -500,6 +533,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
         (
             ".software.applications.docker.containers:",
             NodeDisplayHint(
+                ident="invsoftware_applications_docker_containers",
                 path=(
                     SDNodeName("software"),
                     SDNodeName("applications"),
@@ -514,6 +548,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 # The single column hints are not checked here
                 columns={
                     SDKey("id"): ColumnDisplayHint(
+                        ident="invdockercontainers_id",
                         title="",
                         short_title="",
                         long_title="",
@@ -522,6 +557,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("creation"): ColumnDisplayHint(
+                        ident="invdockercontainers_creation",
                         title="",
                         short_title="",
                         long_title="",
@@ -530,6 +566,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("name"): ColumnDisplayHint(
+                        ident="invdockercontainers_name",
                         title="",
                         short_title="",
                         long_title="",
@@ -538,6 +575,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("labels"): ColumnDisplayHint(
+                        ident="invdockercontainers_labels",
                         title="",
                         short_title="",
                         long_title="",
@@ -546,6 +584,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("status"): ColumnDisplayHint(
+                        ident="invdockercontainers_status",
                         title="",
                         short_title="",
                         long_title="",
@@ -554,6 +593,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         filter_class=FilterInvtableText,
                     ),
                     SDKey("image"): ColumnDisplayHint(
+                        ident="invdockercontainers_image",
                         title="",
                         short_title="",
                         long_title="",
@@ -595,6 +635,7 @@ def test_make_node_displayhint_from_hint(
             (),
             "key",
             ColumnDisplayHint(
+                ident="",
                 title="Key",
                 short_title="Key",
                 long_title="Key",
@@ -607,6 +648,7 @@ def test_make_node_displayhint_from_hint(
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
+                ident="invinterface_oper_status",
                 title="Operational status",
                 short_title="Operational status",
                 long_title="Network interfaces ➤ Operational status",
@@ -619,6 +661,7 @@ def test_make_node_displayhint_from_hint(
             ("path", "to", "node"),
             "key",
             ColumnDisplayHint(
+                ident="",
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
@@ -631,6 +674,7 @@ def test_make_node_displayhint_from_hint(
             ("software", "applications", "check_mk", "sites"),
             "cmc",
             ColumnDisplayHint(
+                ident="invcmksites_cmc",
                 title="CMC status",
                 short_title="CMC",
                 long_title="Checkmk sites ➤ CMC status",
@@ -643,6 +687,7 @@ def test_make_node_displayhint_from_hint(
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
     hint = inv_display_hints.get_node_hint(path).get_column_hint(key)
+    assert hint.ident == expected.ident
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
@@ -657,6 +702,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".foo:*.bar",
             ColumnDisplayHint(
+                ident="",
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
@@ -668,6 +714,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
+                ident="invswpac_package_version",
                 title="Package version",
                 short_title="Package version",
                 long_title="Software packages ➤ Package version",
@@ -679,6 +726,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.version",
             ColumnDisplayHint(
+                ident="invswpac_version",
                 title="Version",
                 short_title="Version",
                 long_title="Software packages ➤ Version",
@@ -690,6 +738,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
+                ident="invinterface_index",
                 title="Index",
                 short_title="Index",
                 long_title="Network interfaces ➤ Index",
@@ -701,6 +750,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
+                ident="invinterface_oper_status",
                 title="Operational status",
                 short_title="Operational status",
                 long_title="Network interfaces ➤ Operational status",
@@ -716,6 +766,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
+    assert hint.ident == expected.ident
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
@@ -731,6 +782,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             (),
             "key",
             AttributeDisplayHint(
+                ident="inv_key",
                 title="Key",
                 short_title="Key",
                 long_title="Key",
@@ -744,6 +796,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("hardware", "storage", "disks"),
             "size",
             AttributeDisplayHint(
+                ident="inv_hardware_storage_disks_size",
                 title="Size",
                 short_title="Size",
                 long_title="Block devices ➤ Size",
@@ -757,6 +810,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("path", "to", "node"),
             "key",
             AttributeDisplayHint(
+                ident="inv_path_to_node_key",
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
@@ -770,12 +824,14 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
     hint = inv_display_hints.get_node_hint(path).get_attribute_hint(key)
-    assert hint.data_type == expected.data_type
-    assert callable(hint.paint_function)
-    assert callable(hint.sort_function)
+    assert hint.ident == expected.ident
     assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
+    assert callable(hint.paint_function)
+    assert callable(hint.sort_function)
+    assert hint.data_type == expected.data_type
     assert hint.is_show_more == expected.is_show_more
 
 
@@ -785,6 +841,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".foo.bar",
             AttributeDisplayHint(
+                ident="invfoo_bar",
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
@@ -797,6 +854,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
+                ident="invhardware_cpu_product",
                 title="CPU architecture",
                 short_title="CPU architecture",
                 long_title="Processor ➤ CPU architecture",
@@ -809,6 +867,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.system.product",
             AttributeDisplayHint(
+                ident="invhardware_system_product",
                 title="Product",
                 short_title="Product",
                 long_title="System ➤ Product",

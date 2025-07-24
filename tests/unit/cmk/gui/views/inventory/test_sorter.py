@@ -19,6 +19,7 @@ from cmk.utils.structured_data import ImmutableTree, SDKey
 
 def test_registered_sorter_cmp() -> None:
     hint = AttributeDisplayHint(
+        ident="inv_key",
         title="Product",
         short_title="Product",
         long_title="System ➤ Product",

@@ -316,19 +316,18 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
     painters: list[ColumnSpec] = []
     filters = []
     for key, col_hint in node_hint.columns.items():
-        col_hint_ident = node_hint.column_ident(key)
-        _register_painter(col_hint_ident, column_painter_from_hint(col_hint_ident, col_hint))
-        _register_sorter(col_hint_ident, column_sorter_from_hint(col_hint_ident, col_hint))
+        _register_painter(col_hint.ident, column_painter_from_hint(col_hint.ident, col_hint))
+        _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint.ident, col_hint))
         filter_registry.register(
             col_hint.filter_class(
                 inv_info=node_hint.table_view_name,
-                ident=col_hint_ident,
+                ident=col_hint.ident,
                 title=col_hint.long_title,
             )
         )
 
-        painters.append(ColumnSpec(col_hint_ident))
-        filters.append(col_hint_ident)
+        painters.append(ColumnSpec(col_hint.ident))
+        filters.append(col_hint.ident)
 
     _register_views(node_hint, painters, filters)
 
@@ -352,13 +351,15 @@ def register_table_views_and_columns() -> None:
         _register_painter(node_hint.ident, node_painter_from_hint(node_hint, painter_options))
 
         for key, attr_hint in node_hint.attributes.items():
-            attr_ident = node_hint.attribute_ident(key)
             _register_painter(
-                attr_ident, attribute_painter_from_hint(node_hint.path, key, attr_ident, attr_hint)
+                attr_hint.ident,
+                attribute_painter_from_hint(node_hint.path, key, attr_hint.ident, attr_hint),
             )
-            _register_sorter(attr_ident, attribute_sorter_from_hint(node_hint.path, key, attr_hint))
+            _register_sorter(
+                attr_hint.ident, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
+            )
             filter_registry.register(
-                _make_attribute_filter(attr_ident, node_hint.path, key, attr_hint)
+                _make_attribute_filter(attr_hint.ident, node_hint.path, key, attr_hint)
             )
 
         _register_table_view(node_hint)

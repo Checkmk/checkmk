@@ -46,7 +46,7 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
                 yield HostLabel("cmk/device_type", device_type.name.lower())
             return
 
-    if model := getattr(section, "model"):
+    if model := getattr(section, "model", None):
         yield HostLabel("cmk/device_model", model)
 
 

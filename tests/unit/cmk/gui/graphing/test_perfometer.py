@@ -10,10 +10,10 @@ import pytest
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.gui.graphing import get_first_matching_perfometer
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._perfometer import (
     _ArcTan,
+    _get_first_matching_perfometer_testable,
     _make_projection,
     MetricometerRendererPerfometer,
     MetricometerRendererStacked,
@@ -23,9 +23,9 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_first_matching_perfometer_testable() -> None:
+def test_get_first_matching_perfometer_testable_without_superseding() -> None:
     assert (
-        first_renderer := get_first_matching_perfometer(
+        first_renderer := _get_first_matching_perfometer_testable(
             {
                 "active_connections": TranslatedMetric(
                     originals=[Original("active_connections", 1.0)],
@@ -50,10 +50,60 @@ def test_get_first_matching_perfometer_testable() -> None:
                     segments=["active_connections"],
                 )
             },
+            {},
         )
     ) is not None
     assert first_renderer.perfometer == perfometers_api.Perfometer(
         name="active_connections",
+        focus_range=perfometers_api.FocusRange(
+            lower=perfometers_api.Closed(0),
+            upper=perfometers_api.Open(90),
+        ),
+        segments=["active_connections"],
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_first_matching_perfometer_testable_with_superseding() -> None:
+    assert (
+        first_renderer := _get_first_matching_perfometer_testable(
+            {
+                "active_connections": TranslatedMetric(
+                    originals=[Original("active_connections", 1.0)],
+                    value=1.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="Active connections",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#111111",
+                ),
+            },
+            {
+                "active_connections": perfometers_api.Perfometer(
+                    name="active_connections",
+                    focus_range=perfometers_api.FocusRange(
+                        perfometers_api.Closed(0),
+                        perfometers_api.Open(90),
+                    ),
+                    segments=["active_connections"],
+                ),
+                "active_connections_better": perfometers_api.Perfometer(
+                    name="active_connections_better",
+                    focus_range=perfometers_api.FocusRange(
+                        perfometers_api.Closed(0),
+                        perfometers_api.Open(90),
+                    ),
+                    segments=["active_connections"],
+                ),
+            },
+            {"active_connections": "active_connections_better"},
+        )
+    ) is not None
+    assert first_renderer.perfometer == perfometers_api.Perfometer(
+        name="active_connections_better",
         focus_range=perfometers_api.FocusRange(
             lower=perfometers_api.Closed(0),
             upper=perfometers_api.Open(90),

@@ -19,6 +19,7 @@ from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from ._color import parse_color_from_api
 from ._from_api import parse_unit_from_api
+from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -797,11 +798,12 @@ def _get_renderer(
             return MetricometerRendererStacked(perfometer, translated_metrics)
 
 
-def get_first_matching_perfometer(
+def _get_first_matching_perfometer_testable(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_perfometers: Mapping[
         str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ],
+    superseded_to_superseder: Mapping[str, str],
 ) -> (
     MetricometerRendererPerfometer
     | MetricometerRendererBidirectional
@@ -813,6 +815,31 @@ def get_first_matching_perfometer(
 
     for perfometer in registered_perfometers.values():
         if _perfometer_matches(perfometer, translated_metrics):
+            if (
+                (superseder_name := superseded_to_superseder.get(perfometer.name))
+                and (superseder := registered_perfometers.get(superseder_name))
+                and _perfometer_matches(superseder, translated_metrics)
+            ):
+                return _get_renderer(superseder, translated_metrics)
+
             return _get_renderer(perfometer, translated_metrics)
 
     return None
+
+
+def get_first_matching_perfometer(
+    translated_metrics: Mapping[str, TranslatedMetric],
+    registered_perfometers: Mapping[
+        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ],
+) -> (
+    MetricometerRendererPerfometer
+    | MetricometerRendererBidirectional
+    | MetricometerRendererStacked
+    | None
+):
+    return _get_first_matching_perfometer_testable(
+        translated_metrics,
+        registered_perfometers,
+        PERFOMETER_SUPERSEDED_TO_SUPERSEDER,
+    )

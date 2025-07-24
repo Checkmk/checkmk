@@ -818,14 +818,15 @@ def test_login():
     assert isinstance(section["ORA7777.FANTASY"], Instance)
 
     assert section["ORA7777"].logins == "ALLOWED"
-    assert section["ORA7777.BBBBBBBBBBBBBBB"].logins == "ALLOWED"
-    assert section["ORA7777.PDB$SEED"].logins == "RESTRICTED"
+    assert section["ORA7777.BBBBBBBBBBBBBBB"].logins == "RESTRICTED"
+    assert section["ORA7777.PDB$SEED"].logins == "ALLOWED"
 
     assert list(
         oracle_instance_check.check_oracle_instance("ORA7777.PDB$SEED", params, section)
     ) == [
         Result(state=State.OK, summary="PDB Name ORA7777.PDB$SEED"),
         Result(state=State.OK, summary="Status READ ONLY"),
+        Result(state=State.OK, summary="Logins allowed"),
         Result(state=State.OK, summary="PDB size: 4.14 GiB"),
         Metric("oracle_pdb_total_size", 4444444444.0),
     ]
@@ -835,6 +836,7 @@ def test_login():
     ) == [
         Result(state=State.OK, summary="PDB Name ORA7777.BBBBBBBBBBBBBBB"),
         Result(state=State.OK, summary="Status READ WRITE"),
+        Result(state=State.CRIT, summary="Logins restricted"),
         Result(state=State.OK, summary="PDB size: 10.3 GiB"),
         Metric("oracle_pdb_total_size", 11111111111.0),
     ]
@@ -844,7 +846,7 @@ def test_login():
     ) == [
         Result(state=State.OK, summary="PDB Name ORA7777.FANTASY"),
         Result(state=State.OK, summary="Status OPEN"),
-        Result(state=State.OK, summary="Logins allowed"),
+        Result(state=State.CRIT, summary="Logins restricted"),
         Result(state=State.OK, summary="PDB size: 10.3 GiB"),
         Metric("oracle_pdb_total_size", 11111111111.0),
     ]

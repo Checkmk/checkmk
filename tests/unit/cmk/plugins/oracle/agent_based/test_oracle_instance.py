@@ -12,7 +12,15 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 
-from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
+from cmk.agent_based.v2 import (
+    CheckResult,
+    InventoryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventory_oracle_instance
@@ -785,3 +793,62 @@ def test_discover_template_database_negative_uptime():
     section = parse_oracle_instance(string_table)
     items = list(oracle_instance_check.discover_oracle_instance_uptime(section))
     assert not items
+
+
+def test_login():
+    params: oracle_instance_check._Params = {
+        "logins": 2,
+        "noforcelogging": 2,
+        "noarchivelog": 2,
+        "primarynotopen": 2,
+        "archivelog": 2,
+        "forcelogging": 2,
+    }
+
+    # SUP-24195
+    # first three lines are obfuscated data from the customer, line four is fantasy data
+    instance_lines = [
+        "ORA7777|19.26.0.0.0|OPEN|ALLOWED|STARTED|3333333|2222222222|ARCHIVELOG|PRIMARY|NO|ORA7777|077777777777|TRUE|0||0|||||-1|0",
+        "ORA7777|19.26.0.0.0|OPEN|ALLOWED|STARTED|3333333|2222222222|ARCHIVELOG|PRIMARY|NO|ORA7777|077777777777|TRUE|2|PDB$SEED|6666666666|READ ONLY|NO|4444444444|ENABLED|2222222|8888",
+        "ORA7777|19.26.0.0.0|OPEN|ALLOWED|STARTED|3333333|2222222222|ARCHIVELOG|PRIMARY|NO|ORA7777|077777777777|TRUE|5|BBBBBBBBBBBBBBB|8888888888|READ WRITE|YES|11111111111|ENABLED|2077277|8888",
+        "ORA7777|19.26.0.0.0|OPEN|ALLOWED|STARTED|3333333|2222222222|ARCHIVELOG|PRIMARY|NO|ORA7777|077777777777|TRUE|5|FANTASY|8888888888|OPEN|YES|11111111111|ENABLED|2077277|8888",
+    ]
+    string_table = [il.split("|") for il in instance_lines]
+    section = parse_oracle_instance(string_table)
+    assert len(section) == 4
+    assert isinstance(section["ORA7777"], Instance)
+    assert isinstance(section["ORA7777.BBBBBBBBBBBBBBB"], Instance)
+    assert isinstance(section["ORA7777.PDB$SEED"], Instance)
+    assert isinstance(section["ORA7777.FANTASY"], Instance)
+
+    assert section["ORA7777"].logins == "ALLOWED"
+    assert section["ORA7777.BBBBBBBBBBBBBBB"].logins == "ALLOWED"
+    assert section["ORA7777.PDB$SEED"].logins == "RESTRICTED"
+
+    assert list(
+        oracle_instance_check.check_oracle_instance("ORA7777.PDB$SEED", params, section)
+    ) == [
+        Result(state=State.OK, summary="PDB Name ORA7777.PDB$SEED"),
+        Result(state=State.OK, summary="Status READ ONLY"),
+        Result(state=State.OK, summary="PDB size: 4.14 GiB"),
+        Metric("oracle_pdb_total_size", 4444444444.0),
+    ]
+
+    assert list(
+        oracle_instance_check.check_oracle_instance("ORA7777.BBBBBBBBBBBBBBB", params, section)
+    ) == [
+        Result(state=State.OK, summary="PDB Name ORA7777.BBBBBBBBBBBBBBB"),
+        Result(state=State.OK, summary="Status READ WRITE"),
+        Result(state=State.OK, summary="PDB size: 10.3 GiB"),
+        Metric("oracle_pdb_total_size", 11111111111.0),
+    ]
+
+    assert list(
+        oracle_instance_check.check_oracle_instance("ORA7777.FANTASY", params, section)
+    ) == [
+        Result(state=State.OK, summary="PDB Name ORA7777.FANTASY"),
+        Result(state=State.OK, summary="Status OPEN"),
+        Result(state=State.OK, summary="Logins allowed"),
+        Result(state=State.OK, summary="PDB size: 10.3 GiB"),
+        Metric("oracle_pdb_total_size", 11111111111.0),
+    ]

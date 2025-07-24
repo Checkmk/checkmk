@@ -476,33 +476,46 @@ oracle:
       role: "sysdba" # optional, default: empty, values: sysdba, sysasm, ...
       type: "standard" # mandatory, default: "standard", values: standard, wallet
     connection: # optional
-      hostname: "localhost" # optional(default: "localhost")
+      hostname: "localhost2" # optional(default: "localhost")
       port: 1521 # optional, default: 1521
       timeout: 11 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     sections: # optional
-    - instance:  # special section
-    - databases:
-    - counters:
-    - blocked_sessions:
-    - transactionlogs:
-    - clusters:
-    - mirroring:
-    - availability_groups:
-    - connections:
-    - tablespaces:
-        is_async : yes
-    - datafiles:
-        is_async: yes
-    - backup:
-        is_async: yes
+    - instance: # special section
+      affinity: "all" # optional, default: "db", values: "all", "db", "asm"
+    - dataguard_stats:
+    - locks:
+    - logswitches:
+    - longactivesessions:
+    - performance:
+    - processes:
+      affinity: "all" # optional, default "db", values: "all", "db", "asm"
+    - recovery_area:
+    - recovery_status:
+    - sessions:
+    - systemparameter:
+    - undostat:
+    - asm_diskgroup:
+      is_async: yes
+      affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
+    - iostats:
+      is_async: yes
     - jobs:
-        is_async: yes
-    - someOtherSQL:
-        is_async: yes
-        disabled: yes
-    cache_age: 600 # optional(default:600)
+      is_async: yes
+    - resumable:
+      is_async: yes
+    - rman:
+      is_async: yes
+    - tablespaces:
+      is_async: yes
+    - tablespaces_xxx:
+      is_async: yes
+    - tablespaces_xxxz:
+      is_async: yes
+    - tablespaces_xxxz1222:
+      is_async: yes
+    cache_age: 501 # optional(default:600)
     piggyback_host: "my_pb_host"
     discovery: # optional
       detect: true # optional(default:yes)
@@ -648,6 +661,11 @@ piggyback:
         let auth = c.auth();
         assert_eq!(auth.username(), "foo");
         assert_eq!(auth.password(), Some("bar"));
+        let conn = c.conn();
+        assert_eq!(conn.hostname(), "localhost2".to_string().into());
+        let sections = c.sections();
+        assert_eq!(sections.cache_age(), 501);
+        assert_eq!(sections.sections().len(), 21);
     }
 
     #[test]

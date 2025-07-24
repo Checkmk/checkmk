@@ -811,15 +811,17 @@ def check_systemd_units_summary(
     services_organised = _services_split(units, blacklist)
     yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
 
+    sum_failed = sum(
+        s.active_status == "failed"
+        for s in units
+        if s not in services_organised["excluded"] and s not in services_organised["disabled"]
+    )
+
     yield Result(
         state=State(params["states"].get("failed", params["states_default"]))
-        if sum(
-            s.active_status == "failed"
-            for s in units
-            if s not in services_organised["excluded"] and s not in services_organised["disabled"]
-        )
+        if sum_failed
         else State.OK,
-        summary=f"Failed: {sum(s.active_status == 'failed' for s in units)}",
+        summary=f"Failed: {sum_failed}",
     )
 
     included_template = "{count:d} {unit_type} {status} ({service_text})"

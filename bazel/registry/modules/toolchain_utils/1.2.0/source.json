@@ -1,0 +1,5 @@
+{
+  "url": "https://gitlab.arm.com/bazel/toolchain_utils/-/releases/v1.2.0/downloads/src.tar.gz",
+  "integrity": "sha512-RrFL+rtXtHWMgJd+yM0RQQxR/W1Nd209mfVXuv1xs4wHsg50mPaW19iSmeio7MXsJxMjcqZsayoxiQ9AwSWLVA==",
+  "strip_prefix": "toolchain_utils-v1.2.0"
+}

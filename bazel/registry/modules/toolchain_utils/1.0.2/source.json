@@ -1,0 +1,8 @@
+{
+  "url": "https://gitlab.arm.com/bazel/toolchain_utils/-/releases/v1.0.2/downloads/src.tar.gz",
+  "mirror_urls": [
+      "https://artifacts.lan.tribe29.com/repository/upstream-archives/toolchain_utils-v1.0.2.tar.gz"
+  ],
+  "integrity": "sha512-AXqtA9CzczVUdS5dw0dX332eaXZQhFcEZmf1iKALwsoKoT9Mboah7/j1JN9hZpzq6B5X7gpe83TPpya6yJZ6Lw==",
+  "strip_prefix": "toolchain_utils-v1.0.2"
+}

@@ -1,0 +1,8 @@
+{
+  "url": "https://gitlab.arm.com/bazel/download_utils/-/releases/v1.0.1/downloads/src.tar.gz",
+  "mirror_urls": [
+      "https://artifacts.lan.tribe29.com/repository/upstream-archives/download_utils-v1.0.1.tar.gz"
+  ],
+  "integrity": "sha512-nsUJrJJjUWKzTQA187uWHhnBSqPA7t8Q6Rqry83Sj63Kf09L6xEFCR7thlnRUtbRbzabIKGr7JreouFdjjdarw==",
+  "strip_prefix": "download_utils-v1.0.1"
+}

@@ -75,7 +75,7 @@ def main() {
             condition: true,
             raiseOnError: false,) {
         smart_build(
-            job: "${branch_base_folder}/test-integration-fips",
+            job: "${branch_base_folder}/fips/test-integration-fips",
             parameters: job_parameters
         );
     }[0]

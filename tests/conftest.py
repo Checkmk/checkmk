@@ -11,6 +11,7 @@ import subprocess
 from collections.abc import Generator, Iterator
 from enum import StrEnum
 from pathlib import Path
+from typing import Final
 
 import pytest
 import pytest_check
@@ -46,6 +47,10 @@ pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
 # when pytest based tests are being run from inside the IDE
 # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+ARG_EDITION_CMK: Final[str] = "--cmk-edition"
+ARG_VERSION_CMK: Final[str] = "--cmk-version"
+ARG_REUSE: Final[str] = "--reuse"
+ARG_CLEANUP: Final[str] = "--cleanup"
 
 
 class EditionMarker(StrEnum):
@@ -250,10 +255,69 @@ def pytest_addoption(parser):
         default=False,
         help="Simulate test execution. XFail all tests that would be executed.",
     )
+    parser.addoption(
+        ARG_VERSION_CMK,
+        action="store",
+        type=str,
+        metavar="2.X.0[pZ|-YYYY.MM.DD]",
+        help=(
+            "Select version of the Checkmk site under test, by default '2.X.0-<daily-timestamp>'."
+            "Please use environment variable `VERSION`. "
+            "Example, `VERSION=2.5.0-2025.05.25 pytest ...`."
+        ),
+    )
+    parser.addoption(
+        ARG_EDITION_CMK,
+        action="store",
+        choices=[
+            CMKEdition.CCE.short,
+            CMKEdition.CEE.short,
+            CMKEdition.CME.short,
+            CMKEdition.CRE.short,
+            CMKEdition.CSE.short,
+        ],
+        type=str,
+        help=(
+            "Select edition of the Checkmk site under test, by default 'cee'. "
+            "Please use environment variable `EDITION`. Example, `EDITION=cce pytest ...`."
+        ),
+    )
+    parser.addoption(
+        ARG_REUSE,
+        action="store",
+        choices=["on", "off"],
+        # default="off",
+        type=str,
+        help=(
+            "Reuse an existing site to perform the tests, by default `off`. "
+            "Please use environment variable `REUSE`. Example, `REUSE=1 pytest ...`."
+        ),
+    )
+    parser.addoption(
+        ARG_CLEANUP,
+        action="store",
+        choices=["on", "off"],
+        type=str,
+        # default="on",
+        help=(
+            "Cleanup the test-environment after a test-run, by default `on`. "
+            "Please use environment variable `CLEANUP`. Example, `CLEANUP=0 pytest ...`."
+        ),
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
     """Add important environment variables to the report and register custom pytest markers"""
+
+    if any(
+        map(config.getoption, args := [ARG_EDITION_CMK, ARG_VERSION_CMK, ARG_REUSE, ARG_CLEANUP])
+    ):
+        raise NotImplementedError(
+            "TODO: CMK-24368 interface with test-framework! "
+            f"Following CLI arguments\n{args}\n, are not yet functional! "
+            "Please refer to `pytest tests --help` for more information."
+        )
+
     env_vars = {
         "BRANCH": current_base_branch_name(),
         "EDITION": "cee",

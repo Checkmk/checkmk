@@ -406,6 +406,11 @@ class EndpointModel[**P, T]:
         # this also guarantees that all required parameters to call the handler are present
         return self._signature.bind(**out)
 
+    @staticmethod
+    def _contains_path_parameter_errors(error: ValidationError) -> bool:
+        """Check if the error is related to path parameters."""
+        return any(details["loc"][0] == "path" for details in error.errors())
+
     def validate_request_and_identify_args(
         self, request_data: RawRequestData, content_type: str | None, api_context: ApiContext
     ) -> inspect.BoundArguments:
@@ -416,7 +421,8 @@ class EndpointModel[**P, T]:
         try:
             return self._validate_request_parameters(request_data, content_type, api_context)
         except ValidationError as e:
-            RequestDataValidator.raise_formatted_pydantic_error(e)
+            status_code: Literal[400, 404] = 404 if self._contains_path_parameter_errors(e) else 400
+            RequestDataValidator.raise_formatted_pydantic_error(e, status_code=status_code)
 
     def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:
         for field_instance in dataclasses.fields(self._input_model):

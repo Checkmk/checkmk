@@ -21,7 +21,7 @@ from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.utils import (
     RestAPIHeaderValidationException,
     RestAPIPermissionException,
-    RestAPIRequestDataValidationException,
+    RestAPIRequestGeneralException,
     RestAPIWatoDisabledException,
 )
 from cmk.gui.utils.permission_verification import AllPerm, Perm
@@ -225,7 +225,7 @@ def test_handle_endpoint_request_missing_parameters_header(
     request_data = RawRequestDataFactory.build(
         headers=Headers({"Accept": request_endpoint.content_type}),
     )
-    with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
         handle_endpoint_request(
             request_endpoint,
             request_data,
@@ -254,7 +254,7 @@ def test_handle_endpoint_request_missing_parameters_query(
     request_data = RawRequestDataFactory.build(
         headers=Headers({"Accept": request_endpoint.content_type}), query={}
     )
-    with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
         handle_endpoint_request(
             request_endpoint,
             request_data,
@@ -283,7 +283,7 @@ def test_handle_endpoint_request_missing_parameters_path(
     request_data = RawRequestDataFactory.build(
         headers=Headers({"Accept": request_endpoint.content_type}), path={}
     )
-    with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
         handle_endpoint_request(
             request_endpoint,
             request_data,
@@ -295,7 +295,7 @@ def test_handle_endpoint_request_missing_parameters_path(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == 404, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "path.path_param" in response_json["detail"]
     assert response_json["fields"]["path.path_param"]["type"] == "missing"
@@ -305,7 +305,7 @@ def test_handle_endpoint_request_missing_parameters_body(
     permission_validator: PermissionValidator,
 ) -> None:
     request_endpoint = RequestEndpointFactory.build(
-        handler=_handler, content_type="application/json", accept="application/json"
+        handler=_handler_body, content_type="application/json", accept="application/json"
     )
     request_data = RawRequestDataFactory.build(
         body=b"{}",
@@ -316,7 +316,7 @@ def test_handle_endpoint_request_missing_parameters_body(
             }
         ),
     )
-    with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
         handle_endpoint_request(
             request_endpoint,
             request_data,

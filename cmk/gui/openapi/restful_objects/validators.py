@@ -12,7 +12,7 @@ import http.client
 import json
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, NoReturn, Self
+from typing import Any, Literal, NoReturn, Self
 from urllib import parse
 
 import pydantic
@@ -44,6 +44,7 @@ from cmk.gui.openapi.utils import (
     RestAPIQueryPathValidationException,
     RestAPIRequestContentTypeException,
     RestAPIRequestDataValidationException,
+    RestAPIRequestGeneralException,
     RestAPIResponseException,
 )
 from cmk.gui.utils import permission_verification as permissions
@@ -311,6 +312,7 @@ class RequestDataValidator:
     @staticmethod
     def raise_formatted_pydantic_error(
         validation_error: pydantic.ValidationError,
+        status_code: Literal[400, 401, 403, 404, 406, 415] = 400,
     ) -> NoReturn:
         """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
         # the context may contain the actual exception, which is usually not serializable
@@ -319,8 +321,9 @@ class RequestDataValidator:
             RequestDataValidator._format_pydantic_location(error["loc"]): error
             for error in validation_error.errors(include_context=False)
         }
-        raise RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+        raise RestAPIRequestGeneralException(
+            status=status_code,
+            title=http.client.responses[status_code],
             detail=f"These fields have problems: {_format_fields(errors)}",
             fields=FIELDS(errors),
         ) from validation_error

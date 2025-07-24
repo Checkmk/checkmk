@@ -1216,6 +1216,48 @@ class MetricCache(DataCache):
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
+    @staticmethod
+    def _get_available_metrics_from_exception(
+        desired_names: str, api_error: ApiError, resource_type: str
+    ) -> str | None:
+        match = re.match(
+            r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
+            api_error.args[0],
+        )
+        if not match:
+            raise api_error
+
+        available_names = match.groups()[0]
+        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
+        if not retry_names:
+            LOGGER.debug("None of the expected metrics are available for %s", resource_type)
+            return None
+
+        return ",".join(sorted(retry_names))
+
+    async def _get_metrics(self, api_client, region, resource_ids, params):
+        regional_url = api_client.build_regional_url(region, "/metrics:getBatch")
+
+        async def _query_metrics(specific_params):
+            return await api_client.request_async(
+                "POST",
+                full_uri=regional_url,
+                body={"resourceids": resource_ids},
+                params=specific_params,
+                key="values",
+            )
+
+        params["api-version"] = "2023-10-01"
+        try:
+            return await _query_metrics(params)
+        except ApiError as exc:
+            if retry_names := self._get_available_metrics_from_exception(
+                params["metricnames"], exc, params["metricnamespace"]
+            ):
+                params["metricnames"] = retry_names
+                return await _query_metrics(params)
+            return []
+
     async def get_live_data(self, *args: Any) -> Any:
         mgmt_client: MgmtApiClient = args[0]
         region: str = args[1]
@@ -1236,7 +1278,7 @@ class MetricCache(DataCache):
 
         raw_metrics = []
         for chunk in _chunks(resource_ids):
-            raw_metrics += await mgmt_client.metrics(region, chunk, params)
+            raw_metrics += await self._get_metrics(mgmt_client, region, chunk, params)
 
         metrics = defaultdict(list)
 
@@ -1258,7 +1300,7 @@ class MetricCache(DataCache):
 
         return metrics
 
-    async def get_data_async(self, *args, **kwargs):
+    async def get_metrics(self, *args, **kwargs):
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
@@ -1365,7 +1407,7 @@ async def _gather_metrics(
             )
 
             tasks.add(
-                cache.get_data_async(
+                cache.get_metrics(
                     mgmt_client,
                     resource_region,
                     resource_ids,
@@ -1592,7 +1634,6 @@ async def _collect_usage_data(mgmt_client: MgmtApiClient) -> Sequence[dict[str, 
     return processed_query
 
 
-# TODO: do not call usage data inside the client
 async def get_usage_data(client: MgmtApiClient) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",

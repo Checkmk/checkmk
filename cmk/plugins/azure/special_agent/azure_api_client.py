@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import asyncio
 import logging
-import re
 from collections.abc import Callable, Mapping
 from typing import Literal, NamedTuple
 
@@ -113,6 +112,12 @@ class BaseApiClient:
         self._base_url = authority_urls.base
         self._regional_url = authority_urls.regional
         self._http_proxy_config = http_proxy_config
+
+    def build_regional_url(self, region: str, uri_end: str) -> str:
+        if self._regional_url is None:
+            raise ValueError("Regional URL not configured")
+
+        return self._regional_url(region) + uri_end
 
     @property
     def ratelimit(self):
@@ -327,53 +332,3 @@ class MgmtApiClient(BaseAsyncApiClient):
     ):
         super().__init__(authority_urls, http_proxy_config, tenant, client, secret)
         self.subscription = subscription
-
-    @staticmethod
-    def _get_available_metrics_from_exception(
-        desired_names: str, api_error: ApiError, resource_type: str
-    ) -> str | None:
-        error_message = api_error.args[0]
-        match = re.match(
-            r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
-            error_message,
-        )
-        if not match:
-            raise api_error
-
-        available_names = match.groups()[0]
-        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
-        if not retry_names:
-            LOGGER.debug("None of the expected metrics are available for %s", resource_type)
-            return None
-
-        return ",".join(sorted(retry_names))
-
-    # TODO: extract
-    async def metrics(self, region, resource_ids, params):
-        if self._regional_url is None:
-            raise ValueError("Regional url not configured")
-
-        params["api-version"] = "2023-10-01"
-        try:
-            return await self.request_async(
-                "POST",
-                full_uri=self._regional_url(region) + "/metrics:getBatch",
-                body={"resourceids": resource_ids},
-                params=params,
-                key="values",
-            )
-
-        except ApiError as exc:
-            retry_names = self._get_available_metrics_from_exception(
-                params["metricnames"], exc, params["metricnamespace"]
-            )
-            if retry_names:
-                params["metricnames"] = retry_names
-                return await self.request_async(
-                    "POST",
-                    full_uri=self._regional_url(region) + "/metrics:getBatch",
-                    body={"resourceids": resource_ids},
-                    params=params,
-                    key="values",
-                )
-            return []

@@ -37,6 +37,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.activate_changes import (
     activate_changes_start,
@@ -128,6 +129,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     ):
         activation_response = activate_changes_start(
             sites=sites,
+            enabled_sites=list(enabled_sites(active_config.sites).keys()),
             source="REST API",
             comment=None,
             force_foreign_changes=body["force_foreign_changes"],

@@ -77,7 +77,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.site_config import (
-    enabled_sites,
     is_single_local_site,
     is_wato_slave_site,
     site_is_local,
@@ -1461,7 +1460,7 @@ class ActivateChangesManager(ActivateChanges):
     )
 
     def __init__(self) -> None:
-        self._sites: list[SiteId] = []
+        self._sites: Sequence[SiteId] = []
         self._site_snapshot_settings: dict[SiteId, SnapshotSettings] = {}
         self._activate_until: str | None = None
         self._comment: str | None = None
@@ -1515,7 +1514,7 @@ class ActivateChangesManager(ActivateChanges):
     @tracer.instrument("activate_changes")
     def start(
         self,
-        sites: list[SiteId],
+        sites: Sequence[SiteId],
         source: ActivationSource,
         *,
         debug: bool,
@@ -1700,7 +1699,7 @@ class ActivateChangesManager(ActivateChanges):
     def _new_activation_id(self) -> ActivationId:
         return cmk.gui.utils.gen_id()
 
-    def _get_sites(self, sites: list[SiteId]) -> list[SiteId]:
+    def _get_sites(self, sites: Sequence[SiteId]) -> Sequence[SiteId]:
         for site_id in sites:
             if site_id not in activation_sites():
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
@@ -3600,7 +3599,8 @@ def _raise_for_license_block() -> None:
 
 def activate_changes_start(
     *,
-    sites: list[SiteId],
+    sites: Sequence[SiteId],
+    enabled_sites: Sequence[SiteId],
     source: ActivationSource,
     comment: str | None,
     force_foreign_changes: bool,
@@ -3642,9 +3642,8 @@ def activate_changes_start(
                 )
             )
 
-    known_sites = enabled_sites(active_config.sites).keys()
     for site in sites:
-        if site not in known_sites:
+        if site not in enabled_sites:
             raise MKUserError(
                 None, _("Unknown site %s") % escaping.escape_attribute(site), status=400
             )

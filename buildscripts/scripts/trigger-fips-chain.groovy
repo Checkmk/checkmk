@@ -65,7 +65,7 @@ def main() {
             condition: true,
             raiseOnError: false,) {
         smart_build(
-            job: "${branch_base_folder}/fips/test-gui-e2e-fips ",
+            job: "${branch_base_folder}/fips/test-gui-e2e-fips",
             parameters: job_parameters
         );
     }[0]

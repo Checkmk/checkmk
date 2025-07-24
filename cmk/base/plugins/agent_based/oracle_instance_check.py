@@ -60,6 +60,10 @@ _FORCELOGGING_MAP: Mapping[str, _ParamsKey] = {
 }
 
 
+def _is_open(openmode: str) -> bool:
+    return openmode in {"OPEN", "READ ONLY", "READ WRITE"}
+
+
 def discover_oracle_instance(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
@@ -86,11 +90,7 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
 
     status_state = State.OK
     # Check state for PRIMARY Database. Normaly there are always OPEN
-    if instance.database_role == "PRIMARY" and instance.openmode not in (
-        "OPEN",
-        "READ ONLY",
-        "READ WRITE",
-    ):
+    if instance.database_role == "PRIMARY" and not _is_open(instance.openmode):
         status_state = State(params["primarynotopen"])
         yield Result(
             state=status_state,
@@ -130,7 +130,7 @@ def _asses_property(
 
 def _check_archive_log(instance: Instance, params: _Params) -> Iterable[Result]:
     # logins are only possible when the database is open
-    if instance.openmode == "OPEN":
+    if _is_open(instance.openmode):
         yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
 
     # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode

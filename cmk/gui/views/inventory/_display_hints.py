@@ -204,7 +204,7 @@ def _parse_column_hint(
     )
 
 
-def _parse_view_name(view_name: str | None) -> str:
+def _parse_view_name(view_name: str) -> str:
     if not view_name:
         return ""
     if not view_name.startswith("inv"):
@@ -252,7 +252,7 @@ def _parse_node_hint(
             SDKey(key): _parse_column_hint(title, key, columns.get(key, {}))
             for key in _complete_key_order(table_key_order, set(columns))
         },
-        table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view")),
+        table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view", "")),
         table_is_show_more=legacy_hint.get("is_show_more", True),
     )
 

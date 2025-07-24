@@ -839,7 +839,6 @@ def test_make_attribute_displayhint_from_hint(
 @pytest.mark.parametrize(
     "view_name, expected_view_name",
     [
-        (None, ""),
         ("", ""),
         ("viewname", "invviewname"),
         ("invviewname", "invviewname"),
@@ -847,5 +846,5 @@ def test_make_attribute_displayhint_from_hint(
         ("invviewname_of_host", "invviewname"),
     ],
 )
-def test__parse_view_name(view_name: str | None, expected_view_name: str) -> None:
+def test__parse_view_name(view_name: str, expected_view_name: str) -> None:
     assert _parse_view_name(view_name) == expected_view_name

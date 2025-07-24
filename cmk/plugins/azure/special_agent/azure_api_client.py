@@ -9,7 +9,6 @@ from typing import Literal, NamedTuple
 
 import aiohttp  # type: ignore[import-not-found]  # type: ignore[import-not-found]
 import msal
-import requests
 
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 
@@ -98,19 +97,28 @@ def get_mgmt_authority_urls(
     raise ValueError("Unknown authority %r" % authority)
 
 
-class BaseApiClient:
+class BaseAsyncApiClient:
     def __init__(
         self,
         authority_urls: _AuthorityURLs,
         http_proxy_config: HTTPProxyConfig,
-    ) -> None:
-        self._ratelimit = float("Inf")
-        self._headers: dict = {}
+        tenant: str,
+        client: str,
+        secret: str,
+    ):
         self._login_url = authority_urls.login
         self._resource_url = authority_urls.resource
         self._base_url = authority_urls.base
         self._regional_url = authority_urls.regional
         self._http_proxy_config = http_proxy_config
+
+        self._tenant = tenant
+        self._client = client
+        self._secret = secret
+
+        self._headers: dict = {}
+        self._ratelimit = float("Inf")
+        self._session: aiohttp.ClientSession | None = None
 
     def build_regional_url(self, region: str, uri_end: str) -> str:
         if self._regional_url is None:
@@ -124,56 +132,12 @@ class BaseApiClient:
             return self._ratelimit
         return None
 
-    def _update_ratelimit(self, response: requests.Response) -> None:
+    def _update_ratelimit(self, response: aiohttp.ClientResponse) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
         except (KeyError, ValueError, TypeError):
             return
         self._ratelimit = min(self._ratelimit, new_value)
-
-    def request(
-        self,
-        method,
-        uri_end=None,
-        full_uri=None,
-        body=None,
-        key=None,
-        params=None,
-        next_page_key="nextLink",
-    ):
-        uri = full_uri or self._base_url + uri_end
-        if not uri:
-            raise ValueError("No URI provided")
-
-        json_data = self._request_json_from_url(method, uri, body=body, params=params)
-
-        if (error := json_data.get("error")) is not None:
-            raise _make_exception(error)
-
-        if key is None:  # we do not paginate without a key
-            return json_data
-
-        data = self.lookup_json_data(json_data, key)
-
-        while next_link := json_data.get(next_page_key):
-            json_data = self._request_json_from_url(method, next_link, body=body)
-            data += self.lookup_json_data(json_data, key)
-
-        return data
-
-    def _request_json_from_url(self, method, url, *, body=None, params=None):
-        response = requests.request(
-            method,
-            url,
-            json=body,
-            params=params,
-            headers=self._headers,
-            proxies=self._http_proxy_config.to_requests_proxies(),
-        )
-
-        json_data = response.json()
-        LOGGER.debug("response: %r", json_data)
-        return json_data
 
     @staticmethod
     def lookup_json_data(json_data, key):
@@ -181,16 +145,6 @@ class BaseApiClient:
             return json_data[key]
         except KeyError:
             raise _make_exception(json_data)
-
-
-class BaseAsyncApiClient(BaseApiClient):
-    # TODO: type
-    def __init__(self, authority_urls, http_proxy_config, tenant, client, secret):
-        super().__init__(authority_urls, http_proxy_config)
-        self._session = None
-        self._tenant = tenant
-        self._client = client
-        self._secret = secret
 
     async def __aenter__(self):
         await self.login_async(tenant=self._tenant, client=self._client, secret=self._secret)

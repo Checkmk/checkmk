@@ -2041,8 +2041,7 @@ async def _get_subscriptions(args: Args) -> set[str]:
             args.client,
             args.secret,
         ) as api_client:
-            # TODO: should we keep the sync client only for this call?
-            response = api_client.request(
+            response = await api_client.request_async(
                 method="GET",
                 full_uri="https://management.azure.com/subscriptions",
                 params={"api-version": "2022-12-01"},

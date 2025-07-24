@@ -46,6 +46,7 @@ from ._metric_expression import (
     parse_legacy_conditional_expression,
     parse_legacy_simple_expression,
 )
+from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -1254,8 +1255,9 @@ def _get_legacy_renderer(
     raise ValueError(perfometer["type"])
 
 
-def get_first_matching_perfometer(
+def _get_first_matching_perfometer_testable(
     translated_metrics: Mapping[str, TranslatedMetric],
+    superseded_to_superseder: Mapping[str, str],
 ) -> (
     MetricometerRendererPerfometer
     | MetricometerRendererBidirectional
@@ -1271,6 +1273,13 @@ def get_first_matching_perfometer(
 
     for perfometer in perfometers_from_api.values():
         if _perfometer_matches(perfometer, translated_metrics):
+            if (
+                (superseder_name := superseded_to_superseder.get(perfometer.name))
+                and (superseder := perfometers_from_api.get(superseder_name))
+                and _perfometer_matches(superseder, translated_metrics)
+            ):
+                return _get_renderer(superseder, translated_metrics)
+
             return _get_renderer(perfometer, translated_metrics)
 
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
@@ -1280,3 +1289,21 @@ def get_first_matching_perfometer(
             return _get_legacy_renderer(parsed, translated_metrics)
 
     return None
+
+
+def get_first_matching_perfometer(
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> (
+    MetricometerRendererPerfometer
+    | MetricometerRendererBidirectional
+    | MetricometerRendererStacked
+    | MetricometerRendererLegacyLogarithmic
+    | MetricometerRendererLegacyLinear
+    | MetricometerRendererLegacyStacked
+    | MetricometerRendererLegacyDual
+    | None
+):
+    return _get_first_matching_perfometer_testable(
+        translated_metrics,
+        PERFOMETER_SUPERSEDED_TO_SUPERSEDER,
+    )

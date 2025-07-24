@@ -11,11 +11,12 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
+from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
 from cmk.gui.graphing._perfometer import (
     _ArcTan,
+    _get_first_matching_perfometer_testable,
     _make_projection,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
@@ -293,9 +294,9 @@ def test__perfometer_possible(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_first_matching_perfometer_testable() -> None:
+def test_get_first_matching_perfometer_testable_without_superseding() -> None:
     assert (
-        first_renderer := get_first_matching_perfometer(
+        first_renderer := _get_first_matching_perfometer_testable(
             {
                 "active_connections": TranslatedMetric(
                     originals=[Original("active_connections", 1.0)],
@@ -309,7 +310,8 @@ def test_get_first_matching_perfometer_testable() -> None:
                     ),
                     color="#111111",
                 ),
-            }
+            },
+            {},
         )
     ) is not None
     assert first_renderer.perfometer == perfometers_api.Perfometer(
@@ -319,6 +321,49 @@ def test_get_first_matching_perfometer_testable() -> None:
             upper=perfometers_api.Open(90),
         ),
         segments=["active_connections"],
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_first_matching_perfometer_testable_with_superseding() -> None:
+    assert (
+        first_renderer := _get_first_matching_perfometer_testable(
+            {
+                "mem_used": TranslatedMetric(
+                    originals=[Original("mem_used", 1.0)],
+                    value=1.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="Memory Used",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#111111",
+                ),
+                "mem_used_percent": TranslatedMetric(
+                    originals=[Original("mem_used_percent", 1.0)],
+                    value=1.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="Memory Used Percent",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="%"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#111111",
+                ),
+            },
+            {"mem_used": "mem_used_percent"},
+        )
+    ) is not None
+    assert first_renderer.perfometer == perfometers_api.Perfometer(
+        name="mem_used_percent",
+        focus_range=perfometers_api.FocusRange(
+            lower=perfometers_api.Closed(0),
+            upper=perfometers_api.Closed(100),
+        ),
+        segments=("mem_used_percent",),
     )
 
 

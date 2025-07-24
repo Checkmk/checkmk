@@ -176,11 +176,11 @@ function handleDelTagItem(tag: FilterOption) {
   height: 60px;
   min-height: 60px !important;
   z-index: +1;
-  width: calc(100% - 40px);
+  width: calc(100% - 2 * var(--spacing-double));
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 20px;
+  padding: 0 var(--spacing-double);
   border-bottom: 1px solid var(--ux-theme-3);
 }
 
@@ -204,7 +204,7 @@ function handleDelTagItem(tag: FilterOption) {
   opacity: 0.5;
 
   span {
-    font-size: 10px;
+    font-size: var(--font-size-small);
   }
 
   .arrow-key {
@@ -238,9 +238,9 @@ function handleDelTagItem(tag: FilterOption) {
   background-color: var(--default-form-element-bg-color);
   box-shadow: none;
   filter: none;
-  padding: 0 35px 0 35px;
+  padding: 0 35px;
   width: 100%;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   border: 1px solid var(--default-form-element-border-color);
   line-height: 15px;
   height: 27px;
@@ -257,22 +257,22 @@ function handleDelTagItem(tag: FilterOption) {
   display: inline-flex;
   align-items: center;
   background: var(--color-yellow-80);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   height: 20px;
-  padding: 0px 4px;
-  margin-right: 4px;
+  padding: 0px var(--spacing-half);
+  margin-right: var(--spacing-half);
 
   .unified-search-input-tag-dismiss {
     background: transparent;
     border: 0;
-    margin: 0 0 0 4px;
+    margin: 0 0 0 var(--spacing-half);
     height: 16px;
     max-width: 16px;
     overflow: hidden;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     padding: 0;
     width: 16px;
-    font-size: 10px;
+    font-size: var(--font-size-small);
 
     &:hover {
       background: var(--color-yellow-60);
@@ -302,14 +302,18 @@ function handleDelTagItem(tag: FilterOption) {
   line-height: 15px;
   height: 27px;
   padding: 0;
-  margin-left: 8px;
+  margin-left: var(--spacing-half);
   flex-grow: 5;
+
+  &::placeholder {
+    color: var(--default-form-element-placeholder-color);
+  }
 }
 
 .unified-search-filter-suggestions {
   position: absolute;
   top: 30px;
-  left: 4px;
+  left: var(--spacing-half);
   width: calc(100% - 24px);
   padding: 0;
   background: var(--default-form-element-bg-color);
@@ -321,24 +325,9 @@ function handleDelTagItem(tag: FilterOption) {
   padding: 0 8px 16px 8px;
 }
 
-.unified-search-input {
-  background: transparent;
-  border: 0;
-  width: auto;
-  line-height: 15px;
-  height: 27px;
-  padding: 0;
-  margin-left: 8px;
-  flex-grow: 5;
-
-  &::placeholder {
-    color: var(--default-form-element-placeholder-color);
-  }
-}
-
 .unified-search-icon {
   position: absolute;
-  margin-left: 10px;
+  margin-left: var(--spacing);
   z-index: +1;
 }
 

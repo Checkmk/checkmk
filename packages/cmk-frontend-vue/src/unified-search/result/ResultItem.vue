@@ -55,9 +55,11 @@ immediateWatch(
           ></CmkIcon>
         </div>
         <div class="result-item-inner-end">
-          <span v-if="props.breadcrumb" class="result-item-breadcrump">{{
-            props.breadcrumb.join(' > ')
-          }}</span>
+          <span
+            v-if="props.breadcrumb && props.breadcrumb.length > 0"
+            class="result-item-breadcrump"
+            >{{ props.breadcrumb.join(' > ') }}</span
+          >
           <ResultItemTitle :title="props.html ? props.html : props.title"></ResultItemTitle>
         </div>
       </a>
@@ -86,7 +88,7 @@ immediateWatch(
   list-style-type: none;
 
   .result-item-handler {
-    padding: 10px;
+    padding: var(--spacing);
     width: calc(100% - 22px);
     margin: 0;
     background: var(--default-bg-color);
@@ -103,6 +105,7 @@ immediateWatch(
 
     &:hover {
       background-color: var(--ux-theme-5);
+      border: 1px solid var(--ux-theme-5);
     }
 
     &:active,
@@ -131,8 +134,8 @@ immediateWatch(
 
 .result-item-breadcrump {
   text-transform: capitalize;
-  margin-bottom: 4px;
-  font-size: 10px;
+  margin-bottom: var(--spacing-half);
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
 
@@ -141,6 +144,6 @@ immediateWatch(
 }
 
 .result-item-icon {
-  margin-right: 16px;
+  margin-right: var(--spacing);
 }
 </style>

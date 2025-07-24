@@ -247,10 +247,10 @@ function searchResultNotEmpty(): boolean {
 <style scoped>
 .cmk-unified-search-tab-info {
   position: absolute;
-  right: 16px;
-  margin-top: 10px;
+  right: var(--spacing-double);
+  margin-top: var(--spacing-half);
   line-height: 14px;
-  font-size: 10px;
+  font-size: var(--font-size-small);
   opacity: 0.5;
 
   .arrow-key {
@@ -301,8 +301,7 @@ function searchResultNotEmpty(): boolean {
 }
 
 .cmk-unified-search-result-tabs {
-  margin: 16px;
-  bottom: 16px;
+  margin: var(--spacing-double);
   height: 100%;
 }
 
@@ -312,11 +311,11 @@ function searchResultNotEmpty(): boolean {
   align-items: center;
 
   .tab-icon {
-    margin-left: 16px;
+    margin-left: var(--spacing);
   }
 
   h2 {
-    margin: 16px;
+    margin: var(--spacing);
 
     &::first-letter {
       text-transform: capitalize;

@@ -34,15 +34,18 @@
   --font-size-xlarge: 16px;
   --font-size-large: 14px;
   --font-size-normal: 12px;
+  --font-size-small: 10px;
   --font-weight-default: 400;
   --font-weight-bold: 700;
 
   /* Spacings */
+  --spacing-double: 20px;
   --spacing: 10px;
   --spacing-half: 5px;
 
   /* Borders */
   --border-radius: 4px;
+  --border-radius-half: 2px;
 
   /* Dimensions */
   --form-field-height: 21px;

@@ -215,13 +215,13 @@ searchUtils.input.onEmptyBackspace(() => {
 .unified-search-filter-suggestions {
   position: absolute;
   top: 30px;
-  left: 4px;
+  left: var(--spacing-half);
   width: calc(100% - 24px);
   padding: 0;
   background: var(--default-form-element-bg-color);
   height: auto;
-  border-bottom-left-radius: 2px;
-  border-bottom-right-radius: 2px;
+  border-bottom-left-radius: var(--border-radius-half);
+  border-bottom-right-radius: var(--border-radius-half);
 }
 
 .unified-search-filter-suggestions-list {

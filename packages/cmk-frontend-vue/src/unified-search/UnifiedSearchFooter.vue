@@ -32,7 +32,7 @@ const { t } = usei18n('unified-search-app')
   display: flex;
   flex-direction: column;
   align-items: center;
-  bottom: 32px;
+  bottom: calc(3 * var(--spacing));
   position: fixed;
   width: 750px;
 }

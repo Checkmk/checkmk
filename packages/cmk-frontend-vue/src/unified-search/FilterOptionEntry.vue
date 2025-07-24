@@ -53,7 +53,7 @@ li {
     background: transparent;
     border: 1px solid transparent;
     width: 100%;
-    padding: 8px;
+    padding: var(--spacing);
     margin: 0;
     text-align: left;
     font-weight: normal;

@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 h2 {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -148,7 +148,7 @@ h2 {
 button {
   border: 0;
   background: 0;
-  font-weight: normal;
+  font-weight: var(--font-weight-default);
   background: transparent;
   margin-right: 0;
   text-decoration: underline;
@@ -164,8 +164,7 @@ button {
   }
 }
 
-.recently-viewed,
 .recent-searches {
-  margin: 20px;
+  margin: var(--spacing-double);
 }
 </style>

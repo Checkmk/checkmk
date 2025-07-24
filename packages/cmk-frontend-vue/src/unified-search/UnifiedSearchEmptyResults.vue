@@ -93,12 +93,12 @@ onBeforeUnmount(() => {
 
   .shruggy {
     font-size: 38px;
-    margin: 64px 0;
+    margin: calc(6 * var(--spacing)) 0;
   }
 
   .reset-button {
-    margin: 32px 0;
-    gap: 8px;
+    margin: calc(3 * var(--spacing)) 0;
+    gap: var(--spacing);
 
     &:focus {
       border: 1px solid var(--success);

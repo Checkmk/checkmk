@@ -93,7 +93,7 @@ immediateWatch(
 
 <style scoped>
 h2 {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -119,8 +119,7 @@ button {
   }
 }
 
-.recently-viewed,
-.recent-searches {
-  margin: 20px;
+.recently-viewed {
+  margin: var(--spacing-double);
 }
 </style>

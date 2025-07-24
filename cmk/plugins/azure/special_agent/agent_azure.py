@@ -37,7 +37,6 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     BaseAsyncApiClient,
     get_graph_authority_urls,
     get_mgmt_authority_urls,
-    MgmtApiClient,
     NoConsumptionAPIError,
 )
 from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
@@ -751,10 +750,10 @@ def get_params_from_azure_id(
 
 
 async def get_frontend_ip_configs(
-    mgmt_client: MgmtApiClient, resource: Mapping
+    mgmt_client: BaseAsyncApiClient, resource: Mapping
 ) -> dict[str, dict[str, object]]:
     async def _get_public_ip_addresses(
-        mgmt_client: MgmtApiClient, group: str, name: str
+        mgmt_client: BaseAsyncApiClient, group: str, name: str
     ) -> Mapping[str, Any]:
         return await mgmt_client.get_async(
             f"resourceGroups/{group}/providers/Microsoft.Network/publicIPAddresses/{name}",
@@ -822,7 +821,7 @@ def _get_http_listeners(http_listeners: Mapping) -> Mapping[str, Mapping]:
 
 
 async def _collect_app_gateways_resources(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureResource]:
     app_gateways = await mgmt_client.get_async(
@@ -884,7 +883,7 @@ async def _collect_app_gateways_resources(
 
 # TODO: test
 async def process_app_gateways(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     applications_gateways = await _collect_app_gateways_resources(
@@ -901,7 +900,7 @@ async def process_app_gateways(
 
 
 async def _collect_load_balancers_resources(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureResource]:
     load_balancers_response = await mgmt_client.get_async(
@@ -949,7 +948,7 @@ async def _collect_load_balancers_resources(
 
 # TODO: test
 async def process_load_balancers(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources_by_id)
@@ -964,7 +963,7 @@ async def process_load_balancers(
 
 
 async def _get_standard_network_interface_config(
-    mgmt_client: MgmtApiClient, nic_id: str
+    mgmt_client: BaseAsyncApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
     _, group, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
@@ -976,7 +975,7 @@ async def _get_standard_network_interface_config(
 
 
 async def _get_vmss_network_interface_config(
-    mgmt_client: MgmtApiClient, nic_id: str
+    mgmt_client: BaseAsyncApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
     async def _nic_vmss_ip_conf_view(group, vmss, virtual_machine_index, nic_name, ip_conf_name):
         return await mgmt_client.get_async(
@@ -998,7 +997,7 @@ async def _get_vmss_network_interface_config(
 
 
 async def get_network_interface_config(
-    mgmt_client: MgmtApiClient, nic_id: str
+    mgmt_client: BaseAsyncApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
     if "virtualMachineScaleSets" in nic_id:
         return await _get_vmss_network_interface_config(mgmt_client, nic_id)
@@ -1007,7 +1006,7 @@ async def get_network_interface_config(
 
 
 async def get_inbound_nat_rules(
-    mgmt_client: MgmtApiClient, load_balancer: Mapping
+    mgmt_client: BaseAsyncApiClient, load_balancer: Mapping
 ) -> list[dict[str, object]]:
     nat_rule_keys = ("frontendPort", "backendPort", "frontendIPConfiguration")
 
@@ -1032,7 +1031,7 @@ async def get_inbound_nat_rules(
 
 
 async def get_backend_address_data(
-    mgmt_client: MgmtApiClient, ip_config_id: str
+    mgmt_client: BaseAsyncApiClient, ip_config_id: str
 ) -> Mapping[str, object] | None:
     backend_address_keys = ("privateIPAddress", "privateIPAllocationMethod", "primary")
     nic_config = await get_network_interface_config(mgmt_client, ip_config_id)
@@ -1047,7 +1046,7 @@ async def get_backend_address_data(
 
 
 async def get_backend_address_pools(
-    mgmt_client: MgmtApiClient, load_balancer: Mapping
+    mgmt_client: BaseAsyncApiClient, load_balancer: Mapping
 ) -> list[dict[str, object]]:
     backend_pools: list[dict[str, object]] = []
 
@@ -1079,14 +1078,16 @@ async def get_backend_address_pools(
 
 
 async def get_remote_peerings(
-    mgmt_client: MgmtApiClient, resource: dict
+    mgmt_client: BaseAsyncApiClient, resource: dict
 ) -> Sequence[Mapping[str, object]]:
-    peering_keys = ("name", "peeringState", "peeringSyncLevel")
+    # retrieve the current subscription ID from the virtual network gateway ID
+    vnet_gateway_subscription, *_ = get_params_from_azure_id(resource["id"])
 
+    peering_keys = ("name", "peeringState", "peeringSyncLevel")
     vnet_peerings = []
     for vnet_peering in resource["properties"].get("remoteVirtualNetworkPeerings", []):
         vnet_peering_id = vnet_peering["id"]
-        subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
+        peering_subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
             vnet_peering_id,
             resource_types=[
                 "providers",
@@ -1095,8 +1096,7 @@ async def get_remote_peerings(
             ],
         )
         # skip vNet peerings that belong to another Azure subscription
-        # TODO: can we remove client.subscription?
-        if subscription != mgmt_client.subscription:
+        if peering_subscription != vnet_gateway_subscription:
             continue
 
         peering_view = await mgmt_client.get_async(
@@ -1115,7 +1115,9 @@ async def get_remote_peerings(
     return vnet_peerings
 
 
-async def get_vnet_gw_health(mgmt_client: MgmtApiClient, resource: Mapping) -> Mapping[str, object]:
+async def get_vnet_gw_health(
+    mgmt_client: BaseAsyncApiClient, resource: Mapping
+) -> Mapping[str, object]:
     health_keys = ("availabilityState", "summary", "reasonType", "occuredTime")
 
     _, group, providers, vnet_gw = get_params_from_azure_id(
@@ -1133,7 +1135,7 @@ async def get_vnet_gw_health(mgmt_client: MgmtApiClient, resource: Mapping) -> M
 
 
 async def process_virtual_net_gw(
-    api_client: MgmtApiClient, resource: AzureResource
+    api_client: BaseAsyncApiClient, resource: AzureResource
 ) -> AzureSection:
     gw_keys = (
         "bgpSettings",
@@ -1259,7 +1261,7 @@ class MetricCache(DataCache):
             return []
 
     async def get_live_data(self, *args: Any) -> Any:
-        mgmt_client: MgmtApiClient = args[0]
+        mgmt_client: BaseAsyncApiClient = args[0]
         region: str = args[1]
         resource_ids: Sequence[str] = args[2]
         resource_type: str = args[3]
@@ -1358,7 +1360,7 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 
 
 async def process_metrics(
-    mgmt_client: MgmtApiClient, resources: Sequence[AzureResource], args: Args
+    mgmt_client: BaseAsyncApiClient, resources: Sequence[AzureResource], args: Args
 ) -> None:
     errors = await _gather_metrics(mgmt_client, resources, args)
 
@@ -1372,7 +1374,7 @@ async def process_metrics(
 
 # TODO: to test
 async def _gather_metrics(
-    mgmt_client: MgmtApiClient, all_resources: Sequence[AzureResource], args: Args
+    mgmt_client: BaseAsyncApiClient, all_resources: Sequence[AzureResource], args: Args
 ) -> IssueCollector:
     """
     Gather metrics for all resources. Metrics are collected per resource type, region, metric
@@ -1453,7 +1455,7 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 async def get_group_labels(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_groups: Sequence[str],
     tag_key_pattern: TagsOption,
 ) -> GroupLabels:
@@ -1588,7 +1590,7 @@ def _process_query_id(columns, rows, common_metadata):
     return processed_query
 
 
-async def _collect_usage_data(mgmt_client: MgmtApiClient) -> Sequence[dict[str, Any]]:
+async def _collect_usage_data(mgmt_client: BaseAsyncApiClient) -> Sequence[dict[str, Any]]:
     yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     body = {
         "type": "ActualCost",
@@ -1634,7 +1636,7 @@ async def _collect_usage_data(mgmt_client: MgmtApiClient) -> Sequence[dict[str, 
     return processed_query
 
 
-async def get_usage_data(client: MgmtApiClient) -> Sequence[dict[str, Any]]:
+async def get_usage_data(client: BaseAsyncApiClient) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",
@@ -1682,7 +1684,7 @@ def write_usage_section(
 
 
 async def process_usage_details(
-    mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args
+    mgmt_client: BaseAsyncApiClient, monitored_groups: list[str], args: Args
 ) -> None:
     try:
         usage_section = await get_usage_data(mgmt_client)
@@ -1707,7 +1709,7 @@ async def process_usage_details(
 
 
 async def process_resource_health(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
     monitored_groups: Sequence[str],
     debug: bool,
@@ -1741,7 +1743,7 @@ async def process_resource_health(
 
 # TODO: test
 async def process_virtual_machines(
-    api_client: MgmtApiClient,
+    api_client: BaseAsyncApiClient,
     args: Args,
     group_labels: GroupLabels,
     monitored_resources_by_id: Mapping[str, AzureResource],
@@ -1790,7 +1792,7 @@ async def process_virtual_machines(
 
 # TODO: test
 async def process_vault(
-    api_client: MgmtApiClient,
+    api_client: BaseAsyncApiClient,
     resource: AzureResource,
 ) -> AzureSection:
     vault_properties = (
@@ -1876,30 +1878,6 @@ def _get_resource_health_sections(
     return sections
 
 
-async def _authenticate_client(args: Args, subscription: str | None) -> None:
-    if subscription is not None:
-        async with MgmtApiClient(
-            get_mgmt_authority_urls(args.authority, subscription),
-            deserialize_http_proxy_config(args.proxy),
-            tenant=args.tenant,
-            client=args.client,
-            secret=args.secret,
-            subscription=subscription,
-        ):
-            # we just need to authenticate
-            ...
-    else:
-        async with BaseAsyncApiClient(
-            get_mgmt_authority_urls(args.authority, ""),
-            deserialize_http_proxy_config(args.proxy),
-            tenant=args.tenant,
-            client=args.client,
-            secret=args.secret,
-        ):
-            # we just need to authenticate
-            ...
-
-
 async def _test_connection(args: Args, subscription: str | None) -> int | tuple[int, str]:
     """We test the connection only via the Management API client, not via the Graph API client.
     The Graph API client is used for three specific services, which are disabled in the default
@@ -1908,7 +1886,15 @@ async def _test_connection(args: Args, subscription: str | None) -> int | tuple[
     connection that's essential for the vast majority of setups."""
 
     try:
-        await _authenticate_client(args, subscription)
+        async with BaseAsyncApiClient(
+            get_mgmt_authority_urls(args.authority, subscription or ""),
+            deserialize_http_proxy_config(args.proxy),
+            tenant=args.tenant,
+            client=args.client,
+            secret=args.secret,
+        ):
+            # we just need to authenticate
+            ...
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
@@ -1921,7 +1907,7 @@ async def _test_connection(args: Args, subscription: str | None) -> int | tuple[
 
 
 def get_bulk_tasks(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     args: Args,
     group_labels: GroupLabels,
     monitored_services: set[str],
@@ -1939,7 +1925,7 @@ def get_bulk_tasks(
 
 # TODO: test
 async def process_single_resources(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     args: Args,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[Section]:
@@ -1977,7 +1963,7 @@ async def process_single_resources(
 
 
 async def process_resources(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     args: Args,
     group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
@@ -2013,7 +1999,7 @@ async def process_resources(
 
 
 async def _collect_resources(
-    mgmt_client: MgmtApiClient, args: Args, selector: Selector
+    mgmt_client: BaseAsyncApiClient, args: Args, selector: Selector
 ) -> tuple[Sequence[AzureResource], list[str]]:
     resources = await mgmt_client.get_async(
         "resources", key="value", params={"api-version": "2019-05-01"}
@@ -2036,13 +2022,12 @@ async def main_subscription(
     args: Args, selector: Selector, subscription: str, monitored_services: set[str]
 ) -> None:
     try:
-        async with MgmtApiClient(
+        async with BaseAsyncApiClient(
             get_mgmt_authority_urls(args.authority, subscription),
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
             secret=args.secret,
-            subscription=subscription,
         ) as mgmt_client:
             selected_resources, monitored_groups = await _collect_resources(
                 mgmt_client, args, selector

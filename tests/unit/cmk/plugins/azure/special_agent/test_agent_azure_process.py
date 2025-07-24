@@ -35,12 +35,11 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     _AuthorityURLs,
     ApiError,
     BaseAsyncApiClient,
-    MgmtApiClient,
 )
 from cmk.utils.http_proxy_config import NoProxyConfig
 
 
-class MockMgmtApiClient(MgmtApiClient):
+class MockBaseAsyncApiClient(BaseAsyncApiClient):
     def __init__(
         self,
         resource_groups: Sequence[Mapping[str, Any]],
@@ -65,7 +64,6 @@ class MockMgmtApiClient(MgmtApiClient):
             "tenant",
             "client",
             "secret",
-            "mock_subscription",
         )
 
     async def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
@@ -112,7 +110,7 @@ class MockAzureSection(AzureSection):
     "mgmt_client, vmach_info, args, expected_info, expected_tags, expected_piggyback_targets",
     [
         (
-            MockMgmtApiClient(
+            MockBaseAsyncApiClient(
                 [],
                 {
                     "burningman": {
@@ -167,7 +165,7 @@ class MockAzureSection(AzureSection):
             ["myvm"],
         ),
         (
-            MockMgmtApiClient(
+            MockBaseAsyncApiClient(
                 [],
                 {
                     "burningman": {
@@ -226,7 +224,7 @@ class MockAzureSection(AzureSection):
 @pytest.mark.asyncio
 @pytest.mark.skip("Used different API to fetch VMs info")
 async def test_process_vm(
-    mgmt_client: MgmtApiClient,
+    mgmt_client: BaseAsyncApiClient,
     vmach_info: Mapping[str, Any],
     args: Args,
     expected_info: Mapping[str, Any],
@@ -594,7 +592,7 @@ async def test_usage_details(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # TODO: use new Mocked api client async
-    mgmt_client = MockMgmtApiClient(
+    mgmt_client = MockBaseAsyncApiClient(
         [], {}, 0, usage_data=usage_data, usage_details_exception=exception
     )
     monitored_groups = ["test1", "test2"]

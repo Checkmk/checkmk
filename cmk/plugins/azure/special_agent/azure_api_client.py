@@ -318,17 +318,3 @@ class BaseAsyncApiClient(BaseApiClient):
             params=params,
             next_page_key=next_page_key,
         )
-
-
-class MgmtApiClient(BaseAsyncApiClient):
-    def __init__(
-        self,
-        authority_urls: _AuthorityURLs,
-        http_proxy_config: HTTPProxyConfig,
-        tenant: str,
-        client: str,
-        secret: str,
-        subscription: str,
-    ):
-        super().__init__(authority_urls, http_proxy_config, tenant, client, secret)
-        self.subscription = subscription

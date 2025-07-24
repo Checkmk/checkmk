@@ -12,7 +12,7 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
-from cmk.gui.page_state import PageState
+from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.utils.licensing.registry import get_licensing_user_effect
@@ -52,7 +52,16 @@ def top_heading(
 
     writer.close_div()
 
+    page_state = _make_default_page_state(
+        writer,
+        request,
+        browser_reload=browser_reload,
+    )
+
     _may_show_license_banner(writer)
+
+    if page_state:
+        PageStateRenderer().show(page_state)
 
     writer.close_div()  # titlebar
 

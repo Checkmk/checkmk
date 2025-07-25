@@ -64,5 +64,5 @@ ENDPOINT_DELETE_PASSWORD = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=PASSWORD_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=delete_password_v1)},
+    versions={APIVersion.V1: EndpointHandler(handler=delete_password_v1)},
 )

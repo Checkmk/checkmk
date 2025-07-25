@@ -40,5 +40,5 @@ ENDPOINT_LIST_PASSWORDS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=PASSWORD_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=list_passwords_v1)},
+    versions={APIVersion.V1: EndpointHandler(handler=list_passwords_v1)},
 )

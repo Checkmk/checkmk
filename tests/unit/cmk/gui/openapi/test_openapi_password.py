@@ -205,7 +205,7 @@ def test_password_min_length_create(clients: ClientRegistry) -> None:
     )
 
     resp.assert_status_code(400)
-    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+    assert resp.json["fields"]["body.password"]["type"] == "string_too_short"
 
 
 @managedtest
@@ -228,7 +228,7 @@ def test_password_min_length_update(clients: ClientRegistry) -> None:
     )
 
     resp.assert_status_code(400)
-    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+    assert resp.json["fields"]["body.password.constrained-str"]["type"] == "string_too_short"
 
 
 @managedtest
@@ -243,8 +243,7 @@ def test_password_identifier_regex(clients: ClientRegistry) -> None:
     )
 
     resp.assert_status_code(400)
-    assert resp.json["fields"] == {
-        "ident": [
-            "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
-        ]
-    }
+    assert (
+        resp.json["fields"]["body.ident"]["msg"]
+        == "Value error, 'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+    )

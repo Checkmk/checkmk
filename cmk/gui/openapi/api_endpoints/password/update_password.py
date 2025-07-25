@@ -64,5 +64,5 @@ ENDPOINT_UPDATE_PASSWORD = VersionedEndpoint(
     behavior=EndpointBehavior(etag="both"),
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=PASSWORD_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=update_password_v1)},
+    versions={APIVersion.V1: EndpointHandler(handler=update_password_v1)},
 )

@@ -786,13 +786,22 @@ class PostgresWin(PostgresBase):
 
         query = "\\pset footer off \\\\"
 
+        response = ""
         cur_rows_only = False
+        # On windows, we saw issues when more than one database was queried at once.
+        # See SUP-23843
+        # We therefore execute the query per database and accumulate the results.
         for idx, database in enumerate(databases):
-            query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
-            if idx == 0:
-                query = "%s \\pset tuples_only on" % query
-
-        return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
+            current_query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
+            if idx != 0:
+                # Switch off the header for all but the first database: this is now needed as we
+                # execute psql _per_ database but want to get the same format as before.
+                current_query = "\\pset tuples_only on %s" % current_query
+                response += "\n"
+            response += self.run_sql_as_db_user(
+                current_query, mixed_cmd=True, rows_only=cur_rows_only
+            )
+        return response
 
 
 class PostgresLinux(PostgresBase):

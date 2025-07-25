@@ -9425,6 +9425,10 @@ msgid "Bazel Cache User"
 msgstr "Max Cache Leeftijd"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Max Cache Leeftijd"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Database wachtwoord"
 
@@ -15587,14 +15591,6 @@ msgstr "Controller"
 msgid "Controller version"
 msgstr "Controller Versie"
 
-#, python-format
-msgid "Convert %s to lower case"
-msgstr "Zet %s om in kleine letters"
-
-#, python-format
-msgid "Convert %s to upper case"
-msgstr "Zet %s om in hoofdletters"
-
 msgid "Convert FQHN"
 msgstr "Omzetten FQHN"
 
@@ -15612,6 +15608,14 @@ msgstr "Hostnamen omzetten naar hoofdletters"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converteer geïmporteerde User-IDs naar kleine letters tijdens synchronisatie."
+
+#, fuzzy
+msgid "Convert to lower case"
+msgstr "Zet %s om in kleine letters"
+
+#, fuzzy
+msgid "Convert to upper case"
+msgstr "Zet %s om in hoofdletters"
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -15817,6 +15821,13 @@ msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
 "Geen gebruikersobject gevonden voor synchronisatie. Controleer uw "
 "filterinstellingen."
+
+#, python-format
+msgid ""
+"Could not connect to automation helper. Possibly the service <tt>automation-"
+"helper</tt> is not started, please make sure that all site services are "
+"started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -22632,7 +22643,7 @@ msgstr "Elektrisch vermogen"
 msgid "Electrical power"
 msgstr "Elektrisch vermogen"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische spanning in % van de normale waarde"
 
@@ -24416,10 +24427,6 @@ msgstr "Verklaring van de gebeurtenis"
 msgid "Explicit"
 msgstr "Expliciet"
 
-#, python-format
-msgid "Explicit %s mapping"
-msgstr "Expliciete %s mapping"
-
 msgid "Explicit Queue Names"
 msgstr "Expliciete wachtrijnamen"
 
@@ -24468,6 +24475,10 @@ msgstr "Expliciete koppeling van de exitcodes van banen aan staten"
 
 msgid "Explicit match"
 msgstr "Expliciete overeenkomst"
+
+#, fuzzy
+msgid "Explicit name mapping"
+msgstr "Expliciete %s mapping"
 
 msgid "Explicit number"
 msgstr "Expliciet getal"
@@ -32171,10 +32182,10 @@ msgstr "Als agent_hash is weggelaten, moet doel worden gegeven."
 msgid "If available, the following metric will be shown"
 msgstr "Indien beschikbaar, wordt de volgende metriek getoond"
 
-#, python-brace-format
+#, fuzzy
 msgid ""
 "If case conversion and regular expression do not work for all cases then you "
-"can specify explicity pairs of origin {0} and translated {0} here. This "
+"can specify explicit pairs of original and translated names here. This "
 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a "
 "regular expression conversion (if that matches)."
 msgstr ""
@@ -48267,10 +48278,6 @@ msgstr "Orig. IP"
 msgid "Origin"
 msgstr "Oorsprong"
 
-#, python-format
-msgid "Original %s"
-msgstr "Origineel %s"
-
 msgid "Original IP address"
 msgstr "Oorspronkelijk IP-adres"
 
@@ -48287,6 +48294,10 @@ msgstr "Originele tekst"
 msgid "Original host name when host name has been rewritten, empty otherwise"
 msgstr ""
 "Oorspronkelijke hostnaam wanneer de hostnaam herschreven is, anders leeg"
+
+#, fuzzy
+msgid "Original name"
+msgstr "Originele tekst"
 
 msgid "Other"
 msgstr "Andere"
@@ -48893,6 +48904,10 @@ msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -51866,7 +51881,8 @@ msgstr "Niveau printercartridges"
 msgid "Printer queue length"
 msgstr "Lengte printerwachtrij"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr ""
 "Printer stuurt <i>gebruikt</i> materiaal in plaats van <i>restmateriaal</i>"
 
@@ -60455,16 +60471,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Sommige printers (b.v. Konica voor Drum Cartdiges) geven de beschikbare "
-"brandstof terug in plaats van wat er nog over is. In dit geval is het "
-"mogelijk om de niveaus te verhogen om dit gedrag te verwerken"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -60614,6 +60620,17 @@ msgstr ""
 "kunnen tijdstempelkolommen absoluut, relatief of in een gemengde stijl "
 "worden weergegeven. Met deze toestemming kan de gebruiker de weergaveopties "
 "wijzigen"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Sommige printers (b.v. Konica voor Drum Cartdiges) geven de beschikbare "
+"brandstof terug in plaats van wat er nog over is. In dit geval is het "
+"mogelijk om de niveaus te verhogen om dit gedrag te verwerken"
 
 #, fuzzy
 msgid ""
@@ -78131,9 +78148,9 @@ msgstr "Vertalen UCS Bladecenter status naar monitoring status"
 msgid "Translate host names"
 msgstr "Hostnamen vertalen"
 
-#, python-format
-msgid "Translated %s"
-msgstr "Vertaald %s"
+#, fuzzy
+msgid "Translated name"
+msgstr "Hostnamen vertalen"
 
 msgid "Translation of HAProxy state to monitoring state"
 msgstr "Vertaling van HAProxy status naar monitoring status"
@@ -80244,7 +80261,8 @@ msgstr "Uptime sinds laatste reboot"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Uptime sinds laatste reboot van apparaten met modules"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Tonerniveaus verhogen"
 
 msgid "Urgency"
@@ -85718,15 +85736,15 @@ msgstr ""
 "U kunt het aanmaken van diensten activeren voor DHCP pools, die geen IP "
 "adressen bevatten."
 
-#, python-format
+#, fuzzy
 msgid ""
 "You can add any number of expressions here which are executed succesively "
 "until the first match. Please specify a regular expression in the first "
 "field. This expression should at least contain one subexpression exclosed in "
 "brackets - for example <tt>vm_(.*)_prod</tt>. In the second field you "
-"specify the translated %s and can refer to the first matched group with "
-"<tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example "
-"<tt>\\1.example.org</tt>. "
+"specify the desired outcome of the translation. You can refer to the first "
+"matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for "
+"example <tt>\\1.example.org</tt>. "
 msgstr ""
 "U kunt hier een willekeurig aantal expressies toevoegen die succesvol worden "
 "uitgevoerd tot de eerste overeenkomst. Geef een reguliere expressie op in "
@@ -90040,6 +90058,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "Original %s"
+#~ msgstr "Origineel %s"
+
+#, python-format
+#~ msgid "Translated %s"
+#~ msgstr "Vertaald %s"
 
 #~ msgid "Do not check"
 #~ msgstr "Niet controleren"

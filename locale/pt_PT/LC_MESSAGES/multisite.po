@@ -9438,6 +9438,10 @@ msgid "Bazel Cache User"
 msgstr "Idade Max Cache"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Idade Max Cache"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Senha do banco de dados"
 
@@ -15579,14 +15583,6 @@ msgstr "Controlador"
 msgid "Controller version"
 msgstr "Versão do Controlador"
 
-#, python-format
-msgid "Convert %s to lower case"
-msgstr "Converter %s em minúsculas"
-
-#, python-format
-msgid "Convert %s to upper case"
-msgstr "Converter %s em maiúsculas"
-
 msgid "Convert FQHN"
 msgstr "Converter FQHN"
 
@@ -15604,6 +15600,14 @@ msgstr "Converter hostnames em maiúsculas"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converter os User-IDs importados para minúsculas durante a sincronização."
+
+#, fuzzy
+msgid "Convert to lower case"
+msgstr "Converter %s em minúsculas"
+
+#, fuzzy
+msgid "Convert to upper case"
+msgstr "Converter %s em maiúsculas"
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -15809,6 +15813,13 @@ msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
 "Não encontrei nenhum objeto de usuário para sincronização. Por favor, "
 "verifique as suas configurações de filtro."
+
+#, python-format
+msgid ""
+"Could not connect to automation helper. Possibly the service <tt>automation-"
+"helper</tt> is not started, please make sure that all site services are "
+"started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -22627,7 +22638,7 @@ msgstr "Energia eléctrica"
 msgid "Electrical power"
 msgstr "Energia eléctrica"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensão eléctrica em % do valor normal"
 
@@ -24407,10 +24418,6 @@ msgstr "Explicação para a ação do evento"
 msgid "Explicit"
 msgstr "Explicito"
 
-#, python-format
-msgid "Explicit %s mapping"
-msgstr "Mapeamento explícito de %s"
-
 msgid "Explicit Queue Names"
 msgstr "Nomes explícitos das filas"
 
@@ -24459,6 +24466,10 @@ msgstr "Mapeamento explícito dos códigos de saída do trabalho para os estados
 
 msgid "Explicit match"
 msgstr "Partida explícita"
+
+#, fuzzy
+msgid "Explicit name mapping"
+msgstr "Mapeamento explícito de %s"
 
 msgid "Explicit number"
 msgstr "Número explícito"
@@ -32170,10 +32181,10 @@ msgstr "Se agent_hash for omitido, é necessário fornecer o destino."
 msgid "If available, the following metric will be shown"
 msgstr "Se disponível, será mostrada a seguinte métrica"
 
-#, python-brace-format
+#, fuzzy
 msgid ""
 "If case conversion and regular expression do not work for all cases then you "
-"can specify explicity pairs of origin {0} and translated {0} here. This "
+"can specify explicit pairs of original and translated names here. This "
 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a "
 "regular expression conversion (if that matches)."
 msgstr ""
@@ -48233,10 +48244,6 @@ msgstr "Origem. IP"
 msgid "Origin"
 msgstr "Origem"
 
-#, python-format
-msgid "Original %s"
-msgstr "Original %s"
-
 msgid "Original IP address"
 msgstr "Endereço IP original"
 
@@ -48253,6 +48260,10 @@ msgid "Original host name when host name has been rewritten, empty otherwise"
 msgstr ""
 "Nome original do anfitrião quando o nome do anfitrião tiver sido reescrito, "
 "vazio, caso contrário"
+
+#, fuzzy
+msgid "Original name"
+msgstr "Texto original"
 
 msgid "Other"
 msgstr "Outros"
@@ -48854,6 +48865,10 @@ msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -51835,7 +51850,8 @@ msgstr "Níveis de cartucho de impressora"
 msgid "Printer queue length"
 msgstr "Comprimento da fila de impressão"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr "Impressora envia <i> material usado</i> em vez de <i> predominante</i>"
 
 msgid "Printers"
@@ -60436,16 +60452,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Algumas impressoras (por exemplo, Konica for Drum Cartdiges) devolvem o "
-"combustível disponível em vez do que resta. Neste caso, é possível aumentar "
-"os níveis para lidar com este comportamento"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -60601,6 +60607,17 @@ msgstr ""
 "saída. Por exemplo, as colunas de carimbo de data/hora podem ser "
 "apresentadas de forma absoluta, relativa ou num estilo misto. Esta permissão "
 "permite ao utilizador modificar as opções de visualização"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Algumas impressoras (por exemplo, Konica for Drum Cartdiges) devolvem o "
+"combustível disponível em vez do que resta. Neste caso, é possível aumentar "
+"os níveis para lidar com este comportamento"
 
 #, fuzzy
 msgid ""
@@ -78083,9 +78100,9 @@ msgstr "Traduzir o estado do Bladecenter da UCS para o estado de monitoramento"
 msgid "Translate host names"
 msgstr "Traduzir Hostnames"
 
-#, python-format
-msgid "Translated %s"
-msgstr "Traduzido %s"
+#, fuzzy
+msgid "Translated name"
+msgstr "Traduzir Hostnames"
 
 msgid "Translation of HAProxy state to monitoring state"
 msgstr "Tradução do estado HAProxy para o estado de monitoramento"
@@ -80191,7 +80208,8 @@ msgstr ""
 "Tempo de funcionamento desde a última reinicialização dos dispositivos com "
 "módulos"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Níveis de toner de retorno"
 
 msgid "Urgency"
@@ -85624,15 +85642,15 @@ msgstr ""
 "Você pode ativar a criação de serviços para DHCP pools, que não contêm "
 "endereços IP."
 
-#, python-format
+#, fuzzy
 msgid ""
 "You can add any number of expressions here which are executed succesively "
 "until the first match. Please specify a regular expression in the first "
 "field. This expression should at least contain one subexpression exclosed in "
 "brackets - for example <tt>vm_(.*)_prod</tt>. In the second field you "
-"specify the translated %s and can refer to the first matched group with "
-"<tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example "
-"<tt>\\1.example.org</tt>. "
+"specify the desired outcome of the translation. You can refer to the first "
+"matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for "
+"example <tt>\\1.example.org</tt>. "
 msgstr ""
 "Você pode adicionar aqui qualquer número de expressões que são executadas "
 "sucessivamente até a primeira partida. Por favor especifique uma expressão "
@@ -89932,6 +89950,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "Original %s"
+#~ msgstr "Original %s"
+
+#, python-format
+#~ msgid "Translated %s"
+#~ msgstr "Traduzido %s"
 
 #~ msgid "Do not check"
 #~ msgstr "Não verificar"

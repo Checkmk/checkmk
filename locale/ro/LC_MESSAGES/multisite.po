@@ -9420,6 +9420,10 @@ msgid "Bazel Cache User"
 msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Parola bazei de date"
 
@@ -15594,14 +15598,6 @@ msgstr "Controler"
 msgid "Controller version"
 msgstr "Versiunea controlerului"
 
-#, python-format
-msgid "Convert %s to lower case"
-msgstr "Convertește %s în minusculă"
-
-#, python-format
-msgid "Convert %s to upper case"
-msgstr "Convertește %s în majuscule"
-
 msgid "Convert FQHN"
 msgstr "Conversia FQHN"
 
@@ -15620,6 +15616,14 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Conversia ID-urilor de utilizator importate în minuscule în timpul "
 "sincronizării."
+
+#, fuzzy
+msgid "Convert to lower case"
+msgstr "Convertește %s în minusculă"
+
+#, fuzzy
+msgid "Convert to upper case"
+msgstr "Convertește %s în majuscule"
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -15818,6 +15822,13 @@ msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
 "Nu s-a găsit niciun obiect utilizator pentru sincronizare. Vă rugăm să "
 "verificați setările de filtrare."
+
+#, python-format
+msgid ""
+"Could not connect to automation helper. Possibly the service <tt>automation-"
+"helper</tt> is not started, please make sure that all site services are "
+"started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -22673,7 +22684,7 @@ msgstr "Putere electrică"
 msgid "Electrical power"
 msgstr "Putere electrică"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensiunea electrică în % din valoarea normală"
 
@@ -24483,10 +24494,6 @@ msgstr "Explicație pentru acțiunea evenimentului"
 msgid "Explicit"
 msgstr "Explicit"
 
-#, python-format
-msgid "Explicit %s mapping"
-msgstr "Explicit %s mapping"
-
 msgid "Explicit Queue Names"
 msgstr "Nume explicite ale cozilor de așteptare"
 
@@ -24536,6 +24543,10 @@ msgstr ""
 
 msgid "Explicit match"
 msgstr "Potrivire explicită"
+
+#, fuzzy
+msgid "Explicit name mapping"
+msgstr "Explicit %s mapping"
 
 msgid "Explicit number"
 msgstr "Număr explicit"
@@ -32226,10 +32237,10 @@ msgstr "Dacă agent_hash este omis, trebuie să se precizeze ținta."
 msgid "If available, the following metric will be shown"
 msgstr "Dacă este disponibilă, se va afișa următoarea măsurătoare"
 
-#, python-brace-format
+#, fuzzy
 msgid ""
 "If case conversion and regular expression do not work for all cases then you "
-"can specify explicity pairs of origin {0} and translated {0} here. This "
+"can specify explicit pairs of original and translated names here. This "
 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a "
 "regular expression conversion (if that matches)."
 msgstr ""
@@ -48350,10 +48361,6 @@ msgstr "Orig. IP"
 msgid "Origin"
 msgstr "Origine"
 
-#, python-format
-msgid "Original %s"
-msgstr "Original %s"
-
 msgid "Original IP address"
 msgstr "Adresa IP originală"
 
@@ -48370,6 +48377,10 @@ msgid "Original host name when host name has been rewritten, empty otherwise"
 msgstr ""
 "Numele original al gazdei atunci când numele gazdei a fost rescris, gol în "
 "caz contrar"
+
+#, fuzzy
+msgid "Original name"
+msgstr "Textul original"
 
 msgid "Other"
 msgstr "Altele"
@@ -48974,6 +48985,10 @@ msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
+msgstr ""
+
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
 msgstr ""
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -51952,7 +51967,8 @@ msgstr "Nivelurile cartușelor de imprimantă"
 msgid "Printer queue length"
 msgstr "Lungimea cozii de așteptare a imprimantei"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr "Imprimanta trimite materialul <i>folosit</i> în loc de <i> rămas</i>."
 
 msgid "Printers"
@@ -60603,16 +60619,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Unele imprimante (de exemplu, Konica pentru cartelele cu tambur) returnează "
-"combustibilul disponibil în loc de cel rămas. În acest caz, este posibil să "
-"se răstoarne nivelurile pentru a gestiona acest comportament"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -60765,6 +60771,17 @@ msgstr ""
 "rezultatului lor. De exemplu, coloanele de marcaj orar pot fi afișate "
 "absolut, relativ sau într-un stil mixt. Această permisiune permite "
 "utilizatorului să modifice opțiunile de afișare"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Unele imprimante (de exemplu, Konica pentru cartelele cu tambur) returnează "
+"combustibilul disponibil în loc de cel rămas. În acest caz, este posibil să "
+"se răstoarne nivelurile pentru a gestiona acest comportament"
 
 #, fuzzy
 msgid ""
@@ -78329,9 +78346,9 @@ msgstr "Conversia stării UCS Bladecenter în stare de monitorizare"
 msgid "Translate host names"
 msgstr "Traducere nume de gazde"
 
-#, python-format
-msgid "Translated %s"
-msgstr "Tradus %s"
+#, fuzzy
+msgid "Translated name"
+msgstr "Traducere nume de gazde"
 
 msgid "Translation of HAProxy state to monitoring state"
 msgstr "Traducerea stării HAProxy în stare de monitorizare"
@@ -80440,7 +80457,8 @@ msgid "Uptime since last reboot of devices with modules"
 msgstr ""
 "Timpul de funcționare de la ultima repornire a dispozitivelor cu module"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Îmbunătățirea nivelului de toner"
 
 msgid "Urgency"
@@ -85920,15 +85938,15 @@ msgstr ""
 "Puteți activa crearea de servicii pentru grupurile DHCP, care nu conțin "
 "adrese IP."
 
-#, python-format
+#, fuzzy
 msgid ""
 "You can add any number of expressions here which are executed succesively "
 "until the first match. Please specify a regular expression in the first "
 "field. This expression should at least contain one subexpression exclosed in "
 "brackets - for example <tt>vm_(.*)_prod</tt>. In the second field you "
-"specify the translated %s and can refer to the first matched group with "
-"<tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example "
-"<tt>\\1.example.org</tt>. "
+"specify the desired outcome of the translation. You can refer to the first "
+"matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for "
+"example <tt>\\1.example.org</tt>. "
 msgstr ""
 "Puteți adăuga aici orice număr de expresii care sunt executate succesiv până "
 "la prima potrivire. Vă rugăm să specificați o expresie regulată în primul "
@@ -90260,6 +90278,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "Original %s"
+#~ msgstr "Original %s"
+
+#, python-format
+#~ msgid "Translated %s"
+#~ msgstr "Tradus %s"
 
 #~ msgid "Do not check"
 #~ msgstr "Nu verificați"

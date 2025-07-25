@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-07-24 20:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -4899,14 +4899,14 @@ msgid ""
 "day, week or bank (30 day) month."
 msgstr ""
 "Nachdem der Monitoring-Kern die konsolidierte Zeitreihe mit Tagesauflösung "
-"zurückgibt, wird der Trend berechnet. Es stehen zwei Verfahren zur Verfügung:"
-" Das Erste wendet eine lineare Regression auf die Daten an. Das Zweite "
-"benutzt die Forecast engine, um einen Forecast Graphen für den Trend der "
-"Daten zu berechnen. Dieses Verfahren ist relativ rechenintensiv und dauert "
-"deswegen auch länger. Es sollte nicht für Ansichten verwendet werden die "
-"unmittelbare Visualisierung benötigen, sondern eher in geplanten Berichten. "
-"Da der Trend eine Rate ist, muss ein Zeitraum dafür festgelegt werden (Tag, "
-"Woche, Monat)."
+"zurückgibt, wird der Trend berechnet. Es stehen zwei Verfahren zur "
+"Verfügung: Das Erste wendet eine lineare Regression auf die Daten an. Das "
+"Zweite benutzt die Forecast engine, um einen Forecast Graphen für den Trend "
+"der Daten zu berechnen. Dieses Verfahren ist relativ rechenintensiv und "
+"dauert deswegen auch länger. Es sollte nicht für Ansichten verwendet werden "
+"die unmittelbare Visualisierung benötigen, sondern eher in geplanten "
+"Berichten. Da der Trend eine Rate ist, muss ein Zeitraum dafür festgelegt "
+"werden (Tag, Woche, Monat)."
 
 msgid "After this number of days old logfile of event history will be deleted."
 msgstr ""
@@ -9026,6 +9026,10 @@ msgstr "Bazel Cache-Port"
 msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
+#, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Bazel Cache Benutzer"
+
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
 
@@ -9944,20 +9948,20 @@ msgid ""
 msgstr ""
 "Standardmäßig führt Robot Framework <i>jeden</i> Test aus.<br>Aber manchmal "
 "sind Tests voneinander abhängig - im Falle eines fehlgeschlagenen Login ist "
-"es zum Beispiel unmöglich, die nachfolgenden Tests erfolgreich "
-"abzuschließen.<br>Wenn diese Option aktiviert ist, hält Robot Framework die "
-"Ausführung der Suite <b>sofort</b> an, wenn ein Test fehlschlägt. <br>Die "
-"Ergebnisse nachfolgender Tests (die fehlgeschlagen wären) werden dann nicht "
-"an Checkmk weitergeleitet; je nach den Erkennungseinstellungen <b>fehlen</b> "
-"entweder ihre Ergebnisse (wenn sie Teil eines Suite-Ergebnisses sind) oder "
-"die für sie erstellten Services werden <b>veraltet (stale)</"
-"b>.<br><br><b>Wichtiger Hinweis</b>: An dieser Stelle weicht Robotmk vom "
-"Verhalten des Robot Frameworks ab. Das HTML-Protokoll enthält weiterhin die "
-"ausgelassenen Tests und zeigt sie als <tt>FAIL</tt> an (auch wenn sie nicht "
-"ausgeführt wurden).<br>Siehe auch \"<a href=\"http://robotframework.org/"
-"robotframework/latest/RobotFrameworkUserGuide.html#stopping-when-first-test-"
-"case-fails\" target=\"_blank\">Anhalten einer Suite, wenn der erste Test "
-"fehlschlägt</a>\". "
+"es zum Beispiel unmöglich, die nachfolgenden Tests erfolgreich abzuschließen."
+"<br>Wenn diese Option aktiviert ist, hält Robot Framework die Ausführung der "
+"Suite <b>sofort</b> an, wenn ein Test fehlschlägt. <br>Die Ergebnisse "
+"nachfolgender Tests (die fehlgeschlagen wären) werden dann nicht an Checkmk "
+"weitergeleitet; je nach den Erkennungseinstellungen <b>fehlen</b> entweder "
+"ihre Ergebnisse (wenn sie Teil eines Suite-Ergebnisses sind) oder die für "
+"sie erstellten Services werden <b>veraltet (stale)</b>.<br><br><b>Wichtiger "
+"Hinweis</b>: An dieser Stelle weicht Robotmk vom Verhalten des Robot "
+"Frameworks ab. Das HTML-Protokoll enthält weiterhin die ausgelassenen Tests "
+"und zeigt sie als <tt>FAIL</tt> an (auch wenn sie nicht ausgeführt wurden)."
+"<br>Siehe auch \"<a href=\"http://robotframework.org/robotframework/latest/"
+"RobotFrameworkUserGuide.html#stopping-when-first-test-case-fails\" "
+"target=\"_blank\">Anhalten einer Suite, wenn der erste Test fehlschlägt</"
+"a>\". "
 
 msgid ""
 "By default, Robotmk executes all plans in the user context of the Checkmk "
@@ -15083,14 +15087,6 @@ msgstr "Controller"
 msgid "Controller version"
 msgstr "Controller-Version"
 
-#, python-format
-msgid "Convert %s to lower case"
-msgstr "%s in Kleinbuchstaben umwandeln"
-
-#, python-format
-msgid "Convert %s to upper case"
-msgstr "%s in Großbuchstaben umwandeln"
-
 msgid "Convert FQHN"
 msgstr "Vollqualifizierte Host-Namen reduzieren"
 
@@ -15107,6 +15103,14 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Importierte Benutzer IDs während Synchronisation in Kleinbuchstaben "
 "umwandeln."
+
+#, fuzzy
+msgid "Convert to lower case"
+msgstr "%s in Kleinbuchstaben umwandeln"
+
+#, fuzzy
+msgid "Convert to upper case"
+msgstr "%s in Großbuchstaben umwandeln"
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -15301,6 +15305,18 @@ msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
 "Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
+
+#, fuzzy, python-format
+msgid ""
+"Could not connect to automation helper. Possibly the service <tt>automation-"
+"helper</tt> is not started, please make sure that all site services are "
+"started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
+"Es konnte keine Verbindung zu ui-job-scheduler hergestellt werden. "
+"Möglicherweise ist der Service <tt>ui-job-scheduler</tt> nicht gestartet. "
+"Bitte stellen Sie sicher, dass alle Instanz-Services gestartet sind. Es "
+"wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
+"Fehler war: %s."
 
 #, python-format
 msgid ""
@@ -21871,7 +21887,7 @@ msgstr "Elektrische Ausgangsleistung"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -23647,10 +23663,6 @@ msgstr "Erklärung für Ereignisaktion"
 msgid "Explicit"
 msgstr "Explizit"
 
-#, python-format
-msgid "Explicit %s mapping"
-msgstr "Explizite %s Zuordnung"
-
 msgid "Explicit Queue Names"
 msgstr "Einschränkung für Warteschlangen"
 
@@ -23692,6 +23704,10 @@ msgstr "Explizite Zuordnung von Job-Exit-Codes zu Zuständen"
 
 msgid "Explicit match"
 msgstr "Genaue Übereinstimmung"
+
+#, fuzzy
+msgid "Explicit name mapping"
+msgstr "Explizite %s Zuordnung"
 
 msgid "Explicit number"
 msgstr "Explizite Zahl"
@@ -26203,8 +26219,8 @@ msgid ""
 "create --api-token)"
 msgstr ""
 "Erstelle den API-Token über die Purity Benutzeroberfläche (System > Users > "
-"Create API Token) oder über die Purity Kommandozeilenschnittstelle ("
-"pureadmin create --api-token)"
+"Create API Token) oder über die Purity Kommandozeilenschnittstelle "
+"(pureadmin create --api-token)"
 
 msgid "Generate this report"
 msgstr "Erstelle diesen Bericht"
@@ -30702,10 +30718,9 @@ msgid ""
 msgstr ""
 "Wenn das Windows-Ereignisprotokoll mehrere Meldungen mit gleichem Inhalt "
 "erzeugt, liefert der Agent nur die erste Meldung im Rohzustand und die "
-"Information, wie oft die Meldung wiederholt wurde: "
-"[diese Nachricht wurde n-Mal wiederholt]. Das Setzen dieses Flags kann "
-"helfen, die Größe des Protokolls zu verringern, wenn zu viele gleiche "
-"Ereignisse erstellt werden."
+"Information, wie oft die Meldung wiederholt wurde: [diese Nachricht wurde n-"
+"Mal wiederholt]. Das Setzen dieses Flags kann helfen, die Größe des "
+"Protokolls zu verringern, wenn zu viele gleiche Ereignisse erstellt werden."
 
 msgid ""
 "If a Checkmk site is updated to a newer version but the agents of some hosts "
@@ -30889,10 +30904,10 @@ msgstr "Wenn agent_hash weggelassen wird, muss das Ziel angegeben werden."
 msgid "If available, the following metric will be shown"
 msgstr "Wenn aktiviert, wird die folgende Metrik angezeigt"
 
-#, python-brace-format
+#, fuzzy
 msgid ""
 "If case conversion and regular expression do not work for all cases then you "
-"can specify explicity pairs of origin {0} and translated {0} here. This "
+"can specify explicit pairs of original and translated names here. This "
 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a "
 "regular expression conversion (if that matches)."
 msgstr ""
@@ -31235,10 +31250,9 @@ msgid ""
 msgstr ""
 "Werden mehrere aufeinanderfolgende Meldungen mit demselben Inhalt gefunden, "
 "liefert der Agent nur die erste Meldung und gibt dann eine Kontextzeile mit "
-"der Anzahl der entfernten Zeilen aus: "
-"[the above message was repeated n times]. Das Setzen dieses Flags kann dazu "
-"beitragen, die Größe der Agentenausgabe zu verringern, falls viele "
-"wiederholte Zeilen erstellt werden."
+"der Anzahl der entfernten Zeilen aus: [the above message was repeated n "
+"times]. Das Setzen dieses Flags kann dazu beitragen, die Größe der "
+"Agentenausgabe zu verringern, falls viele wiederholte Zeilen erstellt werden."
 
 msgid ""
 "If there is more than one plan testing the same application, then the "
@@ -46280,10 +46294,6 @@ msgstr "Ursp. IP"
 msgid "Origin"
 msgstr "Ursprung"
 
-#, python-format
-msgid "Original %s"
-msgstr "Original %s"
-
 msgid "Original IP address"
 msgstr "Ursprüngliche IP-Adresse"
 
@@ -46300,6 +46310,10 @@ msgid "Original host name when host name has been rewritten, empty otherwise"
 msgstr ""
 "Ursprünglicher Host-Name wenn der Host-Name umgeschrieben wurde. Ansonsten "
 "leer"
+
+#, fuzzy
+msgid "Original name"
+msgstr "Originaltext"
 
 msgid "Other"
 msgstr "Andere"
@@ -46881,6 +46895,11 @@ msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
+
+#, fuzzy
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
+msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -49737,7 +49756,8 @@ msgstr "Druckerpatronen-Levels"
 msgid "Printer queue length"
 msgstr "Länge der Druckerschlange"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr ""
 "Dieser Drucker sendet <i>verbrauchtes</i> Material anstelle von "
 "<i>verfügbarem</i>"
@@ -57992,15 +58012,6 @@ msgstr ""
 "einige inkompatible Erweiterungspakete verursacht werden."
 
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Einige Drucker (z. B. Konica für Trommelkartuschen) geben den verfügbaren "
-"Füllstand zurück, anstatt den verbleibenden. In diesem Fall ist es möglich, "
-"die Füllstände umzudrehen, um dieses Verhalten zu behandeln"
-
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -58164,6 +58175,17 @@ msgstr ""
 "Beispiel können Zeitstempelspalten absolut, relativ oder in einem gemischten "
 "Stil angezeigt werden. Diese Berechtigung erlaubt es dem Benutzer, die "
 "Anzeigeoptionen zu ändern"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Einige Drucker (z. B. Konica für Trommelkartuschen) geben den verfügbaren "
+"Füllstand zurück, anstatt den verbleibenden. In diesem Fall ist es möglich, "
+"die Füllstände umzudrehen, um dieses Verhalten zu behandeln"
 
 msgid ""
 "Some printers do not report a precise percentage but just <i>some remaining</"
@@ -75253,9 +75275,9 @@ msgstr "UCS Bladecenter-Zustand in Monitoring-Zustand übersetzen"
 msgid "Translate host names"
 msgstr "Host-Namen übersetzen"
 
-#, python-format
-msgid "Translated %s"
-msgstr "%s übersetzt"
+#, fuzzy
+msgid "Translated name"
+msgstr "Host-Namen übersetzen"
 
 msgid "Translation of HAProxy state to monitoring state"
 msgstr "Zuordnung des HAProxy-Zustand zum Monitoring-Zustand"
@@ -77282,7 +77304,8 @@ msgstr "Laufzeit seit dem letzten Reboot"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Laufzeit seit dem letzten Reboot von Geräten mit Modulen"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Tonerschwellen umdrehen"
 
 msgid "Urgency"
@@ -81663,8 +81686,8 @@ msgid ""
 "after the schedulder gets started by the Checkmk agent and before it enters "
 "the scheduling phase."
 msgstr ""
-"Mit Hilfe der Binärdatei <a href=\"https://github.com/robocorp/rcc\" target="
-"\"_blank\">RCC</a> kann der Robotmk-Scheduler die Python-Umgebungen "
+"Mit Hilfe der Binärdatei <a href=\"https://github.com/robocorp/rcc\" "
+"target=\"_blank\">RCC</a> kann der Robotmk-Scheduler die Python-Umgebungen "
 "erstellen, die für die Ausführung von Robot Framework Suiten erforderlich "
 "sind. Dadurch entfällt die Notwendigkeit, Python und alle dazugehörigen "
 "Bibliothekspakete auf den Ziel-Hosts zu installieren und zu konfigurieren. "
@@ -82528,15 +82551,15 @@ msgstr ""
 "Sie können die Erstellung von Services für DHCP-Pools aktivieren, die keine "
 "IP-Adressen enthalten."
 
-#, python-format
+#, fuzzy
 msgid ""
 "You can add any number of expressions here which are executed succesively "
 "until the first match. Please specify a regular expression in the first "
 "field. This expression should at least contain one subexpression exclosed in "
 "brackets - for example <tt>vm_(.*)_prod</tt>. In the second field you "
-"specify the translated %s and can refer to the first matched group with "
-"<tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example "
-"<tt>\\1.example.org</tt>. "
+"specify the desired outcome of the translation. You can refer to the first "
+"matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for "
+"example <tt>\\1.example.org</tt>. "
 msgstr ""
 "Hier können Sie eine beliebige Anzahl an Ausdrücken eingeben, die "
 "nacheinander abgearbeitet werden und nach dem ersten Treffer abbricht. Bitte "
@@ -84115,9 +84138,9 @@ msgstr ""
 "mehrfach zum aktuellen Bericht hinzugefügt, wenn Sie unten Bedingungen "
 "konfigurieren, die auf mehrere Objekte zutreffen. Wenn Sie beispielsweise "
 "einen Bericht erstellen, der einen anderen Bericht mehrfach pro Host "
-"einbettet, wählen Sie hier einen Bericht aus, der als Context "
-"\"Einzelner Host\" konfiguriert hat. Dann konfigurieren Sie hier die "
-"Filterkriterien zur Auswahl der gewünschten Hosts."
+"einbettet, wählen Sie hier einen Bericht aus, der als Context \"Einzelner "
+"Host\" konfiguriert hat. Dann konfigurieren Sie hier die Filterkriterien zur "
+"Auswahl der gewünschten Hosts."
 
 msgid ""
 "You need to be member of at least one contact group to be able to create a "
@@ -86859,6 +86882,14 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#, python-format
+#~ msgid "Original %s"
+#~ msgstr "Original %s"
+
+#, python-format
+#~ msgid "Translated %s"
+#~ msgstr "%s übersetzt"
 
 #~ msgid "Do not check"
 #~ msgstr "Nicht überprüfen"

@@ -350,6 +350,34 @@ def test_inventory_printer_supply(
                 Metric("supply_toner_magenta", 75.0),
             ],
         ),
+        (
+            "Waste box that shows space used",
+            DEFAULT_PARAMETERS,
+            [
+                [["1.1", "waste"]],
+                [
+                    ["Waste box that shows space used", "19", "5000", "1000", "4", "1"],
+                ],
+            ],
+            [
+                Result(state=State.OK, summary="Supply level remaining: 80.00%"),
+                Metric("supply_toner_other", 80.0),
+            ],
+        ),
+        (
+            "Waste box that shows space left",
+            DEFAULT_PARAMETERS | {"upturn_toner": True},
+            [
+                [["1.1", "waste"]],
+                [
+                    ["Waste box that shows space left", "19", "5000", "1000", "4", "1"],
+                ],
+            ],
+            [
+                Result(state=State.OK, summary="Supply level remaining: 20.00%"),
+                Metric("supply_toner_other", 20.0),
+            ],
+        ),
     ],
 )
 def test_check_printer_supply(

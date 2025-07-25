@@ -297,9 +297,14 @@ def _get_partial_data_results(
 def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> float:
     fill_level_percentage = 100.0 * supply.level / supply.max_capacity
 
-    # Some printers handle the used / remaining material differently
-    # With the upturn option we can toggle the point of view (again)
-    if supply.supply_class is SupplyClass.RECEPTACLE or upturn_toner:
+    if supply.supply_class is SupplyClass.RECEPTACLE:
+        # We expect a receptacle (like a waste container) to display used space that counts up.
+        # Since we handle all percentages as "supply left", we turn the percentage upside down.
+        fill_level_percentage = 100 - fill_level_percentage
+
+    if upturn_toner:
+        # This option must always upturn the applying logic.
+        # Otherwise, we wouldn't catch a receptacle that shows space left instead of space used.
         return 100 - fill_level_percentage
 
     return fill_level_percentage

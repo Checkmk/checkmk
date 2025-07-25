@@ -391,7 +391,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return _("Activate pending changes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        self._select_sites_with_pending_changes()
+        self._select_sites_with_pending_changes(active_config.sites)
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -400,11 +400,17 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     topics=[
                         PageMenuTopic(
                             title=_("On all sites"),
-                            entries=list(self._page_menu_entries_all_sites()),
+                            entries=list(
+                                self._page_menu_entries_all_sites(
+                                    active_config.wato_read_only, debug=active_config.debug
+                                )
+                            ),
                         ),
                         PageMenuTopic(
                             title=_("On selected sites"),
-                            entries=list(self._page_menu_entries_selected_sites()),
+                            entries=list(
+                                self._page_menu_entries_selected_sites(active_config.wato_read_only)
+                            ),
                         ),
                         make_checkbox_selection_topic(
                             selection_key=self.name(),
@@ -446,14 +452,16 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
-    def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_discard_changes(active_config.wato_read_only, debug=active_config.debug):
+    def _page_menu_entries_all_sites(
+        self, read_only_config: ReadOnlySpec, *, debug: bool
+    ) -> Iterator[PageMenuEntry]:
+        if not self._may_discard_changes(read_only_config, debug=debug):
             return
 
         enabled = False
         disabled_tooltip: str | None = None
         if self.has_changes():
-            if not _get_last_wato_snapshot_file(debug=active_config.debug):
+            if not _get_last_wato_snapshot_file(debug=debug):
                 enabled = False
                 disabled_tooltip = _("No snapshot to restore available.")
             elif self.discard_changes_forbidden():
@@ -483,8 +491,10 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             disabled_tooltip=disabled_tooltip,
         )
 
-    def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
-        if not self._may_activate_changes(active_config.wato_read_only):
+    def _page_menu_entries_selected_sites(
+        self, read_only_config: ReadOnlySpec
+    ) -> Iterator[PageMenuEntry]:
+        if not self._may_activate_changes(read_only_config):
             return
 
         yield PageMenuEntry(
@@ -823,10 +833,10 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def _can_activate_all(self, site_id: SiteId) -> bool:
         return not self._site_has_foreign_changes(site_id) or user.may("wato.activateforeign")
 
-    def _get_selected_sites(self) -> list[SiteId | str]:
+    def _get_selected_sites(self, site_configs: SiteConfigurations) -> list[str]:
         return [
             "site_%s" % site_id
-            for site_id, site in sort_sites(activation_sites(active_config.sites))
+            for site_id, site in sort_sites(activation_sites(site_configs))
             if len(self._changes_of_site(site_id))
             and self._can_activate_all(site_id)
             and self._is_active_site(
@@ -836,8 +846,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
         ]
 
-    def _select_sites_with_pending_changes(self) -> None:
-        selected_sites: list[SiteId | str] = self._get_selected_sites()
+    def _select_sites_with_pending_changes(self, site_configs: SiteConfigurations) -> None:
+        selected_sites: list[str] = self._get_selected_sites(site_configs)
         user.set_rowselection(SelectionId.from_request(request), self.name(), selected_sites, "set")
 
     def _is_active_site(self, site_id: SiteId, site: SiteConfiguration, status: str) -> bool:

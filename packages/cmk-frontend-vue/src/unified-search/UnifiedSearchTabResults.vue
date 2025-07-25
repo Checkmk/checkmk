@@ -185,7 +185,7 @@ function searchResultNotEmpty(): boolean {
         size="small"
         content=""
       ></CmkChip
-      >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip><br />
+      >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip>
       <span>{{ t('to-nav-tabs', 'to navigate between tabs') }}</span>
     </div>
     <CmkTabs v-model="tabModel">
@@ -198,9 +198,9 @@ function searchResultNotEmpty(): boolean {
           class="cmk-unified-search-result-tab"
         >
           <CmkIcon v-if="tab.icon" :name="tab.icon.name" class="tab-icon"></CmkIcon>
-          <h2>
+          <div>
             {{ tab.title }} <span>({{ tab.count }})</span>
-          </h2>
+          </div>
         </CmkTab>
       </template>
       <template #tab-contents>
@@ -248,7 +248,7 @@ function searchResultNotEmpty(): boolean {
 .cmk-unified-search-tab-info {
   position: absolute;
   right: var(--spacing-double);
-  margin-top: var(--spacing-half);
+  margin-top: 3px;
   line-height: 14px;
   font-size: var(--font-size-small);
   opacity: 0.5;
@@ -311,23 +311,17 @@ function searchResultNotEmpty(): boolean {
   align-items: center;
 
   .tab-icon {
-    margin-left: var(--spacing);
+    margin-right: var(--spacing);
   }
 
-  h2 {
-    margin: var(--spacing);
-
+  div {
     &::first-letter {
       text-transform: capitalize;
     }
 
     span {
-      font-weight: normal;
+      font-weight: var(--font-weight-default);
     }
   }
-}
-
-.cmk-unified-search-result-tab-content {
-  padding: 0;
 }
 </style>

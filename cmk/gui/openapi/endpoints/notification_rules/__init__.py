@@ -33,14 +33,13 @@ from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.notifications import (
     BulkNotAllowedException,
     NotificationRule,
     NotificationRuleConfigFile,
 )
-from cmk.utils.notify_types import NotificationRuleID
+from cmk.utils.notify_types import EventRule, NotificationRuleID
 
 RO_PERMISSIONS = permissions.Perm("general.edit_notifications")
 RW_PERMISSIONS = permissions.AllPerm(
@@ -61,52 +60,6 @@ RULE_ID = {
 }
 
 
-def _create_or_update_rule(
-    incoming_rule_config: APINotificationRule,
-    rule_id: NotificationRuleID | None,
-    pprint_value: bool,
-) -> Response:
-    all_rules: NotificationRules = get_notification_rules()
-    rule_from_request = NotificationRule.from_api_request(incoming_rule_config)
-    if rule_id is not None:
-        if rule_id not in all_rules:
-            raise ProblemException(
-                status=404,
-                title=_("Not found"),
-                detail=_("The rule_id %s does not exist.") % rule_id,
-            )
-        rule_from_request.rule_id = rule_id
-
-    try:
-        all_rules[rule_from_request.rule_id] = rule_from_request
-        NotificationRuleConfigFile().save(
-            [
-                rule.to_mk_file_format(pprint_value=active_config.wato_pprint_config)
-                for rule in all_rules.values()
-            ],
-            pprint_value=active_config.wato_pprint_config,
-        )
-    except BulkNotAllowedException as exc:
-        raise ProblemException(
-            status=400,
-            title=_("Bulking not allowed"),
-            detail=str(exc),
-        )
-    return serve_json(data=_serialize_notification_rule(rule_from_request), status=200)
-
-
-NotificationRules = dict[NotificationRuleID, NotificationRule]
-
-
-def get_notification_rules() -> NotificationRules:
-    all_rules: list[NotificationRule] = [
-        NotificationRule.from_mk_file_format(config)
-        for config in NotificationRuleConfigFile().load_for_reading()
-    ]
-    notification_rules = NotificationRules({rule.rule_id: rule for rule in all_rules})
-    return notification_rules
-
-
 @Endpoint(
     constructors.object_href("notification_rule", "{rule_id}"),
     "cmk/show",
@@ -119,9 +72,13 @@ def get_notification_rules() -> NotificationRules:
 def show_rule(params: Mapping[str, Any]) -> Response:
     """Show a notification rule"""
     user.need_permission("general.edit_notifications")
-    all_rules = get_notification_rules()
-    if rule := all_rules.get(NotificationRuleID(params["rule_id"])):
-        return serve_json(_serialize_notification_rule(rule))
+
+    notification_rules: list[EventRule] = NotificationRuleConfigFile().load_for_reading()
+    for rule in notification_rules:
+        if rule["rule_id"] == params["rule_id"]:
+            return serve_json(
+                _serialize_notification_rule(NotificationRule.from_mk_file_format(rule))
+            )
     raise ProblemException(
         status=404,
         title=_("The requested notification rule was not found"),
@@ -144,7 +101,11 @@ def show_rules(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="notification_rule",
             value=[
-                _serialize_notification_rule(rule) for rule in get_notification_rules().values()
+                _serialize_notification_rule(rule)
+                for rule in [
+                    NotificationRule.from_mk_file_format(config)
+                    for config in NotificationRuleConfigFile().load_for_reading()
+                ]
             ],
         )
     )
@@ -165,12 +126,28 @@ def post_rule(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.see_all_folders")
     user.need_permission("general.edit_notifications")
 
-    incoming_rule: APINotificationRule = params["body"]["rule_config"]
-    return _create_or_update_rule(
-        incoming_rule_config=incoming_rule,
-        rule_id=None,
+    notification_rules: list[EventRule] = NotificationRuleConfigFile().load_for_modification()
+    rule_from_request = NotificationRule.from_api_request(params["body"]["rule_config"])
+
+    try:
+        new_rule = rule_from_request.to_mk_file_format(
+            pprint_value=active_config.wato_pprint_config,
+        )
+    except BulkNotAllowedException as exc:
+        raise ProblemException(
+            status=400,
+            title=_("Bulking not allowed"),
+            detail=str(exc),
+        )
+
+    notification_rules.append(new_rule)
+    NotificationRuleConfigFile().rule_created(
+        rules=notification_rules,
         pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
+
+    return serve_json(data=_serialize_notification_rule(rule_from_request))
 
 
 @Endpoint(
@@ -188,11 +165,39 @@ def put_rule(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.see_all_folders")
     user.need_permission("general.edit_notifications")
-    incoming_rule: APINotificationRule = params["body"]["rule_config"]
-    return _create_or_update_rule(
-        incoming_rule_config=incoming_rule,
-        rule_id=NotificationRuleID(params["rule_id"]),
-        pprint_value=active_config.wato_pprint_config,
+
+    notification_rules: list[EventRule] = NotificationRuleConfigFile().load_for_modification()
+    rule_id = NotificationRuleID(params["rule_id"])
+    for n, rule in enumerate(notification_rules):
+        if rule["rule_id"] == rule_id:
+            rule_from_request = NotificationRule.from_api_request(params["body"]["rule_config"])
+            rule_from_request.rule_id = rule_id
+
+            try:
+                modified_rule = rule_from_request.to_mk_file_format(
+                    pprint_value=active_config.wato_pprint_config
+                )
+            except BulkNotAllowedException as exc:
+                raise ProblemException(
+                    status=400,
+                    title=_("Bulking not allowed"),
+                    detail=str(exc),
+                )
+
+            notification_rules[n] = modified_rule
+            NotificationRuleConfigFile().rule_updated(
+                rules=notification_rules,
+                rule_number=str(n),
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
+
+            return serve_json(data=_serialize_notification_rule(rule_from_request))
+
+    raise ProblemException(
+        status=404,
+        title=_("Not found"),
+        detail=_("The rule_id %s does not exist.") % rule_id,
     )
 
 
@@ -211,18 +216,22 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.see_all_folders")
     user.need_permission("general.edit_notifications")
 
-    rule_id = NotificationRuleID(params["rule_id"])
-    all_rules: NotificationRules = get_notification_rules()
-    if rule_id in all_rules:
-        del all_rules[rule_id]
-        updated_rules = [
-            rule.to_mk_file_format(pprint_value=active_config.wato_pprint_config)
-            for rule in all_rules.values()
-        ]
-        NotificationRuleConfigFile().save(
-            updated_rules, pprint_value=active_config.wato_pprint_config
-        )
+    config_file = NotificationRuleConfigFile()
+    notification_rules: list[EventRule] = []
+    rule_number: str | None = None
+    for n, rule in enumerate(config_file.load_for_modification()):
+        if rule["rule_id"] == NotificationRuleID(params["rule_id"]):
+            rule_number = str(n)
+        else:
+            notification_rules.append(rule)
 
+    if rule_number is not None:
+        config_file.rule_deleted(
+            rules=notification_rules,
+            rule_number=rule_number,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
     return Response(status=204)
 
 

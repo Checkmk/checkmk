@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-23 19:35+0000\n"
+"PO-Revision-Date: 2025-07-24 20:35+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -16001,9 +16001,8 @@ msgstr "ユーザー %s のカスタム通知テーブル"
 msgid "Custom notification table of this user"
 msgstr "このユーザーのカスタム通知テーブル"
 
-#, fuzzy
 msgid "Custom port"
-msgstr "カスタムホスト"
+msgstr "カスタムポート"
 
 msgid "Custom probe state"
 msgstr "カスタムプローブの状態"
@@ -39643,9 +39642,8 @@ msgstr "モニターRoute53"
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
 
-#, fuzzy
 msgid "Monitor all instances"
-msgstr "見つかったすべてのインスタンスを監視する"
+msgstr "すべてのインスタンスを監視する"
 
 msgid "Monitor all instances detected and manually added"
 msgstr "検出され、手動で追加されたすべてのインスタンスを監視する"
@@ -40766,7 +40764,6 @@ msgstr "名前: %s"
 msgid "Names"
 msgstr "名前"
 
-#, fuzzy
 msgid ""
 "Names for files containing <b>additional command line arguments</b> for "
 "Robot Framework. The paths are relative to the <i>base directory of Robot "
@@ -40780,33 +40777,33 @@ msgid ""
 "argument files</a>)"
 msgstr ""
 "Robot Frameworkの<b>追加コマンドライン引数</b>を含むファイルの名前。パスは "
-"<i>robot suites base directory</i> からの相対パスです。引数ファイルは、コマン"
-"ドラインオプションや引数の全部または一部を外部ファイルに置くことができます。"
-"これは、Robotmk がネイティブにサポートしていないような特殊な RF パラメータ"
-"や、問題のある文字の場合に便利です。ここで指定された引数は、他のコマンドライ"
-"ンオプションと一緒に使用されます。(<a href=\"https://robotframework.org/"
-"robotframework/latest/RobotFrameworkUserGuide.html#argument-files\" "
-"target=\"_blank\">引数ファイルについて</a> も参照してください)"
+"<i>Robot Framework projectsのベースディレクトリ</i> "
+"からの相対パスです。引数ファイルは、コマンドラインオプションや引数の全部また"
+"は一部を外部ファイルに格納し、そこから読み込むことができます。これは、"
+"Robotmk がネイティブにサポートしていないような特殊な RF "
+"パラメータや、問題のある文字列を扱う場合に便利です。ここで指定された引数は、"
+"他のコマンドラインオプションと組み合わせて使用されます。(<a href=\"https://"
+"robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html"
+"#argument-files\" target=\"_blank\">引数ファイルについて</a> "
+"も参照してください)"
 
-#, fuzzy
 msgid ""
 "Names of IPMI sensors that should be ignored during discovery. The pattern "
 "specified here must match exactly the beginning of the actual sensor name "
 "(case sensitive)."
 msgstr ""
 "検出中に無視する必要があるIPMIセンサーの名前。ここで指定するパターンは、実際"
-"のセンサー名の先頭と正確に一致する必要があります(大文字と小文字が区別されま"
-"す)。"
+"のセンサー名の先頭と完全に一致する必要があります(大文字と小文字が区別されます"
+")。"
 
-#, fuzzy
 msgid ""
 "Names of IPMI sensors that should be ignored when summarizing. The pattern "
 "specified here must match exactly the beginning of the actual sensor name "
 "(case sensitive)."
 msgstr ""
-"要約するときに無視する必要があるIPMIセンサーの名前。ここで指定するパターン"
-"は、実際のセンサー名の先頭と正確に一致する必要があります(大文字と小文字が区別"
-"されます)。"
+"要約するときに無視する必要があるIPMIセンサーの名前。ここで指定するパターンは"
+"、実際のセンサー名の先頭と完全に一致する必要があります(大文字と小文字が区別さ"
+"れます)。"
 
 msgid "Namespace"
 msgstr "ネームスペース"
@@ -40968,9 +40965,8 @@ msgstr "ネットワークID"
 msgid "Network IO"
 msgstr "ネットワークIO"
 
-#, fuzzy
 msgid "Network Inbound"
-msgstr "ネットワーク out"
+msgstr "ネットワーク Inbound"
 
 msgid "Network Interfaces"
 msgstr "ネットワークインターフェース"
@@ -40990,16 +40986,14 @@ msgstr "ネットワークロードバランサーのターゲットグループ
 msgid "Network Load balancers"
 msgstr "ネットワークロードバランサー"
 
-#, fuzzy
 msgid "Network Outbound"
-msgstr "ネットワーク out"
+msgstr "ネットワーク Outbound"
 
 msgid "Network Ports"
 msgstr "ネットワークポート"
 
-#, fuzzy
 msgid "Network Throughput"
-msgstr "ネットワーク out"
+msgstr "ネットワーク スループット"
 
 msgid "Network adapters"
 msgstr "ネットワークアダプタ"
@@ -41010,9 +41004,8 @@ msgstr "ネットワークアドレス"
 msgid "Network address:"
 msgstr "ネットワークアドレス:"
 
-#, fuzzy
 msgid "Network containers"
-msgstr "Dockerコンテナ"
+msgstr "ネットワークコンテナ"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム-全体的なステータスと使用状況(例:NFS)"
@@ -41090,9 +41083,8 @@ msgstr "決して"
 msgid "Never analyzed/vacuumed tables"
 msgstr "テーブルを分析/バキュームしたことはありません"
 
-#, fuzzy
 msgid "Never compute a rate"
-msgstr "配信されたメッセージレート"
+msgstr "レートを計算しないでください"
 
 msgid "Never do discovery or activate changes in the following time ranges"
 msgstr "次の時間範囲では、変更を検出したりアクティブ化したりしないでください"
@@ -41112,9 +41104,9 @@ msgstr "ピギーバックデータは絶対に使用しないでください"
 msgid "New"
 msgstr "新しい"
 
-#, fuzzy, python-format
+#, python-format
 msgid "New %s"
-msgstr "新しい状態: %s"
+msgstr "新しい %s"
 
 msgid "New Action"
 msgstr "新しいアクション"
@@ -41161,9 +41153,8 @@ msgid "New host label: "
 msgid_plural "New host labels: "
 msgstr[0] "新しいホストラベル: "
 
-#, fuzzy
 msgid "New managed robot"
-msgstr "管理対象オブジェクト"
+msgstr "新しく管理されたロボット"
 
 msgid "New name"
 msgstr "新しい名前"
@@ -41210,9 +41201,8 @@ msgstr "以下の最新のファイル経過時間"
 msgid "Newest first"
 msgstr "最新のものが最初"
 
-#, fuzzy
 msgid "Next"
-msgstr "次の実行"
+msgstr "次"
 
 msgid "Next Run"
 msgstr "次の実行"
@@ -41220,9 +41210,8 @@ msgstr "次の実行"
 msgid "Next check"
 msgstr "次のチェック"
 
-#, fuzzy
 msgid "Next cycle"
-msgstr "次のチェック"
+msgstr "次のサイクル"
 
 msgid "Next notification"
 msgstr "次の通知"
@@ -41230,28 +41219,23 @@ msgstr "次の通知"
 msgid "Next run"
 msgstr "次の実行"
 
-#, fuzzy
 msgid "Next step: General properties"
-msgstr "一般的なプロパティ"
+msgstr "次のステップ：一般的なプロパティ"
 
-#, fuzzy
 msgid "Next step: Notification method (plug-in)"
-msgstr "通知プラグイン"
+msgstr "次のステップ：通知方法（プラグイン）"
 
-#, fuzzy
 msgid "Next step: Recipient"
-msgstr "受信者"
+msgstr "次のステップ：受信者"
 
 msgid "Next step: Review all settings"
 msgstr "次のステップ：すべての設定を確認"
 
-#, fuzzy
 msgid "Next step: Sending conditions"
-msgstr "保留中の接続"
+msgstr "次のステップ：送信条件"
 
-#, fuzzy
 msgid "Next step: Specify host/services"
-msgstr "コメントタイプ(ホスト/サービス)"
+msgstr "次のステップ：ホスト/サービスの指定"
 
 msgid "Nginx Server"
 msgstr "Nginxサーバー"
@@ -41279,13 +41263,11 @@ msgstr "いいえ(エラー: %s、コード: %d、深さ: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "API統合なし、Checkmkエージェントなし"
 
-#, fuzzy
 msgid "No AWS services found."
-msgstr "ホスト/サービスが見つかりません。"
+msgstr "AWSサービスが見つかりません。"
 
-#, fuzzy
 msgid "No Azure services found."
-msgstr "ホスト/サービスが見つかりません。"
+msgstr "Azureサービスが見つかりません。"
 
 msgid "No CSRF token received"
 msgstr "CSRFトークンを受信していない"
@@ -41298,17 +41280,14 @@ msgstr "%sの構成クイック・セットアップを使用できません"
 msgid "No Dictionary ValueSpec within Migrate: %s"
 msgstr "Migrate 内に Dictionary ValueSpec が存在しません: %s"
 
-#, fuzzy
 msgid "No GCP services found."
-msgstr "ホスト/サービスが見つかりません。"
+msgstr "GCPサービスが見つかりません。"
 
-#, fuzzy
 msgid "No GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
 
-#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPIを使用する HW/SW Inventory プラグインは使用しないでください"
 
 msgid "No IP"
 msgstr "IPなし"
@@ -41319,9 +41298,8 @@ msgstr "IP範囲が構成されていません"
 msgid "No Levels"
 msgstr "レベルなし"
 
-#, fuzzy
 msgid "No PNP templates using the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
 
 msgid "No SNMP"
 msgstr "SNMPなし"
@@ -41372,16 +41350,14 @@ msgstr "壊れた拡張機能は見つかりませんでした。"
 msgid "No certificate"
 msgstr "証明書なし"
 
-#, fuzzy
 msgid "No check man pages using the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPIを使用するチェックmanページを使用しないでください"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
-#, fuzzy
 msgid "No check plug-ins using the deprecated API (v1)"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPI(v1)を使用するチェックプラグインを使用しないでください"
 
 msgid "No colon, slash or backslash is allowed in the filename."
 msgstr ""
@@ -41447,21 +41423,18 @@ msgid "No edit configuration bundle implemented for bundle group type '%s'."
 msgstr ""
 "バンドルグループタイプ '%s' に対して編集設定バンドルが実装されていません。"
 
-#, fuzzy
 msgid "No elements available"
-msgstr "利用不可"
+msgstr "利用可能な要素がありません"
 
-#, fuzzy
 msgid "No elements selected"
-msgstr "選択されていない"
+msgstr "選択された要素はありません"
 
 #, python-format
 msgid "No empty folders for %s available to delete."
 msgstr "%s 用の空のフォルダーは削除できません。"
 
-#, fuzzy
 msgid "No endpoint"
-msgstr "エンドポイント"
+msgstr "エンドポイントはありません"
 
 msgid "No entries"
 msgstr "エントリなし"
@@ -41478,9 +41451,8 @@ msgstr "有効期限なし"
 msgid "No explicit credentials"
 msgstr "明示的な資格情報はありません"
 
-#, fuzzy
 msgid "No fallback email address configured"
-msgstr "(フォールバックメールアドレスは設定されていません!)"
+msgstr "フォールバックメールアドレスが設定されていません"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -41525,9 +41497,8 @@ msgstr "エレメントの表示に影響を与えません"
 msgid "No information available"
 msgstr "利用可能な情報はありません"
 
-#, fuzzy
 msgid "No legacy GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "非推奨のAPIを使用したレガシーGUI拡張機能は使用しないでください"
 
 msgid "No levels"
 msgstr "レベルなし"
@@ -41541,12 +41512,10 @@ msgstr "ライセンス認証はまだ行われていない"
 msgid "No logging"
 msgstr "ロギングなし"
 
-#, fuzzy
 msgid ""
 "No logs are available. If available, more information will be shown in the "
 "service name."
-msgstr ""
-"ログはありません。利用可能な場合は、サービスの説明に詳細情報が表示されます。"
+msgstr "ログはありません。利用可能な場合は、サービス名に詳細情報が表示されます。"
 
 msgid "No logs found for this host."
 msgstr "このホストのログは見つかりませんでした。"
@@ -41585,35 +41554,30 @@ msgstr "モニタリングコアなし"
 msgid "No more tags to add"
 msgstr "追加するタグはありません"
 
-#, fuzzy
 msgid "No names defined"
-msgstr "接続が定義されていません"
+msgstr "名前が定義されていません"
 
-#, fuzzy
 msgid "No next cycle available"
-msgstr "利用不可"
+msgstr "次のサイクルは利用できません"
 
 #, python-format
 msgid "No notification parameters for method '%s' found"
-msgstr "メソッド '%s' の通知パラメータが見つかりません"
+msgstr "メソッド'%s'に対する通知パラメータが見つかりません"
 
 msgid "No object type"
 msgstr "オブジェクトタイプなし"
 
-#, fuzzy
 msgid "No options available"
-msgstr "利用可能な情報はありません"
+msgstr "利用可能なオプションはありません"
 
 msgid "No password entered. Please enter a password."
 msgstr "パスワードが入力されていません。パスワードを入力してください。"
 
-#, fuzzy
 msgid "No password provided"
-msgstr "パスワードストアから"
+msgstr "パスワードが提供されていません"
 
-#, fuzzy
 msgid "No password selected"
-msgstr "パスワードストアから"
+msgstr "パスワードが選択されていません"
 
 msgid "No pending changes."
 msgstr "保留中の変更はありません。"
@@ -41628,9 +41592,8 @@ msgstr ""
 "フォールバックトピック「その他」の権限がありません。管理者に連絡してくださ"
 "い。"
 
-#, fuzzy
 msgid "No previous cycle available"
-msgstr "利用可能な情報はありません"
+msgstr "以前のサイクルは利用できません"
 
 msgid "No proxy"
 msgstr "プロキシなし"
@@ -41669,12 +41632,9 @@ msgstr "アクションを実行するために選択された行はありませ
 msgid "No rule match"
 msgstr "ルールマッチなし"
 
-#, fuzzy
 msgid ""
 "No rule set <b>State in case of restricted address mismatch</b> is configured"
-msgstr ""
-"ルールセット<b>アドレスの不一致が制限されている場合の状態</b>は構成されていま"
-"せん"
+msgstr "ルールセット<b>制限付きアドレス不一致の場合の状態</b>は構成されていません"
 
 msgid "No rules found."
 msgstr "ルールが見つかりません。"
@@ -41694,9 +41654,8 @@ msgstr "検索なし"
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
 
-#, fuzzy
 msgid "No smarthosts"
-msgstr "スマートホスト"
+msgstr "スマートホストはありません"
 
 msgid "No snapshot to restore available."
 msgstr "復元可能なスナップショットはありません。"
@@ -41752,9 +41711,8 @@ msgstr "ユーザー名が入力されていません。ユーザー名を入力
 msgid "No users are defined yet."
 msgstr "ユーザーはまだ定義されていません。"
 
-#, fuzzy
 msgid "No users available"
-msgstr "利用可能なポート"
+msgstr "利用可能なユーザーはいません"
 
 msgid "No valid target folder."
 msgstr "有効なターゲットフォルダがありません。"
@@ -41762,9 +41720,8 @@ msgstr "有効なターゲットフォルダがありません。"
 msgid "No valid theme directories found."
 msgstr "有効なテーマディレクトリがありません。"
 
-#, fuzzy
 msgid "No valid users available"
-msgstr "利用可能なポート"
+msgstr "有効なユーザーはいません"
 
 msgid "No values defined"
 msgstr "値の定義なし"
@@ -41776,9 +41733,8 @@ msgstr "バージョン制限なし"
 msgid "No view defined with the name '%s'."
 msgstr "%s'という名前で定義されたビューはありません。"
 
-#, fuzzy
 msgid "No waiting batches"
-msgstr "全てのトピックを表示"
+msgstr "待機中のバッチはありません"
 
 msgid "No, adjust settings"
 msgstr "いいえ、設定を調整してください"
@@ -41792,9 +41748,8 @@ msgstr "クローンを作成しないでください"
 msgid "No, keep current name"
 msgstr "いいえ、現在の名前を維持します"
 
-#, fuzzy
 msgid "No, keep host"
-msgstr "Ntopホスト"
+msgstr "いいえ、ホストを維持します"
 
 msgid "No-TxCredits errors"
 msgstr "No-TxCreditsエラー"
@@ -41817,9 +41772,8 @@ msgstr "ノードパスマッチング"
 msgid "Node Stats"
 msgstr "ノード統計"
 
-#, fuzzy
 msgid "Node Status (off: ignore node status)"
-msgstr "チェックをアクティブにします(オフ:ノードステータスを無視します)"
+msgstr "ノードの状態(オフ:ノードの状態を無視する)"
 
 msgid "Node index"
 msgstr "ノードインデックス"
@@ -41882,25 +41836,21 @@ msgstr "公称周波数"
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
 msgstr "非ASCII文字は、属性 \"%s\" では使用することはできません。"
 
-#, fuzzy
 msgid "Non-Critical Event Rate"
 msgstr "重要でないイベント率"
 
-#, fuzzy
 msgid "Non-Critical Events"
-msgstr "クリティカルでないイベント"
+msgstr "重大でないイベント"
 
 msgid "Non-Multicast"
 msgstr "非マルチキャスト"
 
-#, fuzzy
 msgid "Non-Unicast packet rates"
-msgstr "ユニキャスト以外のパケットレート"
+msgstr "非ユニキャストパケットレート"
 
 msgid "Non-compliant devices"
 msgstr "非準拠デバイス"
 
-#, fuzzy
 msgid "Non-empty rule sets"
 msgstr "空でないルールセット"
 
@@ -42092,20 +42042,17 @@ msgstr "ない"
 msgid "Not Before: %s - Not After: %s"
 msgstr "開始日: %s - 終了日: %s"
 
-#, fuzzy
 msgid "Not Present"
 msgstr "現在ではない"
 
 msgid "Not Started"
 msgstr "未スタート"
 
-#, fuzzy
 msgid "Not a list"
-msgstr "ホストマッチリスト"
+msgstr "リストがありません"
 
-#, fuzzy
 msgid "Not a number"
-msgstr "ポート番号"
+msgstr "数ではありません"
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "有効なURLでない（httpとhttpsのURLのみ使用可能）。"
@@ -42117,9 +42064,8 @@ msgstr ""
 msgid "Not an active member of the stack"
 msgstr "スタックのアクティブなメンバーではありません"
 
-#, fuzzy
 msgid "Not an integer number"
-msgstr "無効なファイル名"
+msgstr "整数ではありません"
 
 msgid "Not authenticated"
 msgstr "認証されていません"
@@ -42166,9 +42112,8 @@ msgstr "パスワードの変更は許可されていません。変更を強制
 msgid "Not ready duration"
 msgstr "準備期間"
 
-#, fuzzy
 msgid "Not required"
-msgstr "必須"
+msgstr "不要"
 
 msgid "Not responding devices"
 msgstr "デバイスが応答しない"
@@ -42201,13 +42146,12 @@ msgstr ""
 msgid "Not yet monitored"
 msgstr "まだ監視されていません"
 
-#, fuzzy
 msgid "Notation"
-msgstr "通知"
+msgstr "注記"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Notation: %s"
-msgstr "注釈: %s"
+msgstr "注記: %s"
 
 msgid "Note down the generated Access key ID and Secret access key."
 msgstr ""
@@ -42317,17 +42261,14 @@ msgstr ""
 msgid "Notes"
 msgstr "ノート"
 
-#, fuzzy
 msgid "Notes (URL)"
-msgstr "ノート"
+msgstr "ノート(URL)"
 
-#, fuzzy
 msgid "Notes (URL) for Hosts"
-msgstr "ホストのメモURL"
+msgstr "ホストのノート(URL)"
 
-#, fuzzy
 msgid "Notes (URL) for Services"
-msgstr "サービスのメモURL"
+msgstr "サービスのノート(URL)"
 
 msgid "Notes URL"
 msgstr "備考URL"
@@ -42383,24 +42324,20 @@ msgstr "通知コメント"
 msgid "Notification configuration"
 msgstr "通知設定"
 
-#, fuzzy
 msgid "Notification core status"
-msgstr "通知コメント"
+msgstr "通知コアの状態"
 
-#, fuzzy
 msgid "Notification delivery rate"
-msgstr "通知システム"
+msgstr "通知配信率"
 
-#, fuzzy
 msgid "Notification effect"
-msgstr "通知方法"
+msgstr "通知効果"
 
 msgid "Notification events of hosts."
 msgstr "ホストの通知イベント。"
 
-#, fuzzy
 msgid "Notification frequency and timing"
-msgstr "%s 通知ルール"
+msgstr "通知の頻度とタイミング"
 
 msgid "Notification log level"
 msgstr "通知ログレベル"
@@ -42408,25 +42345,21 @@ msgstr "通知ログレベル"
 msgid "Notification method"
 msgstr "通知方法"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Notification method '%s' does not exist"
-msgstr "グラフコレクション '%s'は存在しません"
+msgstr "通知方法 '%s'は存在しません"
 
-#, fuzzy
 msgid "Notification method (plug-in)"
-msgstr "通知プラグイン"
+msgstr "通知方法(プラグイン)"
 
-#, fuzzy
 msgid "Notification method and parameter"
-msgstr "通知フェーズ"
+msgstr "通知方法とパラメータ"
 
-#, fuzzy
 msgid "Notification overview"
-msgstr "通知期間"
+msgstr "通知概要"
 
-#, fuzzy
 msgid "Notification parameter"
-msgstr "通知フェーズ"
+msgstr "通知パラメータ"
 
 msgid "Notification period"
 msgstr "通知期間"
@@ -42644,20 +42577,17 @@ msgstr ""
 msgid "Number is not a float value."
 msgstr "数値は浮動小数点ではありません。"
 
-#, fuzzy
 msgid "Number is not an integer value."
-msgstr "パラメータ \"%s\" は整数ではありません。"
+msgstr "数値は整数値ではありません。"
 
 msgid "Number of Active Sessions"
 msgstr "アクティブなセッションの数"
 
-#, fuzzy
 msgid "Number of Attempted SIP/H323 calls"
-msgstr "失敗したパスの数"
+msgstr "SIP/H323 通話の試行回数"
 
-#, fuzzy
 msgid "Number of Attempted SIP/H323 fax calls"
-msgstr "失敗したパスの数"
+msgstr "SIP/H323 ファックス通話の試行回数"
 
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Checkmkチェッカーの数がCPUの数より少ない"
@@ -42671,9 +42601,8 @@ msgstr "列の数"
 msgid "Number of Deadlocks / sec"
 msgstr "デッドロックの数/秒"
 
-#, fuzzy
 msgid "Number of Destination Busy SIP/H323 calls"
-msgstr "失敗したパスの数"
+msgstr "宛先がビジー状態のSIP/H323通話の数"
 
 msgid "Number of Documents"
 msgstr "ドキュメントの数"
@@ -42699,17 +42628,15 @@ msgstr "LotusDominoユーザーの数"
 msgid "Number of Mails in Queue"
 msgstr "キュー内のメールの数"
 
-#, fuzzy
 msgid "Number of No Answer SIP/H323 calls"
-msgstr "失敗したパスの数"
+msgstr "SIP/H323 での応答なし通話の数"
 
 msgid ""
 "Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
 msgstr "ルート未設定のSIP/H323通話数。おそらく番号が間違っていることが原因"
 
-#, fuzzy
 msgid "Number of No capability match between peers on SIP/H323 calls"
-msgstr "失敗したパスの数"
+msgstr "SIP/H323通話におけるピア間の機能不一致件数"
 
 msgid "Number of Nodes"
 msgstr "ノードの数"
@@ -42726,9 +42653,8 @@ msgstr "作成されたOSスレッド数"
 msgid "Number of PING probes"
 msgstr "PINGプローブの数"
 
-#, fuzzy
 msgid "Number of Placement Groups"
-msgstr "ルールグループの数"
+msgstr "配置グループの数"
 
 msgid "Number of Resources"
 msgstr "リソースの数"
@@ -42736,9 +42662,8 @@ msgstr "リソースの数"
 msgid "Number of Running Bossock Fibers"
 msgstr "Running Bossock Fibersの数"
 
-#, fuzzy
 msgid "Number of SIP/H323 fax success calls"
-msgstr "アクセスポイントの数"
+msgstr "SIP/H323 ファックスの成功した通話数"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Lotus Dominoサーバーの1分あたりのトランザクション数"
@@ -42819,9 +42744,8 @@ msgstr "保持する構成スナップショットの数"
 msgid "Number of connected clients"
 msgstr "接続されているクライアントの数"
 
-#, fuzzy
 msgid "Number of connection retries"
-msgstr "接続数"
+msgstr "接続再試行回数"
 
 msgid "Number of connections"
 msgstr "接続数"
@@ -42847,13 +42771,11 @@ msgstr "現在の接続数"
 msgid "Number of current sessions"
 msgstr "現在のセッション数"
 
-#, fuzzy
 msgid "Number of current thread count in threadpool"
-msgstr "スレッドプール内の現在のスレッド数のパーセンテージレベル"
+msgstr "スレッドプール内の現在のスレッド数"
 
-#, fuzzy
 msgid "Number of current threads busy in threadpool"
-msgstr "スレッドプールでビジー状態の現在のスレッドの割合"
+msgstr "スレッドプール内で現在ビジー状態のスレッド数"
 
 msgid "Number of currently running sessions"
 msgstr "現在実行中のセッションの数"
@@ -42894,9 +42816,8 @@ msgstr "退去キー数"
 msgid "Number of expected messages"
 msgstr "予想されるメッセージの数"
 
-#, fuzzy
 msgid "Number of failed SIP/H323 calls"
-msgstr "失敗したパスの数"
+msgstr "SIP/H323通話の失敗件数"
 
 msgid "Number of failed jobs"
 msgstr "失敗したジョブの数"
@@ -42928,9 +42849,8 @@ msgstr "各レベルで作成するフォルダーの数"
 msgid "Number of goroutines"
 msgstr "実行ルーチンの数"
 
-#, fuzzy
 msgid "Number of graphs per notification (default: 5)"
-msgstr "通知ごとのグラフ(デフォルト: 5)"
+msgstr "通知ごとのグラフの数（デフォルト：5）"
 
 msgid "Number of healthy hosts lower levels"
 msgstr "正常なホストの数 下位レベル"
@@ -43258,9 +43178,8 @@ msgstr "スタックしたタスクの数"
 msgid "Number of tables"
 msgstr "テーブルの数"
 
-#, fuzzy
 msgid "Number of tasks"
-msgstr "テーブルの数"
+msgstr "タスクの数"
 
 msgid "Number of the Rack"
 msgstr "ラックの数"
@@ -43436,13 +43355,11 @@ msgstr "OAUTH 2.0"
 msgid "OAUth authentication"
 msgstr "OAUth認証"
 
-#, fuzzy
 msgid "OAuth token"
-msgstr "APIトークン"
+msgstr "OAuth トークン"
 
-#, fuzzy
 msgid "OAuth token authentication"
-msgstr "トークン認証"
+msgstr "OAuth トークン認証"
 
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2（クライアントID/テナントID）"
@@ -43536,9 +43453,8 @@ msgstr ""
 "OS、Checkmkのバージョンとエディション、Time、Core、Pythonのバージョンとパス、"
 "アーキテクチャ"
 
-#, fuzzy
 msgid "OSD Latency"
-msgstr "ディスク遅延"
+msgstr "OSDレイテンシ"
 
 msgid "OSDs epoch levels and average"
 msgstr "OSDのエポックレベルと平均"
@@ -43546,13 +43462,11 @@ msgstr "OSDのエポックレベルと平均"
 msgid "OSN Laser attenuation"
 msgstr "OSNレーザー減衰"
 
-#, fuzzy
 msgid "OTLP endpoint"
-msgstr "エンドポイント"
+msgstr "OTLPエンドポイント"
 
-#, fuzzy
 msgid "OVS bonding"
-msgstr "Vswitchボンディング"
+msgstr "OVSボンディング"
 
 msgid "Object"
 msgstr "オブジェクト"
@@ -43624,7 +43538,6 @@ msgstr "オフセット"
 msgid "Ok"
 msgstr "OK"
 
-#, fuzzy
 msgid "Ok services"
 msgstr "OKサービス"
 
@@ -43646,7 +43559,6 @@ msgstr ""
 msgid "Older events"
 msgstr "古いイベント"
 
-#, fuzzy
 msgid "Oldest Message Age"
 msgstr "最も古いメッセージ経過時間"
 
@@ -43687,16 +43599,14 @@ msgstr "On"
 msgid "On %s (server time)."
 msgstr "On %s(サーバー時間)。"
 
-#, fuzzy
 msgid "On Checkmk agent uninstallation"
-msgstr "Checkmkエージェントのインストール監査"
+msgstr "Checkmkエージェントのアンインストールにおいて"
 
 msgid "On Hold"
 msgstr "保留"
 
-#, fuzzy
 msgid "On all services"
-msgstr "すべてのサービス"
+msgstr "すべてのサービスにおいて"
 
 msgid "On all sites"
 msgstr "すべてのサイトで"
@@ -43728,9 +43638,8 @@ msgstr "選択したオブジェクトについて"
 msgid "On selected rules"
 msgstr "選択したルールについて"
 
-#, fuzzy
 msgid "On selected services"
-msgstr "選択したサイト"
+msgstr "選択したサイトにおいて"
 
 msgid "On selected sites"
 msgstr "選択したサイト"
@@ -43757,17 +43666,15 @@ msgstr ""
 "エージェントのみの監視を設定する場合は、\"%s\" 属性を \"%s\" に設定することも"
 "できます。"
 
-#, fuzzy
 msgid ""
 "On this page you can test the defined log file patterns against a custom "
 "text, for example a line from a log file. Using this dialog it is possible "
 "to analyze and debug your whole set of log file patterns."
 msgstr ""
-"このページでは、カスタムテキスト（例えばログファイルからの行）に対して定義さ"
-"れたログファイルパターンをテストすることができます。このダイアログを使用し"
-"て、ログファイルパターンのセット全体を分析およびデバッグすることが可能です。"
+"このページでは、カスタムテキスト（例えばログファイルの１行）に対して定義され"
+"たログファイルパターンをテストすることができます。このダイアログを使用して、"
+"ログファイルパターンのセット全体を分析およびデバッグすることが可能です。"
 
-#, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -43775,9 +43682,9 @@ msgid ""
 "mind that this feature might increase the execution time of your LDAP sync."
 msgstr ""
 "このオプションを有効にすると、このプラグインは直接のグループメンバーシップを"
-"処理するだけでなく、ネストされたグループを掘り下げ、それらのグループのメン"
-"バーを連絡先グループのメンバーとしても扱います。この機能により、LDAP同期の実"
-"行時間が長くなる可能性があることに注意してください。"
+"処理するだけでなく、ネストされたグループにもアクセスし、それらのグループのメ"
+"ンバーを連絡先グループのメンバーとしても扱います。この機能により、LDAP同期の"
+"実行時間が長くなる可能性がある点ご注意ください。"
 
 msgid ""
 "Once you reach 100%, further change activations will be blocked. Avoid "
@@ -44063,9 +43970,8 @@ msgid ""
 msgstr ""
 "ここに入力した正規表現で名前が<i>始まる</i>ホスト名のみの名前を変更します。"
 
-#, fuzzy
 msgid "Only root socket"
-msgstr "パーセントのみ"
+msgstr "rootソケットのみ"
 
 msgid "Only show current value"
 msgstr "現在の値のみを表示"
@@ -44100,9 +44006,8 @@ msgstr "strとunicode値のみが許可される、%sを取得"
 msgid "Only time"
 msgstr "唯一の時間"
 
-#, fuzzy
 msgid "Only unused parameters can be deleted."
-msgstr "ターゲットが削除されました。"
+msgstr "未使用のパラメーターのみ削除可能です。"
 
 msgid "Only upper case letters are allowed"
 msgstr "大文字のみ使用できます"
@@ -44110,9 +44015,8 @@ msgstr "大文字のみ使用できます"
 msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
 
-#, fuzzy
 msgid "Only user sockets"
-msgstr "ネットワークソケットを開く"
+msgstr "ユーザーソケットのみ"
 
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr "Jenkinsバージョン1.622以下でのみ有効です。"
@@ -44127,7 +44031,7 @@ msgid "Open Log"
 msgstr "ログを開く"
 
 msgid "Open Telemetry Collector configuration"
-msgstr "オープンテレメトリーコレクターの構成"
+msgstr "Open Telemetryコレクターの設定"
 
 msgid "Open bulk notifications"
 msgstr "一括通知を開く"
@@ -44144,9 +44048,8 @@ msgstr "ファイル記述子を開く"
 msgid "Open files"
 msgstr "ファイルを開く"
 
-#, fuzzy
 msgid "Open files and sockets"
-msgstr "ファイル記述子を開く"
+msgstr "ファイルとソケットを開く"
 
 msgid "Open in"
 msgstr "で開く"
@@ -44179,7 +44082,7 @@ msgid "Open telemetry collector creation options"
 msgstr "Open telemetry コレクターの作成オプション"
 
 msgid "Open telemetry hosts creation options"
-msgstr "Open telemetryホスト作成オプションを開く"
+msgstr "Open telemetryホスト作成オプション"
 
 msgid "Open the action menu"
 msgstr "アクションメニューを開く"
@@ -44203,9 +44106,8 @@ msgstr "このサイトのローカルWebユーザーインターフェイスを
 msgid "Open this table for filtering / sorting"
 msgstr "この表を開いてフィルタリング/ソートする"
 
-#, fuzzy
 msgid "Open vSwitch (ovs) bonding interface status"
-msgstr "ボンディングインターフェース"
+msgstr "Open vSwitch (ovs) ボンディング インターフェースの状態"
 
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
@@ -44238,7 +44140,7 @@ msgid "OpenVPN clients"
 msgstr "OpenVPNクライアント"
 
 msgid "Opentelemetry collector data"
-msgstr "Open telemetryコレクターデータ"
+msgstr "Opentelemetry コレクターデータ"
 
 msgid "Operating CPU"
 msgstr "動作中のCPU"
@@ -44264,7 +44166,6 @@ msgstr "オペレーティングシステム"
 msgid "Operation"
 msgstr "操作"
 
-#, fuzzy
 msgid "Operation Errors"
 msgstr "操作エラー"
 
@@ -44286,63 +44187,50 @@ msgstr "オペレーション"
 msgid "Operations States"
 msgstr "運用状態"
 
-#, fuzzy
 msgid "Operations on selected graph lines"
-msgstr "選択したメトリックの操作"
+msgstr "選択されたグラフの線に対する操作"
 
 msgid "Operations per second"
 msgstr "1秒あたりの操作数"
 
-#, fuzzy
 msgid "Opsgenie parameters"
-msgstr "オプションのパラメータ"
+msgstr "Opsgenie パラメータ"
 
 msgid "Optical Signal Power"
 msgstr "光信号パワー"
 
-#, fuzzy
 msgid "Optical signal power lane 0"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 0"
 
-#, fuzzy
 msgid "Optical signal power lane 1"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 1"
 
-#, fuzzy
 msgid "Optical signal power lane 2"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 2"
 
-#, fuzzy
 msgid "Optical signal power lane 3"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 3"
 
-#, fuzzy
 msgid "Optical signal power lane 4"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 4"
 
-#, fuzzy
 msgid "Optical signal power lane 5"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 5"
 
-#, fuzzy
 msgid "Optical signal power lane 6"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 6"
 
-#, fuzzy
 msgid "Optical signal power lane 7"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 7"
 
-#, fuzzy
 msgid "Optical signal power lane 8"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 8"
 
-#, fuzzy
 msgid "Optical signal power lane 9"
-msgstr "光信号パワーレーン%d"
+msgstr "光信号パワーレーン 9"
 
-#, fuzzy
 msgid "Optimize notifications"
-msgstr "失敗した通知"
+msgstr "通知を最適化"
 
 msgid "Optimize rule execution"
 msgstr "ルールの実行を最適化する"
@@ -44480,15 +44368,14 @@ msgstr ""
 "これはこの接続によって作成されたホストにのみ適用され、監視ホスト('Dummy "
 "host')には適用されません。<br><br>"
 
-#, fuzzy
 msgid ""
 "Optionally, restrict host creation using regular expressions."
 "<br><b>Important:</b><br>This only applies to hosts created by this "
 "connection, not the monitoring host.<br><br>"
 msgstr ""
 "オプションで、正規表現を使ってホストの作成を制限します。<br><b>重要:</b><br>"
-"これはこの接続によって作成されたホストにのみ適用され、監視ホスト('Dummy "
-"host')には適用されません。<br><br>"
+"これはこの接続によって作成されたホストにのみ適用され、監視ホストには適用され"
+"ません。<br><br>"
 
 msgid "Options"
 msgstr "オプション"
@@ -44520,17 +44407,14 @@ msgstr "OracleカスタムSQL"
 msgid "Oracle DB"
 msgstr "Oracle DB"
 
-#, fuzzy
 msgid "Oracle DB CPU time"
-msgstr "Oracle DB"
+msgstr "Oracle DB CPU時間"
 
-#, fuzzy
 msgid "Oracle DB non-idle wait"
-msgstr "ORACLE DBの時間統計"
+msgstr "Oracle DB 非アイドル待機"
 
-#, fuzzy
 msgid "Oracle DB time"
-msgstr "Oracle DB"
+msgstr "Oracle DB 時間"
 
 msgid "Oracle DB time statistics"
 msgstr "Oracle DBの時間統計"
@@ -44538,57 +44422,44 @@ msgstr "Oracle DBの時間統計"
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO"
-msgstr "ORACLE IOSTAT IOs"
+msgstr "Oracle IOSTAT IOs"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO reads"
-msgstr "ORACLE IOSTAT IOs"
+msgstr "Oracle IOSTAT IOs読み取り"
 
-#, fuzzy
 msgid "Oracle IOSTAT IO writes"
-msgstr "ORACLE IOSTAT IOs"
+msgstr "Oracle IOSTAT IOs書き込み"
 
-#, fuzzy
 msgid "Oracle IOSTAT bytes"
-msgstr "ORACLEIOSTATバイト"
+msgstr "Oracle IOSTATバイト"
 
-#, fuzzy
 msgid "Oracle IOSTAT read bytes"
-msgstr "ORACLEIOSTATバイト"
+msgstr "Oracle IOSTAT読み込みバイト"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IO reads"
-msgstr "ORACLE IOSTAT 合計IO"
+msgstr "Oracle IOSTAT 合計IO読み込み"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IO writes"
-msgstr "ORACLE IOSTAT 合計IO"
+msgstr "Oracle IOSTAT 合計IO書き込み"
 
-#, fuzzy
 msgid "Oracle IOSTAT total IOs"
-msgstr "ORACLE IOSTAT 合計IO"
+msgstr "Oracle IOSTAT 合計IOs"
 
-#, fuzzy
 msgid "Oracle IOSTAT total bytes"
-msgstr "ORACLE IOSTATの合計バイト数"
+msgstr "Oracle IOSTATの合計バイト数"
 
-#, fuzzy
 msgid "Oracle IOSTAT total read bytes"
-msgstr "ORACLE IOSTATの合計バイト数"
+msgstr "Oracle IOSTATの合計読み込みバイト数"
 
-#, fuzzy
 msgid "Oracle IOSTAT total writes bytes"
-msgstr "ORACLE IOSTATの合計バイト数"
+msgstr "Oracle IOSTATの合計書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle IOSTAT write bytes"
-msgstr "ORACLEIOSTATバイト"
+msgstr "Oracle IOSTAT書き込みバイト"
 
-#, fuzzy
 msgid "Oracle Java pool size"
-msgstr "Javaプールサイズ"
+msgstr "Oracle Javaプールサイズ"
 
 msgid "Oracle Locks"
 msgstr "Oracle Locks"
@@ -44596,9 +44467,8 @@ msgstr "Oracle Locks"
 msgid "Oracle Logswitches"
 msgstr "Oracle Logswitches"
 
-#, fuzzy
 msgid "Oracle PDB Total Size"
-msgstr "Oracle DB"
+msgstr "Oracle PDB 合計サイズ"
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
@@ -44621,334 +44491,261 @@ msgstr "リモートデータベースのOracle SID"
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle待機クラス(FGラインはダウンサイド)"
 
-#, fuzzy
 msgid "Oracle administrative wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle管理待機クラス"
 
-#, fuzzy
 msgid "Oracle administrative wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle 管理待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle application wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle アプリケーション待機クラス"
 
-#, fuzzy
 msgid "Oracle application wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle アプリケーション待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle archive log backup large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle アーカイブログバックアップの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle archive log backup large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle アーカイブログバックアップの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle archive log backup large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle アーカイブログ バックアップの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle archive log backup large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle アーカイブログ バックアップの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle archive log backup small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle アーカイブログ バックアップの小規模読み取りバイト数"
 
 msgid "Oracle archive log backup small reads"
-msgstr "Oracle アーカイブログバックアップの小規模読取"
+msgstr "Oracle アーカイブログバックアップの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle archive log backup small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle アーカイブログバックアップの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle archive log backup small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle アーカイブログ バックアップ小規模書き込み"
 
-#, fuzzy
 msgid "Oracle archive log large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle アーカイブログ 大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle archive log large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle アーカイブログ 大規模読み取り"
 
-#, fuzzy
 msgid "Oracle archive log large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle アーカイブログ大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle archive log large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle アーカイブログ大規模書き込み"
 
-#, fuzzy
 msgid "Oracle archive log small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle アーカイブログ 小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle archive log small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle アーカイブログ小規模読み取り"
 
-#, fuzzy
 msgid "Oracle archive log small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle アーカイブログ 小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle archive log small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle アーカイブログ 小規模書き込み"
 
 #, python-format
 msgid "Oracle binaries permissions check %s"
 msgstr "Oracle バイナリのパーミッション・チェック %s"
 
-#, fuzzy
 msgid "Oracle block change"
-msgstr "変化率"
+msgstr "Oracle ブロック変更"
 
-#, fuzzy
 msgid "Oracle block gets"
-msgstr "Oracle Locks"
+msgstr "Oracle ブロック取得"
 
-#, fuzzy
 msgid "Oracle buffer busy wait"
-msgstr "ORACLEバッファプールの統計"
+msgstr "Oracle バッファ ビジー ウェイト"
 
-#, fuzzy
 msgid "Oracle buffer cache size"
-msgstr "バッファキャッシュサイズ"
+msgstr "racle バッファキャッシュのサイズ"
 
-#, fuzzy
 msgid "Oracle buffer hit ratio"
-msgstr "キャッシュヒット率"
+msgstr "Oracle バッファヒット率"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracleバッファプールの統計"
 
-#, fuzzy
 msgid "Oracle cluster wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracleクラスタ待機クラス"
 
-#, fuzzy
 msgid "Oracle cluster wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle クラスタ 待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle commit wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle コミット待機クラス"
 
-#, fuzzy
 msgid "Oracle commit wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle コミット待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle concurrency wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle 並行処理待機クラス"
 
-#, fuzzy
 msgid "Oracle concurrency wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle 並行処理待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle configuration wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle 設定待機クラス"
 
-#, fuzzy
 msgid "Oracle configuration wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle 設定待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle consistent gets"
-msgstr "Oracleインスタンス"
+msgstr "Oracleの一貫性取得"
 
-#, fuzzy
 msgid "Oracle control file large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle コントロールファイルの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle control file large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle コントロールファイルの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle control file large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle コントロールファイルの大規模書き込みバイト"
 
-#, fuzzy
 msgid "Oracle control file large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle コントロールファイルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle control file small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle コントロールファイルの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle control file small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle コントロールファイルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle control file small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle コントロールファイルの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle control file small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle コントロールファイルの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle count"
-msgstr "総数"
+msgstr "Oracle カウント"
 
-#, fuzzy
 msgid "Oracle data file backup large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle データファイルバックアップの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data file backup large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle データファイルバックアップの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file backup large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle データファイルバックアップの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file backup large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle データファイルバックアップの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle data file backup small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle データファイルバックアップの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data file backup small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle データファイルバックアップの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file backup small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle データファイルバックアップの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file backup small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle データファイルバックアップの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle data file copy large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle データファイルコピーの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data file copy large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle データファイルコピーの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file copy large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle データファイルコピーの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file copy large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle データファイルコピーの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle data file copy small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle データファイルコピーの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data file copy small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle データファイルコピーの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file copy small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle データファイルのコピーの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file copy small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle データファイルのコピーの小規模書き込み"
 
 msgid "Oracle data file incremental backup large read bytes"
-msgstr "Oracle データファイルの増分バックアップにおける大容量読み取りバイト"
+msgstr "Oracle データファイル増分バックアップの大規模読み取りバイト数"
 
 msgid "Oracle data file incremental backup large reads"
-msgstr "Oracle データファイルの増分バックアップにおける大容量読み取り"
+msgstr "Oracle データファイル増分バックアップの大規模読み取り"
 
 msgid "Oracle data file incremental backup large write bytes"
-msgstr "Oracle データファイルの増分バックアップの大規模書込みバイト数"
+msgstr "Oracle データファイル増分バックアップの大規模書き込みバイト数"
 
 msgid "Oracle data file incremental backup large writes"
-msgstr "Oracle データファイルの増分バックアップにおける大容量書き込み"
+msgstr "Oracle データファイル増分バックアップの大規模書き込み"
 
 msgid "Oracle data file incremental backup small read bytes"
-msgstr "Oracle データファイルの増分バックアップにおける小さな読み取りバイト数"
+msgstr "Oracle データファイル増分バックアップの小規模読み取りバイト数"
 
 msgid "Oracle data file incremental backup small reads"
-msgstr "Oracle データファイルの増分バックアップにおける小規模な読み取り"
+msgstr "Oracle データファイル増分バックアップの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file incremental backup small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle データファイル増分バックアップの小規模書き込みバイト数"
 
 msgid "Oracle data file incremental backup small writes"
-msgstr "Oracle データファイルの増分バックアップの小規模書込み"
+msgstr "Oracle データファイル増分バックアップの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle data file large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle データファイルの大規模読み取りバイト数"
 
 msgid "Oracle data file large reads"
-msgstr "Oracleデータファイルの大規模読取"
+msgstr "Oracleデータファイルの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle データファイルの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle データファイルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle data file small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle データファイルの小規模読み取りバイト数"
 
 msgid "Oracle data file small reads"
-msgstr "Oracleデータファイルの小規模読取"
+msgstr "Oracleデータファイルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle data file small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle データファイルの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data file small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle データファイルの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle data pump dump file large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle データポンプ ダンプ ファイルの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data pump dump file large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle データポンプ ダンプ ファイルの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle data pump dump file large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle データポンプ ダンプ ファイルの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data pump dump file large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle データポンプ ダンプ ファイルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle data pump dump file small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle データポンプ ダンプ ファイルの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle data pump dump file small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle データポンプ ダンプ ファイルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle data pump dump file small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle data pump dump file small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
@@ -44956,84 +44753,65 @@ msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
 msgid "Oracle dataguard statistics"
 msgstr "Oracle dataguardの統計"
 
-#, fuzzy
 msgid "Oracle external table large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle外部テーブルの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle external table large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle外部テーブルの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle external table large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle外部テーブルの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle external table large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle外部テーブルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle external table small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle外部テーブルの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle external table small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle外部テーブルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle external table small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle外部テーブルの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle external table small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle外部テーブルの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle flashback log large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle フラッシュバック ログの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle flashback log large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle フラッシュバック ログの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle flashback log large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle フラッシュバック ログの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle flashback log large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle フラッシュバック ログの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle flashback log small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle フラッシュバック ログの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle flashback log small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle フラッシュバック ログの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle flashback log small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle フラッシュバックログの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle flashback log small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle フラッシュバックログの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle free buffer wait"
-msgstr "ORACLEバッファプールの統計"
+msgstr "Oracle空きバッファ待機"
 
 msgid "Oracle hit ratio"
 msgstr "Oracleヒット率"
 
-#, fuzzy
 msgid "Oracle idle wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle アイドル待機クラス"
 
-#, fuzzy
 msgid "Oracle idle wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle アイドル 待機クラス(FG)"
 
 msgid "Oracle instance"
 msgstr "Oracleインスタンス"
@@ -45041,111 +44819,86 @@ msgstr "Oracleインスタンス"
 msgid "Oracle instances"
 msgstr "Oracleインスタンス"
 
-#, fuzzy
 msgid "Oracle large pool size"
-msgstr "大きなプールサイズ"
+msgstr "Oracle 大規模プールサイズ"
 
-#, fuzzy
 msgid "Oracle library cache hit ratio"
-msgstr "ORACLEライブラリのキャッシュ統計"
+msgstr "Oracleライブラリキャッシュヒット率"
 
 msgid "Oracle library cache statistics"
 msgstr "Oracleライブラリのキャッシュ統計"
 
-#, fuzzy
 msgid "Oracle log file large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle ログファイルの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle log file large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle ログファイルの大規模読み取り"
 
-#, fuzzy
 msgid "Oracle log file large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracleログファイルの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle log file large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracleログファイルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle log file small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracleログファイルの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle log file small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracleログファイルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle log file small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle ログファイルの小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle log file small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle ログファイルの小規模書き込み"
 
 msgid "Oracle long active sessions"
 msgstr "Oracleの長期アクティブセッション"
 
-#, fuzzy
 msgid "Oracle maximum SGA size"
-msgstr "テーブルスペースの最大サイズ"
+msgstr "Oracle 最大SGAサイズ"
 
-#, fuzzy
 msgid "Oracle memory"
-msgstr "キャッシュされたメモリ"
+msgstr "Oracleメモリ"
 
-#, fuzzy
 msgid "Oracle network wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle ネットワーク待機クラス"
 
-#, fuzzy
 msgid "Oracle network wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle ネットワーク待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle number of nodes in target state"
-msgstr "ターゲット状態にないノード数"
+msgstr "Oracle ターゲット状態のノード数"
 
-#, fuzzy
 msgid "Oracle other large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle その他の大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle other large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle その他の大規模読み取り"
 
-#, fuzzy
 msgid "Oracle other large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracleその他の大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle other large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracleその他の大規模書き込み"
 
-#, fuzzy
 msgid "Oracle other small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracleその他小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle other small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracleその他小規模読み取り"
 
-#, fuzzy
 msgid "Oracle other small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle その他 小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle other small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle その他 小規模書き込み"
 
-#, fuzzy
 msgid "Oracle other wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle その他待機クラス"
 
-#, fuzzy
 msgid "Oracle other wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle その他待機クラス(FG)"
 
 msgid "Oracle performance"
 msgstr "Oracleパフォーマンス"
@@ -45156,25 +44909,20 @@ msgstr "Oracleのパフォーマンスの検出"
 msgid "Oracle physical IO"
 msgstr "Oracle物理IO"
 
-#, fuzzy
 msgid "Oracle physical IO reads"
-msgstr "ORACLE物理IO"
+msgstr "Oracle 物理IO読み取り"
 
-#, fuzzy
 msgid "Oracle physical reads"
-msgstr "ORACLE物理IO"
+msgstr "Oracle 物理読み取り"
 
-#, fuzzy
 msgid "Oracle physical writes"
-msgstr "ORACLE物理IO"
+msgstr "Oracle 物理書き込み"
 
-#, fuzzy
 msgid "Oracle pin hits sum"
-msgstr "ORACLE %s %s %s"
+msgstr "Oracle ピンヒット合計"
 
-#, fuzzy
 msgid "Oracle pins sum"
-msgstr "Oracleインスタンス"
+msgstr "Oracle ピン合計"
 
 msgid "Oracle processes"
 msgstr "Oracleプロセス"
@@ -45188,9 +44936,8 @@ msgstr "Oracleリカバリ領域"
 msgid "Oracle recovery status"
 msgstr "Oracleリカバリステータス"
 
-#, fuzzy
 msgid "Oracle redo buffers"
-msgstr "バッファのやり直し"
+msgstr "Oracle REDOバッファ"
 
 msgid "Oracle release of the remote database"
 msgstr "リモートデータベースのOracleリリース"
@@ -45198,35 +44945,29 @@ msgstr "リモートデータベースのOracleリリース"
 msgid "Oracle scheduler job"
 msgstr "Oracleスケジューラジョブ"
 
-#, fuzzy
 msgid "Oracle scheduler wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle スケジューラ待機クラス"
 
-#, fuzzy
 msgid "Oracle scheduler wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle スケジューラ待機クラス(FG)"
 
 msgid "Oracle sessions"
 msgstr "Oracleセッション"
 
-#, fuzzy
 msgid "Oracle shared IO pool size"
-msgstr "共有プールサイズ"
+msgstr "Oracle 共有IOプールサイズ"
 
-#, fuzzy
 msgid "Oracle shared pool size"
-msgstr "共有プールサイズ"
+msgstr "Oracle 共有プールサイズ"
 
-#, fuzzy
 msgid "Oracle streams pool size"
-msgstr "ストリームプールサイズ"
+msgstr "Oracle ストリームプールサイズ"
 
 msgid "Oracle system I/O wait class"
 msgstr "OracleシステムI/O待機クラス"
 
-#, fuzzy
 msgid "Oracle system I/O wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracle システムI/O待機クラス(FG)"
 
 msgid "Oracle system parameters"
 msgstr "Oracleシステムパラメータ"
@@ -45234,106 +44975,85 @@ msgstr "Oracleシステムパラメータ"
 msgid "Oracle tablespaces"
 msgstr "Oracleテーブルスペース"
 
-#, fuzzy
 msgid "Oracle temp file large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle 一時ファイルの大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle temp file large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle 一時ファイルの大規模読み取り"
 
 msgid "Oracle temp file large write bytes"
-msgstr "Oracle一時ファイルの大規模書込バイト数"
+msgstr "Oracle一時ファイルの大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle temp file large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle一時ファイルの大規模書き込み"
 
-#, fuzzy
 msgid "Oracle temp file small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle一時ファイルの小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle temp file small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle一時ファイルの小規模読み取り"
 
-#, fuzzy
 msgid "Oracle temp file small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle 一時ファイル 小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle temp file small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle 一時ファイル 小規模書き込み"
 
 msgid "Oracle total Memory"
 msgstr "Oracleの合計メモリ"
 
-#, fuzzy
 msgid "Oracle total PGA allocated"
-msgstr "割り当てられたPGAの合計"
+msgstr "Oracle 総PGA割り当て"
 
-#, fuzzy
 msgid "Oracle total PGA inuse"
-msgstr "PGAの総使用量"
+msgstr "Oracle 総PGA使用量"
 
-#, fuzzy
 msgid "Oracle total freeable PGA memory"
-msgstr "解放可能なPGAメモリの合計"
+msgstr "Oracle 総利用可能なPGAメモリ"
 
-#, fuzzy
 msgid "Oracle total large read bytes"
-msgstr "ORACLE Total Large Read Bytes"
+msgstr "Oracle 合計大規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle total large reads"
-msgstr "ORACLE Total Large Reads"
+msgstr "Oracle 合計大規模読み取り"
 
-#, fuzzy
 msgid "Oracle total large write bytes"
-msgstr "ORACLE Total Large Write Bytes"
+msgstr "Oracle 合計大規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle total large writes"
-msgstr "ORACLE Total Large Writes"
+msgstr "Oracle 合計大規模書き込み"
 
-#, fuzzy
 msgid "Oracle total small read bytes"
-msgstr "ORACLE Total Small Read Bytes"
+msgstr "Oracle 合計小規模読み取りバイト数"
 
-#, fuzzy
 msgid "Oracle total small reads"
-msgstr "ORACLE Total Small Reads"
+msgstr "Oracle 合計小規模読み取り"
 
-#, fuzzy
 msgid "Oracle total small write bytes"
-msgstr "ORACLE 小さい書き込みバイトの合計"
+msgstr "Oracle 合計 小規模書き込みバイト数"
 
-#, fuzzy
 msgid "Oracle total small writes"
-msgstr "ORACLE Total Small Writes"
+msgstr "Oracle 合計 小規模書き込み"
 
 #, fuzzy
 msgid "Oracle total waited"
-msgstr "ORACLE合計待機"
+msgstr "Oracle合計待機"
 
 #, fuzzy
 msgid "Oracle total waited (FG)"
-msgstr "ORACLE合計待機(FG)"
+msgstr "Oracle合計待機(FG)"
 
 msgid "Oracle undo retention"
 msgstr "Oracle Undo Retention"
 
-#, fuzzy
 msgid "Oracle user I/O wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracleユーザー I/O待機クラス"
 
-#, fuzzy
 msgid "Oracle user I/O wait class (FG)"
-msgstr "ORACLE %s 待ち時間クラス(FG)"
+msgstr "Oracleユーザー I/O待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle wait class"
-msgstr "ORACLE%s待機クラス"
+msgstr "Oracle 待機クラス"
 
 msgid "Order"
 msgstr "注文"
@@ -45528,9 +45248,8 @@ msgstr "通知期間外"
 msgid "Out of service period"
 msgstr "サービス期間満了"
 
-#, fuzzy
 msgid "Out of sync"
-msgstr "KiB 同期していません"
+msgstr "同期していません"
 
 msgid "Outage count requirement"
 msgstr "停止カウント要件"

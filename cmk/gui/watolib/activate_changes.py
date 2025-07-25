@@ -1415,19 +1415,20 @@ def _add_peer_to_peer_connections(
         )
 
 
-def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
+def get_all_replicated_sites(
+    activation_site_configs: SiteConfigurations,
+) -> Mapping[SiteId, SiteConfiguration]:
     return {
         site_id: site_config
-        for site_id, site_config in activation_sites(active_config.sites).items()
+        for site_id, site_config in activation_site_configs.items()
         if site_config.get("replication")
     }
 
 
 def default_rabbitmq_definitions(
+    replicated_sites_configs: Mapping[SiteId, SiteConfiguration],
     peer_to_peer_connections: BrokerConnections,
 ) -> Mapping[str, rabbitmq.Definitions]:
-    replicated_sites_configs = get_all_replicated_sites()
-
     connection_info = [
         rabbitmq.Connection(
             connectee=rabbitmq.Connectee(
@@ -1593,7 +1594,8 @@ class ActivateChangesManager:
 
         with _debug_log_message("Compute rabbitmq definitions"):
             rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
-                BrokerConnectionsConfigFile().load_for_reading()
+                get_all_replicated_sites(activation_sites(active_config.sites)),
+                BrokerConnectionsConfigFile().load_for_reading(),
             )
 
         with _debug_log_message("Preparing site snapshot settings"):
@@ -2357,7 +2359,9 @@ def _sync_and_activate(
             broker_certificate_sync_registry["broker_certificate_sync"],
             debug=debug,
         )
-        clean_remote_sites_certs(kept_sites=list(get_all_replicated_sites()))
+        clean_remote_sites_certs(
+            kept_sites=list(get_all_replicated_sites(activation_sites(active_config.sites)))
+        )
 
         active_tasks = ActiveTasks(
             fetch_sync_state={},
@@ -3708,7 +3712,9 @@ class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
-    get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
+    get_rabbitmq_definitions: Callable[
+        [Mapping[SiteId, SiteConfiguration], BrokerConnections], Mapping[str, rabbitmq.Definitions]
+    ]
     distribute_piggyback_hub_configs: Callable[
         [
             GlobalSettings,

@@ -8,7 +8,9 @@ from logging import Logger
 from cmk import messaging
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.activate_changes import get_all_replicated_sites
 from cmk.gui.watolib.broker_certificates import (
     clean_remote_sites_certs,
@@ -38,7 +40,7 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
         text=_("Renamed site %s") % old_site_id,
         user_id=user.id,
         domains=[ConfigDomainGUI()],
-        sites=list(get_all_replicated_sites()),
+        sites=list(get_all_replicated_sites(activation_sites(active_config.sites))),
         need_restart=True,
         use_git=False,
     )

@@ -10,7 +10,6 @@ import os
 import tarfile
 from collections.abc import Mapping
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from werkzeug.test import create_environ
@@ -1009,7 +1008,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         ),
         pytest.param(
             {
-                "remote_1": SiteConfiguration(
+                SiteId("remote_1"): SiteConfiguration(
                     id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
@@ -1077,7 +1076,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         ),
         pytest.param(
             {
-                "remote_1": SiteConfiguration(
+                SiteId("remote_1"): SiteConfiguration(
                     id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
@@ -1218,13 +1217,9 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
     ],
 )
 def test_default_rabbitmq_definitions(
-    site_configs: Mapping[str, SiteConfiguration],
+    site_configs: Mapping[SiteId, SiteConfiguration],
     peer_to_peer_connections: BrokerConnections,
     expected_definitions: Mapping[str, rabbitmq.Definitions],
 ) -> None:
-    with patch(
-        "cmk.gui.watolib.activate_changes.get_all_replicated_sites",
-        return_value=site_configs,
-    ):
-        actual_definitions = default_rabbitmq_definitions(peer_to_peer_connections)
-        assert dict(actual_definitions) == expected_definitions
+    actual_definitions = default_rabbitmq_definitions(site_configs, peer_to_peer_connections)
+    assert dict(actual_definitions) == expected_definitions

@@ -909,7 +909,7 @@ mssql:
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
-      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user) 
+      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user)
       access_token: "baz" # optional
     connection: # optional
       hostname: "localhost" # optional(default: "localhost")
@@ -1211,8 +1211,8 @@ authentication:
         let test: Vec<(&str, Backend)> = vec![
             ("auto", Backend::Auto),
             ("tcp", Backend::Tcp),
-            #[cfg(Unix)]
-            ("odbc", Backend::default()),
+            #[cfg(unix)]
+            ("odbc", Backend::Auto),
             #[cfg(windows)]
             ("odbc", Backend::Odbc),
             ("unknown", Backend::default()),

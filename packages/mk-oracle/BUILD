@@ -77,6 +77,7 @@ rust_test(
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
+        "tests/files/endpoints.txt",
     ],
     crate = ":mk-oracle-lib",
 )
@@ -108,6 +109,7 @@ rust_test_suite(
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
+        "tests/files/endpoints.txt",
     ],
     crate_features = ["build_system_bazel"],
     env_inherit = [

@@ -1,0 +1,6 @@
+# contains endpoints for testing
+# format:
+# <hostname>:::<port>:<instance>:<role>:<reserved>:<reserved>:<reserved>
+#           ^^^ will be replaced with the user and password
+$CI_ORA2_DB_TEST # contains the database connection string including credentials
+oracle-win.dev.checkmk.net:::1521:FREE::_:_:_

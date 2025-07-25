@@ -7,16 +7,18 @@ extern crate common;
 #[cfg(not(feature = "build_system_bazel"))]
 mod common;
 
+use crate::common::tools::{
+    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+};
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::system;
 use mk_oracle::types::SqlQuery;
-
-use crate::common::tools::{
-    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
-};
 use mk_oracle::types::{Credentials, InstanceName};
+use std::str::FromStr;
+
+pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
 fn make_base_config(
     credentials: &Credentials,
@@ -77,10 +79,48 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
+fn load_endpoints() -> Vec<SqlDbEndpoint> {
+    let mut r = reference_endpoint();
+    let content = ORA_TEST_ENDPOINTS.to_owned();
+    content
+        .split("\n")
+        .filter_map(|s| {
+            let cleaned = s.split('#').next().unwrap_or("").trim();
+            if cleaned.is_empty() {
+                None
+            } else {
+                Some(cleaned)
+            }
+        })
+        .filter_map(|s| {
+            if let Some(env_var) = s.strip_prefix("$") {
+                r = SqlDbEndpoint::from_env(env_var).unwrap();
+                None
+            } else {
+                Some(s.replacen(":::", &format!(":{}:{}:", r.user, r.pwd), 1))
+            }
+        })
+        .map(|s| SqlDbEndpoint::from_str(s.as_str()).unwrap())
+        .collect::<Vec<SqlDbEndpoint>>()
+}
+
+fn reference_endpoint() -> SqlDbEndpoint {
+    SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap()
+}
+
+lazy_static::lazy_static! {
+    static ref WORKING_ENDPOINTS: Vec<SqlDbEndpoint> = load_endpoints();
+}
 #[test]
-fn test_enpoint() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
-    assert!(r.is_ok());
+fn test_endpoints_file() {
+    let s = &WORKING_ENDPOINTS;
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap();
+    assert!(!s.is_empty());
+    assert_eq!(s[0], r);
+    for e in &s[1..] {
+        assert_eq!(e.user, r.user);
+        assert_eq!(e.pwd, r.pwd);
+    }
 }
 
 #[test]
@@ -159,10 +199,8 @@ fn test_local_connection() {
 
 #[test]
 fn test_remote_mini_connection() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
-    assert!(r.is_ok());
     add_runtime_to_path();
-    let endpoint = r.unwrap();
+    let endpoint = reference_endpoint();
 
     let config = make_mini_config(
         &Credentials {
@@ -203,31 +241,31 @@ fn test_remote_mini_connection() {
 
 #[test]
 fn test_remote_mini_connection_version() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT);
-    assert!(r.is_ok());
     add_runtime_to_path();
-    let endpoint = r.unwrap();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        eprintln!("Testing endpoint: {}", endpoint.host);
 
-    let config = make_mini_config(
-        &Credentials {
-            user: endpoint.user,
-            password: endpoint.pwd,
-        },
-        AuthType::Standard,
-        &endpoint.host,
-    );
+        let config = make_mini_config(
+            &Credentials {
+                user: endpoint.user.clone(),
+                password: endpoint.pwd.clone(),
+            },
+            AuthType::Standard,
+            &endpoint.host,
+        );
 
-    let mut task = backend::make_task(&config.endpoint()).unwrap();
-    task.connect()
-        .expect("Connect failed, check environment variables");
+        let mut task = backend::make_task(&config.endpoint()).unwrap();
+        task.connect()
+            .expect("Connect failed, check environment variables");
 
-    let version = system::get_version(&task, &InstanceName::from(&endpoint.instance))
-        .unwrap()
-        .unwrap();
-    assert!(version.starts_with("2"));
-    assert!(
-        system::get_version(&task, &InstanceName::from("no-such-db"))
+        let version = system::get_version(&task, &InstanceName::from(&endpoint.instance))
             .unwrap()
-            .is_none()
-    );
+            .unwrap();
+        assert!(version.starts_with("2"));
+        assert!(
+            system::get_version(&task, &InstanceName::from("no-such-db"))
+                .unwrap()
+                .is_none()
+        );
+    }
 }

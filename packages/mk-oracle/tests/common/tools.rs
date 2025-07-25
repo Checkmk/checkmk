@@ -50,6 +50,6 @@ pub mod platform {
 #[cfg(unix)]
 pub mod platform {
     pub fn add_runtime_to_path() {
-        // nothing to do
+        // script is responsible for setting up the environment
     }
 }

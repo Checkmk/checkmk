@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.inventory._tree import InventoryPath, TreeSource
-from cmk.gui.inventory.filters import FilterInvtableText, FilterInvText
+from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
@@ -140,7 +140,7 @@ def test_sort_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
                     ident="changed",
@@ -149,7 +149,7 @@ def test_sort_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
                     ident="foo",
@@ -158,7 +158,7 @@ def test_sort_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
                     ident="flashback",
@@ -167,7 +167,7 @@ def test_sort_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("other"): ColumnDisplayHint(
                     ident="other",
@@ -176,7 +176,7 @@ def test_sort_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
             },
             table_view_name="",
@@ -443,7 +443,7 @@ def test_sort_delta_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("changed"): ColumnDisplayHint(
                     ident="changed",
@@ -452,7 +452,7 @@ def test_sort_delta_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("foo"): ColumnDisplayHint(
                     ident="foo",
@@ -461,7 +461,7 @@ def test_sort_delta_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("flashback"): ColumnDisplayHint(
                     ident="flashback",
@@ -470,7 +470,7 @@ def test_sort_delta_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
                 SDKey("other"): ColumnDisplayHint(
                     ident="other",
@@ -479,7 +479,7 @@ def test_sort_delta_table_rows_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    filter_class=FilterInvtableText,
+                    filter=None,
                 ),
             },
             table_view_name="",

@@ -266,16 +266,11 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
     for key, col_hint in node_hint.columns.items():
         _register_painter(col_hint.ident, column_painter_from_hint(col_hint.ident, col_hint))
         _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint.ident, col_hint))
-        filter_registry.register(
-            col_hint.filter_class(
-                inv_info=node_hint.table_view_name,
-                ident=col_hint.ident,
-                title=col_hint.long_title,
-            )
-        )
-
         painters.append(ColumnSpec(col_hint.ident))
-        filters.append(col_hint.ident)
+
+        if col_hint.filter is not None:
+            filter_registry.register(col_hint.filter)
+            filters.append(col_hint.ident)
 
     _register_views(node_hint, painters, filters)
 

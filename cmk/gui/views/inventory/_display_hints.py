@@ -209,6 +209,9 @@ def _parse_attribute_hint(
 
 
 def _parse_column_display_hint_filter_class(
+    table_view_name: str,
+    ident: str,
+    long_title: str,
     filter_class: (
         None
         | type[FilterInvText]
@@ -224,34 +227,70 @@ def _parse_column_display_hint_filter_class(
         | type[FilterInvtableVersion]
     ),
 ) -> (
-    type[FilterInvtableAdminStatus]
-    | type[FilterInvtableAvailable]
-    | type[FilterInvtableIntegerRange]
-    | type[FilterInvtableInterfaceType]
-    | type[FilterInvtableOperStatus]
-    | type[FilterInvtableText]
-    | type[FilterInvtableTimestampAsAge]
-    | type[FilterInvtableVersion]
+    FilterInvtableAdminStatus
+    | FilterInvtableAvailable
+    | FilterInvtableIntegerRange
+    | FilterInvtableInterfaceType
+    | FilterInvtableOperStatus
+    | FilterInvtableText
+    | FilterInvtableTimestampAsAge
+    | FilterInvtableVersion
 ):
     if not filter_class:
-        return FilterInvtableText
+        return FilterInvtableText(
+            inv_info=table_view_name,
+            ident=ident,
+            title=long_title,
+        )
     match filter_class.__name__:
         case "FilterInvtableAdminStatus":
-            return FilterInvtableAdminStatus
+            return FilterInvtableAdminStatus(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableAvailable":
-            return FilterInvtableAvailable
+            return FilterInvtableAvailable(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableIntegerRange":
-            return FilterInvtableIntegerRange
+            return FilterInvtableIntegerRange(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableInterfaceType":
-            return FilterInvtableInterfaceType
+            return FilterInvtableInterfaceType(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableOperStatus":
-            return FilterInvtableOperStatus
+            return FilterInvtableOperStatus(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableText":
-            return FilterInvtableText
+            return FilterInvtableText(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableTimestampAsAge":
-            return FilterInvtableTimestampAsAge
+            return FilterInvtableTimestampAsAge(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
         case "FilterInvtableVersion":
-            return FilterInvtableVersion
+            return FilterInvtableVersion(
+                inv_info=table_view_name,
+                ident=ident,
+                title=long_title,
+            )
     raise TypeError(filter_class)
 
 
@@ -262,17 +301,25 @@ def _parse_column_hint(
     legacy_hint: InventoryHintSpec,
 ) -> ColumnDisplayHint:
     _data_type, paint_function = _get_paint_function(legacy_hint)
+    ident = _make_col_ident(table_view_name, key)
     title = _make_title_function(legacy_hint)(key)
+    long_title = _make_long_title(node_title, title)
     return ColumnDisplayHint(
-        ident=_make_col_ident(table_view_name, key),
+        ident=ident,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
-        long_title=_make_long_title(node_title, title),
+        long_title=long_title,
         paint_function=paint_function,
         sort_function=_make_sort_function(legacy_hint),
-        filter_class=_parse_column_display_hint_filter_class(legacy_hint.get("filter")),
+        filter=(
+            _parse_column_display_hint_filter_class(
+                table_view_name, ident, long_title, legacy_hint.get("filter")
+            )
+            if table_view_name
+            else None
+        ),
     )
 
 
@@ -417,15 +464,16 @@ class ColumnDisplayHint:
     long_title: str
     paint_function: PaintFunction
     sort_function: SortFunction
-    filter_class: (
-        type[FilterInvtableAdminStatus]
-        | type[FilterInvtableAvailable]
-        | type[FilterInvtableIntegerRange]
-        | type[FilterInvtableInterfaceType]
-        | type[FilterInvtableOperStatus]
-        | type[FilterInvtableText]
-        | type[FilterInvtableTimestampAsAge]
-        | type[FilterInvtableVersion]
+    filter: (
+        FilterInvtableAdminStatus
+        | FilterInvtableAvailable
+        | FilterInvtableIntegerRange
+        | FilterInvtableInterfaceType
+        | FilterInvtableOperStatus
+        | FilterInvtableText
+        | FilterInvtableTimestampAsAge
+        | FilterInvtableVersion
+        | None
     )
 
     @property
@@ -483,15 +531,25 @@ class NodeDisplayHint:
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         def _default() -> ColumnDisplayHint:
+            ident = _make_col_ident(self.table_view_name, key)
             title = key.replace("_", " ").title()
+            long_title = _make_long_title(self.title if self.path else "", title)
             return ColumnDisplayHint(
-                ident=_make_col_ident(self.table_view_name, key),
+                ident=ident,
                 title=title,
                 short_title=title,
-                long_title=_make_long_title(self.title if self.path else "", title),
+                long_title=long_title,
                 paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=(
+                    FilterInvtableText(
+                        inv_info=self.table_view_name,
+                        ident=ident,
+                        title=long_title,
+                    )
+                    if self.table_view_name
+                    else None
+                ),
             )
 
         return hint if (hint := self.columns.get(SDKey(key))) else _default()

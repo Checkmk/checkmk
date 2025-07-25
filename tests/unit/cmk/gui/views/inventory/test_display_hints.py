@@ -11,10 +11,7 @@ import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
-    FilterInvtableIntegerRange,
-    FilterInvtableOperStatus,
     FilterInvtableText,
-    FilterInvtableVersion,
     FilterInvText,
 )
 from cmk.gui.num_split import cmp_version
@@ -539,7 +536,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_id",
+                            title="",
+                        ),
                     ),
                     SDKey("creation"): ColumnDisplayHint(
                         ident="invdockerimages_creation",
@@ -548,7 +549,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_creation",
+                            title="",
+                        ),
                     ),
                     SDKey("size"): ColumnDisplayHint(
                         ident="invdockerimages_size",
@@ -557,7 +562,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_size",
+                            title="",
+                        ),
                     ),
                     SDKey("labels"): ColumnDisplayHint(
                         ident="invdockerimages_labels",
@@ -566,7 +575,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_labels",
+                            title="",
+                        ),
                     ),
                     SDKey("amount_containers"): ColumnDisplayHint(
                         ident="invdockerimages_amount_containers",
@@ -575,7 +588,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_amount_containers",
+                            title="",
+                        ),
                     ),
                     SDKey("repotags"): ColumnDisplayHint(
                         ident="invdockerimages_repotags",
@@ -584,7 +601,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_repotags",
+                            title="",
+                        ),
                     ),
                     SDKey("repodigests"): ColumnDisplayHint(
                         ident="invdockerimages_repodigests",
@@ -593,7 +614,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockerimages",
+                            ident="invdockerimages_repodigests",
+                            title="",
+                        ),
                     ),
                 },
                 table_view_name="invdockerimages",
@@ -705,7 +730,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_id",
+                            title="",
+                        ),
                     ),
                     SDKey("creation"): ColumnDisplayHint(
                         ident="invdockercontainers_creation",
@@ -714,7 +743,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_creation",
+                            title="",
+                        ),
                     ),
                     SDKey("name"): ColumnDisplayHint(
                         ident="invdockercontainers_name",
@@ -723,7 +756,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_name",
+                            title="",
+                        ),
                     ),
                     SDKey("labels"): ColumnDisplayHint(
                         ident="invdockercontainers_labels",
@@ -732,7 +769,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_labels",
+                            title="",
+                        ),
                     ),
                     SDKey("status"): ColumnDisplayHint(
                         ident="invdockercontainers_status",
@@ -741,7 +782,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_status",
+                            title="",
+                        ),
                     ),
                     SDKey("image"): ColumnDisplayHint(
                         ident="invdockercontainers_image",
@@ -750,7 +795,11 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        filter_class=FilterInvtableText,
+                        filter=FilterInvtableText(
+                            inv_info="invdockercontainers",
+                            ident="invdockercontainers_image",
+                            title="",
+                        ),
                     ),
                 },
                 table_view_name="invdockercontainers",
@@ -792,7 +841,7 @@ def test_make_node_displayhint_from_hint(
                 long_title="Key",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=None,
             ),
         ),
         (
@@ -805,7 +854,11 @@ def test_make_node_displayhint_from_hint(
                 long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=FilterInvtableText(
+                    inv_info="invinterface",
+                    ident="invinterface_oper_status",
+                    title="Network interfaces ➤ Operational status",
+                ),
             ),
         ),
         (
@@ -818,7 +871,7 @@ def test_make_node_displayhint_from_hint(
                 long_title="Node ➤ Key",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=None,
             ),
         ),
         (
@@ -831,7 +884,11 @@ def test_make_node_displayhint_from_hint(
                 long_title="Checkmk sites ➤ CMC status",
                 paint_function=inv_paint_service_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=FilterInvtableText(
+                    inv_info="invcmksites",
+                    ident="invcmksites_cmc",
+                    title="Checkmk sites ➤ CMC status",
+                ),
             ),
         ),
     ],
@@ -842,9 +899,15 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
-    assert hint.long_inventory_title == expected.long_inventory_title
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
+    if expected.filter is None:
+        assert hint.filter is None
+    else:
+        assert hint.filter is not None
+        assert hint.filter.ident == expected.filter.ident
+        assert hint.filter.title == expected.filter.title
+    assert hint.long_inventory_title == expected.long_inventory_title
 
 
 @pytest.mark.parametrize(
@@ -859,7 +922,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Foo ➤ Bar",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter=None,
             ),
         ),
         (
@@ -871,7 +934,11 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Software packages ➤ Package version",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
-                filter_class=FilterInvtableVersion,
+                filter=FilterInvtableText(
+                    inv_info="invswpac",
+                    ident="invswpac_package_version",
+                    title="Software packages ➤ Package version",
+                ),
             ),
         ),
         (
@@ -883,7 +950,11 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Software packages ➤ Version",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
-                filter_class=FilterInvtableVersion,
+                filter=FilterInvtableText(
+                    inv_info="invswpac",
+                    ident="invswpac_version",
+                    title="Software packages ➤ Version",
+                ),
             ),
         ),
         (
@@ -895,7 +966,11 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Network interfaces ➤ Index",
                 paint_function=inv_paint_number,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableIntegerRange,
+                filter=FilterInvtableText(
+                    inv_info="invinterface",
+                    ident="invinterface_index",
+                    title="Network interfaces ➤ Index",
+                ),
             ),
         ),
         (
@@ -907,7 +982,11 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableOperStatus,
+                filter=FilterInvtableText(
+                    inv_info="invinterface",
+                    ident="invinterface_oper_status",
+                    title="Network interfaces ➤ Operational status",
+                ),
             ),
         ),
     ],
@@ -923,7 +1002,12 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     assert hint.long_title == expected.long_title
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    assert hint.filter_class == expected.filter_class
+    if expected.filter is None:
+        assert hint.filter is None
+    else:
+        assert hint.filter is not None
+        assert hint.filter.ident == expected.filter.ident
+        assert hint.filter.title == expected.filter.title
     assert hint.long_inventory_title == expected.long_inventory_title
 
 

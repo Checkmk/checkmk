@@ -9,6 +9,7 @@ from typing import Literal, TypedDict
 # NOTE: intentionally not using the `type` syntax because it's not possible to use
 # `typing.get_args` to dynamically check if string is type at runtime.
 Provider = Literal["setup", "monitoring"]
+SortType = Literal["alphabetic", "weighted_index"]
 
 
 class UnifiedSearchResultItemSerialized(TypedDict):

@@ -11,8 +11,10 @@ from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 
 from .engines.monitoring import SupportsMonitoringSearchEngine
 from .engines.setup import SupportsSetupSearchEngine
+from .sorting import get_sorter
 from .type_defs import (
     Provider,
+    SortType,
     UnifiedSearchResult,
     UnifiedSearchResultCounts,
     UnifiedSearchResultItem,
@@ -37,6 +39,7 @@ class UnifiedSearch:
         *,
         config: Config,
         provider: Provider | None = None,
+        sort_type: SortType | None = None,
     ) -> UnifiedSearchResult:
         setup_results_by_topic: SearchResultsByTopic = []
         monitoring_results_by_topic: SearchResultsByTopic = []
@@ -63,6 +66,7 @@ class UnifiedSearch:
             )
         )
         search_results = [*setup_results, *monitoring_results]
+        get_sorter(sort_type, query)(search_results)
 
         result_counts = UnifiedSearchResultCounts(
             total=len(search_results),

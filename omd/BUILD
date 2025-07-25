@@ -211,7 +211,6 @@ editions = {
         "@//bazel/cmk/distro:almalinux-8": "el8-38",
         "@//bazel/cmk/distro:almalinux-9": "el9-38",
         "@//bazel/cmk/distro:debian-12": "0.bookworm",
-        "@//bazel/cmk/distro:sles-15sp4": "sles15sp4",
         "@//bazel/cmk/distro:sles-15sp5": "sles15sp5",
         "@//bazel/cmk/distro:sles-15sp6": "sles15sp6",
         "@//bazel/cmk/distro:ubuntu-22.04": "0.jammy",

@@ -5,7 +5,6 @@ common: &common
     - "ubuntu-24.04"
     - "almalinux-8"
     - "almalinux-9"
-    - "sles-15sp4"
     - "sles-15sp5"
     - "sles-15sp6"
 

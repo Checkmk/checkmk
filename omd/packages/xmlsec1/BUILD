@@ -97,7 +97,6 @@ filter_directory(
         "@//bazel/cmk/distro:almalinux-9": [],
         (
             "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp4",
             "@//bazel/cmk/distro:sles-15sp5",
             "@//bazel/cmk/distro:sles-15sp6",
         ): ["lib/libxmlsec1-gcrypt.so.1.3.0"],
@@ -145,7 +144,6 @@ pkg_files(
         "@//bazel/cmk/distro:almalinux-9": [],
         (
             "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp4",
             "@//bazel/cmk/distro:sles-15sp5",
             "@//bazel/cmk/distro:sles-15sp6",
         ): [

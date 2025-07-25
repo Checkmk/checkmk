@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "889871f3ad4388e4e719a344bc670515143049929b96c22ccbf20600e5f60a0f",
+          "@@//requirements_all_lock.txt": "99a51f6b6a0770dab374ff6f9a5b03f1408ba0994abdc150f1c4e169681c567b",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -4284,7 +4284,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "requests==2.32.3     --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760     --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"
+              "requirement": "requests==2.32.4     --hash=sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c     --hash=sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422"
             }
           },
           "cmk_requirements_312_tenacity": {
@@ -6579,7 +6579,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "types-requests==2.32.0.20241016     --hash=sha256:0d9cad2f27515d0e3e3da7134a1b6f28fb97129d86b867f24d9c726452634d95     --hash=sha256:4195d62d6d3e043a4eaaf08ff8a62184584d2e8684e9d2aa178c7915a7da3747"
+              "requirement": "types-requests==2.32.4.20250611     --hash=sha256:741c8777ed6425830bf51e54d6abe245f79b4dcb9019f1622b773463946bf826     --hash=sha256:ad2fe5d3b0cb3c2c902c8815a70e7fb2302c4b8c1f77bdcd738192cdb3878072"
             }
           },
           "cmk_requirements_312_uvicorn_worker": {

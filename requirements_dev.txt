@@ -84,6 +84,6 @@ types-pysaml2==1.0.1 # used for type checking
 types-python-dateutil==2.9.0.20241206 # used for type checking
 types-pyyaml==6.0.12.20240917 # used for type checking
 types-redis==4.6.0.20241004 # used for type checking
-types-requests==2.32.0.20241016 # used for type checking
+types-requests==2.32.4.20250611 # used for type checking
 types-setuptools==75.6.0.20241126 # used for type checking
 types-simplejson==3.19.0.20240801 # used for type checking

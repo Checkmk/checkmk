@@ -13,7 +13,7 @@ snmpsim-lextudio==1.1.0  # needed by pysnmp integration tests
 urllib3==2.5.0 # needed by requests
 pyopenssl==24.3.0
 pyghmi==1.5.60  # needed by base for IPMI
-requests==2.32.3
+requests==2.32.4
 jinja2==3.1.6 # needed by flask
 werkzeug==3.1.3 # direct dependency and needed by flask
 flask==3.0.3  # direct dependency

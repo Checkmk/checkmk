@@ -99,12 +99,15 @@ def _parameter_valuespec_printer_supply() -> Migrate:
                 (
                     "upturn_toner",
                     Checkbox(
-                        title=_("Upturn toner levels"),
-                        label=_("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                        title=_("Upturn supply levels"),
+                        label=_("Printer sends <i>used</i> supply instead of <i>remaining</i>"),
                         help=_(
-                            "Some Printers (e.g. Konica for Drum Cartdiges) returning the available"
-                            " fuel instead of what is left. In this case it's possible"
-                            " to upturn the levels to handle this behavior"
+                            "Some printers (e.g. Konica for drum cartridges) return"
+                            "<ul>"
+                            "<li>in case of a container: The used instead of the available supply</li>"
+                            "<li>in case of a receptacle: The available instead of the used space</li>"
+                            "<ul>"
+                            "Enable this option to handle this behavior."
                         ),
                     ),
                 ),

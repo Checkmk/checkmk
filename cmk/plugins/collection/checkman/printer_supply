@@ -4,22 +4,20 @@ catalog: hw/printer
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the remaining filling level in percent of a printers
- supplys like toner or fuser. The printer has to support the generic
- PRINTER-MIB.
- The default check levels are 20% (warning) and 10% of the full level
- (critical).
- According the PRINTER-MIB it's possible that a printer couldn't determine
- how much is remaining in a supply, so the printer says "some remaining".
- This value produces a warning.
+ This check monitors the remaining level of a printer's supplies, such as toner, fuser, or waste box.
+ The printer must support the generic PRINTER-MIB.
+ The default check levels are 20% (warning) and 10% (critical) of the full supply level.
+ According to the PRINTER-MIB, it is possible that a printer cannot determine the exact remaining amount in a supply and instead reports "some remaining."
+ This status will result in a warning. However, this is customizable via service parameter.
+ Some printers may report a supply level in an unsusual way, e.g., used ink instead of remaining, or space left in waste box instead of space used.
+ The check can't detect this situation, but you can correct the value by applying the service parameter {Upturn supply levels}.
 
- In case of OKI c5900 devices the name of the supply units ins not unique.
- One example is {Toner Cartridge OKI DATA CORP}. In this case the color of
- the supply unit is added to the beginning of the name to get a unique
- item name.
+ For OKI c5900 devices, the names of the supply units are not unique.
+ For example, one supply might be named {Toner Cartridge OKI DATA CORP}. In such cases, the color of the supply unit is added to the beginning of the name to create a unique item name.
 
 item:
- The description of the printer
+ The description of the printer supply unit.
 
 discovery:
  One service is created for each supply unit with a unique name.
+ The service always shows remaining supply. E.g., remaining ink, remaining space in waste box.

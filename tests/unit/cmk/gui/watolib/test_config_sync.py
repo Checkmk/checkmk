@@ -580,7 +580,12 @@ def _synchronize_site(
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
-        site_id, activation_manager._activation_id, activation_manager.changes, time.time(), "GUI"
+        site_id,
+        snapshot_settings.site_config,
+        activation_manager._activation_id,
+        activation_manager.changes,
+        time.time(),
+        "GUI",
     )
 
     current_span = trace.get_current_span()

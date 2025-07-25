@@ -337,7 +337,7 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
     manager.changes.load(list(active_config.sites))
 
-    if not manager.changes.is_sync_needed(site_id):
+    if not manager.changes.is_sync_needed(site_id, active_config.sites[site_id]):
         return
 
     logger.info("Syncing %s", site_id)
@@ -652,11 +652,13 @@ def _handle_activation_changes_exception(
     )
 
 
-def _load_expected_duration(site_id: SiteId, activate_changes: ActivateChanges) -> float:
+def _load_expected_duration(
+    site_id: SiteId, site_config: SiteConfiguration, activate_changes: ActivateChanges
+) -> float:
     times = get_activation_times(site_id)
     duration = 0.0
 
-    if activate_changes.is_sync_needed(site_id):
+    if activate_changes.is_sync_needed(site_id, site_config):
         duration += times.get(ACTIVATION_TIME_SYNC, 0)
 
     if activate_changes.is_activate_needed(site_id):
@@ -1247,18 +1249,20 @@ class ActivateChanges:
         return bool([c for c in changes if is_foreign_change(c) and not has_been_activated(c)])
 
     def _is_sync_needed_specific_changes(
-        self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
+        self,
+        site_id: SiteId,
+        site_config: SiteConfiguration,
+        changes_to_check: Sequence[ChangeSpec],
     ) -> bool:
-        if site_is_local(active_config.sites[site_id]):
+        if site_is_local(site_config):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)
 
-    def is_sync_needed(self, site_id: SiteId) -> bool:
-        return self._is_sync_needed_specific_changes(site_id, self.changes_of_site(site_id))
-
-    def is_sync_needed_until(self, site_id: SiteId) -> bool:
-        return self._is_sync_needed_specific_changes(site_id, self._changes_by_site_until[site_id])
+    def is_sync_needed(self, site_id: SiteId, site_config: SiteConfiguration) -> bool:
+        return self._is_sync_needed_specific_changes(
+            site_id, site_config, self.changes_of_site(site_id)
+        )
 
     def _is_activate_needed_specific_changes(self, changes_to_check: Sequence[ChangeSpec]) -> bool:
         return any(c["need_restart"] for c in changes_to_check)
@@ -1584,7 +1588,8 @@ class ActivateChangesManager:
 
         self._activate_foreign = activate_foreign
 
-        self._sites = self._get_sites(sites)
+        self._verify_requested_sites(sites, list(activation_sites(active_config.sites)))
+        self._sites = sites
 
         self._source = source
         self._activation_id = self._new_activation_id()
@@ -1728,12 +1733,12 @@ class ActivateChangesManager:
     def _new_activation_id(self) -> ActivationId:
         return cmk.gui.utils.gen_id()
 
-    def _get_sites(self, sites: Sequence[SiteId]) -> Sequence[SiteId]:
-        for site_id in sites:
-            if site_id not in activation_sites(active_config.sites):
+    def _verify_requested_sites(
+        self, requested_sites: Sequence[SiteId], activation_site_ids: Sequence[SiteId]
+    ) -> None:
+        for site_id in requested_sites:
+            if site_id not in activation_site_ids:
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
-
-        return sites
 
     def _info_path(self, activation_id: str) -> str:
         if not re.match(r"^[\d\-a-fA-F]+$", activation_id):
@@ -2135,6 +2140,7 @@ def _handle_distributed_sites_in_free(
 
 def _initialize_site_activation_state(
     site_id: SiteId,
+    site_config: SiteConfiguration,
     activation_id: ActivationId,
     activate_changes: ActivateChanges,
     time_started: float,
@@ -2150,7 +2156,7 @@ def _initialize_site_activation_state(
         "_time_started": time_started,
         "_time_updated": None,
         "_time_ended": None,
-        "_expected_duration": _load_expected_duration(site_id, activate_changes),
+        "_expected_duration": _load_expected_duration(site_id, site_config, activate_changes),
         "_pid": os.getpid(),
         "_user_id": user.id,
         "_source": source,
@@ -2234,7 +2240,12 @@ def _prepare_for_activation_tasks(
     site_activation_states_per_site = {}
     for site_id, snapshot_settings in sorted(site_snapshot_settings.items(), key=lambda e: e[0]):
         site_activation_state = _initialize_site_activation_state(
-            site_id, activation_id, activate_changes, time_started, source
+            site_id,
+            snapshot_settings.site_config,
+            activation_id,
+            activate_changes,
+            time_started,
+            source,
         )
         try:
             if not _lock_activation(site_activation_state):
@@ -2253,7 +2264,7 @@ def _prepare_for_activation_tasks(
             )
             site_activation_states_per_site[site_id] = site_activation_state
 
-            if activate_changes.is_sync_needed(site_id):
+            if activate_changes.is_sync_needed(site_id, snapshot_settings.site_config):
                 central_file_infos_per_site[site_id] = _get_site_central_file_infos(
                     site_id, snapshot_settings, config_sync_file_infos_per_inode
                 )
@@ -2378,7 +2389,9 @@ def _sync_and_activate(
         for site_id, site_activation_state in site_activation_states.items():
             automation_config = automation_configs[site_id]
 
-            if activate_changes.is_sync_needed(site_id):
+            if activate_changes.is_sync_needed(
+                site_id, site_snapshot_settings[site_id].site_config
+            ):
                 assert isinstance(automation_config, RemoteAutomationConfig)
                 async_result_fetch_sync_state = task_pool.apply_async(
                     func=copy_request_context(fetch_sync_state),

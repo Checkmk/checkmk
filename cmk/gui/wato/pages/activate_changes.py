@@ -729,7 +729,7 @@ class ModeActivateChanges(WatoMode):
                     can_activate_all = False
 
                 need_restart = self._changes.is_activate_needed(site_id)
-                need_sync = self._changes.is_sync_needed(site_id)
+                need_sync = self._changes.is_sync_needed(site_id, site)
                 need_action = need_restart or need_sync
                 nr_changes = len(
                     list(

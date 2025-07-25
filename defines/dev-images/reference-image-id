@@ -12,7 +12,7 @@
 set -e
 
 : "${REFERENCE_IMAGE_DISTRO:="ubuntu-22.04"}"
-: "${BUILD_IMAGE_TAG:="2.4.0-latest"}"
+: "${BUILD_IMAGE_TAG:="2.4.0-rustbump"}"
 : "${DOCKER_REGISTRY:="artifacts.lan.tribe29.com:4000"}"
 : "${DOCKER_REGISTRY_NO_HTTP:="$(echo "${DOCKER_REGISTRY}" | sed -e "s/^https*:\/\///")"}"
 : "${BASE_BUILD_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}:${BUILD_IMAGE_TAG}"}"

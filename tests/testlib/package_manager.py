@@ -34,7 +34,6 @@ PackageUrl = NewType("PackageUrl", str)
 
 DISTRO_CODES = {
     "cma-4": "cma-4",
-    "debian-11": "bullseye",
     "debian-12": "bookworm",
     "ubuntu-22.04": "jammy",
     "ubuntu-23.04": "lunar",

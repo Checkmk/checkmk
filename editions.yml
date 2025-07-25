@@ -1,6 +1,5 @@
 # The common set of distros which gets build during an official release
 common: &common
-    - "debian-11"
     - "debian-12"
     - "ubuntu-22.04"
     - "ubuntu-24.04"

@@ -13,11 +13,19 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-./run --build
-PACKAGE_DIR="$(bazel info bazel-bin)/packages/neb"
-
-install "${PACKAGE_DIR}/libneb_shared.so" "${ROOT}/lib/mk-livestatus/livestatus.o"
-patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/mk-livestatus/livestatus.o"
+TARGET=":all"
+bazel build "${TARGET}"
+EXECUTION_ROOT=$(bazel info execution_root)
+for FILE in $(bazel cquery --output=files "${TARGET}"); do
+    FULL_PATH=${EXECUTION_ROOT}/${FILE}
+    BASENAME=${FILE##*/}
+    case "${BASENAME}" in
+        libneb_shared.so)
+            install "${FULL_PATH}" "${ROOT}/lib/mk-livestatus/livestatus.o"
+            patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/mk-livestatus/livestatus.o"
+            ;;
+    esac
+done
 
 test -z "${ONLY_COPY}" || exit 0
 sudo --login -u "${SITE}" -- bash -c "omd restart nagios"

@@ -798,9 +798,13 @@ async def _collect_app_gateways_resources(
         try:
             resource = monitored_resources_by_id[app_gateway["id"].lower()]
         except KeyError:
-            raise ApiErrorMissingData(
-                f"App gateway not found in monitored resources: {app_gateway['id']}"
+            # this can happen because the resource has been filtered out
+            # (for example because it is not in the monitored group configured via --explicit-config)
+            LOGGER.info(
+                "Application gateway not found in monitored resources: %s",
+                app_gateway["id"],
             )
+            continue
 
         resource.info["properties"] = {}
         resource.info["properties"]["operational_state"] = app_gateway["properties"][
@@ -877,9 +881,10 @@ async def _collect_load_balancers_resources(
         try:
             resource = monitored_resources_by_id[load_balancer["id"].lower()]
         except KeyError:
-            raise ApiErrorMissingData(
-                f"Load balancer not found in monitored resources: {load_balancer['id']}"
-            )
+            # this can happen because the resource has been filtered out
+            # (for example because it is not in the monitored group configured via --explicit-config)
+            LOGGER.info("Load balancer not found in monitored resources: %s", load_balancer["id"])
+            continue
 
         try:
             frontend_ip_configs, inbound_nat_rules, backend_pools = await asyncio.gather(
@@ -1726,9 +1731,10 @@ async def process_virtual_machines(
         try:
             resource = monitored_resources_by_id[vm["id"].lower()]
         except KeyError:
-            raise ApiErrorMissingData(
-                f"Virtual machine not found in monitored resources: {vm['id']}"
-            )
+            # this can happen because the resource has been filtered out
+            # (for example because it is not in the monitored group configured via --explicit-config)
+            LOGGER.info("Virtual machine not found in monitored resources: %s", vm["id"])
+            continue
 
         try:
             statuses = vm.pop("properties")["instanceView"]["statuses"]

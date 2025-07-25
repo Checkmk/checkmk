@@ -1188,8 +1188,8 @@ class ActivateChanges:
         message = ActivateChanges._make_changes_message(number_of_changes)
         return PendingChangesInfo(number=number_of_changes, message=message)
 
-    def discard_changes_forbidden(self):
-        for site_id in set(activation_sites(active_config.sites)):
+    def discard_changes_forbidden(self, sites: Sequence[SiteId]) -> bool:
+        for site_id in sites:
             for change in SiteChanges(site_id).read():
                 if change.get("prevent_discard_changes", False):
                     return True
@@ -1203,7 +1203,9 @@ class ActivateChanges:
 
     def dirty_and_active_activation_sites(self) -> list[SiteId]:
         """Returns the list of sites that should be used when activating all affected sites"""
-        return self.filter_not_activatable_sites(self.dirty_sites())
+        return self.filter_not_activatable_sites(
+            self.dirty_sites(activation_sites(active_config.sites))
+        )
 
     def filter_not_activatable_sites(
         self, sites: list[tuple[SiteId, SiteConfiguration]]
@@ -1218,11 +1220,11 @@ class ActivateChanges:
                 dirty.append(site_id)
         return dirty
 
-    def dirty_sites(self) -> list[tuple[SiteId, SiteConfiguration]]:
+    def dirty_sites(
+        self, sites: Mapping[SiteId, SiteConfiguration]
+    ) -> list[tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
-        return [
-            s for s in activation_sites(active_config.sites).items() if self.changes_of_site(s[0])
-        ]
+        return [s for s in sites.items() if self.changes_of_site(s[0])]
 
     def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
         return site_is_local(site) or "secret" in site
@@ -1644,7 +1646,12 @@ class ActivateChangesManager:
                 activation_features.distribute_piggyback_hub_configs(
                     load_configuration_settings(),
                     active_config.sites,
-                    {site_id for site_id, _site_config in self.changes.dirty_sites()},
+                    {
+                        site_id
+                        for site_id, _site_config in self.changes.dirty_sites(
+                            activation_sites(active_config.sites)
+                        )
+                    },
                     {
                         host_name: host.site_id()
                         for host_name, host in folder_tree()
@@ -3670,7 +3677,7 @@ def activate_changes_start(
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:
-        dirty_sites = manager.changes.dirty_sites()
+        dirty_sites = manager.changes.dirty_sites(activation_sites(active_config.sites))
         if not dirty_sites:
             raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 

@@ -10,7 +10,7 @@ import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from typing import Literal
 
 from livestatus import SiteConfiguration, SiteConfigurations
@@ -402,7 +402,9 @@ class ModeActivateChanges(WatoMode):
                             title=_("On all sites"),
                             entries=list(
                                 self._page_menu_entries_all_sites(
-                                    active_config.wato_read_only, debug=active_config.debug
+                                    list(activation_sites(active_config.sites)),
+                                    active_config.wato_read_only,
+                                    debug=active_config.debug,
                                 )
                             ),
                         ),
@@ -453,7 +455,7 @@ class ModeActivateChanges(WatoMode):
             )
 
     def _page_menu_entries_all_sites(
-        self, read_only_config: ReadOnlySpec, *, debug: bool
+        self, sites: Sequence[SiteId], read_only_config: ReadOnlySpec, *, debug: bool
     ) -> Iterator[PageMenuEntry]:
         if not self._may_discard_changes(read_only_config, debug=debug):
             return
@@ -464,7 +466,7 @@ class ModeActivateChanges(WatoMode):
             if not _get_last_wato_snapshot_file(debug=debug):
                 enabled = False
                 disabled_tooltip = _("No snapshot to restore available.")
-            elif self._changes.discard_changes_forbidden():
+            elif self._changes.discard_changes_forbidden(sites):
                 enabled = False
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."

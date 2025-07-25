@@ -152,7 +152,7 @@ def _get_last_wato_snapshot_file(*, debug: bool) -> None | str:
     return None
 
 
-class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
+class ModeRevertChanges(WatoMode):
     @classmethod
     def name(cls) -> str:
         return "revert_changes"
@@ -162,9 +162,9 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         return ["discard"]
 
     def __init__(self) -> None:
-        self._value: dict = {}
         super().__init__()
-        super().load(list(active_config.sites))
+        self._changes = activate_changes.ActivateChanges()
+        self._changes.load(list(active_config.sites))
 
     def title(self) -> str:
         return _("Revert changes")
@@ -231,7 +231,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if not self._may_discard_changes(config.wato_read_only, debug=config.debug):
             return None
 
-        if not self.has_changes():
+        if not self._changes.has_changes():
             return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
@@ -259,7 +259,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         )
 
         for site_id in activation_sites(config.sites):
-            self.confirm_site_changes(site_id)
+            self._changes.confirm_site_changes(site_id)
 
         request_index_rebuild()
 
@@ -276,7 +276,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
     def page(self, config: Config) -> None:
-        if not self.has_changes():
+        if not self._changes.has_changes():
             html.open_div(class_="wato")
             html.show_message(_("No pending changes."))
             html.footer()
@@ -308,7 +308,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             confirm_text=_("Revert changes"),
         )
 
-        _change_table(self._all_changes, _("Revert changes"))
+        _change_table(self._changes.changes, _("Revert changes"))
 
 
 def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
@@ -368,7 +368,7 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
                 html.write_text_permissive(", ".join(sorted(change["affected_sites"])))
 
 
-class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
+class ModeActivateChanges(WatoMode):
     VAR_ORIGIN = "origin"
     VAR_SPECIAL_AGENT_NAME = "special_agent_name"
 
@@ -381,9 +381,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return []
 
     def __init__(self) -> None:
-        self._value: dict = {}
         super().__init__()
-        super().load(list(active_config.sites))
+        self._changes = activate_changes.ActivateChanges()
+        self._changes.load(list(active_config.sites))
         self._license_usage_report_validity = get_license_usage_report_validity()
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
@@ -414,7 +414,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                         ),
                         make_checkbox_selection_topic(
                             selection_key=self.name(),
-                            is_enabled=self.has_pending_changes(),
+                            is_enabled=self._changes.has_pending_changes(),
                         ),
                     ],
                 ),
@@ -460,17 +460,17 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         enabled = False
         disabled_tooltip: str | None = None
-        if self.has_changes():
+        if self._changes.has_changes():
             if not _get_last_wato_snapshot_file(debug=debug):
                 enabled = False
                 disabled_tooltip = _("No snapshot to restore available.")
-            elif self.discard_changes_forbidden():
+            elif self._changes.discard_changes_forbidden():
                 enabled = False
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
                 )
             elif any(
-                (change["user_id"] != user.id for _, change in self._pending_changes)
+                (change["user_id"] != user.id for _, change in self._changes.pending_changes)
             ) and not user.may("wato.discardforeign"):
                 enabled = False
                 disabled_tooltip = _("This user doesn't have permission to revert these changes")
@@ -507,14 +507,14 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             name="activate_selected",
             is_shortcut=True,
             is_suggested=True,
-            is_enabled=self.has_pending_changes(),
+            is_enabled=self._changes.has_pending_changes(),
         )
 
     def _may_discard_changes(self, read_only_config: ReadOnlySpec, *, debug: bool) -> bool:
         if not user.may("wato.discard"):
             return False
 
-        if not user.may("wato.discardforeign") and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.discardforeign") and self._changes.has_foreign_changes_on_any_site():
             return False
 
         if not self._may_activate_changes(read_only_config):
@@ -544,7 +544,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not user.may("wato.activate"):
             return False
 
-        if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site():
             return False
 
         if read_only.is_enabled(read_only_config) and not read_only.may_override(read_only_config):
@@ -561,11 +561,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         self._activation_status(activation_sites(config.sites))
 
-        if self.has_pending_changes():
-            _change_table(self._pending_changes, _("Pending changes"))
+        if self._changes.has_pending_changes():
+            _change_table(self._changes.pending_changes, _("Pending changes"))
 
     def _quick_setup_activation_msg(self):
-        if not (self._quick_setup_origin and self.has_pending_changes()):
+        if not (self._quick_setup_origin and self._changes.has_pending_changes()):
             return
 
         message = html.render_div(
@@ -597,7 +597,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         html.close_div()
 
     def _get_initial_message(self) -> str | None:
-        if len(self._pending_changes) == 0:
+        if len(self._changes.pending_changes) == 0:
             return None
         if not request.has_var("_finished"):
             return None
@@ -608,27 +608,29 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             html.show_warning(_("You are not permitted to activate configuration changes."))
             return
 
-        if not self._pending_changes:
+        if not self._changes.pending_changes:
             return
 
-        if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site():
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 
-        valuespec = _vs_activation(self.title(), comment_mode, self.has_foreign_changes())
+        valuespec = _vs_activation(self.title(), comment_mode, self._changes.has_foreign_changes())
 
         with html.form_context("activate", method="POST", action=""):
-            html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
+            html.hidden_field(
+                "activate_until", self._changes.get_last_change_id(), id_="activate_until"
+            )
 
             if valuespec:
                 title = valuespec.title()
                 assert title is not None
                 forms.header(title)
-                valuespec.render_input("activate", self._value)
+                valuespec.render_input("activate", {})
                 valuespec.set_focus("activate")
                 html.help(valuespec.help())
 
-            if self.has_foreign_changes():
+            if self._changes.has_foreign_changes():
                 if user.may("wato.activateforeign"):
                     html.show_warning(
                         _(
@@ -706,23 +708,23 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             for site_id, site in sort_sites(activation_sites):
                 table.row()
 
-                site_status, status = self._get_site_status(site_id, site)
+                site_status, status = self._changes.get_site_status(site_id, site)
 
-                is_online = self._site_is_online(status)
-                is_logged_in = self._site_is_logged_in(site_id, site)
+                is_online = self._changes.site_is_online(status)
+                is_logged_in = self._changes.site_is_logged_in(site_id, site)
                 can_activate_all = self._can_activate_all(site_id)
 
                 # Disable actions for offline sites and not logged in sites
                 if not is_online or not is_logged_in:
                     can_activate_all = False
 
-                need_restart = self.is_activate_needed(site_id)
-                need_sync = self.is_sync_needed(site_id)
+                need_restart = self._changes.is_activate_needed(site_id)
+                need_sync = self._changes.is_sync_needed(site_id)
                 need_action = need_restart or need_sync
                 nr_changes = len(
                     list(
                         change
-                        for change in self._changes_of_site(site_id)
+                        for change in self._changes.changes_of_site(site_id)
                         if not has_been_activated(change)
                     )
                 )
@@ -816,7 +818,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             html.write_text_permissive(str(site_status["exception"]))
             return
 
-        last_state = self._last_activation_state(site_id)
+        last_state = self._changes.last_activation_state(site_id)
 
         if not is_logged_in:
             html.write_text_permissive(_("Is not logged in.") + " ")
@@ -831,18 +833,20 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
 
     def _can_activate_all(self, site_id: SiteId) -> bool:
-        return not self._site_has_foreign_changes(site_id) or user.may("wato.activateforeign")
+        return not self._changes.site_has_foreign_changes(site_id) or user.may(
+            "wato.activateforeign"
+        )
 
     def _get_selected_sites(self, site_configs: SiteConfigurations) -> list[str]:
         return [
             "site_%s" % site_id
             for site_id, site in sort_sites(activation_sites(site_configs))
-            if len(self._changes_of_site(site_id))
+            if len(self._changes.changes_of_site(site_id))
             and self._can_activate_all(site_id)
             and self._is_active_site(
                 site_id=site_id,
                 site=site,
-                status=self._get_site_status(site_id, site)[1],
+                status=self._changes.get_site_status(site_id, site)[1],
             )
         ]
 
@@ -851,7 +855,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         user.set_rowselection(SelectionId.from_request(request), self.name(), selected_sites, "set")
 
     def _is_active_site(self, site_id: SiteId, site: SiteConfiguration, status: str) -> bool:
-        return self._site_is_online(status) and self._site_is_logged_in(site_id, site)
+        return self._changes.site_is_online(status) and self._changes.site_is_logged_in(
+            site_id, site
+        )
 
 
 def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:

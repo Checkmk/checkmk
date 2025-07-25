@@ -1198,7 +1198,7 @@ class ActivateChanges:
     def grouped_changes(self):
         return self._pending_changes
 
-    def _changes_of_site(self, site_id):
+    def changes_of_site(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site[site_id]
 
     def dirty_and_active_activation_sites(self) -> list[SiteId]:
@@ -1210,9 +1210,9 @@ class ActivateChanges:
     ) -> list[SiteId]:
         dirty = []
         for site_id, site in sites:
-            status = self._get_site_status(site_id, site)[1]
-            is_online = self._site_is_online(status)
-            is_logged_in = self._site_is_logged_in(site_id, site)
+            status = self.get_site_status(site_id, site)[1]
+            is_online = self.site_is_online(status)
+            is_logged_in = self.site_is_logged_in(site_id, site)
 
             if is_online and is_logged_in:
                 dirty.append(site_id)
@@ -1221,16 +1221,16 @@ class ActivateChanges:
     def dirty_sites(self) -> list[tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
         return [
-            s for s in activation_sites(active_config.sites).items() if self._changes_of_site(s[0])
+            s for s in activation_sites(active_config.sites).items() if self.changes_of_site(s[0])
         ]
 
-    def _site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
+    def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
         return site_is_local(site) or "secret" in site
 
-    def _site_is_online(self, status: str) -> bool:
+    def site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
 
-    def _get_site_status(self, site_id: SiteId, site: SiteConfiguration) -> tuple[SiteStatus, str]:
+    def get_site_status(self, site_id: SiteId, site: SiteConfiguration) -> tuple[SiteStatus, str]:
         if site.get("disabled"):
             site_status = SiteStatus({})
             status = "disabled"
@@ -1240,8 +1240,8 @@ class ActivateChanges:
 
         return site_status, status
 
-    def _site_has_foreign_changes(self, site_id: SiteId) -> bool:
-        changes = self._changes_of_site(site_id)
+    def site_has_foreign_changes(self, site_id: SiteId) -> bool:
+        changes = self.changes_of_site(site_id)
         return bool([c for c in changes if is_foreign_change(c) and not has_been_activated(c)])
 
     def _is_sync_needed_specific_changes(
@@ -1253,7 +1253,7 @@ class ActivateChanges:
         return any(c["need_sync"] for c in changes_to_check)
 
     def is_sync_needed(self, site_id: SiteId) -> bool:
-        return self._is_sync_needed_specific_changes(site_id, self._changes_of_site(site_id))
+        return self._is_sync_needed_specific_changes(site_id, self.changes_of_site(site_id))
 
     def is_sync_needed_until(self, site_id: SiteId) -> bool:
         return self._is_sync_needed_specific_changes(site_id, self._changes_by_site_until[site_id])
@@ -1262,25 +1262,33 @@ class ActivateChanges:
         return any(c["need_restart"] for c in changes_to_check)
 
     def is_activate_needed(self, site_id: SiteId) -> bool:
-        return self._is_activate_needed_specific_changes(self._changes_of_site(site_id))
+        return self._is_activate_needed_specific_changes(self.changes_of_site(site_id))
 
     def is_activate_needed_until(self, site_id: SiteId) -> bool:
         return self._is_activate_needed_specific_changes(self._changes_by_site_until[site_id])
 
-    def _last_activation_state(self, site_id: SiteId) -> SiteActivationState:
+    def last_activation_state(self, site_id: SiteId) -> SiteActivationState:
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
             Path(ActivateChangesManager.persisted_site_state_path(site_id)), default={}
         )
 
-    def _get_last_change_id(self) -> str:
+    def get_last_change_id(self) -> str:
         return self._pending_changes[-1][1]["id"]
 
     def has_changes(self) -> bool:
         return bool(self._all_changes)
 
+    @property
+    def changes(self) -> list[tuple[str, ChangeSpec]]:
+        return self._all_changes
+
     def has_pending_changes(self) -> bool:
         return bool(self._pending_changes)
+
+    @property
+    def pending_changes(self) -> list[tuple[str, ChangeSpec]]:
+        return self._pending_changes
 
     def has_foreign_changes(self) -> bool:
         return any(
@@ -1289,7 +1297,7 @@ class ActivateChanges:
             if is_foreign_change(change) and not has_been_activated(change)
         )
 
-    def _has_foreign_changes_on_any_site(self) -> bool:
+    def has_foreign_changes_on_any_site(self) -> bool:
         return any(
             change
             for _change_id, change in self._pending_changes
@@ -1593,7 +1601,7 @@ class ActivateChangesManager(ActivateChanges):
                 rabbitmq_definitions,
             )
         self._activate_until = (
-            self._get_last_change_id() if activate_until is None else activate_until
+            self.get_last_change_id() if activate_until is None else activate_until
         )
         self._comment = comment
         self._time_started = time.time()
@@ -1799,7 +1807,7 @@ class ActivateChangesManager(ActivateChanges):
             if not self._pending_changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
-            if self._get_last_change_id() != self._activate_until:
+            if self.get_last_change_id() != self._activate_until:
                 raise MKUserError(
                     None,
                     _(
@@ -1878,7 +1886,7 @@ class ActivateChangesManager(ActivateChanges):
         return snapshot_settings
 
     def _check_snapshot_creation_permissions(self, site_id):
-        if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
+        if self.site_has_foreign_changes(site_id) and not self._activate_foreign:
             if not user.may("wato.activateforeign"):
                 raise MKUserError(
                     None,

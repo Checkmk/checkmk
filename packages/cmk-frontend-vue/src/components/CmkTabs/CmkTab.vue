@@ -25,31 +25,39 @@ defineProps<CmkTabProps>()
   display: flex;
   flex-direction: row;
   background: var(--ux-theme-0);
-  padding: 10px 16px 8px 16px;
-  border: 1px solid transparent;
+  padding: var(--spacing-half) var(--spacing) !important;
+  border: 1px solid var(--ux-theme-7);
+  font-weight: var(--font-weight-default);
+  line-height: var(--form-field-height);
+  border-right: 0 solid var(--ux-theme-0);
+
+  &:first-of-type {
+    border-top-left-radius: var(--border-radius);
+  }
+
+  &:last-of-type {
+    border-top-right-radius: var(--border-radius);
+    border-right: 1px solid var(--ux-theme-7);
+  }
 
   &:hover {
     cursor: pointer;
     background: var(--ux-theme-2);
   }
 
-  &:focus,
-  &:active {
+  &:focus {
     outline: none;
     border: 1px solid var(--success);
   }
 
   &[data-state='active'] {
-    background: var(--ux-theme-3);
+    background: var(--ux-theme-7);
+    font-weight: var(--font-weight-bold);
   }
   &[data-disabled] {
     opacity: 0.6;
     cursor: default;
     background: var(--ux-theme-0);
-  }
-
-  &[data-orientation='vertical'] {
-    padding: 8px 16px 8px 18px;
   }
 }
 </style>

@@ -112,6 +112,10 @@
     --ux-theme-4: var(--color-daylight-grey-40);
     --ux-theme-5: var(--color-daylight-grey-50);
     --ux-theme-6: var(--color-daylight-grey-60);
+    --ux-theme-7: var(--color-daylight-grey-70);
+    --ux-theme-8: var(--color-daylight-grey-80);
+    --ux-theme-9: var(--color-daylight-grey-90);
+    --ux-theme-10: var(--color-daylight-grey-100);
 
     --color-warning: rgb(255, 208, 0);
     --color-danger: rgb(229, 63, 63);
@@ -170,6 +174,10 @@
     --ux-theme-4: var(--color-midnight-grey-60);
     --ux-theme-5: var(--color-midnight-grey-50);
     --ux-theme-6: var(--color-midnight-grey-40);
+    --ux-theme-7: var(--color-midnight-grey-30);
+    --ux-theme-8: var(--color-midnight-grey-20);
+    --ux-theme-9: var(--color-midnight-grey-10);
+    --ux-theme-10: var(--color-midnight-grey-0);
 
     --color-warning: rgb(255, 215, 3);
     --color-danger: rgb(180, 45, 45);

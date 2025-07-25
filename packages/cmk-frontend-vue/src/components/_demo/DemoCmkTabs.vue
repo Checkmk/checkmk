@@ -62,7 +62,7 @@ defineProps<{ screenshotMode: boolean }>()
         class="cmk-demo-tabs"
       >
         <CmkIcon :name="tab.icon.name"></CmkIcon>
-        <h2>{{ tab.title }}</h2>
+        {{ tab.title }}
       </CmkTab>
     </template>
     <template #tab-contents>
@@ -82,8 +82,13 @@ defineProps<{ screenshotMode: boolean }>()
     margin: 0;
     padding: 0;
   }
+
   > .cmk-icon {
     margin-right: 16px;
   }
+}
+
+p {
+  padding-left: 10px;
 }
 </style>

@@ -21,8 +21,9 @@ defineProps<CmkTabContentProps>()
 
 <style scoped>
 .cmk-tab-content {
-  padding: 16px;
-  background: var(--ux-theme-3);
+  margin-top: -1px;
+  padding: var(--spacing) 0;
+  border: 1px solid var(--ux-theme-7);
 
   &:focus,
   &:active {

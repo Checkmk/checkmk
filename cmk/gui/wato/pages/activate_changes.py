@@ -308,10 +308,14 @@ class ModeRevertChanges(WatoMode):
             confirm_text=_("Revert changes"),
         )
 
-        _change_table(self._changes.changes, _("Revert changes"))
+        _change_table(
+            list(activation_sites(config.sites)), self._changes.changes, _("Revert changes")
+        )
 
 
-def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
+def _change_table(
+    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, dict]], title: str
+) -> None:
     with table_element(
         "changes",
         title=title,
@@ -362,7 +366,7 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
             table.cell(_("Change"), icon_code + HTML.without_escaping(change["text"]))
 
             table.cell(_("Affected sites"), css=["affected_sites"])
-            if affects_all_sites(change):
+            if affects_all_sites(activation_site_ids, change):
                 html.write_text_permissive("<i>%s</i>" % _("All sites"))
             else:
                 html.write_text_permissive(", ".join(sorted(change["affected_sites"])))
@@ -561,10 +565,14 @@ class ModeActivateChanges(WatoMode):
 
         self._show_license_validity()
 
-        self._activation_status(activation_sites(config.sites))
+        self._activation_status(activation_site_configs := activation_sites(config.sites))
 
         if self._changes.has_pending_changes():
-            _change_table(self._changes.pending_changes, _("Pending changes"))
+            _change_table(
+                list(activation_site_configs),
+                self._changes.pending_changes,
+                _("Pending changes"),
+            )
 
     def _quick_setup_activation_msg(self):
         if not (self._quick_setup_origin and self._changes.has_pending_changes()):
@@ -1012,7 +1020,9 @@ class PageAjaxStartActivation(AjaxPage):
         manager.changes.load(list(config.sites))
         affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
-            affected_sites = manager.changes.dirty_and_active_activation_sites()
+            affected_sites = manager.changes.dirty_and_active_activation_sites(
+                activation_sites(config.sites)
+            )
         else:
             affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 

@@ -41,7 +41,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
-from livestatus import BrokerConnections, SiteConfiguration
+from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils
@@ -1201,11 +1201,11 @@ class ActivateChanges:
     def changes_of_site(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site[site_id]
 
-    def dirty_and_active_activation_sites(self) -> list[SiteId]:
+    def dirty_and_active_activation_sites(
+        self, sites: Mapping[SiteId, SiteConfiguration]
+    ) -> list[SiteId]:
         """Returns the list of sites that should be used when activating all affected sites"""
-        return self.filter_not_activatable_sites(
-            self.dirty_sites(activation_sites(active_config.sites))
-        )
+        return self.filter_not_activatable_sites(self.dirty_sites(sites))
 
     def filter_not_activatable_sites(
         self, sites: list[tuple[SiteId, SiteConfiguration]]
@@ -1305,7 +1305,7 @@ class ActivateChanges:
             for _change_id, change in self._pending_changes
             if is_foreign_change(change)
             and not has_been_activated(change)
-            and affects_all_sites(change)
+            and affects_all_sites(list(activation_sites(active_config.sites)), change)
         )
 
     def get_activation_time(self, site_id: SiteId, ty: str) -> float | None:
@@ -1315,9 +1315,10 @@ class ActivateChanges:
         return self._changes_by_site_until[site_id]
 
     def get_all_data_required_for_activation_popout(
-        self, sites: Sequence[SiteId]
+        self, sites: SiteConfigurations
     ) -> ActivationChangesSummary:
-        self.load(sites)
+        # TODO: Isn't activation_sites() enough here?
+        self.load(list(sites))
 
         changes_that_require_activation: list[tuple[str, ChangeSpec]] = [
             (change_id, change)
@@ -1353,7 +1354,7 @@ class ActivateChanges:
                     if site.get("disabled")
                     else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
                 )
-                for site_id, site in activation_sites(active_config.sites).items()
+                for site_id, site in activation_sites(sites).items()
             ],
             pendingChanges=[
                 PendingChangesSummary(
@@ -1362,7 +1363,7 @@ class ActivateChanges:
                     user=change["user_id"],
                     time=change["time"],
                     whichSites="All sites"
-                    if affects_all_sites(change)
+                    if affects_all_sites(list(activation_sites(sites)), change)
                     else ", ".join(sorted(change["affected_sites"])),
                 )
                 for _, change in changes_that_require_activation
@@ -1382,10 +1383,8 @@ def is_foreign_change(change: ChangeSpec) -> bool:
     return change["user_id"] and change["user_id"] != user.id
 
 
-def affects_all_sites(change: ChangeSpec) -> bool:
-    return not set(change["affected_sites"]).symmetric_difference(
-        set(activation_sites(active_config.sites))
-    )
+def affects_all_sites(sites: Sequence[SiteId], change: ChangeSpec) -> bool:
+    return not set(change["affected_sites"]).symmetric_difference(set(sites))
 
 
 def _add_peer_to_peer_connections(

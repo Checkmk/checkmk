@@ -46,7 +46,7 @@ from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.activate_changes import has_pending_changes
+from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -722,7 +722,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     """
     user.need_permission("wato.edit_hosts")
     user.need_permission("wato.rename_hosts")
-    if has_pending_changes():
+    if _has_pending_changes(list(active_config.sites)):
         return problem(
             status=409,
             title="Pending changes are present",
@@ -771,6 +771,10 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         )["href"]
     ).path
     return response
+
+
+def _has_pending_changes(sites: Sequence[SiteId]) -> bool:
+    return ActivateChanges.get_pending_changes_info(sites).has_changes()
 
 
 @Endpoint(

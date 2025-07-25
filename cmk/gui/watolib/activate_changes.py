@@ -2758,14 +2758,6 @@ def _update_links_for_agent_receiver() -> None:
     uuid_link_manager.update_links(collect_all_hosts())
 
 
-def confirm_all_local_changes() -> None:
-    ActivateChanges.confirm_site_changes(omd_site())
-
-
-def has_pending_changes() -> bool:
-    return ActivateChanges.get_pending_changes_info(list(active_config.sites)).has_changes()
-
-
 def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) -> str:
     if changes_info is None:
         changes_info = ActivateChanges.get_pending_changes_info(list(active_config.sites))
@@ -2951,7 +2943,7 @@ def _execute_post_config_sync_actions(
         # The local configuration has just been replaced. The pending changes are not
         # relevant anymore. Confirm all of them to cleanup the inconsistency.
         logger.debug("Confirming pending changes")
-        confirm_all_local_changes()
+        ActivateChanges.confirm_site_changes(omd_site())
 
         hooks.call("snapshot-pushed")
     except Exception:

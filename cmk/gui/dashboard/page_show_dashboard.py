@@ -52,7 +52,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
-from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from cmk.utils import paths
 
@@ -497,8 +496,6 @@ def _page_menu(
             ),
         ],
         breadcrumb=breadcrumb,
-        has_pending_changes=has_pending_changes(),
-        pending_changes_tooltip=get_pending_changes_tooltip(),
         # Disable suggestion rendering because it makes the page content shift downwards, which is
         # unwanted on unscrollable dashboards
         enable_suggestions=False,

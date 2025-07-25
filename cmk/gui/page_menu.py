@@ -283,8 +283,6 @@ class PageMenu:
     dropdowns: list[PageMenuDropdown] = field(default_factory=list)
     breadcrumb: Breadcrumb | None = None
     inpage_search: PageMenuSearch | None = None
-    has_pending_changes: bool = False
-    pending_changes_tooltip: str | None = None
     enable_suggestions: bool = True
 
     def __post_init__(self) -> None:

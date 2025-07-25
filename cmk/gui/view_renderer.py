@@ -53,7 +53,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
-from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
@@ -380,8 +379,6 @@ class GUIViewRenderer(ABCViewRenderer):
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
             breadcrumb=breadcrumb,
-            has_pending_changes=has_pending_changes(),
-            pending_changes_tooltip=get_pending_changes_tooltip(),
         )
 
         self._extend_display_dropdown(menu, show_filters)

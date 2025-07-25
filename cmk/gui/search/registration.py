@@ -5,7 +5,7 @@
 
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
-from .unified import PageUnifiedSearch
+from .pages import PageUnifiedSearch
 
 
 def register(page_registry: PageRegistry) -> None:

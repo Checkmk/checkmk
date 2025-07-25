@@ -251,7 +251,7 @@ def _activate_changes(
     # workaround until CMK-13093 is fixed
     folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
-    manager.load(all_sites)
+    manager.changes.load(all_sites)
     with SuperUserContext():
         activation_id = manager.start(
             sites=list(sites),

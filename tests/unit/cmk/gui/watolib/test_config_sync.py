@@ -251,7 +251,7 @@ def _get_activation_manager(
 
         activation_manager = activate_changes.ActivateChangesManager()
         activation_manager._sites = [remote_site]
-        activation_manager._changes_by_site = {remote_site: []}
+        activation_manager.changes._changes_by_site = {remote_site: []}
         activation_manager._activation_id = "123"
         yield activation_manager
 
@@ -580,7 +580,7 @@ def _synchronize_site(
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
-        site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
+        site_id, activation_manager._activation_id, activation_manager.changes, time.time(), "GUI"
     )
 
     current_span = trace.get_current_span()

@@ -335,9 +335,9 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
 def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
-    manager.load(list(active_config.sites))
+    manager.changes.load(list(active_config.sites))
 
-    if not manager.is_sync_needed(site_id):
+    if not manager.changes.is_sync_needed(site_id):
         return
 
     logger.info("Syncing %s", site_id)
@@ -1455,7 +1455,7 @@ def _debug_log_message(msg: str) -> Iterator[None]:
     logger.debug(f"{msg} ... done (%ss)", round(time.time() - start, 2))
 
 
-class ActivateChangesManager(ActivateChanges):
+class ActivateChangesManager:
     """Manages the activation of pending configuration changes
 
     A single object cares about one activation for all affected sites.
@@ -1480,6 +1480,7 @@ class ActivateChangesManager(ActivateChanges):
     )
 
     def __init__(self) -> None:
+        self.changes = ActivateChanges()
         self._sites: Sequence[SiteId] = []
         self._site_snapshot_settings: dict[SiteId, SnapshotSettings] = {}
         self._activate_until: str | None = None
@@ -1601,7 +1602,7 @@ class ActivateChangesManager(ActivateChanges):
                 rabbitmq_definitions,
             )
         self._activate_until = (
-            self.get_last_change_id() if activate_until is None else activate_until
+            self.changes.get_last_change_id() if activate_until is None else activate_until
         )
         self._comment = comment
         self._time_started = time.time()
@@ -1634,7 +1635,7 @@ class ActivateChangesManager(ActivateChanges):
         # rabbitmq must be running on the central site if one of the remote sites
         # has piggyback-hub running
         if rabbitmq.rabbitmqctl_running() and has_piggyback_hub_relevant_changes(
-            [change for _, change in self._pending_changes]
+            [change for _, change in self.changes.pending_changes]
         ):
             with (
                 tracer.span("distribute_piggyback_hub_configs"),
@@ -1643,7 +1644,7 @@ class ActivateChangesManager(ActivateChanges):
                 activation_features.distribute_piggyback_hub_configs(
                     load_configuration_settings(),
                     active_config.sites,
-                    {site_id for site_id, _site_config in self.dirty_sites()},
+                    {site_id for site_id, _site_config in self.changes.dirty_sites()},
                     {
                         host_name: host.site_id()
                         for host_name, host in folder_tree()
@@ -1753,7 +1754,7 @@ class ActivateChangesManager(ActivateChanges):
     def _set_persisted_changes(self) -> None:
         """Sets the persisted_changes, which are a subset of self._changes."""
         if not self._persisted_changes:
-            for _activation_id, change in self._pending_changes:
+            for _activation_id, change in self.changes.pending_changes:
                 self._persisted_changes.append(
                     asdict(
                         ActivationChange(
@@ -1804,10 +1805,10 @@ class ActivateChangesManager(ActivateChanges):
 
         """
         with store.lock_checkmk_configuration(configuration_lockfile):
-            if not self._pending_changes:
+            if not self.changes.pending_changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
-            if self.get_last_change_id() != self._activate_until:
+            if self.changes.get_last_change_id() != self._activate_until:
                 raise MKUserError(
                     None,
                     _(
@@ -1886,7 +1887,7 @@ class ActivateChangesManager(ActivateChanges):
         return snapshot_settings
 
     def _check_snapshot_creation_permissions(self, site_id):
-        if self.site_has_foreign_changes(site_id) and not self._activate_foreign:
+        if self.changes.site_has_foreign_changes(site_id) and not self._activate_foreign:
             if not user.may("wato.activateforeign"):
                 raise MKUserError(
                     None,
@@ -3671,20 +3672,20 @@ def activate_changes_start(
 
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use the passed sites?
-    manager.load(list(active_config.sites))
+    manager.changes.load(list(active_config.sites))
 
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)
 
-    if not manager.has_pending_changes():
+    if not manager.changes.has_pending_changes():
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:
-        dirty_sites = manager.dirty_sites()
+        dirty_sites = manager.changes.dirty_sites()
         if not dirty_sites:
             raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
-        sites = manager.filter_not_activatable_sites(dirty_sites)
+        sites = manager.changes.filter_not_activatable_sites(dirty_sites)
         if not sites:
             raise MKUserError(
                 None,

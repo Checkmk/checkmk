@@ -1007,10 +1007,10 @@ class PageAjaxStartActivation(AjaxPage):
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.load(list(config.sites))
+        manager.changes.load(list(config.sites))
         affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
-            affected_sites = manager.dirty_and_active_activation_sites()
+            affected_sites = manager.changes.dirty_and_active_activation_sites()
         else:
             affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 
@@ -1019,7 +1019,7 @@ class PageAjaxStartActivation(AjaxPage):
         activate_foreign = api_request.get("activate_foreign", "0") == "1"
 
         valuespec = _vs_activation(
-            "", config.wato_activate_changes_comment_mode, manager.has_foreign_changes()
+            "", config.wato_activate_changes_comment_mode, manager.changes.has_foreign_changes()
         )
         if valuespec:
             valuespec.validate_value(
@@ -1058,7 +1058,7 @@ class PageAjaxActivationState(AjaxPage):
             raise MKUserError("activation_id", _('Missing parameter "%s".') % "activation_id")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.load(list(config.sites))
+        manager.changes.load(list(config.sites))
         manager.load_activation(activation_id)
 
         return manager.get_state()

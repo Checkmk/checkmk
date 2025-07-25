@@ -2758,10 +2758,7 @@ def _update_links_for_agent_receiver() -> None:
     uuid_link_manager.update_links(collect_all_hosts())
 
 
-def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) -> str:
-    if changes_info is None:
-        changes_info = ActivateChanges.get_pending_changes_info(list(active_config.sites))
-
+def get_pending_changes_tooltip(changes_info: PendingChangesInfo) -> str:
     if changes_info.has_changes():
         n_changes = changes_info.number
         return (
@@ -2776,9 +2773,9 @@ def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) 
     return _("Click here to see the activation status per site.")
 
 
-def get_pending_changes() -> dict[str, ActivationChange]:
+def get_pending_changes(sites: Sequence[SiteId]) -> dict[str, ActivationChange]:
     changes = ActivateChanges()
-    changes.load(list(active_config.sites))
+    changes.load(sites)
     return {
         change_id: ActivationChange(
             id=ac["id"],

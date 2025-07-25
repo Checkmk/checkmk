@@ -406,10 +406,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "datasources": datasources_code,
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(discovery_options, host),
-            "pending_changes_info": ActivateChanges.get_pending_changes_info(
-                list(config.sites)
+            "pending_changes_info": (
+                pending_changes_info := ActivateChanges.get_pending_changes_info(list(config.sites))
             ).message,
-            "pending_changes_tooltip": get_pending_changes_tooltip(),
+            "pending_changes_tooltip": get_pending_changes_tooltip(pending_changes_info),
             "discovery_options": discovery_options._asdict(),
             "discovery_result": discovery_result.serialize(Version.from_str(__version__)),
         }

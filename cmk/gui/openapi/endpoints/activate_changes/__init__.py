@@ -121,7 +121,9 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
-    constructors.require_etag(constructors.hash_of_dict(get_pending_changes()))
+    constructors.require_etag(
+        constructors.hash_of_dict(get_pending_changes(list(active_config.sites)))
+    )
     with (
         may_fail(MKUserError),
         may_fail(MKAuthException, status=401),
@@ -280,7 +282,7 @@ def list_activations(params: Mapping[str, Any]) -> Response:
 def list_pending_changes(params: Mapping[str, Any]) -> Response:
     """Show all pending changes"""
 
-    pending_changes = get_pending_changes()
+    pending_changes = get_pending_changes(list(active_config.sites))
     response = serve_json(
         {
             "id": "activation_run",

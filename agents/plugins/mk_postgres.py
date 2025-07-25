@@ -167,7 +167,7 @@ class PostgresBase:
     """
 
     __metaclass__ = abc.ABCMeta
-    _supported_pg_versions = ["12"]
+    _supported_pg_versions = ["12", "15"]
 
     def __init__(self, db_user, pg_binary_path, instance, process_match_patterns):
         # type: (str, str | None, dict, Sequence[re.Pattern]) -> None

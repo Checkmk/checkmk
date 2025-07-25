@@ -9388,6 +9388,10 @@ msgid "Bazel Cache User"
 msgstr "Max Cache Leeftijd"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Max Cache Leeftijd"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Database wachtwoord"
 
@@ -22515,7 +22519,7 @@ msgstr "Elektrisch vermogen"
 msgid "Electrical power"
 msgstr "Elektrisch vermogen"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische spanning in % van de normale waarde"
 
@@ -48477,6 +48481,10 @@ msgstr ""
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr ""
 
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
+msgstr ""
+
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr ""
 
@@ -51458,7 +51466,8 @@ msgstr "Niveau printercartridges"
 msgid "Printer queue length"
 msgstr "Lengte printerwachtrij"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr ""
 "Printer stuurt <i>gebruikt</i> materiaal in plaats van <i>restmateriaal</i>"
 
@@ -60000,16 +60009,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Sommige printers (b.v. Konica voor Drum Cartdiges) geven de beschikbare "
-"brandstof terug in plaats van wat er nog over is. In dit geval is het "
-"mogelijk om de niveaus te verhogen om dit gedrag te verwerken"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -60159,6 +60158,17 @@ msgstr ""
 "kunnen tijdstempelkolommen absoluut, relatief of in een gemengde stijl "
 "worden weergegeven. Met deze toestemming kan de gebruiker de weergaveopties "
 "wijzigen"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Sommige printers (b.v. Konica voor Drum Cartdiges) geven de beschikbare "
+"brandstof terug in plaats van wat er nog over is. In dit geval is het "
+"mogelijk om de niveaus te verhogen om dit gedrag te verwerken"
 
 #, fuzzy
 msgid ""
@@ -79610,7 +79620,8 @@ msgstr "Uptime sinds laatste reboot"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Uptime sinds laatste reboot van apparaten met modules"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Tonerniveaus verhogen"
 
 msgid "Urgency"

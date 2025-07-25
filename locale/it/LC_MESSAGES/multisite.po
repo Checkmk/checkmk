@@ -9316,6 +9316,10 @@ msgid "Bazel Cache User"
 msgstr "Età massima della cache"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Età massima della cache"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Password del database"
 
@@ -22329,7 +22333,7 @@ msgstr "Potenza elettrica"
 msgid "Electrical power"
 msgstr "Potenza elettrica"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensione elettrica in % del valore normale"
 
@@ -48066,6 +48070,10 @@ msgstr ""
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr ""
 
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
+msgstr ""
+
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr ""
 
@@ -51031,7 +51039,8 @@ msgstr "Livelli delle cartucce della stampante"
 msgid "Printer queue length"
 msgstr "Lunghezza della coda della stampante"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr "La stampante invia materiale <i>usato</i> invece di <i>rimanere</i>"
 
 msgid "Printers"
@@ -59508,16 +59517,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Alcune stampanti (es. Konica per le cartucce a tamburo) restituiscono il "
-"carburante disponibile invece di quello rimasto. In questo caso è possibile "
-"ribaltare i livelli per gestire questo comportamento"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -59670,6 +59669,17 @@ msgstr ""
 "il loro output. Ad esempio, le colonne con la data e l'ora possono essere "
 "visualizzate in modo assoluto, relativo o misto. Questa autorizzazione "
 "consente all'utente di modificare le opzioni di visualizzazione"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Alcune stampanti (es. Konica per le cartucce a tamburo) restituiscono il "
+"carburante disponibile invece di quello rimasto. In questo caso è possibile "
+"ribaltare i livelli per gestire questo comportamento"
 
 #, fuzzy
 msgid ""
@@ -78936,7 +78946,8 @@ msgstr "Tempo di attività dall'ultimo riavvio"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Tempo di attività dall'ultimo riavvio dei dispositivi con moduli"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Innalzare i livelli di toner"
 
 msgid "Urgency"

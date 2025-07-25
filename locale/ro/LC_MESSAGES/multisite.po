@@ -9383,6 +9383,10 @@ msgid "Bazel Cache User"
 msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
+msgid "Bazel Cache Version"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
 msgid "Bazel Cache password"
 msgstr "Parola bazei de date"
 
@@ -22556,7 +22560,7 @@ msgstr "Putere electrică"
 msgid "Electrical power"
 msgstr "Putere electrică"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensiunea electrică în % din valoarea normală"
 
@@ -48539,6 +48543,10 @@ msgstr ""
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr ""
 
+msgid ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
+msgstr ""
+
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr ""
 
@@ -51524,7 +51532,8 @@ msgstr "Nivelurile cartușelor de imprimantă"
 msgid "Printer queue length"
 msgstr "Lungimea cozii de așteptare a imprimantei"
 
-msgid "Printer sends <i>used</i> material instead of <i>remaining</i>"
+#, fuzzy
+msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr "Imprimanta trimite materialul <i>folosit</i> în loc de <i> rămas</i>."
 
 msgid "Printers"
@@ -60129,16 +60138,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Some Printers (e.g. Konica for Drum Cartdiges) returning the available fuel "
-"instead of what is left. In this case it's possible to upturn the levels to "
-"handle this behavior"
-msgstr ""
-"Unele imprimante (de exemplu, Konica pentru cartelele cu tambur) returnează "
-"combustibilul disponibil în loc de cel rămas. În acest caz, este posibil să "
-"se răstoarne nivelurile pentru a gestiona acest comportament"
-
-#, fuzzy
-msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
 "Please be aware that you should only do this if no other approach is "
@@ -60291,6 +60290,17 @@ msgstr ""
 "rezultatului lor. De exemplu, coloanele de marcaj orar pot fi afișate "
 "absolut, relativ sau într-un stil mixt. Această permisiune permite "
 "utilizatorului să modifice opțiunile de afișare"
+
+#, fuzzy
+msgid ""
+"Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
+"container: The used instead of the available supply</li><li>in case of a "
+"receptacle: The available instead of the used space</li><ul>Enable this "
+"option to handle this behavior."
+msgstr ""
+"Unele imprimante (de exemplu, Konica pentru cartelele cu tambur) returnează "
+"combustibilul disponibil în loc de cel rămas. În acest caz, este posibil să "
+"se răstoarne nivelurile pentru a gestiona acest comportament"
 
 #, fuzzy
 msgid ""
@@ -79781,7 +79791,8 @@ msgid "Uptime since last reboot of devices with modules"
 msgstr ""
 "Timpul de funcționare de la ultima repornire a dispozitivelor cu module"
 
-msgid "Upturn toner levels"
+#, fuzzy
+msgid "Upturn supply levels"
 msgstr "Îmbunătățirea nivelului de toner"
 
 msgid "Urgency"

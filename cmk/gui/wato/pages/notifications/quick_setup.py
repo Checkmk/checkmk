@@ -40,7 +40,6 @@ from cmk.gui.form_specs.private.list_unique_selection import (
 from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationDialogWidget,
@@ -83,7 +82,6 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
@@ -1989,12 +1987,9 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
     notifications_rules += [
         migrate_to_event_rule(cast(NotificationQuickSetupSpec, all_stages_form_data))
     ]
-    config_file.save(notifications_rules, pprint_value=active_config.wato_pprint_config)
-    add_change(
-        action_name="new-notification-rule",
-        text=_("Created new notification rule"),
-        user_id=user.id,
-        need_restart=False,
+    config_file.rule_created(
+        notifications_rules,
+        pprint_value=active_config.wato_pprint_config,
         use_git=active_config.wato_use_git,
     )
 
@@ -2010,12 +2005,11 @@ def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
             )
             rule_nr = str(n)
             break
-    config_file.save(notification_rules, pprint_value=active_config.wato_pprint_config)
-    add_change(
-        action_name="edit-notification-rule",
-        text=_("Changed notification rule #%s") % rule_nr,
-        user_id=user.id,
-        need_restart=False,
+
+    config_file.rule_updated(
+        rules=notification_rules,
+        rule_number=rule_nr,
+        pprint_value=active_config.wato_pprint_config,
         use_git=active_config.wato_use_git,
     )
 

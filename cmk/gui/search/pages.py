@@ -20,7 +20,7 @@ class PageUnifiedSearch(AjaxPage):
         monitoring_engine = MonitoringSearchEngine()
         unified_search_engine = UnifiedSearch(setup_engine, monitoring_engine)
 
-        response = unified_search_engine.search(query, provider, config)
+        response = unified_search_engine.search(query, config=config, provider=provider)
 
         return {
             "url": request.url,

@@ -32,7 +32,11 @@ class UnifiedSearch:
         self._monitoring_engine = monitoring_engine
 
     def search(
-        self, query: SearchQuery, provider: Provider | None, config: Config
+        self,
+        query: SearchQuery,
+        *,
+        config: Config,
+        provider: Provider | None = None,
     ) -> UnifiedSearchResult:
         setup_results_by_topic: SearchResultsByTopic = []
         monitoring_results_by_topic: SearchResultsByTopic = []

@@ -75,7 +75,7 @@ class Connector:
         if ignore_ssl:
             sys.stdout.write("Ignoring SSL certificate verification\n")
             conf.verify_ssl = False
-            urllib3.disable_warnings(urllib3.connectionpool.InsecureRequestWarning)
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         else:
             sys.stdout.write(f"Using trust store: {trusted_ca_file}\n")
             conf.ssl_ca_cert = trusted_ca_file

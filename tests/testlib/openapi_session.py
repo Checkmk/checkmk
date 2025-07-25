@@ -130,6 +130,7 @@ class CMKOpenApiSession(requests.Session):
         self.license = LicenseAPI(self)
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
+        self.saml2 = Saml2API(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -1337,5 +1338,58 @@ class EventConsoleAPI(BaseAPI):
         response = self.session.post(
             url="/domain-types/event_console/actions/delete/invoke", json=body
         )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class Saml2API(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get("/domain-types/saml_connection/collections/all")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()["value"]
+
+    def get(self, connection_id: str) -> tuple[dict[str, Any], str]:
+        """Returns a tuple with the connection details and the Etag header"""
+        response = self.session.get(f"/objects/saml_connection/{connection_id}")
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        return (response.json()["extensions"], response.headers["Etag"])
+
+    def create(self, connection_id: str) -> dict[str, Any]:
+        connection = {
+            "general_properties": {
+                "id": connection_id,
+                "name": "Test SAML Auth",
+            },
+            "connection_config": {
+                "checkmk_server_url": "https://localhost",
+                "identity_provider_metadata": {"type": "url", "url": "https://localhost/saml"},
+            },
+            "security": {
+                "signing_certificate": {"type": "builtin"},
+                "decrypt_auth_certificate": {"type": "builtin"},
+            },
+            "users": {
+                "id_attribute": "user_id",
+            },
+        }
+
+        response = self.session.post(
+            "/domain-types/saml_connection/collections/all",
+            json=connection,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
+
+    def delete(self, connection_id: str, etag: str) -> None:
+        response = self.session.delete(
+            f"/objects/saml_connection/{connection_id}",
+            headers={"If-Match": etag},
+        )
+
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

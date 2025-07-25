@@ -35,7 +35,7 @@ kubernetes==21.7.0 # needed by kubernetes
 botocore==1.35.80 # needed by boto3 (aws), keep version in sync with botocore-stubs
 boto3==1.35.80 # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7==1.3 # needed by Siemens PLC special agent
-pymssql==2.3.1 # needed by check_sql active check
+pymssql==2.3.5 # needed by check_sql active check
 pymysql~=1.1.1 # needed by check_sql active check
 psycopg2-binary==2.9.6 # needed by check_sql active check
 apispec==6.8.0

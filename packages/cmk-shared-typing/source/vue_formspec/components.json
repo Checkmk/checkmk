@@ -1309,7 +1309,7 @@
             "type": "object",
             "properties": {
                 "fetch_method": {
-                    "const": "ajax_vs_autocomplete",
+                    "enum": ["ajax_vs_autocomplete", "rest_autocomplete"],
                     "default": "ajax_vs_autocomplete"
                 },
                 "data": {

@@ -123,6 +123,7 @@ repos:
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
             require_serial: true
+            pass_filenames: false
           - id: buildifier_lint
             name: Lint bazel files
             entry: scripts/run-buildifier
@@ -131,6 +132,7 @@ repos:
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
             require_serial: true
+            pass_filenames: false
           - id: requirements-locking
             name: requirements locking
             entry: bazel test //:requirements_test

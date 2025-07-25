@@ -1842,7 +1842,7 @@ def _get_resource_health_sections(
     return sections
 
 
-async def _test_connection(args: Args, subscription: str | None) -> int | tuple[int, str]:
+async def _test_connection(args: Args) -> int:
     """We test the connection only via the Management API client, not via the Graph API client.
     The Graph API client is used for three specific services, which are disabled in the default
     setup when configured via the UI.
@@ -1851,7 +1851,7 @@ async def _test_connection(args: Args, subscription: str | None) -> int | tuple[
 
     try:
         async with BaseAsyncApiClient(
-            get_mgmt_authority_urls(args.authority, subscription or ""),
+            get_mgmt_authority_urls(args.authority, ""),
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
@@ -1862,11 +1862,11 @@ async def _test_connection(args: Args, subscription: str | None) -> int | tuple[
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
-        return 2, error_msg
+        return 2
     except requests.exceptions.ProxyError as exc:
         error_msg = f"Connection failed due to a proxy error: {exc}\n"
         sys.stdout.write(error_msg)
-        return 2, error_msg
+        return 2
     return 0
 
 
@@ -2054,21 +2054,6 @@ async def _get_subscriptions(args: Args) -> set[str]:
     return set()  # no subscriptions
 
 
-async def test_connections(args: Args, subscriptions: set[str]) -> int:
-    tasks = {_test_connection(args, subscription) for subscription in subscriptions}
-    tasks = tasks or {_test_connection(args, None)}
-
-    for coroutine in asyncio.as_completed(tasks):
-        test_result = await coroutine
-        if test_result != 0:
-            if isinstance(test_result, tuple):
-                sys.stderr.write(test_result[1])
-                return test_result[0]
-            return test_result
-
-    return 0
-
-
 async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) -> None:
     monitored_services = set(args.services)
     await asyncio.gather(
@@ -2081,10 +2066,10 @@ async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) 
 
 
 async def main_async(args: Args, selector: Selector) -> int:
-    subscriptions = await _get_subscriptions(args)
     if args.connection_test:
-        return await test_connections(args, subscriptions)
+        return await _test_connection(args)
 
+    subscriptions = await _get_subscriptions(args)
     await collect_info(args, selector, subscriptions)
     LOGGER.debug("%s", selector)
     return 0

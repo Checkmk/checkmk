@@ -23,7 +23,6 @@ obj = NotificationRule.from_api_request(APINotificationRule)
 
 from __future__ import annotations
 
-import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -33,6 +32,7 @@ from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
@@ -61,6 +61,7 @@ from cmk.gui.rest_api_types.notifications_types import (
     PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.simple_config_file import (
     ConfigFileRegistry,
     WatoListConfigFile,
@@ -80,8 +81,6 @@ from cmk.utils.notify_types import (
     NotifyPlugin,
     PluginNameWithParameters,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
@@ -110,6 +109,57 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
 
         return notification_rules
 
+    def rule_updated(
+        self,
+        rules: list[EventRule],
+        rule_number: str,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
+        """Update a notification rule."""
+        add_change(
+            action_name="edit-notification-rule",
+            text=_("Changed notification rule #%s") % rule_number,
+            user_id=user.id,
+            need_restart=False,
+            use_git=use_git,
+        )
+
+        self.save(rules, pprint_value=pprint_value)
+
+    def rule_created(
+        self,
+        rules: list[EventRule],
+        pprint_value: bool,
+        use_git: bool = True,
+    ) -> None:
+        """Create new notification rule."""
+        add_change(
+            action_name="new-notification-rule",
+            text=_("Created new notification rule"),
+            user_id=user.id,
+            need_restart=False,
+            use_git=use_git,
+        )
+        self.save(rules, pprint_value=pprint_value)
+
+    def rule_deleted(
+        self,
+        rules: list[EventRule],
+        rule_number: str,
+        pprint_value: bool,
+        use_git: bool = True,
+    ) -> None:
+        """Delete a notification rule."""
+        add_change(
+            action_name="notification-delete-rule",
+            text=_("Deleted notification rule #%s") % rule_number,
+            user_id=user.id,
+            need_restart=False,
+            use_git=use_git,
+        )
+        self.save(rules, pprint_value=pprint_value)
+
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(NotificationRuleConfigFile())
@@ -121,8 +171,8 @@ def _generate_new_rule_id() -> NotificationRuleID:
 
 def load_user_notification_rules() -> Mapping[UserId, list[EventRule]]:
     rules = {}
-    for user_id, user in userdb.load_users().items():
-        user_rules = user.get("notification_rules")
+    for user_id, userspec in userdb.load_users().items():
+        user_rules = userspec.get("notification_rules")
         if user_rules:
             rules[user_id] = user_rules
     return rules

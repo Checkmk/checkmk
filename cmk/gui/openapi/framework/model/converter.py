@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ipaddress
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
@@ -23,6 +24,7 @@ from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
+from cmk.utils.regex import regex, REGEX_ID
 from cmk.utils.tags import TagGroupID, TagID
 
 
@@ -298,6 +300,21 @@ class PermissionsConverter:
 
 
 class PasswordConverter:
+    @staticmethod
+    def is_valid_id(ident: str) -> str:
+        pattern: re.Pattern[str] = regex(REGEX_ID, re.ASCII)
+        if pattern.match(ident) is None:
+            raise ValueError(
+                f"{ident!r} does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+            )
+        return ident
+
+    @staticmethod
+    def not_exists(ident: str) -> str:
+        if ident in load_passwords():
+            raise ValueError(f'Password "{ident}" already exists.')
+        return ident
+
     @staticmethod
     def exists(ident: str) -> str:
         if ident not in load_passwords():

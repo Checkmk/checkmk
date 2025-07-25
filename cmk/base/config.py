@@ -1276,15 +1276,6 @@ class ServiceDependsOn:
 #   '----------------------------------------------------------------------'
 
 
-def get_piggyback_translations(
-    matcher: RulesetMatcher, labels_of_host: Callable[[HostName], Labels], hostname: HostName
-) -> cmk.utils.translations.TranslationOptions:
-    """Get a dict that specifies the actions to be done during the hostname translation"""
-    return cmk.utils.translations.parse_translation_options(
-        matcher.get_host_values_merged(hostname, piggyback_translation, labels_of_host)
-    )
-
-
 def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
 

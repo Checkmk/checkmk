@@ -10,18 +10,16 @@ from typing import cast, get_args, override
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import (
+from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+
+from .engines.monitoring import MonitoringSearchEngine, SupportsMonitoringSearchEngine
+from .engines.setup import SetupSearchEngine, SupportsSetupSearchEngine
+from .type_defs import (
     Provider,
-    SearchQuery,
-    SearchResult,
-    SearchResultsByTopic,
     UnifiedSearchResult,
     UnifiedSearchResultCounts,
     UnifiedSearchResultItem,
 )
-
-from .engines.monitoring import MonitoringSearchEngine, SupportsMonitoringSearchEngine
-from .engines.setup import SetupSearchEngine, SupportsSetupSearchEngine
 
 
 # TODO: currently searching with legacy providers and then transforming the results into the desired

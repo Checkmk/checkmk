@@ -97,7 +97,6 @@ filter_directory(
         "@//bazel/cmk/distro:almalinux-9": [],
         (
             "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp3",
             "@//bazel/cmk/distro:sles-15sp4",
             "@//bazel/cmk/distro:sles-15sp5",
             "@//bazel/cmk/distro:sles-15sp6",
@@ -146,7 +145,6 @@ pkg_files(
         "@//bazel/cmk/distro:almalinux-9": [],
         (
             "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp3",
             "@//bazel/cmk/distro:sles-15sp4",
             "@//bazel/cmk/distro:sles-15sp5",
             "@//bazel/cmk/distro:sles-15sp6",

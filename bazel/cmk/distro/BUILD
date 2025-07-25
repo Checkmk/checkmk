@@ -10,7 +10,6 @@ string_flag(
         "almalinux-8",
         "almalinux-9",
         "debian-12",
-        "sles-15sp3",
         "sles-15sp4",
         "sles-15sp5",
         "sles-15sp6",
@@ -50,11 +49,6 @@ selects.config_setting_group(
 )
 
 config_setting(
-    name = "sles-15sp3",
-    flag_values = {":distro": "sles-15sp3"},
-)
-
-config_setting(
     name = "sles-15sp4",
     flag_values = {":distro": "sles-15sp4"},
 )
@@ -72,7 +66,6 @@ config_setting(
 selects.config_setting_group(
     name = "sles",
     match_any = [
-        ":sles-15sp3",
         ":sles-15sp4",
         ":sles-15sp5",
         ":sles-15sp6",

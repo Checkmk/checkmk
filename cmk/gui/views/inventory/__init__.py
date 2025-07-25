@@ -11,8 +11,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from cmk.ccc.user import UserId
 from cmk.gui import inventory
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.i18n import _, _l
-from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText
+from cmk.gui.i18n import _l
 from cmk.gui.painter.v0 import Painter, painter_registry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
@@ -25,11 +24,9 @@ from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
-from cmk.utils.structured_data import SDKey, SDPath
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
-    AttributeDisplayHint,
     inv_display_hints,
     NodeDisplayHint,
     PAINT_FUNCTION_NAME_PREFIX,
@@ -104,55 +101,6 @@ def _register_sorter(ident: str, spec: SorterFromHint) -> None:
             sort_function=lambda r1, r2, **_kwargs: spec["cmp"](r1, r2),
             load_inv=spec.get("load_inv", False),
         )
-    )
-
-
-def _make_attribute_filter(
-    ident: str, path: SDPath, key: SDKey, hint: AttributeDisplayHint
-) -> FilterInvText | FilterInvBool | FilterInvFloat:
-    inventory_path = inventory.InventoryPath(
-        path=path,
-        source=inventory.TreeSource.attributes,
-        key=key,
-    )
-    match hint.data_type:
-        case "str":
-            return FilterInvText(
-                ident=ident,
-                title=hint.long_title,
-                inventory_path=inventory_path,
-                is_show_more=hint.is_show_more,
-            )
-        case "bool":
-            return FilterInvBool(
-                ident=ident,
-                title=hint.long_title,
-                inventory_path=inventory_path,
-                is_show_more=hint.is_show_more,
-            )
-        case "bytes" | "bytes_rounded":
-            unit = _("MB")
-            scale = 1024 * 1024
-        case "hz":
-            unit = _("MHz")
-            scale = 1000000
-        case "volt":
-            unit = _("Volt")
-            scale = 1
-        case "timestamp":
-            unit = _("secs")
-            scale = 1
-        case _:
-            unit = ""
-            scale = 1
-
-    return FilterInvFloat(
-        ident=ident,
-        title=hint.long_title,
-        inventory_path=inventory_path,
-        unit=unit,
-        scale=scale,
-        is_show_more=hint.is_show_more,
     )
 
 
@@ -358,8 +306,6 @@ def register_table_views_and_columns() -> None:
             _register_sorter(
                 attr_hint.ident, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
             )
-            filter_registry.register(
-                _make_attribute_filter(attr_hint.ident, node_hint.path, key, attr_hint)
-            )
+            filter_registry.register(attr_hint.filter)
 
         _register_table_view(node_hint)

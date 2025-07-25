@@ -132,22 +132,79 @@ def _make_col_ident(table_view_name: str, key: SDKey | str) -> str:
     return f"{table_view_name}_{key}" if table_view_name else ""
 
 
+def _make_attribute_filter(
+    *, path: SDPath, key: str, data_type: str, ident: str, long_title: str, is_show_more: bool
+) -> FilterInvText | FilterInvBool | FilterInvFloat:
+    inventory_path = inventory.InventoryPath(
+        path=path,
+        source=inventory.TreeSource.attributes,
+        key=SDKey(key),
+    )
+    match data_type:
+        case "str":
+            return FilterInvText(
+                ident=ident,
+                title=long_title,
+                inventory_path=inventory_path,
+                is_show_more=is_show_more,
+            )
+        case "bool":
+            return FilterInvBool(
+                ident=ident,
+                title=long_title,
+                inventory_path=inventory_path,
+                is_show_more=is_show_more,
+            )
+        case "bytes" | "bytes_rounded":
+            unit = _("MB")
+            scale = 1024 * 1024
+        case "hz":
+            unit = _("MHz")
+            scale = 1000000
+        case "volt":
+            unit = _("Volt")
+            scale = 1
+        case "timestamp":
+            unit = _("secs")
+            scale = 1
+        case _:
+            unit = ""
+            scale = 1
+
+    return FilterInvFloat(
+        ident=ident,
+        title=long_title,
+        inventory_path=inventory_path,
+        unit=unit,
+        scale=scale,
+        is_show_more=is_show_more,
+    )
+
+
 def _parse_attribute_hint(
-    node_ident: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
+    path: SDPath, node_ident: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
+    ident = _make_attr_ident(node_ident, key)
     title = _make_title_function(legacy_hint)(key)
+    long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        ident=_make_attr_ident(node_ident, key),
+        ident=ident,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
-        long_title=_make_long_title(node_title, title),
+        long_title=long_title,
         paint_function=paint_function,
         sort_function=_make_sort_function(legacy_hint),
-        data_type=data_type,
-        is_show_more=legacy_hint.get("is_show_more", True),
+        filter=_make_attribute_filter(
+            path=path,
+            key=key,
+            data_type=data_type,
+            ident=ident,
+            long_title=long_title,
+            is_show_more=legacy_hint.get("is_show_more", True),
+        ),
     )
 
 
@@ -264,7 +321,7 @@ def _parse_node_hint(
         short_title=title,
         icon=legacy_hint.get("icon", ""),
         attributes={
-            SDKey(key): _parse_attribute_hint(ident, title, key, attributes.get(key, {}))
+            SDKey(key): _parse_attribute_hint(path, ident, title, key, attributes.get(key, {}))
             for key in _complete_key_order(attributes_key_order, set(attributes))
         },
         columns={
@@ -342,8 +399,7 @@ class AttributeDisplayHint:
     long_title: str
     paint_function: PaintFunction
     sort_function: SortFunction
-    data_type: str
-    is_show_more: bool
+    filter: FilterInvText | FilterInvBool | FilterInvFloat
 
     @property
     def long_inventory_title(self) -> str:
@@ -403,16 +459,24 @@ class NodeDisplayHint:
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
+            ident = _make_attr_ident(self.ident, key)
             title = key.replace("_", " ").title()
+            long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
-                ident=_make_attr_ident(self.ident, key),
+                ident=ident,
                 title=title,
                 short_title=title,
-                long_title=_make_long_title(self.title if self.path else "", title),
+                long_title=long_title,
                 paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=True,
+                filter=_make_attribute_filter(
+                    path=self.path,
+                    key=key,
+                    data_type="str",
+                    ident=ident,
+                    long_title=long_title,
+                    is_show_more=True,
+                ),
             )
 
         return hint if (hint := self.attributes.get(SDKey(key))) else _default()

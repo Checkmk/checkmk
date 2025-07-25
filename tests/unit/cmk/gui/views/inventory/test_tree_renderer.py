@@ -7,7 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.inventory.filters import FilterInvtableText
+from cmk.gui.inventory._tree import InventoryPath, TreeSource
+from cmk.gui.inventory.filters import FilterInvtableText, FilterInvText
 from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
@@ -561,8 +562,16 @@ def test_sort_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_a",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("a"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("b"): AttributeDisplayHint(
                     ident="inv_b",
@@ -571,8 +580,16 @@ def test_sort_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_b",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("b"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("d"): AttributeDisplayHint(
                     ident="inv_d",
@@ -581,8 +598,16 @@ def test_sort_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_d",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("d"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("c"): AttributeDisplayHint(
                     ident="inv_c",
@@ -591,8 +616,16 @@ def test_sort_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_c",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("c"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
             },
             columns={},
@@ -665,8 +698,16 @@ def test_sort_delta_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_a",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("a"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("b"): AttributeDisplayHint(
                     ident="inv_c",
@@ -675,8 +716,16 @@ def test_sort_delta_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_b",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("b"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("d"): AttributeDisplayHint(
                     ident="inv_d",
@@ -685,8 +734,16 @@ def test_sort_delta_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_d",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("d"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
                 SDKey("c"): AttributeDisplayHint(
                     ident="inv_c",
@@ -695,8 +752,16 @@ def test_sort_delta_attributes_pairs_displayhint(
                     long_title="",
                     paint_function=inv_paint_generic,
                     sort_function=lambda *args: 0,
-                    data_type="",
-                    is_show_more=False,
+                    filter=FilterInvText(
+                        ident="inv_c",
+                        title="",
+                        inventory_path=InventoryPath(
+                            path=(),
+                            source=TreeSource.attributes,
+                            key=SDKey("c"),
+                        ),
+                        is_show_more=True,
+                    ),
                 ),
             },
             columns={},

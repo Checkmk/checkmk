@@ -9,11 +9,13 @@ import pytest
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvtableIntegerRange,
     FilterInvtableOperStatus,
     FilterInvtableText,
     FilterInvtableVersion,
+    FilterInvText,
 )
 from cmk.gui.num_split import cmp_version
 from cmk.gui.views.inventory._display_hints import (
@@ -190,8 +192,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_arch",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("arch"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("max_speed"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_max_speed",
@@ -200,8 +210,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_max_speed",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("max_speed"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("model"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_model",
@@ -210,8 +228,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_model",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("model"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("type"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_type",
@@ -220,8 +246,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_type",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("type"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("threads"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_threads",
@@ -230,8 +264,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_threads",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("threads"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("smt_threads"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_smt_threads",
@@ -240,8 +282,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_smt_threads",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("smt_threads"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("cpu_max_capa"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_cpu_max_capa",
@@ -250,8 +300,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_cpu_max_capa",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("cpu_max_capa"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("cpus"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_cpus",
@@ -260,8 +318,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_cpus",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("cpus"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("logical_cpus"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_logical_cpus",
@@ -270,8 +336,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_logical_cpus",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("logical_cpus"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("cores"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_cores",
@@ -280,8 +354,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_cores",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("cores"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("cores_per_cpu"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_cores_per_cpu",
@@ -290,8 +372,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_cores_per_cpu",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("cores_per_cpu"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("threads_per_cpu"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_threads_per_cpu",
@@ -300,8 +390,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_threads_per_cpu",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("threads_per_cpu"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("cache_size"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_cache_size",
@@ -310,8 +408,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_cache_size",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("cache_size"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("bus_speed"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_bus_speed",
@@ -320,8 +426,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_bus_speed",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("bus_speed"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("voltage"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_voltage",
@@ -330,8 +444,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_voltage",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("voltage"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("sharing_mode"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_sharing_mode",
@@ -340,8 +462,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_sharing_mode",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("sharing_mode"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("implementation_mode"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_implementation_mode",
@@ -350,8 +480,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_implementation_mode",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("implementation_mode"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                     SDKey("entitlement"): AttributeDisplayHint(
                         ident="inv_hardware_cpu_entitlement",
@@ -360,8 +498,16 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         long_title="",
                         paint_function=lambda *args: ("", ""),
                         sort_function=lambda *args: 0,
-                        data_type="",
-                        is_show_more=False,
+                        filter=FilterInvText(
+                            ident="inv_hardware_cpu_entitlement",
+                            title="",
+                            inventory_path=InventoryPath(
+                                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                                source=TreeSource.attributes,
+                                key=SDKey("entitlement"),
+                            ),
+                            is_show_more=True,
+                        ),
                     ),
                 },
                 columns={},
@@ -794,8 +940,16 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 long_title="Key",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=True,
+                filter=FilterInvText(
+                    ident="inv_key",
+                    title="Key",
+                    inventory_path=InventoryPath(
+                        path=(),
+                        source=TreeSource.attributes,
+                        key=SDKey("key"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
         (
@@ -808,8 +962,16 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 long_title="Block devices ➤ Size",
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="size",
-                is_show_more=True,
+                filter=FilterInvText(
+                    ident="inv_hardware_storage_disks_size",
+                    title="Block devices ➤ Size",
+                    inventory_path=InventoryPath(
+                        path=(SDNodeName("hardware"), SDNodeName("storage"), SDNodeName("disks")),
+                        source=TreeSource.attributes,
+                        key=SDKey("size"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
         (
@@ -822,8 +984,16 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 long_title="Node ➤ Key",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=True,
+                filter=FilterInvText(
+                    ident="inv_path_to_node_key",
+                    title="Node ➤ Key",
+                    inventory_path=InventoryPath(
+                        path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                        source=TreeSource.attributes,
+                        key=SDKey("key"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
     ],
@@ -832,12 +1002,12 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     hint = inv_display_hints.get_node_hint(path).get_attribute_hint(key)
     assert hint.ident == expected.ident
     assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
-    assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    assert hint.data_type == expected.data_type
-    assert hint.is_show_more == expected.is_show_more
+    assert hint.filter.ident == expected.filter.ident
+    assert hint.filter.title == expected.filter.title
     assert hint.long_inventory_title == expected.long_inventory_title
 
 
@@ -853,8 +1023,16 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 long_title="Foo ➤ Bar",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=True,
+                filter=FilterInvText(
+                    ident="inv_foo_bar",
+                    title="Foo ➤ Bar",
+                    inventory_path=InventoryPath(
+                        path=(SDNodeName("foo"),),
+                        source=TreeSource.attributes,
+                        key=SDKey("bar"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
         (
@@ -866,8 +1044,16 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 long_title="Processor ➤ CPU architecture",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=True,
+                filter=FilterInvText(
+                    ident="inv_hardware_cpu_arch",
+                    title="Processor ➤ CPU architecture",
+                    inventory_path=InventoryPath(
+                        path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                        source=TreeSource.attributes,
+                        key=SDKey("arch"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
         (
@@ -879,8 +1065,16 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 long_title="System ➤ Product",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                data_type="str",
-                is_show_more=False,
+                filter=FilterInvText(
+                    ident="inv_hardware_system_product",
+                    title="System ➤ Product",
+                    inventory_path=InventoryPath(
+                        path=(SDNodeName("hardware"), SDNodeName("system")),
+                        source=TreeSource.attributes,
+                        key=SDKey("product"),
+                    ),
+                    is_show_more=True,
+                ),
             ),
         ),
     ],
@@ -894,12 +1088,12 @@ def test_make_attribute_displayhint_from_hint(
     )
     assert hint.ident == expected.ident
     assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
-    assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    assert hint.data_type == expected.data_type
-    assert hint.is_show_more == expected.is_show_more
+    assert hint.filter.ident == expected.filter.ident
+    assert hint.filter.title == expected.filter.title
     assert hint.long_inventory_title == expected.long_inventory_title
 
 

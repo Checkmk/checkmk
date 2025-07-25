@@ -6,6 +6,7 @@ from cmk.gui.openapi.api_endpoints.password.endpoint_family import PASSWORD_FAMI
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
+from .delete_password import ENDPOINT_DELETE_PASSWORD
 from .list_passwords import ENDPOINT_LIST_PASSWORDS
 from .show_password import ENDPOINT_SHOW_PASSWORD
 
@@ -23,5 +24,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_SHOW_PASSWORD,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_DELETE_PASSWORD,
         ignore_duplicates=ignore_duplicates,
     )

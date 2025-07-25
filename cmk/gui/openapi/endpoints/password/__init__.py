@@ -16,6 +16,7 @@ from cmk.gui.openapi.endpoints.utils import (
     mutually_exclusive_fields,
     update_customer_info,
 )
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
@@ -161,6 +162,7 @@ def update_password(params: Mapping[str, Any]) -> Response:
     permissions_required=RW_PERMISSIONS,
     additional_status_codes=[400],
     family_name=PASSWORD_FAMILY.name,
+    removed_in_version=APIVersion.UNSTABLE,
 )
 def delete_password(params: Mapping[str, Any]) -> Response:
     """Delete a password"""

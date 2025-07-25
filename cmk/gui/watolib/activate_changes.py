@@ -2361,7 +2361,7 @@ def _sync_and_activate(
 
             if activate_changes.is_sync_needed(site_id):
                 assert isinstance(automation_config, RemoteAutomationConfig)
-                async_result = task_pool.apply_async(
+                async_result_fetch_sync_state = task_pool.apply_async(
                     func=copy_request_context(fetch_sync_state),
                     args=(
                         site_snapshot_settings[site_id].snapshot_components,
@@ -2373,9 +2373,9 @@ def _sync_and_activate(
                     ),
                     error_callback=_error_callback,
                 )
-                active_tasks["fetch_sync_state"][site_id] = async_result
+                active_tasks["fetch_sync_state"][site_id] = async_result_fetch_sync_state
             else:
-                async_result = task_pool.apply_async(
+                async_result_activate_site_changes = task_pool.apply_async(
                     func=copy_request_context(activate_site_changes),
                     args=(
                         activate_changes,
@@ -2387,7 +2387,7 @@ def _sync_and_activate(
                     ),
                     error_callback=_error_callback,
                 )
-                active_tasks["activate_site_changes"][site_id] = async_result
+                active_tasks["activate_site_changes"][site_id] = async_result_activate_site_changes
 
         remote_config_generation_per_site: dict[SiteId, int] = {}
         # we want to mostly parallelize the activation steps, but if one site takes longer,

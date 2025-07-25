@@ -10,6 +10,7 @@ from cmk.base.config import LoadedConfigFragment
 from cmk.base.core_config import MonitoringCore
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
+from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
@@ -33,6 +34,7 @@ def create_core(
     label_manager: LabelManager,
     loaded_config: LoadedConfigFragment,
     host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
+    snmp_plugin_store: SNMPPluginStore,
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
@@ -45,7 +47,9 @@ def create_core(
 
             return CmcPb(
                 get_licensing_handler_type(),
-                make_cmc_config(edition, matcher, label_manager, loaded_config, host_tags),
+                make_cmc_config(
+                    edition, matcher, label_manager, loaded_config, host_tags, snmp_plugin_store
+                ),
             )
         case "nagios":
             from cmk.base.core_nagios import NagiosCore

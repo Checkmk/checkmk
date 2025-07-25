@@ -22,6 +22,7 @@ from cmk.base.core_factory import create_core
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, ConfiguredService
+from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import ip_lookup, password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels, LabelSources
@@ -75,6 +76,7 @@ def test_do_create_config_nagios(
             core_scenario.label_manager,
             replace(EMPTY_CONFIG, monitoring_core="nagios"),
             core_scenario.host_tags.tags,
+            snmp_plugin_store=SNMPPluginStore(),
         ),
         core_scenario,
         core_scenario.hosts_config,
@@ -123,6 +125,7 @@ def test_do_create_config_nagios_collects_passwords(
             core_scenario.label_manager,
             replace(EMPTY_CONFIG, monitoring_core="nagios"),
             core_scenario.host_tags.tags,
+            snmp_plugin_store=SNMPPluginStore(),
         ),
         core_scenario,
         core_scenario.hosts_config,

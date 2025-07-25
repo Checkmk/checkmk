@@ -112,6 +112,7 @@ from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
+from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.ccc import tty, version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
@@ -1120,6 +1121,7 @@ def _execute_autodiscovery(
         loading_result.config_cache.label_manager,
         loading_result.loaded_config,
         loading_result.config_cache.host_tags.tags,
+        make_plugin_store(ab_plugins),
     )
     with config.set_use_core_config(
         autochecks_dir=autochecks_dir,
@@ -2501,6 +2503,7 @@ def _execute_silently(
                     config_cache.label_manager,
                     loaded_config,
                     config_cache.host_tags.tags,
+                    make_plugin_store(plugins),
                 ),
                 plugins,
                 action=action,

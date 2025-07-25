@@ -49,6 +49,7 @@ from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import Mode, modes, Option
+from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store, tty
@@ -1544,6 +1545,7 @@ def mode_update() -> None:
                     loading_result.config_cache.label_manager,
                     loading_result.loaded_config,
                     loading_result.config_cache.host_tags.tags,
+                    make_plugin_store(plugins),
                 ),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
@@ -1636,6 +1638,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
             loading_result.config_cache.label_manager,
             loading_result.loaded_config,
             loading_result.config_cache.host_tags.tags,
+            make_plugin_store(plugins),
         ),
         plugins,
         hosts_to_update=set(args) if args else None,
@@ -1715,6 +1718,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
             loading_result.config_cache.label_manager,
             loading_result.loaded_config,
             loading_result.config_cache.host_tags.tags,
+            make_plugin_store(plugins),
         ),
         plugins,
         hosts_to_update=set(args) if args else None,

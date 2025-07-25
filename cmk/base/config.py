@@ -619,6 +619,8 @@ class LoadedConfigFragment:
     cmc_graphite_host_metrics: Sequence[RuleSpec[Sequence[str]]]
     cmc_graphite_service_metrics: Sequence[RuleSpec[Sequence[str]]]
     cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]]
+    cmc_log_levels: Mapping[str, int]
+    cluster_max_cachefile_age: int
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -760,6 +762,8 @@ def _perform_post_config_loading_actions(
         cmc_graphite_host_metrics=cmc_graphite_host_metrics,
         cmc_graphite_service_metrics=cmc_graphite_service_metrics,
         cmc_influxdb_service_metrics=cmc_influxdb_service_metrics,
+        cmc_log_levels=cmc_log_levels,
+        cluster_max_cachefile_age=cluster_max_cachefile_age,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()

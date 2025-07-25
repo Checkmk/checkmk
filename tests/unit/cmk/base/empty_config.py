@@ -66,6 +66,19 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_graphite_host_metrics=[],
     cmc_graphite_service_metrics=[],
     cmc_influxdb_service_metrics=[],
+    cmc_log_levels={
+        "cmk.alert": 5,
+        "cmk.carbon": 5,
+        "cmk.core": 5,
+        "cmk.downtime": 5,
+        "cmk.helper": 5,
+        "cmk.livestatus": 5,
+        "cmk.notification": 5,
+        "cmk.rrd": 5,
+        "cmk.influxdb": 5,
+        "cmk.smartping": 5,
+    },
+    cluster_max_cachefile_age=90,
 )
 
 

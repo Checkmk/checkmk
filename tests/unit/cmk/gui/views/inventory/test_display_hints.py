@@ -9,7 +9,12 @@ import pytest
 
 import cmk.gui.inventory
 import cmk.gui.utils
-from cmk.gui.inventory.filters import FilterInvtableText, FilterInvtableVersion
+from cmk.gui.inventory.filters import (
+    FilterInvtableIntegerRange,
+    FilterInvtableOperStatus,
+    FilterInvtableText,
+    FilterInvtableVersion,
+)
 from cmk.gui.num_split import cmp_version
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
@@ -720,7 +725,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Software packages ➤ Package version",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
-                filter_class=FilterInvtableText,
+                filter_class=FilterInvtableVersion,
             ),
         ),
         (
@@ -744,7 +749,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Network interfaces ➤ Index",
                 paint_function=inv_paint_number,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter_class=FilterInvtableIntegerRange,
             ),
         ),
         (
@@ -756,7 +761,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=FilterInvtableText,
+                filter_class=FilterInvtableOperStatus,
             ),
         ),
     ],
@@ -770,9 +775,10 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
-    assert hint.long_inventory_title == expected.long_inventory_title
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
+    assert hint.filter_class == expected.filter_class
+    assert hint.long_inventory_title == expected.long_inventory_title
 
 
 @pytest.mark.parametrize(
@@ -826,13 +832,13 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     hint = inv_display_hints.get_node_hint(path).get_attribute_hint(key)
     assert hint.ident == expected.ident
     assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
-    assert hint.long_inventory_title == expected.long_inventory_title
+    assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
     assert hint.data_type == expected.data_type
     assert hint.is_show_more == expected.is_show_more
+    assert hint.long_inventory_title == expected.long_inventory_title
 
 
 @pytest.mark.parametrize(
@@ -841,7 +847,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".foo.bar",
             AttributeDisplayHint(
-                ident="invfoo_bar",
+                ident="inv_foo_bar",
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
@@ -854,7 +860,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
-                ident="invhardware_cpu_product",
+                ident="inv_hardware_cpu_arch",
                 title="CPU architecture",
                 short_title="CPU architecture",
                 long_title="Processor ➤ CPU architecture",
@@ -867,7 +873,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.system.product",
             AttributeDisplayHint(
-                ident="invhardware_system_product",
+                ident="inv_hardware_system_product",
                 title="Product",
                 short_title="Product",
                 long_title="System ➤ Product",
@@ -886,13 +892,15 @@ def test_make_attribute_displayhint_from_hint(
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )
+    assert hint.ident == expected.ident
+    assert hint.title == expected.title
+    assert hint.long_title == expected.long_title
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    assert hint.title == expected.title
-    assert hint.long_title == expected.long_title
-    assert hint.long_inventory_title == expected.long_inventory_title
+    assert hint.data_type == expected.data_type
     assert hint.is_show_more == expected.is_show_more
+    assert hint.long_inventory_title == expected.long_inventory_title
 
 
 @pytest.mark.parametrize(

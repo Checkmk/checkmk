@@ -133,7 +133,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
             return super().breadcrumb()
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             title=_("Configuration"),
             breadcrumb=breadcrumb,
@@ -211,7 +211,7 @@ class ModeEditConfigurationBundles(WatoMode):
         raise MKGeneralException("Not implemented bundle group type")
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -653,7 +653,7 @@ class ModeConfigurationBundle(WatoMode):
             )
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Actions"), breadcrumb, form_name="edit_bundle", button_name="_save"
         )

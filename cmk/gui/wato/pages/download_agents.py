@@ -55,7 +55,7 @@ class ABCModeDownloadAgents(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["download_agents"]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

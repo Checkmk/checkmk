@@ -98,7 +98,7 @@ class ModeBulkImport(WatoMode):
     def title(self) -> str:
         return _("Bulk host import")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("file_id"):
             return make_simple_form_page_menu(
                 _("Hosts"),

@@ -385,7 +385,7 @@ class ModeBIEditPack(ABCBIMode):
 
         return redirect(mode_url("bi_packs"))
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("BI pack"),
             breadcrumb,
@@ -494,7 +494,7 @@ class ModeBIPacks(ABCBIMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         bi_config_entries = []
         if user.may("wato.bi_admin"):
             bi_config_entries.append(
@@ -705,7 +705,7 @@ class ModeBIRules(ABCBIMode):
             return self.title_for_pack(self.bi_pack) + " - " + _("Rules")
         return self.title_for_pack(self.bi_pack) + " - " + _("Unused Rules")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         rules_entries = []
         if is_contact_for_pack(self.bi_pack):
             rules_entries.append(
@@ -1163,7 +1163,7 @@ class ModeBIEditRule(ABCBIMode):
             return _("Add BI Rule")
         return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Rule"),
             breadcrumb,
@@ -1729,7 +1729,7 @@ class BIModeEditAggregation(ABCBIMode):
             return _("Add Aggregation")
         return _("Edit Aggregation")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Aggregation"),
             breadcrumb,
@@ -2117,7 +2117,7 @@ class BIModeAggregations(ABCBIMode):
             )
         self._bi_packs.save_config()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         aggr_entries = []
         if self.have_rules() and is_contact_for_pack(self.bi_pack):
             aggr_entries.append(
@@ -2377,7 +2377,7 @@ class ModeBIRuleTree(ABCBIMode):
             self.title_for_pack(self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
         )
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
     def page(self, config: Config) -> None:

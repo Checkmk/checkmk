@@ -140,7 +140,7 @@ class ModeCertificateOverview(WatoMode):
             if path.exists()
         ]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

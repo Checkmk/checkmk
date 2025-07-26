@@ -122,7 +122,7 @@ class ModeTags(ABCTagMode):
     def title(self) -> str:
         return _("Tag groups")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -717,7 +717,7 @@ class ModeEditAuxtag(ABCEditTagMode):
             return _("Add auxiliary tag")
         return _("Edit auxiliary tag")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Tag"), breadcrumb, form_name="aux_tag", button_name="_save"
         )
@@ -806,7 +806,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             return _("Add tag group")
         return _("Edit tag group")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Tag group"), breadcrumb, form_name="tag_group", button_name="_save"
         )

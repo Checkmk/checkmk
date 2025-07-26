@@ -169,7 +169,7 @@ class ModeRevertChanges(WatoMode):
     def title(self) -> str:
         return _("Revert changes")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -394,7 +394,7 @@ class ModeActivateChanges(WatoMode):
     def title(self) -> str:
         return _("Activate pending changes")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         self._select_sites_with_pending_changes(active_config.sites)
         return PageMenu(
             dropdowns=[

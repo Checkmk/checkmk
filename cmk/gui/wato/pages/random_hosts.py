@@ -45,7 +45,7 @@ class ModeRandomHosts(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Hosts"), breadcrumb, form_name="random", button_name="_save", save_title=_("Start!")
         )

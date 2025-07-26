@@ -156,7 +156,7 @@ class WatoMode(abc.ABC):
         )
         yield from main_module.additional_breadcrumb_items()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)
 

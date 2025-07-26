@@ -426,7 +426,7 @@ class PageBackup:
         super().__init__()
         self.key_store = key_store
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -696,7 +696,7 @@ class PageEditBackupJob:
     def title(self) -> str:
         return self._title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
         )
@@ -935,7 +935,7 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
     @abc.abstractmethod
     def job(self) -> _TBackupJob: ...
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
     def page(self, config: Config) -> None:
@@ -1586,7 +1586,7 @@ class PageBackupTargets:
     def title(self) -> str:
         return _("Site backup targets")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1675,7 +1675,7 @@ class PageEditBackupTarget:
     def title(self) -> str:
         return self._title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
         )
@@ -1998,7 +1998,7 @@ class PageBackupRestore:
             return _("Site restore")
         return _("Restore from target: %s") % self._target.title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

@@ -110,7 +110,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
         super().__init__()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Host"), breadcrumb)
         menu.dropdowns.insert(
             0,
@@ -449,7 +449,7 @@ class ModeEditHost(ABCHostMode):
     def title(self) -> str:
         return _("Properties of host") + " " + self._host.name()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

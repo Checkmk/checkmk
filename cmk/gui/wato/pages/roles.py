@@ -86,7 +86,7 @@ class ModeRoles(WatoMode):
     def title(self) -> str:
         return _("Roles & permissions")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -313,7 +313,7 @@ class ModeEditRole(WatoMode):
     def title(self) -> str:
         return _("Edit role %s") % self._role_id
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Role"), breadcrumb, form_name="role", button_name="_save"
         )
@@ -503,7 +503,7 @@ class ModeRoleMatrix(WatoMode):
     def title(self) -> str:
         return _("Permission matrix")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(breadcrumb=breadcrumb, inpage_search=PageMenuSearch())
 
     def page(self, config: Config) -> None:

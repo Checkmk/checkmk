@@ -78,7 +78,7 @@ class ModeAuditLog(WatoMode):
     def title(self) -> str:
         return _("Audit log")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(

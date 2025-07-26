@@ -83,7 +83,7 @@ class ModeParentScan(WatoMode):
         return ModeFolder
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Parent scan"), breadcrumb)
         menu.dropdowns.insert(
             0,

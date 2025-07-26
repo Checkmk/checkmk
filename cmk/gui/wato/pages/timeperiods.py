@@ -215,7 +215,7 @@ class ModeTimeperiods(WatoMode):
     def title(self) -> str:
         return _("Time periods")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -355,7 +355,7 @@ class ModeTimeperiodImportICal(WatoMode):
             return _("Add time period")
         return _("Import iCalendar File to create a time period")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.var("upload"):
             return make_simple_form_page_menu(
                 _("iCalendar"),
@@ -364,7 +364,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 button_name="upload",
                 save_title=_("Import"),
             )
-        return ModeEditTimeperiod().page_menu(breadcrumb)
+        return ModeEditTimeperiod().page_menu(config, breadcrumb)
 
     def _vs_ical(self) -> Dictionary:
         return Dictionary(
@@ -544,7 +544,7 @@ class ModeEditTimeperiod(WatoMode):
     def title(self) -> str:
         return _("Add time period") if self._name is None else _("Edit time period")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Time period"), breadcrumb, form_name="timeperiod", button_name="_save"
         )

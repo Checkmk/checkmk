@@ -122,7 +122,7 @@ class ModePatternEditor(WatoMode):
             return _("Log file patterns of host %s") % (self._hostname)
         return _("Log file patterns of log file %s on host %s") % (self._item, self._hostname)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(

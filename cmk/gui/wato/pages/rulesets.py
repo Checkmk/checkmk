@@ -471,7 +471,7 @@ class ModeRuleSearch(ABCRulesetMode):
         else:
             raise NotImplementedError()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -707,7 +707,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             rulegroup.doc_references if isinstance(rulegroup, RulespecGroup) else {}
         )
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1006,7 +1006,7 @@ class ModeEditRuleset(WatoMode):
 
         return title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1693,7 +1693,7 @@ class ModeRuleSearchForm(WatoMode):
             return _("Refine search")
         return _("Search rulesets and rules")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Search"),
             breadcrumb,
@@ -2065,7 +2065,7 @@ class ABCEditRuleMode(WatoMode):
     def title(self) -> str:
         return _("Edit rule: %s") % self._rulespec.title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule"),
             breadcrumb,
@@ -3319,7 +3319,7 @@ class ModeExportRule(ABCEditRuleMode):
                 onclick=f"cmk.utils.copy_dom_element_content_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg)})",
             )
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=list(self._page_menu_dropdowns()),
             breadcrumb=breadcrumb,
@@ -3403,7 +3403,7 @@ class ModeUnknownRulesets(WatoMode):
     def title(self) -> str:
         return _("Unknown rulesets")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

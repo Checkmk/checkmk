@@ -205,7 +205,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         """
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -422,7 +422,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             return _("Add %s") % self._mode_type.name_singular()
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Actions"), breadcrumb, form_name="edit", button_name="_save"
         )

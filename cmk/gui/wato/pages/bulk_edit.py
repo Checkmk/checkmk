@@ -73,7 +73,7 @@ class ModeBulkEdit(WatoMode):
         return _("Bulk edit hosts")
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Hosts"), breadcrumb, form_name="edit_host", button_name="_save"
         )
@@ -182,7 +182,7 @@ class ModeBulkCleanup(WatoMode):
         return _("Bulk removal of explicit attributes")
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         hosts = get_hosts_from_checkboxes(self._folder)
 
         return make_simple_form_page_menu(

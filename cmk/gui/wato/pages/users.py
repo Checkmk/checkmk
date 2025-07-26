@@ -136,7 +136,7 @@ class ModeUsers(WatoMode):
         # "Users" topic to the breadcrumb. Else we get "Users > Users"
         return ()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         topics = (
             [
                 PageMenuTopic(
@@ -717,7 +717,7 @@ class ModeEditUser(WatoMode):
             return _("Add user")
         return _("Edit user %s") % self._user_id
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("User"), breadcrumb, form_name="user", button_name="_save"
         )

@@ -97,7 +97,7 @@ class ModeObjectParameters(WatoMode):
             title += " / " + self._service
         return title
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

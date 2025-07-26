@@ -81,8 +81,8 @@ class ModeCheckPlugins(WatoMode):
     def title(self) -> str:
         return _("Catalog of check plug-ins")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = super().page_menu(breadcrumb)
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = super().page_menu(config, breadcrumb)
         menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
@@ -543,7 +543,7 @@ class ModeCheckManPage(WatoMode):
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plug-in is not in use.
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if self._check_plugin_name.startswith("check_"):
             command = "check_mk_active-" + self._check_plugin_name[6:]
         else:

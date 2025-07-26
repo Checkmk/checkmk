@@ -116,7 +116,7 @@ class ModeBulkDiscovery(WatoMode):
         return _("Bulk discovery")
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Discovery"),
             breadcrumb,

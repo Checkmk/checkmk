@@ -126,7 +126,7 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> Non
             user_errors.add(MKUserError(None, e.args[0]))
 
     breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
-    page_menu = mode.page_menu(breadcrumb)
+    page_menu = mode.page_menu(config, breadcrumb)
     wato_html_head(
         title=mode.title(),
         breadcrumb=breadcrumb,

@@ -327,7 +327,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             return user.may("wato.add_or_modify_executables")
         return True
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Setting"), breadcrumb, form_name="value_editor", button_name="_save"
         )
@@ -546,7 +546,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             return _("Global settings matching '%s'") % self._search
         return _("Global settings")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
         dropdowns.append(

@@ -125,7 +125,7 @@ class PageKeyManagement:
     def name(cls) -> str:
         raise NotImplementedError()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._may_edit_config():
             return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
@@ -261,7 +261,7 @@ class PageEditKey:
         self._minlen = 12
         self.key_store = key_store
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
         )
@@ -358,7 +358,7 @@ class PageUploadKey:
         super().__init__()
         self.key_store = key_store
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
         )
@@ -518,7 +518,7 @@ class PageDownloadKey:
         super().__init__()
         self.key_store = key_store
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
         )

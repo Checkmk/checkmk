@@ -183,7 +183,7 @@ class ModeFolder(WatoMode):
         return make_folder_breadcrumb(self._folder)
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
             return self._search_folder_page_menu(breadcrumb)
         assert not isinstance(self._folder, SearchFolder)
@@ -1392,7 +1392,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         is_enabled = (
             self._is_new
             or not folder_from_request(

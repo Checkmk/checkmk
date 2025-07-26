@@ -716,7 +716,7 @@ class ModeNotifications(ABCNotificationsMode):
     def title(self) -> str:
         return _("Notifications")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1211,7 +1211,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
     def title(self) -> str:
         return _("Analyze recent notifications")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1576,7 +1576,7 @@ class ModeTestNotifications(ModeNotifications):
     def title(self) -> str:
         return _("Test notifications")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2553,7 +2553,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         except ValueError as e:
             raise MKUserError("user", str(e))
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2621,7 +2621,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def main_menu(self) -> MainMenu:
         return main_menu_registry.menu_user()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -3198,7 +3198,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Notification rule"), breadcrumb, form_name="rule", button_name="_save"
         )
@@ -3462,7 +3462,7 @@ class ModeNotificationParametersOverview(WatoMode):
     def title(self) -> str:
         return _("Parameters for notification methods")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -3662,7 +3662,7 @@ class ABCNotificationParameterMode(WatoMode):
             return convert_to_legacy_valuespec(plugin.parameter_form(), _)
         return plugin.spec()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Notification parameter"),
             breadcrumb,
@@ -3778,7 +3778,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             return _("Created new notification parameter")
         return _("Changed notification parameter %d") % edit_nr
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -4131,7 +4131,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         with request.stashed_vars():
             return super().breadcrumb()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             title=_("Notification rule"),
             breadcrumb=breadcrumb,

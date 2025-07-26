@@ -84,7 +84,7 @@ class ModeGroups(WatoMode, abc.ABC):
         super().__init__()
         self._groups = self._load_groups()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -294,7 +294,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _show_extra_page_elements(self) -> None:
         pass
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Group"), breadcrumb, form_name="group", button_name="_save"
         )

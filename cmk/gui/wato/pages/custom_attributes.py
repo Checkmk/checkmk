@@ -133,7 +133,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def title(self) -> str:
         raise NotImplementedError()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Attribute"), breadcrumb, form_name="attr", button_name="_save"
         )
@@ -459,7 +459,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def _update_config(self, *, pprint_value: bool) -> None:
         raise NotImplementedError()
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

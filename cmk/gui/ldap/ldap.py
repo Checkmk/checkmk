@@ -705,7 +705,7 @@ class ModeLDAPConfig(WatoMode):
         return _("LDAP connections")
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return add_connections_page_menu(
             title=self.title(),
             edit_mode_path="edit_ldap_connection",
@@ -798,7 +798,7 @@ class ModeEditLDAPConnection(WatoMode):
         return _("Edit LDAP connection: %s") % self._connection_id
 
     @override
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"),
             breadcrumb,

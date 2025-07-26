@@ -1742,7 +1742,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     def title(self) -> str:
         return _("Event Console rule packs")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2257,7 +2257,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def title(self) -> str:
         return _("Rule pack %s") % self._rule_pack["title"]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2699,7 +2699,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             return _("Add rule pack")
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="_save"
         )
@@ -2853,7 +2853,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             return _("Add rule")
         return _("Edit rule %s") % list(self._rule_pack["rules"])[self._edit_nr]["id"]
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule"), breadcrumb, form_name="rule", button_name="_save"
         )
@@ -3011,7 +3011,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def title(self) -> str:
         return _("Local server status")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -3147,7 +3147,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             return html_escape(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -3286,7 +3286,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def title(self) -> str:
         return _("SNMP MIBs for trap translation")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -3480,7 +3480,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def title(self) -> str:
         return _("Upload SNMP MIBs")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("MIBs"),
             breadcrumb,

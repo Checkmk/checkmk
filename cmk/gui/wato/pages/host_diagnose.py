@@ -99,7 +99,7 @@ class ModeDiagHost(WatoMode):
     def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(

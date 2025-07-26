@@ -253,7 +253,7 @@ class ModeEditSite(WatoMode):
         assert self._site_id is not None
         return self.mode_url(site=self._site_id)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="site", button_name="_save"
         )
@@ -692,7 +692,7 @@ class ModeEditBrokerConnection(WatoMode):
         assert self._edit_id is not None
         return self.mode_url(site=self._edit_id)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="broker_connection", button_name="_save"
         )
@@ -845,7 +845,7 @@ class ModeDistributedMonitoring(WatoMode):
     def title(self) -> str:
         return _("Distributed monitoring")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1596,7 +1596,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(site=self._site_id)
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 _page_menu_dropdown_site_details(
@@ -1793,7 +1793,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def title(self) -> str:
         return _("Livestatus encryption of %s") % self._site_id
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 _page_menu_dropdown_site_details(

@@ -117,7 +117,8 @@ from cmk.server_side_calls_backend import (
     SSCRules,
 )
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
-from cmk.snmplib import (  # these are required in the modules' namespace to load the configuration!
+from cmk.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
+    parse_oid_range_config,
     SNMPBackendEnum,
     SNMPContextConfig,
     SNMPCredentials,
@@ -1826,14 +1827,11 @@ class ConfigCache:
                 ),
                 bulk_walk_size_of=self._bulk_walk_size(host_name),
                 timing=self._snmp_timing(host_name),
-                oid_range_limits={
-                    SectionName(name): rule
-                    for name, rule in reversed(
-                        self.ruleset_matcher.get_host_values_all(
-                            host_name, snmp_limit_oid_range, self.label_manager.labels_of_host
-                        )
+                oid_range_limits=parse_oid_range_config(
+                    self.ruleset_matcher.get_host_values_all(
+                        host_name, snmp_limit_oid_range, self.label_manager.labels_of_host
                     )
-                },
+                ),
                 snmpv3_contexts=[
                     SNMPContextConfig(
                         section=SectionName(name) if name is not None else None,

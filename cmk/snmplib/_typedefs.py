@@ -26,6 +26,26 @@ SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
 
 
+def parse_oid_range_config(
+    rule_values: Sequence[object],
+) -> Mapping[SectionName, Sequence[RangeLimit]]:
+    """Parse the OID range limits from the given config values."""
+    return {
+        SectionName(str(v[0])): [_parse_range_limit(l) for l in v[1]]
+        for v in reversed(rule_values)
+        if isinstance(v, tuple)
+    }
+
+
+def _parse_range_limit(raw: object) -> RangeLimit:
+    match raw:
+        case ("first" | "last" as position, int(limit)):
+            return position, limit
+        case ("mid", tuple((int(), int())) as oid_range):
+            return "mid", oid_range
+    raise ValueError(raw)
+
+
 class SNMPContextTimeout(MKSNMPError):
     pass
 

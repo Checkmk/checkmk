@@ -11,7 +11,7 @@ from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.fetchers import IPMICredentials
 from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
-from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
+from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
@@ -88,7 +88,7 @@ snmp_backend_hosts: list[RuleSpec[object]] = []
 non_inline_snmp_hosts: list[RuleSpec[object]] = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
-snmp_limit_oid_range: list[RuleSpec[tuple[str, Sequence[RangeLimit]]]] = []
+snmp_limit_oid_range: Sequence[RuleSpec[object]] = []
 # Ruleset to customize bulk size
 snmp_bulk_size: list[RuleSpec[int]] = []
 snmp_default_community = "public"

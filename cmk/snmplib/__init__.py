@@ -19,6 +19,7 @@ from ._typedefs import ensure_str as ensure_str
 from ._typedefs import OID as OID
 from ._typedefs import OIDRange as OIDRange
 from ._typedefs import OIDSpecLike as OIDSpecLike
+from ._typedefs import parse_oid_range_config as parse_oid_range_config
 from ._typedefs import RangeLimit as RangeLimit
 from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum

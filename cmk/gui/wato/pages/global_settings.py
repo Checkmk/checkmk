@@ -139,7 +139,7 @@ class ABCGlobalSettingsMode(WatoMode):
             return False
 
         if isinstance(domain, ConfigDomainCore) and varname not in self._default_values:
-            if active_config.debug:
+            if debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
                     "your local Checkmk installation" % varname

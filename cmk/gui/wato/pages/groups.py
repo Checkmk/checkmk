@@ -175,7 +175,9 @@ class ModeGroups(WatoMode, abc.ABC):
     def _collect_additional_data(self) -> None:
         pass
 
-    def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
+    def _show_row_cells(
+        self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
+    ) -> None:
         table.cell("#", css=["narrow nowrap"])
         html.write_text_permissive(nr)
 
@@ -211,7 +213,7 @@ class ModeGroups(WatoMode, abc.ABC):
                 sorted(self._groups.items(), key=lambda x: x[1]["alias"])
             ):
                 table.row()
-                self._show_row_cells(nr, table, name, group)
+                self._show_row_cells(nr, table, name, group, config)
 
 
 class ABCModeEditGroup(WatoMode, abc.ABC):
@@ -427,8 +429,10 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get("alias", userid)))
 
-    def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
-        super()._show_row_cells(nr, table, name, group)
+    def _show_row_cells(
+        self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
+    ) -> None:
+        super()._show_row_cells(nr, table, name, group, config)
         table.cell(_("Members"))
         html.write_html(
             HTML.without_escaping(", ").join(

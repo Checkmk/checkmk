@@ -276,14 +276,16 @@ class PageEditKey:
             # leak the secret information
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
-            self._create_key(value["alias"], PasswordType(value["passphrase"]))
+            self._create_key(
+                value["alias"], PasswordType(value["passphrase"]), use_git=config.wato_use_git
+            )
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py")
             )
         return None
 
     def _create_key(
-        self, alias: str, passphrase: PasswordType, default_key_size: int = 4096
+        self, alias: str, passphrase: PasswordType, *, use_git: bool, default_key_size: int = 4096
     ) -> None:
         keys = self.key_store.load()
 

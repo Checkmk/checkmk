@@ -22,7 +22,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
@@ -168,6 +168,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         text: str,
         user_id: UserId | None,
         affected_sites: list[SiteId] | None,
+        use_git: bool,
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
         _changes.add_change(
@@ -176,7 +177,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
             user_id=user_id,
             domains=self._mode_type.affected_config_domains(),
             sites=affected_sites,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
 
@@ -275,6 +276,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
             user_id=user.id,
             affected_sites=self._mode_type.affected_sites(entry),
+            use_git=config.wato_use_git,
         )
         self._store.save(entries, pprint_value=config.wato_pprint_config)
 
@@ -731,6 +733,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
                 user_id=user.id,
                 affected_sites=self._mode_type.affected_sites(self._entry),
+                use_git=config.wato_use_git,
             )
         else:
             current_sites = self._mode_type.affected_sites(self._entry)
@@ -749,14 +752,15 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
                 user_id=user.id,
                 affected_sites=affected_sites,
+                use_git=config.wato_use_git,
             )
 
-        self._save(entries)
+        self._save(entries, pprint_value=config.wato_pprint_config)
 
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
-    def _save(self, entries: dict[str, _T]) -> None:
-        self._store.save(entries, pprint_value=active_config.wato_pprint_config)
+    def _save(self, entries: dict[str, _T], *, pprint_value: bool) -> None:
+        self._store.save(entries, pprint_value=pprint_value)
 
     def page(self, config: Config, form_name: str = "edit") -> None:
         html.enable_help_toggle()

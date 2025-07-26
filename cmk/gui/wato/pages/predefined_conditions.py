@@ -281,14 +281,14 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             ),
         ]
 
-    def _save(self, entries: dict[str, PredefinedConditionSpec]) -> None:
+    def _save(self, entries: dict[str, PredefinedConditionSpec], *, pprint_value: bool) -> None:
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
         old_path = None
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super()._save(entries)
+        super()._save(entries, pprint_value=pprint_value)
 
         assert self._ident is not None
         conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])

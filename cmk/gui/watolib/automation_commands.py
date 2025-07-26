@@ -10,6 +10,8 @@ from collections.abc import Mapping
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
@@ -24,7 +26,7 @@ class AutomationCommand[T](ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_request(self) -> T:
+    def get_request(self, config: Config, request: Request) -> T:
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -49,7 +51,7 @@ class AutomationPing(AutomationCommand[None]):
     def command_name(self) -> str:
         return "ping"
 
-    def get_request(self) -> None:
+    def get_request(self, config: Config, request: Request) -> None:
         return None
 
     def _parse_omd_status(self, raw_status: str) -> OMDStatus:

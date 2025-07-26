@@ -26,10 +26,10 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
@@ -538,7 +538,7 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
         return "start-quick-setup-stage-action"
 
     @override
-    def get_request(self) -> QuickSetupStageActionJobArgs:
+    def get_request(self, config: Config, request: Request) -> QuickSetupStageActionJobArgs:
         api_request = request.get_request()
         return QuickSetupStageActionJobArgs.model_validate_json(api_request["args"])
 
@@ -562,7 +562,7 @@ class AutomationQuickSetupStageActionResult(AutomationCommand[str]):
         return "fetch-quick-setup-stage-action-result"
 
     @override
-    def get_request(self) -> str:
+    def get_request(self, config: Config, request: Request) -> str:
         job_id = request.get_request()["job_id"]
         assert isinstance(job_id, str)
         return job_id

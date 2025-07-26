@@ -18,8 +18,9 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
+from cmk.gui.config import Config
 from cmk.gui.exceptions import RequestTimeout
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
@@ -248,7 +249,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
     def command_name(self) -> str:
         return "push-profiles"
 
-    def get_request(self) -> PushUserProfilesRequest:
+    def get_request(self, config: Config, request: Request) -> PushUserProfilesRequest:
         return PushUserProfilesRequest(
             ast.literal_eval(request.get_str_input_mandatory("profiles")),
             ast.literal_eval(request.get_str_input_mandatory("visuals", None)),

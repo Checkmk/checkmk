@@ -27,7 +27,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -235,7 +235,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
     def command_name(self) -> str:
         return "service-discovery-job-snapshot"
 
-    def get_request(self) -> HostName:
+    def get_request(self, config: Config, request: Request) -> HostName:
         return request.get_validated_type_input_mandatory(HostName, "hostname")
 
     def execute(self, api_request: HostName) -> str:
@@ -253,7 +253,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
     def command_name(self) -> str:
         return "service-discovery-job"
 
-    def get_request(self) -> _AutomationServiceDiscoveryRequest:
+    def get_request(self, config: Config, request: Request) -> _AutomationServiceDiscoveryRequest:
         host_name = request.get_validated_type_input_mandatory(HostName, "host_name")
         options = json.loads(request.get_ascii_input_mandatory("options"))
         action = DiscoveryAction(options["action"])

@@ -3209,7 +3209,7 @@ class AutomationGetConfigSyncState(AutomationCommand[list[ReplicationPath]]):
     def command_name(self) -> str:
         return "get-config-sync-state"
 
-    def get_request(self) -> list[ReplicationPath]:
+    def get_request(self, config: Config, request: Request) -> list[ReplicationPath]:
         return [
             ReplicationPath.deserialize(e)
             for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
@@ -3385,16 +3385,16 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
     def command_name(self) -> str:
         return "receive-config-sync"
 
-    def get_request(self) -> ReceiveConfigSyncRequest:
-        site_id = SiteId(_request.get_ascii_input_mandatory("site_id"))
-        verify_remote_site_config(active_config.sites, site_id)
+    def get_request(self, config: Config, request: Request) -> ReceiveConfigSyncRequest:
+        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
+        verify_remote_site_config(config.sites, site_id)
 
         return ReceiveConfigSyncRequest(
             site_id,
-            _request.uploaded_file("sync_archive")[2],
-            ast.literal_eval(_request.get_str_input_mandatory("to_delete")),
-            _request.get_integer_input_mandatory("config_generation"),
-            active_config.wato_use_git,
+            request.uploaded_file("sync_archive")[2],
+            ast.literal_eval(request.get_str_input_mandatory("to_delete")),
+            request.get_integer_input_mandatory("config_generation"),
+            config.wato_use_git,
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:

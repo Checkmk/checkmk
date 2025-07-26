@@ -15,7 +15,7 @@ from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
@@ -81,7 +81,7 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()
 
-    def get_request(self) -> int:
+    def get_request(self, config: Config, request: Request) -> int:
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
@@ -99,7 +99,7 @@ class AutomationClearSiteChanges(AutomationCommand[str]):
                     break
             site_entries[:] = site_entries[keep_idx:]
 
-    def get_request(self) -> str:
+    def get_request(self, config: Config, request: Request) -> str:
         return request.get_str_input_mandatory("last_change_id")
 
 

@@ -163,23 +163,23 @@ class PageAutomation(AjaxPage):
             if lock_config
             else nullcontext()
         ):
-            self._execute_automation(debug=config.debug)
+            self._execute_automation(config)
         return None
 
-    def _execute_automation(self, *, debug: bool) -> None:
+    def _execute_automation(self, config: Config) -> None:
         with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
-                self._execute_cmk_automation(debug=debug)
+                self._execute_cmk_automation(debug=config.debug)
                 return
             if self._command == "push-profile":
-                self._execute_push_profile(debug=debug)
+                self._execute_push_profile(debug=config.debug)
                 return
             try:
                 automation_command = automation_command_registry[self._command]
             except KeyError:
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-            self._execute_automation_command(automation_command, debug=debug)
+            self._execute_automation_command(automation_command, config)
 
     @staticmethod
     def _format_cmk_automation_result(
@@ -267,15 +267,15 @@ class PageAutomation(AjaxPage):
         return True
 
     def _execute_automation_command(
-        self, automation_command: type[AutomationCommand], *, debug: bool
+        self, automation_command: type[AutomationCommand], config: Config
     ) -> None:
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             automation = automation_command()
-            response.set_data(repr(automation.execute(automation.get_request())))
+            response.set_data(repr(automation.execute(automation.get_request(config, request))))
         except Exception as e:
             logger.exception("error executing automation command")
-            if debug:
+            if config.debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 

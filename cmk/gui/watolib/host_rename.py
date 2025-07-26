@@ -21,8 +21,9 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.gui import userdb
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri
@@ -481,7 +482,7 @@ class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkReques
     def execute(self, api_request: _RenameHostsUUIDLinkRequest) -> int:
         return len(get_uuid_link_manager().rename(api_request.renamings))
 
-    def get_request(self) -> _RenameHostsUUIDLinkRequest:
+    def get_request(self, config: Config, request: Request) -> _RenameHostsUUIDLinkRequest:
         return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))
 
 

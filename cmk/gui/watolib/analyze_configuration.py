@@ -25,8 +25,8 @@ import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui import log
-from cmk.gui.config import active_config
-from cmk.gui.http import Request, request
+from cmk.gui.config import active_config, Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.site_config import is_wato_slave_site
@@ -230,7 +230,7 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
     def command_name(self) -> str:
         return "check-analyze-config"
 
-    def get_request(self) -> _TCheckAnalyzeConfig:
+    def get_request(self, config: Config, request: Request) -> _TCheckAnalyzeConfig:
         raw_categories = request.get_request().get("categories")
         return _TCheckAnalyzeConfig(
             categories=json.loads(raw_categories) if raw_categories else None

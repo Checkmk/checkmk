@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from werkzeug import datastructures as werkzeug_datastructures
+from werkzeug.test import create_environ
 
 from livestatus import SiteConfiguration
 
@@ -21,6 +21,7 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import (
@@ -908,38 +909,30 @@ class TestAutomationReceiveConfigSync:
         assert file_to_dir.is_dir()
         assert file_to_dir.joinpath("aaa").exists()
 
-    def test_get_request(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        request_context: None,
-    ) -> None:
-        request = Request({})
-        request.set_var("site_id", "NO_SITE")
-        request.set_var("to_delete", "['x/y/z.txt', 'abc.ending', '/ä/☃/☕']")
-        request.set_var("config_generation", "123")
-        request.files = werkzeug_datastructures.ImmutableMultiDict(
-            {
-                "sync_archive": werkzeug_datastructures.FileStorage(
-                    stream=io.BytesIO(b"some data"),
-                    filename="sync_archive",
-                    name="sync_archive",
-                )
-            }
-        )
-        monkeypatch.setattr(
-            activate_changes,
-            "_request",
-            request,
-        )
-        assert (
-            activate_changes.AutomationReceiveConfigSync().get_request()
-            == activate_changes.ReceiveConfigSyncRequest(
-                site_id=SiteId("NO_SITE"),
-                sync_archive=b"some data",
-                to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
-                config_generation=123,
-                use_git=False,
+    def test_get_request(self) -> None:
+        request = Request(
+            create_environ(
+                method="POST",
+                data={
+                    "site_id": "NO_SITE",
+                    "to_delete": "['x/y/z.txt', 'abc.ending', '/ä/☃/☕']",
+                    "config_generation": "123",
+                    "sync_archive": (
+                        io.BytesIO(b"some data"),
+                        "sync_archive",
+                        "sync_archive",
+                    ),
+                },
             )
+        )
+        assert activate_changes.AutomationReceiveConfigSync().get_request(
+            Config(), request
+        ) == activate_changes.ReceiveConfigSyncRequest(
+            site_id=SiteId("NO_SITE"),
+            sync_archive=b"some data",
+            to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
+            config_generation=123,
+            use_git=False,
         )
 
 

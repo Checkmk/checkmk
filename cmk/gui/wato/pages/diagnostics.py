@@ -25,7 +25,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html, HTMLGenerator
-from cmk.gui.http import ContentDispositionType, request, response
+from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -898,7 +898,7 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
     def execute(self, api_request: str) -> bytes:
         return _get_local_diagnostics_dump_file(api_request)
 
-    def get_request(self) -> str:
+    def get_request(self, config: Config, request: Request) -> str:
         return request.get_ascii_input_mandatory("tarfile_name")
 
 

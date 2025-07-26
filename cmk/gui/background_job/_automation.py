@@ -7,7 +7,8 @@ import json
 from typing import override
 
 from cmk.gui.background_job import BackgroundJob
-from cmk.gui.http import request
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.watolib.automation_commands import AutomationCommand
 
 JOB_ID = str
@@ -21,7 +22,7 @@ class AutomationBackgroundJobSnapshot(AutomationCommand[JOB_ID]):
         return "fetch-background-job-snapshot"
 
     @override
-    def get_request(self) -> str:
+    def get_request(self, config: Config, request: Request) -> str:
         return request.get_validated_type_input_mandatory(str, "job_id")
 
     @override

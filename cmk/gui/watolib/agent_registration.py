@@ -8,7 +8,8 @@ from collections.abc import Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.http import request
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.log import logger
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -46,7 +47,7 @@ class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
     def command_name(self) -> str:
         return "remove-tls-registration"
 
-    def get_request(self) -> Sequence[HostName]:
+    def get_request(self, config: Config, request: Request) -> Sequence[HostName]:
         value = json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
         if not isinstance(value, list):
             raise MKGeneralException(f"Not a list of host names: {value}")

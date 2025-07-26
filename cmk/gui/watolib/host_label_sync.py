@@ -26,7 +26,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import wato_slave_sites
@@ -312,7 +312,7 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
     def command_name(self) -> str:
         return "discovered-host-label-sync"
 
-    def get_request(self) -> SiteRequest:
+    def get_request(self, config: Config, request: Request) -> SiteRequest:
         ascii_input = request.get_ascii_input("request")
         if ascii_input is None:
             raise MKUserError("request", _('The parameter "%s" is missing.') % "request")

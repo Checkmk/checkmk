@@ -27,7 +27,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -1080,9 +1080,9 @@ class AutomationActivateChanges(AutomationCommand[DomainRequests]):
     def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self) -> DomainRequests:
+    def get_request(self, config: Config, request: Request) -> DomainRequests:
         verify_remote_site_config(
-            active_config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
+            config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
         )
         domains = request.get_ascii_input_mandatory("domains")
         try:

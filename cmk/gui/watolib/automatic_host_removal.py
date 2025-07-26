@@ -19,7 +19,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site, wato_site_ids
@@ -287,7 +287,7 @@ class AutomationHostsForAutoRemoval(AutomationCommand[HostsForAutoRemovalRequest
         return "hosts-for-auto-removal"
 
     @override
-    def get_request(self) -> HostsForAutoRemovalRequest:
+    def get_request(self, config: Config, request: Request) -> HostsForAutoRemovalRequest:
         return HostsForAutoRemovalRequest(
             #  default is needed for 2.4 central site compability in 2.5
             debug=request.get_str_input_mandatory("debug", deflt="") == "1"

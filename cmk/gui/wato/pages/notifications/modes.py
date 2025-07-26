@@ -41,7 +41,7 @@ from cmk.gui.form_specs.vue import (
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -1531,7 +1531,7 @@ class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
     def command_name(self) -> str:
         return "notification-test"
 
-    def get_request(self) -> NotificationTestRequest:
+    def get_request(self, config: Config, request: Request) -> NotificationTestRequest:
         if (context := request.var("context")) is None:
             raise MKGeneralException(_("Context is missing"))
 

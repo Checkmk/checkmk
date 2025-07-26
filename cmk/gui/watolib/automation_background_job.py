@@ -24,7 +24,8 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.http import request
+from cmk.gui.config import Config
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -58,7 +59,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationReques
     def command_name(self) -> str:
         return "checkmk-remote-automation-start"
 
-    def get_request(self) -> CheckmkAutomationRequest:
+    def get_request(self, config: Config, request: Request) -> CheckmkAutomationRequest:
         return CheckmkAutomationRequest(
             *ast.literal_eval(request.get_ascii_input_mandatory("request"))
         )
@@ -104,7 +105,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     def command_name(self) -> str:
         return "checkmk-remote-automation-get-status"
 
-    def get_request(self) -> str:
+    def get_request(self, config: Config, request: Request) -> str:
         return ast.literal_eval(request.get_ascii_input_mandatory("request"))
 
     @staticmethod

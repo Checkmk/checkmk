@@ -28,7 +28,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html, HTMLGenerator
-from cmk.gui.http import ContentDispositionType, request, response
+from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
@@ -266,7 +266,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 
 class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
-    def get_request(self) -> FetchAgentOutputRequest:
+    def get_request(self, config: Config, request: Request) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 
         ascii_input = request.get_ascii_input("request")

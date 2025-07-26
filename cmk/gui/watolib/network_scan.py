@@ -21,7 +21,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import UserContext
@@ -200,7 +200,7 @@ class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
         return "network-scan"
 
     @override
-    def get_request(self) -> NetworkScanRequest:
+    def get_request(self, config: Config, request: Request) -> NetworkScanRequest:
         folder_path = request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))

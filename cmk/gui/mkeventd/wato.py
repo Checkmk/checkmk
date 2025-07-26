@@ -28,7 +28,12 @@ from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
-from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations
+from livestatus import (
+    LocalConnection,
+    MKLivestatusSocketError,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -325,12 +330,14 @@ def mib_dirs() -> list[tuple[Path, str]]:
     ]
 
 
-def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
+def match_event_rule(
+    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_config: SiteConfiguration
+) -> ec.MatchResult:
     if edition(cmk.utils.paths.omd_root) is Edition.CME:
         rule_customer_id = (
             rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = customer_api().get_customer_id(active_config.sites[event["site"]])
+        site_customer_id = customer_api().get_customer_id(site_config)
         if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
@@ -1509,16 +1516,12 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
 #   '----------------------------------------------------------------------'
 
 
-def _save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack]) -> None:
-    ec.save_rule_packs(
-        rule_packs, pretty_print=active_config.mkeventd_pprint_rules, path=ec.rule_pack_dir()
-    )
+def _save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack], *, pretty_print: bool) -> None:
+    ec.save_rule_packs(rule_packs, pretty_print=pretty_print, path=ec.rule_pack_dir())
 
 
-def _export_mkp_rule_pack(rule_pack: ec.ECRulePack) -> None:
-    ec.export_rule_pack(
-        rule_pack, pretty_print=active_config.mkeventd_pprint_rules, path=ec.mkp_rule_pack_dir()
-    )
+def _export_mkp_rule_pack(rule_pack: ec.ECRulePack, *, pretty_print: bool) -> None:
+    ec.export_rule_pack(rule_pack, pretty_print=pretty_print, path=ec.mkp_rule_pack_dir())
 
 
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
@@ -1531,7 +1534,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return 50
 
     def generate(self) -> None:
-        _save_mkeventd_rules([ec.default_rule_pack([])])
+        _save_mkeventd_rules([ec.default_rule_pack([])], pretty_print=True)
 
 
 # .
@@ -1555,8 +1558,8 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         self._rule_packs = list(ec.load_rule_packs())
         super().__init__()
 
-    def _verify_ec_enabled(self) -> None:
-        if not active_config.mkeventd_enabled:
+    def _verify_ec_enabled(self, *, enabled: bool) -> None:
+        if not enabled:
             raise MKUserError(None, _('The Event Console is disabled ("omd config").'))
 
     def _search_expression(self) -> str | None:
@@ -1613,14 +1616,14 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         )
         return True
 
-    def _add_change(self, action_name: str, text: str) -> None:
+    def _add_change(self, action_name: str, text: str, *, use_git: bool) -> None:
         _changes.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,
             domains=[self._config_domain],
             sites=_get_event_console_sync_sites(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
@@ -1835,9 +1838,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="delete-rule-pack",
                 text=_("Deleted rule pack %s") % rule_pack["id"],
+                use_git=config.wato_use_git,
             )
             del self._rule_packs[nr]
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
@@ -1846,14 +1850,19 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="counter-reset",
                 text=_("Reset all rule hit counters to zero"),
+                use_git=config.wato_use_git,
             )
 
         # Copy rules from master
         elif request.has_var("_copy_rules"):
-            self._copy_rules_from_master()
+            self._copy_rules_from_master(
+                connect_timeout=config.mkeventd_connect_timeout,
+                pretty_print=config.mkeventd_pprint_rules,
+            )
             self._add_change(
                 action_name="copy-rules-from-master",
                 text=_("Copied the event rules from the central site into the local configuration"),
+                use_git=config.wato_use_git,
             )
             flash(_("Copied rules from central site"))
             return redirect(self.mode_url())
@@ -1865,10 +1874,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             self._add_change(
                 action_name="move-rule-pack",
                 text=_("Changed position of rule pack %s") % rule_pack["id"],
+                use_git=config.wato_use_git,
             )
 
         # Export rule pack
@@ -1879,12 +1889,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             except KeyError:
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
-            _export_mkp_rule_pack(rule_pack)
+            _export_mkp_rule_pack(rule_pack, pretty_print=config.mkeventd_pprint_rules)
             self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             self._add_change(
                 action_name="export-rule-pack",
                 text=_("Made rule pack %s available for MKP export") % rule_pack["id"],
+                use_git=config.wato_use_git,
             )
 
         # Make rule pack non-exportable
@@ -1897,11 +1908,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             if not isinstance(rp, ec.MkpRulePackProxy):
                 raise MKUserError("_dissolve", _("rule pack was not exported"))
             self._rule_packs[nr] = rp.get_rule_pack_spec()
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             ec.remove_exported_rule_pack(self._rule_packs[nr], ec.mkp_rule_pack_dir())
             self._add_change(
                 action_name="dissolve-rule-pack",
                 text=_("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"],
+                use_git=config.wato_use_git,
             )
 
         # Reset to rule pack provided via MKP
@@ -1912,40 +1924,42 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             self._add_change(
                 action_name="reset-rule-pack",
                 text=_("Reset the rules of rule pack %s to the ones provided via MKP") % rp.id_,
+                use_git=config.wato_use_git,
             )
 
         # Synchronize modified rule pack with MKP
         elif request.has_var("_synchronize"):
             nr = request.get_integer_input_mandatory("_synchronize")
-            _export_mkp_rule_pack(self._rule_packs[nr])
+            _export_mkp_rule_pack(self._rule_packs[nr], pretty_print=config.mkeventd_pprint_rules)
             try:
                 rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
-            _save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             self._add_change(
                 action_name="synchronize-rule-pack",
                 text=_("Synchronized MKP with the modified rule pack %s") % rp.id_,
+                use_git=config.wato_use_git,
             )
 
         # Update data structure after actions
         self._rule_packs = list(ec.load_rule_packs())
         return redirect(self.mode_url())
 
-    def _copy_rules_from_master(self) -> None:
-        answer = query_ec_directly(b"REPLICATE 0")
+    def _copy_rules_from_master(self, *, connect_timeout: int, pretty_print: bool) -> None:
+        answer = query_ec_directly(b"REPLICATE 0", connect_timeout)
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
-        _save_mkeventd_rules(rule_packs)
+        _save_mkeventd_rules(rule_packs, pretty_print=pretty_print)
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
@@ -2135,7 +2149,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = match_event_rule(rule_pack, rule, event)
+                        result = match_event_rule(
+                            rule_pack, rule, event, config.sites[event["site"]]
+                        )
                         if isinstance(result, ec.MatchSuccess):
                             cancelling, groups = result.cancelling, result.match_groups
 
@@ -2351,14 +2367,19 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     self._rule_packs[self._rule_pack_nr]["rules"] = rules
 
                     if other_type_ == ec.RulePackType.exported:
-                        _export_mkp_rule_pack(other_pack)
+                        _export_mkp_rule_pack(other_pack, pretty_print=config.mkeventd_pprint_rules)
                     if type_ == ec.RulePackType.exported:
-                        _export_mkp_rule_pack(self._rule_pack)
-                    _save_mkeventd_rules(self._rule_packs)
+                        _export_mkp_rule_pack(
+                            self._rule_pack, pretty_print=config.mkeventd_pprint_rules
+                        )
+                    _save_mkeventd_rules(
+                        self._rule_packs, pretty_print=config.mkeventd_pprint_rules
+                    )
 
                     self._add_change(
                         action_name="move-rule-to-pack",
                         text=_("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]),
+                        use_git=config.wato_use_git,
                     )
                     flash(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
                     return None
@@ -2377,14 +2398,15 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change(
                 action_name="delete-rule",
                 text=_("Deleted rule %s") % rules[nr]["id"],
+                use_git=config.wato_use_git,
             )
             del rules[nr]
 
             self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
-                _export_mkp_rule_pack(self._rule_pack)
-            _save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
         if request.has_var("_move"):
@@ -2404,17 +2426,18 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
-                _export_mkp_rule_pack(self._rule_pack)
-            _save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+            _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
             self._add_change(
                 action_name="move-rule",
                 text=_("Changed position of rule %s") % rule["id"],
+                use_git=config.wato_use_git,
             )
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         search_expression = self._search_expression()
 
         found_rules: list[ec.Rule]
@@ -2436,14 +2459,18 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         if len(self._rule_packs) > 1:
             with html.form_context("move_to", method="POST"):
-                self._show_table(event, found_rules, rules)
+                self._show_table(event, found_rules, rules, config.sites)
                 html.hidden_field("_move_to", "yes")
                 html.hidden_fields()
         else:
-            self._show_table(event, found_rules, rules)
+            self._show_table(event, found_rules, rules, config.sites)
 
     def _show_table(
-        self, event: ec.Event | None, found_rules: list[ec.Rule], rules: Collection[ec.Rule]
+        self,
+        event: ec.Event | None,
+        found_rules: list[ec.Rule],
+        rules: Collection[ec.Rule],
+        site_configs: SiteConfigurations,
     ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
@@ -2497,7 +2524,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     event["host"] = cmk.utils.translations.translate_hostname(
                         eventd_configuration()["hostname_translation"], event["host"]
                     )
-                    result = match_event_rule(self._rule_pack, rule, event)
+                    result = match_event_rule(
+                        self._rule_pack, rule, event, site_configs[event["site"]]
+                    )
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:
@@ -2648,6 +2677,7 @@ def _add_change_for_sites(
     text: str,
     rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec,
     config_domain: ConfigDomainEventConsole,
+    use_git: bool,
 ) -> None:
     """If CME, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
@@ -2662,7 +2692,7 @@ def _add_change_for_sites(
         user_id=user.id,
         domains=[config_domain],
         sites=sites_,
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
     )
 
 
@@ -2757,13 +2787,13 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._rule_packs.insert(0, self._rule_pack)
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
-            _export_mkp_rule_pack(self._rule_pack)
+            _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
         elif self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
             self._rule_packs[self._edit_nr] = self._rule_pack
         else:
             self._rule_packs[self._edit_nr] = self._rule_pack
 
-        _save_mkeventd_rules(self._rule_packs)
+        _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
         if self._new:
             _add_change_for_sites(
@@ -2771,6 +2801,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 text=_("Created new rule pack with id %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
+                use_git=config.wato_use_git,
             )
         else:
             _add_change_for_sites(
@@ -2778,11 +2809,12 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 text=_("Modified rule pack %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
+                use_git=config.wato_use_git,
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         with html.form_context("rule_pack"):
             vs = self._valuespec()
             vs.render_input("rule_pack", dict(self._rule_pack))
@@ -2962,8 +2994,8 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         self._rule_pack["rules"] = rules
 
         if type_ == ec.RulePackType.exported:
-            _export_mkp_rule_pack(self._rule_pack)
-        _save_mkeventd_rules(self._rule_packs)
+            _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+        _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
         if self._new:
             _add_change_for_sites(
@@ -2971,6 +3003,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 text=("Created new event correlation rule with id %s") % rule["id"],
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
+                use_git=config.wato_use_git,
             )
         else:
             _add_change_for_sites(
@@ -2978,13 +3011,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 text=("Modified event correlation rule %s") % rule["id"],
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
+                use_git=config.wato_use_git,
             )
             # Reset hit counters of this rule
             execute_command("RESETCOUNTERS", [rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         with html.form_context("rule"):
             vs = self._valuespec(config.sites)
             vs.render_input("rule", dict(self._rule))
@@ -3047,7 +3081,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return None
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
 
         warning = _("The Event Console Daemon is currently not running. ")
         warning += _(
@@ -3198,6 +3232,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._add_change(
             action_name="edit-configvar",
             text=msg,
+            use_git=config.wato_use_git,
         )
 
         if action == "_reset":
@@ -3209,7 +3244,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return "mkeventd_edit_configvar"
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         self._show_configuration_variables(debug=config.debug)
 
 
@@ -3351,13 +3386,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         if filename := request.var("_delete"):
             if info := self._load_snmp_mibs(mib_upload_dir()).get(filename):
-                self._delete_mib(filename, info.name)
+                self._delete_mib(filename, info.name, use_git=config.wato_use_git)
         elif request.var("_bulk_delete_custom_mibs"):
-            self._bulk_delete_custom_mibs_after_confirm()
+            self._bulk_delete_custom_mibs_after_confirm(use_git=config.wato_use_git)
 
         return redirect(self.mode_url())
 
-    def _bulk_delete_custom_mibs_after_confirm(self) -> None:
+    def _bulk_delete_custom_mibs_after_confirm(self, *, use_git: bool) -> None:
         custom_mibs = self._load_snmp_mibs(mib_upload_dir())
         selected_custom_mibs: list[str] = []
         for varname, _value in request.itervars(prefix="_c_mib_"):
@@ -3367,12 +3402,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     selected_custom_mibs.append(filename)
 
         for filename in selected_custom_mibs:
-            self._delete_mib(filename, custom_mibs[filename].name)
+            self._delete_mib(filename, custom_mibs[filename].name, use_git=use_git)
 
-    def _delete_mib(self, filename: str, mib_name: str) -> None:
+    def _delete_mib(self, filename: str, mib_name: str, *, use_git: bool) -> None:
         self._add_change(
             action_name="delete-mib",
             text=_("Deleted MIB %s") % filename,
+            use_git=use_git,
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
         for path in {
@@ -3386,7 +3422,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             path.unlink(missing_ok=True)
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         for mib_path, title in mib_dirs():
             is_custom_dir = mib_path == mib_upload_dir()
             if is_custom_dir:
@@ -3511,7 +3547,11 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         filename, mimetype, content = request.uploaded_file("_upload_mib")
         if filename:
             try:
-                flash(self._upload_mib(filename, mimetype, content, debug=config.debug))
+                flash(
+                    self._upload_mib(
+                        filename, mimetype, content, use_git=config.wato_use_git, debug=config.debug
+                    )
+                )
                 return None
             except Exception as e:
                 if config.debug:
@@ -3519,11 +3559,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 raise MKUserError("_upload_mib", "%s" % e)
         return None
 
-    def _upload_mib(self, filename: str, mimetype: str, content: bytes, *, debug: bool) -> str:
+    def _upload_mib(
+        self, filename: str, mimetype: str, content: bytes, *, use_git: bool, debug: bool
+    ) -> str:
         self._validate_mib_file_name(filename)
 
         if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(filename, content, debug=debug)
+            msg = self._process_uploaded_zip_file(filename, content, use_git=use_git, debug=debug)
         else:
             if (
                 mimetype == "application/tar"
@@ -3532,7 +3574,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             ):
                 raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
 
-            msg = self._process_uploaded_mib_file(filename, content, debug=debug)
+            msg = self._process_uploaded_mib_file(filename, content, use_git=use_git, debug=debug)
 
         return msg
 
@@ -3547,7 +3589,9 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         except zipfile.BadZipfile:
             return False
 
-    def _process_uploaded_zip_file(self, filename: str, content: bytes, *, debug: bool) -> str:
+    def _process_uploaded_zip_file(
+        self, filename: str, content: bytes, *, use_git: bool, debug: bool
+    ) -> str:
         with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
             messages = []
             success, fail = 0, 0
@@ -3560,7 +3604,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                     with zip_obj.open(mib_file_name) as mib_obj:
                         messages.append(
                             self._process_uploaded_mib_file(
-                                mib_file_name, mib_obj.read(), debug=debug
+                                mib_file_name, mib_obj.read(), use_git=use_git, debug=debug
                             )
                         )
                     success += 1
@@ -3572,7 +3616,9 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             messages
         ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
 
-    def _process_uploaded_mib_file(self, filename: str, content: bytes, *, debug: bool) -> str:
+    def _process_uploaded_mib_file(
+        self, filename: str, content: bytes, *, use_git: bool, debug: bool
+    ) -> str:
         if "." in filename:
             mibname = filename.split(".")[0]
         else:
@@ -3585,6 +3631,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         self._add_change(
             action_name="uploaded-mib",
             text=_("MIB %s: %s") % (filename, msg),
+            use_git=use_git,
         )
         return msg
 
@@ -3653,7 +3700,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 
     def page(self, config: Config) -> None:
-        self._verify_ec_enabled()
+        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         html.h3(_("Upload MIB file"))
         html.write_text_permissive(
             _(
@@ -5361,11 +5408,11 @@ def replication_mode() -> str:
 
 
 # Only use this for master/slave replication. For status queries use livestatus
-def query_ec_directly(query: bytes) -> dict[str, Any]:
+def query_ec_directly(query: bytes, connect_timeout: int) -> dict[str, Any]:
     response_text = b""
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.settimeout(active_config.mkeventd_connect_timeout)
+        sock.settimeout(connect_timeout)
         sock.connect(str(_socket_path()))
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)

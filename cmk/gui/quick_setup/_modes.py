@@ -10,7 +10,7 @@ from typing import override, Protocol
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -244,7 +244,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        if not active_config.wato_hide_varnames:
+        if not config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
             )
@@ -252,7 +252,9 @@ class ModeEditConfigurationBundles(WatoMode):
 
         self._bundles_listing(self._name)
 
-    def _delete_bundle(self, bundle_id: BundleId) -> None:
+    def _delete_bundle(
+        self, bundle_id: BundleId, *, pprint_value: bool, use_git: bool, debug: bool
+    ) -> None:
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             # revert changes does not work correctly when a config sync to another site occurred
             # for consistency reasons we always prevent the user from reverting the changes
@@ -263,16 +265,16 @@ class ModeEditConfigurationBundles(WatoMode):
         delete_config_bundle(
             bundle_id,
             user_id=user.id,
-            pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
-            debug=active_config.debug,
+            pprint_value=pprint_value,
+            use_git=use_git,
+            debug=debug,
         )
         add_change(
             action_name="delete-quick-setup",
             text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
             user_id=user.id,
             prevent_discard_changes=prevent_discard_changes,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _bundles_listing(self, group_name: str) -> None:
@@ -328,7 +330,12 @@ class ModeEditConfigurationBundles(WatoMode):
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
         action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
-            self._delete_bundle(bundle_id)
+            self._delete_bundle(
+                bundle_id,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+                debug=config.debug,
+            )
 
         return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
@@ -790,9 +797,9 @@ class ModeConfigurationBundle(WatoMode):
             delete_config_bundle_objects(
                 references,
                 user_id=user.id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
-                debug=active_config.debug,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+                debug=config.debug,
             )
             return redirect(mode_url("changelog"))
 
@@ -809,7 +816,7 @@ class ModeConfigurationBundle(WatoMode):
             edit_config_bundle_configuration(
                 self._bundle_id,
                 self._bundle,
-                pprint_value=active_config.wato_pprint_config,
+                pprint_value=config.wato_pprint_config,
             )
 
         return redirect(self.parent_mode().mode_url(varname=self._bundle_group))

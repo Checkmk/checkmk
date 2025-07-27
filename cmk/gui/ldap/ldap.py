@@ -719,7 +719,7 @@ class ModeLDAPConfig(WatoMode):
             config_mode_url=self.mode_url(),
             connection_type=self.type,
             custom_config_dirs=(),
-            site_configs=active_config.sites,
+            site_configs=config.sites,
         )
 
     @override
@@ -846,7 +846,7 @@ class ModeEditLDAPConnection(WatoMode):
             add_change(
                 action_name="new-ldap-connection",
                 text=_("Created new LDAP connection"),
-                sites=get_affected_sites(active_config.sites, connection_cfg),
+                sites=get_affected_sites(config.sites, connection_cfg),
             )
 
         else:
@@ -854,13 +854,13 @@ class ModeEditLDAPConnection(WatoMode):
             add_change(
                 action_name="edit-ldap-connection",
                 text=_("Changed LDAP connection %s") % connection_cfg["id"],
-                sites=get_affected_sites(active_config.sites, connection_cfg),
+                sites=get_affected_sites(config.sites, connection_cfg),
             )
 
         self._connection_cfg = connection_cfg
         connection_list = list(_all_connections.values())
         save_connection_config(connection_list)
-        active_config.user_connections = connection_list  # make directly available on current page
+        config.user_connections = connection_list  # make directly available on current page
 
         if request.var("_save"):
             return redirect(mode_url("ldap_config"))

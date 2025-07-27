@@ -267,7 +267,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular(),
             )
 
-        self._validate_deletion(ident, entries[ident], debug=active_config.debug)
+        self._validate_deletion(ident, entries[ident], debug=config.debug)
 
         entry = entries.pop(ident)
         self._add_change(
@@ -276,7 +276,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             user_id=user.id,
             affected_sites=self._mode_type.affected_sites(entry),
         )
-        self._store.save(entries, pprint_value=active_config.wato_pprint_config)
+        self._store.save(entries, pprint_value=config.wato_pprint_config)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))

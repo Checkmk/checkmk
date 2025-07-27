@@ -185,7 +185,7 @@ class PageKeyManagement:
                 raise MKUserError("", _("This key is still used."))
 
             del keys[key_id]
-            self._log_delete_action(key_id, key)
+            self._log_delete_action(key_id, key, use_git=config.wato_use_git)
             self.key_store.save(keys)
         return None
 
@@ -193,7 +193,7 @@ class PageKeyManagement:
     def component_name(self) -> CertManagementEvent.ComponentType:
         raise NotImplementedError()
 
-    def _log_delete_action(self, key_id: int, key: Key) -> None:
+    def _log_delete_action(self, key_id: int, key: Key, *, use_git: bool) -> None:
         log_security_event(
             CertManagementEvent(
                 event="certificate removed",

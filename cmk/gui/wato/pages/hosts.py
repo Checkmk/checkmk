@@ -21,7 +21,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -465,7 +465,7 @@ class ModeEditHost(ABCHostMode):
                             title=_("For all hosts on site %s") % self._host.site_id(),
                             entries=list(
                                 page_menu_all_hosts_entries(
-                                    self._should_use_dns_cache(active_config.sites)
+                                    self._should_use_dns_cache(config.sites)
                                 )
                             ),
                         ),

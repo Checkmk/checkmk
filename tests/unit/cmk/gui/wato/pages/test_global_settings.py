@@ -33,7 +33,7 @@ def test_match_item_generator_settings(
 
     class SomeSettingsMode(DefaultModeEditGlobals):
         def iter_all_configuration_variables(
-            self,
+            self, *, debug: bool
         ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
             return [
                 (

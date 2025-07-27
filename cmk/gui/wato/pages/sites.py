@@ -1190,7 +1190,7 @@ class ModeDistributedMonitoring(WatoMode):
                 table.row()
 
                 self._show_buttons(table, site_id, site, site_configs)
-                self._show_basic_settings(table, site_id, site)
+                self._show_basic_settings(table, site_id, site, config)
                 self._show_status_connection_config(table, site_id, site)
                 self._show_status_connection_status(table, site_id, site)
                 self._show_config_connection_config(table, site_id, site)
@@ -1291,7 +1291,9 @@ class ModeDistributedMonitoring(WatoMode):
         table.cell(_("Initiating peer"), connection.connecter.site_id)
         table.cell(_("Accepting peer"), connection.connectee.site_id)
 
-    def _show_basic_settings(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
+    def _show_basic_settings(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration, config: Config
+    ) -> None:
         table.cell(_("ID"), site_id)
         table.cell(_("Alias"), site.get("alias", ""))
 
@@ -1713,7 +1715,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 )
                 return
 
-        self._show_configuration_variables()
+        self._show_configuration_variables(debug=config.debug)
 
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):

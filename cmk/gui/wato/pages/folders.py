@@ -14,7 +14,7 @@ import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1042,6 +1042,7 @@ class ModeFolder(WatoMode):
                         colspan,
                         host_errors,
                         contact_group_names,
+                        hide_hosttags=config.wato_hide_hosttags,
                     )
 
             html.hidden_field("selection_id", SelectionId.from_request(request))
@@ -1061,6 +1062,8 @@ class ModeFolder(WatoMode):
         colspan: int,
         host_errors: dict[HostName, list[str]],
         contact_group_names: GroupSpecs,
+        *,
+        hide_hosttags: bool,
     ) -> None:
         host = self._folder.load_host(hostname)
         rendered_hosts.append(hostname)
@@ -1152,7 +1155,7 @@ class ModeFolder(WatoMode):
             ),
         )
 
-        if not active_config.wato_hide_hosttags and user.wato_folders_show_tags:
+        if not hide_hosttags and user.wato_folders_show_tags:
             table.cell(_("Tags"), css=["tag-ellipsis"])
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
             html.write_html(

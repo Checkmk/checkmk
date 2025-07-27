@@ -12,7 +12,7 @@ from typing import override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -193,8 +193,8 @@ class ModeBulkCleanup(WatoMode):
             save_is_enabled=bool(
                 self._get_attributes_for_bulk_cleanup(
                     all_host_attributes(
-                        active_config.wato_host_attrs,
-                        active_config.tags.get_tag_groups_by_topic(),
+                        config.wato_host_attrs,
+                        config.tags.get_tag_groups_by_topic(),
                     ),
                     hosts,
                 ),

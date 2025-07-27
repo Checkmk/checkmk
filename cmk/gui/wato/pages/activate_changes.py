@@ -395,7 +395,7 @@ class ModeActivateChanges(WatoMode):
         return _("Activate pending changes")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        self._select_sites_with_pending_changes(active_config.sites)
+        self._select_sites_with_pending_changes(config.sites)
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -407,15 +407,15 @@ class ModeActivateChanges(WatoMode):
                             entries=list(
                                 self._page_menu_entries_all_sites(
                                     list(activation_sites(active_config.sites)),
-                                    active_config.wato_read_only,
-                                    debug=active_config.debug,
+                                    config.wato_read_only,
+                                    debug=config.debug,
                                 )
                             ),
                         ),
                         PageMenuTopic(
                             title=_("On selected sites"),
                             entries=list(
-                                self._page_menu_entries_selected_sites(active_config.wato_read_only)
+                                self._page_menu_entries_selected_sites(config.wato_read_only)
                             ),
                         ),
                         make_checkbox_selection_topic(

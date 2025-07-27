@@ -3210,7 +3210,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def page(self, config: Config) -> None:
         self._verify_ec_enabled()
-        self._show_configuration_variables()
+        self._show_configuration_variables(debug=config.debug)
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(

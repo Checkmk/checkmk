@@ -132,7 +132,7 @@ class ABCGlobalSettingsMode(WatoMode):
     def edit_mode_name(self) -> str:
         return "edit_configvar"
 
-    def _should_show_config_variable(self, config_variable: ConfigVariable) -> bool:
+    def _should_show_config_variable(self, config_variable: ConfigVariable, *, debug: bool) -> bool:
         varname = config_variable.ident()
 
         if not (domain := config_variable.domain()).enabled():
@@ -177,7 +177,7 @@ class ABCGlobalSettingsMode(WatoMode):
         )
 
     def iter_all_configuration_variables(
-        self,
+        self, *, debug: bool
     ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
         yield from (
             (
@@ -185,19 +185,19 @@ class ABCGlobalSettingsMode(WatoMode):
                 (
                     config_variable
                     for config_variable in group.config_variables()
-                    if self._should_show_config_variable(config_variable)
+                    if self._should_show_config_variable(config_variable, debug=debug)
                 ),
             )
             for group in sorted(self._groups(), key=lambda g: g.sort_index())
         )
 
-    def _show_configuration_variables(self) -> None:
+    def _show_configuration_variables(self, *, debug: bool) -> None:
         search = self._search
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
         global_config = get_global_config()
-        for group, config_variables in self.iter_all_configuration_variables():
+        for group, config_variables in self.iter_all_configuration_variables(debug=debug):
             header_is_painted = False  # needed for omitting empty groups
 
             for config_variable in config_variables:
@@ -621,7 +621,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         return redirect(mode_url("globalvars"))
 
     def page(self, config: Config) -> None:
-        self._show_configuration_variables()
+        self._show_configuration_variables(debug=config.debug)
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -704,7 +704,9 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         mode = self._mode_class()
         yield from (
             self._config_variable_to_match_item(config_variable, mode.edit_mode_name)
-            for _group, config_variables in mode.iter_all_configuration_variables()
+            for _group, config_variables in mode.iter_all_configuration_variables(
+                debug=active_config.debug
+            )
             for config_variable in config_variables
         )
 

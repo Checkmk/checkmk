@@ -7,7 +7,7 @@
 from collections.abc import Collection
 
 from cmk.gui import userdb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -281,25 +281,31 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             ),
         ]
 
-    def _save(self, entries: dict[str, PredefinedConditionSpec], *, pprint_value: bool) -> None:
+    def _save(
+        self, entries: dict[str, PredefinedConditionSpec], *, pprint_value: bool, debug: bool
+    ) -> None:
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
         old_path = None
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super()._save(entries, pprint_value=pprint_value)
+        super()._save(entries, pprint_value=pprint_value, debug=debug)
 
         assert self._ident is not None
         conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])
 
         # Update rules of source folder in case the folder was changed
         if old_path is not None and old_path != conditions.host_folder:
-            self._move_rules_for_conditions(conditions, old_path)
+            self._move_rules_for_conditions(
+                conditions, old_path, pprint_value=pprint_value, debug=debug
+            )
 
-        self._rewrite_rules_for(conditions)
+        self._rewrite_rules_for(conditions, pprint_value=pprint_value, debug=debug)
 
-    def _move_rules_for_conditions(self, conditions: RuleConditions, old_path: str) -> None:
+    def _move_rules_for_conditions(
+        self, conditions: RuleConditions, old_path: str, *, pprint_value: bool, debug: bool
+    ) -> None:
         """Apply changed folder of predefined condition to rules"""
         tree = folder_tree()
         old_folder = tree.folder(old_path)
@@ -316,14 +322,12 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)
 
-        new_rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
-        old_rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        new_rulesets.save_folder(pprint_value=pprint_value, debug=debug)
+        old_rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
-    def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
+    def _rewrite_rules_for(
+        self, conditions: RuleConditions, *, pprint_value: bool, debug: bool
+    ) -> None:
         """Apply changed predefined condition to rules
 
         After updating a predefined condition it is necessary to rewrite the
@@ -339,9 +343,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
                 if rule.predefined_condition_id() == self._ident:
                     rule.update_conditions(conditions)
 
-        rulesets.save_folder(
-            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
-        )
+        rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     def _contact_group_choices(self, only_own: bool = False) -> list[tuple[str, str]]:
         contact_groups = load_contact_group_information()

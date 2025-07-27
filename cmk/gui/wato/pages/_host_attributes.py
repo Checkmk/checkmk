@@ -10,7 +10,6 @@ from typing import cast, Literal
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -36,6 +35,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.tags import TagID
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
@@ -58,6 +58,7 @@ def configure_attributes(
     hosts: Mapping[str, Host | Folder | None],
     for_what: DialogIdent,
     parent: Folder | SearchFolder | None,
+    aux_tags_by_tag: Mapping[TagID | None, Sequence[TagID]],
     myself: Folder | None = None,
     without_attributes: Sequence[str] | None = None,
     varprefix: str = "",
@@ -398,7 +399,7 @@ def configure_attributes(
             | set(dependency_mapping_roles.keys())
             | set(hide_attributes)
         ),
-        "aux_tags_by_tag": active_config.tags.get_aux_tags_by_tag(),
+        "aux_tags_by_tag": aux_tags_by_tag,
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,

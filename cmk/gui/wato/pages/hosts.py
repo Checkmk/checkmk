@@ -366,6 +366,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 for_what="host" if not self._is_cluster() else "cluster",
                 parent=folder_from_request(request.var("folder"), host_name),
                 basic_attributes=basic_attributes,
+                aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
             )
 
             if self._mode != "edit":

@@ -205,14 +205,14 @@ def render_connections_page(
             html.write_text_permissive(connection["description"])
 
 
-def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
+def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId], use_git: bool) -> None:
     _changes.add_change(
         action_name=action_name,
         text=text,
         user_id=user.id,
         domains=[ConfigDomainGUI()],
         sites=sites,
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
     )
 
 
@@ -224,7 +224,7 @@ def get_affected_sites(
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)
         if _customer_api.is_global(customer):
-            return list(active_config.sites.keys())
+            return list(site_configs)
         assert customer is not None
         return list(_customer_api.get_sites_of_customer(customer).keys())
     return get_login_sites(site_configs)
@@ -236,6 +236,7 @@ def _delete_connection(
     connection_type: str,
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
+    use_git: bool,
 ) -> None:
     connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[index]
@@ -244,6 +245,7 @@ def _delete_connection(
         action_name=f"delete-{connection_type}-connection",
         text=_("Deleted connection %s") % (connection_id),
         sites=get_affected_sites(site_configs, connection),
+        use_git=use_git,
     )
 
     for dir_ in custom_config_dirs:
@@ -265,6 +267,8 @@ def _move_connection(
     to_index: int,
     connection_type: str,
     site_configs: SiteConfigurations,
+    *,
+    use_git: bool,
 ) -> None:
     connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[from_index]
@@ -272,6 +276,7 @@ def _move_connection(
         action_name=f"move-{connection_type}-connection",
         text=_("Changed position of connection %s to %d") % (connection["id"], to_index),
         sites=get_affected_sites(site_configs, connection),
+        use_git=use_git,
     )
     del connections[from_index]  # make to_pos now match!
     connections[to_index:to_index] = [connection]
@@ -296,6 +301,8 @@ def connection_actions(
     connection_type: str,
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
+    *,
+    use_git: bool,
 ) -> ActionResult:
     if not transactions.check_transaction():
         return redirect(config_mode_url)
@@ -306,6 +313,7 @@ def connection_actions(
             connection_type=connection_type,
             custom_config_dirs=custom_config_dirs,
             site_configs=site_configs,
+            use_git=use_git,
         )
 
     elif request.has_var("_move"):
@@ -318,6 +326,7 @@ def connection_actions(
             ),
             connection_type=connection_type,
             site_configs=site_configs,
+            use_git=use_git,
         )
 
     return redirect(config_mode_url)

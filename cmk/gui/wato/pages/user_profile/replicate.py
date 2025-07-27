@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -24,18 +24,6 @@ def register(page_registry: PageRegistry) -> None:
 
 
 class UserProfileReplicate(Page):
-    def __init__(self) -> None:
-        super().__init__()
-
-        if not user.id:
-            raise MKUserError(None, _("Not logged in."))
-
-        if not user.may("general.change_password") and not user.may("general.edit_profile"):
-            raise MKAuthException(_("You are not allowed to edit your user profile."))
-
-        if not active_config.wato_enabled:
-            raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
-
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Profile"), breadcrumb, form_name="profile", button_name="_save"
@@ -44,6 +32,15 @@ class UserProfileReplicate(Page):
         return menu
 
     def page(self, config: Config) -> None:
+        if not user.id:
+            raise MKUserError(None, _("Not logged in."))
+
+        if not user.may("general.change_password") and not user.may("general.edit_profile"):
+            raise MKAuthException(_("You are not allowed to edit your user profile."))
+
+        if not config.wato_enabled:
+            raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
+
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), title)
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))

@@ -9,7 +9,7 @@ import enum
 import json
 import re
 import time
-from collections.abc import Collection, Generator, Iterator, Mapping
+from collections.abc import Collection, Generator, Iterator, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -228,9 +228,11 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         permissions.load_dynamic_permissions()
 
     @classmethod
-    def _rule_match_conditions(cls) -> list[DictionaryEntry | tuple[str, ListChoice]]:
+    def _rule_match_conditions(
+        cls, service_levels: Sequence[tuple[int, str]]
+    ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         return (
-            cls._generic_rule_match_conditions()
+            cls._generic_rule_match_conditions(service_levels)
             + cls._event_rule_match_conditions(flavour="notify")
             + cls._notification_rule_match_conditions()
         )
@@ -407,6 +409,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def _render_notification_rules(
         self,
         rules: list[EventRule],
+        service_levels: Sequence[tuple[int, str]],
         userid: str = "",
         show_title: bool = False,
         show_buttons: bool = True,
@@ -418,7 +421,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             html.show_message(_("You have not created any rules yet."))
             return
 
-        vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
+        vs_match_conditions = Dictionary(elements=self._rule_match_conditions(service_levels))
 
         title = self._table_title(show_title, profilemode, userid)
         with table_element(title=title, limit=None, sortable=False) as table:
@@ -917,7 +920,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     def page(self, config: Config) -> None:
         self._show_overview()
-        self._show_rules(analyse=None)
+        self._show_rules(analyse=None, service_levels=config.mkeventd_service_levels)
 
     def _show_overview(self) -> None:
         html.vue_component(
@@ -987,10 +990,14 @@ class ModeNotifications(ABCNotificationsMode):
             html.td(val)
         html.close_table()
 
-    def _show_rules(self, analyse: NotifyAnalysisInfo | None) -> None:
+    def _show_rules(
+        self, analyse: NotifyAnalysisInfo | None, service_levels: Sequence[tuple[int, str]]
+    ) -> None:
         start_nr = 0
         rules = self._get_notification_rules()
-        self._render_notification_rules(rules, show_title=True, analyse=analyse, start_nr=start_nr)
+        self._render_notification_rules(
+            rules, service_levels, show_title=True, analyse=analyse, start_nr=start_nr
+        )
         start_nr += len(rules)
         if self._show_user_rules:
             for user_id, user_rules in sorted(
@@ -998,6 +1005,7 @@ class ModeNotifications(ABCNotificationsMode):
             ):
                 self._render_notification_rules(
                     user_rules,
+                    service_levels,
                     user_id,
                     show_title=True,
                     show_buttons=False,
@@ -1361,7 +1369,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         self._show_notification_backlog(escape_plugin_output=config.escape_plugin_output)
         if request.var("analyse") and result:
             self._show_resulting_notifications(result=result)
-        self._show_rules(result)
+        self._show_rules(result, service_levels=config.mkeventd_service_levels)
 
     def _get_result_from_request(self, *, debug: bool) -> NotifyAnalysisInfo | None:
         if request.var("analyse"):
@@ -1729,7 +1737,7 @@ class ModeTestNotifications(ModeNotifications):
             )
             if request.var("test_notification") and analyse:
                 self._show_resulting_notifications(result=analyse)
-        self._show_rules(analyse)
+        self._show_rules(analyse, service_levels=config.mkeventd_service_levels)
 
     def _result_from_request(
         self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
@@ -2503,6 +2511,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
         self._render_notification_rules(
             rules=self._rules,
+            service_levels=config.mkeventd_service_levels,
             userid=self._user_id(),
             profilemode=isinstance(self, ModePersonalUserNotifications),
         )
@@ -2744,10 +2753,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def _get_default_notification_rule(self) -> EventRule | dict[str, object]:
         return get_default_notification_rule()
 
-    def _valuespec(self) -> Dictionary:
-        return self._vs_notification_rule(self._user_id())
+    def _valuespec(self, service_levels: Sequence[tuple[int, str]]) -> Dictionary:
+        return self._vs_notification_rule(self._user_id(), service_levels)
 
-    def _vs_notification_rule(self, userid: UserId | None) -> Dictionary:
+    def _vs_notification_rule(
+        self, userid: UserId | None, service_levels: Sequence[tuple[int, str]]
+    ) -> Dictionary:
         if userid:
             contact_headers: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = []
             section_contacts = []
@@ -3029,7 +3040,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             title=_("Rule Properties"),
             elements=rule_option_elements()
             + section_override
-            + self._rule_match_conditions()
+            + self._rule_match_conditions(service_levels)
             + section_contacts
             + [
                 (
@@ -3209,7 +3220,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         if not transactions.check_transaction():
             return self._back_mode()
 
-        vs = self._valuespec()
+        vs = self._valuespec(config.mkeventd_service_levels)
         raw_value = vs.from_html_vars("rule")
         vs.validate_value(raw_value, "rule")
         # There is currently no way around this as we don't have typing support from the VS
@@ -3253,7 +3264,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             return
 
         with html.form_context("rule", method="POST"):
-            vs = self._valuespec()
+            vs = self._valuespec(config.mkeventd_service_levels)
             vs.render_input("rule", dict(self._rule))
             vs.set_focus("rule")
             forms.end()

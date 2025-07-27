@@ -1505,6 +1505,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
                 parent=folder if new else folder.parent(),
                 myself=myself,
                 basic_attributes=basic_attributes,
+                aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
             )
 
             forms.end()

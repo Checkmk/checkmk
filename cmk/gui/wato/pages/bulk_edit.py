@@ -150,6 +150,7 @@ class ModeBulkEdit(WatoMode):
                 hosts={str(k): v for k, v in hosts.items()},
                 for_what="bulk",
                 parent=self._folder,
+                aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
             )
             forms.end()
             html.hidden_fields()

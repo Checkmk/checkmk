@@ -10,7 +10,6 @@ from typing import Generic, Literal, TypeVar
 from livestatus import SiteConfigurations
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.userdb import UserSelection
@@ -42,7 +41,9 @@ _T_EventSpec = TypeVar("_T_EventSpec", bound=EventRule | dict)
 class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
     @classmethod
     @abc.abstractmethod
-    def _rule_match_conditions(cls):
+    def _rule_match_conditions(
+        cls, service_levels: Sequence[tuple[int, str]]
+    ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         raise NotImplementedError()
 
     @classmethod
@@ -113,7 +114,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         ]
 
     @classmethod
-    def _generic_rule_match_conditions(cls) -> list[DictionaryEntry]:
+    def _generic_rule_match_conditions(
+        cls, service_levels: Sequence[tuple[int, str]]
+    ) -> list[DictionaryEntry]:
         return _simple_host_rule_match_conditions() + [
             (
                 "match_servicelabels",
@@ -277,7 +280,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                     choices=sorted_contact_group_choices,
                 ),
             ),
-            *cls._match_service_level_elements(),
+            *cls._match_service_level_elements(service_levels),
             (
                 "match_timeperiod",
                 TimeperiodSelection(
@@ -291,7 +294,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         ]
 
     @classmethod
-    def _match_service_level_elements(cls) -> list[DictionaryEntry]:
+    def _match_service_level_elements(
+        cls, service_levels: Sequence[tuple[int, str]]
+    ) -> list[DictionaryEntry]:
         if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
             return []
         return [
@@ -307,12 +312,12 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                     elements=[
                         DropdownChoice(
                             label=_("from:"),
-                            choices=active_config.mkeventd_service_levels,
+                            choices=service_levels,
                             prefix_values=True,
                         ),
                         DropdownChoice(
                             label=_(" to:"),
-                            choices=active_config.mkeventd_service_levels,
+                            choices=service_levels,
                             prefix_values=True,
                         ),
                     ],

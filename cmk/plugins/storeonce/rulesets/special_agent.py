@@ -54,7 +54,7 @@ def _migrate_cert(params: object) -> Mapping[str, object]:
     match params:
         case {"cert": cert_value, **rest}:
             return {
-                "ignore_tls": cert_value,
+                "ignore_tls": not cert_value,
                 **{str(k): v for k, v in rest.items()},
             }
         case dict():

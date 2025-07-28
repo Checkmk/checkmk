@@ -54,7 +54,6 @@ class _Builder:
         *,
         simulation_mode: bool,
         fetcher_factory: FetcherFactory,
-        is_cluster: bool,
         snmp_fetcher_config: SNMPFetcherConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
@@ -72,7 +71,6 @@ class _Builder:
         check_mk_check_interval: float,
     ) -> None:
         super().__init__()
-        assert not is_cluster
 
         self.plugins: Final = plugins
         self.host_name: Final = host_name
@@ -308,7 +306,6 @@ def make_sources(
     ip_stack_config: IPStackConfig,
     *,
     fetcher_factory: FetcherFactory,
-    is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
     snmp_fetcher_config: SNMPFetcherConfig,
     snmp_backend: SNMPBackendEnum,
@@ -328,10 +325,6 @@ def make_sources(
     check_mk_check_interval: float,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    if is_cluster:
-        # Cluster hosts do not have any actual data sources
-        # Instead all data is provided by the nodes
-        return ()
 
     def max_age_snmp() -> MaxAge:
         if simulation_mode:
@@ -359,7 +352,6 @@ def make_sources(
         fetcher_factory=fetcher_factory,
         snmp_fetcher_config=snmp_fetcher_config,
         snmp_backend=snmp_backend,
-        is_cluster=is_cluster,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
         file_cache_path=file_cache_path,

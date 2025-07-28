@@ -217,56 +217,61 @@ def dump_host(
     )
     used_password_store = cmk.utils.password_store.pending_password_store_path()
     passwords = cmk.utils.password_store.load(used_password_store)
-    agenttypes = [
-        dump_source(source)
-        for source in sources.make_sources(
-            plugins,
-            hostname,
-            primary_family,
-            ipaddress,
-            ip_stack_config,
-            fetcher_factory=config_cache.fetcher_factory(
-                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-                ip_address_of,
-                service_name_config,
-                enforced_services_table,
-            ),
-            snmp_fetcher_config=SNMPFetcherConfig(
-                scan_config=SNMPScanConfig(
-                    on_error=OnError.RAISE,
-                    missing_sys_description=config_cache.missing_sys_description(hostname),
-                    oid_cache_dir=oid_cache_dir,
-                ),
-                selected_sections=NO_SELECTION,
-                backend_override=None,
-                stored_walk_path=stored_walk_path,
-                walk_cache_path=walk_cache_path,
-            ),
-            is_cluster=hostname in hosts_config.clusters,
-            file_cache_options=FileCacheOptions(),
-            simulation_mode=simulation_mode,
-            file_cache_max_age=MaxAge.zero(),
-            snmp_backend=config_cache.get_snmp_backend(hostname),
-            file_cache_path=file_cache_path,
-            tcp_cache_path=tcp_cache_path,
-            tls_config=tls_config,
-            computed_datasources=config_cache.computed_datasources(hostname),
-            datasource_programs=config_cache.datasource_programs(hostname),
-            tag_list=config_cache.host_tags.tag_list(hostname),
-            management_ip=ip_address_of_mgmt(hostname, primary_family),
-            management_protocol=config_cache.management_protocol(hostname),
-            special_agent_command_lines=config_cache.special_agent_command_lines(
+    agenttypes = (
+        []
+        if hostname in hosts_config.clusters
+        else [
+            dump_source(source)
+            for source in sources.make_sources(
+                plugins,
                 hostname,
                 primary_family,
                 ipaddress,
-                password_store_file=used_password_store,
-                passwords=passwords,
-                ip_address_of=ip_address_of,
-            ),
-            agent_connection_mode=config_cache.agent_connection_mode(hostname),
-            check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-        )
-    ]
+                ip_stack_config,
+                fetcher_factory=config_cache.fetcher_factory(
+                    config_cache.make_service_configurer(
+                        plugins.check_plugins, service_name_config
+                    ),
+                    ip_address_of,
+                    service_name_config,
+                    enforced_services_table,
+                ),
+                snmp_fetcher_config=SNMPFetcherConfig(
+                    scan_config=SNMPScanConfig(
+                        on_error=OnError.RAISE,
+                        missing_sys_description=config_cache.missing_sys_description(hostname),
+                        oid_cache_dir=oid_cache_dir,
+                    ),
+                    selected_sections=NO_SELECTION,
+                    backend_override=None,
+                    stored_walk_path=stored_walk_path,
+                    walk_cache_path=walk_cache_path,
+                ),
+                file_cache_options=FileCacheOptions(),
+                simulation_mode=simulation_mode,
+                file_cache_max_age=MaxAge.zero(),
+                snmp_backend=config_cache.get_snmp_backend(hostname),
+                file_cache_path=file_cache_path,
+                tcp_cache_path=tcp_cache_path,
+                tls_config=tls_config,
+                computed_datasources=config_cache.computed_datasources(hostname),
+                datasource_programs=config_cache.datasource_programs(hostname),
+                tag_list=config_cache.host_tags.tag_list(hostname),
+                management_ip=ip_address_of_mgmt(hostname, primary_family),
+                management_protocol=config_cache.management_protocol(hostname),
+                special_agent_command_lines=config_cache.special_agent_command_lines(
+                    hostname,
+                    primary_family,
+                    ipaddress,
+                    password_store_file=used_password_store,
+                    passwords=passwords,
+                    ip_address_of=ip_address_of,
+                ),
+                agent_connection_mode=config_cache.agent_connection_mode(hostname),
+                check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+            )
+        ]
+    )
 
     if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")

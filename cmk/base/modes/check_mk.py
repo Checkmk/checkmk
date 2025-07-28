@@ -703,7 +703,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 stored_walk_path=stored_walk_path,
                 walk_cache_path=walk_cache_path,
             ),
-            is_cluster=False,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(

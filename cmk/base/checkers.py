@@ -467,7 +467,6 @@ class CMKFetcher:
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,
                     ),
-                    is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if not is_cluster else False
                     ),

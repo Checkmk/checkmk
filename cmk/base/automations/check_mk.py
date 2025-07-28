@@ -3230,6 +3230,9 @@ class AutomationDiagHost(Automation):
         ip_address_of: ip_lookup.IPLookup,
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
+        if host_name in hosts_config.clusters:
+            return 0, ""  # I think we never even call this for cluster hosts?
+
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_family = ip_lookup_config.default_address_family(host_name)
         check_interval = config_cache.check_mk_check_interval(host_name)
@@ -3279,7 +3282,6 @@ class AutomationDiagHost(Automation):
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=walk_cache_path,
             ),
-            is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
@@ -3754,6 +3756,7 @@ class AutomationGetAgentOutput(Automation):
         )
         config_cache = loading_result.config_cache
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
+
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
         ip_family = ip_lookup_config.default_address_family(hostname)
@@ -3795,6 +3798,9 @@ class AutomationGetAgentOutput(Automation):
             )
 
             if ty == "agent":
+                if hostname in hosts_config.clusters:
+                    return GetAgentOutputResult(success, output, AgentRawData(info))
+
                 core_password_store_file = cmk.utils.password_store.core_password_store_path()
                 for source in sources.make_sources(
                     plugins,
@@ -3825,7 +3831,6 @@ class AutomationGetAgentOutput(Automation):
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,
                     ),
-                    is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
                     file_cache_max_age=MaxAge(

@@ -75,7 +75,6 @@ def _make_sources(
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
         ),
-        is_cluster=False,
         simulation_mode=True,
         file_cache_options=FileCacheOptions(),
         file_cache_max_age=MaxAge.zero(),

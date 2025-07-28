@@ -1,6 +1,6 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "livestatus_poller",

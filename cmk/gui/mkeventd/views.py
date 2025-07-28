@@ -9,7 +9,7 @@ from typing import Any, Literal, TypeGuard, TypeVar
 
 from livestatus import OnlySites, SiteId
 
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
@@ -633,7 +633,8 @@ class PainterEventHost(Painter):
         return False
 
     def render(self, row: Row, cell: "Cell") -> CellSpec:
-        host_name = row.get("event_host", row["host_name"])
+        event_host: HostAddress = row["event_host"]
+        host_name = row.get("host_name", event_host)
 
         return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
 

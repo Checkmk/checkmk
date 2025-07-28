@@ -8,7 +8,7 @@ from typing import TypedDict
 
 from cmk.utils.structured_data import SDKey, SDPath
 
-from ._display_hints import AttributeDisplayHint, ColumnDisplayHint
+from ._display_hints import AttributeDisplayHint, ColumnDisplayHintOfView
 from .registry import SortFunction
 
 
@@ -33,7 +33,7 @@ def attribute_sorter_from_hint(
     )
 
 
-def column_sorter_from_hint(ident: str, hint: ColumnDisplayHint) -> SorterFromHint:
+def column_sorter_from_hint(ident: str, hint: ColumnDisplayHintOfView) -> SorterFromHint:
     return SorterFromHint(
         title=hint.long_inventory_title,
         columns=[ident],

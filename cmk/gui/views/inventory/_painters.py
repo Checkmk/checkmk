@@ -37,7 +37,7 @@ from cmk.utils.structured_data import (
 
 from ._display_hints import (
     AttributeDisplayHint,
-    ColumnDisplayHint,
+    ColumnDisplayHintOfView,
     inv_display_hints,
     NodeDisplayHint,
 )
@@ -408,7 +408,7 @@ def _paint_host_inventory_column(
     return alignment_class, rendered_value
 
 
-def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
+def column_painter_from_hint(ident: str, hint: ColumnDisplayHintOfView) -> ColumnPainterFromHint:
     return ColumnPainterFromHint(
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:

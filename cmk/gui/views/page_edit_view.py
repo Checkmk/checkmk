@@ -57,7 +57,11 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint
+from cmk.gui.views.inventory import (
+    inv_display_hints,
+    OrderedColumnDisplayHintsOfView,
+    TableWithView,
+)
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils.structured_data import SDPath
@@ -163,7 +167,9 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
     )
 
 
-def view_inventory_join_macros(ds_name: str) -> Dictionary:
+def view_inventory_join_macros(
+    ds_name: str, all_column_display_hints: Sequence[OrderedColumnDisplayHintsOfView]
+) -> Dictionary:
     def _validate_macro_of_datasource(macro: str, varprefix: str) -> None:
         allowed_macros_chars = string.ascii_uppercase + string.digits + "_"
         if (
@@ -193,9 +199,8 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                                 title=_("Use value from"),
                                 choices=[
                                     col_info
-                                    for node_hint in inv_display_hints
-                                    if node_hint.table_view_name == ds_name
-                                    for col_info in _get_inventory_column_infos(node_hint)
+                                    for col_hints in all_column_display_hints
+                                    for col_info in _get_inventory_column_infos(col_hints)
                                 ],
                             ),
                             TextInput(
@@ -402,29 +407,34 @@ def _get_inventory_column_infos_by_table(
     ds_name: str,
 ) -> Iterator[tuple[InventoryTableInfo, Sequence[InventoryColumnInfo]]]:
     for node_hint in inv_display_hints:
-        if node_hint.table_view_name in ("", ds_name):
+        if not isinstance(node_hint.table, TableWithView):
+            continue
+
+        if node_hint.table.name in ("", ds_name):
             # No view, no choices; Also skip in case of same data source:
             # columns are already avail in "normal" column.
             continue
 
         yield (
             InventoryTableInfo(
-                table_view_name=node_hint.table_view_name,
+                table_view_name=node_hint.table.name,
                 path=node_hint.path,
                 title=node_hint.long_title,
             ),
-            _get_inventory_column_infos(node_hint),
+            _get_inventory_column_infos(node_hint.table.columns),
         )
 
 
-def _get_inventory_column_infos(hint: NodeDisplayHint) -> Sequence[InventoryColumnInfo]:
+def _get_inventory_column_infos(
+    column_display_hints: OrderedColumnDisplayHintsOfView,
+) -> Sequence[InventoryColumnInfo]:
     registered_painters = all_painters(active_config)
     return [
         InventoryColumnInfo(
             column_name=column_name,
             title=str(column_hint.title),
         )
-        for column_name, column_hint in hint.columns.items()
+        for column_name, column_hint in column_display_hints.items()
         if column_hint.ident and registered_painters.get(column_hint.ident)
     ]
 
@@ -775,9 +785,10 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
         view_editor_general_properties(ds_name).render_input("view", value.get("view"))
 
     if _is_inventory_datasource(ds_name):
-        view_inventory_join_macros(ds_name).render_input(
-            "macros", value.get("inventory_join_macros")
-        )
+        view_inventory_join_macros(
+            ds_name,
+            [h.table.columns for h in inv_display_hints if isinstance(h.table, TableWithView)],
+        ).render_input("macros", value.get("inventory_join_macros"))
 
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", value["columns"])
@@ -872,7 +883,13 @@ def create_view_from_valuespec(old_view, view):
     update_view("sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"]))
 
     if _is_inventory_datasource(ds_name):
-        update_view("macros", view_inventory_join_macros(ds_name))
+        update_view(
+            "macros",
+            view_inventory_join_macros(
+                ds_name,
+                [h.table.columns for h in inv_display_hints if isinstance(h.table, TableWithView)],
+            ),
+        )
 
     return view
 

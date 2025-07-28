@@ -23,8 +23,11 @@ from cmk.gui.views.inventory._display_hints import (
     _RelatedLegacyHints,
     AttributeDisplayHint,
     ColumnDisplayHint,
+    ColumnDisplayHintOfView,
     inv_display_hints,
     NodeDisplayHint,
+    Table,
+    TableWithView,
 )
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
@@ -151,9 +154,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Inventory tree",
                 long_title="Inventory tree",
                 attributes={},
-                columns={},
-                table_view_name="",
-                table_is_show_more=True,
+                table=Table(columns={}),
             ),
         ),
         (
@@ -166,9 +167,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Hardware",
                 long_title="Hardware",
                 attributes={},
-                columns={},
-                table_view_name="",
-                table_is_show_more=True,
+                table=Table(columns={}),
             ),
         ),
         (
@@ -507,9 +506,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         ),
                     ),
                 },
-                columns={},
-                table_view_name="",
-                table_is_show_more=True,
+                table=Table(columns={}),
             ),
         ),
         (
@@ -528,101 +525,103 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 long_title="Docker ➤ Docker images",
                 attributes={},
                 # The single column hints are not checked here
-                columns={
-                    SDKey("id"): ColumnDisplayHint(
-                        ident="invdockerimages_id",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                table=TableWithView(
+                    columns={
+                        SDKey("id"): ColumnDisplayHintOfView(
                             ident="invdockerimages_id",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_id",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("creation"): ColumnDisplayHint(
-                        ident="invdockerimages_creation",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("creation"): ColumnDisplayHintOfView(
                             ident="invdockerimages_creation",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_creation",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("size"): ColumnDisplayHint(
-                        ident="invdockerimages_size",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("size"): ColumnDisplayHintOfView(
                             ident="invdockerimages_size",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_size",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("labels"): ColumnDisplayHint(
-                        ident="invdockerimages_labels",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("labels"): ColumnDisplayHintOfView(
                             ident="invdockerimages_labels",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_labels",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("amount_containers"): ColumnDisplayHint(
-                        ident="invdockerimages_amount_containers",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("amount_containers"): ColumnDisplayHintOfView(
                             ident="invdockerimages_amount_containers",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_amount_containers",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("repotags"): ColumnDisplayHint(
-                        ident="invdockerimages_repotags",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("repotags"): ColumnDisplayHintOfView(
                             ident="invdockerimages_repotags",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_repotags",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("repodigests"): ColumnDisplayHint(
-                        ident="invdockerimages_repodigests",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockerimages",
+                        SDKey("repodigests"): ColumnDisplayHintOfView(
                             ident="invdockerimages_repodigests",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockerimages",
+                                ident="invdockerimages_repodigests",
+                                title="",
+                            ),
                         ),
-                    ),
-                },
-                table_view_name="invdockerimages",
-                table_is_show_more=False,
+                    },
+                    name="invdockerimages",
+                    is_show_more=False,
+                ),
             ),
         ),
         (
@@ -635,9 +634,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Node",
                 long_title="To ➤ Node",
                 attributes={},
-                columns={},
-                table_view_name="",
-                table_is_show_more=True,
+                table=Table(columns={}),
             ),
         ),
     ],
@@ -652,10 +649,12 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
     assert node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
     assert list(node_hint.attributes) == list(expected_node_hint.attributes)
-    assert list(node_hint.columns) == list(expected_node_hint.columns)
+    assert list(node_hint.table.columns) == list(expected_node_hint.table.columns)
 
-    assert node_hint.table_view_name == expected_node_hint.table_view_name
-    assert node_hint.table_is_show_more == expected_node_hint.table_is_show_more
+    if isinstance(expected_node_hint.table, TableWithView):
+        assert isinstance(node_hint.table, TableWithView)
+        assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 
 @pytest.mark.parametrize(
@@ -671,9 +670,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
                 attributes={},
-                columns={},
-                table_is_show_more=True,
-                table_view_name="",
+                table=Table(columns={}),
             ),
         ),
         (
@@ -686,9 +683,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
                 attributes={},
-                columns={},
-                table_is_show_more=True,
-                table_view_name="",
+                table=Table(columns={}),
             ),
         ),
         (
@@ -701,9 +696,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 short_title="Software",
                 long_title="Software",
                 attributes={},
-                columns={},
-                table_view_name="",
-                table_is_show_more=True,
+                table=Table(columns={}),
             ),
         ),
         (
@@ -722,88 +715,90 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 long_title="Docker ➤ Docker containers",
                 attributes={},
                 # The single column hints are not checked here
-                columns={
-                    SDKey("id"): ColumnDisplayHint(
-                        ident="invdockercontainers_id",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                table=TableWithView(
+                    columns={
+                        SDKey("id"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_id",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_id",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("creation"): ColumnDisplayHint(
-                        ident="invdockercontainers_creation",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                        SDKey("creation"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_creation",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_creation",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("name"): ColumnDisplayHint(
-                        ident="invdockercontainers_name",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                        SDKey("name"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_name",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_name",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("labels"): ColumnDisplayHint(
-                        ident="invdockercontainers_labels",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                        SDKey("labels"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_labels",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_labels",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("status"): ColumnDisplayHint(
-                        ident="invdockercontainers_status",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                        SDKey("status"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_status",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_status",
+                                title="",
+                            ),
                         ),
-                    ),
-                    SDKey("image"): ColumnDisplayHint(
-                        ident="invdockercontainers_image",
-                        title="",
-                        short_title="",
-                        long_title="",
-                        paint_function=lambda *args: ("", ""),
-                        sort_function=lambda *args: 0,
-                        filter=FilterInvtableText(
-                            inv_info="invdockercontainers",
+                        SDKey("image"): ColumnDisplayHintOfView(
                             ident="invdockercontainers_image",
                             title="",
+                            short_title="",
+                            long_title="",
+                            paint_function=lambda *args: ("", ""),
+                            sort_function=lambda *args: 0,
+                            filter=FilterInvtableText(
+                                inv_info="invdockercontainers",
+                                ident="invdockercontainers_image",
+                                title="",
+                            ),
                         ),
-                    ),
-                },
-                table_view_name="invdockercontainers",
-                table_is_show_more=False,
+                    },
+                    name="invdockercontainers",
+                    is_show_more=False,
+                ),
             ),
         ),
     ],
@@ -822,10 +817,12 @@ def test_make_node_displayhint_from_hint(
     assert node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
     assert list(node_hint.attributes) == list(expected_node_hint.attributes)
-    assert list(node_hint.columns) == list(expected_node_hint.columns)
+    assert list(node_hint.table.columns) == list(expected_node_hint.table.columns)
 
-    assert node_hint.table_view_name == expected_node_hint.table_view_name
-    assert node_hint.table_is_show_more == expected_node_hint.table_is_show_more
+    if isinstance(expected_node_hint.table, TableWithView):
+        assert isinstance(node_hint.table, TableWithView)
+        assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 
 @pytest.mark.parametrize(
@@ -835,19 +832,41 @@ def test_make_node_displayhint_from_hint(
             (),
             "key",
             ColumnDisplayHint(
-                ident="",
                 title="Key",
                 short_title="Key",
                 long_title="Key",
                 paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter=None,
             ),
         ),
         (
+            ("path", "to", "node"),
+            "key",
+            ColumnDisplayHint(
+                title="Key",
+                short_title="Key",
+                long_title="Node ➤ Key",
+                paint_function=inv_paint_generic,
+            ),
+        ),
+    ],
+)
+def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
+    hint = inv_display_hints.get_node_hint(path).get_column_hint(key)
+    assert isinstance(hint, ColumnDisplayHint)
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
+    assert callable(hint.paint_function)
+    assert hint.long_inventory_title == expected.long_inventory_title
+
+
+@pytest.mark.parametrize(
+    "path, key, expected",
+    [
+        (
             ("networking", "interfaces"),
             "oper_status",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invinterface_oper_status",
                 title="Operational status",
                 short_title="Operational status",
@@ -862,22 +881,9 @@ def test_make_node_displayhint_from_hint(
             ),
         ),
         (
-            ("path", "to", "node"),
-            "key",
-            ColumnDisplayHint(
-                ident="",
-                title="Key",
-                short_title="Key",
-                long_title="Node ➤ Key",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter=None,
-            ),
-        ),
-        (
             ("software", "applications", "check_mk", "sites"),
             "cmc",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invcmksites_cmc",
                 title="CMC status",
                 short_title="CMC",
@@ -893,20 +899,20 @@ def test_make_node_displayhint_from_hint(
         ),
     ],
 )
-def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
+def test_make_column_displayhint_of_view(
+    path: SDPath, key: str, expected: ColumnDisplayHintOfView
+) -> None:
     hint = inv_display_hints.get_node_hint(path).get_column_hint(key)
+    assert isinstance(hint, ColumnDisplayHintOfView)
     assert hint.ident == expected.ident
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    if expected.filter is None:
-        assert hint.filter is None
-    else:
-        assert hint.filter is not None
-        assert hint.filter.ident == expected.filter.ident
-        assert hint.filter.title == expected.filter.title
+    assert hint.filter is not None
+    assert hint.filter.ident == expected.filter.ident
+    assert hint.filter.title == expected.filter.title
     assert hint.long_inventory_title == expected.long_inventory_title
 
 
@@ -916,18 +922,33 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".foo:*.bar",
             ColumnDisplayHint(
-                ident="",
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
                 paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter=None,
             ),
         ),
+    ],
+)
+def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
+    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
+        inventory_path.key or ""
+    )
+    assert isinstance(hint, ColumnDisplayHint)
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
+    assert callable(hint.paint_function)
+    assert hint.long_inventory_title == expected.long_inventory_title
+
+
+@pytest.mark.parametrize(
+    "raw_path, expected",
+    [
         (
             ".software.packages:*.package_version",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invswpac_package_version",
                 title="Package version",
                 short_title="Package version",
@@ -943,7 +964,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         ),
         (
             ".software.packages:*.version",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invswpac_version",
                 title="Version",
                 short_title="Version",
@@ -959,7 +980,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         ),
         (
             ".networking.interfaces:*.index",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invinterface_index",
                 title="Index",
                 short_title="Index",
@@ -975,7 +996,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         ),
         (
             ".networking.interfaces:*.oper_status",
-            ColumnDisplayHint(
+            ColumnDisplayHintOfView(
                 ident="invinterface_oper_status",
                 title="Operational status",
                 short_title="Operational status",
@@ -991,23 +1012,23 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         ),
     ],
 )
-def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
+def test_make_column_displayhint_of_view_from_hint(
+    raw_path: str, expected: ColumnDisplayHintOfView
+) -> None:
     inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
+    assert isinstance(hint, ColumnDisplayHintOfView)
     assert hint.ident == expected.ident
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
-    if expected.filter is None:
-        assert hint.filter is None
-    else:
-        assert hint.filter is not None
-        assert hint.filter.ident == expected.filter.ident
-        assert hint.filter.title == expected.filter.title
+    assert hint.filter is not None
+    assert hint.filter.ident == expected.filter.ident
+    assert hint.filter.title == expected.filter.title
     assert hint.long_inventory_title == expected.long_inventory_title
 
 

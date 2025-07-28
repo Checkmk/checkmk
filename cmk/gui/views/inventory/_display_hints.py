@@ -310,7 +310,7 @@ def _parse_column_display_hint_filter_class(
 
 
 @dataclass(frozen=True, kw_only=True)
-class ColumnDisplayHint:
+class ColumnDisplayHintOfView:
     ident: str
     title: str
     short_title: str
@@ -326,7 +326,6 @@ class ColumnDisplayHint:
         | FilterInvtableText
         | FilterInvtableTimestampAsAge
         | FilterInvtableVersion
-        | None
     )
 
     @property
@@ -334,14 +333,14 @@ class ColumnDisplayHint:
         return _("Inventory column: %s") % self.long_title
 
 
-def _parse_column_hint(
+def _parse_column_hint_of_view(
     *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
-) -> ColumnDisplayHint:
+) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
     ident = _make_col_ident(table_view_name, key)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
-    return ColumnDisplayHint(
+    return ColumnDisplayHintOfView(
         ident=ident,
         title=title,
         short_title=(
@@ -350,13 +349,36 @@ def _parse_column_hint(
         long_title=long_title,
         paint_function=paint_function,
         sort_function=_make_sort_function(legacy_hint),
-        filter=(
-            _parse_column_display_hint_filter_class(
-                table_view_name, ident, long_title, legacy_hint.get("filter")
-            )
-            if table_view_name
-            else None
+        filter=_parse_column_display_hint_filter_class(
+            table_view_name, ident, long_title, legacy_hint.get("filter")
         ),
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ColumnDisplayHint:
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory column: %s") % self.long_title
+
+
+def _parse_column_hint(
+    *, node_title: str, key: str, legacy_hint: InventoryHintSpec
+) -> ColumnDisplayHint:
+    _data_type, paint_function = _get_paint_function(legacy_hint)
+    title = _make_title_function(legacy_hint)(key)
+    return ColumnDisplayHint(
+        title=title,
+        short_title=(
+            title if (short_title := legacy_hint.get("short")) is None else str(short_title)
+        ),
+        long_title=_make_long_title(node_title, title),
+        paint_function=paint_function,
     )
 
 
@@ -406,6 +428,21 @@ OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
 
 
 @dataclass(frozen=True, kw_only=True)
+class Table:
+    columns: OrderedColumnDisplayHints
+
+
+OrderedColumnDisplayHintsOfView: TypeAlias = Mapping[SDKey, ColumnDisplayHintOfView]
+
+
+@dataclass(frozen=True, kw_only=True)
+class TableWithView:
+    columns: OrderedColumnDisplayHintsOfView
+    name: str
+    is_show_more: bool
+
+
+@dataclass(frozen=True, kw_only=True)
 class NodeDisplayHint:
     ident: str
     path: SDPath
@@ -414,9 +451,7 @@ class NodeDisplayHint:
     long_title: str
     icon: str
     attributes: OrderedAttributeDisplayHints
-    columns: OrderedColumnDisplayHints
-    table_view_name: str
-    table_is_show_more: bool
+    table: Table | TableWithView
 
     @property
     def long_inventory_title(self) -> str:
@@ -450,30 +485,17 @@ class NodeDisplayHint:
 
         return hint if (hint := self.attributes.get(SDKey(key))) else _default()
 
-    def get_column_hint(self, key: str) -> ColumnDisplayHint:
+    def get_column_hint(self, key: str) -> ColumnDisplayHint | ColumnDisplayHintOfView:
         def _default() -> ColumnDisplayHint:
-            ident = _make_col_ident(self.table_view_name, key)
             title = key.replace("_", " ").title()
-            long_title = _make_long_title(self.title if self.path else "", title)
             return ColumnDisplayHint(
-                ident=ident,
                 title=title,
                 short_title=title,
-                long_title=long_title,
+                long_title=_make_long_title(self.title if self.path else "", title),
                 paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter=(
-                    FilterInvtableText(
-                        inv_info=self.table_view_name,
-                        ident=ident,
-                        title=long_title,
-                    )
-                    if self.table_view_name
-                    else None
-                ),
             )
 
-        return hint if (hint := self.columns.get(SDKey(key))) else _default()
+        return hint if (hint := self.table.columns.get(SDKey(key))) else _default()
 
 
 def _parse_legacy_display_hints(
@@ -500,10 +522,41 @@ def _parse_legacy_display_hints(
         # - nodes with a table, eg. ".software.packages:"
         ident = _make_node_ident(path)
         title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
-        table_view_name = (
-            "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
-        )
         titles_by_path[path] = title
+        table: Table | TableWithView
+        if table_view_name := (
+            "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
+        ):
+            table = TableWithView(
+                columns={
+                    SDKey(key): _parse_column_hint_of_view(
+                        table_view_name=table_view_name,
+                        node_title=title,
+                        key=key,
+                        legacy_hint=related_legacy_hints.by_column.get(key, {}),
+                    )
+                    for key in _complete_key_order(
+                        related_legacy_hints.for_table.get("keyorder", []),
+                        set(related_legacy_hints.by_column),
+                    )
+                },
+                name=table_view_name,
+                is_show_more=node_or_table_hints.get("is_show_more", True),
+            )
+        else:
+            table = Table(
+                columns={
+                    SDKey(key): _parse_column_hint(
+                        node_title=title,
+                        key=key,
+                        legacy_hint=related_legacy_hints.by_column.get(key, {}),
+                    )
+                    for key in _complete_key_order(
+                        related_legacy_hints.for_table.get("keyorder", []),
+                        set(related_legacy_hints.by_column),
+                    )
+                }
+            )
         yield NodeDisplayHint(
             ident=ident,
             path=path,
@@ -524,20 +577,7 @@ def _parse_legacy_display_hints(
                     set(related_legacy_hints.by_key),
                 )
             },
-            columns={
-                SDKey(key): _parse_column_hint(
-                    table_view_name=table_view_name,
-                    node_title=title,
-                    key=key,
-                    legacy_hint=related_legacy_hints.by_column.get(key, {}),
-                )
-                for key in _complete_key_order(
-                    related_legacy_hints.for_table.get("keyorder", []),
-                    set(related_legacy_hints.by_column),
-                )
-            },
-            table_view_name=table_view_name,
-            table_is_show_more=node_or_table_hints.get("is_show_more", True),
+            table=table,
         )
 
 
@@ -580,9 +620,7 @@ class DisplayHints:
             ),
             icon="",
             attributes={},
-            columns={},
-            table_view_name="",
-            table_is_show_more=True,
+            table=Table(columns={}),
         )
 
 
@@ -596,9 +634,7 @@ inv_display_hints = DisplayHints(
             long_title=str(_l("Inventory tree")),
             icon="",
             attributes={},
-            columns={},
-            table_view_name="",
-            table_is_show_more=True,
+            table=Table(columns={}),
         )
     }
 )

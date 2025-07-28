@@ -44,7 +44,12 @@ from cmk.utils.structured_data import (
     SDValue,
 )
 
-from ._display_hints import DisplayHints, inv_display_hints, NodeDisplayHint
+from ._display_hints import (
+    DisplayHints,
+    inv_display_hints,
+    NodeDisplayHint,
+    TableWithView,
+)
 from .registry import PaintFunction
 
 
@@ -181,7 +186,9 @@ class _ABCItemsSorter(abc.ABC):
                 paint_function=h.paint_function,
                 key_info=f"{c}*" if c in key_columns else c,
             )
-            for c in list(self.hint.columns) + sorted(needed_keys - set(self.hint.columns))
+            for c in (
+                list(self.hint.table.columns) + sorted(needed_keys - set(self.hint.table.columns))
+            )
             if c in needed_keys
             for h in (self.hint.get_column_hint(c),)
         ]
@@ -526,6 +533,10 @@ class TreeRenderer:
         if sorted_pairs:
             self._show_attributes(sorted_pairs)
         if sorted_rows:
-            self._show_table(hint.table_view_name, columns, sorted_rows)
+            self._show_table(
+                hint.table.name if isinstance(hint.table, TableWithView) else "",
+                columns,
+                sorted_rows,
+            )
         for name in sorted(tree.nodes_by_name):
             self._show_node(tree.nodes_by_name[name], tree_id)

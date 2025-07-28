@@ -29,8 +29,10 @@ from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
+    OrderedColumnDisplayHintsOfView,
     PAINT_FUNCTION_NAME_PREFIX,
     register_display_hints,
+    TableWithView,
 )
 from ._painters import (
     attribute_painter_from_hint,
@@ -50,9 +52,11 @@ from .registry import (
 )
 
 __all__ = [
-    "inv_display_hints",
     "InventoryHintSpec",
     "NodeDisplayHint",
+    "OrderedColumnDisplayHintsOfView",
+    "TableWithView",
+    "inv_display_hints",
 ]
 
 
@@ -105,20 +109,23 @@ def _register_sorter(ident: str, spec: SorterFromHint) -> None:
 
 
 def _register_views(
-    hint: NodeDisplayHint,
+    node_hint: NodeDisplayHint,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
 ) -> None:
     """Declare two views: one for searching globally. And one for the items of one host"""
+    if not isinstance(node_hint.table, TableWithView):
+        return
+
     context: VisualContext = {f: {} for f in filters}
 
     # View for searching for items
-    search_view_name = hint.table_view_name + "_search"
+    search_view_name = node_hint.table.name + "_search"
     multisite_builtin_views[search_view_name] = {
         # General options
-        "title": _l("Search %s") % hint.title.lower(),
+        "title": _l("Search %s") % node_hint.title.lower(),
         "description": (
-            _l("A view for searching in the inventory data for %s") % hint.title.lower()
+            _l("A view for searching in the inventory data for %s") % node_hint.title.lower()
         ),
         "hidden": False,
         "hidebutton": False,
@@ -153,7 +160,7 @@ def _register_views(
         "link_from": {},
         "icon": None,
         "single_infos": [],
-        "datasource": hint.table_view_name,
+        "datasource": node_hint.table.name,
         "topic": "inventory",
         "sort_index": 30,
         "public": True,
@@ -167,7 +174,7 @@ def _register_views(
         "mobile": False,
         "group_painters": [],
         "sorters": [],
-        "is_show_more": hint.table_is_show_more,
+        "is_show_more": node_hint.table.is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
@@ -175,26 +182,26 @@ def _register_views(
     }
 
     # View for the items of one host
-    host_view_name = make_table_view_name_of_host(hint.table_view_name)
+    host_view_name = make_table_view_name_of_host(node_hint.table.name)
     multisite_builtin_views[host_view_name] = {
         # General options
-        "title": hint.title,
-        "description": _l("A view for the %s of one host") % hint.title,
+        "title": node_hint.title,
+        "description": _l("A view for the %s of one host") % node_hint.title,
         "hidden": True,
         "hidebutton": False,
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": hint.path,
+            "has_inventory_tree": node_hint.path,
         },
         # Columns
         "painters": painters,
         # Filters
         "context": context,
-        "icon": hint.icon,
+        "icon": node_hint.icon,
         "name": host_view_name,
         "single_infos": ["host"],
-        "datasource": hint.table_view_name,
+        "datasource": node_hint.table.name,
         "topic": "inventory",
         "sort_index": 30,
         "public": True,
@@ -208,7 +215,7 @@ def _register_views(
         "mobile": False,
         "group_painters": [],
         "sorters": [],
-        "is_show_more": hint.table_is_show_more,
+        "is_show_more": node_hint.table.is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
@@ -217,16 +224,16 @@ def _register_views(
 
 
 def _register_table_view(node_hint: NodeDisplayHint) -> None:
-    if not node_hint.table_view_name:
+    if not isinstance(node_hint.table, TableWithView):
         return
 
     # Declare the "info" (like a database table)
     visual_info_registry.register(
         type(
-            "VisualInfo%s" % node_hint.table_view_name.title(),
+            "VisualInfo%s" % node_hint.table.name.title(),
             (VisualInfo,),
             {
-                "_ident": node_hint.table_view_name,
+                "_ident": node_hint.table.name,
                 "ident": property(lambda self: self._ident),
                 "_title": node_hint.title,
                 "title": property(lambda self: self._title),
@@ -240,15 +247,15 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % node_hint.table_view_name.title(),
+            "DataSourceInventory%s" % node_hint.table.name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": node_hint.table_view_name,
+                "_ident": node_hint.table.name,
                 "_inventory_path": inventory.InventoryPath(
                     path=node_hint.path, source=inventory.TreeSource.table
                 ),
                 "_title": node_hint.long_inventory_table_title,
-                "_infos": ["host", node_hint.table_view_name],
+                "_infos": ["host", node_hint.table.name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -263,14 +270,12 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for col_hint in node_hint.columns.values():
+    for col_hint in node_hint.table.columns.values():
         _register_painter(col_hint.ident, column_painter_from_hint(col_hint.ident, col_hint))
         _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint.ident, col_hint))
         painters.append(ColumnSpec(col_hint.ident))
-
-        if col_hint.filter is not None:
-            filter_registry.register(col_hint.filter)
-            filters.append(col_hint.ident)
+        filter_registry.register(col_hint.filter)
+        filters.append(col_hint.ident)
 
     _register_views(node_hint, painters, filters)
 

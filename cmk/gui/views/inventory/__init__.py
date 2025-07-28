@@ -263,7 +263,7 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for key, col_hint in node_hint.columns.items():
+    for col_hint in node_hint.columns.values():
         _register_painter(col_hint.ident, column_painter_from_hint(col_hint.ident, col_hint))
         _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint.ident, col_hint))
         painters.append(ColumnSpec(col_hint.ident))

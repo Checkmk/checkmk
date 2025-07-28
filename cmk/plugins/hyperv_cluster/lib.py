@@ -6,13 +6,12 @@
 # Thanks to Andreas Döhler for the contribution.
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Mapping[str, Mapping[str, Any]]
+Section = Mapping[str, Mapping[str, str]]
 
 
 def hyperv_vm_convert(string_table: StringTable) -> Mapping[str, str]:
@@ -36,7 +35,7 @@ COUNTER_TRANSLATIONS = {
 
 
 def parse_hyperv_io(string_table: StringTable) -> Section:
-    parsed: dict[str, Any] = {}
+    parsed: dict[str, dict[str, str]] = {}
     for line in string_table:
         value = line[-1]
         data = " ".join(line[:-1])
@@ -61,7 +60,7 @@ def parse_hyperv(string_table: StringTable) -> Section:
         "cluster.number_of_networks": "cluster.network.name",
     }
 
-    parsed: dict[str, dict[str, Any]] = {}
+    parsed: dict[str, dict[str, str]] = {}
     if len(string_table) == 0:
         return parsed
 

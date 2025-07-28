@@ -5,6 +5,8 @@
 
 # Thanks to Andreas Döhler for the contribution.
 
+from collections.abc import Mapping
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -14,7 +16,9 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.hyperv_cluster.lib import hyperv_vm_convert, Section
+from cmk.plugins.hyperv_cluster.lib import hyperv_vm_convert
+
+Section = Mapping[str, str]
 
 
 def discovery_hyperv_vm_general_name(section: Section) -> DiscoveryResult:
@@ -23,7 +27,11 @@ def discovery_hyperv_vm_general_name(section: Section) -> DiscoveryResult:
 
 
 def check_hyperv_vm_general_name(section: Section) -> CheckResult:
-    yield Result(state=State.OK, summary=str(section["name"]))
+    name = section.get("name")
+    if name:
+        yield Result(state=State.OK, summary=str(name))
+    else:
+        yield Result(state=State.UNKNOWN, summary="Name information is missing")
 
 
 agent_section_hyperv_vm_general: AgentSection = AgentSection(
@@ -49,10 +57,10 @@ def check_hyperv_vm_general_running_on(section: Section) -> CheckResult:
     running_on = section.get("runtime.host")
     state = section.get("runtime.powerState", "unknown")
 
-    if not running_on:
+    if running_on:
+        yield Result(state=State.OK, summary=f"Running on {running_on} with state {state}")
+    else:
         yield Result(state=State.UNKNOWN, summary="Runtime host information is missing")
-
-    yield Result(state=State.OK, summary=f"Running on {running_on} with state {state}")
 
 
 check_plugin_hyperv_vm_general_running_on = CheckPlugin(

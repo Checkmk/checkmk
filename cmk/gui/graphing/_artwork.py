@@ -611,6 +611,19 @@ def _compute_labels_from_api(
                     + [Label(0, "0")]
                     + list(labels)
                 )
+
+            if abs_min_y == abs_max_y:
+                labels = formatter.render_y_labels(
+                    min_y=0,
+                    max_y=max(abs_min_y, abs_max_y),
+                    mean_num_labels=height_ex / 8.0 + 1,
+                )
+                return (
+                    [Label(-1 * l.position, f"-{l.text}") for l in labels]
+                    + [Label(0, "0")]
+                    + list(labels)
+                )
+
             mean_num_labels = height_ex / 4.0 + 1
             min_mean_num_labels = round(mean_num_labels * abs_min_y / (abs_min_y + abs_max_y))
             max_mean_num_labels = mean_num_labels - min_mean_num_labels

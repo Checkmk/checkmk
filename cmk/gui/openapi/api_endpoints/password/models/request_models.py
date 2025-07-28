@@ -107,3 +107,89 @@ class CreatePassword:
         if isinstance(self.customer, str):
             password["customer"] = self.customer
         return password
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdatePassword:
+    title: str | ApiOmitted = api_field(
+        example="Kubernetes login",
+        description="The name of your password for easy recognition.",
+        default_factory=ApiOmitted,
+    )
+    comment: str | ApiOmitted = api_field(
+        example="Kommentar",
+        description="An optional comment to explain the purpose of this password.",
+        default_factory=ApiOmitted,
+    )
+    documentation_url: str | ApiOmitted = api_field(
+        alias="docu_url",
+        example="localhost",
+        description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
+        default_factory=ApiOmitted,
+    )
+    password: Annotated[str, MinLen(1)] | ApiOmitted = api_field(
+        example="password",
+        description="The password string",
+        default_factory=ApiOmitted,
+    )
+    # TODO: DEPRECATED(17274) - remove in 2.5
+    owned_by: str | ApiOmitted = api_field(
+        example="admin",
+        description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        alias="owner",
+        default_factory=ApiOmitted,
+        additional_metadata={"deprecated": True},
+    )
+    editable_by: str | ApiOmitted = api_field(
+        example="admin",
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        default_factory=ApiOmitted,
+    )
+    shared_with: list[str] | ApiOmitted = api_field(
+        example=["all"],
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        alias="shared",
+        default_factory=ApiOmitted,
+    )
+    customer: Annotated[
+        str | ApiOmitted,
+        RestrictEditions(supported_editions={Edition.CME}, required_if_supported=True),
+    ] = api_field(
+        example="provider",
+        description=edition_field_description(
+            "By specifying a customer, you configure on which sites the user object will be "
+            "available. 'global' will make the object available on all sites.",
+            supported_editions={Edition.CME},
+            field_required=True,
+        ),
+        default_factory=ApiOmitted,
+    )
+
+    @model_validator(mode="after")
+    def validate_mutually_exclusive_fields(self) -> Self:
+        if not isinstance(self.owned_by, ApiOmitted) and not isinstance(
+            self.editable_by, ApiOmitted
+        ):
+            raise ValueError(
+                "Only one of the fields 'owned_by' or 'editable_by' is allowed, but multiple were provided."
+            )
+        return self
+
+    def update(self, old: Password) -> Password:
+        """Update the old password with the new values."""
+
+        if not isinstance(self.title, ApiOmitted):
+            old["title"] = self.title
+        if not isinstance(self.comment, ApiOmitted):
+            old["comment"] = self.comment
+        if not isinstance(self.documentation_url, ApiOmitted):
+            old["docu_url"] = self.documentation_url
+        if not isinstance(self.password, ApiOmitted):
+            old["password"] = self.password
+        if not isinstance(self.editable_by, ApiOmitted):
+            old["owned_by"] = self.editable_by
+        if not isinstance(self.shared_with, ApiOmitted):
+            old["shared_with"] = self.shared_with
+        if not isinstance(self.customer, ApiOmitted):
+            old["customer"] = self.customer
+        return old

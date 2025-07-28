@@ -10,6 +10,7 @@ from .create_password import ENDPOINT_CREATE_PASSWORD
 from .delete_password import ENDPOINT_DELETE_PASSWORD
 from .list_passwords import ENDPOINT_LIST_PASSWORDS
 from .show_password import ENDPOINT_SHOW_PASSWORD
+from .update_password import ENDPOINT_UPDATE_PASSWORD
 
 
 def register(
@@ -33,5 +34,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_CREATE_PASSWORD,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_UPDATE_PASSWORD,
         ignore_duplicates=ignore_duplicates,
     )

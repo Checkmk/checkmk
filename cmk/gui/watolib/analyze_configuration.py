@@ -25,7 +25,7 @@ import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui import log
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
@@ -206,12 +206,8 @@ class ACTest:
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 
-    def _get_effective_global_setting(self, varname: str) -> Any:
-        return get_effective_global_setting(
-            omd_site(),
-            is_wato_slave_site(active_config.sites),
-            varname,
-        )
+    def _get_effective_global_setting(self, site_id: SiteId, config: Config, varname: str) -> Any:
+        return get_effective_global_setting(site_id, is_wato_slave_site(config.sites), varname)
 
 
 class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):

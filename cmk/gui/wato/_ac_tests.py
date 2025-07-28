@@ -594,7 +594,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
         return True
 
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if not self._get_effective_global_setting("escape_plugin_output"):
+        if not self._get_effective_global_setting(site_id, config, "escape_plugin_output"):
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=_(
@@ -915,7 +915,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
         # Only report this as warning in case the user increased the default helper configuration
         default_values = ABCConfigDomain.get_all_default_globals()
         if (
-            self._get_effective_global_setting("cmc_fetcher_helpers")
+            self._get_effective_global_setting(site_id, config, "cmc_fetcher_helpers")
             > default_values["cmc_fetcher_helpers"]
             and fetcher_usage_perc < 50
         ):
@@ -992,7 +992,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         # Only report this as warning in case the user increased the default helper configuration
         default_values = ABCConfigDomain.get_all_default_globals()
         if (
-            self._get_effective_global_setting("cmc_checker_helpers")
+            self._get_effective_global_setting(site_id, config, "cmc_checker_helpers")
             > default_values["cmc_checker_helpers"]
             and checker_usage_perc < 50
         ):
@@ -1838,7 +1838,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
             )
             return
 
-        if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
+        if self._get_effective_global_setting(site_id, config, "cmc_checker_helpers") > num_cpu:
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(

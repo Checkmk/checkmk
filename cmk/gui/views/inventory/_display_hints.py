@@ -504,7 +504,6 @@ class NodeDisplayHint:
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Iterator[NodeDisplayHint]:
-    titles_by_path: dict[SDPath, str] = {}
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
     ):
@@ -525,8 +524,10 @@ def _parse_legacy_display_hints(
         # - nodes with a table, eg. ".software.packages:"
         name = _make_node_name(path)
         title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
-        titles_by_path[path] = title
-        long_title = _make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title)
+        long_title = _make_long_title(
+            inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else "",
+            title,
+        )
         icon = node_or_table_hints.get("icon", "")
         table: Table | TableWithView
         if table_view_name := (

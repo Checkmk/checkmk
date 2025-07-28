@@ -13,7 +13,7 @@ from pathlib import Path
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.log import logger
@@ -133,10 +133,6 @@ class SyncRemoteSitesJob:
             self._last_audit_log_timestamps_path
         )
         self._audit_log_store = AuditLogStore()
-
-    def shall_start(self) -> bool:
-        """Some basic preliminary check to decide quickly whether to start the job"""
-        return bool(wato_slave_sites(active_config.sites))
 
     def do_execute(
         self, *, sites: Sequence[tuple[SiteId, RemoteAutomationConfig]], debug: bool

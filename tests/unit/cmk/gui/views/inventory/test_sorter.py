@@ -40,7 +40,7 @@ def test_registered_sorter_cmp() -> None:
             is_show_more=True,
         ),
     )
-    _register_sorter(attribute_sorter_from_hint((), SDKey("key"), hint))
+    _register_sorter(sorter_registry, attribute_sorter_from_hint((), SDKey("key"), hint))
     sorter = sorter_registry[name]
     assert (
         sorter.cmp(

@@ -9,12 +9,16 @@ from typing import Any
 
 from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
-from cmk.gui.painter.v0 import register_painter
+from cmk.gui.painter.v0 import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
+from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.info import visual_info_registry
 
 from . import icon, inventory
 from .command import register_legacy_command
@@ -47,7 +51,13 @@ def load_plugins() -> None:
         register_legacy_command(cmd_spec)
 
     # Needs to be executed after all plug-ins (built-in and local) are loaded
-    register_table_views_and_columns()
+    register_table_views_and_columns(
+        painter_registry,
+        sorter_registry,
+        filter_registry,
+        visual_info_registry,
+        data_source_registry,
+    )
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_painters.items():
@@ -89,11 +99,19 @@ def _register_pre_21_plugin_api() -> None:
     # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
-    import cmk.gui.painter.v0.registry as painter_registry
+    import cmk.gui.painter.v0.registry as gui_painter_registry
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
-    from cmk.gui import data_source, display_options, exporter, painter_options, visual_link
-    from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui import (
+        data_source,
+        display_options,
+        exporter,
+        painter_options,
+        visual_link,
+    )
+    from cmk.gui.plugins.views import (  # pylint: disable=cmk-module-layer-violation
+        icons,
+    )
 
     from . import command, layout, sorter, store
 
@@ -188,7 +206,7 @@ def _register_pre_21_plugin_api() -> None:
         "painter_registry",
         "register_painter",
     ):
-        api_module.__dict__[name] = painter_registry.__dict__[name]
+        api_module.__dict__[name] = gui_painter_registry.__dict__[name]
 
     for name in (
         "format_plugin_output",

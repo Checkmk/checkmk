@@ -10,9 +10,9 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.ccc.user import UserId
 from cmk.gui import inventory
-from cmk.gui.data_source import data_source_registry
+from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
-from cmk.gui.painter.v0 import Painter, painter_registry
+from cmk.gui.painter.v0 import Painter, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -20,10 +20,10 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.views.sorter import Sorter, sorter_registry
+from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.visuals.filter import filter_registry
-from cmk.gui.visuals.info import visual_info_registry, VisualInfo
+from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
@@ -68,6 +68,7 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 
 
 def _register_painter(
+    painter_registry: PainterRegistry,
     from_hint: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint,
 ) -> None:
     # TODO Clean this up one day
@@ -101,7 +102,7 @@ def _register_painter(
     painter_registry.register(cls)
 
 
-def _register_sorter(from_hint: SorterFromHint) -> None:
+def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:
     sorter_registry.register(
         Sorter(
             ident=from_hint["name"],
@@ -225,7 +226,14 @@ def _register_views(
     }
 
 
-def _register_table_view(table: TableWithView) -> None:
+def _register_table_view(
+    painter_registry: PainterRegistry,
+    sorter_registry: SorterRegistry,
+    filter_registry: FilterRegistry,
+    visual_info_registry: VisualInfoRegistry,
+    data_source_registry: DataSourceRegistry,
+    table: TableWithView,
+) -> None:
     # Declare the "info" (like a database table)
     visual_info_registry.register(
         type(
@@ -270,18 +278,25 @@ def _register_table_view(table: TableWithView) -> None:
     painters: list[ColumnSpec] = []
     filters = []
     for col_hint in table.columns.values():
-        _register_painter(column_painter_from_hint(col_hint))
-        _register_sorter(column_sorter_from_hint(col_hint))
-        painters.append(ColumnSpec(col_hint.name))
+        _register_painter(painter_registry, column_painter_from_hint(col_hint))
+        _register_sorter(sorter_registry, column_sorter_from_hint(col_hint))
         filter_registry.register(col_hint.filter)
+
+        painters.append(ColumnSpec(col_hint.name))
         filters.append(col_hint.name)
 
     _register_views(table, painters, filters)
 
 
-def register_table_views_and_columns() -> None:
-    register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
+def register_table_views_and_columns(
+    painter_registry: PainterRegistry,
+    sorter_registry: SorterRegistry,
+    filter_registry: FilterRegistry,
+    visual_info_registry: VisualInfoRegistry,
+    data_source_registry: DataSourceRegistry,
+) -> None:
     painter_options = PainterOptions.get_instance()
+    register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:
             # FIXME DYNAMIC-PATHS
@@ -295,12 +310,25 @@ def register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_painter(node_painter_from_hint(node_hint, painter_options))
+        _register_painter(painter_registry, node_painter_from_hint(node_hint, painter_options))
 
         for key, attr_hint in node_hint.attributes.items():
-            _register_painter(attribute_painter_from_hint(node_hint.path, key, attr_hint))
-            _register_sorter(attribute_sorter_from_hint(node_hint.path, key, attr_hint))
+            _register_painter(
+                painter_registry,
+                attribute_painter_from_hint(node_hint.path, key, attr_hint),
+            )
+            _register_sorter(
+                sorter_registry,
+                attribute_sorter_from_hint(node_hint.path, key, attr_hint),
+            )
             filter_registry.register(attr_hint.filter)
 
         if isinstance(node_hint.table, TableWithView):
-            _register_table_view(node_hint.table)
+            _register_table_view(
+                painter_registry,
+                sorter_registry,
+                filter_registry,
+                visual_info_registry,
+                data_source_registry,
+                node_hint.table,
+            )

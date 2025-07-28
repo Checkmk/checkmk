@@ -119,8 +119,8 @@ perfometer_mem_used_perc = Perfometer(
         )
     ],
 )
-perfometer_mem_used = Perfometer(
-    name="mem_used_total",
+perfometer_mem_used_with_dynamic_range = Perfometer(
+    name="mem_used_with_dynamic_range",
     focus_range=FocusRange(Closed(0), Closed("mem_total")),
     segments=["mem_used"],
 )

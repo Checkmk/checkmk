@@ -24,7 +24,6 @@ from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
-from cmk.utils.structured_data import SDPath
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
@@ -110,8 +109,6 @@ def _register_sorter(ident: str, spec: SorterFromHint) -> None:
 
 
 def _register_views(
-    path: SDPath,
-    icon: str,
     table: TableWithView,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
@@ -192,13 +189,13 @@ def _register_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": path,
+            "has_inventory_tree": table.path,
         },
         # Columns
         "painters": painters,
         # Filters
         "context": context,
-        "icon": icon,
+        "icon": table.icon,
         "name": host_view_name,
         "single_infos": ["host"],
         "datasource": table.name,
@@ -223,7 +220,7 @@ def _register_views(
     }
 
 
-def _register_table_view(path: SDPath, icon: str, table: TableWithView) -> None:
+def _register_table_view(table: TableWithView) -> None:
     # Declare the "info" (like a database table)
     visual_info_registry.register(
         type(
@@ -249,7 +246,7 @@ def _register_table_view(path: SDPath, icon: str, table: TableWithView) -> None:
             {
                 "_ident": table.name,
                 "_inventory_path": inventory.InventoryPath(
-                    path=path, source=inventory.TreeSource.table
+                    path=table.path, source=inventory.TreeSource.table
                 ),
                 "_title": table.long_inventory_title,
                 "_infos": ["host", table.name],
@@ -274,7 +271,7 @@ def _register_table_view(path: SDPath, icon: str, table: TableWithView) -> None:
         filter_registry.register(col_hint.filter)
         filters.append(col_hint.ident)
 
-    _register_views(path, icon, table, painters, filters)
+    _register_views(table, painters, filters)
 
 
 def register_table_views_and_columns() -> None:
@@ -306,4 +303,4 @@ def register_table_views_and_columns() -> None:
             filter_registry.register(attr_hint.filter)
 
         if isinstance(node_hint.table, TableWithView):
-            _register_table_view(node_hint.path, node_hint.icon, node_hint.table)
+            _register_table_view(node_hint.table)

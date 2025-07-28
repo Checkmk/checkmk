@@ -439,7 +439,9 @@ OrderedColumnDisplayHintsOfView: TypeAlias = Mapping[SDKey, ColumnDisplayHintOfV
 class TableWithView:
     columns: OrderedColumnDisplayHintsOfView
     name: str
+    path: SDPath
     long_title: str
+    icon: str
     is_show_more: bool
 
     @property
@@ -525,6 +527,7 @@ def _parse_legacy_display_hints(
         title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
         titles_by_path[path] = title
         long_title = _make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title)
+        icon = node_or_table_hints.get("icon", "")
         table: Table | TableWithView
         if table_view_name := (
             "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
@@ -543,7 +546,9 @@ def _parse_legacy_display_hints(
                     )
                 },
                 name=table_view_name,
+                path=path,
                 long_title=long_title,
+                icon=icon,
                 is_show_more=node_or_table_hints.get("is_show_more", True),
             )
         else:
@@ -566,7 +571,7 @@ def _parse_legacy_display_hints(
             title=title,
             short_title=title,
             long_title=long_title,
-            icon=node_or_table_hints.get("icon", ""),
+            icon=icon,
             attributes={
                 SDKey(key): _parse_attribute_hint(
                     path=path,

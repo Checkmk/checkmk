@@ -620,7 +620,14 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         ),
                     },
                     name="invdockerimages",
+                    path=(
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("images"),
+                    ),
                     long_title="Docker ➤ Docker images",
+                    icon="",
                     is_show_more=False,
                 ),
             ),
@@ -655,7 +662,9 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
     if isinstance(expected_node_hint.table, TableWithView):
         assert isinstance(node_hint.table, TableWithView)
         assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.path == expected_node_hint.table.path
         assert node_hint.table.long_title == expected_node_hint.table.long_title
+        assert node_hint.table.icon == expected_node_hint.table.icon
         assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 
@@ -799,7 +808,14 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         ),
                     },
                     name="invdockercontainers",
+                    path=(
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("containers"),
+                    ),
                     long_title="Docker ➤ Docker containers",
+                    icon="",
                     is_show_more=False,
                 ),
             ),
@@ -825,7 +841,9 @@ def test_make_node_displayhint_from_hint(
     if isinstance(expected_node_hint.table, TableWithView):
         assert isinstance(node_hint.table, TableWithView)
         assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.path == expected_node_hint.table.path
         assert node_hint.table.long_title == expected_node_hint.table.long_title
+        assert node_hint.table.icon == expected_node_hint.table.icon
         assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 

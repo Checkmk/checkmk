@@ -559,7 +559,7 @@ class DisplayHints:
         for abc_path in self._nodes_by_path:
             if len(path) != len(abc_path):
                 continue
-            if all(r in (l, "*") for l, r in zip(path, abc_path)):
+            if all(right in (left, "*") for left, right in zip(path, abc_path)):
                 return abc_path
         return None
 

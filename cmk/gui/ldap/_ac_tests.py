@@ -7,7 +7,8 @@ from collections.abc import Iterator
 from typing import override
 
 import cmk.gui.ldap.ldap_connector as ldap
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.watolib.analyze_configuration import (
@@ -42,8 +43,7 @@ class ACTestLDAPSecured(ACTest):
         return bool([c for _cid, c in active_connections_() if c.type() == "ldap"])
 
     @override
-    def execute(self) -> Iterator[ACSingleResult]:
-        site_id = omd_site()
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         for connection_id, connection in active_connections_():
             if connection.type() != "ldap":
                 continue

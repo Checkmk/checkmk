@@ -704,10 +704,6 @@ def _update_distributed_wato_file(sites: SiteConfigurations) -> None:
 
     Makes sure, that in distributed mode we monitor only the hosts that are directly assigned
     to our (the local) site.
-
-    Note:
-        We cannot access active_config.sites here, because we are currently in the process of
-        saving the new site configuration.
     """
     distributed = False
     for siteid, site in sites.items():

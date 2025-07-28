@@ -11,6 +11,7 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResultState,
@@ -82,7 +83,7 @@ class _FakeACTestSingleSite(ACTest):
     def is_relevant(self) -> bool:
         return False
 
-    def execute(self) -> Iterator[ACSingleResult]:
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield ACSingleResult(
             state=ACResultState.OK,
             text="single result 1",
@@ -108,7 +109,7 @@ class _FakeACTestMultiSite(ACTest):
     def is_relevant(self) -> bool:
         return False
 
-    def execute(self) -> Iterator[ACSingleResult]:
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield ACSingleResult(
             state=ACResultState.OK,
             text="single result 1 1",
@@ -199,7 +200,7 @@ class _FakeACTestMultiSite(ACTest):
     ],
 )
 def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult]) -> None:
-    assert merge_tests({SiteId("site_id"): list(ac_test().run())}) == {
+    assert merge_tests({SiteId("site_id"): list(ac_test().run(SiteId("site_id"), Config()))}) == {
         SiteId("site_id"): test_result
     }
 

@@ -164,7 +164,7 @@ class ACTest:
         be shown to the user."""
         raise NotImplementedError()
 
-    def execute(self) -> Iterator[ACSingleResult]:
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
@@ -172,9 +172,9 @@ class ACTest:
         """
         raise NotImplementedError()
 
-    def run(self) -> Iterator[ACTestResult]:
+    def run(self, site_id: SiteId, config: Config) -> Iterator[ACTestResult]:
         try:
-            for result in self.execute():
+            for result in self.execute(site_id, config):
                 yield ACTestResult(
                     state=result.state,
                     text=result.text,
@@ -223,6 +223,8 @@ ac_test_registry = ACTestRegistry()
 
 
 class _TCheckAnalyzeConfig(TypedDict):
+    site_id: SiteId
+    config: Config
     categories: Sequence[str] | None
 
 
@@ -233,7 +235,9 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
     def get_request(self, config: Config, request: Request) -> _TCheckAnalyzeConfig:
         raw_categories = request.get_request().get("categories")
         return _TCheckAnalyzeConfig(
-            categories=json.loads(raw_categories) if raw_categories else None
+            site_id=omd_site(),
+            config=config,
+            categories=json.loads(raw_categories) if raw_categories else None,
         )
 
     def execute(self, api_request: _TCheckAnalyzeConfig) -> list[ACTestResult]:
@@ -248,7 +252,7 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
             if not test.is_relevant():
                 continue
 
-            for result in test.run():
+            for result in test.run(api_request["site_id"], api_request["config"]):
                 results.append(result)
 
         return results
@@ -262,6 +266,7 @@ class _TestResult(TypedDict):
 
 def _perform_tests_for_site(
     logger: logging.Logger,
+    config: Config,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     request_: Request,
     site_id: SiteId,
@@ -274,7 +279,13 @@ def _perform_tests_for_site(
     try:
         if isinstance(automation_config, LocalAutomationConfig):
             automation = AutomationCheckAnalyzeConfig()
-            ac_test_results = automation.execute(_TCheckAnalyzeConfig(categories=categories))
+            ac_test_results = automation.execute(
+                _TCheckAnalyzeConfig(
+                    site_id=site_id,
+                    config=config,
+                    categories=categories,
+                )
+            )
         else:
             raw_ac_test_results = do_remote_automation(
                 automation_config,
@@ -323,6 +334,7 @@ def _error_callback(error: BaseException) -> None:
 
 def perform_tests(
     logger: logging.Logger,
+    config: Config,
     request_: Request,
     test_sites: SiteConfigurations,
     *,
@@ -338,6 +350,7 @@ def perform_tests(
     def run(site_id: SiteId) -> _TestResult:
         return _perform_tests_for_site(
             logger,
+            config,
             make_automation_config(test_sites[site_id]),
             request_,
             site_id,

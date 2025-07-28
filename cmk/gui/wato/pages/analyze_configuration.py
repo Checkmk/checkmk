@@ -148,6 +148,7 @@ class ModeAnalyzeConfig(WatoMode):
         for _site_id, results in merge_tests(
             perform_tests(
                 self._logger,
+                config,
                 request,
                 analyze_sites,
                 categories=None,

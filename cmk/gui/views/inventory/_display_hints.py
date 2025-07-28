@@ -584,9 +584,20 @@ def _parse_legacy_display_hints(
         )
 
 
-@dataclass(frozen=True)
 class DisplayHints:
-    _nodes_by_path: dict[SDPath, NodeDisplayHint]
+    def __init__(self) -> None:
+        self._nodes_by_path: dict[SDPath, NodeDisplayHint] = {
+            (): NodeDisplayHint(
+                ident=_make_node_ident(()),
+                path=(),
+                title=str(_l("Inventory tree")),
+                short_title=str(_l("Inventory tree")),
+                long_title=str(_l("Inventory tree")),
+                icon="",
+                attributes={},
+                table=Table(columns={}),
+            )
+        }
 
     def add(self, node_hint: NodeDisplayHint) -> None:
         self._nodes_by_path[node_hint.path] = node_hint
@@ -627,20 +638,7 @@ class DisplayHints:
         )
 
 
-inv_display_hints = DisplayHints(
-    {
-        (): NodeDisplayHint(
-            ident=_make_node_ident(()),
-            path=(),
-            title=str(_l("Inventory tree")),
-            short_title=str(_l("Inventory tree")),
-            long_title=str(_l("Inventory tree")),
-            icon="",
-            attributes={},
-            table=Table(columns={}),
-        )
-    }
-)
+inv_display_hints = DisplayHints()
 
 
 def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> None:

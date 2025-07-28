@@ -10,7 +10,7 @@ from typing import Literal, TypeGuard, TypeVar
 from livestatus import OnlySites, SiteId
 
 from cmk.utils.defines import short_service_state_name
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostAddress, HostName, UserId
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
@@ -535,7 +535,8 @@ class PainterEventHost(Painter):
         return False
 
     def render(self, row: Row, cell: "Cell") -> CellSpec:
-        host_name = row.get("event_host", row["host_name"])
+        event_host: HostAddress = row["event_host"]
+        host_name = row.get("host_name", event_host)
 
         return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
 

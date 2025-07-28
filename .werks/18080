@@ -1,0 +1,11 @@
+Title: Fix translation of event host names
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1753696880
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+Since werk #17724 the translation of event host names was broken. This werk
+reverts the changes.

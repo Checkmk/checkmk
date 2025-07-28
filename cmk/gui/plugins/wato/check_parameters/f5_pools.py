@@ -21,6 +21,7 @@ def _parameter_valuespec_f5_pools():
                     "levels_lower",
                     SimpleLevels(
                         spec=Integer,
+                        direction="lower",
                         title=_("Minimum number of pool members"),
                         unit=_("Members "),
                     ),

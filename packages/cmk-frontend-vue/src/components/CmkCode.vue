@@ -69,9 +69,14 @@ async function copyToClipboard() {
   margin-bottom: var(--spacing);
 
   .code_container {
+    font-family: monospace;
+    font-size: var(--font-size-normal, 12px);
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
     padding: var(--spacing);
-    background: var(--black);
-    color: var(--white);
+    background: var(--ux-theme-0);
+    color: var(--font-color);
     border-radius: var(--spacing-half);
 
     pre {
@@ -87,7 +92,7 @@ async function copyToClipboard() {
 
     .clone_icon_container {
       padding: var(--spacing-half);
-      background-color: var(--color-corporate-green-60);
+      background-color: var(--color-corporate-green-50);
 
       .clone_icon {
         margin-right: 0;
@@ -98,7 +103,7 @@ async function copyToClipboard() {
       margin-left: var(--spacing);
       padding: var(--spacing-half);
       border-radius: var(--spacing-half);
-      background-color: var(--color-corporate-green-60);
+      background-color: var(--ux-theme-0);
       color: var(--font-color);
     }
     .message.error {

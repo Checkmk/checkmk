@@ -23,11 +23,23 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    ("translated_metrics", "registered_perfometers", "perfometer"),
-    [
-        pytest.param(
-            {"active_connections": {}},
+def test_get_first_matching_perfometer_testable() -> None:
+    assert (
+        first_renderer := get_first_matching_perfometer(
+            {
+                "active_connections": TranslatedMetric(
+                    originals=[Original("active_connections", 1.0)],
+                    value=1.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="Active connections",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#111111",
+                ),
+            },
             {
                 "active_connections": perfometers_api.Perfometer(
                     name="active_connections",
@@ -38,31 +50,16 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
                     segments=["active_connections"],
                 )
             },
-            perfometers_api.Perfometer(
-                name="active_connections",
-                focus_range=perfometers_api.FocusRange(
-                    lower=perfometers_api.Closed(0),
-                    upper=perfometers_api.Open(90),
-                ),
-                segments=["active_connections"],
-            ),
-            id="very first perfometer",
-        ),
-    ],
-)
-def test_get_first_matching_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric],
-    registered_perfometers: Mapping[
-        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
-    ],
-    perfometer: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
-    ),
-) -> None:
-    assert (
-        first_renderer := get_first_matching_perfometer(translated_metrics, registered_perfometers)
+        )
     ) is not None
-    assert first_renderer.perfometer == perfometer
+    assert first_renderer.perfometer == perfometers_api.Perfometer(
+        name="active_connections",
+        focus_range=perfometers_api.FocusRange(
+            lower=perfometers_api.Closed(0),
+            upper=perfometers_api.Open(90),
+        ),
+        segments=["active_connections"],
+    )
 
 
 @pytest.mark.parametrize(

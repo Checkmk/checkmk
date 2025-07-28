@@ -78,7 +78,7 @@ const classes = computed(() => [
   }
 }
 .cmk-link-card__icon {
-  margin-right: var(--spacing);
+  margin-right: var(--dimension-item-spacing-7);
 }
 .cmk-link-card__text-area {
   margin-right: var(--spacing);

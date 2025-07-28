@@ -1,0 +1,20 @@
+/**
+ * Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+:root {
+  /* Item spacing */
+  --dimension-item-spacing-1: 1px;
+  --dimension-item-spacing-2: 2px;
+  --dimension-item-spacing-3: 4px;
+  --dimension-item-spacing-4: 8px;
+  --dimension-item-spacing-5: 12px;
+  --dimension-item-spacing-6: 16px;
+  --dimension-item-spacing-7: 20px;
+  --dimension-item-spacing-8: 24px;
+  --dimension-item-spacing-9: 28px;
+  --dimension-item-spacing-10: 32px;
+  --dimension-item-spacing-11: 36px;
+}

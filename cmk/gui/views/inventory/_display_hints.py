@@ -223,6 +223,33 @@ def _parse_attribute_hint(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ColumnDisplayHint:
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory column: %s") % self.long_title
+
+
+def _parse_column_hint(
+    *, node_title: str, key: str, legacy_hint: InventoryHintSpec
+) -> ColumnDisplayHint:
+    _data_type, paint_function = _get_paint_function(legacy_hint)
+    title = _make_title_function(legacy_hint)(key)
+    return ColumnDisplayHint(
+        title=title,
+        short_title=(
+            title if (short_title := legacy_hint.get("short")) is None else str(short_title)
+        ),
+        long_title=_make_long_title(node_title, title),
+        paint_function=paint_function,
+    )
+
+
 def _parse_column_display_hint_filter_class(
     table_view_name: str,
     name: str,
@@ -352,33 +379,6 @@ def _parse_column_hint_of_view(
         filter=_parse_column_display_hint_filter_class(
             table_view_name, name, long_title, legacy_hint.get("filter")
         ),
-    )
-
-
-@dataclass(frozen=True, kw_only=True)
-class ColumnDisplayHint:
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory column: %s") % self.long_title
-
-
-def _parse_column_hint(
-    *, node_title: str, key: str, legacy_hint: InventoryHintSpec
-) -> ColumnDisplayHint:
-    _data_type, paint_function = _get_paint_function(legacy_hint)
-    title = _make_title_function(legacy_hint)(key)
-    return ColumnDisplayHint(
-        title=title,
-        short_title=(
-            title if (short_title := legacy_hint.get("short")) is None else str(short_title)
-        ),
-        long_title=_make_long_title(node_title, title),
-        paint_function=paint_function,
     )
 
 

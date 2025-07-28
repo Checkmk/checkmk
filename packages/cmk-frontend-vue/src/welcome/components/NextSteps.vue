@@ -24,19 +24,6 @@ defineProps<{
   </CmkHeading>
   <CmkSpace />
   <CmkLinkCard
-    :title="t('create-contact-groups', 'Create contact groups')"
-    :subtitle="
-      t(
-        'create-contact-groups-subtitle',
-        'Streamline responsibilities to ensure that the right people receive relevant alerts and access.'
-      )
-    "
-    icon-name="contactgroups"
-    :url="urls.create_contactgoups"
-    variant="borderless"
-    :open-in-new-tab="false"
-  />
-  <CmkLinkCard
     :title="t('setup-backup', 'Set up backup')"
     :subtitle="
       t(

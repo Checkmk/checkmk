@@ -13,9 +13,11 @@ use crate::common::tools::{
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
+use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
-use mk_oracle::types::SqlQuery;
 use mk_oracle::types::{Credentials, InstanceName};
+use mk_oracle::types::{Separator, SqlQuery};
+use std::collections::HashSet;
 use std::str::FromStr;
 
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
@@ -139,6 +141,22 @@ authentication:
     assert_ne!(a.password(), Some("$CI_ORA2_DB_TEST"));
 }
 
+lazy_static::lazy_static! {
+    static ref REFERENCE_ENDPOINT: SqlDbEndpoint = reference_endpoint();
+    static ref TEST_SQL_INSTANCE:SqlQuery = SqlQuery::new(
+            r"
+    select upper(i.INSTANCE_NAME)
+        ||'|'|| 'sys_time_model'
+        ||'|'|| S.STAT_NAME
+        ||'|'|| Round(s.value/1000000)
+    from v$instance i,
+        v$sys_time_model s
+    where s.stat_name in('DB time', 'DB CPU')
+    order by s.stat_name",
+            Separator::No
+        );
+}
+
 #[cfg(windows)]
 #[test]
 fn test_environment() {
@@ -174,20 +192,7 @@ fn test_local_connection() {
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
     assert!(r.is_ok());
-    let result = task.query(
-        &SqlQuery::from(
-            r"
-    select upper(i.INSTANCE_NAME)
-        ||'|'|| 'sys_time_model'
-        ||'|'|| S.STAT_NAME
-        ||'|'|| Round(s.value/1000000)
-    from v$instance i,
-        v$sys_time_model s
-    where s.stat_name in('DB time', 'DB CPU')
-    order by s.stat_name",
-        ),
-        "",
-    );
+    let result = task.query(&TEST_SQL_INSTANCE, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     eprintln!("Rows: {:?}", rows);
@@ -217,7 +222,7 @@ fn test_remote_mini_connection() {
     println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
     let result = task.query(
-        &SqlQuery::from(
+        &SqlQuery::new(
             r"
     select upper(i.INSTANCE_NAME)
         ||'|'|| 'sys_time_model'
@@ -227,6 +232,7 @@ fn test_remote_mini_connection() {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
+            Separator::No,
         ),
         "",
     );
@@ -267,5 +273,67 @@ fn test_remote_mini_connection_version() {
                 .unwrap()
                 .is_none()
         );
+    }
+}
+
+#[test]
+fn test_io_stats_query() {
+    add_runtime_to_path();
+    let endpoint = reference_endpoint();
+
+    let config = make_mini_config(
+        &Credentials {
+            user: endpoint.user,
+            password: endpoint.pwd,
+        },
+        AuthType::Standard,
+        &endpoint.host,
+    );
+
+    let mut task = backend::make_task(&config.endpoint()).unwrap();
+    let r = task.connect();
+    assert!(r.is_ok());
+    let q = SqlQuery::new(
+        sqls::find_known_query(sqls::Id::IoStats).unwrap(),
+        Separator::default(),
+    );
+    let result = task.query(&q, "");
+    assert!(result.is_ok());
+    let rows = result.unwrap();
+    assert!(rows.len() > 10);
+    let name_dot = format!("{}.", &endpoint.instance);
+    for r in &rows {
+        let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
+        assert_eq!(values.len(), 15, "Row does not have enough columns: {}", r);
+        assert!(
+            values[0].starts_with(name_dot.as_str()),
+            "Row does not start with instance name: {}",
+            r
+        );
+        assert_eq!(values[1], "iostat_file");
+        let all_types: HashSet<String> = HashSet::from_iter(
+            vec![
+                "Archive Log",
+                "Archive Log Backup",
+                "Control File",
+                "Data File",
+                "Data File Backup",
+                "Data File Copy",
+                "Data File Incremental Backup",
+                "Data Pump Dump File",
+                "External Table",
+                "Flashback Log",
+                "Log File",
+                "Other",
+                "Temp File",
+            ]
+            .into_iter()
+            .map(|s| s.to_string()),
+        );
+        let the_type = &values[2];
+        assert!(all_types.contains(the_type), "Wrong type: {}", the_type);
+        for v in &values[3..] {
+            assert!(v.parse::<u64>().is_ok(), "Value is not digit: {}", v);
+        }
     }
 }

@@ -96,9 +96,7 @@ impl Section {
     /// or in the known queries if custom sql query is not provided
     pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         match self.name.as_ref() {
-            names::INSTANCE => find_known_query(sqls::Id::Instance)
-                .map(str::to_string)
-                .ok(),
+            names::IO_STATS => find_known_query(sqls::Id::IoStats).map(str::to_string).ok(),
             _ => self.find_query(sql_dir, instance_version),
         }
     }
@@ -186,7 +184,7 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
 
 lazy_static::lazy_static! {
     static ref SECTION_MAP: HashMap<&'static str, sqls::Id> = HashMap::from([
-        (names::INSTANCE, sqls::Id::Instance),
+        (names::IO_STATS, sqls::Id::IoStats),
     ]);
 }
 
@@ -236,7 +234,7 @@ mod tests {
     /// We test only few parameters
     #[test]
     fn test_get_ids() {
-        assert_eq!(get_sql_id(names::INSTANCE).unwrap(), sqls::Id::Instance);
+        assert_eq!(get_sql_id(names::IO_STATS).unwrap(), sqls::Id::IoStats);
         // TODO: add all..
         assert!(get_sql_id("").is_none());
     }

@@ -3,14 +3,15 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::ora_sql::backend::Task;
-use crate::types::{InstanceName, SqlQuery};
+use crate::types::{InstanceName, Separator, SqlQuery};
 use anyhow::Result;
 use std::collections::HashMap;
 
 #[allow(dead_code)]
 pub fn get_version(connected_task: &Task, instance: &InstanceName) -> Result<Option<String>> {
-    let result = connected_task.query_table(&SqlQuery::from(
+    let result = connected_task.query_table(&SqlQuery::new(
         r"SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance",
+        Separator::default(),
     ))?;
     let hashmap: HashMap<InstanceName, String> = result
         .into_iter()

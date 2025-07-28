@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::config::defines::defaults::DEFAULT_SEP;
 use derive_more::{Display, From, Into};
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, From, Into)]
@@ -105,17 +106,55 @@ pub struct Credentials {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, From)]
-pub struct SqlQuery(pub String);
-impl From<&str> for SqlQuery {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
+pub enum Separator {
+    No,
+    Comma,
+    Decorated(char),
+}
+
+impl Default for Separator {
+    fn default() -> Self {
+        Separator::Decorated(DEFAULT_SEP)
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, From)]
+pub struct SqlQuery {
+    text: String,
+    separator: Separator,
+}
 impl SqlQuery {
-    pub fn as_str(&self) -> &str {
-        &self.0
+    pub fn new<T: AsRef<str> + Sized>(s: T, separator: Separator) -> Self {
+        match separator {
+            Separator::No => Self {
+                text: s.as_ref().to_owned(),
+                separator: crate::types::Separator::No,
+            },
+            Separator::Comma => Self {
+                text: use_sep(s.as_ref(), ","),
+                separator: Separator::Comma,
+            },
+            Separator::Decorated(c) => Self {
+                text: use_sep(s, format!("|| '{}' ||", c).as_str()),
+                separator: Separator::Decorated(c),
+            },
+        }
     }
+
+    pub fn as_str(&self) -> &str {
+        &self.text
+    }
+
+    pub fn sep(&self) -> Option<char> {
+        match &self.separator {
+            Separator::No => None,
+            Separator::Comma => None,
+            Separator::Decorated(c) => Some(*c),
+        }
+    }
+}
+fn use_sep<T: AsRef<str>>(s: T, sep: &str) -> String {
+    s.as_ref().replace("{sep}", sep)
 }
 
 #[cfg(test)]
@@ -125,5 +164,31 @@ mod tests {
     #[test]
     fn test_instance_name() {
         assert_eq!(&InstanceName::from("teST").to_string(), "TEST");
+    }
+
+    #[test]
+    fn test_sql_query() {
+        assert_eq!(
+            SqlQuery::new("a {sep} b", Separator::No).as_str(),
+            "a {sep} b"
+        );
+        assert_eq!(
+            SqlQuery::new("a {sep} b", Separator::Comma).as_str(),
+            "a , b"
+        );
+        assert_eq!(
+            SqlQuery::new("a {sep} b", Separator::default()).as_str(),
+            "a || '|' || b"
+        );
+        assert_eq!(
+            SqlQuery::new("a {sep} b", Separator::Decorated('x')).as_str(),
+            "a || 'x' || b"
+        );
+    }
+
+    #[test]
+    fn test_make_query() {
+        const QUERY: &str = "a{sep}b{sep}c";
+        assert_eq!(use_sep(QUERY, ","), "a,b,c");
     }
 }

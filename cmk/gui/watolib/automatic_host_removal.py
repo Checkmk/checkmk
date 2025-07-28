@@ -12,7 +12,7 @@ from typing import Literal, NamedTuple, override, TypedDict
 
 from redis import ConnectionError as RedisConnectionError
 
-from livestatus import LocalConnection, MKLivestatusSocketError
+from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations
 
 import cmk.gui.log
 from cmk.ccc.hostaddress import HostName
@@ -97,7 +97,13 @@ def execute_host_removal_job(config: Config) -> None:
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")
-        _activate_changes(list(config.sites), hosts_to_be_removed, debug=config.debug)
+        _activate_changes(
+            config.sites,
+            hosts_to_be_removed,
+            max_snapshots=config.wato_max_snapshots,
+            use_git=config.wato_use_git,
+            debug=config.debug,
+        )
 
         _LOGGER.info("Host removal background job finished")
     except RedisConnectionError as e:
@@ -244,19 +250,27 @@ def _should_delete_host(
 
 
 def _activate_changes(
-    all_sites: Sequence[SiteId], sites: Collection[SiteId], *, debug: bool
+    all_site_configs: SiteConfigurations,
+    sites: Collection[SiteId],
+    *,
+    max_snapshots: int,
+    use_git: bool,
+    debug: bool,
 ) -> None:
     _LOGGER_BACKGROUND_JOB.debug("Activating changes for %d site(s)", len(sites))
 
     # workaround until CMK-13093 is fixed
     folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
-    manager.changes.load(all_sites)
+    manager.changes.load(list(all_site_configs))
     with SuperUserContext():
         activation_id = manager.start(
             sites=list(sites),
             source="INTERNAL",
+            all_site_configs=all_site_configs,
+            max_snapshots=max_snapshots,
             activate_foreign=True,
+            use_git=use_git,
             debug=debug,
         )
         _LOGGER_BACKGROUND_JOB.info("Activation %s started", activation_id)

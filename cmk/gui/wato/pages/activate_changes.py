@@ -406,7 +406,9 @@ class ModeActivateChanges(WatoMode):
                             title=_("On all sites"),
                             entries=list(
                                 self._page_menu_entries_all_sites(
-                                    list(activation_sites(active_config.sites)),
+                                    activation_site_ids := list(
+                                        activation_sites(active_config.sites)
+                                    ),
                                     config.wato_read_only,
                                     debug=config.debug,
                                 )
@@ -415,7 +417,9 @@ class ModeActivateChanges(WatoMode):
                         PageMenuTopic(
                             title=_("On selected sites"),
                             entries=list(
-                                self._page_menu_entries_selected_sites(config.wato_read_only)
+                                self._page_menu_entries_selected_sites(
+                                    config.wato_read_only, activation_site_ids
+                                )
                             ),
                         ),
                         make_checkbox_selection_topic(
@@ -459,9 +463,9 @@ class ModeActivateChanges(WatoMode):
             )
 
     def _page_menu_entries_all_sites(
-        self, sites: Sequence[SiteId], read_only_config: ReadOnlySpec, *, debug: bool
+        self, activation_site_ids: Sequence[SiteId], read_only_config: ReadOnlySpec, *, debug: bool
     ) -> Iterator[PageMenuEntry]:
-        if not self._may_discard_changes(read_only_config, debug=debug):
+        if not self._may_discard_changes(read_only_config, activation_site_ids, debug=debug):
             return
 
         enabled = False
@@ -470,7 +474,7 @@ class ModeActivateChanges(WatoMode):
             if not _get_last_wato_snapshot_file(debug=debug):
                 enabled = False
                 disabled_tooltip = _("No snapshot to restore available.")
-            elif self._changes.discard_changes_forbidden(sites):
+            elif self._changes.discard_changes_forbidden(activation_site_ids):
                 enabled = False
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
@@ -498,9 +502,9 @@ class ModeActivateChanges(WatoMode):
         )
 
     def _page_menu_entries_selected_sites(
-        self, read_only_config: ReadOnlySpec
+        self, read_only_config: ReadOnlySpec, activation_site_ids: Sequence[SiteId]
     ) -> Iterator[PageMenuEntry]:
-        if not self._may_activate_changes(read_only_config):
+        if not self._may_activate_changes(read_only_config, activation_site_ids):
             return
 
         yield PageMenuEntry(
@@ -516,14 +520,18 @@ class ModeActivateChanges(WatoMode):
             is_enabled=self._changes.has_pending_changes(),
         )
 
-    def _may_discard_changes(self, read_only_config: ReadOnlySpec, *, debug: bool) -> bool:
+    def _may_discard_changes(
+        self, read_only_config: ReadOnlySpec, activation_site_ids: Sequence[SiteId], *, debug: bool
+    ) -> bool:
         if not user.may("wato.discard"):
             return False
 
-        if not user.may("wato.discardforeign") and self._changes.has_foreign_changes_on_any_site():
+        if not user.may("wato.discardforeign") and self._changes.has_foreign_changes_on_any_site(
+            activation_site_ids
+        ):
             return False
 
-        if not self._may_activate_changes(read_only_config):
+        if not self._may_activate_changes(read_only_config, activation_site_ids):
             return False
 
         if not _get_last_wato_snapshot_file(debug=debug):
@@ -546,11 +554,15 @@ class ModeActivateChanges(WatoMode):
             return block_effect.block is None and license_usage_report_valid
         return True
 
-    def _may_activate_changes(self, read_only_config: ReadOnlySpec) -> bool:
+    def _may_activate_changes(
+        self, read_only_config: ReadOnlySpec, activation_site_ids: Sequence[SiteId]
+    ) -> bool:
         if not user.may("wato.activate"):
             return False
 
-        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site(
+            activation_site_ids
+        ):
             return False
 
         if read_only.is_enabled(read_only_config) and not read_only.may_override(read_only_config):
@@ -561,7 +573,10 @@ class ModeActivateChanges(WatoMode):
     def page(self, config: Config) -> None:
         self._quick_setup_activation_msg()
         self._activation_msg()
-        self._activation_form(comment_mode=config.wato_activate_changes_comment_mode)
+        self._activation_form(
+            comment_mode=config.wato_activate_changes_comment_mode,
+            activation_site_ids=list(activation_sites(config.sites)),
+        )
 
         self._show_license_validity()
 
@@ -613,7 +628,11 @@ class ModeActivateChanges(WatoMode):
             return None
         return _("Activation has finished.")
 
-    def _activation_form(self, comment_mode: Literal["enforce", "optional", "disabled"]) -> None:
+    def _activation_form(
+        self,
+        comment_mode: Literal["enforce", "optional", "disabled"],
+        activation_site_ids: Sequence[SiteId],
+    ) -> None:
         if not user.may("wato.activate"):
             html.show_warning(_("You are not permitted to activate configuration changes."))
             return
@@ -621,7 +640,9 @@ class ModeActivateChanges(WatoMode):
         if not self._changes.pending_changes:
             return
 
-        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._changes.has_foreign_changes_on_any_site(
+            activation_site_ids
+        ):
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 
@@ -1047,10 +1068,13 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
+            all_site_configs=config.sites,
             activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",
+            max_snapshots=config.wato_max_snapshots,
+            use_git=config.wato_use_git,
             debug=config.debug,
         )
 

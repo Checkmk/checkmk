@@ -132,9 +132,12 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
         activation_response = activate_changes_start(
             sites=sites,
             enabled_sites=list(enabled_sites(active_config.sites).keys()),
+            all_site_configs=active_config.sites,
             source="REST API",
             comment=None,
+            max_snapshots=active_config.wato_max_snapshots,
             force_foreign_changes=body["force_foreign_changes"],
+            use_git=active_config.wato_use_git,
             debug=active_config.debug,
         )
 

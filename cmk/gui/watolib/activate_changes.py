@@ -347,6 +347,9 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",
+        all_site_configs=active_config.sites,
+        max_snapshots=active_config.wato_max_snapshots,
+        use_git=active_config.wato_use_git,
         debug=debug,
     )
 
@@ -1303,13 +1306,13 @@ class ActivateChanges:
             if is_foreign_change(change) and not has_been_activated(change)
         )
 
-    def has_foreign_changes_on_any_site(self) -> bool:
+    def has_foreign_changes_on_any_site(self, activation_site_ids: Sequence[SiteId]) -> bool:
         return any(
             change
             for _change_id, change in self._pending_changes
             if is_foreign_change(change)
             and not has_been_activated(change)
-            and affects_all_sites(list(activation_sites(active_config.sites)), change)
+            and affects_all_sites(activation_site_ids, change)
         )
 
     def get_activation_time(self, site_id: SiteId, ty: str) -> float | None:
@@ -1544,6 +1547,9 @@ class ActivateChangesManager:
         sites: Sequence[SiteId],
         source: ActivationSource,
         *,
+        all_site_configs: SiteConfigurations,
+        max_snapshots: int,
+        use_git: bool,
         debug: bool,
         activate_until: str | None = None,
         comment: str | None = None,
@@ -1588,7 +1594,7 @@ class ActivateChangesManager:
 
         self._activate_foreign = activate_foreign
 
-        self._verify_requested_sites(sites, list(activation_sites(active_config.sites)))
+        self._verify_requested_sites(sites, list(activation_sites(all_site_configs)))
         self._sites = sites
 
         self._source = source
@@ -1599,14 +1605,14 @@ class ActivateChangesManager:
 
         with _debug_log_message("Compute rabbitmq definitions"):
             rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
-                get_all_replicated_sites(activation_sites(active_config.sites)),
+                get_all_replicated_sites(activation_sites(all_site_configs)),
                 BrokerConnectionsConfigFile().load_for_reading(),
             )
 
         with _debug_log_message("Preparing site snapshot settings"):
             self._site_snapshot_settings = self._get_site_snapshot_settings(
                 self._activation_id,
-                {site_id: active_config.sites[site_id] for site_id in self._sites},
+                {site_id: all_site_configs[site_id] for site_id in self._sites},
                 rabbitmq_definitions,
             )
         self._activate_until = (
@@ -1627,14 +1633,14 @@ class ActivateChangesManager:
         with _debug_log_message("Creating snapshots"):
             self._create_snapshots(
                 activation_features.snapshot_manager_factory,
-                max_snapshots=active_config.wato_max_snapshots,
+                max_snapshots=max_snapshots,
                 debug=debug,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
         self._save_activation()
 
         with _debug_log_message("Starting activation"):
-            self._start_activation(debug=debug, use_git=active_config.wato_use_git)
+            self._start_activation(debug=debug, use_git=use_git)
 
         with _debug_log_message("Update and activate central rabbitmq changes"):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
@@ -1651,11 +1657,11 @@ class ActivateChangesManager:
             ):
                 activation_features.distribute_piggyback_hub_configs(
                     load_configuration_settings(),
-                    active_config.sites,
+                    all_site_configs,
                     {
                         site_id
                         for site_id, _site_config in self.changes.dirty_sites(
-                            activation_sites(active_config.sites)
+                            activation_sites(all_site_configs)
                         )
                     },
                     {
@@ -3634,9 +3640,12 @@ def activate_changes_start(
     *,
     sites: Sequence[SiteId],
     enabled_sites: Sequence[SiteId],
+    all_site_configs: SiteConfigurations,
     source: ActivationSource,
     comment: str | None,
+    max_snapshots: int,
     force_foreign_changes: bool,
+    use_git: bool,
     debug: bool,
 ) -> ActivationRestAPIResponseExtensions:
     """Start activation of configuration changes on specific or "dirty" sites.
@@ -3660,8 +3669,8 @@ def activate_changes_start(
     """
 
     changes = ActivateChanges()
-    # TODO: So far we used active_config.sites. Would it be enough to use the passed sites?
-    changes.load(list(active_config.sites))
+    # TODO: So far we used all_site_configs. Would it be enough to use the passed sites?
+    changes.load(list(all_site_configs))
 
     _raise_for_license_block()
 
@@ -3683,8 +3692,8 @@ def activate_changes_start(
             )
 
     manager = ActivateChangesManager()
-    # TODO: So far we used active_config.sites. Would it be enough to use the passed sites?
-    manager.changes.load(list(active_config.sites))
+    # TODO: So far we used all_site_configs. Would it be enough to use the passed sites?
+    manager.changes.load(list(all_site_configs))
 
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)
@@ -3693,7 +3702,7 @@ def activate_changes_start(
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:
-        dirty_sites = manager.changes.dirty_sites(activation_sites(active_config.sites))
+        dirty_sites = manager.changes.dirty_sites(activation_sites(all_site_configs))
         if not dirty_sites:
             raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
@@ -3715,6 +3724,9 @@ def activate_changes_start(
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,
+        all_site_configs=all_site_configs,
+        max_snapshots=max_snapshots,
+        use_git=use_git,
         debug=debug,
     )
     return activation_attributes_for_rest_api_response(manager)

@@ -40,7 +40,6 @@ from cmk.utils.structured_data import (
     SDRetentionFilterChoices,
     serialize_delta_tree,
     serialize_tree,
-    UpdateResult,
 )
 from tests.testlib.common.repo import repo_path
 
@@ -1722,14 +1721,7 @@ def test_update_from_previous_1() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice="all", cache_info=(4, 5))
 
-    update_result = UpdateResult()
-    current_tree_.update(
-        now=0,
-        previous_tree=previous_tree,
-        choices=choices,
-        update_result=update_result,
-    )
-    assert bool(update_result)
+    assert len(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)) > 0
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
@@ -1769,14 +1761,7 @@ def test_update_from_previous_2() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
 
-    update_result = UpdateResult()
-    current_tree_.update(
-        now=0,
-        previous_tree=previous_tree,
-        choices=choices,
-        update_result=update_result,
-    )
-    assert bool(update_result)
+    assert len(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)) > 0
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]

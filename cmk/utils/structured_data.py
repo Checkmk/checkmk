@@ -158,35 +158,25 @@ class RetentionInterval:
         return self.cached_at + self.cache_interval + self.retention_interval
 
 
-@dataclass(frozen=True)
-class UpdateResult:
-    reasons_by_path: dict[SDPath, list[str]] = field(default_factory=dict)
-
-    @property
-    def save_tree(self) -> bool:
-        return bool(self.reasons_by_path)
-
-    def add_attr_reason(self, path: SDPath, title: str, iterable: Iterable[str]) -> None:
-        self.reasons_by_path.setdefault(path, []).append(
-            f"[Attributes] {title}: {', '.join(sorted(iterable))}"
-        )
-
-    def add_row_reason(
-        self, path: SDPath, ident: SDRowIdent, title: str, iterable: Iterable[str]
-    ) -> None:
-        self.reasons_by_path.setdefault(path, []).append(
-            f"[Table] '{', '.join(map(str, ident))}': {title}: {', '.join(sorted(iterable))}"
-        )
+@dataclass(frozen=True, kw_only=True)
+class UpdateResultAttributes:
+    path: SDPath
+    title: str
+    message: str
 
     def __str__(self) -> str:
-        if not self.reasons_by_path:
-            return "No tree update.\n"
+        return f"[Attributes] {self.title}: self.message"
 
-        lines = ["Updated inventory tree:"]
-        for path, reasons in self.reasons_by_path.items():
-            lines.append(f"  Path '{' > '.join(path)}':")
-            lines.extend(f"    {r}" for r in sorted(reasons))
-        return "\n".join(lines) + "\n"
+
+@dataclass(frozen=True, kw_only=True)
+class UpdateResultTable:
+    path: SDPath
+    ident: SDRowIdent
+    title: str
+    message: str
+
+    def __str__(self) -> str:
+        return f"[Table] '{', '.join(map(str, self.ident))}': {self.title}: self.message"
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:
@@ -715,8 +705,7 @@ class _MutableAttributes:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-        update_result: UpdateResult,
-    ) -> None:
+    ) -> Sequence[UpdateResultAttributes]:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
@@ -742,15 +731,28 @@ class _MutableAttributes:
         for key in compared_keys.both.union(compared_keys.only_right):
             retentions[key] = retention_interval
 
+        update_results = []
         if pairs:
             self.add(pairs)
-            update_result.add_attr_reason(path, "Added pairs", pairs)
+            update_results.append(
+                UpdateResultAttributes(
+                    path=path,
+                    title="Added pairs",
+                    message=", ".join(sorted(pairs)),
+                )
+            )
 
         if retentions:
             self.retentions = retentions
-            update_result.add_attr_reason(
-                path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
+            update_results.append(
+                UpdateResultAttributes(
+                    path=path,
+                    title="Keep until",
+                    message=", ".join([f"{k} ({v.keep_until})" for k, v in retentions.items()]),
+                )
             )
+
+        return update_results
 
     @property
     def bare(self) -> SDBareAttributes:
@@ -810,8 +812,7 @@ class _MutableTable:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-        update_result: UpdateResult,
-    ) -> None:
+    ) -> Sequence[UpdateResultTable]:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         self._add_key_columns(previous.key_columns)
@@ -840,6 +841,7 @@ class _MutableTable:
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
+        update_results = []
         for ident in compared_row_idents.only_left:
             previous_row: dict[SDKey, SDValue] = {}
             for key, value in previous_filtered_rows[ident].items():
@@ -852,7 +854,14 @@ class _MutableTable:
                 # Update row with key column entries
                 previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
                 self._add_row(ident, previous_row)
-                update_result.add_row_reason(path, ident, "Added row", previous_row)
+                update_results.append(
+                    UpdateResultTable(
+                        path=path,
+                        ident=ident,
+                        title="Added row",
+                        message=", ".join(sorted(previous_row)),
+                    )
+                )
 
         for ident in compared_row_idents.both:
             compared_keys = _DictKeys.compare(
@@ -878,7 +887,14 @@ class _MutableTable:
                     }
                 )
                 self._add_row(ident, row)
-                update_result.add_row_reason(path, ident, "Added row", row)
+                update_results.append(
+                    UpdateResultTable(
+                        path=path,
+                        ident=ident,
+                        title="Added row",
+                        message=", ".join(sorted(row)),
+                    )
+                )
 
         for ident in compared_row_idents.only_right:
             for key in current_filtered_rows[ident]:
@@ -887,12 +903,18 @@ class _MutableTable:
         if retentions:
             self.retentions = retentions
             for ident, intervals_by_key in retentions.items():
-                update_result.add_row_reason(
-                    path,
-                    ident,
-                    "Keep until",
-                    [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
+                update_results.append(
+                    UpdateResultTable(
+                        path=path,
+                        ident=ident,
+                        title="Keep until",
+                        message=", ".join(
+                            [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()]
+                        ),
+                    )
                 )
+
+        return update_results
 
     @property
     def bare(self) -> SDBareTable:
@@ -963,28 +985,20 @@ class MutableTree:
         now: int,
         previous_tree: ImmutableTree,
         choices: SDRetentionFilterChoices,
-        update_result: UpdateResult,
-    ) -> None:
+    ) -> Sequence[UpdateResultAttributes | UpdateResultTable]:
         node = self.setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
-        for choice in choices.pairs:
-            node.attributes.update(
-                now,
-                previous_node.attributes,
-                choices.path,
-                choices.interval,
-                choice,
-                update_result,
+        return [
+            r
+            for c in choices.pairs
+            for r in node.attributes.update(
+                now, previous_node.attributes, choices.path, choices.interval, c
             )
-        for choice in choices.columns:
-            node.table.update(
-                now,
-                previous_node.table,
-                choices.path,
-                choices.interval,
-                choice,
-                update_result,
-            )
+        ] + [
+            r
+            for c in choices.columns
+            for r in node.table.update(now, previous_node.table, choices.path, choices.interval, c)
+        ]
 
     def setdefault_node(self, path: SDPath) -> MutableTree:
         if not path:

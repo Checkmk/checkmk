@@ -133,7 +133,9 @@ from cmk.utils.structured_data import (
     make_meta,
     MutableTree,
     RawIntervalFromConfig,
-    UpdateResult,
+    SDPath,
+    UpdateResultAttributes,
+    UpdateResultTable,
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
@@ -3005,7 +3007,7 @@ def execute_active_check_inventory(
         save_tree_actions = _get_save_tree_actions(
             previous_tree=previous_tree,
             inventory_tree=result.inventory_tree,
-            update_result=result.update_result,
+            update_results=result.update_results,
         )
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
@@ -3027,11 +3029,25 @@ class _SaveTreeActions(NamedTuple):
     do_save: bool
 
 
+def _render_update_results(
+    update_results: Sequence[UpdateResultAttributes | UpdateResultTable],
+) -> str:
+    by_path: dict[SDPath, list[str]] = {}
+    for update_result in update_results:
+        by_path.setdefault(update_result.path, []).append(str(update_result))
+
+    lines = ["Updated inventory tree:"]
+    for path, message in by_path.items():
+        lines.append(f"  Path '{' > '.join(path)}':")
+        lines.extend(f"    {r}" for r in sorted(message))
+    return "\n".join(lines) + "\n"
+
+
 def _get_save_tree_actions(
     *,
     previous_tree: ImmutableTree,
     inventory_tree: MutableTree,
-    update_result: UpdateResult,
+    update_results: Sequence[UpdateResultAttributes | UpdateResultTable],
 ) -> _SaveTreeActions:
     if not inventory_tree:
         # Archive current inventory tree file if it exists. Important for host inventory icon
@@ -3045,12 +3061,12 @@ def _get_save_tree_actions(
     if has_changed := previous_tree != inventory_tree:
         console.verbose("Inventory tree has changed.")
 
-    if update_result.save_tree:
-        console.verbose_no_lf(str(update_result))
+    if update_results:
+        console.verbose_no_lf(_render_update_results(update_results))
 
     return _SaveTreeActions(
         do_archive=has_changed,
-        do_save=(has_changed or update_result.save_tree),
+        do_save=(has_changed or len(update_results) > 0),
     )
 
 

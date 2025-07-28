@@ -8,7 +8,15 @@ from __future__ import annotations
 import contextlib
 import itertools
 import time
-from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Container,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from dataclasses import dataclass, field
 from typing import Any, assert_never, TypeVar
 
@@ -30,7 +38,8 @@ from cmk.utils.structured_data import (
     SDPath,
     SDRetentionFilterChoices,
     SDValue,
-    UpdateResult,
+    UpdateResultAttributes,
+    UpdateResultTable,
 )
 
 from .checkresults import ActiveCheckResult
@@ -106,7 +115,7 @@ class CheckInventoryTreeResult:
     no_data_or_files: bool
     check_results: Sequence[ActiveCheckResult]
     inventory_tree: MutableTree
-    update_result: UpdateResult
+    update_results: Sequence[UpdateResultAttributes | UpdateResultTable]
 
 
 def inventorize_host(
@@ -138,7 +147,7 @@ def inventorize_host(
         error_handling=section_error_handling,
     )
 
-    trees, update_result = _inventorize_real_host(
+    trees, update_results = _inventorize_real_host(
         now=int(time.time()),
         items_of_inventory_plugins=list(
             _collect_inventory_plugin_items(
@@ -181,7 +190,7 @@ def inventorize_host(
             *check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
         ],
         inventory_tree=trees.inventory,
-        update_result=update_result,
+        update_results=update_results,
     )
 
 
@@ -204,7 +213,7 @@ def inventorize_cluster(
             )
         ),
         inventory_tree=inventory_tree,
-        update_result=UpdateResult(),
+        update_results=[],
     )
 
 
@@ -246,14 +255,14 @@ def _inventorize_real_host(
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
-) -> tuple[MutableTrees, UpdateResult]:
+) -> tuple[MutableTrees, Sequence[UpdateResultAttributes | UpdateResultTable]]:
     section.section_step("Create inventory or status data tree")
 
     trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
 
     section.section_step("May update inventory tree")
 
-    update_result = _may_update(
+    update_results = _may_update(
         now=now,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=raw_intervals_from_config,
@@ -267,7 +276,7 @@ def _inventorize_real_host(
             pairs=[{SDKey("is_cluster"): False}],
         )
 
-    return trees, update_result
+    return trees, update_results
 
 
 def inventorize_status_data_of_real_host(
@@ -504,9 +513,9 @@ def _may_update(
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     inventory_tree: MutableTree,
     previous_tree: ImmutableTree,
-) -> UpdateResult:
+) -> Sequence[UpdateResultAttributes | UpdateResultTable]:
     if not raw_intervals_from_config:
-        return UpdateResult()
+        return []
 
     # TODO do we need class name?
     cache_info_by_path_and_type = {
@@ -544,15 +553,11 @@ def _may_update(
                 ),
             )
 
-    update_result = UpdateResult()
-    for choices in choices_by_path.values():
-        inventory_tree.update(
-            now=now,
-            previous_tree=previous_tree,
-            choices=choices,
-            update_result=update_result,
-        )
-    return update_result
+    return [
+        r
+        for c in choices_by_path.values()
+        for r in inventory_tree.update(now=now, previous_tree=previous_tree, choices=c)
+    ]
 
 
 def _check_fetched_data_or_trees(

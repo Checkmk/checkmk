@@ -11,7 +11,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkButton from '@/components/CmkButton.vue'
 
 defineProps<{ screenshotMode: boolean }>()
-const data = ref(null)
+const data = ref('')
 
 type PropTypes = ComponentInstance<typeof CmkInput>['$props']
 

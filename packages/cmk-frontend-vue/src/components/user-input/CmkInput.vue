@@ -3,7 +3,7 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends 'text' | 'number' = 'text'">
 import { ref, watch } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import { cva, type VariantProps } from 'class-variance-authority'
@@ -22,7 +22,8 @@ const propsCva = cva('cmk-input', {
   }
 })
 
-export type InputType = NonNullable<VariantProps<typeof propsCva>['type']>
+type InputType = NonNullable<VariantProps<typeof propsCva>['type']>
+type InputDataType<TType extends InputType> = TType extends 'number' ? number : string
 
 const {
   type = 'text',
@@ -31,18 +32,18 @@ const {
   externalErrors,
   validators
 } = defineProps<{
-  type?: InputType
+  type?: T
   fieldSize?: keyof typeof inputSizes
   unit?: string
   externalErrors?: string[]
-  validators?: ((value: unknown) => string[])[]
+  validators?: ((value: InputDataType<T>) => string[])[]
 }>()
 
-const data = defineModel<unknown>()
+const data = defineModel<InputDataType<T>>()
 const validation = ref<string[]>([])
 
 watch(data, (newData) => {
-  if (validators && validators.length > 0) {
+  if (newData !== undefined && validators && validators.length > 0) {
     validation.value =
       validators.reduce((acc, validator) => {
         return [...acc, ...validator(newData)]

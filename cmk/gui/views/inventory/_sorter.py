@@ -13,6 +13,7 @@ from .registry import SortFunction
 
 
 class SorterFromHint(TypedDict):
+    name: str
     title: str
     columns: Sequence[str]
     load_inv: bool
@@ -23,6 +24,7 @@ def attribute_sorter_from_hint(
     path: SDPath, key: SDKey, hint: AttributeDisplayHint
 ) -> SorterFromHint:
     return SorterFromHint(
+        name=hint.name,
         title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
         load_inv=True,
@@ -35,6 +37,7 @@ def attribute_sorter_from_hint(
 
 def column_sorter_from_hint(hint: ColumnDisplayHintOfView) -> SorterFromHint:
     return SorterFromHint(
+        name=hint.name,
         title=hint.long_inventory_title,
         columns=[hint.name],
         load_inv=False,

@@ -100,14 +100,14 @@ def _register_painter(
     painter_registry.register(cls)
 
 
-def _register_sorter(name: str, spec: SorterFromHint) -> None:
+def _register_sorter(from_hint: SorterFromHint) -> None:
     sorter_registry.register(
         Sorter(
-            ident=name,
-            title=spec["title"],
-            columns=spec["columns"],
-            sort_function=lambda r1, r2, **_kwargs: spec["cmp"](r1, r2),
-            load_inv=spec.get("load_inv", False),
+            ident=from_hint["name"],
+            title=from_hint["title"],
+            columns=from_hint["columns"],
+            sort_function=lambda r1, r2, **_kwargs: from_hint["cmp"](r1, r2),
+            load_inv=from_hint.get("load_inv", False),
         )
     )
 
@@ -270,7 +270,7 @@ def _register_table_view(table: TableWithView) -> None:
     filters = []
     for col_hint in table.columns.values():
         _register_painter(column_painter_from_hint(col_hint))
-        _register_sorter(col_hint.name, column_sorter_from_hint(col_hint))
+        _register_sorter(column_sorter_from_hint(col_hint))
         painters.append(ColumnSpec(col_hint.name))
         filter_registry.register(col_hint.filter)
         filters.append(col_hint.name)
@@ -298,9 +298,7 @@ def register_table_views_and_columns() -> None:
 
         for key, attr_hint in node_hint.attributes.items():
             _register_painter(attribute_painter_from_hint(node_hint.path, key, attr_hint))
-            _register_sorter(
-                attr_hint.name, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
-            )
+            _register_sorter(attribute_sorter_from_hint(node_hint.path, key, attr_hint))
             filter_registry.register(attr_hint.filter)
 
         if isinstance(node_hint.table, TableWithView):

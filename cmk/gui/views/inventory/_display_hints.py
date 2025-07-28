@@ -439,7 +439,12 @@ OrderedColumnDisplayHintsOfView: TypeAlias = Mapping[SDKey, ColumnDisplayHintOfV
 class TableWithView:
     columns: OrderedColumnDisplayHintsOfView
     name: str
+    long_title: str
     is_show_more: bool
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory table: %s") % self.long_title
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -456,10 +461,6 @@ class NodeDisplayHint:
     @property
     def long_inventory_title(self) -> str:
         return _("Inventory node: %s") % self.long_title
-
-    @property
-    def long_inventory_table_title(self) -> str:
-        return _("Inventory table: %s") % self.long_title
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
@@ -523,6 +524,7 @@ def _parse_legacy_display_hints(
         ident = _make_node_ident(path)
         title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
         titles_by_path[path] = title
+        long_title = _make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title)
         table: Table | TableWithView
         if table_view_name := (
             "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
@@ -541,6 +543,7 @@ def _parse_legacy_display_hints(
                     )
                 },
                 name=table_view_name,
+                long_title=long_title,
                 is_show_more=node_or_table_hints.get("is_show_more", True),
             )
         else:
@@ -562,7 +565,7 @@ def _parse_legacy_display_hints(
             path=path,
             title=title,
             short_title=title,
-            long_title=_make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title),
+            long_title=long_title,
             icon=node_or_table_hints.get("icon", ""),
             attributes={
                 SDKey(key): _parse_attribute_hint(

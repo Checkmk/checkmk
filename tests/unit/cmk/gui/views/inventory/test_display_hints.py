@@ -620,6 +620,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         ),
                     },
                     name="invdockerimages",
+                    long_title="Docker ➤ Docker images",
                     is_show_more=False,
                 ),
             ),
@@ -654,6 +655,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
     if isinstance(expected_node_hint.table, TableWithView):
         assert isinstance(node_hint.table, TableWithView)
         assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.long_title == expected_node_hint.table.long_title
         assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 
@@ -797,6 +799,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         ),
                     },
                     name="invdockercontainers",
+                    long_title="Docker ➤ Docker containers",
                     is_show_more=False,
                 ),
             ),
@@ -822,6 +825,7 @@ def test_make_node_displayhint_from_hint(
     if isinstance(expected_node_hint.table, TableWithView):
         assert isinstance(node_hint.table, TableWithView)
         assert node_hint.table.name == expected_node_hint.table.name
+        assert node_hint.table.long_title == expected_node_hint.table.long_title
         assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
 
 

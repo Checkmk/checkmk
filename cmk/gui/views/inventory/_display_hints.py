@@ -334,19 +334,6 @@ def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> 
     return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
 
-@dataclass(frozen=True)
-class _NodeDisplayHint:
-    ident: str
-    path: SDPath
-    title: str
-    short_title: str
-    icon: str
-    attributes: OrderedAttributeDisplayHints
-    columns: OrderedColumnDisplayHints
-    table_view_name: str
-    table_is_show_more: bool
-
-
 # TODO Workaround for InventoryHintSpec (TypedDict)
 # https://github.com/python/mypy/issues/7178
 _ALLOWED_KEYS: Sequence[
@@ -376,9 +363,10 @@ _ALLOWED_KEYS: Sequence[
 
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
-) -> Iterator[_NodeDisplayHint]:
+) -> Iterator[NodeDisplayHint]:
+    titles_by_path: dict[SDPath, str] = {}
     for path, related_legacy_hints in sorted(
-        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]
+        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
     ):
         if not path:
             continue
@@ -400,11 +388,13 @@ def _parse_legacy_display_hints(
         table_view_name = (
             "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
         )
-        yield _NodeDisplayHint(
+        titles_by_path[path] = title
+        yield NodeDisplayHint(
             ident=ident,
             path=path,
             title=title,
             short_title=title,
+            long_title=_make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title),
             icon=node_or_table_hints.get("icon", ""),
             attributes={
                 SDKey(key): _parse_attribute_hint(
@@ -618,20 +608,4 @@ inv_display_hints = DisplayHints(
 
 def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> None:
     for hint in _parse_legacy_display_hints(legacy_hints):
-        inv_display_hints.add(
-            NodeDisplayHint(
-                ident=hint.ident,
-                path=hint.path,
-                title=hint.title,
-                short_title=hint.short_title,
-                long_title=_make_long_title(
-                    inv_display_hints.get_node_hint(hint.path[:-1]).title if hint.path[:-1] else "",
-                    hint.title,
-                ),
-                icon=hint.icon,
-                attributes=hint.attributes,
-                columns=hint.columns,
-                table_view_name=hint.table_view_name,
-                table_is_show_more=hint.table_is_show_more,
-            )
-        )
+        inv_display_hints.add(hint)

@@ -6,7 +6,7 @@
 
 This tool will modify legacy check plug-ins in place, to make them use the API `cmk.agent_based.v2`.
 It requires you to install the python library `libcst`.
-It does not require, but will attempt to call `scripts/run-uvenv`, `scripts/run-format` and `scripts/run-sort` on the modified file(s).
+It does not require, but will attempt to call `scripts/run-uvenv` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.
 
 It's a quick and dirty, untested hacky thing.
@@ -750,8 +750,8 @@ def main(argv: Sequence[str]) -> None:
                 raise
 
     _try_to_run("scripts/run-uvenv", "ruff", "check", "--fix", *args.files)
-    _try_to_run("scripts/run-sort", *args.files)
-    _try_to_run("scripts/run-format", *args.files)
+    _try_to_run("scripts/run-uvenv", "ruff", "check", "--select", "I", "--fix", *args.files)
+    _try_to_run("scripts/run-uvenv", "ruff", "format", *args.files)
 
 
 if __name__ == "__main__":

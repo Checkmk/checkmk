@@ -166,9 +166,9 @@ def main(argv: list[str]) -> int:
                 raise
             sys.stderr.write(f"ERROR {file_name}: {e}\n")
 
-    _try_to_run("scripts/run-sort", *args.files)
+    _try_to_run("scripts/run-uvenv", "ruff", "check", "--select", "I", "--fix", *args.files)
     _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
-    _try_to_run("scripts/run-format", *args.files)
+    _try_to_run("scripts/run-uvenv", "ruff", "format", *args.files)
 
     return 0
 

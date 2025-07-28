@@ -25,6 +25,7 @@ py_library(
         "cmk/crypto/totp.py",
         "cmk/crypto/x509.py",
     ],
+    data = [":py_typed"],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
@@ -71,7 +72,15 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-crypto"],
     # TODO: Duplicated from pyproject.toml
     version = "1.1.0",
-    deps = [":cmk-crypto"],
+    deps = [
+        ":cmk-crypto",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/crypto/py.typed"],
 )
 
 package_wheel(

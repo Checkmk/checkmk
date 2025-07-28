@@ -330,6 +330,8 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

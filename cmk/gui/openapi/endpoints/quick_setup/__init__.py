@@ -474,6 +474,8 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
                 mode=mode,
                 user_input_stages=body["stages"],
                 object_id=object_id,
+                use_git=active_config.wato_use_git,
+                pprint_value=active_config.wato_pprint_config,
             )
         except AlreadyRunningError:
             return _serve_error(
@@ -497,6 +499,8 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         input_stages=body["stages"],
         form_spec_map=form_spec_map,
         object_id=object_id,
+        use_git=active_config.wato_use_git,
+        pprint_value=active_config.wato_pprint_config,
     )
 
     if not result.redirect_url and not result.all_stage_errors:

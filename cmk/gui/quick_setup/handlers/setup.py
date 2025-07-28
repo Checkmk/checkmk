@@ -241,6 +241,8 @@ def complete_quick_setup(
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
     object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
         redirect_url=action.action(
@@ -248,6 +250,8 @@ def complete_quick_setup(
             mode,
             progress_logger,
             object_id,
+            use_git,
+            pprint_value,
         )
     )
 
@@ -286,6 +290,9 @@ def verify_custom_validators_and_complete_quick_setup(
     form_spec_map: FormspecMap,
     object_id: str | None,
     progress_logger: ProgressLogger | None = None,
+    *,
+    use_git: bool,
+    pprint_value: bool,
 ) -> CompleteActionResult:
     if progress_logger is None:
         progress_logger = InfoLogger()
@@ -311,6 +318,8 @@ def verify_custom_validators_and_complete_quick_setup(
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
         object_id=object_id,
+        use_git=use_git,
+        pprint_value=pprint_value,
     ).redirect_url
     return CompleteActionResult(redirect_url=redirect_url)
 
@@ -341,11 +350,15 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         self._object_id = object_id
         super().__init__(job_id=self.job_prefix)
 
-    def run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
+    def run_quick_setup_stage(
+        self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
+    ) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
         with job_interface.gui_context():
             try:
-                self._run_quick_setup_stage(job_interface)
+                self._run_quick_setup_stage(
+                    job_interface, use_git=use_git, pprint_value=pprint_value
+                )
             except Exception as e:
                 job_interface.get_logger().debug(
                     "Exception raised while the Quick setup stage action: %s", e
@@ -359,7 +372,9 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                     )
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
-    def _run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
+    def _run_quick_setup_stage(
+        self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
+    ) -> None:
         job_interface.send_progress_update(_("Starting Quick setup action..."))
 
         register_config_setups(quick_setup_registry)
@@ -372,6 +387,8 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
             form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
             object_id=self._object_id,
             progress_logger=JobBasedProgressLogger(job_interface),
+            use_git=use_git,
+            pprint_value=pprint_value,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
@@ -385,6 +402,9 @@ def start_quick_setup_job(
     mode: QuickSetupActionMode,
     user_input_stages: Sequence[dict],
     object_id: str | None,
+    *,
+    use_git: bool,
+    pprint_value: bool,
 ) -> str:
     job = QuickSetupActionBackgroundJob(
         quick_setup_id=quick_setup.id,
@@ -403,6 +423,8 @@ def start_quick_setup_job(
                 user_input_stages=user_input_stages,
                 mode=mode,
                 object_id=object_id,
+                use_git=use_git,
+                pprint_value=pprint_value,
             ),
         ),
         InitialStatusArgs(
@@ -424,6 +446,8 @@ class QuickSetupActionJobArgs(BaseModel, frozen=True):
     user_input_stages: Sequence[dict]
     mode: QuickSetupActionMode
     object_id: str | None
+    use_git: bool
+    pprint_value: bool
 
 
 def quick_setup_action_job_entry_point(
@@ -435,4 +459,4 @@ def quick_setup_action_job_entry_point(
         user_input_stages=args.user_input_stages,
         mode=args.mode,
         object_id=args.object_id,
-    ).run_quick_setup_stage(job_interface)
+    ).run_quick_setup_stage(job_interface, use_git=args.use_git, pprint_value=args.pprint_value)

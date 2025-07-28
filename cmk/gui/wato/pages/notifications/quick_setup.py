@@ -1941,14 +1941,16 @@ def save_and_test_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
-            _save(all_stages_form_data)
+            _save(all_stages_form_data, use_git=use_git, pprint_value=pprint_value)
             result_msg = _("New notification rule successfully created!")
         case QuickSetupActionMode.EDIT:
             assert object_id is not None
-            _edit(all_stages_form_data, object_id)
+            _edit(all_stages_form_data, object_id, use_git=use_git, pprint_value=pprint_value)
             result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
@@ -1960,14 +1962,16 @@ def save_and_new_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
-            _save(all_stages_form_data)
+            _save(all_stages_form_data, use_git=use_git, pprint_value=pprint_value)
             result_msg = _("New notification rule successfully created!")
         case QuickSetupActionMode.EDIT:
             assert object_id is not None
-            _edit(all_stages_form_data, object_id)
+            _edit(all_stages_form_data, object_id, use_git=use_git, pprint_value=pprint_value)
             result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
@@ -1981,7 +1985,7 @@ def register(quick_setup_registry: QuickSetupRegistry) -> None:
     quick_setup_registry.register(quick_setup_notifications)
 
 
-def _save(all_stages_form_data: ParsedFormData) -> None:
+def _save(all_stages_form_data: ParsedFormData, *, use_git: bool, pprint_value: bool) -> None:
     config_file = NotificationRuleConfigFile()
     notifications_rules = list(config_file.load_for_modification())
     notifications_rules += [
@@ -1989,12 +1993,14 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
     ]
     config_file.rule_created(
         notifications_rules,
-        pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pprint_value=pprint_value,
+        use_git=use_git,
     )
 
 
-def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
+def _edit(
+    all_stages_form_data: ParsedFormData, object_id: str, *, use_git: bool, pprint_value: bool
+) -> None:
     config_file = NotificationRuleConfigFile()
     notification_rules = list(config_file.load_for_modification())
     rule_nr = "N/A"
@@ -2007,10 +2013,7 @@ def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
             break
 
     config_file.rule_updated(
-        rules=notification_rules,
-        rule_number=rule_nr,
-        pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        rules=notification_rules, rule_number=rule_nr, pprint_value=pprint_value, use_git=use_git
     )
 
 

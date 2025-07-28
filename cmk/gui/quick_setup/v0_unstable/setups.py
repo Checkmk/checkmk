@@ -60,7 +60,17 @@ CallableRecap = Callable[
     ],
     Sequence[Widget],
 ]
-CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, ProgressLogger, str | None], str]
+CallableAction = Callable[
+    [
+        ParsedFormData,
+        QuickSetupActionMode,
+        ProgressLogger,
+        str | None,
+        bool,
+        bool,
+    ],
+    str,
+]
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 

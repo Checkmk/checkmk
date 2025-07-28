@@ -13,9 +13,11 @@ from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, Uniqu
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableAction,
     ProgressLogger,
     QuickSetup,
     QuickSetupAction,
+    QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
     QuickSetupStage,
@@ -42,6 +44,24 @@ from cmk.rulesets.v1.form_specs import (
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
+def _make_action(
+    return_value: str,
+) -> CallableAction:
+    """Helper function to create a callable action that returns a fixed URL."""
+
+    def action(
+        all_stages_form_data: ParsedFormData,
+        mode: QuickSetupActionMode,
+        _progress_logger: ProgressLogger,
+        object_id: str | None,
+        use_git: bool,
+        pprint_value: bool,
+    ) -> str:
+        return return_value
+
+    return action
+
+
 def register_quick_setup(
     setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None,
@@ -52,13 +72,13 @@ def register_quick_setup(
             QuickSetupAction(
                 id=ActionId("save"),
                 label="Complete",
-                action=lambda stages, mode, progress_logger, object_id: "http://save/url",
+                action=_make_action("http://save/url"),
                 custom_validators=[],
             ),
             QuickSetupAction(
                 id=ActionId("other_save"),
                 label="Complete2: The Sequel",
-                action=lambda stages, mode, progress_logger, object_id: "http://other_save",
+                action=_make_action("http://other_save"),
                 custom_validators=[],
             ),
         ]
@@ -589,7 +609,7 @@ def test_validation_on_save_all(
             QuickSetupAction(
                 id=ActionId("save"),
                 label="Complete",
-                action=lambda stages, mode, progress_logger, object_id: "http://save/url",
+                action=_make_action("http://save/url"),
                 custom_validators=[_form_spec_extra_validate],
             ),
         ],
@@ -700,7 +720,7 @@ class TestCompleteAction:
                 QuickSetupBackgroundAction(
                     id=ActionId("save"),
                     label="Complete",
-                    action=lambda stages, mode, progress_logger, object_id: "http://save/url",
+                    action=_make_action("http://save/url"),
                     custom_validators=[],
                 ),
             ],

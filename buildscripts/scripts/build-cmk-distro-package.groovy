@@ -10,7 +10,6 @@ def main() {
         ["EDITION", true],
         ["DISTRO", true],
         ["VERSION", true],
-        "DEPENDENCY_PATH_HASHES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now

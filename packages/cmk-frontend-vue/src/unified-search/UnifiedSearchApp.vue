@@ -45,6 +45,9 @@ const searchProviderIdentifiers: { id: UnifiedSearchProviderIdentifier; sort: nu
 if (props.providers.setup.active) {
   searchProviderIdentifiers.push({ id: 'setup', sort: props.providers.setup.sort })
 }
+if (props.providers.customize.active) {
+  searchProviderIdentifiers.push({ id: 'customize', sort: props.providers.customize.sort })
+}
 if (props.providers.monitoring.active) {
   searchProviderIdentifiers.push({ id: 'monitoring', sort: props.providers.monitoring.sort })
 }

@@ -71,6 +71,7 @@
   --icon-main-changes: url('~cmk-frontend/themes/facelift/images/icon_main_changes.svg');
   --icon-main-setup-active: url('~cmk-frontend/themes/facelift/images/icon_main_setup_active.svg');
   --icon-main-monitoring-active: url('~cmk-frontend/themes/facelift/images/icon_main_monitoring_active.svg');
+  --icon-main-customize-active: url('~cmk-frontend/themes/facelift/images/icon_main_customize_active.svg');
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/themes/facelift/images/icon_info.svg');
   --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');

@@ -15,15 +15,16 @@ const { t } = usei18n('unified-search-app')
 const searchUtils = getSearchUtils()
 
 const filterOptions = ref<FilterOption[]>([
-  { type: 'provider', value: 'setup', title: 'Only search in setup' },
   { type: 'provider', value: 'monitoring', title: 'Only search in monitoring' },
-  { type: 'inline', value: 'h:', title: 'Host', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 'hg:', title: 'Host group', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 'ad:', title: 'Address', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 'al:', title: 'Alias', notAvailableFor: ['setup'] },
-  { type: 'inline', value: 'tg:', title: 'Host tag', notAvailableFor: ['setup'] },
+  { type: 'provider', value: 'customize', title: 'Only search in customize' },
+  { type: 'provider', value: 'setup', title: 'Only search in setup' },
+  { type: 'inline', value: 'h:', title: 'Host', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'hg:', title: 'Host group', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'ad:', title: 'Address', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'al:', title: 'Alias', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'tg:', title: 'Host tag', notAvailableFor: ['setup', 'customize'] },
   {
     type: 'inline',
     value: 'hl:',

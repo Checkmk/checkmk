@@ -292,6 +292,7 @@ class PainterInvhistChanged(Painter):
 
 
 class AttributePainterFromHint(TypedDict):
+    name: str
     title: str
     short: str
     tooltip_title: str
@@ -341,6 +342,7 @@ def attribute_painter_from_hint(
     path: SDPath, key: SDKey, hint: AttributeDisplayHint
 ) -> AttributePainterFromHint:
     return AttributePainterFromHint(
+        name=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
         # - BIOS > Version
@@ -377,6 +379,7 @@ def attribute_painter_from_hint(
 
 
 class ColumnPainterFromHint(TypedDict):
+    name: str
     title: str
     short: str
     tooltip_title: str
@@ -405,6 +408,7 @@ def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> Cel
 
 def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFromHint:
     return ColumnPainterFromHint(
+        name=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
         # - BIOS > Version
@@ -429,6 +433,7 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFrom
 
 
 class NodePainterFromHint(TypedDict):
+    name: str
     title: str
     short: str
     columns: Sequence[str]
@@ -480,6 +485,7 @@ def node_painter_from_hint(
     hint: NodeDisplayHint, painter_options: PainterOptions
 ) -> NodePainterFromHint:
     return NodePainterFromHint(
+        name=hint.name,
         title=hint.long_inventory_title,
         short=hint.short_title,
         columns=["host_inventory", "host_structured_status"],

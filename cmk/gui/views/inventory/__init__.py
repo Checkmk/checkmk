@@ -67,24 +67,28 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 
 
 def _register_painter(
-    name: str, spec: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint
+    from_hint: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint,
 ) -> None:
     # TODO Clean this up one day
     cls = type(
-        "LegacyPainter%s" % name.title(),
+        "LegacyPainter%s" % from_hint["name"].title(),
         (Painter,),
         {
-            "_ident": name,
-            "_spec": spec,
+            "_ident": from_hint["name"],
+            "_spec": from_hint,
             "ident": property(lambda s: s._ident),
             "title": lambda s, cell: s._spec["title"],
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
             "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell, user: spec["paint"](row),
-            "export_for_python": lambda self, row, cell, user: spec["export_for_python"](row, cell),
-            "export_for_csv": lambda self, row, cell, user: spec["export_for_csv"](row, cell),
-            "export_for_json": lambda self, row, cell, user: spec["export_for_json"](row, cell),
+            "render": lambda self, row, cell, user: from_hint["paint"](row),
+            "export_for_python": lambda self, row, cell, user: from_hint["export_for_python"](
+                row, cell
+            ),
+            "export_for_csv": lambda self, row, cell, user: from_hint["export_for_csv"](row, cell),
+            "export_for_json": lambda self, row, cell, user: from_hint["export_for_json"](
+                row, cell
+            ),
             "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
@@ -265,7 +269,7 @@ def _register_table_view(table: TableWithView) -> None:
     painters: list[ColumnSpec] = []
     filters = []
     for col_hint in table.columns.values():
-        _register_painter(col_hint.name, column_painter_from_hint(col_hint))
+        _register_painter(column_painter_from_hint(col_hint))
         _register_sorter(col_hint.name, column_sorter_from_hint(col_hint))
         painters.append(ColumnSpec(col_hint.name))
         filter_registry.register(col_hint.filter)
@@ -290,13 +294,10 @@ def register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_painter(node_hint.name, node_painter_from_hint(node_hint, painter_options))
+        _register_painter(node_painter_from_hint(node_hint, painter_options))
 
         for key, attr_hint in node_hint.attributes.items():
-            _register_painter(
-                attr_hint.name,
-                attribute_painter_from_hint(node_hint.path, key, attr_hint),
-            )
+            _register_painter(attribute_painter_from_hint(node_hint.path, key, attr_hint))
             _register_sorter(
                 attr_hint.name, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
             )

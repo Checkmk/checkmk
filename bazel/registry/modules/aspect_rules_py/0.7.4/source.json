@@ -1,5 +1,5 @@
 {
-    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "mirror_urls": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/aspect-build/rules_py/releases/download/v0.7.4/rules_py-v0.7.4.tar.gz"],
     "integrity": "sha256-BCeM4jzFyRokti6gCsBMVT/kDKOQlDrPZoTTZ6aBqHE=",
     "strip_prefix": "rules_py-0.7.4",
     "url": "https://github.com/aspect-build/rules_py/releases/download/v0.7.4/rules_py-v0.7.4.tar.gz",

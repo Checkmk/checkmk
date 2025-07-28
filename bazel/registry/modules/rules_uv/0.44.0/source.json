@@ -1,5 +1,5 @@
 {
-    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "mirror_urls": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/theoremlp/rules_uv/releases/download/v0.44.0/rules_uv-0.44.0.tar.gz"],
     "integrity": "sha256-RCT8Y8qtbGMBij/NsxZEvVVb8HlDAsL3WaxAexUDvxA=",
     "strip_prefix": "rules_uv-0.44.0",
     "url": "https://github.com/theoremlp/rules_uv/releases/download/v0.44.0/rules_uv-0.44.0.tar.gz"

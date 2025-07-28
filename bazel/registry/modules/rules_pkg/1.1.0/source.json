@@ -1,5 +1,7 @@
 {
-    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
-    "url": "https://github.com/bazelbuild/rules_pkg/releases/download/1.1.0/rules_pkg-1.1.0.tar.gz",
-    "integrity": "sha256-tyFcY28iwYSfHDFCxy9LlUuxK7jc88viKa5uacxkeds="
+  "url": "https://github.com/bazelbuild/rules_pkg/releases/download/1.1.0/rules_pkg-1.1.0.tar.gz",
+  "integrity": "sha256-tyFcY28iwYSfHDFCxy9LlUuxK7jc88viKa5uacxkeds=",
+  "mirror_urls": [
+    "https://artifacts.lan.tribe29.com/repository/upstream-archives/bazelbuild/rules_pkg/releases/download/1.1.0/rules_pkg-1.1.0.tar.gz"
+  ]
 }

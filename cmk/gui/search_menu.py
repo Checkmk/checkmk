@@ -22,9 +22,9 @@ class UnifiedSearchMainMenuData(UnifiedSearchConfig, MainMenuData): ...
 def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
     return UnifiedSearchMainMenuData(
         providers=Providers(
-            monitoring=Provider(active=True, sort=-1),
-            customize=Provider(active=True, sort=-1),
-            setup=Provider(active=not _hide_menu(), sort=-1),
+            monitoring=Provider(active=True, sort=0),
+            customize=Provider(active=True, sort=1),
+            setup=Provider(active=not _hide_menu(), sort=2),
         )
     )
 

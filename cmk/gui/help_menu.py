@@ -52,8 +52,8 @@ def default_info_line() -> str:
 def default_learning_entries() -> MainMenuTopicEntries:
     return [
         MainMenuItem(
-            name="getting_started",
-            title=_("Getting started"),
+            name="welcome_page",
+            title=_("Welcome page"),
             url="welcome.py",
             sort_index=10,
             icon="learning_beginner",

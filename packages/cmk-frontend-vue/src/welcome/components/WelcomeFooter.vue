@@ -59,7 +59,7 @@ const setStartUrl = async (startUrlValue?: string): Promise<void> => {
       {{
         t(
           'access-breadcrumbs',
-          'You can still access it later via Help > Learning Checkmk > Get started'
+          'You can still access it later via Help > Learning Checkmk > Welcome page'
         )
       }}
     </CmkParagraph>

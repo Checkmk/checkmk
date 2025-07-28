@@ -187,7 +187,7 @@ class StartURLUserAttribute(UserAttribute):
                     ),
                     FixedValue(
                         value="welcome.py",
-                        title=_("Get started (Welcome)"),
+                        title=_("Welcome page"),
                         totext="",
                     ),
                     TextInput(

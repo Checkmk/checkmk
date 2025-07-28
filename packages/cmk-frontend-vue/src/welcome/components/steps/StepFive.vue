@@ -7,10 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import usei18n from '@/lib/i18n.ts'
-import FlexRow from '@/welcome/components/steps/FlexRow.vue'
+import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
+
 const { t } = usei18n('welcome-step-5')
 
 defineProps<{
@@ -27,11 +28,11 @@ defineProps<{
     :title="t('title', 'Customize dashboard')"
     :info="t('time', '5-7 min')"
   >
-    <CmkParagraph class="margin-bottom">
+    <StepParagraph>
       {{ t('text', 'TBD') }}
-    </CmkParagraph>
+    </StepParagraph>
 
-    <FlexRow>
+    <StepCardsRow>
       <CmkLinkCard
         icon-name="new"
         :title="t('add-custom-dashboard', 'Add custom dashboard')"
@@ -44,12 +45,6 @@ defineProps<{
         :url="urls.all_dashboards"
         :open-in-new-tab="false"
       />
-    </FlexRow>
+    </StepCardsRow>
   </CmkAccordionStepPanelItem>
 </template>
-
-<style scoped>
-.margin-bottom {
-  margin-bottom: var(--spacing);
-}
-</style>

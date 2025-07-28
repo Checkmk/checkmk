@@ -7,10 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import usei18n from '@/lib/i18n.ts'
-import FlexRow from '@/welcome/components/steps/FlexRow.vue'
+import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
+import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
+
 const { t } = usei18n('welcome-step-3')
 
 defineProps<{
@@ -27,7 +29,7 @@ defineProps<{
     :title="t('title', 'Explore your hosts and services')"
     :info="t('time', '5-7 min')"
   >
-    <CmkParagraph class="margin-bottom">
+    <StepParagraph>
       {{
         t(
           'text',
@@ -35,10 +37,12 @@ defineProps<{
     and help you spot what needs your attention – right out of the box.`
         )
       }}
-    </CmkParagraph>
+    </StepParagraph>
 
-    <b> {{ t('on-premise-hosts', 'View hosts') }}</b>
-    <FlexRow>
+    <StepHeading>
+      {{ t('on-premise-hosts', 'View hosts') }}
+    </StepHeading>
+    <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
         :title="t('all-hosts', 'All hosts')"
@@ -51,10 +55,12 @@ defineProps<{
         :url="urls.main_dashboard"
         :open-in-new-tab="false"
       />
-    </FlexRow>
+    </StepCardsRow>
 
-    <b> {{ t('investigate-problems', 'Investigate problems') }}</b>
-    <FlexRow>
+    <StepHeading>
+      {{ t('investigate-problems', 'Investigate problems') }}
+    </StepHeading>
+    <StepCardsRow>
       <CmkLinkCard
         icon-name="dashboard-problems"
         :title="t('problem-dashboard', 'Problem dashboard')"
@@ -67,12 +73,6 @@ defineProps<{
         :url="urls.unhandled_service_problems"
         :open-in-new-tab="false"
       />
-    </FlexRow>
+    </StepCardsRow>
   </CmkAccordionStepPanelItem>
 </template>
-
-<style scoped>
-.margin-bottom {
-  margin-bottom: var(--spacing);
-}
-</style>

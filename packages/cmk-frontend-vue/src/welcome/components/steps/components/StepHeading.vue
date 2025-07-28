@@ -4,19 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+</script>
 
 <template>
-  <div class="flex-row">
+  <CmkHeading type="h4" class="step-section-heading">
     <slot />
-  </div>
+  </CmkHeading>
 </template>
 
 <style scoped>
-.flex-row {
-  margin-top: var(--spacing-half);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing);
+.step-section-heading {
+  margin-bottom: var(--spacing-half);
 }
 </style>

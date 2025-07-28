@@ -7,10 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import usei18n from '@/lib/i18n.ts'
-import FlexRow from '@/welcome/components/steps/FlexRow.vue'
+import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
+import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
+
 const { t } = usei18n('welcome-step-2')
 
 defineProps<{
@@ -27,7 +29,7 @@ defineProps<{
     :title="t('title', 'Add your first host')"
     :info="t('time', '2-5 min')"
   >
-    <CmkParagraph class="margin-bottom">
+    <StepParagraph>
       {{
         t(
           'text',
@@ -37,10 +39,12 @@ defineProps<{
   monitoring with minimal setup.`
         )
       }}
-    </CmkParagraph>
+    </StepParagraph>
 
-    <b> {{ t('on-premise-hosts', 'On-premise-hosts') }}</b>
-    <FlexRow>
+    <StepHeading>
+      {{ t('on-premise-hosts', 'On-premise-hosts') }}
+    </StepHeading>
+    <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
         :title="t('add-host', 'Add host')"
@@ -53,10 +57,12 @@ defineProps<{
         :url="urls.network_devices"
         :open-in-new-tab="false"
       />
-    </FlexRow>
+    </StepCardsRow>
 
-    <b> {{ t('cloud-hosts', 'Cloud hosts') }}</b>
-    <FlexRow>
+    <StepHeading>
+      {{ t('cloud-hosts', 'Cloud hosts') }}
+    </StepHeading>
+    <StepCardsRow>
       <CmkLinkCard
         icon-name="aws-logo"
         :title="t('aws', 'Amazon Web Services (AWS)')"
@@ -75,11 +81,13 @@ defineProps<{
         :url="urls.gcp_quick_setup"
         :open-in-new-tab="false"
       />
-    </FlexRow>
+    </StepCardsRow>
 
     <template v-if="urls.synthetic_monitoring || urls.opentelemetry">
-      <b> {{ t('application-monitoring', 'Application monitoring') }}</b>
-      <FlexRow>
+      <StepHeading>
+        {{ t('application-monitoring', 'Application monitoring') }}
+      </StepHeading>
+      <StepCardsRow>
         <CmkLinkCard
           v-if="urls.synthetic_monitoring"
           icon-name="synthetic-monitoring-yellow"
@@ -94,13 +102,7 @@ defineProps<{
           :url="urls.opentelemetry"
           :open-in-new-tab="false"
         />
-      </FlexRow>
+      </StepCardsRow>
     </template>
   </CmkAccordionStepPanelItem>
 </template>
-
-<style scoped>
-.margin-bottom {
-  margin-bottom: var(--spacing);
-}
-</style>

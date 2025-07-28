@@ -63,7 +63,6 @@ const classes = computed(() => [
   text-decoration: none;
   border-radius: 4px;
   padding: var(--spacing);
-  margin-bottom: var(--spacing);
 
   &:hover {
     background-color: var(--ux-theme-5);

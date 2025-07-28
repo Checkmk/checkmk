@@ -14,6 +14,7 @@ import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 export interface UnifiedSearchQueryLike {
   input: string
   filters: FilterOption[]
+  sort: string
 }
 
 export interface FilterOption {
@@ -25,6 +26,7 @@ export interface FilterOption {
 
 const queryInput = ref<string>('')
 const queryFilters = ref<FilterOption[]>([])
+const sort = ref<string>('none')
 
 const suggestionsActive = ref<boolean>(false)
 const query = {
@@ -33,9 +35,11 @@ const query = {
   toQueryLike: (): UnifiedSearchQueryLike => {
     return {
       input: queryInput.value,
-      filters: queryFilters.value
+      filters: queryFilters.value,
+      sort: sort.value
     }
-  }
+  },
+  sort: sort
 }
 const shortcuts = new KeyShortcutService(window)
 const shortCutEventIds = ref<string[]>([])

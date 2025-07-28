@@ -63,14 +63,18 @@ export class UnifiedSearchProvider extends SearchProvider {
   }
 
   public async search(query: UnifiedSearchQueryLike): Promise<UnifiedSearchResultResponse> {
-    const { q, provider } = this.renderQuery(query)
+    const { q, provider, sort } = this.renderQuery(query)
 
     return this.getApi().get(
-      'ajax_unified_search.py?q='.concat(q).concat(provider)
+      'ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort)
     ) as Promise<UnifiedSearchResultResponse>
   }
 
-  protected renderQuery(query: UnifiedSearchQueryLike): { q: string; provider: string } {
+  protected renderQuery(query: UnifiedSearchQueryLike): {
+    q: string
+    provider: string
+    sort: string
+  } {
     const providers = []
 
     for (const f of query.filters) {
@@ -81,6 +85,8 @@ export class UnifiedSearchProvider extends SearchProvider {
 
     const provider = providers.length > 0 ? '&provider='.concat(providers.join(',')) : ''
 
-    return { q: query.input, provider }
+    const sort = '&sort='.concat(query.sort)
+
+    return { q: query.input, provider, sort }
   }
 }

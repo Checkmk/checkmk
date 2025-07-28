@@ -11,7 +11,6 @@ def main() {
         ["EDITION", true],
         ["DISTRO", true],
         "VERSION",  // should be deprecated
-        "DEPENDENCY_PATH_HASHES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now

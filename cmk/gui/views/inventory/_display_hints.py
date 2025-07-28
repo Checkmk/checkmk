@@ -181,6 +181,21 @@ def _make_attribute_filter(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class AttributeDisplayHint:
+    ident: str
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    filter: FilterInvText | FilterInvBool | FilterInvFloat
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory attribute: %s") % self.long_title
+
+
 def _parse_attribute_hint(
     *, path: SDPath, node_ident: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> AttributeDisplayHint:
@@ -294,6 +309,31 @@ def _parse_column_display_hint_filter_class(
     raise TypeError(filter_class)
 
 
+@dataclass(frozen=True, kw_only=True)
+class ColumnDisplayHint:
+    ident: str
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    filter: (
+        FilterInvtableAdminStatus
+        | FilterInvtableAvailable
+        | FilterInvtableIntegerRange
+        | FilterInvtableInterfaceType
+        | FilterInvtableOperStatus
+        | FilterInvtableText
+        | FilterInvtableTimestampAsAge
+        | FilterInvtableVersion
+        | None
+    )
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory column: %s") % self.long_title
+
+
 def _parse_column_hint(
     *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHint:
@@ -361,114 +401,7 @@ _ALLOWED_KEYS: Sequence[
 ]
 
 
-def _parse_legacy_display_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec],
-) -> Iterator[NodeDisplayHint]:
-    titles_by_path: dict[SDPath, str] = {}
-    for path, related_legacy_hints in sorted(
-        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
-    ):
-        if not path:
-            continue
-
-        node_or_table_hints = InventoryHintSpec()
-        for key in _ALLOWED_KEYS:
-            if (value := related_legacy_hints.for_table.get(key)) is not None:
-                node_or_table_hints[key] = value
-            elif (value := related_legacy_hints.for_node.get(key)) is not None:
-                node_or_table_hints[key] = value
-
-        # Some fields like 'title' or 'keyorder' of legacy display hints are declared
-        # either for
-        # - real nodes, eg. ".hardware.chassis.",
-        # - nodes with attributes, eg. ".hardware.cpu." or
-        # - nodes with a table, eg. ".software.packages:"
-        ident = _make_node_ident(path)
-        title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
-        table_view_name = (
-            "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
-        )
-        titles_by_path[path] = title
-        yield NodeDisplayHint(
-            ident=ident,
-            path=path,
-            title=title,
-            short_title=title,
-            long_title=_make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title),
-            icon=node_or_table_hints.get("icon", ""),
-            attributes={
-                SDKey(key): _parse_attribute_hint(
-                    path=path,
-                    node_ident=ident,
-                    node_title=title,
-                    key=key,
-                    legacy_hint=related_legacy_hints.by_key.get(key, {}),
-                )
-                for key in _complete_key_order(
-                    related_legacy_hints.for_node.get("keyorder", []),
-                    set(related_legacy_hints.by_key),
-                )
-            },
-            columns={
-                SDKey(key): _parse_column_hint(
-                    table_view_name=table_view_name,
-                    node_title=title,
-                    key=key,
-                    legacy_hint=related_legacy_hints.by_column.get(key, {}),
-                )
-                for key in _complete_key_order(
-                    related_legacy_hints.for_table.get("keyorder", []),
-                    set(related_legacy_hints.by_column),
-                )
-            },
-            table_view_name=table_view_name,
-            table_is_show_more=node_or_table_hints.get("is_show_more", True),
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class AttributeDisplayHint:
-    ident: str
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    filter: FilterInvText | FilterInvBool | FilterInvFloat
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory attribute: %s") % self.long_title
-
-
 OrderedAttributeDisplayHints: TypeAlias = Mapping[SDKey, AttributeDisplayHint]
-
-
-@dataclass(frozen=True, kw_only=True)
-class ColumnDisplayHint:
-    ident: str
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    filter: (
-        FilterInvtableAdminStatus
-        | FilterInvtableAvailable
-        | FilterInvtableIntegerRange
-        | FilterInvtableInterfaceType
-        | FilterInvtableOperStatus
-        | FilterInvtableText
-        | FilterInvtableTimestampAsAge
-        | FilterInvtableVersion
-        | None
-    )
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory column: %s") % self.long_title
-
-
 OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
 
 
@@ -541,6 +474,71 @@ class NodeDisplayHint:
             )
 
         return hint if (hint := self.columns.get(SDKey(key))) else _default()
+
+
+def _parse_legacy_display_hints(
+    legacy_hints: Mapping[str, InventoryHintSpec],
+) -> Iterator[NodeDisplayHint]:
+    titles_by_path: dict[SDPath, str] = {}
+    for path, related_legacy_hints in sorted(
+        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
+    ):
+        if not path:
+            continue
+
+        node_or_table_hints = InventoryHintSpec()
+        for key in _ALLOWED_KEYS:
+            if (value := related_legacy_hints.for_table.get(key)) is not None:
+                node_or_table_hints[key] = value
+            elif (value := related_legacy_hints.for_node.get(key)) is not None:
+                node_or_table_hints[key] = value
+
+        # Some fields like 'title' or 'keyorder' of legacy display hints are declared
+        # either for
+        # - real nodes, eg. ".hardware.chassis.",
+        # - nodes with attributes, eg. ".hardware.cpu." or
+        # - nodes with a table, eg. ".software.packages:"
+        ident = _make_node_ident(path)
+        title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
+        table_view_name = (
+            "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))
+        )
+        titles_by_path[path] = title
+        yield NodeDisplayHint(
+            ident=ident,
+            path=path,
+            title=title,
+            short_title=title,
+            long_title=_make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title),
+            icon=node_or_table_hints.get("icon", ""),
+            attributes={
+                SDKey(key): _parse_attribute_hint(
+                    path=path,
+                    node_ident=ident,
+                    node_title=title,
+                    key=key,
+                    legacy_hint=related_legacy_hints.by_key.get(key, {}),
+                )
+                for key in _complete_key_order(
+                    related_legacy_hints.for_node.get("keyorder", []),
+                    set(related_legacy_hints.by_key),
+                )
+            },
+            columns={
+                SDKey(key): _parse_column_hint(
+                    table_view_name=table_view_name,
+                    node_title=title,
+                    key=key,
+                    legacy_hint=related_legacy_hints.by_column.get(key, {}),
+                )
+                for key in _complete_key_order(
+                    related_legacy_hints.for_table.get("keyorder", []),
+                    set(related_legacy_hints.by_column),
+                )
+            },
+            table_view_name=table_view_name,
+            table_is_show_more=node_or_table_hints.get("is_show_more", True),
+        )
 
 
 @dataclass(frozen=True)

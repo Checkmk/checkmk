@@ -120,20 +120,20 @@ def _make_long_title(parent_title: str, title: str) -> str:
     return parent_title + " ➤ " + title if parent_title else title
 
 
-def _make_node_ident(path: SDPath) -> str:
+def _make_node_name(path: SDPath) -> str:
     return "_".join(["inv"] + list(path))
 
 
-def _make_attr_ident(node_ident: str, key: SDKey | str) -> str:
-    return f"{node_ident}_{key}"
+def _make_attr_name(node_name: str, key: SDKey | str) -> str:
+    return f"{node_name}_{key}"
 
 
-def _make_col_ident(table_view_name: str, key: SDKey | str) -> str:
+def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
     return f"{table_view_name}_{key}" if table_view_name else ""
 
 
 def _make_attribute_filter(
-    *, path: SDPath, key: str, data_type: str, ident: str, long_title: str, is_show_more: bool
+    *, path: SDPath, key: str, data_type: str, name: str, long_title: str, is_show_more: bool
 ) -> FilterInvText | FilterInvBool | FilterInvFloat:
     inventory_path = inventory.InventoryPath(
         path=path,
@@ -143,14 +143,14 @@ def _make_attribute_filter(
     match data_type:
         case "str":
             return FilterInvText(
-                ident=ident,
+                ident=name,
                 title=long_title,
                 inventory_path=inventory_path,
                 is_show_more=is_show_more,
             )
         case "bool":
             return FilterInvBool(
-                ident=ident,
+                ident=name,
                 title=long_title,
                 inventory_path=inventory_path,
                 is_show_more=is_show_more,
@@ -172,7 +172,7 @@ def _make_attribute_filter(
             scale = 1
 
     return FilterInvFloat(
-        ident=ident,
+        ident=name,
         title=long_title,
         inventory_path=inventory_path,
         unit=unit,
@@ -183,7 +183,7 @@ def _make_attribute_filter(
 
 @dataclass(frozen=True, kw_only=True)
 class AttributeDisplayHint:
-    ident: str
+    name: str
     title: str
     short_title: str
     long_title: str
@@ -197,14 +197,14 @@ class AttributeDisplayHint:
 
 
 def _parse_attribute_hint(
-    *, path: SDPath, node_ident: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
+    *, path: SDPath, node_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
-    ident = _make_attr_ident(node_ident, key)
+    name = _make_attr_name(node_name, key)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        ident=ident,
+        name=name,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -216,7 +216,7 @@ def _parse_attribute_hint(
             path=path,
             key=key,
             data_type=data_type,
-            ident=ident,
+            name=name,
             long_title=long_title,
             is_show_more=legacy_hint.get("is_show_more", True),
         ),
@@ -225,7 +225,7 @@ def _parse_attribute_hint(
 
 def _parse_column_display_hint_filter_class(
     table_view_name: str,
-    ident: str,
+    name: str,
     long_title: str,
     filter_class: (
         None
@@ -254,56 +254,56 @@ def _parse_column_display_hint_filter_class(
     if not filter_class:
         return FilterInvtableText(
             inv_info=table_view_name,
-            ident=ident,
+            ident=name,
             title=long_title,
         )
     match filter_class.__name__:
         case "FilterInvtableAdminStatus":
             return FilterInvtableAdminStatus(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableAvailable":
             return FilterInvtableAvailable(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableIntegerRange":
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableInterfaceType":
             return FilterInvtableInterfaceType(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableOperStatus":
             return FilterInvtableOperStatus(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableText":
             return FilterInvtableText(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableTimestampAsAge":
             return FilterInvtableTimestampAsAge(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
         case "FilterInvtableVersion":
             return FilterInvtableVersion(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=name,
                 title=long_title,
             )
     raise TypeError(filter_class)
@@ -311,7 +311,7 @@ def _parse_column_display_hint_filter_class(
 
 @dataclass(frozen=True, kw_only=True)
 class ColumnDisplayHintOfView:
-    ident: str
+    name: str
     title: str
     short_title: str
     long_title: str
@@ -337,11 +337,11 @@ def _parse_column_hint_of_view(
     *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
-    ident = _make_col_ident(table_view_name, key)
+    name = _make_col_name(table_view_name, key)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        ident=ident,
+        name=name,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -350,7 +350,7 @@ def _parse_column_hint_of_view(
         paint_function=paint_function,
         sort_function=_make_sort_function(legacy_hint),
         filter=_parse_column_display_hint_filter_class(
-            table_view_name, ident, long_title, legacy_hint.get("filter")
+            table_view_name, name, long_title, legacy_hint.get("filter")
         ),
     )
 
@@ -451,7 +451,7 @@ class TableWithView:
 
 @dataclass(frozen=True, kw_only=True)
 class NodeDisplayHint:
-    ident: str
+    name: str
     path: SDPath
     title: str
     short_title: str
@@ -466,11 +466,11 @@ class NodeDisplayHint:
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
-            ident = _make_attr_ident(self.ident, key)
+            name = _make_attr_name(self.name, key)
             title = key.replace("_", " ").title()
             long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
-                ident=ident,
+                name=name,
                 title=title,
                 short_title=title,
                 long_title=long_title,
@@ -480,7 +480,7 @@ class NodeDisplayHint:
                     path=self.path,
                     key=key,
                     data_type="str",
-                    ident=ident,
+                    name=name,
                     long_title=long_title,
                     is_show_more=True,
                 ),
@@ -523,7 +523,7 @@ def _parse_legacy_display_hints(
         # - real nodes, eg. ".hardware.chassis.",
         # - nodes with attributes, eg. ".hardware.cpu." or
         # - nodes with a table, eg. ".software.packages:"
-        ident = _make_node_ident(path)
+        name = _make_node_name(path)
         title = _make_title_function(node_or_table_hints)(path[-1] if path else "")
         titles_by_path[path] = title
         long_title = _make_long_title(titles_by_path[path[:-1]] if path[:-1] else "", title)
@@ -566,7 +566,7 @@ def _parse_legacy_display_hints(
                 }
             )
         yield NodeDisplayHint(
-            ident=ident,
+            name=name,
             path=path,
             title=title,
             short_title=title,
@@ -575,7 +575,7 @@ def _parse_legacy_display_hints(
             attributes={
                 SDKey(key): _parse_attribute_hint(
                     path=path,
-                    node_ident=ident,
+                    node_name=name,
                     node_title=title,
                     key=key,
                     legacy_hint=related_legacy_hints.by_key.get(key, {}),
@@ -593,7 +593,7 @@ class DisplayHints:
     def __init__(self) -> None:
         self._nodes_by_path: dict[SDPath, NodeDisplayHint] = {
             (): NodeDisplayHint(
-                ident=_make_node_ident(()),
+                name=_make_node_name(()),
                 path=(),
                 title=str(_l("Inventory tree")),
                 short_title=str(_l("Inventory tree")),
@@ -629,7 +629,7 @@ class DisplayHints:
             return self._nodes_by_path[abc_path]
         title = path[-1].replace("_", " ").title()
         return NodeDisplayHint(
-            ident=_make_node_ident(path),
+            name=_make_node_name(path),
             path=path,
             title=title,
             short_title=title,

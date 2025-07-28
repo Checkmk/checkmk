@@ -505,7 +505,7 @@ def node_painter_from_hint(
         # not look good for the HW/SW Inventory tree
         printable=False,
         load_inv=True,
-        sorter=hint.ident,
+        sorter=hint.name,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
         export_for_python=lambda row, cell: (
             serialize_tree(_compute_node_painter_data(row, hint.path))

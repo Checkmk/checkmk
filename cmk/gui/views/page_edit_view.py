@@ -435,7 +435,7 @@ def _get_inventory_column_infos(
             title=str(column_hint.title),
         )
         for column_name, column_hint in column_display_hints.items()
-        if column_hint.ident and registered_painters.get(column_hint.ident)
+        if column_hint.name and registered_painters.get(column_hint.name)
     ]
 
 

@@ -20,17 +20,17 @@ from cmk.utils.structured_data import ImmutableTree, SDKey
 
 
 def test_registered_sorter_cmp() -> None:
-    ident = "inv_key"
+    name = "inv_key"
     long_title = "System ➤ Product"
     hint = AttributeDisplayHint(
-        ident=ident,
+        name=name,
         title="Product",
         short_title="Product",
         long_title=long_title,
         paint_function=inv_paint_generic,
         sort_function=_decorate_sort_function(_cmp_inv_generic),
         filter=FilterInvText(
-            ident=ident,
+            ident=name,
             title=long_title,
             inventory_path=InventoryPath(
                 path=(),
@@ -40,8 +40,8 @@ def test_registered_sorter_cmp() -> None:
             is_show_more=True,
         ),
     )
-    _register_sorter(ident, attribute_sorter_from_hint((), SDKey("key"), hint))
-    sorter = sorter_registry[ident]
+    _register_sorter(name, attribute_sorter_from_hint((), SDKey("key"), hint))
+    sorter = sorter_registry[name]
     assert (
         sorter.cmp(
             {"host_inventory": ImmutableTree()},

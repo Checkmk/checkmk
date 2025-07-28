@@ -67,14 +67,14 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 
 
 def _register_painter(
-    ident: str, spec: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint
+    name: str, spec: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint
 ) -> None:
     # TODO Clean this up one day
     cls = type(
-        "LegacyPainter%s" % ident.title(),
+        "LegacyPainter%s" % name.title(),
         (Painter,),
         {
-            "_ident": ident,
+            "_ident": name,
             "_spec": spec,
             "ident": property(lambda s: s._ident),
             "title": lambda s, cell: s._spec["title"],
@@ -96,10 +96,10 @@ def _register_painter(
     painter_registry.register(cls)
 
 
-def _register_sorter(ident: str, spec: SorterFromHint) -> None:
+def _register_sorter(name: str, spec: SorterFromHint) -> None:
     sorter_registry.register(
         Sorter(
-            ident=ident,
+            ident=name,
             title=spec["title"],
             columns=spec["columns"],
             sort_function=lambda r1, r2, **_kwargs: spec["cmp"](r1, r2),
@@ -265,11 +265,11 @@ def _register_table_view(table: TableWithView) -> None:
     painters: list[ColumnSpec] = []
     filters = []
     for col_hint in table.columns.values():
-        _register_painter(col_hint.ident, column_painter_from_hint(col_hint.ident, col_hint))
-        _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint.ident, col_hint))
-        painters.append(ColumnSpec(col_hint.ident))
+        _register_painter(col_hint.name, column_painter_from_hint(col_hint.name, col_hint))
+        _register_sorter(col_hint.name, column_sorter_from_hint(col_hint.name, col_hint))
+        painters.append(ColumnSpec(col_hint.name))
         filter_registry.register(col_hint.filter)
-        filters.append(col_hint.ident)
+        filters.append(col_hint.name)
 
     _register_views(table, painters, filters)
 
@@ -290,15 +290,15 @@ def register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_painter(node_hint.ident, node_painter_from_hint(node_hint, painter_options))
+        _register_painter(node_hint.name, node_painter_from_hint(node_hint, painter_options))
 
         for key, attr_hint in node_hint.attributes.items():
             _register_painter(
-                attr_hint.ident,
-                attribute_painter_from_hint(node_hint.path, key, attr_hint.ident, attr_hint),
+                attr_hint.name,
+                attribute_painter_from_hint(node_hint.path, key, attr_hint.name, attr_hint),
             )
             _register_sorter(
-                attr_hint.ident, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
+                attr_hint.name, attribute_sorter_from_hint(node_hint.path, key, attr_hint)
             )
             filter_registry.register(attr_hint.filter)
 

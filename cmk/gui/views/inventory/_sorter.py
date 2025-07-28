@@ -33,10 +33,10 @@ def attribute_sorter_from_hint(
     )
 
 
-def column_sorter_from_hint(ident: str, hint: ColumnDisplayHintOfView) -> SorterFromHint:
+def column_sorter_from_hint(hint: ColumnDisplayHintOfView) -> SorterFromHint:
     return SorterFromHint(
         title=hint.long_inventory_title,
-        columns=[ident],
+        columns=[hint.name],
         load_inv=False,
-        cmp=lambda left, right: hint.sort_function(left.get(ident), right.get(ident)),
+        cmp=lambda left, right: hint.sort_function(left.get(hint.name), right.get(hint.name)),
     )

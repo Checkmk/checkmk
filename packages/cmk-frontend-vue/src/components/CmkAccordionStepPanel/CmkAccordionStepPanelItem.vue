@@ -35,7 +35,7 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
         shape="circle"
         class="cmk-step-panel-item-indicator"
       >
-        <CmkIcon v-if="props.accomplished" name="checkmark" size="xlarge"></CmkIcon>
+        <CmkIcon v-if="props.accomplished" name="checkmark_bare"></CmkIcon>
         <span v-if="!props.accomplished">{{ props.step.toString() }}</span>
       </CmkBadge>
       <CmkAccordionItemStateIndicator

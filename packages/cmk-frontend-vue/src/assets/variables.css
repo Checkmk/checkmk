@@ -50,6 +50,7 @@
 
   /* Icons that are only defined for facelift, so without dark variant */
   --icon-checkmark: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
+  --icon-checkmark-bare: url('~cmk-frontend/themes/facelift/images/icon_checkmark_bare.svg');
   --icon-crit-problem: url('~cmk-frontend/themes/facelift/images/icon_crit_problem.svg');
   --icon-back: url('~cmk-frontend/themes/facelift/images/icon_back.png');
   --icon-continue: url('~cmk-frontend/themes/facelift/images/icon_continue.png');

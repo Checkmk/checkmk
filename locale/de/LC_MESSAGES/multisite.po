@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-24 20:35+0000\n"
+"PO-Revision-Date: 2025-07-28 13:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9013,9 +9013,8 @@ msgstr "Bazel Cache-Port"
 msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
-#, fuzzy
 msgid "Bazel Cache Version"
-msgstr "Bazel Cache Benutzer"
+msgstr "Bazel Cache Version"
 
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
@@ -46579,10 +46578,10 @@ msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 
-#, fuzzy
 msgid ""
 "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
-msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
+msgstr ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -49455,7 +49454,6 @@ msgstr "Druckerpatronen-Levels"
 msgid "Printer queue length"
 msgstr "Länge der Druckerschlange"
 
-#, fuzzy
 msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr ""
 "Dieser Drucker sendet <i>verbrauchtes</i> Material anstelle von "
@@ -57851,16 +57849,17 @@ msgstr ""
 "Stil angezeigt werden. Diese Berechtigung erlaubt es dem Benutzer, die "
 "Anzeigeoptionen zu ändern"
 
-#, fuzzy
 msgid ""
 "Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
 "container: The used instead of the available supply</li><li>in case of a "
 "receptacle: The available instead of the used space</li><ul>Enable this "
 "option to handle this behavior."
 msgstr ""
-"Einige Drucker (z. B. Konica für Trommelkartuschen) geben den verfügbaren "
-"Füllstand zurück, anstatt den verbleibenden. In diesem Fall ist es möglich, "
-"die Füllstände umzudrehen, um dieses Verhalten zu behandeln"
+"Einige Drucker (z. B. Konica für Trommelkartuschen) geben<ul><li>im Falle "
+"eines Containers: den verbrauchten anstatt den verfügbaren Füllstand zurück</"
+"li><li>im Falle eines Behälters: den verfügbaren anstatt den verbrauchten "
+"Füllstand zurück</li><ul>Aktivieren Sie diese Option, um dieses Verhalten zu "
+"berücksichtigen."
 
 msgid ""
 "Some printers do not report a precise percentage but just <i>some remaining</"
@@ -76800,9 +76799,8 @@ msgstr "Laufzeit seit dem letzten Reboot"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Laufzeit seit dem letzten Reboot von Geräten mit Modulen"
 
-#, fuzzy
 msgid "Upturn supply levels"
-msgstr "Tonerschwellen umdrehen"
+msgstr "Verfügbarkeitslevels heraufsetzen"
 
 msgid "Urgency"
 msgstr "Dringlichkeit"

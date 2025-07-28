@@ -67,6 +67,7 @@
   --icon-pending-task: url('~cmk-frontend/themes/facelift/images/icon_pending_task.svg');
   --icon-sparkle: url('~cmk-frontend/themes/facelift/images/icon_sparkle.svg');
   --icon-history: url('~cmk-frontend/themes/facelift/images/icon_topic_history.png');
+  --icon-main-changes: url('~cmk-frontend/themes/facelift/images/icon_main_changes.svg');
   --icon-main-setup-active: url('~cmk-frontend/themes/facelift/images/icon_main_setup_active.svg');
   --icon-main-monitoring-active: url('~cmk-frontend/themes/facelift/images/icon_main_monitoring_active.svg');
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
@@ -202,6 +203,7 @@
     --icon-export-link: url('~cmk-frontend/themes/modern-dark/images/icon_export_link.svg');
     --icon-frameurl: url('~cmk-frontend/themes/facelift/images/icon_frameurl.svg');
     --icon-reload: url('~cmk-frontend/themes/modern-dark/images/icon_reload_cmk.svg');
+    --icon-main-changes: url('~cmk-frontend/themes/modern-dark/images/icon_main_changes.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

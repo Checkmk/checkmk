@@ -30,7 +30,17 @@ defineProps<{
     :info="t('time', '10-15 min')"
   >
     <StepParagraph>
-      {{ t('text', 'TBD') }}
+      {{
+        t(
+          'paragraph',
+          'Notifications help you stay on top of problems ' +
+            'without constantly checking the interface. ' +
+            'Start by configuring contact groups, time periods, and host groups ' +
+            'to define who should be notified and when. ' +
+            'Then, add a notification rule and use the test feature ' +
+            'to make sure alerts reach you the way you expect.'
+        )
+      }}
     </StepParagraph>
 
     <StepHeading>

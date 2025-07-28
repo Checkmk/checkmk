@@ -29,7 +29,16 @@ defineProps<{
     :info="t('time', '5-7 min')"
   >
     <StepParagraph>
-      {{ t('text', 'TBD') }}
+      {{
+        t(
+          'paragraph',
+          'Tailor your monitoring experience by creating a custom dashboard ' +
+            'that highlights what matters most to you. ' +
+            'Whether you want to track specific hosts, services, or metrics, ' +
+            'dashboards help you stay focused and efficient. ' +
+            'You can create your own or explore the list of all dashboards to find useful presets.'
+        )
+      }}
     </StepParagraph>
 
     <StepCardsRow>

@@ -47,7 +47,7 @@ defineProps<{
     <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
-        :title="t('add-host', 'Add host')"
+        :title="t('server', 'Server (Linux, Windows, Solaris, ...)')"
         :url="urls.add_host"
         :open-in-new-tab="false"
       />

@@ -141,6 +141,11 @@ def _welcome_page(config: Config) -> None:
                     ),
                     synthetic_monitoring=make_url_from_registry("robotmk_managed_robots_overview"),
                     opentelemetry=make_url_from_registry("otel_collectors"),
+                    activate_changes=makeuri(
+                        request,
+                        addvars=[("mode", "changelog")],
+                        filename="wato.py",
+                    ),
                     all_hosts=makeuri(
                         request,
                         addvars=[("view_name", "allhosts")],

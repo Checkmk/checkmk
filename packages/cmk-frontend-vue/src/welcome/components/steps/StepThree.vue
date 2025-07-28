@@ -26,21 +26,43 @@ defineProps<{
     :step="3"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Explore your hosts and services')"
+    :title="t('title', 'Activate changes and explore your hosts')"
     :info="t('time', '5-7 min')"
   >
     <StepParagraph>
       {{
         t(
-          'text',
-          `Checkmk comes with a range of built-in dashboards that give you a quick overview of your infrastructure
-    and help you spot what needs your attention – right out of the box.`
+          'paragraph-1',
+          'After adding hosts and discovering services, ' +
+            'you need to activate your changes to apply the configuration.'
+        )
+      }}
+    </StepParagraph>
+    <StepParagraph>
+      {{
+        t(
+          'paragraph-2',
+          'Once done, dive into your monitoring data: get an overview of all hosts, ' +
+            'check the problem dashboard for critical issues, ' +
+            'or focus on unhandled service problems to start troubleshooting.'
         )
       }}
     </StepParagraph>
 
     <StepHeading>
-      {{ t('on-premise-hosts', 'View hosts') }}
+      {{ t('activate-changes', 'Activate changes') }}
+    </StepHeading>
+    <StepCardsRow>
+      <CmkLinkCard
+        icon-name="main_changes"
+        :title="t('activate-changes', 'Activate pending changes')"
+        :url="urls.activate_changes"
+        :open-in-new-tab="false"
+      />
+    </StepCardsRow>
+
+    <StepHeading>
+      {{ t('explore-host', 'Explore hosts') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard
@@ -55,22 +77,10 @@ defineProps<{
         :url="urls.main_dashboard"
         :open-in-new-tab="false"
       />
-    </StepCardsRow>
-
-    <StepHeading>
-      {{ t('investigate-problems', 'Investigate problems') }}
-    </StepHeading>
-    <StepCardsRow>
       <CmkLinkCard
         icon-name="dashboard-problems"
         :title="t('problem-dashboard', 'Problem dashboard')"
         :url="urls.problem_dashboard"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="svc-problems"
-        :title="t('unhandled-service-problems', 'Unhandled service problems')"
-        :url="urls.unhandled_service_problems"
         :open-in-new-tab="false"
       />
     </StepCardsRow>

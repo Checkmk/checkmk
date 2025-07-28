@@ -217,8 +217,8 @@
   --color-midnight-grey-100: rgb(15, 18, 21);
 
   /* daylight gray */
-  --color-daylight-grey-0: rgb(252, 252, 252);
-  --color-daylight-grey-10: rgb(250, 250, 250);
+  --color-daylight-grey-0: rgb(251, 251, 254);
+  --color-daylight-grey-10: rgb(250, 250, 255);
   --color-daylight-grey-20: rgb(249, 249, 255);
   --color-daylight-grey-30: rgb(240, 240, 244);
   --color-daylight-grey-40: rgb(235, 235, 241);

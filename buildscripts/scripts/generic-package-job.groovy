@@ -17,7 +17,6 @@ def main() {
         "PACKAGE_PATH",
         "SECRET_VARS",
         "COMMAND_LINE",
-        "DEPENDENCY_PATH_HASHES",
     ]);
 
     validate_parameters();

@@ -15,6 +15,7 @@ from cmk.gui.form_specs.vue import (
     get_visitor,
     RawFrontendData,
     serialize_data_for_frontend,
+    VisitorOptions,
 )
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
@@ -137,7 +138,9 @@ def _get_rule_defaults(parameter_form: Dictionary) -> DiskModel:
     # 1a. Invalid entries exist since we have required dictelements without a DefaultValue prefill
     # 2.  Then convert this valid structure back to disk format so it can be properly merged
     #     with the actual configuration data from the quick setup stages
-    return get_visitor(parameter_form).to_disk(
+    return get_visitor(
+        parameter_form, VisitorOptions(migrate_values=True, mask_values=False)
+    ).to_disk(
         RawFrontendData(
             serialize_data_for_frontend(
                 form_spec=parameter_form,

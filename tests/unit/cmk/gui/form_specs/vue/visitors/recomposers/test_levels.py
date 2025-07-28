@@ -7,7 +7,13 @@ from typing import Any, Literal, TypeVar
 
 import pytest
 
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -239,7 +245,7 @@ def test_levels_recompose(
 ) -> None:
     """Gets a spec and its value, serializes it for the frontend
     and then parses it back to disk data."""
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     validation = visitor.validate(value)
     _, frontend_data = visitor.to_vue(value)
     disk_data = visitor.to_disk(RawFrontendData(frontend_data))
@@ -291,7 +297,7 @@ def test_levels_recompose_invalid_data(
     invalid_value: Any,
     expected_validation_message: str,
 ) -> None:
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     validation = visitor.validate(invalid_value)
 
     assert len(validation) == 1

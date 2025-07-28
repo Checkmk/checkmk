@@ -49,7 +49,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
     ) -> tuple[shared_type_defs.ListOfStrings, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        element_visitor = get_visitor(self.form_spec.string_spec)
+        element_visitor = get_visitor(self.form_spec.string_spec, self.visitor_options)
         string_spec, string_default_value = element_visitor.to_vue(DEFAULT_VALUE)
 
         assert isinstance(string_default_value, str)
@@ -70,7 +70,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         element_validations: list[shared_type_defs.ValidationMessage] = []
-        element_visitor = get_visitor(self.form_spec.string_spec)
+        element_visitor = get_visitor(self.form_spec.string_spec, self.visitor_options)
 
         for idx, entry in enumerate(parsed_value):
             for validation in element_visitor.validate(RawDiskData(entry)):

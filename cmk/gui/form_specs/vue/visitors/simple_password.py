@@ -83,8 +83,6 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
 
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
+        if self.visitor_options.mask_values:
+            return "******"
         return parsed_value
-
-    @override
-    def _mask(self, parsed_value: _ParsedValueModel) -> object:
-        return "******"

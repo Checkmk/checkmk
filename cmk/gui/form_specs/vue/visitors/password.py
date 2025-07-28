@@ -143,9 +143,6 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
         postprocessed, password_type, (password_id, password) = parsed_value
         if password_type == "explicit_password" and not password_id:
             password_id = ad_hoc_password_id()
+        if self.visitor_options.mask_values:
+            return (postprocessed, password_type, (password_id, "******"))
         return (postprocessed, password_type, (password_id, password))
-
-    @override
-    def _mask(self, parsed_value: ParsedPassword) -> ParsedPassword:
-        postprocessed, password_type, (password_id, _) = self._to_disk(parsed_value)
-        return (postprocessed, password_type, (password_id, "******"))

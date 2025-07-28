@@ -12,7 +12,7 @@ from typing import Any
 
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
@@ -391,7 +391,6 @@ def edit_rule(param):
 
     try:
         _validate_value(ruleset, value)
-
     except FieldValidationException as exc:
         return problem(
             status=400,
@@ -427,7 +426,9 @@ def edit_rule(param):
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
     # FormSpec validation
     try:
-        if problems := get_visitor(ruleset.rulespec.form_spec).validate(RawDiskData(value)):
+        if problems := get_visitor(
+            ruleset.rulespec.form_spec, VisitorOptions(migrate_values=False, mask_values=False)
+        ).validate(RawDiskData(value)):
             exception = FieldValidationException()
             exception.title = f"Problem in field {'.'.join(problems[0].location)}"
             exception.detail = problems[0].message
@@ -503,14 +504,9 @@ def _create_rule(
     ruleset: Ruleset,
     conditions: dict[str, Any],
     properties: RuleOptionsSpec,
-    value: Any,
+    validated_value: Any,
     rule_id: str = gen_id(),
 ) -> Rule:
-    try:
-        transformed_value = get_visitor(ruleset.rulespec.form_spec).to_disk(RawDiskData(value))
-    except FormSpecNotImplementedError:
-        transformed_value = ruleset.valuespec().transform_value(value)
-
     rule = Rule(
         rule_id,
         folder,
@@ -534,7 +530,7 @@ def _create_rule(
             ),
         ),
         RuleOptions.from_config(properties),
-        transformed_value,
+        validated_value,
     )
 
     return rule
@@ -559,7 +555,12 @@ def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> R
 
 def _get_masked_rule_value(rule: Rule) -> object:
     try:
-        return repr(get_visitor(rule.ruleset.rulespec.form_spec).mask(RawDiskData(rule.value)))
+        return repr(
+            get_visitor(
+                rule.ruleset.rulespec.form_spec,
+                VisitorOptions(migrate_values=False, mask_values=True),
+            ).to_disk(RawDiskData(rule.value))
+        )
     except FormSpecNotImplementedError:
         return repr(rule.ruleset.valuespec().mask(rule.value))
 

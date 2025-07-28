@@ -8,7 +8,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.form_specs.converter import SimplePassword
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.utils.encrypter import Encrypter
 
 
@@ -18,7 +18,9 @@ def test_simple_password_encrypts_disk_password(
     with_user: tuple[UserId, str],
 ) -> None:
     password = RawDiskData("some_password")
-    pw_visitor = get_visitor(SimplePassword())
+    pw_visitor = get_visitor(
+        SimplePassword(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _, frontend_value = pw_visitor.to_vue(password)
 
     assert isinstance(frontend_value, tuple)
@@ -37,8 +39,8 @@ def test_simple_password_encrypts_disk_password(
     ],
 )
 def test_simple_password_masks_password(value: RawDiskData | RawFrontendData) -> None:
-    visitor = get_visitor(SimplePassword())
-    password = visitor.mask(value)
+    visitor = get_visitor(SimplePassword(), VisitorOptions(migrate_values=True, mask_values=True))
+    password = visitor.to_disk(value)
 
     assert password == "******"
 
@@ -63,7 +65,9 @@ def test_simple_password_encrypts_frontend_password(
     if password[1]:
         password_value[0] = base64.b64encode(Encrypter.encrypt(password[0])).decode("ascii")
 
-    pw_visitor = get_visitor(SimplePassword())
+    pw_visitor = get_visitor(
+        SimplePassword(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _, frontend_value = pw_visitor.to_vue(RawFrontendData(password_value))
 
     assert isinstance(frontend_value, tuple)

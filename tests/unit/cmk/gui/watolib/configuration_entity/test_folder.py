@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
@@ -37,7 +37,9 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
 
 def test_folder_save_returns_full_title(create_folder_test_environment: None) -> None:
     # GIVEN
-    visitor = get_visitor(get_folder_slidein_schema())
+    visitor = get_visitor(
+        get_folder_slidein_schema(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
     )
@@ -55,7 +57,9 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
 )
 def test_folder_save_roundtrip(create_folder_test_environment: None, parent_folder: str) -> None:
     # GIVEN
-    visitor = get_visitor(get_folder_slidein_schema())
+    visitor = get_visitor(
+        get_folder_slidein_schema(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": parent_folder}})
     )

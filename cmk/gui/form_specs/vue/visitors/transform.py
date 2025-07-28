@@ -46,14 +46,18 @@ class TransformVisitor(
             if isinstance(parsed_value, InvalidValue)
             else parsed_value
         )
-        return get_visitor(self.form_spec.wrapped_form_spec).to_vue(value)
+        return get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).to_vue(value)
 
     @override
     def _validate(self, parsed_value: _ParsedValueModel) -> list[VueComponents.ValidationMessage]:
-        return get_visitor(self.form_spec.wrapped_form_spec).validate(parsed_value)
+        return get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).validate(
+            parsed_value
+        )
 
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return self.form_spec.to_disk(
-            get_visitor(self.form_spec.wrapped_form_spec).to_disk(parsed_value)
+            get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).to_disk(
+                parsed_value
+            )
         )

@@ -177,7 +177,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
         )
 
     def _time_specific_enabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
-        return get_visitor(self._time_specific_spec())
+        return get_visitor(self._time_specific_spec(), self.visitor_options)
 
     def _time_specific_disabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
-        return get_visitor(self.form_spec.parameter_form)
+        return get_visitor(self.form_spec.parameter_form, self.visitor_options)

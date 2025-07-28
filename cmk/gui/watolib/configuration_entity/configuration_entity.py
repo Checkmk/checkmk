@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, NamedTuple, NewType
 
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawFrontendData
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
@@ -92,7 +92,7 @@ def get_configuration_entity_schema(
     entity_type_specifier: str,
 ) -> ConfigurationEntitySchema:
     form_spec = _get_configuration_fs(entity_type, entity_type_specifier)
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return ConfigurationEntitySchema(schema=schema, default_values=default_values)
 

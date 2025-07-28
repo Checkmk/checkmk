@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.gui.form_specs.private import ListOfStrings
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.rulesets.v1.form_specs import String
 
 
@@ -21,7 +21,7 @@ def test_list_of_strings_filter(
     string_spec: ListOfStrings,
 ) -> None:
     entries = data_wrapper(["foo", "", "bar", "baz", ""])
-    visitor = get_visitor(string_spec)
+    visitor = get_visitor(string_spec, VisitorOptions(migrate_values=True, mask_values=False))
     # Check filtering
     _vue_spec, vue_value = visitor.to_vue(entries)
     assert vue_value == ["foo", "bar", "baz"]

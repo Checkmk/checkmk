@@ -75,7 +75,9 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
             tuple_values = parsed_value
 
         for element_spec, value in zip(self.form_spec.elements, tuple_values):
-            element_vue, element_value = get_visitor(element_spec).to_vue(value)
+            element_vue, element_value = get_visitor(element_spec, self.visitor_options).to_vue(
+                value
+            )
             vue_specs.append(element_vue)
             vue_elements.append(element_value)
 
@@ -97,7 +99,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
     ) -> list[shared_type_defs.ValidationMessage]:
         validation_errors: list[shared_type_defs.ValidationMessage] = []
         for idx, (element_spec, value) in enumerate(zip(self.form_spec.elements, parsed_value)):
-            element_visitor = get_visitor(element_spec)
+            element_visitor = get_visitor(element_spec, self.visitor_options)
             for validation in element_visitor.validate(value):
                 validation_errors.append(
                     shared_type_defs.ValidationMessage(
@@ -112,6 +114,6 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
     def _to_disk(self, parsed_value: _ParsedValueModel) -> tuple[object, ...]:
         disk_values = []
         for parameter_form, value in zip(self.form_spec.elements, parsed_value, strict=True):
-            element_visitor = get_visitor(parameter_form)
+            element_visitor = get_visitor(parameter_form, self.visitor_options)
             disk_values.append(element_visitor.to_disk(value))
         return tuple(disk_values)

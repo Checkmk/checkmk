@@ -13,6 +13,7 @@ from cmk.gui.form_specs.vue import (
     IncomingData,
     RawDiskData,
     RawFrontendData,
+    VisitorOptions,
 )
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, Integer
@@ -47,7 +48,9 @@ def test_optional_choice_valid_value(
     source_value: IncomingData,
     expected_value: int | None,
 ) -> None:
-    visitor = get_visitor(optional_choice_spec)
+    visitor = get_visitor(
+        optional_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _vue_spec, vue_value = visitor.to_vue(source_value)
     assert vue_value == expected_value
 
@@ -69,7 +72,9 @@ def test_optional_choice_invalid_parameter_form_value(
     class SomeClass:
         pass
 
-    visitor = get_visitor(optional_choice_spec)
+    visitor = get_visitor(
+        optional_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _vue_spec, vue_value = visitor.to_vue(data_wrapper(SomeClass))
     # Note: this is the INVALID_VALUE result of the embedded Integer parameter_form
     assert vue_value == ""

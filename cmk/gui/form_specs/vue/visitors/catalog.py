@@ -149,7 +149,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
 
             element_lookup: dict[str, tuple[shared_type_defs.FormSpec, object]] = {}
             for element_name, element in actual_elements.items():
-                element_visitor = get_visitor(element.parameter_form)
+                element_visitor = get_visitor(element.parameter_form, self.visitor_options)
                 is_active = element_name in topic_values
                 spec, value = element_visitor.to_vue(
                     topic_values[element_name] if is_active else DEFAULT_VALUE
@@ -193,7 +193,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         for topic_name, topic in self.form_spec.elements.items():
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
-                element_visitor = get_visitor(element.parameter_form)
+                element_visitor = get_visitor(element.parameter_form, self.visitor_options)
                 if element_name not in topic_values:
                     if element.required:
                         _spec, element_default_value = element_visitor.to_vue(DEFAULT_VALUE)
@@ -222,7 +222,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
                 if element_name in topic_values:
-                    element_visitor = get_visitor(element.parameter_form)
+                    element_visitor = get_visitor(element.parameter_form, self.visitor_options)
                     disk_values[topic_name][element_name] = element_visitor.to_disk(
                         topic_values[element_name]
                     )

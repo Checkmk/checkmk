@@ -7,8 +7,14 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
-from cmk.rulesets.v1.form_specs import migrate_to_password, Password
+from cmk.gui.form_specs.vue import (
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, migrate_to_password, Password
 
 PasswordOnDisk = tuple[
     Literal["cmk_postprocessed"],
@@ -23,7 +29,7 @@ def test_password_encrypts_password(
     request_context: None,
 ) -> None:
     password = "some_password"
-    visitor = get_visitor(Password())
+    visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=False))
     _, frontend_value = visitor.to_vue(
         RawDiskData(("cmk_postprocessed", "explicit_password", ("", password)))
     )
@@ -46,9 +52,26 @@ def test_password_encrypts_password(
 def test_password_masks_password(
     patch_pwstore: None, request_context: None, value: IncomingData
 ) -> None:
-    visitor = get_visitor(Password())
-    _, _, (_, masked_password) = visitor.mask(value)
+    visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=True))
+    _, _, (_, masked_password) = visitor.to_disk(value)
+    assert masked_password == "******"
 
+
+@patch("cmk.gui.form_specs.vue.visitors.password.passwordstore_choices", return_value=[])
+@pytest.mark.parametrize(
+    "value",
+    [
+        RawDiskData({"el": ("cmk_postprocessed", "explicit_password", ("", "some_password"))}),
+        RawFrontendData({"el": ("explicit_password", "", "some_password", False)}),
+    ],
+)
+def test_nested_password_gets_masked(
+    patch_pwstore: None, request_context: None, value: IncomingData
+) -> None:
+    spec = Dictionary(elements={"el": DictElement(parameter_form=Password())})
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=True))
+    dict_result = visitor.to_disk(value)
+    _, _, (_, masked_password) = dict_result["el"]
     assert masked_password == "******"
 
 
@@ -115,6 +138,9 @@ def test_password_migrates_password_on_disk(
     old: IncomingData,
     new: PasswordOnDisk,
 ) -> None:
-    disk_visitor = get_visitor(Password(migrate=migrate_to_password))
+    disk_visitor = get_visitor(
+        Password(migrate=migrate_to_password),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
     disk_visitor_password = disk_visitor.to_disk(old)
     assert new == disk_visitor_password

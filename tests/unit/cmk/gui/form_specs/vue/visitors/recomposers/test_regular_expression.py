@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import MatchingScope, RegularExpression
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -19,7 +19,7 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 )
 def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     errors = visitor.validate(value)
 
@@ -28,7 +28,7 @@ def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
 
 def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     global_flags_in_middle_regex = RawDiskData(
         "~(?i)^(?!.*\b(deprecated|dev|lab|sysprepped|Omnistack)\b).*$"
     )
@@ -41,7 +41,7 @@ def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
 
 def test_syntax_error_is_invalid(request_context: None) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     syntax_error_regex = RawDiskData("^(.*server.*}$")
 
     errors = visitor.validate(syntax_error_regex)
@@ -57,7 +57,7 @@ def test_custom_validate_is_applied(request_context: None) -> None:
     form_spec = RegularExpression(
         predefined_help_text=MatchingScope.FULL, custom_validate=[custom_validator]
     )
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     errors = visitor.validate(RawDiskData("foo"))
 

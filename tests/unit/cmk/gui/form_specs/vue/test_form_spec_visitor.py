@@ -7,7 +7,13 @@ from typing import Any
 
 import pytest
 
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -195,6 +201,6 @@ def test_validation(
     value: Any,
     valid: bool,
 ) -> None:
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     assert (len(visitor.validate(value)) == 0) == valid

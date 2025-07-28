@@ -13,6 +13,7 @@ from cmk.gui.form_specs.vue import (
     IncomingData,
     RawDiskData,
     RawFrontendData,
+    VisitorOptions,
 )
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
@@ -71,7 +72,7 @@ def test_list(
     expected_frontend_value: list[Any],
     expected_disk_value: list[Any],
 ) -> None:
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert visitor.validate(value) == []
     assert visitor.to_vue(value)[1] == expected_frontend_value
     assert visitor.to_disk(value) == expected_disk_value

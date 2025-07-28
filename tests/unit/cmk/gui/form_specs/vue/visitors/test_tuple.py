@@ -8,7 +8,13 @@ from typing import Any
 import pytest
 
 from cmk.gui.form_specs.converter import Tuple
-from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
@@ -90,7 +96,7 @@ def tuple_spec() -> Tuple:
     ],
 )
 def test_tuple_visitor_to_disk(spec: Tuple, value: IncomingData, expected_value: list[Any]) -> None:
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     disk_value = visitor.to_disk(value)
     assert disk_value == expected_value
     assert len(visitor.validate(value)) == 0
@@ -124,7 +130,7 @@ def test_tuple_visitor_to_disk(spec: Tuple, value: IncomingData, expected_value:
     ],
 )
 def test_tuple_visitor_to_vue(spec: Tuple, value: IncomingData, expected_value: list[Any]) -> None:
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert visitor.to_vue(value)[1] == expected_value
     assert len(visitor.validate(value)) == 0
 
@@ -150,7 +156,7 @@ def test_tuple_visitor_invalid_value(
     invalid_value: IncomingData,
     expected_errors: int,
 ) -> None:
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert len(visitor.validate(invalid_value)) == expected_errors
 
 
@@ -172,7 +178,7 @@ def test_tuple_validator() -> None:
         custom_validate=[_i_dont_like((1,))],
     )
 
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     assert len(visitor.validate(RawDiskData((0,)))) == 0
     assert len(visitor.validate(RawDiskData((1,)))) == 1

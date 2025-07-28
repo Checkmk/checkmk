@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawFrontendData, VisitorOptions
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
@@ -32,7 +32,7 @@ def test_time_span_validator() -> None:
             )
         ]
     )
-    visitor = get_visitor(time_span_spec)
+    visitor = get_visitor(time_span_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     assert visitor.validate(RawFrontendData(1)) == [
         shared_type_defs.ValidationMessage(
@@ -55,7 +55,7 @@ def test_time_span_validator_custom_message() -> None:
             )
         ]
     )
-    visitor = get_visitor(time_span_spec)
+    visitor = get_visitor(time_span_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     assert visitor.validate(RawFrontendData(1)) == [
         shared_type_defs.ValidationMessage(

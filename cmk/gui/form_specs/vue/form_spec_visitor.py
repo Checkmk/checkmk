@@ -21,7 +21,13 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, FormSpecValidationError, IncomingData, RawFrontendData
+from ._type_defs import (
+    DEFAULT_VALUE,
+    FormSpecValidationError,
+    IncomingData,
+    RawFrontendData,
+    VisitorOptions,
+)
 
 T = TypeVar("T")
 
@@ -100,7 +106,7 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> object:
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
     value_from_frontend = RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
     _process_validation_errors(visitor.validate(value_from_frontend))
     return visitor.to_disk(value_from_frontend)
 
@@ -108,7 +114,7 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> object:
 def validate_value_from_frontend(
     form_spec: FormSpec[T], value: IncomingData
 ) -> Sequence[shared_type_defs.ValidationMessage]:
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     return visitor.validate(value)
 
 
@@ -120,7 +126,7 @@ def serialize_data_for_frontend(
     display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
-    visitor = get_visitor(form_spec)
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     vue_component, vue_value = visitor.to_vue(value)
 
     validation: list[shared_type_defs.ValidationMessage] = []

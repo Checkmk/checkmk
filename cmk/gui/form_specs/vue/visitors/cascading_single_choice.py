@@ -76,7 +76,7 @@ class CascadingSingleChoiceVisitor(
         selected_vue_value: object = None
         vue_elements = []
         for element in self.form_spec.elements:
-            element_visitor = get_visitor(element.parameter_form)
+            element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             element_value = selected_value if selected_name == element.name else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
 
@@ -117,7 +117,7 @@ class CascadingSingleChoiceVisitor(
             if selected_name != element.name:
                 continue
 
-            element_visitor = get_visitor(element.parameter_form)
+            element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             for validation in element_visitor.validate(selected_value):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(
@@ -137,6 +137,6 @@ class CascadingSingleChoiceVisitor(
         for element in self.form_spec.elements:
             if selected_name != element.name:
                 continue
-            element_visitor = get_visitor(element.parameter_form)
+            element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             disk_value = element_visitor.to_disk(selected_value)
         return selected_name, disk_value

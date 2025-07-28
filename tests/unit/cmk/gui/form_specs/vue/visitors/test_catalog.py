@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.user import UserId
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
@@ -28,7 +28,7 @@ def test_catalog_validation_simple(
             )
         }
     )
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     validation_messages = visitor.validate(RawDiskData({"some_key": {"key": "string"}}))
     assert validation_messages == []
@@ -59,7 +59,7 @@ def test_catalog_serializes_empty_topics_to_disk() -> None:
             )
         }
     )
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     disk_data = visitor.to_disk(RawDiskData({"some_topic": {}}))
 

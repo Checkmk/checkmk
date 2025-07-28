@@ -6,7 +6,13 @@
 import pytest
 
 from cmk.gui.form_specs.vue import DefaultValue as FormSpecDefaultValue
-from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, MultipleChoice, MultipleChoiceElement
 
@@ -44,7 +50,9 @@ def test_multiple_choice(
     multiple_choice_spec: MultipleChoice,
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
-    visitor = get_visitor(multiple_choice_spec)
+    visitor = get_visitor(
+        multiple_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _vue_spec, vue_value = visitor.to_vue(sorted_good_choices)
     # Send good choice to vue
     assert vue_value == SORTED_GOOD_CHOICES_FRONTEND
@@ -79,7 +87,9 @@ def test_multiple_choice_with_invalid_key(
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
     # Check behaviour: Invalid keys are filtered out during parsing
-    visitor = get_visitor(multiple_choice_spec)
+    visitor = get_visitor(
+        multiple_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _vue_spec, vue_value = visitor.to_vue(some_bad_choice)
     # Send good choice to vue
     assert vue_value == SORTED_SOME_BAD_CHOICE_FILTERED_FRONTEND
@@ -93,5 +103,7 @@ def test_multiple_choice_with_invalid_key(
 
 
 def test_parse_default_value(multiple_choice_spec: MultipleChoice) -> None:
-    visitor = get_visitor(multiple_choice_spec)
+    visitor = get_visitor(
+        multiple_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND

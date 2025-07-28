@@ -28,7 +28,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKInternalError, MKUserError
-from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
@@ -112,9 +112,10 @@ def _form_spec_validate(
         form_spec_id: [QuickSetupValidationError(**asdict(error)) for error in errors]
         for form_spec_id, form_data in current_stage_form_data.items()
         if (
-            errors := get_visitor(expected_formspecs_map[form_spec_id]).validate(
-                RawFrontendData(form_data)
-            )
+            errors := get_visitor(
+                expected_formspecs_map[form_spec_id],
+                VisitorOptions(migrate_values=True, mask_values=False),
+            ).validate(RawFrontendData(form_data))
         )
     }
 

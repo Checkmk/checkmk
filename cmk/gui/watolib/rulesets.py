@@ -24,7 +24,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -1274,7 +1274,10 @@ class Rule:
     def value_masked(self) -> RuleValue:
         """Return a copy of the value with all secrets masked"""
         try:
-            return get_visitor(self.ruleset.rulespec.form_spec).mask(RawDiskData(self.value))
+            return get_visitor(
+                self.ruleset.rulespec.form_spec,
+                VisitorOptions(migrate_values=True, mask_values=True),
+            ).to_disk(RawDiskData(self.value))
         except FormSpecNotImplementedError:
             pass
 

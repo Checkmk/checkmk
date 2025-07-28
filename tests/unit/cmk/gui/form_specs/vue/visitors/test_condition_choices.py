@@ -5,7 +5,7 @@
 from dataclasses import asdict
 
 from cmk.gui.form_specs.private import ConditionChoices, not_empty
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.rulesets.v1 import Label
 from cmk.shared_typing.vue_formspec_components import (
     Condition,
@@ -56,7 +56,9 @@ def test_tags_from_disk() -> None:
             "ip-v6": "ip-v6",
         }
     )
-    disk_visitor = get_visitor(CONDITION_CHOICES_FS)
+    disk_visitor = get_visitor(
+        CONDITION_CHOICES_FS, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     _, frontend_tags = disk_visitor.to_vue(disk_tags)
 
     assert frontend_tags == [
@@ -82,7 +84,9 @@ def test_tags_from_frontend() -> None:
             asdict(ConditionChoicesValue(group_name="ip-v6", value=Eq(oper_eq="ip-v6"))),
         ]
     )
-    disk_visitor = get_visitor(CONDITION_CHOICES_FS)
+    disk_visitor = get_visitor(
+        CONDITION_CHOICES_FS, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     disk_tags = disk_visitor.to_disk(frontend_tags)
 
     assert disk_tags == {
@@ -94,7 +98,9 @@ def test_tags_from_frontend() -> None:
 
 
 def test_non_empty_validation() -> None:
-    visitor = get_visitor(CONDITION_CHOICES_FS)
+    visitor = get_visitor(
+        CONDITION_CHOICES_FS, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     validation = visitor.validate(RawFrontendData([]))
 
     assert validation == [

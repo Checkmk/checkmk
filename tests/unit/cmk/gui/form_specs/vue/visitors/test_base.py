@@ -5,7 +5,13 @@
 from typing import override
 
 import cmk.shared_typing.vue_formspec_components as VueTypes
-from cmk.gui.form_specs.vue import DefaultValue, IncomingData, InvalidValue, RawDiskData
+from cmk.gui.form_specs.vue import (
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.vue._visitor_base import FormSpecVisitor
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import String
@@ -67,7 +73,7 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
 
 def test_validate_returns_frontend_representation_of_replacement_value() -> None:
     # GIVEN
-    visitor = DummyVisitor(String())
+    visitor = DummyVisitor(String(), VisitorOptions(migrate_values=True, mask_values=False))
 
     # WHEN
     validation = visitor.validate(RawDiskData("error"))
@@ -81,6 +87,7 @@ def test_validate_returns_frontend_representation_of_parsed_value() -> None:
     # GIVEN
     visitor = DummyVisitor(
         String(custom_validate=[nonstop_complainer]),
+        VisitorOptions(migrate_values=True, mask_values=False),
     )
 
     # WHEN

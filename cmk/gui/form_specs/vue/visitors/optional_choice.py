@@ -57,7 +57,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
         if isinstance(parsed_value, InvalidValue):
             parsed_value = RawDiskData(None)
 
-        visitor = get_visitor(self.form_spec.parameter_form)
+        visitor = get_visitor(self.form_spec.parameter_form, self.visitor_options)
         embedded_schema, embedded_value = visitor.to_vue(
             parsed_value if parsed_value.value is not None else DEFAULT_VALUE
         )
@@ -87,9 +87,9 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
     ) -> list[shared_type_defs.ValidationMessage]:
         validation_errors: list[shared_type_defs.ValidationMessage] = []
         if parsed_value.value is not None:
-            for validation_error in get_visitor(self.form_spec.parameter_form).validate(
-                parsed_value
-            ):
+            for validation_error in get_visitor(
+                self.form_spec.parameter_form, self.visitor_options
+            ).validate(parsed_value):
                 validation_errors.append(
                     shared_type_defs.ValidationMessage(
                         location=["parameter_form"],
@@ -104,4 +104,6 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         if parsed_value.value is None:
             return None
-        return get_visitor(self.form_spec.parameter_form).to_disk(parsed_value)
+        return get_visitor(self.form_spec.parameter_form, self.visitor_options).to_disk(
+            parsed_value
+        )

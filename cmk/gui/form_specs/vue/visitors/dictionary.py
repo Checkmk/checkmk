@@ -117,7 +117,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         vue_values = {}
 
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form)
+            element_visitor = get_visitor(dict_element.parameter_form, self.visitor_options)
             is_active = key_name in parsed_value
             element_value = parsed_value[key_name] if is_active else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
@@ -172,7 +172,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}
         element_validations = []
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form)
+            element_visitor = get_visitor(dict_element.parameter_form, self.visitor_options)
 
             if key_name not in parsed_value:
                 if dict_element.required:
@@ -200,7 +200,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
     def _to_disk(self, parsed_value: _ParsedValueModel) -> dict[str, object]:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():
-            element_visitor = get_visitor(dict_element.parameter_form)
+            element_visitor = get_visitor(dict_element.parameter_form, self.visitor_options)
             is_active = key_name in parsed_value
             if is_active:
                 disk_values[key_name] = element_visitor.to_disk(parsed_value[key_name])

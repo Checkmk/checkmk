@@ -8,7 +8,7 @@ import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
 from cmk.ccc.user import UserId
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs.vue.visitors import (
     FileUploadVisitor,
 )
@@ -32,7 +32,7 @@ def test_file_upload_content_encryption(
 ) -> None:
     with UserContext(with_user[0]):
         # Data from disk (unencrypted)
-        visitor = get_visitor(spec)
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
         vue_value = visitor.to_vue(RawDiskData(("my_file", "text/ascii", b"FOO")))[1]
         assert isinstance(vue_value, FileUploadModel)
         assert vue_value.file_type == "text/ascii"
@@ -59,7 +59,7 @@ def test_file_upload_invalid_data(
 ) -> None:
     invalid_value = RawDiskData({"BROKEN": True})
     with UserContext(with_user[0]):
-        visitor = get_visitor(spec)
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
         vue_value = visitor.to_vue(invalid_value)[1]
         assert isinstance(vue_value, FileUploadModel)
         assert vue_value.file_name is None
@@ -85,7 +85,7 @@ def test_file_upload_new_file_from_frontend(
                 }
             ),
         )
-        visitor = get_visitor(spec)
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
         value_from_frontend = RawFrontendData({"input_uuid": "some_uuid"})
         vue_value = visitor.to_vue(value_from_frontend)[1]
         assert isinstance(vue_value, FileUploadModel)

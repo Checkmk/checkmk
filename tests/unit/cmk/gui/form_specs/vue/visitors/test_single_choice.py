@@ -7,7 +7,13 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors.single_choice import NO_SELECTION
 from cmk.rulesets.v1 import Title
@@ -47,7 +53,7 @@ def test_invalid_single_choice_validator_keep(
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.KEEP))
-    visitor = get_visitor(single_choice)
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -81,7 +87,7 @@ def test_invalid_single_choice_validator_complain(
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.COMPLAIN))
-    visitor = get_visitor(single_choice)
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -110,7 +116,7 @@ def test_invalid_single_choice_validator_none(
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(None)
-    visitor = get_visitor(single_choice)
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
     assert vue_value is None
@@ -139,7 +145,7 @@ def test_single_choice_valid_value(
     valid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(None)
-    visitor = get_visitor(single_choice)
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
 
     vue_spec, vue_value = visitor.to_vue(valid_choice)
     assert vue_spec.type == "single_choice"
@@ -159,6 +165,6 @@ def test_default_value_roundtrip() -> None:
         ],
         prefill=DefaultValue("bar"),
     )
-    visitor = get_visitor(single_choice)
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
     _, vue_value = visitor.to_vue(DEFAULT_VALUE)
     assert visitor.to_disk(RawFrontendData(vue_value)) == "bar"

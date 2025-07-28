@@ -10,7 +10,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData
+from ._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData, VisitorOptions
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -25,17 +25,26 @@ _FallbackDataModel = TypeVar("_FallbackDataModel")
 
 class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _FallbackDataModel]):
     @final
-    def __init__(self, form_spec: FormSpecModel) -> None:
+    def __init__(self, form_spec: FormSpecModel, visitor_options: VisitorOptions) -> None:
         self.form_spec = form_spec
+        self.visitor_options = visitor_options
 
     @final
     def to_vue(self, raw_value: IncomingData) -> tuple[shared_type_defs.FormSpec, object]:
-        parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
+        parsed_value = self._parse_value(
+            self._migrate_disk_value(raw_value)
+            if self.visitor_options.migrate_values
+            else raw_value
+        )
         return self._to_vue(parsed_value)
 
     @final
     def validate(self, raw_value: IncomingData) -> list[shared_type_defs.ValidationMessage]:
-        parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
+        parsed_value = self._parse_value(
+            self._migrate_disk_value(raw_value)
+            if self.visitor_options.migrate_values
+            else raw_value
+        )
         # Stage 1: Check if the value is invalid
         if isinstance(parsed_value, InvalidValue):
             return create_validation_error(self._to_vue(parsed_value)[1], parsed_value.reason)
@@ -55,21 +64,16 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
 
     @final
     def to_disk(self, raw_value: IncomingData) -> DiskModel:
-        parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
+        parsed_value = self._parse_value(
+            self._migrate_disk_value(raw_value)
+            if self.visitor_options.migrate_values
+            else raw_value
+        )
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException(
                 "Unable to serialize invalid value. Reason: %s" % parsed_value.reason
             )
         return self._to_disk(parsed_value)
-
-    @final
-    def mask(self, raw_value: IncomingData) -> DiskModel:
-        parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
-        if isinstance(parsed_value, InvalidValue):
-            raise MKGeneralException(
-                "Unable to serialize invalid value. Reason: %s" % parsed_value.reason
-            )
-        return self._mask(parsed_value)
 
     def _migrate_disk_value(self, value: IncomingData) -> IncomingData:
         if isinstance(value, RawDiskData) and self.form_spec.migrate:
@@ -103,11 +107,3 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
     @abc.abstractmethod
     def _to_disk(self, parsed_value: _ParsedValueModel) -> DiskModel:
         """Transforms the value into a serializable format for disk storage."""
-
-    def _mask(self, parsed_value: _ParsedValueModel) -> DiskModel:
-        """Obscure any sensitive information in the provided value
-
-        Container-like ValueSpecs must recurse over their items, allow these to mask their
-        values. Other ValueSpecs that don't have a need for masking sensitive information
-        can simply return the input value."""
-        return self._to_disk(parsed_value)

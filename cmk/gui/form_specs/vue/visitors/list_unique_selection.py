@@ -62,7 +62,7 @@ class ListUniqueSelectionVisitor(
 
         title, help_text = get_title_and_help(self.form_spec)
 
-        element_visitor = get_visitor(self._build_element_template())
+        element_visitor = get_visitor(self._build_element_template(), self.visitor_options)
         element_schema, element_vue_default_value = element_visitor.to_vue(DEFAULT_VALUE)
 
         list_values: list[object] = []
@@ -140,7 +140,7 @@ class ListUniqueSelectionVisitor(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         element_validations: list[shared_type_defs.ValidationMessage] = []
-        element_visitor = get_visitor(self._build_element_template())
+        element_visitor = get_visitor(self._build_element_template(), self.visitor_options)
 
         for idx, entry in enumerate(parsed_value):
             for validation in element_visitor.validate(entry):
@@ -156,7 +156,7 @@ class ListUniqueSelectionVisitor(
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> list[T]:
         disk_values = []
-        element_visitor = get_visitor(self._build_element_template())
+        element_visitor = get_visitor(self._build_element_template(), self.visitor_options)
         for entry in parsed_value:
             disk_values.append(element_visitor.to_disk(entry))
         return disk_values

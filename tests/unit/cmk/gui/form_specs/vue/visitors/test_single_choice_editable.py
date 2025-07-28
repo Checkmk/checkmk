@@ -5,7 +5,7 @@
 from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
 )
-from cmk.gui.form_specs.vue import get_visitor, RawFrontendData
+from cmk.gui.form_specs.vue import get_visitor, RawFrontendData, VisitorOptions
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
@@ -15,7 +15,7 @@ def test_single_choice_editable() -> None:
         entity_type_specifier="mail",
     )
 
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     assert visitor.validate(RawFrontendData("foo")) == []
     assert visitor.to_vue(RawFrontendData("foo"))[1] == "foo"
@@ -26,7 +26,7 @@ def test_single_choice_editable_none_complains_nicely() -> None:
         entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="mail",
     )
-    visitor = get_visitor(spec)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     validation = visitor.validate(RawFrontendData(None))
 

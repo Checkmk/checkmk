@@ -15,6 +15,7 @@ from ._type_defs import (
     InvalidValue,
     RawDiskData,
     RawFrontendData,
+    VisitorOptions,
 )
 from .form_spec_visitor import (
     DisplayMode,
@@ -28,6 +29,7 @@ __all__ = [
     "get_visitor",
     "DEFAULT_VALUE",
     "DefaultValue",
+    "VisitorOptions",
     "DiskModel",
     "IncomingData",
     "InvalidValue",

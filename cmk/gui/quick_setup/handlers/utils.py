@@ -16,6 +16,7 @@ from cmk.gui.form_specs.vue import (
     RawDiskData,
     RawFrontendData,
     serialize_data_for_frontend,
+    VisitorOptions,
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
@@ -168,9 +169,10 @@ def form_spec_parse(
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> ParsedFormData:
     return {
-        form_spec_id: get_visitor(expected_formspecs_map[form_spec_id]).to_disk(
-            RawFrontendData(form_data)
-        )
+        form_spec_id: get_visitor(
+            expected_formspecs_map[form_spec_id],
+            VisitorOptions(migrate_values=True, mask_values=False),
+        ).to_disk(RawFrontendData(form_data))
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()
     }

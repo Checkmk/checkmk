@@ -46,3 +46,9 @@ class FormSpecValidationError(ValueError):
     @property
     def messages(self) -> list[ValidationMessage]:
         return self._messages
+
+
+@dataclass(kw_only=True)
+class VisitorOptions:
+    migrate_values: bool
+    mask_values: bool

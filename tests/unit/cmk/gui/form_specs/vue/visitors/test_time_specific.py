@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private import TimeSpecific
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
@@ -34,14 +34,18 @@ def time_specific_dict_spec() -> TimeSpecific:
 
 
 def test_time_specific_default_value_with_int() -> None:
-    visitor = get_visitor(time_specific_int_spec())
+    visitor = get_visitor(
+        time_specific_int_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
 
     _spec, value = visitor.to_vue(DEFAULT_VALUE)
     assert isinstance(value, int)
 
 
 def test_time_specific_default_value_with_dict() -> None:
-    visitor = get_visitor(time_specific_dict_spec())
+    visitor = get_visitor(
+        time_specific_dict_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
 
     _spec, value = visitor.to_vue(DEFAULT_VALUE)
     assert isinstance(value, dict)
@@ -50,7 +54,9 @@ def test_time_specific_default_value_with_dict() -> None:
 
 
 def test_time_specific_wrapping() -> None:
-    visitor = get_visitor(time_specific_dict_spec())
+    visitor = get_visitor(
+        time_specific_dict_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
 
     _spec, frontend_value = visitor.to_vue(
         RawDiskData(
@@ -70,7 +76,7 @@ def test_time_specific_wrapping() -> None:
 
 def test_time_specific_wrapping_error() -> None:
     visitor = get_visitor(
-        time_specific_dict_spec(),
+        time_specific_dict_spec(), VisitorOptions(migrate_values=True, mask_values=False)
     )
 
     validation_messages = visitor.validate(

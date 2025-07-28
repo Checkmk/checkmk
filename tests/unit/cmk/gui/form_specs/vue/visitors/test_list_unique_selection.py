@@ -7,7 +7,13 @@ import pytest
 
 from cmk.gui.form_specs.private import ListUniqueSelection, SingleChoiceElementExtended
 from cmk.gui.form_specs.private.list_unique_selection import UniqueSingleChoiceElement
-from cmk.gui.form_specs.vue import get_visitor, IncomingData, RawDiskData, RawFrontendData
+from cmk.gui.form_specs.vue import (
+    get_visitor,
+    IncomingData,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,
 )
@@ -49,7 +55,9 @@ def test_list_unique_selection_visitor_to_vue(
     expected_value: list[str],
     list_unique_selection_spec: ListUniqueSelection,
 ) -> None:
-    visitor = get_visitor(list_unique_selection_spec)
+    visitor = get_visitor(
+        list_unique_selection_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     vue_value = visitor.to_vue(value)[1]
     assert vue_value == expected_value
     assert len(visitor.validate(value)) == 0
@@ -71,7 +79,9 @@ def test_list_unique_selection_visitor_to_disk(
     expected_value: list[str],
     list_unique_selection_spec: ListUniqueSelection,
 ) -> None:
-    visitor = get_visitor(list_unique_selection_spec)
+    visitor = get_visitor(
+        list_unique_selection_spec, VisitorOptions(migrate_values=True, mask_values=False)
+    )
     disk_value = visitor.to_disk(value)
     assert disk_value == expected_value
     assert len(visitor.validate(value)) == 0

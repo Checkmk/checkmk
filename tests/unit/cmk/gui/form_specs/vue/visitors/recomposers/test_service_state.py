@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.rulesets.v1.form_specs import ServiceState
 from cmk.shared_typing.vue_formspec_components import SingleChoice
 
 
 def test_host_state_recompose() -> None:
-    visitor = get_visitor(ServiceState())
+    visitor = get_visitor(ServiceState(), VisitorOptions(migrate_values=True, mask_values=False))
     schema, data = visitor.to_vue(RawDiskData(0))
     assert data == SingleChoiceVisitor.option_id(0)
     assert isinstance(schema, SingleChoice)

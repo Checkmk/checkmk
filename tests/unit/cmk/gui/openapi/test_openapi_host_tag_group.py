@@ -441,7 +441,7 @@ def test_openapi_delete_host_tag_mode(
     )
     rule_resp = clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
-        value_raw="{'levels': (10.0, 5.0)}",
+        value_raw="{'levels': ('fixed', (10.0, 5.0))}",
         conditions={
             "host_tags": [
                 {

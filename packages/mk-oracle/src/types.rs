@@ -99,6 +99,15 @@ pub struct InstanceAlias(String);
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct HostName(String);
 
+#[derive(PartialEq, From, Clone, Debug, Display, Hash, Eq, Into)]
+pub struct SectionName(String);
+
+impl SectionName {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Debug)]
 pub struct Credentials {
     pub user: String,

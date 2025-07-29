@@ -5,6 +5,7 @@
 use super::sqls::{self, find_known_query};
 use crate::config::{self, section, section::names};
 use crate::emit::header;
+use crate::types::SectionName;
 use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -19,7 +20,7 @@ pub enum SectionKind {
 
 #[derive(Debug, Clone)]
 pub struct Section {
-    name: String,
+    name: SectionName,
     sep: char,
     cache_age: Option<u32>,
     header_name: String,
@@ -38,10 +39,10 @@ impl Section {
             None
         };
         Self {
-            name: section.name().into(),
+            name: section.name().clone(),
             sep: section.sep(),
             cache_age,
-            header_name: section.name().into(),
+            header_name: section.name().clone().into(),
         }
     }
 
@@ -68,7 +69,7 @@ impl Section {
             .unwrap_or_default()
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &SectionName {
         &self.name
     }
 
@@ -95,7 +96,7 @@ impl Section {
     /// try to find the section's query in the sql directory for instance with the given version
     /// or in the known queries if custom sql query is not provided
     pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
-        match self.name.as_ref() {
+        match self.header_name.as_str() {
             names::IO_STATS => find_known_query(sqls::Id::IoStats).map(str::to_string).ok(),
             _ => self.find_query(sql_dir, instance_version),
         }
@@ -104,7 +105,7 @@ impl Section {
     fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         self.find_provided_query(sql_dir, instance_version)
             .or_else(|| {
-                get_sql_id(&self.name)
+                get_sql_id(&self.header_name)
                     .and_then(Self::find_known_query)
                     .map(|s| s.to_owned())
             })
@@ -116,7 +117,7 @@ impl Section {
         instance_version: u32,
     ) -> Option<String> {
         if let Some(dir) = sql_dir {
-            if let Ok(versioned_files) = find_sql_files(&dir, &self.name) {
+            if let Ok(versioned_files) = find_sql_files(&dir, &self.header_name) {
                 for (min_version, sql_file) in versioned_files {
                     if instance_version >= min_version {
                         #[allow(clippy::all)]

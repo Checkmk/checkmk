@@ -726,7 +726,7 @@ discovery:
     }
 
     fn as_names(sections: Vec<&Section>) -> Vec<&str> {
-        sections.iter().map(|s| s.name()).collect()
+        sections.iter().map(|s| s.name().as_str()).collect()
     }
 
     #[test]
@@ -959,7 +959,7 @@ oracle:
             config
                 .all_sections()
                 .iter()
-                .map(|s| (s.name(), s.kind()))
+                .map(|s| (s.name().as_str(), s.kind()))
                 .collect::<Vec<(&str, SectionKind)>>(),
             [
                 ("instance", SectionKind::Sync),
@@ -971,7 +971,7 @@ oracle:
             config
                 .valid_sections()
                 .iter()
-                .map(|s| (s.name(), s.kind()))
+                .map(|s| (s.name().as_str(), s.kind()))
                 .collect::<Vec<(&str, SectionKind)>>(),
             [
                 ("instance", SectionKind::Sync),

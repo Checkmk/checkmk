@@ -4,6 +4,7 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
+use crate::types::SectionName;
 use anyhow::Result;
 use log;
 
@@ -140,7 +141,7 @@ impl SectionBuilder {
 
     pub fn build(self) -> Section {
         Section {
-            name: self.name,
+            name: SectionName::from(self.name),
             sep: self.sep,
             kind: if self.is_disabled {
                 SectionKind::Disabled
@@ -157,7 +158,7 @@ impl SectionBuilder {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Section {
-    name: String,
+    name: SectionName,
     sep: char,
     kind: SectionKind,
     sql: Option<String>,
@@ -169,7 +170,7 @@ impl Section {
         SectionBuilder::new(name.into()).build()
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &SectionName {
         &self.name
     }
 
@@ -340,7 +341,7 @@ sections:
         fn make_section_vector<'a>(s: &'a Sections, kinds: &[SectionKind]) -> Vec<(&'a str, char)> {
             s.select(kinds)
                 .iter()
-                .map(|s| (s.name(), s.sep()))
+                .map(|s| (s.name().as_str(), s.sep()))
                 .collect::<Vec<(&str, char)>>()
         }
         let s = Sections::from_yaml(&create_yaml(SECTIONS_FULL), &Sections::default()).unwrap();
@@ -384,7 +385,7 @@ sections:
         let asyncs = s
             .select(&[SectionKind::Async])
             .iter()
-            .map(|s| s.name())
+            .map(|s| s.name().as_str())
             .collect::<Vec<&str>>();
         assert_eq!(asyncs, PREDEFINED_ASYNC_SECTIONS);
 

@@ -1640,7 +1640,7 @@ class ActivateChangesManager:
         self._save_activation()
 
         with _debug_log_message("Starting activation"):
-            self._start_activation(debug=debug, use_git=use_git)
+            self._start_activation(all_site_configs, debug=debug, use_git=use_git)
 
         with _debug_log_message("Update and activate central rabbitmq changes"):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
@@ -1931,7 +1931,9 @@ class ActivateChangesManager:
             )
 
     @tracer.instrument("start_activation")
-    def _start_activation(self, *, debug: bool, use_git: bool) -> None:
+    def _start_activation(
+        self, all_site_configs: SiteConfigurations, *, debug: bool, use_git: bool
+    ) -> None:
         self._log_activation(use_git=use_git)
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(self._activation_id)
@@ -1943,6 +1945,7 @@ class ActivateChangesManager:
                     site_snapshot_settings=self._site_snapshot_settings,
                     prevent_activate=self._prevent_activate,
                     source=self._source,
+                    all_site_configs=all_site_configs,
                     debug=debug,
                     use_git=use_git,
                 ),
@@ -2323,6 +2326,7 @@ def _sync_and_activate(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     file_filter_func: FileFilterFunc,
     source: ActivationSource,
+    all_site_configs: SiteConfigurations,
     *,
     debug: bool,
     prevent_activate: bool,
@@ -2350,7 +2354,7 @@ def _sync_and_activate(
         setthreadtitle("cmk-activate-changes")
 
         activate_changes = ActivateChanges()
-        activate_changes.load(list(active_config.sites))
+        activate_changes.load(list(all_site_configs))
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
 
         if is_free():
@@ -2377,7 +2381,7 @@ def _sync_and_activate(
             debug=debug,
         )
         clean_remote_sites_certs(
-            kept_sites=list(get_all_replicated_sites(activation_sites(active_config.sites)))
+            kept_sites=list(get_all_replicated_sites(activation_sites(all_site_configs)))
         )
 
         active_tasks = ActiveTasks(
@@ -2653,6 +2657,7 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings]
     prevent_activate: bool
     source: ActivationSource
+    all_site_configs: SiteConfigurations
     debug: bool
     use_git: bool
 
@@ -2665,6 +2670,7 @@ def activate_changes_scheduler_job_entry_point(
         args.site_snapshot_settings,
         args.prevent_activate,
         args.source,
+        args.all_site_configs,
         args.debug,
         args.use_git,
     )
@@ -2689,6 +2695,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
         prevent_activate: bool,
         source: ActivationSource,
+        all_site_configs: SiteConfigurations,
         debug: bool,
         use_git: bool,
     ) -> None:
@@ -2709,6 +2716,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                     str(version.edition(paths.omd_root))
                 ].sync_file_filter_func,
                 source,
+                all_site_configs,
                 debug=debug,
                 prevent_activate=prevent_activate,
                 use_git=use_git,

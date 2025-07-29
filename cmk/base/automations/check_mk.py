@@ -106,7 +106,10 @@ from cmk.base.config import (
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
-from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
+from cmk.base.configlib.servicename import (
+    FinalServiceNameConfig,
+    PassiveServiceNameConfig,
+)
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -115,7 +118,13 @@ from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.ccc import tty, version
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.exceptions import (
+    MKBailOut,
+    MKGeneralException,
+    MKSNMPError,
+    MKTimeout,
+    OnError,
+)
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
@@ -132,7 +141,10 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
-from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets, get_check_plugin
+from cmk.checkengine.plugin_backend import (
+    extract_known_discovery_rulesets,
+    get_check_plugin,
+)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
@@ -172,7 +184,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log, man_pages
+from cmk.utils import config_warnings, ip_lookup, log, man_pages, structured_data
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -1478,12 +1490,13 @@ class AutomationRenameHosts(Automation):
             actions.append("snmpwalk")
 
         # HW/SW Inventory
-        if self._rename_host_file(str(var_dir / "inventory"), oldname, newname):
-            self._rename_host_file(str(var_dir / "inventory"), oldname + ".gz", newname + ".gz")
-            actions.append("inv")
-
-        if self._rename_host_dir(str(var_dir / "inventory_archive"), oldname, newname):
-            actions.append("invarch")
+        actions.extend(
+            structured_data.rename(
+                cmk.utils.paths.omd_root,
+                old_name=HostName(oldname),
+                new_name=HostName(newname),
+            )
+        )
 
         # Baked agents
         baked_agents_dir = str(var_dir) + "/agents/"
@@ -2270,6 +2283,10 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         return DeleteHostsResult()
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
+        inv_paths = structured_data.InventoryPaths(cmk.utils.paths.omd_root)
+        inventory_tree = inv_paths.inventory_tree(hostname)
+        inventory_tree_gz = inv_paths.inventory_tree_gz(hostname)
+        status_data_tree = inv_paths.status_data_tree(hostname)
         return [
             f"{precompiled_hostchecks_dir / hostname}",
             f"{precompiled_hostchecks_dir / hostname}.py",
@@ -2278,9 +2295,14 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
             f"{discovered_host_labels_dir}/{hostname}.mk",
             f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
-            f"{var_dir}/inventory/{hostname}",
-            f"{var_dir}/inventory/{hostname}.gz",
             f"{var_dir}/agent_deployment/{hostname}",
+        ] + [
+            str(inventory_tree.path),
+            str(inventory_tree.legacy),
+            str(inventory_tree_gz.path),
+            str(inventory_tree_gz.legacy),
+            str(status_data_tree.path),
+            str(status_data_tree.legacy),
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:

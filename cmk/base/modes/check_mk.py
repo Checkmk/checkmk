@@ -1373,10 +1373,10 @@ def mode_flush(hosts: list[HostName]) -> None:
             print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
-        path = cmk.utils.paths.var_dir / "inventory" / host
-        if path.exists():
-            path.unlink()
-            print_(tty.bold + tty.yellow + " inventory")
+        inventory_tree = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
+        inventory_tree.path.unlink(missing_ok=True)
+        inventory_tree.legacy.unlink(missing_ok=True)
+        print_(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
             print_("(nothing)")

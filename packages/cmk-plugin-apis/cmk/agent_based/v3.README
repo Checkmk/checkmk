@@ -1,0 +1,3 @@
+Possible improvements:
+
+* get_average should behave like get_rate, when encountering a time anomaly (raise ignoreResultError)

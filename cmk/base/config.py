@@ -50,6 +50,7 @@ from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
+from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
@@ -3785,6 +3786,7 @@ class FetcherFactory:
                 ),
                 sections=plugins.snmp_sections.values(),
             ),
+            plugin_store=make_plugin_store(plugins),
             scan_config=SNMPScanConfig(
                 on_error=self._snmp_fetcher_config.on_error,
                 missing_sys_description=self._snmp_fetcher_config.missing_sys_description(

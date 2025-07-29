@@ -12,11 +12,10 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import assert_never, Final, Literal
 
-from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import SNMPFetcher, TLSConfig
+from cmk.fetchers import TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum
@@ -156,15 +155,9 @@ class _Builder:
             if not special_agents:
                 self._add_agent()
 
-    def _initialize_snmp_plugin_store(self) -> None:
-        if len(SNMPFetcher.plugin_store) != len(self.plugins.snmp_sections):
-            SNMPFetcher.plugin_store = make_plugin_store(self.plugins)
-
     def _initialize_snmp_based(self) -> None:
         if not self.cds.is_snmp:
             return
-
-        self._initialize_snmp_plugin_store()
 
         if self.simulation_mode or self.snmp_backend is SNMPBackendEnum.STORED_WALK:
             # Here, we bypass NO_IP and silently set the IP to localhost.  This is to accomodate
@@ -215,7 +208,6 @@ class _Builder:
 
         match self.management_protocol:
             case "snmp":
-                self._initialize_snmp_plugin_store()
                 self._add(
                     MgmtSNMPSource(
                         self.fetcher_factory,

@@ -403,6 +403,7 @@ class TestSNMPFetcherDeserialization:
     def fetcher(self, tmp_path: Path) -> SNMPFetcher:
         return SNMPFetcher(
             sections={},
+            plugin_store=SNMPPluginStore({}),
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=False,
@@ -443,6 +444,7 @@ def _create_fetcher(
 ) -> SNMPFetcher:
     return SNMPFetcher(
         sections={} if sections is None else sections,
+        plugin_store=PLUGIN_STORE,
         scan_config=SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -472,10 +474,6 @@ def _create_fetcher(
 
 
 class TestSNMPFetcherFetch:
-    @pytest.fixture(autouse=True)
-    def snmp_plugin_fixture(self) -> None:
-        SNMPFetcher.plugin_store = PLUGIN_STORE
-
     def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)
@@ -693,10 +691,6 @@ class TestSNMPFetcherFetch:
 
 
 class TestSNMPFetcherConfiguredCaching:
-    @pytest.fixture(autouse=True)
-    def snmp_plugin_fixture(self) -> None:
-        SNMPFetcher.plugin_store = PLUGIN_STORE
-
     @pytest.fixture(autouse=True, scope="function")
     def _get_snmp_table(self, monkeypatch: pytest.MonkeyPatch) -> None:
         vals = iter("ab")
@@ -776,6 +770,7 @@ class TestSNMPFetcherFetchCache:
     def test_fetch_reading_cache_in_discovery_mode(self, tmp_path: Path) -> None:
         fetcher = SNMPFetcherStub(
             sections={},
+            plugin_store=SNMPPluginStore({}),
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=False,

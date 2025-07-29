@@ -231,12 +231,12 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         SNMPSectionName("brocade_sys"),
         SNMPSectionName("bvip_util"),
     }
-    plugin_store: SNMPPluginStore = SNMPPluginStore()
 
     def __init__(
         self,
         *,
         sections: Mapping[SNMPSectionName, SNMPSectionMeta],
+        plugin_store: SNMPPluginStore,
         scan_config: SNMPScanConfig,
         do_status_data_inventory: bool,
         section_cache_path: Path | str,
@@ -247,6 +247,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     ) -> None:
         super().__init__()
         self.sections: Final = sections
+        self.plugin_store: Final = plugin_store
         self.scan_config: Final = scan_config
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.stored_walk_path: Final = Path(stored_walk_path)

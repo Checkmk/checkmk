@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
@@ -28,6 +28,11 @@ def _form_spec() -> Dictionary:
         return values
 
     return Dictionary(
+        help_text=Help(
+            "Note: Simultaneous monitoring of both Nutanix Prism Element "
+            "and Nutanix Prism Central is not supported. "
+            "Doing so may cause conflicting piggyback data."
+        ),
         migrate=_pre_24_to_formspec_migration,
         elements={
             "port": DictElement(

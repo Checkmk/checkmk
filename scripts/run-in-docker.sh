@@ -16,11 +16,6 @@ GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 CMD="${*:-bash}"
 
-# Make the registry login available within the container, e.g. for agent plugin unit tests which are pulling
-# images from the registry within IMAGE_TESTING
-DOCKER_CONF_PATH="${HOME}/.docker"
-mkdir -p "${DOCKER_CONF_PATH}"
-
 # This block makes sure a local containerized session does not interfere with
 # native builds. Maybe in the future this script should not be executed in
 # a CI environment (since those come with their own containerization solutions)
@@ -50,7 +45,6 @@ if [ "$USER" != "jenkins" ]; then
         -e HOME="${REPO_DIR}/build_user_home/" \
         "
 
-    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${REPO_DIR}/build_user_home/.docker:ro"
 else
     # Needed for .cargo which is shared between workspaces
     SHARED_CARGO_FOLDER="${HOME}/shared_cargo_folder"
@@ -64,7 +58,13 @@ else
     GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 
-    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}:ro"
+    # Make the registry login available within the container, e.g. for agent plugin unit tests which are pulling
+    # images from the registry within IMAGE_TESTING
+    if [ -f "${HOME}/.docker/config.json" ]; then
+        mkdir -p "${REPO_DIR}/home_docker"
+        touch "${REPO_DIR}/home_docker/config.json"
+        DOCKER_CONF_JENKINS_MOUNT="-v ${REPO_DIR}/home_docker:${HOME}/.docker -v ${HOME}/.docker/config.json:${HOME}/.docker/config.json:ro"
+    fi
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"

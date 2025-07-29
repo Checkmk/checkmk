@@ -539,6 +539,7 @@ class InventoryHousekeeping:
                 for h in _collect_all_raw_host_names(
                     is_wato_slave_site=gui_is_wato_slave_site(config.sites)
                 )
+                if h
             ],
             now=int(time.time()),
         )

@@ -13,7 +13,13 @@ const multilineCodeText = `C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-
 register ^
 --hostname mynewhost ^
 --server cmkserver --site mysite ^
---user agent_registration --password "PASSWD"`
+--user agent_registration --password "PASSWD"
+sudo dpkg -i check-mk-agent.deb very long long text
+sudo dpkg -i check-mk-agent.deb very long long text
+sudo dpkg -i check-mk-agent.deb very long long text
+sudo dpkg -i check-mk-agent.deb very long long text
+sudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long text
+sudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long textsudo dpkg -i check-mk-agent.deb very long long text`
 </script>
 
 <template>

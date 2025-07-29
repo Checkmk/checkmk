@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/tooltip'
 import usei18n from '@/lib/i18n'
 
@@ -19,9 +20,11 @@ const props = defineProps<{
 }>()
 
 const TOOLTIP_DISPLAY_DURATION = 8000
+const MAX_LINES = 10
 
 const showMessage = ref(false)
 const errorMessage = ref('')
+const isExpanded = ref(false)
 let tooltipTimeoutId: ReturnType<typeof setTimeout> | null = null
 
 async function copyToClipboard() {
@@ -58,15 +61,43 @@ const handlePointerDownOutside = () => {
     }
   }
 }
+
+const codeLines = computed(() => props.code_txt.split('\n'))
+const displayedCode = computed(() => {
+  if (isExpanded.value || codeLines.value.length <= MAX_LINES) {
+    return props.code_txt
+  }
+  return codeLines.value.slice(0, MAX_LINES).join('\n')
+})
+const shouldShowToggle = computed(() => codeLines.value.length > MAX_LINES)
+
+const toggleExpansion = () => {
+  isExpanded.value = !isExpanded.value
+}
 </script>
 
 <template>
   <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
   <div class="code_wrapper">
-    <div class="code_container">
+    <div class="code_container" :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded }">
       <pre>
-        <code>{{ code_txt.trimStart() }}</code>
+        <code>{{ displayedCode }}</code>
       </pre>
+      <div v-if="shouldShowToggle && !isExpanded" class="fade_overlay"></div>
+      <div v-if="shouldShowToggle" class="toggle_button_container">
+        <CmkButton variant="secondary" class="toggle_button" @click="toggleExpansion">
+          <CmkIcon
+            name="tree-closed"
+            variant="inline"
+            size="small"
+            class="toggle_icon"
+            :class="{ expanded: isExpanded }"
+          />
+          {{
+            isExpanded ? t('cmk-code-show-less', 'Show less') : t('cmk-code-show-more', 'Show more')
+          }}
+        </CmkButton>
+      </div>
     </div>
     <TooltipProvider>
       <Tooltip :open="showMessage" disable-hover-trigger>
@@ -107,6 +138,7 @@ const handlePointerDownOutside = () => {
   gap: 8px;
 
   .code_container {
+    position: relative;
     font-family: monospace;
     font-size: var(--font-size-normal, 12px);
     font-style: normal;
@@ -121,6 +153,59 @@ const handlePointerDownOutside = () => {
     pre {
       margin: 0;
       white-space: pre-line;
+    }
+
+    .fade_overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, var(--ux-theme-0));
+      pointer-events: none;
+    }
+
+    .toggle_button_container {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    &.has-toggle:not(.expanded) .toggle_button_container {
+      bottom: 12px;
+    }
+
+    &.has-toggle.expanded .toggle_button_container {
+      position: relative;
+      left: auto;
+      transform: none;
+      margin-top: 8px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .toggle_button {
+      font-size: var(--font-size-normal);
+      padding: 0px 8px;
+      border-color: var(--font-color);
+      color: var(--font-color);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .toggle_icon {
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+
+      &.expanded {
+        transform: rotate(-90deg);
+      }
+
+      &:not(.expanded) {
+        transform: rotate(90deg);
+      }
     }
   }
 

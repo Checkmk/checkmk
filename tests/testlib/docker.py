@@ -397,6 +397,11 @@ class CheckmkApp:
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
         c.reload()
 
+        self.ports = {
+            str(port): c.attrs["NetworkSettings"]["Ports"][str(port)][0]["HostPort"]
+            for port in self.ports or []
+        }
+
         logger.debug(c.logs().decode("utf-8"))
 
         # TODO: add CSE auth provider setup

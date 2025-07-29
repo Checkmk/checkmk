@@ -58,8 +58,6 @@ class CachedPlugin(NamedTuple):
 
 class CachedPluginsSection(NamedTuple):
     timeout: list[CachedPlugin] | None
-    # "killfailed" has been removed from the agent in 2.4
-    # Currently it is still used by mk_oracle
     killfailed: list[CachedPlugin] | None
 
 

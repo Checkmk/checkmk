@@ -16,8 +16,6 @@ def _split_plugin_descr(plugin_descr: str) -> tuple[CachedPluginType | None, str
 
 
 def parse_checkmk_cached_plugins(string_table: StringTable) -> CachedPluginsSection:
-    # "killfailed" has been removed from the agent in 2.4
-    # Currently it is still used by mk_oracle
     fail_types = ("timeout", "killfailed")
     temp_section: dict[str, list[CachedPlugin]] = {
         fail_type: [

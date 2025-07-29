@@ -19,8 +19,8 @@ export default defineComponent({
 <style scoped>
 :deep(.highlight-query) {
   display: inline-block;
-  background: var(--success-dimmed-2);
-  color: var(--white);
+  background: transparent;
+  color: var(--success);
   line-height: 14px;
 }
 </style>

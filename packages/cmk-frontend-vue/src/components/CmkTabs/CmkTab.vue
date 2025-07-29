@@ -45,7 +45,7 @@ defineProps<CmkTabProps>()
     background: var(--ux-theme-2);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: none;
     border: 1px solid var(--success);
   }

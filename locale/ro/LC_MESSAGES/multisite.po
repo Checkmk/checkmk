@@ -13498,6 +13498,14 @@ msgstr "Mesaje de curățare"
 msgid "Cleanup of working directory"
 msgstr "Curățarea directorului de lucru"
 
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Parametrii impliciți"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Mesaje de curățare"
+
 msgid "Cleanup when disk space is below"
 msgstr "Curățare atunci când spațiul pe disc este sub"
 
@@ -18138,6 +18146,14 @@ msgstr "Implicit (%s)"
 msgid "Default BI visualization settings"
 msgstr "Setări implicite de vizualizare BI"
 
+#, fuzzy
+msgid "Default State"
+msgstr "Stare implicită"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Parametrii impliciți"
+
 msgid "Default color"
 msgstr "Culoare implicită"
 
@@ -18995,6 +19011,10 @@ msgstr "Gazdă ștearsă %s"
 
 #, fuzzy, python-format
 msgid "Deleted notification parameter %d"
+msgstr "Ștergerea regulii de notificare #%d"
+
+#, fuzzy, python-format
+msgid "Deleted notification rule #%s"
 msgstr "Ștergerea regulii de notificare #%d"
 
 #, python-format
@@ -26290,6 +26310,10 @@ msgid "For specific SIDs"
 msgstr "Pentru SID-uri specifice"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Pentru SID-uri specifice"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27963,6 +27987,10 @@ msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 #, fuzzy
 msgid "HW/SW Inventory history"
 msgstr "Istoricul de inventariere a gazdei"
+
+#, fuzzy
+msgid "HW/SW Inventory housekeeping"
+msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -31416,6 +31444,10 @@ msgstr "Nivelurile de umiditate"
 #, fuzzy
 msgid "Humidity levels for devices with a single sensor"
 msgstr "Niveluri de umiditate pentru dispozitive cu un singur senzor"
+
+#, fuzzy
+msgid "Hyper-V Integration Services Status"
+msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
@@ -40582,6 +40614,10 @@ msgstr "Potriviți grupurile gazdă"
 msgid "Match host labels"
 msgstr "Potriviți etichetele gazdă"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Potriviți etichetele gazdă"
+
 msgid "Match host tags"
 msgstr "Potriviți etichetele gazdă"
 
@@ -44276,6 +44312,10 @@ msgstr "Nu este definită nicio sursă de date."
 #, fuzzy
 msgid "No default values can be set for condition choices."
 msgstr "Setați valorile implicite pentru toate secțiunile"
+
+#, fuzzy
+msgid "No defaults"
+msgstr "Este implicit"
 
 #, fuzzy
 msgid "No deprecated rule sets found."
@@ -54115,6 +54155,10 @@ msgstr "Îndepărtați înregistrarea TLS a gazdelor selectate"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Îndepărtați configurația Windows Firewall, dacă este prezentă"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Curățați fișierele gazdă abandonate mai vechi de"
+
 msgid "Remove acknowledgments"
 msgstr "Îndepărtați confirmarea?"
 
@@ -54148,6 +54192,17 @@ msgstr "Îndepărtați setarea explicită"
 
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Ștergeți fișierele mai vechi de"
+
+msgid "Remove history entries right after the"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Obțineți informații despre următoarele partiții"
 
 #, fuzzy
 msgid "Remove name"
@@ -61051,6 +61106,10 @@ msgstr "Discul de rezervă"
 
 msgid "Special Agent"
 msgstr "Agent special"
+
+#, fuzzy
+msgid "Special States"
+msgstr "Starea operațională"
 
 msgid "Specific Mappings"
 msgstr "Mapări specifice"
@@ -81015,6 +81074,10 @@ msgstr "Utilizați următoarea culoare"
 msgid "Use the following credentials"
 msgstr "Utilizați următoarele acreditări"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Utilizați următoarele niveluri"
+
 msgid "Use the following levels"
 msgstr "Utilizați următoarele niveluri"
 
@@ -88446,6 +88509,9 @@ msgstr "implicit (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "implicit (toate regiunile AWS normale)"
 
+msgid "defensive (both conditions must match)"
+msgstr ""
+
 msgid "degraded"
 msgstr "degradat"
 
@@ -89465,6 +89531,10 @@ msgstr "de serviciu nespecificat"
 msgid "off"
 msgstr "off"
 
+#, fuzzy
+msgid "offensive (one condition needs to match)"
+msgstr "Condițiile regulii nu se potrivesc."
+
 msgid "offline"
 msgstr "offline"
 
@@ -89950,6 +90020,10 @@ msgstr "testare"
 
 msgid "tests"
 msgstr "teste"
+
+#, fuzzy
+msgid "th entry"
+msgstr "Pe intrare"
 
 msgid "th notification"
 msgstr "a notificare"
@@ -93031,9 +93105,6 @@ msgstr ""
 
 #~ msgid "Node Name"
 #~ msgstr "Numele nodului"
-
-#~ msgid "Operational Status"
-#~ msgstr "Starea operațională"
 
 #~ msgid "Oracle Instance"
 #~ msgstr "Instanța Oracle"

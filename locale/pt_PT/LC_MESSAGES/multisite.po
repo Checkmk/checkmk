@@ -13485,6 +13485,14 @@ msgstr "Mensagens de limpeza"
 msgid "Cleanup of working directory"
 msgstr "Limpeza do trabalhador em modo inativo"
 
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Parâmetros por defeito"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Mensagens de limpeza"
+
 msgid "Cleanup when disk space is below"
 msgstr "Limpeza quando o espaço em disco está abaixo"
 
@@ -18126,6 +18134,14 @@ msgstr "Default (%s)"
 msgid "Default BI visualization settings"
 msgstr "Configurações padrão de visualização do BI"
 
+#, fuzzy
+msgid "Default State"
+msgstr "Estado por defeito"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Parâmetros por defeito"
+
 msgid "Default color"
 msgstr "Cor predefinida"
 
@@ -18973,6 +18989,10 @@ msgstr "Eliminado %s do anfitrião"
 
 #, fuzzy, python-format
 msgid "Deleted notification parameter %d"
+msgstr "Eliminar regra de notificação #%d"
+
+#, fuzzy, python-format
+msgid "Deleted notification rule #%s"
 msgstr "Eliminar regra de notificação #%d"
 
 #, python-format
@@ -26222,6 +26242,10 @@ msgid "For specific SIDs"
 msgstr "Para SIDs específicos"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Para SIDs específicos"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27917,6 +27941,10 @@ msgstr "Hardware/Software-Inventário (Linux, Windows, Solaris, AIX)"
 #, fuzzy
 msgid "HW/SW Inventory history"
 msgstr "Histórico de inventário do anfitrião"
+
+#, fuzzy
+msgid "HW/SW Inventory housekeeping"
+msgstr "Plugins de inventário HW/SW obsoletos"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -31366,6 +31394,10 @@ msgstr "Níveis de Humidade"
 #, fuzzy
 msgid "Humidity levels for devices with a single sensor"
 msgstr "Níveis de umidade para dispositivos com um único sensor"
+
+#, fuzzy
+msgid "Hyper-V Integration Services Status"
+msgstr "Servidor Hyper-V: Estado das VMs"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Servidor Hyper-V: Estado das VMs"
@@ -40492,6 +40524,10 @@ msgstr "Combinar grupos anfitriões"
 msgid "Match host labels"
 msgstr "Combinar etiquetas de anfitrião"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Combinar etiquetas de anfitrião"
+
 msgid "Match host tags"
 msgstr "Combinar etiquetas de anfitrião"
 
@@ -44175,6 +44211,10 @@ msgstr "Nenhuma fonte de dados definida."
 #, fuzzy
 msgid "No default values can be set for condition choices."
 msgstr "Definir valores padrão para todas as seções"
+
+#, fuzzy
+msgid "No defaults"
+msgstr "É padrão"
 
 #, fuzzy
 msgid "No deprecated rule sets found."
@@ -54001,6 +54041,10 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Remover a configuração do Firewall do Windows, se presente"
 
 #, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Limpeza de arquivos host abandonados mais antigos que"
+
+#, fuzzy
 msgid "Remove acknowledgments"
 msgstr "Remover o reconhecimento"
 
@@ -54035,6 +54079,17 @@ msgstr "Remover configuração explícita"
 
 msgid "Remove filter"
 msgstr "Remover filtro"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Eliminar ficheiros mais antigos que"
+
+msgid "Remove history entries right after the"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Obter informações sobre as seguintes partições"
 
 #, fuzzy
 msgid "Remove name"
@@ -60886,6 +60941,10 @@ msgstr "Disco de reserva"
 
 msgid "Special Agent"
 msgstr "Agente Especial"
+
+#, fuzzy
+msgid "Special States"
+msgstr "Estado Operacional"
 
 msgid "Specific Mappings"
 msgstr "Mapeamentos específicos"
@@ -80756,6 +80815,10 @@ msgstr "Use a seguinte cor"
 msgid "Use the following credentials"
 msgstr "Use as seguintes credenciais"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Use os seguintes níveis"
+
 msgid "Use the following levels"
 msgstr "Use os seguintes níveis"
 
@@ -88133,6 +88196,9 @@ msgstr "padrão (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "predefinição (todas as regiões AWS normais)"
 
+msgid "defensive (both conditions must match)"
+msgstr ""
+
 msgid "degraded"
 msgstr "degradado"
 
@@ -89145,6 +89211,10 @@ msgstr "de serviço não especificado"
 msgid "off"
 msgstr "em"
 
+#, fuzzy
+msgid "offensive (one condition needs to match)"
+msgstr "As condições das regras não coincidem."
+
 msgid "offline"
 msgstr "off-line"
 
@@ -89624,6 +89694,10 @@ msgstr "teste"
 #, fuzzy
 msgid "tests"
 msgstr "Realizar testes"
+
+#, fuzzy
+msgid "th entry"
+msgstr "Por entrada"
 
 msgid "th notification"
 msgstr "esta notificação"
@@ -92624,9 +92698,6 @@ msgstr ""
 
 #~ msgid "Node Name"
 #~ msgstr "Nome do nó"
-
-#~ msgid "Operational Status"
-#~ msgstr "Estado Operacional"
 
 #~ msgid "Oracle Instance"
 #~ msgstr "Tribunal Oracle"

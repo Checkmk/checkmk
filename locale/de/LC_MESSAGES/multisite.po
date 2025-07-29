@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-24 20:35+0000\n"
+"PO-Revision-Date: 2025-07-28 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -9026,9 +9026,8 @@ msgstr "Bazel Cache-Port"
 msgid "Bazel Cache User"
 msgstr "Bazel Cache Benutzer"
 
-#, fuzzy
 msgid "Bazel Cache Version"
-msgstr "Bazel Cache Benutzer"
+msgstr "Bazel Cache Version"
 
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
@@ -13024,6 +13023,14 @@ msgstr "Meldungen aufräumen"
 msgid "Cleanup of working directory"
 msgstr "Bereinigung des Arbeitsverzeichnisses"
 
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Standardparameter"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Meldungen aufräumen"
+
 msgid "Cleanup when disk space is below"
 msgstr "Aufräumen, wenn der freie Speicherplatz geringer ist als"
 
@@ -15104,13 +15111,11 @@ msgstr ""
 "Importierte Benutzer IDs während Synchronisation in Kleinbuchstaben "
 "umwandeln."
 
-#, fuzzy
 msgid "Convert to lower case"
-msgstr "%s in Kleinbuchstaben umwandeln"
+msgstr "In Kleinbuchstaben umwandeln"
 
-#, fuzzy
 msgid "Convert to upper case"
-msgstr "%s in Großbuchstaben umwandeln"
+msgstr "In Großbuchstaben umwandeln"
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -15306,14 +15311,14 @@ msgstr ""
 "Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to automation helper. Possibly the service <tt>automation-"
 "helper</tt> is not started, please make sure that all site services are "
 "started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
 msgstr ""
-"Es konnte keine Verbindung zu ui-job-scheduler hergestellt werden. "
-"Möglicherweise ist der Service <tt>ui-job-scheduler</tt> nicht gestartet. "
+"Es konnte keine Verbindung zum Automation Helper hergestellt werden. "
+"Möglicherweise ist der Service <tt>automation-helper</tt> nicht gestartet. "
 "Bitte stellen Sie sicher, dass alle Instanz-Services gestartet sind. Es "
 "wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
 "Fehler war: %s."
@@ -17568,6 +17573,14 @@ msgstr "Voreinstellung (%s)"
 msgid "Default BI visualization settings"
 msgstr "Standard BI Visualisierungseinstellungen"
 
+#, fuzzy
+msgid "Default State"
+msgstr "Standardzustand"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Standardparameter"
+
 msgid "Default color"
 msgstr "Standardfarbe"
 
@@ -18413,6 +18426,10 @@ msgstr "Host %s gelöscht"
 #, python-format
 msgid "Deleted notification parameter %d"
 msgstr "Benachrichtigungsparameter #%d wurde gelöscht"
+
+#, fuzzy, python-format
+msgid "Deleted notification rule #%s"
+msgstr "Benachrichtigungsregel #%d löschen"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -23705,9 +23722,8 @@ msgstr "Explizite Zuordnung von Job-Exit-Codes zu Zuständen"
 msgid "Explicit match"
 msgstr "Genaue Übereinstimmung"
 
-#, fuzzy
 msgid "Explicit name mapping"
-msgstr "Explizite %s Zuordnung"
+msgstr "Explizite Zuordnung der Namen"
 
 msgid "Explicit number"
 msgstr "Explizite Zahl"
@@ -25385,6 +25401,10 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "Für spezifische SIDs"
 
+#, fuzzy
+msgid "For specific hosts"
+msgstr "Für spezifische SIDs"
+
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27020,6 +27040,10 @@ msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
+
+#, fuzzy
+msgid "HW/SW Inventory housekeeping"
+msgstr "Plugin der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory plug-in"
 msgstr "Plugin der HW-/SW-Inventur"
@@ -30131,6 +30155,10 @@ msgstr "Levels für Feuchtigkeit"
 msgid "Humidity levels for devices with a single sensor"
 msgstr "Feuchtigkeitslevels für Geräte mit einem einzelnen Sensor"
 
+#, fuzzy
+msgid "Hyper-V Integration Services Status"
+msgstr "Hyper-V Server: Zustand von VMs"
+
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Zustand von VMs"
 
@@ -30904,18 +30932,17 @@ msgstr "Wenn agent_hash weggelassen wird, muss das Ziel angegeben werden."
 msgid "If available, the following metric will be shown"
 msgstr "Wenn aktiviert, wird die folgende Metrik angezeigt"
 
-#, fuzzy
 msgid ""
 "If case conversion and regular expression do not work for all cases then you "
 "can specify explicit pairs of original and translated names here. This "
 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a "
 "regular expression conversion (if that matches)."
 msgstr ""
-"Wenn die Umwandlung von Groß-/Kleinschreibung und die regulären Ausdrücke "
-"nicht für alle Fälle ausreichen, dann können Sie hier explizite Paare von "
-"Ursprung {0} und Übersetzung {0} festlegen. Diese Zuordnung geschieht "
-"<b>nach</b> der Groß-/Klein-Umwandlung und <b>nach</b> der Umwandlung "
-"regulärer Ausdrücke (falls dies anwendbar ist)."
+"Wenn die Groß-/Kleinschreibung und reguläre Ausdrücke nicht in allen Fällen "
+"funktionieren, können Sie hier explizite Paare aus Original- und übersetzten "
+"Namen angeben. Diese Zuordnung wird <b>nach</b> der Groß-/Kleinschreibung "
+"und <b>nach</b> einer regulären Ausdruck-Konvertierung (sofern diese "
+"übereinstimmt) angewendet."
 
 msgid ""
 "If context messages are enabled then if at least one relevant message is "
@@ -39022,6 +39049,10 @@ msgstr "Host-Gruppen abgleichen"
 msgid "Match host labels"
 msgstr "Host-Labels abgleichen"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Host-Labels abgleichen"
+
 msgid "Match host tags"
 msgstr "Host-Merkmale abgleichen"
 
@@ -42515,6 +42546,10 @@ msgstr "Keine Datenquelle definiert."
 msgid "No default values can be set for condition choices."
 msgstr ""
 "Für die Auswahl von Bedingungen können keine Standardwerte festgelegt werden."
+
+#, fuzzy
+msgid "No defaults"
+msgstr "Standard"
 
 msgid "No deprecated rule sets found."
 msgstr "Es wurden keine veralteten Regelsätze gefunden."
@@ -46311,9 +46346,8 @@ msgstr ""
 "Ursprünglicher Host-Name wenn der Host-Name umgeschrieben wurde. Ansonsten "
 "leer"
 
-#, fuzzy
 msgid "Original name"
-msgstr "Originaltext"
+msgstr "Originalname"
 
 msgid "Other"
 msgstr "Andere"
@@ -46896,10 +46930,10 @@ msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait"
 
-#, fuzzy
 msgid ""
 "PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
-msgstr "PGs Active + Undersized + Degraded + Remapped + Backfill + Toofull"
+msgstr ""
+"PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"
 
 msgid "PGs Active + Undersized + Degraded + Remapped + Backfilling"
 msgstr "PGs Active + Undersized + Degraded + Remapped + Backfilling"
@@ -49756,7 +49790,6 @@ msgstr "Druckerpatronen-Levels"
 msgid "Printer queue length"
 msgstr "Länge der Druckerschlange"
 
-#, fuzzy
 msgid "Printer sends <i>used</i> supply instead of <i>remaining</i>"
 msgstr ""
 "Dieser Drucker sendet <i>verbrauchtes</i> Material anstelle von "
@@ -51793,6 +51826,10 @@ msgstr "TLS-Registrierung ausgewählter Hosts entfernen"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Windows Firewall Konfiguration entfernen, falls vorhanden"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Veraltete Host-Dateien löschen, die älter sind als"
+
 msgid "Remove acknowledgments"
 msgstr "Entferne Quittierungen"
 
@@ -51825,6 +51862,17 @@ msgstr "Entferne explizite Einstellungen"
 
 msgid "Remove filter"
 msgstr "Filter entfernen"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Lösche Dateien älter als"
+
+msgid "Remove history entries right after the"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Informationen über die folgenden Partitionen einholen"
 
 msgid "Remove name"
 msgstr "Name entfernen"
@@ -58176,16 +58224,17 @@ msgstr ""
 "Stil angezeigt werden. Diese Berechtigung erlaubt es dem Benutzer, die "
 "Anzeigeoptionen zu ändern"
 
-#, fuzzy
 msgid ""
 "Some printers (e.g. Konica for drum cartridges) return<ul><li>in case of a "
 "container: The used instead of the available supply</li><li>in case of a "
 "receptacle: The available instead of the used space</li><ul>Enable this "
 "option to handle this behavior."
 msgstr ""
-"Einige Drucker (z. B. Konica für Trommelkartuschen) geben den verfügbaren "
-"Füllstand zurück, anstatt den verbleibenden. In diesem Fall ist es möglich, "
-"die Füllstände umzudrehen, um dieses Verhalten zu behandeln"
+"Einige Drucker (z. B. Konica für Trommelkartuschen) geben<ul><li>im Falle "
+"eines Containers: den verbrauchten anstatt den verfügbaren Füllstand zurück</"
+"li><li>im Falle eines Behälters: den verfügbaren anstatt den verbrauchten "
+"Füllstand zurück</li><ul>Aktivieren Sie diese Option, um dieses Verhalten zu "
+"berücksichtigen."
 
 msgid ""
 "Some printers do not report a precise percentage but just <i>some remaining</"
@@ -58447,6 +58496,10 @@ msgstr "Freie Platten"
 
 msgid "Special Agent"
 msgstr "Spezialagent"
+
+#, fuzzy
+msgid "Special States"
+msgstr "Betriebszustand"
 
 msgid "Specific Mappings"
 msgstr "Spezifisches Mapping"
@@ -75275,9 +75328,8 @@ msgstr "UCS Bladecenter-Zustand in Monitoring-Zustand übersetzen"
 msgid "Translate host names"
 msgstr "Host-Namen übersetzen"
 
-#, fuzzy
 msgid "Translated name"
-msgstr "Host-Namen übersetzen"
+msgstr "Übersetzter Name"
 
 msgid "Translation of HAProxy state to monitoring state"
 msgstr "Zuordnung des HAProxy-Zustand zum Monitoring-Zustand"
@@ -77304,9 +77356,8 @@ msgstr "Laufzeit seit dem letzten Reboot"
 msgid "Uptime since last reboot of devices with modules"
 msgstr "Laufzeit seit dem letzten Reboot von Geräten mit Modulen"
 
-#, fuzzy
 msgid "Upturn supply levels"
-msgstr "Tonerschwellen umdrehen"
+msgstr "Verfügbarkeitslevels heraufsetzen"
 
 msgid "Urgency"
 msgstr "Dringlichkeit"
@@ -77846,6 +77897,10 @@ msgstr "Die folgende Farbe verwenden"
 
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
+
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Die folgenden Levels benutzen"
 
 msgid "Use the following levels"
 msgstr "Die folgenden Levels benutzen"
@@ -82551,7 +82606,6 @@ msgstr ""
 "Sie können die Erstellung von Services für DHCP-Pools aktivieren, die keine "
 "IP-Adressen enthalten."
 
-#, fuzzy
 msgid ""
 "You can add any number of expressions here which are executed succesively "
 "until the first match. Please specify a regular expression in the first "
@@ -82561,14 +82615,14 @@ msgid ""
 "matched group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for "
 "example <tt>\\1.example.org</tt>. "
 msgstr ""
-"Hier können Sie eine beliebige Anzahl an Ausdrücken eingeben, die "
-"nacheinander abgearbeitet werden und nach dem ersten Treffer abbricht. Bitte "
-"geben Sie im ersten Feld einen regulären Ausdruck an. Dieser Ausdruck sollte "
-"mindestens einen geklammerten Unterausdruck enthalten - z.B. "
-"<tt>vm_(.*)_proc</tt>. Im zweiten Feld geben Sie dann den übersetzen %s an "
-"und können Sie auf den Text, der auf den Klammerausdruck passt, mit <tt>\\1</"
-"tt> beziehen. Der zweite Klammerausdruck wird mit <tt>\\2</tt> angegeben, "
-"usw. Beispiel: <tt>\\1.example.org</tt> "
+"Sie können hier beliebig viele Ausdrücke hinzufügen, die nacheinander "
+"ausgeführt werden, bis zum ersten Match. Bitte geben Sie im ersten Feld "
+"einen regulären Ausdruck an. Dieser Ausdruck sollte mindestens einen in "
+"Klammern eingeschlossenen Teilausdruck enthalten – zum Beispiel "
+"<tt>vm_(.*)_prod</tt>. Im zweiten Feld geben Sie das gewünschte Ergebnis der "
+"Übersetzung an. Sie können auf die erste übereinstimmende Gruppe mit "
+"<tt>\\1</tt>, auf die zweite mit <tt>\\2</tt> usw. verweisen, zum Beispiel "
+"<tt>\\1.example.org</tt>. "
 
 msgid ""
 "You can add any number of expressions here which are executed succesively "
@@ -85102,6 +85156,9 @@ msgstr "Standard (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "Standard (alle normalen AWS-Regionen)"
 
+msgid "defensive (both conditions must match)"
+msgstr ""
+
 msgid "degraded"
 msgstr "degradiert"
 
@@ -86090,6 +86147,10 @@ msgstr "von nicht spezifiziertem Service"
 msgid "off"
 msgstr "aus"
 
+#, fuzzy
+msgid "offensive (one condition needs to match)"
+msgstr "Die Regelbedingungen treffen nicht zu."
+
 msgid "offline"
 msgstr "aus"
 
@@ -86554,6 +86615,10 @@ msgstr "Test läuft"
 
 msgid "tests"
 msgstr "Tests"
+
+#, fuzzy
+msgid "th entry"
+msgstr "Pro Eintrag"
 
 msgid "th notification"
 msgstr "te Benachrichtigung"
@@ -89981,9 +90046,6 @@ msgstr ""
 
 #~ msgid "Node Name"
 #~ msgstr "Name des Knotens"
-
-#~ msgid "Operational Status"
-#~ msgstr "Betriebszustand"
 
 #~ msgid "Oracle Instance"
 #~ msgstr "Oracle-Instanz"

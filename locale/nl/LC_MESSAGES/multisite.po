@@ -13481,6 +13481,14 @@ msgstr "Berichten opruimen"
 msgid "Cleanup of working directory"
 msgstr "Inactief opruimen van werknemer"
 
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Modelparameters"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Berichten opruimen"
+
 msgid "Cleanup when disk space is below"
 msgstr "Opschonen wanneer schijfruimte minder is"
 
@@ -18130,6 +18138,14 @@ msgstr "Standaard (%s)"
 msgid "Default BI visualization settings"
 msgstr "Standaard BI-visualisatie-instellingen"
 
+#, fuzzy
+msgid "Default State"
+msgstr "Standaardstatus"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Modelparameters"
+
 msgid "Default color"
 msgstr "Standaard kleur"
 
@@ -18977,6 +18993,10 @@ msgstr "Verwijderde host %s"
 
 #, fuzzy, python-format
 msgid "Deleted notification parameter %d"
+msgstr "Kennisgevingsregel verwijderen #%d"
+
+#, fuzzy, python-format
+msgid "Deleted notification rule #%s"
 msgstr "Kennisgevingsregel verwijderen #%d"
 
 #, python-format
@@ -26222,6 +26242,10 @@ msgid "For specific SIDs"
 msgstr "Voor specifieke SID's"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Voor specifieke SID's"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27914,6 +27938,10 @@ msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
 #, fuzzy
 msgid "HW/SW Inventory history"
 msgstr "Inventarisatie geschiedenis van host"
+
+#, fuzzy
+msgid "HW/SW Inventory housekeeping"
+msgstr "Afgeschreven HW/SW inventaris plugins"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -31364,6 +31392,10 @@ msgstr "Vochtigheidsniveaus"
 #, fuzzy
 msgid "Humidity levels for devices with a single sensor"
 msgstr "Vochtigheidsniveaus voor apparaten met een enkele sensor"
+
+#, fuzzy
+msgid "Hyper-V Integration Services Status"
+msgstr "Hyper-V Server: Staat van VM's"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Staat van VM's"
@@ -40505,6 +40537,10 @@ msgstr "Match gastgroepen"
 msgid "Match host labels"
 msgstr "Overeenkomende host labels"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Overeenkomende host labels"
+
 msgid "Match host tags"
 msgstr "Overeenkomende host tags"
 
@@ -44187,6 +44223,10 @@ msgstr "Geen datasource gedefinieerd."
 #, fuzzy
 msgid "No default values can be set for condition choices."
 msgstr "Standaardwaarden instellen voor alle secties"
+
+#, fuzzy
+msgid "No defaults"
+msgstr "Is standaard"
 
 #, fuzzy
 msgid "No deprecated rule sets found."
@@ -54031,6 +54071,10 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Verwijder Windows Firewall configuratie indien aanwezig"
 
 #, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Opruimen van achtergelaten host bestanden ouder dan"
+
+#, fuzzy
 msgid "Remove acknowledgments"
 msgstr "Bevestiging verwijderen"
 
@@ -54065,6 +54109,17 @@ msgstr "Expliciete instelling verwijderen"
 
 msgid "Remove filter"
 msgstr "Verwijder filter"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Wis bestanden ouder dan"
+
+msgid "Remove history entries right after the"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Informatie opvragen over de volgende partities"
 
 #, fuzzy
 msgid "Remove name"
@@ -60891,6 +60946,10 @@ msgstr "Reserve schijf"
 
 msgid "Special Agent"
 msgstr "Speciaal Agent"
+
+#, fuzzy
+msgid "Special States"
+msgstr "Operationele status"
 
 #, fuzzy
 msgid "Specific Mappings"
@@ -80820,6 +80879,10 @@ msgstr "Gebruik de volgende kleur"
 msgid "Use the following credentials"
 msgstr "Gebruik de volgende inloggegevens"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Gebruik de volgende niveaus"
+
 msgid "Use the following levels"
 msgstr "Gebruik de volgende niveaus"
 
@@ -88233,6 +88296,9 @@ msgstr "standaard (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "Standaardwaarden instellen voor alle secties"
 
+msgid "defensive (both conditions must match)"
+msgstr ""
+
 msgid "degraded"
 msgstr "gedegradeerd"
 
@@ -89250,6 +89316,10 @@ msgstr "van niet-gespecificeerde dienst"
 msgid "off"
 msgstr "van"
 
+#, fuzzy
+msgid "offensive (one condition needs to match)"
+msgstr "De regelvoorwaarden komen niet overeen."
+
 msgid "offline"
 msgstr "offline"
 
@@ -89734,6 +89804,10 @@ msgstr "testen"
 #, fuzzy
 msgid "tests"
 msgstr "Tests uitvoeren"
+
+#, fuzzy
+msgid "th entry"
+msgstr "Per item"
 
 msgid "th notification"
 msgstr "e kennisgeving"
@@ -92718,9 +92792,6 @@ msgstr ""
 
 #~ msgid "Node Name"
 #~ msgstr "Knooppuntnaam"
-
-#~ msgid "Operational Status"
-#~ msgstr "Operationele status"
 
 #~ msgid "Oracle Instance"
 #~ msgstr "Oracle-instance"

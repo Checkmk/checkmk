@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkIconButton from '@/components/CmkIcon.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/tooltip'
 import usei18n from '@/lib/i18n'
 
@@ -68,49 +68,43 @@ const handlePointerDownOutside = () => {
         <code>{{ code_txt.trimStart() }}</code>
       </pre>
     </div>
-    <div class="icon_container">
-      <TooltipProvider>
-        <Tooltip :open="showMessage" disable-hover-trigger>
-          <TooltipTrigger as-child @click="copyToClipboard">
-            <div class="clone_icon_container">
-              <CmkIconButton name="copied" variant="inline" size="medium" class="clone_icon" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            align="center"
-            as-child
-            @pointer-down-outside="handlePointerDownOutside"
-          >
-            <div v-if="showMessage" class="tooltip-content" :class="{ error: !!errorMessage }">
-              <CmkIcon
-                :name="errorMessage ? 'cross' : 'checkmark'"
-                variant="inline"
-                size="medium"
-              />
-              {{
-                errorMessage
-                  ? t('cmk-code-copy-error', 'Copy to clipboard failed with error: ') + errorMessage
-                  : t('cmk-code-copy-success', 'Copied to clipboard')
-              }}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+    <TooltipProvider>
+      <Tooltip :open="showMessage" disable-hover-trigger>
+        <TooltipTrigger as-child @click="copyToClipboard">
+          <CmkIconButton name="copied" size="medium" class="clone_icon" />
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="center"
+          as-child
+          @pointer-down-outside="handlePointerDownOutside"
+        >
+          <div v-if="showMessage" class="tooltip-content" :class="{ error: !!errorMessage }">
+            <CmkIcon :name="errorMessage ? 'cross' : 'checkmark'" variant="inline" size="medium" />
+            {{
+              errorMessage
+                ? t('cmk-code-copy-error', 'Copy to clipboard failed with error: ') + errorMessage
+                : t('cmk-code-copy-success', 'Copied to clipboard')
+            }}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   </div>
 </template>
 
 <style scoped>
 .cmk-code__heading {
-  margin-bottom: var(--spacing);
+  margin-bottom: 4px;
   color: var(--font-color);
+  font-weight: 400;
 }
 
 .code_wrapper {
   display: flex;
   align-items: center;
   margin-bottom: var(--spacing);
+  gap: 8px;
 
   .code_container {
     font-family: monospace;
@@ -118,10 +112,11 @@ const handlePointerDownOutside = () => {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
-    padding: var(--spacing);
-    background: var(--ux-theme-0);
+    padding: 8px 12px;
     color: var(--font-color);
-    border-radius: var(--spacing-half);
+    border-radius: var(--border-radius);
+    border: var(--border-width-1, 1px) solid var(--ux-theme-0);
+    background: var(--ux-theme-0);
 
     pre {
       margin: 0;
@@ -129,30 +124,24 @@ const handlePointerDownOutside = () => {
     }
   }
 
-  .icon_container {
+  .clone_icon {
     display: flex;
     align-items: center;
-    margin-left: var(--spacing);
-
-    .clone_icon_container {
-      padding: var(--spacing-half);
-      background-color: var(--color-corporate-green-50);
-      border-radius: var(--spacing-half);
-      cursor: pointer;
-
-      .clone_icon {
-        margin-right: 0;
-      }
-    }
+    justify-content: center;
+    padding: 8px;
+    border-radius: var(--border-radius);
+    border: var(--border-width-1, 1px) solid var(--color-corporate-green-50);
+    background: var(--color-corporate-green-50);
+    cursor: pointer;
   }
 }
 
 .tooltip-content {
   display: flex;
   align-items: center;
-  gap: var(--spacing-half);
-  padding: var(--spacing-half) var(--spacing);
-  border-radius: var(--spacing-half);
+  gap: var(--spacing);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
   background-color: var(--ux-theme-0);
   color: var(--font-color);
   white-space: nowrap;

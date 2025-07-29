@@ -44,6 +44,7 @@
   /* Borders */
   --border-radius: 4px;
   --border-radius-half: 2px;
+  --border-width-1: 1px;
 
   /* Dimensions */
   --form-field-height: 21px;

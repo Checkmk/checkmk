@@ -221,24 +221,9 @@ fn test_remote_mini_connection() {
     println!("{:?}", r);
     println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
-    let result = task.query(
-        &SqlQuery::new(
-            r"
-    select upper(i.INSTANCE_NAME)
-        ||'|'|| 'sys_time_model'
-        ||'|'|| S.STAT_NAME
-        ||'|'|| Round(s.value/1000000)
-    from v$instance i,
-        v$sys_time_model s
-    where s.stat_name in('DB time', 'DB CPU')
-    order by s.stat_name",
-            Separator::No,
-        ),
-        "",
-    );
+    let result = task.query(&TEST_SQL_INSTANCE, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
-    eprintln!("Rows: {:?}", rows);
     assert!(!rows.is_empty());
     assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
     assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));

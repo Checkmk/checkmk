@@ -15,6 +15,7 @@ py_library(
         "cmk/metric_backend/__init__.py",
         "cmk/metric_backend/monitoring_data.py",
     ],
+    data = ["cmk/metric_backend/py.typed"],
     imports = ["."],
 )
 
@@ -49,7 +50,15 @@ py_wheel(
     distribution = "cmk-metric-backend",
     strip_path_prefixes = ["packages/cmk-metric-backend"],
     version = "1.0.0",
-    deps = [":cmk-metric-backend"],
+    deps = [
+        ":cmk-metric-backend",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/metric_backend/py.typed"],
 )
 
 package_wheel(

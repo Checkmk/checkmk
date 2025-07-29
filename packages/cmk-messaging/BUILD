@@ -19,6 +19,7 @@ py_library(
         "cmk/messaging/_logging.py",
         "cmk/messaging/rabbitmq.py",
     ],
+    data = ["cmk/messaging/py.typed"],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
@@ -61,7 +62,15 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-messaging"],
     # TODO: Duplicated from pyproject.toml
     version = "0.1.0",
-    deps = [":cmk-messaging"],
+    deps = [
+        "py_typed",
+        ":cmk-messaging",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/messaging/py.typed"],
 )
 
 package_wheel(

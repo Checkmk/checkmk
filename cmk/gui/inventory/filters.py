@@ -118,7 +118,15 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
 class FilterInvtableIntegerRange(FilterNumberRange):
     """Filter for choosing a range in which a certain integer lies"""
 
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+    def __init__(
+        self,
+        *,
+        inv_info: str,
+        ident: str,
+        title: str,
+        unit: str | LazyString,
+        scale: float | None,
+    ) -> None:
         super().__init__(
             title=title,
             sort_index=800,
@@ -127,7 +135,10 @@ class FilterInvtableIntegerRange(FilterNumberRange):
                 ident=ident,
                 filter_livestatus=False,
                 filter_row=query_filters.column_value_in_range,
+                request_var_suffix="",
+                bound_rescaling=scale if scale is not None else 1.0,
             ),
+            unit=unit,
         )
 
 
@@ -303,6 +314,48 @@ class FilterInvtableInterfaceType(DualListFilter):
         if not selection:
             return rows  # No types selected, filter is unused
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
+
+
+def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Rows:
+    values = context.get(ident, {})
+
+    def _add_row(row: Row) -> bool:
+        # Apply filter if and only if a filter value is set
+        value = row.get(ident)
+        if (filter_key := "%s_%s" % (ident, value)) in values:
+            return values[filter_key] == "on"
+        return True
+
+    return [row for row in rows if _add_row(row)]
+
+
+class FilterInvtableChoice(CheckboxRowFilter):
+    def __init__(
+        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident=ident,
+                options=[(f"{ident}_{k}", v) for k, v in options],
+                rows_filter=partial(_filter_table_choices, ident),
+            ),
+        )
+
+
+class FilterInvtableDualChoice(DualListFilter):
+    def __init__(
+        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
+            options=lambda i: list(options),
+        )
 
 
 class FilterInvBool(FilterOption):

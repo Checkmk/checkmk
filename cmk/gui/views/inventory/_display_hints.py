@@ -19,6 +19,8 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
+    FilterInvtableChoice,
+    FilterInvtableDualChoice,
     FilterInvtableIntegerRange,
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
@@ -278,6 +280,64 @@ def _parse_col_field_from_api(
     )
 
 
+def _make_column_filter(
+    key: str,
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    *,
+    table_view_name: str,
+    name: str,
+    long_title: str,
+) -> (
+    FilterInvtableText
+    | FilterInvtableIntegerRange
+    | FilterInvtableChoice
+    | FilterInvtableDualChoice
+):
+    match field_from_api:
+        case BoolFieldFromAPI():
+            return FilterInvtableChoice(
+                inv_info=table_view_name,
+                ident=name,
+                title=long_title,
+                options=[
+                    ("True", _make_str(field_from_api.render_true)),
+                    ("False", _make_str(field_from_api.render_false)),
+                    ("None", "None"),
+                ],
+            )
+        case NumberFieldFromAPI():
+            # TODO unit/scale?
+            return FilterInvtableIntegerRange(
+                inv_info=table_view_name,
+                ident=name,
+                title=long_title,
+                unit=_get_unit_from_number_field(field_from_api),
+                scale=1,
+            )
+        case TextFieldFromAPI():
+            return FilterInvtableText(
+                inv_info=table_view_name,
+                ident=name,
+                title=long_title,
+            )
+        case ChoiceFieldFromAPI():
+            if len(field_from_api.mapping) <= 10:
+                return FilterInvtableChoice(
+                    inv_info=table_view_name,
+                    ident=name,
+                    title=long_title,
+                    options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                )
+            return FilterInvtableDualChoice(
+                inv_info=table_view_name,
+                ident=name,
+                title=long_title,
+                options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+            )
+        case other:
+            assert_never(other)
+
+
 def _parse_col_field_from_api_of_view(
     table_view_name: str,
     node_title: str,
@@ -294,10 +354,12 @@ def _parse_col_field_from_api_of_view(
         long_title=long_title,
         paint_function=_make_paint_function(field_from_api),
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
-        filter=FilterInvtableText(  # TODO
-            inv_info=table_view_name,
-            ident=name,
-            title=long_title,
+        filter=_make_column_filter(
+            key,
+            field_from_api,
+            table_view_name=table_view_name,
+            name=name,
+            long_title=long_title,
         ),
     )
 
@@ -614,6 +676,8 @@ def _parse_column_display_hint_filter_class(
                 inv_info=table_view_name,
                 ident=name,
                 title=long_title,
+                unit="",
+                scale=1,
             )
         case "FilterInvtableInterfaceType":
             return FilterInvtableInterfaceType(
@@ -665,6 +729,8 @@ class ColumnDisplayHintOfView:
         | FilterInvtableText
         | FilterInvtableTimestampAsAge
         | FilterInvtableVersion
+        | FilterInvtableChoice
+        | FilterInvtableDualChoice
     )
 
     @property

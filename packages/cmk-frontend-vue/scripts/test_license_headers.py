@@ -35,6 +35,7 @@ FILES_IGNORED = {
     Path("eslint.config.js"),
     Path(".f12"),
     Path(".gitignore"),
+    Path(".gitattributes"),
     Path(".prettierignore"),
     Path(".prettierrc.json"),
     Path(".npmrc"),

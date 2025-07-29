@@ -1,0 +1,4 @@
+# The bazel multiformat rules lint package implements its own ls-files. Its
+# results will be passed to prettier. If you remove this line and have a local
+# node_modules, `bazel run :format.check $(pwd)` will fail.
+node_modules/**/*    rules-lint-ignored=true

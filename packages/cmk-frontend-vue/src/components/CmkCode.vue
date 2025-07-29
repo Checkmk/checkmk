@@ -93,6 +93,7 @@ async function copyToClipboard() {
     .clone_icon_container {
       padding: var(--spacing-half);
       background-color: var(--color-corporate-green-50);
+      border-radius: var(--spacing-half);
 
       .clone_icon {
         margin-right: 0;

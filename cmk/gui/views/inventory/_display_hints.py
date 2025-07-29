@@ -15,6 +15,7 @@ from cmk.gui import inventory
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
     FilterInvBool,
+    FilterInvChoice,
     FilterInvFloat,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
@@ -36,6 +37,7 @@ from cmk.inventory_ui.v1_alpha import Node as NodeFromAPI
 from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
 from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
+from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 from .registry import (
@@ -182,6 +184,56 @@ def _make_sort_function(
             assert_never(other)
 
 
+def _get_unit_from_number_field(number_field: NumberFieldFromAPI) -> str:
+    return (
+        number_field.render.notation.symbol if isinstance(number_field.render, UnitFromAPI) else ""
+    )
+
+
+def _make_attribute_filter(
+    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    *,
+    name: str,
+    long_title: str,
+    inventory_path: inventory.InventoryPath,
+) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice:
+    match field_from_api:
+        case BoolFieldFromAPI():
+            return FilterInvBool(
+                ident=name,
+                title=long_title,
+                inventory_path=inventory_path,
+                is_show_more=True,
+            )
+        case NumberFieldFromAPI():
+            # TODO unit/scale?
+            return FilterInvFloat(
+                ident=name,
+                title=long_title,
+                inventory_path=inventory_path,
+                unit=_get_unit_from_number_field(field_from_api),
+                scale=1,
+                is_show_more=True,
+            )
+        case TextFieldFromAPI():
+            return FilterInvText(
+                ident=name,
+                title=long_title,
+                inventory_path=inventory_path,
+                is_show_more=True,
+            )
+        case ChoiceFieldFromAPI():
+            return FilterInvChoice(
+                ident=name,
+                title=long_title,
+                inventory_path=inventory_path,
+                options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                is_show_more=True,
+            )
+        case other:
+            assert_never(other)
+
+
 def _parse_attr_field_from_api(
     path: SDPath,
     node_ident: str,
@@ -189,15 +241,9 @@ def _parse_attr_field_from_api(
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
 ) -> AttributeDisplayHint:
-    inventory_path = inventory.InventoryPath(
-        path=path,
-        source=inventory.TreeSource.attributes,
-        key=SDKey(key),
-    )
     name = _make_attr_name(node_ident, key)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
-    is_show_more = True
     return AttributeDisplayHint(
         name=name,
         title=title,
@@ -205,11 +251,15 @@ def _parse_attr_field_from_api(
         long_title=long_title,
         paint_function=_make_paint_function(field_from_api),
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
-        filter=FilterInvText(  # TODO
-            ident=name,
-            title=long_title,
-            inventory_path=inventory_path,
-            is_show_more=is_show_more,
+        filter=_make_attribute_filter(
+            field_from_api,
+            name=name,
+            long_title=long_title,
+            inventory_path=inventory.InventoryPath(
+                path=path,
+                source=inventory.TreeSource.attributes,
+                key=SDKey(key),
+            ),
         ),
     )
 
@@ -394,7 +444,7 @@ def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
     return f"{table_view_name}_{key}" if table_view_name else ""
 
 
-def _make_attribute_filter(
+def _make_attribute_filter_from_legacy_hint(
     *, path: SDPath, key: str, data_type: str, name: str, long_title: str, is_show_more: bool
 ) -> FilterInvText | FilterInvBool | FilterInvFloat:
     inventory_path = inventory.InventoryPath(
@@ -451,7 +501,7 @@ class AttributeDisplayHint:
     long_title: str
     paint_function: PaintFunction
     sort_function: SortFunction
-    filter: FilterInvText | FilterInvBool | FilterInvFloat
+    filter: FilterInvText | FilterInvBool | FilterInvFloat | FilterInvChoice
 
     @property
     def long_inventory_title(self) -> str:
@@ -474,7 +524,7 @@ def _parse_attribute_hint(
         long_title=long_title,
         paint_function=paint_function,
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
-        filter=_make_attribute_filter(
+        filter=_make_attribute_filter_from_legacy_hint(
             path=path,
             key=key,
             data_type=data_type,
@@ -738,7 +788,7 @@ class NodeDisplayHint:
                 long_title=long_title,
                 paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter=_make_attribute_filter(
+                filter=_make_attribute_filter_from_legacy_hint(
                     path=self.path,
                     key=key,
                     data_type="str",

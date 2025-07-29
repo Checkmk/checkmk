@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 
 from cmk.gui import query_filters
@@ -13,7 +13,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
@@ -316,6 +322,34 @@ class FilterInvBool(FilterOption):
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
                 filter_row=inside_inventory(inventory_path),
+            ),
+            is_show_more=is_show_more,
+        )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
+
+
+class FilterInvChoice(FilterOption):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: InventoryPath,
+        options: Sequence[tuple[str, str]],
+        is_show_more: bool = True,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info="host",
+            query_filter=query_filters.SingleOptionQuery(
+                ident=ident,
+                options=list(options),
+                filter_code=lambda x: "",
+                filter_row=lambda selection, row: (selection == "yes")
+                == row.get("invinterface_available"),
             ),
             is_show_more=is_show_more,
         )

@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type ModeHostFormKeys,
   type ModeHostSite,
+  type ModeHostAgentConnectionMode,
   type I18NPingHost
 } from 'cmk-shared-typing/typescript/mode_host'
 import PingHost from '@/mode-host/ping-host/PingHost.vue'
@@ -18,6 +19,7 @@ const props = defineProps<{
   i18n_ping_host: I18NPingHost
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
+  agent_connection_modes: Array<ModeHostAgentConnectionMode>
   url: string
   host_name: string
 }>()
@@ -34,6 +36,7 @@ const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
 const tagAgentInputSelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const tagAgentInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const tagAgentDefaultElement: Ref<HTMLDivElement | null> = ref(null)
+const cmkConnectionModeSelectElement: Ref<HTMLSelectElement | null> = ref(null)
 
 onMounted(() => {
   formElement.value = getElementBySelector(`form[id="form_${props.form_keys.form}"]`)
@@ -75,6 +78,9 @@ onMounted(() => {
   )
   tagAgentDefaultElement.value = getElementBySelector(
     `div[id="attr_default_${props.form_keys.tag_agent}"]`
+  )
+  cmkConnectionModeSelectElement.value = document.querySelector(
+    `select[name="${props.form_keys.cmk_agent_connection}"]`
   )
 })
 
@@ -133,7 +139,9 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-element="ipv6InputElement"
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
+    :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"
+    :agent-connection-modes="agent_connection_modes"
     :url="url"
   ></AgentConnectionTest>
 </template>

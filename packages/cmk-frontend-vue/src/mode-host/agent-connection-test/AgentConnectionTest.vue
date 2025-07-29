@@ -12,7 +12,10 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 import AgentRegisterSlideOutContent from '@/mode-host/agent-connection-test/components/AgentRegisterSlideOutContent.vue'
-import { type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
+import {
+  type ModeHostSite,
+  type ModeHostAgentConnectionMode
+} from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
 
@@ -26,7 +29,9 @@ interface Props {
   ipv6InputElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
   ipAddressFamilySelectElement: HTMLSelectElement
+  cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
+  agentConnectionModes: Array<ModeHostAgentConnectionMode>
   url: string
 }
 
@@ -36,12 +41,19 @@ const slideInOpen = ref(false)
 
 const showTest = ref(true)
 const switchVisibility = () => {
+  const agentConnectionModeHash = props.cmkAgentConnectionModeSelectElement?.value
+  const agentConnectionMode =
+    props.agentConnectionModes.find((mode) => mode.id_hash === agentConnectionModeHash)?.mode ?? ''
+  if (agentConnectionMode === 'push-agent') {
+    showTest.value = false
+    return
+  }
   if (props.changeTagAgent.checked) {
     showTest.value = props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
-  } else {
-    /* TODO: Not the best solution but we have no value here */
-    showTest.value = !props.tagAgentDefault.textContent?.includes('no Checkmk agent')
+    return
   }
+  /* TODO: Not the best solution but we have no value here */
+  showTest.value = !props.tagAgentDefault.textContent?.includes('no Checkmk agent')
 }
 switchVisibility()
 

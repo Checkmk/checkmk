@@ -10,6 +10,12 @@
                 "$ref": "#/$defs/mode_host_site"
             }
         },
+        "agent_connection_modes": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/mode_host_agent_connection_mode"
+            }
+        },
         "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
         "url": { "type": "string" },
         "host_name": { "type": "string" }
@@ -42,6 +48,7 @@
                 "ipv6_address": { "type": "string" },
                 "site": { "type": "string" },
                 "ip_address_family": { "type": "string" },
+                "cmk_agent_connection": { "type": "string" },
                 "tag_agent": { "type": "string" },
                 "cb_change": { "type": "string" }
             },
@@ -52,6 +59,7 @@
                 "ipv6_address",
                 "site",
                 "ip_address_family",
+                "cmk_agent_connection",
                 "tag_agent",
                 "cb_change"
             ]
@@ -63,6 +71,14 @@
                 "site_id": { "type": "string" }
             },
             "required": ["id_hash", "site_id"]
+        },
+        "mode_host_agent_connection_mode": {
+            "type": "object",
+            "properties": {
+                "id_hash": { "type": "string" },
+                "mode": { "type": "string" }
+            },
+            "required": ["id_hash", "mode"]
         }
     }
 }

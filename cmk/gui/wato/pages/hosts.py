@@ -79,9 +79,11 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.shared_typing.mode_host import (
     I18nPingHost,
     ModeHost,
+    ModeHostAgentConnectionMode,
     ModeHostFormKeys,
     ModeHostSite,
 )
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
@@ -322,6 +324,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         ipv6_address=HostAttributeIPv6Address().name(),
                         site=HostAttributeSite().name(),
                         ip_address_family="tag_address_family",
+                        cmk_agent_connection="cmk_agent_connection",
                         tag_agent="tag_agent",
                         cb_change="cb_host_change"
                         if not self._is_cluster()
@@ -333,6 +336,13 @@ class ABCHostMode(WatoMode, abc.ABC):
                             site_id=site_id,
                         )
                         for site_id, _site_name in user_sites.get_activation_site_choices()
+                    ],
+                    agent_connection_modes=[
+                        ModeHostAgentConnectionMode(
+                            id_hash=DropdownChoice.option_id(mode.value),
+                            mode=mode.value,
+                        )
+                        for mode in HostAgentConnectionMode
                     ],
                     url=folder_preserving_link([("mode", "agents")]),
                     host_name=self._host.name(),

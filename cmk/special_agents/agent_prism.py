@@ -6,6 +6,7 @@ import base64
 import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, NotRequired, TypedDict
 
 import requests
@@ -89,9 +90,12 @@ class SessionManager:
         return resp.json()
 
 
-def _is_only_ovh(hosts_obj: Mapping[str, Iterable[Mapping[str, str]]]) -> bool:
+def _is_ahv_exclusive(hosts_obj: Mapping[str, Iterable[Mapping[str, str]]]) -> bool:
     return all(
-        (host.get("hypervisor_type", "") == "kAcropolis" for host in hosts_obj.get("entities", []))
+        (
+            host.get("hypervisor_type", "") in ("kAcropolis", "kKvm")
+            for host in hosts_obj.get("entities", [])
+        )
     )
 
 
@@ -135,6 +139,18 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
 
     return parser.parse_args(argv)
+
+
+def fetch_ha(
+    session_manager: SessionManager, base_url_v2: str, hosts_obj: dict[str, Any]
+) -> dict[str, Any]:
+    try:
+        return session_manager.get(f"{base_url_v2}/ha")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+            LOGGING.warning("HA endpoint not available, assuming non-HA setup")
+            return {}
+        raise e
 
 
 def fetch_from_gateway(
@@ -183,7 +199,11 @@ def fetch_from_gateway(
             {
                 "protection_domains": session_manager.get(f"{base_url_v2}/protection_domains"),
                 "remote_support": session_manager.get(f"{base_url_v2}/cluster/remote_support"),
-                "ha": session_manager.get(f"{base_url_v2}/ha") if _is_only_ovh(hosts_obj) else {},
+                "ha": (
+                    fetch_ha(session_manager, base_url_v2, hosts_obj)
+                    if _is_ahv_exclusive(hosts_obj)
+                    else {}
+                ),
                 "hosts_networks": hosts_networks,
             }
         )

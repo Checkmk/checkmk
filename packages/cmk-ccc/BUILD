@@ -312,7 +312,14 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-ccc"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = _ALL,
+    deps = _ALL + [
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/ccc/py.typed"],
 )
 
 package_wheel(

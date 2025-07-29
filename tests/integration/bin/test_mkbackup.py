@@ -17,7 +17,6 @@ import pytest
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
-from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
 
@@ -130,9 +129,7 @@ def backup_lock_dir_fixture(site_for_mkbackup_tests: Site, request: pytest.Fixtu
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(
-    web: CMKWebSession, site_for_mkbackup_tests: Site, backup_path: str
-) -> Iterator[None]:
+def test_cfg_fixture(site_for_mkbackup_tests: Site, backup_path: str) -> Iterator[None]:
     site_for_mkbackup_tests.ensure_running()
 
     cfg = {
@@ -196,7 +193,6 @@ def test_cfg_fixture(
     #
     site_for_mkbackup_tests.delete_file("etc/check_mk/backup_keys.mk")
     site_for_mkbackup_tests.delete_file("etc/check_mk/backup.mk")
-
     site_for_mkbackup_tests.ensure_running()
 
 

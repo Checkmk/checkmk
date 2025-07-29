@@ -7,6 +7,7 @@
 #define RRDColumn_h
 
 #include <chrono>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -28,6 +29,14 @@ struct RRDColumnArgs {
     int resolution;
     int max_entries;
 };
+
+inline std::ostream &operator<<(std::ostream &os, const RRDColumnArgs &args) {
+    os << "RRDColumnsArgs{" << "rpn=" << args.rpn
+       << ", start_time=" << args.start_time << ", end_time=" << args.end_time
+       << ", resolution=" << args.resolution
+       << ", max_entries=" << args.max_entries << "}";
+    return os;
+}
 
 class RRDDataMaker {
 public:

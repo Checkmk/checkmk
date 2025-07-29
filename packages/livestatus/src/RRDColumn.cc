@@ -214,6 +214,11 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     const std::string &host_name, const std::string &service_description,
     std::chrono::seconds timezone_offset) const {
     auto *logger = core_->loggerRRD();
+    if (logger->isLoggable(LogLevel::debug)) {
+        Debug(logger) << "Send rrd data for host: " << host_name
+                      << " service: " << service_description
+                      << " with args: " << args_;
+    }
 
     // We have an RPN like fs_used,1024,*.
     // One difficulty here: we do not know
@@ -302,10 +307,13 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
         RRDUDSSocket{rrdcached_socket, logger, RRDUDSSocket::verbosity::none};
     sock.connect();
 
-    const auto fetch = std::ostringstream{}
-                       << "FETCHBIN " << location.path_.string() << " " << *cf
-                       << " " << args_.start_time << " " << args_.end_time
-                       << " " << dsname << "\n";
+    auto fetch = std::ostringstream{} << "FETCHBIN " << location.path_.string()
+                                      << " " << *cf << " " << args_.start_time
+                                      << " " << args_.end_time << " " << dsname;
+    if (logger->isLoggable(LogLevel::debug)) {
+        Debug(logger) << "Send rrd data as " << fetch.view();
+    }
+    fetch << "\n";
     sendFetchBin(sock, fetch.view(), logger);
     const auto &&[status, header, rawdata] = recvFetchReply(sock);
     std::vector<double> values;

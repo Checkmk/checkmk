@@ -104,28 +104,36 @@ def backup_path_fixture(site_for_mkbackup_tests: Site) -> Iterator[str]:
         pytest.param(False, id="lock dir not existing"),
     ],
 )
-def backup_lock_dir_fixture(site_for_mkbackup_tests: Site, request: pytest.FixtureRequest) -> None:
-    # This fixture should prepare two possible scenarios:
-    # 1) The folder for the backup locks does already exist *and* has the correct permissions
-    # 2) The folder does not yet exist.
-    # --> In both scenarios mkbackup must not fail
+def backup_lock_dir_fixture(
+    site_for_mkbackup_tests: Site, request: pytest.FixtureRequest
+) -> Iterator[None]:
+    """Prepare two scenarios for testing.
 
-    # In the second case the "omd" command executed as root ensures that the directory is created.
-    # This functionality has been added to the "omd" command, because it is the only command which
-    # can reliably create the directory when started as root.
-    if not request.param:
-        run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
-        assert not mkbackup_lock_dir.exists()
+    This fixture should prepare two possible scenarios:
+    1) The folder for the backup locks does already exist *and* has the correct permissions.
+    2) The folder does not yet exist.
 
+    In both scenarios `mkbackup` must not fail!
+    """
+
+    def _initialize_lock_dir() -> None:
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        run(["omd", "status"], sudo=True)
+        run(["omd", "status", site_for_mkbackup_tests.id], sudo=True)
+        assert mkbackup_lock_dir.exists()
+        backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
+        assert backup_permission_mask == "0770"
+        assert mkbackup_lock_dir.group() == "omd"
 
-    assert mkbackup_lock_dir.exists()
-    backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
-    assert backup_permission_mask == "0770"
-    assert mkbackup_lock_dir.group() == "omd"
+    if request.param:
+        _initialize_lock_dir()
+        yield
+    else:
+        run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
+        assert not mkbackup_lock_dir.exists(), f"Expected '{mkbackup_lock_dir}' to be deleted!"
+        yield
+        _initialize_lock_dir()
 
 
 @pytest.fixture(name="test_cfg", scope="function")

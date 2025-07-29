@@ -752,7 +752,7 @@ function computeOddEven(index: number) {
   return index % 2 === 0 ? 'even0' : 'odd0'
 }
 
-const { tableRef, dragStart, dragEnd, dragging } = useDragging()
+const { trContainerRef, dragStart, dragEnd, dragging } = useDragging()
 
 function dragElement(event: DragEvent) {
   const dragReturn = dragging(event)
@@ -824,8 +824,8 @@ const graphDesignerContentAsJson = computed(() => {
 <template>
   <div ref="graphContainerRef"></div>
 
-  <table ref="tableRef" class="data oddeven graph_designer_metrics">
-    <tbody>
+  <table class="data oddeven graph_designer_metrics">
+    <thead>
       <tr>
         <th class="header_narrow nowrap">#</th>
         <th class="header_buttons"></th>
@@ -838,6 +838,8 @@ const graphDesignerContentAsJson = computed(() => {
         <th class="header_buttons">{{ props.i18n.mirrored }}</th>
         <th>{{ props.i18n.formula }}</th>
       </tr>
+    </thead>
+    <tbody ref="trContainerRef">
       <tr
         v-for="(graphLine, index) in graphLines"
         :key="graphLine.id"

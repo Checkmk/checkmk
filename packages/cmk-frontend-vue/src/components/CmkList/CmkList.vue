@@ -45,7 +45,7 @@ immediateWatch(
   }
 )
 
-const { tableRef, dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging()
+const { trContainerRef, dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging()
 
 function dragging(event: DragEvent) {
   const dragReturn = _dragging(event)
@@ -98,7 +98,7 @@ function getItemVariant(index: number, length: number) {
     :class="{ 'cmk-list--horizontal': orientation === 'horizontal' }"
   >
     <table
-      ref="tableRef"
+      ref="trContainerRef"
       role="list"
       class="cmk-list__table"
       :class="{ 'cmk-list__table-empty': localOrder.length === 0 }"

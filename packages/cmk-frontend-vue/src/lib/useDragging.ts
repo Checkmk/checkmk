@@ -6,7 +6,7 @@
 import { ref, type Ref } from 'vue'
 
 export default function useDragging(): {
-  tableRef: Ref<HTMLTableElement | null>
+  trContainerRef: Ref<HTMLTableElement | null>
   dragStart: (event: DragEvent) => void
   dragEnd: (event: DragEvent) => void
   dragging: (event: DragEvent) => { draggedIndex: number; targetIndex: number } | null
@@ -24,7 +24,7 @@ export default function useDragging(): {
     clientY.value = event.clientY
   }
 
-  const tableRef = ref<HTMLTableElement | null>(null)
+  const trContainerRef = ref<HTMLTableElement | null>(null)
 
   function dragStart(event: DragEvent) {
     ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
@@ -38,10 +38,10 @@ export default function useDragging(): {
   }
 
   function dragging(event: DragEvent): { draggedIndex: number; targetIndex: number } | null {
-    if (tableRef.value === null || clientY.value === 0) {
+    if (trContainerRef.value === null || clientY.value === 0) {
       return null
     }
-    const tableChildren = [...tableRef.value!.children]
+    const tableChildren = [...trContainerRef.value!.children]
     const draggedRow = (event.target! as HTMLImageElement).closest('tr')!
     const draggedIndex = tableChildren.indexOf(draggedRow)
 
@@ -54,13 +54,13 @@ export default function useDragging(): {
     let previous: null | undefined | Element = draggedRow.previousElementSibling
     while (previous && clientY.value < siblingMiddlePoint(previous)) {
       targetIndex = tableChildren.indexOf(previous)
-      previous = tableRef.value!.children[targetIndex - 1]
+      previous = trContainerRef.value!.children[targetIndex - 1]
     }
 
     let next: null | undefined | Element = draggedRow.nextElementSibling
     while (next && clientY.value > siblingMiddlePoint(next)) {
       targetIndex = tableChildren.indexOf(next)
-      next = tableRef.value!.children[targetIndex + 1]
+      next = trContainerRef.value!.children[targetIndex + 1]
     }
 
     if (draggedIndex === targetIndex || targetIndex === -1) {
@@ -69,5 +69,5 @@ export default function useDragging(): {
     return { draggedIndex, targetIndex }
   }
 
-  return { tableRef, dragStart, dragEnd, dragging }
+  return { trContainerRef, dragStart, dragEnd, dragging }
 }

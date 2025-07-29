@@ -27,7 +27,6 @@ py_library(
     ],
     data = [
         ":cmk/agent_receiver/py.typed",
-        ":pyproject.toml",
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],

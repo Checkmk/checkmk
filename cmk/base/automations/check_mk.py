@@ -1070,6 +1070,9 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
         These files are cleaned up by the disk space mechanism.
         """
+        if hostname in (".", ".."):
+            return
+
         for path in self._single_file_paths(hostname):
             self._delete_if_exists(path)
 

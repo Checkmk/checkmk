@@ -1,0 +1,17 @@
+Title: Fix deletion of hosts with hostname "."
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1753777396
+Edition: cre
+Level: 1
+Version: 2.2.0p45
+
+When upgrading to 2.3.0, the update process will warn you about invalid
+hostnames present in your configuration. These hostnames must be removed
+before you can upgrade to 2.3.0.
+
+In the case of hostnames "." and "..", the deletion process would crash.
+
+With this werk, we fix the deletion of these hostnames to allow the
+update process to complete successfully.

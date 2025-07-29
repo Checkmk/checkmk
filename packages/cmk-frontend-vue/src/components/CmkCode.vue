@@ -102,7 +102,7 @@ const toggleExpansion = () => {
     <TooltipProvider>
       <Tooltip :open="showMessage" disable-hover-trigger>
         <TooltipTrigger as-child @click="copyToClipboard">
-          <CmkIconButton name="copied" size="medium" class="clone_icon" />
+          <CmkIconButton name="copied" size="medium" class="copy_button" />
         </TooltipTrigger>
         <TooltipContent
           side="top"
@@ -133,7 +133,7 @@ const toggleExpansion = () => {
 
 .code_wrapper {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--spacing);
   gap: 8px;
 
@@ -209,7 +209,7 @@ const toggleExpansion = () => {
     }
   }
 
-  .clone_icon {
+  .copy_button {
     display: flex;
     align-items: center;
     justify-content: center;

@@ -23,6 +23,8 @@ from cmk.gui.views.inventory._display_hints import (
     _RelatedLegacyHints,
     _RenderBool,
     _RenderChoice,
+    _SortFunctionChoice,
+    _SortFunctionText,
     AttributeDisplayHint,
     ColumnDisplayHint,
     ColumnDisplayHintOfView,
@@ -42,6 +44,7 @@ from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
 from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
 from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
+from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
@@ -1261,3 +1264,21 @@ def test_render_choice() -> None:
     )
     assert _RenderChoice(choice_field)(1) == ("", "One")
     assert _RenderChoice(choice_field)(2) == ("", "2 (No such value)")
+
+
+def test_sort_text() -> None:
+    text_field = TextFieldFromAPI(TitleFromAPI("A title"), sort_key=int)
+    assert _decorate_sort_function(_SortFunctionText(text_field))("1", "2") == -1
+    assert _decorate_sort_function(_SortFunctionText(text_field))("2", "1") == 1
+
+
+def test_sort_choice() -> None:
+    choice_field = ChoiceFieldFromAPI(
+        TitleFromAPI("A title"),
+        mapping={
+            2: LabelFromAPI("Two"),
+            1: LabelFromAPI("One"),
+        },
+    )
+    assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
+    assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1

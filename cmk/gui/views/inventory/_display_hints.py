@@ -127,6 +127,45 @@ def _make_paint_function(
             assert_never(other)
 
 
+class _SortFunctionText:
+    def __init__(self, text_field: TextFieldFromAPI) -> None:
+        self._text_field = text_field
+
+    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+        if not isinstance(val_a, str):
+            raise TypeError(val_a)
+
+        if not isinstance(val_b, str):
+            raise TypeError(val_a)
+
+        if self._text_field.sort_key is None:
+            return (val_a > val_b) - (val_a < val_b)
+
+        parsed_val_a = self._text_field.sort_key(val_a)
+        parsed_val_b = self._text_field.sort_key(val_b)
+        return (parsed_val_a > parsed_val_b) - (parsed_val_a < parsed_val_b)
+
+
+class _SortFunctionChoice:
+    def __init__(self, choice_field: ChoiceFieldFromAPI) -> None:
+        self._choice_field = choice_field
+
+    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+        keys = list(self._choice_field.mapping)
+
+        if val_a in keys:
+            index_a = keys.index(val_a)
+        else:
+            return -1 if val_b in keys else 0
+
+        if val_b in keys:
+            index_b = keys.index(val_b)
+        else:
+            return -1 if val_a in keys else 0
+
+        return (index_a > index_b) - (index_a < index_b)
+
+
 def _make_sort_function(
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
 ) -> SortFunction:
@@ -136,9 +175,9 @@ def _make_sort_function(
         case NumberFieldFromAPI():
             return _cmp_inv_generic
         case TextFieldFromAPI():
-            return _cmp_inv_generic  # TODO
+            return _SortFunctionText(field_from_api)
         case ChoiceFieldFromAPI():
-            return _cmp_inv_generic  # TODO
+            return _SortFunctionChoice(field_from_api)
         case other:
             assert_never(other)
 

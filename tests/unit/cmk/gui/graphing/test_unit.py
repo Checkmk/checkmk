@@ -6,15 +6,6 @@
 import pytest
 
 from cmk.gui.config import Config
-from cmk.gui.graphing._formatter import (
-    AutoPrecision,
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    NotationFormatter,
-    StrictPrecision,
-    TimeFormatter,
-)
 from cmk.gui.graphing._unit import (
     _Conversion,
     ConvertibleUnitSpecification,
@@ -26,6 +17,15 @@ from cmk.gui.graphing._unit import (
     user_specific_unit,
 )
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.unit_formatter import (
+    AutoPrecision,
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    NotationFormatter,
+    StrictPrecision,
+    TimeFormatter,
+)
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 

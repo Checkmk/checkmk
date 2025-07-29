@@ -9,7 +9,6 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
@@ -22,6 +21,7 @@ from cmk.gui.graphing._translated_metrics import (
 )
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
+from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from tests.unit.cmk.web_test_app import SetConfig

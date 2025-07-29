@@ -7,9 +7,9 @@ from collections import Counter
 from typing import Literal
 
 from cmk.gui.graphing._color import parse_color_into_hexrgb
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._metrics import _fallback_metric_spec, MetricSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
+from cmk.gui.unit_formatter import AutoPrecision
 
 
 def test_fallback_metric_spec() -> None:

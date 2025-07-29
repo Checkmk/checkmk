@@ -8,8 +8,8 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import _purge_unit_spec_for_js
-from cmk.gui.graphing._formatter import AutoPrecision, StrictPrecision
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
+from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,6 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.gui import sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._formatter import AutoPrecision, IECFormatter, StrictPrecision
 from cmk.gui.graphing._metrics import MetricSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.graphing._unit import (
@@ -24,6 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.unit_formatter import AutoPrecision, IECFormatter, StrictPrecision
 from cmk.gui.utils.urls import makeuri_contextless
 
 

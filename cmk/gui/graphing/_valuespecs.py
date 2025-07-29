@@ -16,6 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
+from cmk.gui.unit_formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Age,
@@ -39,7 +40,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals import livestatus_query_bare
 from cmk.utils.metrics import MetricName as MetricName_
 
-from ._formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_render_config import GraphRenderConfigBase
 from ._legacy import check_metrics

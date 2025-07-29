@@ -11,9 +11,7 @@ from pydantic import BaseModel, Field
 
 from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.utils.temperate_unit import TemperatureUnit
-
-from ._formatter import (
+from cmk.gui.unit_formatter import (
     AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
@@ -24,6 +22,7 @@ from ._formatter import (
     StrictPrecision,
     TimeFormatter,
 )
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 class DecimalNotation(BaseModel, frozen=True):

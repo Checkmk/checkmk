@@ -14,7 +14,6 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
@@ -57,6 +56,7 @@ from cmk.gui.graphing._translated_metrics import (
 )
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
+from cmk.gui.unit_formatter import AutoPrecision
 
 _CPU_UTIL_GRAPHS = {
     "cpu_utilization_simple": graphs_api.Graph(

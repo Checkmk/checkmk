@@ -8,7 +8,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.graphing._formatter import (
+from cmk.gui.unit_formatter import (
     _stringify_small_decimal_number,
     AutoPrecision,
     DecimalFormatter,

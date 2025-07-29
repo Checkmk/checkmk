@@ -6,13 +6,13 @@
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs, metrics, Title
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
+from cmk.gui.unit_formatter import AutoPrecision
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):

@@ -7,7 +7,7 @@ import abc
 import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from pydantic import BaseModel
 
@@ -232,23 +232,28 @@ def _stringify_small_decimal_number(value: float) -> str:
 class DecimalFormatter(NotationFormatter):
     use_max_digits_for_labels: bool = False
 
+    @override
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["DecimalFormatter"]:
         return "DecimalFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _stringify_formatted_value(self, value: int | float) -> str:
         if 0 < abs(value) < 1:
             # For small decimal numbers we avoid the usage of Python's scientific notation if the
@@ -264,13 +269,16 @@ class DecimalFormatter(NotationFormatter):
             "\N{THIN SPACE}",
         )
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return formatted.text, formatted.symbol
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
@@ -299,13 +307,16 @@ _SI_LARGE_PREFIXES: Final = [
 
 
 class SIFormatter(NotationFormatter):
+    @override
     def ident(self) -> Literal["SI"]:
         return "SI"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["SIFormatter"]:
         return "SIFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -318,6 +329,7 @@ class SIFormatter(NotationFormatter):
                 return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -330,13 +342,16 @@ class SIFormatter(NotationFormatter):
                 return [Preformatted(value / pow(1000, power), prefix, self.symbol)]
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return formatted.text, f"{formatted.prefix}{formatted.symbol}"
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
@@ -355,18 +370,22 @@ _IEC_LARGE_PREFIXES: Final = [
 
 
 class IECFormatter(NotationFormatter):
+    @override
     def ident(self) -> Literal["IEC"]:
         return "IEC"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["IECFormatter"]:
         return "IECFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -379,77 +398,94 @@ class IECFormatter(NotationFormatter):
                 return [Preformatted(value / pow(1024, power), prefix, self.symbol)]
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return formatted.text, f"{formatted.prefix}{formatted.symbol}"
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         exponent = math.floor(math.log2(max_y))
         return [pow(2, e) for e in range(exponent + 1)]
 
 
 class StandardScientificFormatter(NotationFormatter):
+    @override
     def ident(self) -> Literal["StandardScientific"]:
         return "StandardScientific"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["StandardScientificFormatter"]:
         return "StandardScientificFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value))
         return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value))
         return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return f"{formatted.text}{formatted.prefix}", formatted.symbol
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
 
 class EngineeringScientificFormatter(NotationFormatter):
+    @override
     def ident(self) -> Literal["EngineeringScientific"]:
         return "EngineeringScientific"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["EngineeringScientificFormatter"]:
         return "EngineeringScientificFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value) / 3) * 3
         return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value) // 3) * 3
         return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return f"{formatted.text}{formatted.prefix}", formatted.symbol
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
@@ -506,13 +542,16 @@ _TIME_LARGE_SYMBOLS: Final = [
 
 
 class TimeFormatter(NotationFormatter):
+    @override
     def ident(self) -> Literal["Time"]:
         return "Time"
 
     @property
+    @override
     def js_formatter_name(self) -> Literal["TimeFormatter"]:
         return "TimeFormatter"
 
+    @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -525,6 +564,7 @@ class TimeFormatter(NotationFormatter):
                 return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
         return [Preformatted(value, "", self.symbol)]
 
+    @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -560,13 +600,16 @@ class TimeFormatter(NotationFormatter):
                 formatted_parts.append(Preformatted(value, "", "s"))
         return formatted_parts
 
+    @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
         return formatted.text, f"{formatted.prefix}{formatted.symbol}"
 
+    @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
+    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         if max_y >= _ONE_YEAR:
             if (q := int(max_y // _ONE_YEAR)) < 5:

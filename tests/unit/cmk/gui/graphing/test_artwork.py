@@ -28,13 +28,13 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
-from cmk.gui.graphing._formatter import AutoPrecision, DecimalFormatter, Label
 from cmk.gui.graphing._graph_specification import (
     FixedVerticalRange,
     MinimalVerticalRange,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.graphing._utils import SizeEx
+from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
 
 
 @pytest.mark.parametrize(

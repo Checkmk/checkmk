@@ -1,0 +1,11 @@
+{
+    "homepage": "https://clickhouse.com/",
+    "maintainers": [],
+    "repository": [
+        "github:ClickHouse/ClickHouse"
+    ],
+    "version": [
+        "v25.6.5.41-stable"
+    ],
+    "yanked_versions": {}
+}

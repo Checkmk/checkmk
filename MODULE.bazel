@@ -41,6 +41,11 @@ bazel_dep(
     repo_name = "clang-linux-x86_64",
 )
 bazel_dep(
+    name = "clickhouse",
+    version = "v25.6.5.41-stable",
+    dev_dependency = True,
+)
+bazel_dep(
     name = "buildifier_prebuilt",
     version = "8.0.0",
     dev_dependency = True,

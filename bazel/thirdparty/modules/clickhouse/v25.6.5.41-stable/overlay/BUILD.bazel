@@ -1,0 +1,9 @@
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+native_binary(
+    name = "clickhouse",
+    src = "usr/bin/clickhouse",
+    out = "clickhouse",
+)

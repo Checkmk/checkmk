@@ -14,10 +14,12 @@ defineProps<{ screenshotMode: boolean }>()
 <template>
   <table>
     <thead>
-      <th></th>
-      <th>Fill</th>
-      <th>Outline</th>
-      <th>Circle</th>
+      <tr>
+        <th></th>
+        <th>Fill</th>
+        <th>Outline</th>
+        <th>Circle</th>
+      </tr>
     </thead>
     <tbody>
       <tr>

@@ -26,7 +26,7 @@ py_library(
         "cmk/agent_receiver/worker.py",
     ],
     data = [
-        ":cmk/agent_receiver/py.typed",
+        "cmk/agent_receiver/py.typed",
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
@@ -94,7 +94,15 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [":cmk-agent-receiver"],
+    deps = [
+        ":cmk-agent-receiver",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/agent_receiver/py.typed"],
 )
 
 package_wheel(

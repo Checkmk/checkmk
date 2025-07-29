@@ -32,7 +32,7 @@ def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp | None]:
         CheckmkApp(
             client,
             name=f"checkmk-{version_from_env().branch}_{randint(10000000, 99999999)}",
-            ports={"8000/tcp": 9000},
+            ports={"8000/tcp": None},
         )
         if os.getenv("AGENT_PLUGIN_E2E", "0") == "1"
         else nullcontext()

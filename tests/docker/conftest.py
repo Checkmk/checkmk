@@ -26,5 +26,5 @@ def _docker_client() -> docker.DockerClient:
 @pytest.fixture(name="checkmk", scope="session")
 def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp]:
     container_name = f"checkmk-{version_from_env().branch}_{randint(10000000, 99999999)}"
-    with CheckmkApp(client, name=container_name, ports={"8000/tcp": 9000}) as checkmk:
+    with CheckmkApp(client, name=container_name, ports={"8000/tcp": None}) as checkmk:
         yield checkmk

@@ -86,10 +86,20 @@ def fixture_remote_site(
     request: pytest.FixtureRequest, site_factory: SiteFactory
 ) -> Iterator[Site]:
     """Return the remote Checkmk site object."""
+
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from site_factory.get_test_site(name="remote")
+        with site_factory.get_test_site_ctx(name="remote") as _remote_site:
+            yield _remote_site
+
+            # Cleanup: Remove files to unlock local setup again in remote site.
+            for file_to_delete in (
+                "etc/check_mk/multisite.d/wato/sitespecific.mk",
+                "etc/check_mk/conf.d/distributed_wato.mk",
+            ):
+                if _remote_site.file_exists(file_to_delete):
+                    _remote_site.delete_file(file_to_delete)
 
 
 def test_remote_host_configuring(
@@ -97,12 +107,12 @@ def test_remote_host_configuring(
 ) -> None:
     """Test distributed monitoring setup and verify it creating a host.
 
-    This test performs the following steps:
-    1. Configure the remote site in the distributed monitoring setup of the central site.
-    2. Activate changes and ensure the remote site is online.
-    3. Add a host to the remote site from the central site.
-    4. Verify that the host is being monitored from the remote site.
-    5. Clean up the distributed monitoring setup by removing all site connections.
+    Steps:
+        1. Configure the remote site in the distributed monitoring setup of the central site.
+        2. Activate changes and ensure the remote site is online.
+        3. Add a host to the remote site from the central site.
+        4. Verify that the host is being monitored from the remote site.
+        5. Clean up the distributed monitoring setup by removing all site connections.
     """
     try:
         distributed_monitoring_page = DistributedMonitoring(dashboard_page.page)

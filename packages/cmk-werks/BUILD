@@ -29,6 +29,7 @@ py_library(
         "cmk/werks/utils/collect.py",
         "cmk/werks/validate.py",
     ],
+    data = ["cmk/werks/py.typed"],
     imports = ["."],
     visibility = [
         "//cmk:__pkg__",
@@ -75,6 +76,11 @@ py_wheel(
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     deps = [":cmk-werks"],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/werks/py.typed"],
 )
 
 # This wheel is only used for providing the entry point "werk" from the .venv under .venv/bin

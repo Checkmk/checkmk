@@ -36,6 +36,7 @@ py_library(
         "cmk/agent_based/v2/clusterize.py",
         "cmk/agent_based/v2/render.py",
     ],
+    data = ["cmk/agent_based/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
@@ -54,6 +55,9 @@ py_library(
         "cmk/graphing/v1/metrics.py",
         "cmk/graphing/v1/perfometers.py",
         "cmk/graphing/v1/translations.py",
+    ],
+    data = [
+        "cmk/graphing/py.typed",
     ],
     imports = ["."],
     visibility = ["//visibility:public"],
@@ -75,6 +79,7 @@ py_library(
         "cmk/rulesets/v1/form_specs/validators.py",
         "cmk/rulesets/v1/rule_specs.py",
     ],
+    data = ["cmk/rulesets/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -88,6 +93,7 @@ py_library(
         "cmk/server_side_calls/v1/_special_agents.py",
         "cmk/server_side_calls/v1/_utils.py",
     ],
+    data = ["cmk/server_side_calls/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
@@ -106,6 +112,7 @@ py_library(
         "cmk/inventory_ui/v1_alpha/_types.py",
         "cmk/inventory_ui/v1_alpha/_unit.py",
     ],
+    data = ["cmk/inventory_ui/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -200,8 +207,20 @@ py_wheel(
         ":agent_based",
         ":graphing",
         ":inventory_ui",
+        ":py_typed",
         ":rulesets",
         ":server_side_calls",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = [
+        "cmk/agent_based/py.typed",
+        "cmk/graphing/py.typed",
+        "cmk/inventory_ui/py.typed",
+        "cmk/rulesets/py.typed",
+        "cmk/server_side_calls/py.typed",
     ],
 )
 

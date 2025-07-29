@@ -7,13 +7,13 @@
 from collections.abc import Sequence
 from typing import TypeGuard
 
+from cmk.gui.color import parse_color
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pdf import Document
 from cmk.gui.type_defs import RGBColor, SizeMM
 
 from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea, LayoutedCurveStack
-from ._color import parse_color
 from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import GraphDataRange
 

@@ -33,9 +33,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TextIO
 
-from cmk.utils.metrics import MetricName
-
-from cmk.gui.graphing._color import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
+from cmk.gui.color import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.graphing._perfometer import (  # pylint: disable=cmk-module-layer-violation
     _DualPerfometerSpec,
     _LinearPerfometerSpec,
@@ -50,8 +49,7 @@ from cmk.gui.graphing._utils import (  # pylint: disable=cmk-module-layer-violat
     RawGraphTemplate,
 )
 from cmk.gui.utils.speaklater import LazyString  # pylint: disable=cmk-module-layer-violation
-
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
+from cmk.utils.metrics import MetricName
 
 _LOGGER = logging.getLogger(__file__)
 

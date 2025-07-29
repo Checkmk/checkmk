@@ -16,13 +16,13 @@ from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 
 import cmk.utils.render
+from cmk.gui.color import fade_color, parse_color, render_color
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.unit_formatter import Label, NotationFormatter
 
-from ._color import fade_color, parse_color, render_color
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,

@@ -14,12 +14,18 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_api
+from cmk.gui.color import (
+    mix_colors,
+    parse_color,
+    parse_color_from_api,
+    render_color,
+    scalar_colors,
+)
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._metric_operation import (
     create_metric_operation_from_translated_metric,

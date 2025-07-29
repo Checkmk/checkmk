@@ -8,11 +8,11 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.gui.color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.utils.metrics import MetricName
 
-from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._from_api import RegisteredMetric
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
 

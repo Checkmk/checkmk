@@ -18,6 +18,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
+from cmk.gui.color import render_color_icon
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_templates import (
@@ -54,7 +55,6 @@ from ._artwork import (
     order_graph_curves_for_legend_and_mouse_hover,
     save_graph_pin,
 )
-from ._color import render_color_icon
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_render_config import (
     GraphRenderConfig,

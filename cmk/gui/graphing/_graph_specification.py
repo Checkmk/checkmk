@@ -20,9 +20,9 @@ from pydantic import (
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing.v1 import graphs as graphs_api
+from cmk.gui.color import scalar_colors
 from cmk.gui.i18n import _
 
-from ._color import scalar_colors
 from ._from_api import RegisteredMetric
 from ._graph_render_config import GraphRenderOptions
 from ._metric_operation import (

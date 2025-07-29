@@ -14,8 +14,8 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui import sites
+from cmk.gui.color import render_color_icon
 from cmk.gui.config import active_config, Config
-from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
 from cmk.gui.graphing._translated_metrics import (

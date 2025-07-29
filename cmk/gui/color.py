@@ -279,38 +279,41 @@ def parse_color(color: str) -> RGBColor:
     return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0
 
 
-def fade_color(rgb, v):
+def fade_color(rgb: RGBColor, v: float) -> RGBColor:
     gray = _rgb_to_gray(rgb)
     if gray > 0.5:
         return darken_color(rgb, v)
     return lighten_color(rgb, v)
 
 
-def darken_color(rgb, v):
+def darken_color(rgb: RGBColor, v: float) -> RGBColor:
     """Make a color darker. v ranges from 0 (not darker) to 1 (black)"""
 
-    def darken(x, v):
+    def darken(x: float, v: float) -> float:
         return x * (1.0 - v)
 
-    return tuple(darken(x, v) for x in rgb)
+    r, g, b = (darken(x, v) for x in rgb)
+    return r, g, b
 
 
-def lighten_color(rgb, v):
+def lighten_color(rgb: RGBColor, v: float) -> RGBColor:
     """Make a color lighter. v ranges from 0 (not lighter) to 1 (white)"""
 
-    def lighten(x, v):
+    def lighten(x: float, v: float) -> float:
         return x + ((1.0 - x) * v)
 
-    return tuple(lighten(x, v) for x in rgb)
+    r, g, b = (lighten(x, v) for x in rgb)
+    return r, g, b
 
 
-def _rgb_to_gray(rgb):
+def _rgb_to_gray(rgb: RGBColor) -> float:
     r, gr, b = rgb
     return 0.21 * r + 0.72 * gr + 0.07 * b
 
 
-def mix_colors(a, b):
-    return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
+def mix_colors(a: RGBColor, b: RGBColor) -> RGBColor:
+    mixed_colors = tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
+    return mixed_colors[0], mixed_colors[1], mixed_colors[2]
 
 
 def render_color_icon(color: str) -> HTML:

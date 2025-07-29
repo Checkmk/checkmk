@@ -12,12 +12,12 @@ from typing import assert_never, Self
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.gui.color import parse_color_from_api
 from cmk.gui.config import active_config
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._color import parse_color_from_api
 from ._from_api import parse_unit_from_api
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric

@@ -32,7 +32,7 @@ interface Props {
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
-  url: string
+  all_agents_url: string
 }
 
 const props = defineProps<Props>()
@@ -346,12 +346,12 @@ const warnContainerValues = computed<ContainerValues>(() => {
     >
       <AgentRegisterSlideOutContent
         v-if="isNotRegistered"
-        :url="url"
+        :all_agents_url="all_agents_url"
         @close="((slideInOpen = false), (isError = false))"
       />
       <AgentInstallSlideOutContent
         v-else
-        :url="url"
+        :all_agents_url="all_agents_url"
         @close="((slideInOpen = false), (isError = false))"
       />
     </CmkSlideInDialog>

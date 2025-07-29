@@ -17,7 +17,7 @@
             }
         },
         "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
-        "url": { "type": "string" },
+        "all_agents_url": { "type": "string" },
         "host_name": { "type": "string" }
     },
     "required": ["form_keys", "sites", "i18n_ping_host", "url", "host_name"],

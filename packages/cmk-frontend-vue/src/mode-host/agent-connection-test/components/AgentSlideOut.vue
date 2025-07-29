@@ -33,7 +33,7 @@ export interface AgentSlideOutTabs {
 defineProps<{
   dialog_msg: string
   tabs: AgentSlideOutTabs[]
-  url: string
+  all_agents_url: string
 }>()
 
 const { t } = usei18n('agent_slideout')
@@ -70,7 +70,7 @@ watch(model, (newValue) => {
   <CmkButton
     :title="t('ads-all-agents', 'View all agents')"
     class="all_agents"
-    @click="() => openAllAgentsPage(url)"
+    @click="() => openAllAgentsPage(all_agents_url)"
   >
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>

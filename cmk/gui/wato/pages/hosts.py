@@ -344,7 +344,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                         for mode in HostAgentConnectionMode
                     ],
-                    url=folder_preserving_link([("mode", "agents")]),
+                    all_agents_url=folder_preserving_link([("mode", "agents")]),
                     host_name=self._host.name(),
                 )
             ),

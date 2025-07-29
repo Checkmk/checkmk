@@ -10,7 +10,7 @@ import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSli
 import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
 defineProps<{
-  url: string
+  all_agents_url: string
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
@@ -106,7 +106,7 @@ const tabs: AgentSlideOutTabs[] = [
       )
     "
     :tabs="tabs"
-    :url="url"
+    :all_agents_url="all_agents_url"
     @close="close"
   />
 </template>

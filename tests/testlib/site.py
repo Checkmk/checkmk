@@ -2135,6 +2135,12 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(test_site.id)
 
+        assert site.version.version == target_package.version.version, (
+            "Version mismatch after update process:\n"
+            f"Expected version: {target_package.version.version}\n"
+            f"Actual version: {site.version.version}"
+        )
+
         _assert_tmpfs(site, base_package.version)
         if not site.edition.is_saas_edition():
             _assert_nagvis_server(target_package)
@@ -2199,6 +2205,12 @@ class SiteFactory:
 
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
+
+        assert site.version.version == target_package.version.version, (
+            "Version mismatch after update process:\n"
+            f"Expected version: {target_package.version.version}\n"
+            f"Actual version: {site.version.version}"
+        )
 
         _assert_tmpfs(site, base_package.version)
         if not site.edition.is_saas_edition():

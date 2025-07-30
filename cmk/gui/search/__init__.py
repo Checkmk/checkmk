@@ -8,7 +8,6 @@ from .engines.monitoring import (
     IncorrectLabelInputError,
     MonitoringSearchEngine,
     QuicksearchManager,
-    SupportsMonitoringSearchEngine,
     TooManyRowsError,
 )
 from .engines.setup import (
@@ -25,7 +24,6 @@ from .engines.setup import (
     PermissionsHandler,
     SearchIndexBackgroundJob,
     SetupSearchEngine,
-    SupportsSetupSearchEngine,
 )
 from .unified import UnifiedSearch
 
@@ -44,8 +42,6 @@ __all__ = [
     "QuicksearchManager",
     "SearchIndexBackgroundJob",
     "SetupSearchEngine",
-    "SupportsMonitoringSearchEngine",
-    "SupportsSetupSearchEngine",
     "TooManyRowsError",
     "UnifiedSearch",
     "launch_requests_processing_background",

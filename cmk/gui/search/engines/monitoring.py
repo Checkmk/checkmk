@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import itertools
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import override, Protocol
+from typing import override
 
 import livestatus
 
@@ -39,6 +40,9 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.utils.tags import TagGroupID, TagID
+
+from ..legacy_helpers import transform_legacy_results_to_unified
+from ..type_defs import UnifiedSearchResultItem
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1360,14 +1364,13 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
 match_plugin_registry.register(MonitorMenuMatchPlugin())
 
 
-class SupportsMonitoringSearchEngine(Protocol):
-    def search(self, query: str) -> SearchResultsByTopic: ...
-
-
 # TODO: rework monitoring search façade to return correct payload for unified search.
 class MonitoringSearchEngine:
     def __init__(self) -> None:
         self._legacy_engine = QuicksearchManager(raise_too_many_rows_error=False)
 
-    def search(self, query: str) -> SearchResultsByTopic:
-        return self._legacy_engine.generate_results(query)
+    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
+        return itertools.chain.from_iterable(
+            transform_legacy_results_to_unified(results, topic, provider="monitoring")
+            for topic, results in self._legacy_engine.generate_results(query)
+        )

@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
+import itertools
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Final, override, Protocol
+from typing import Final, override
 
 import redis
 from redis import ConnectionError as RedisConnectionError
@@ -52,6 +53,9 @@ from cmk.utils.setup_search_index import (
     UpdateRequests,
     updates_requested,
 )
+
+from ..legacy_helpers import transform_legacy_results_to_unified
+from ..type_defs import UnifiedSearchResultItem
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -643,10 +647,6 @@ class SearchIndexBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
 
-class SupportsSetupSearchEngine(Protocol):
-    def search(self, query: str) -> SearchResultsByTopic: ...
-
-
 # TODO: rework setup search façade to return correct payload for unified search.
 class SetupSearchEngine:
     def __init__(
@@ -662,5 +662,8 @@ class SetupSearchEngine:
             permissions_handler=permissions_handler or PermissionsHandler(),
         )
 
-    def search(self, query: str) -> SearchResultsByTopic:
-        return self._legacy_engine.search(query, self._config)
+    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
+        return itertools.chain.from_iterable(
+            transform_legacy_results_to_unified(results, topic, provider="setup")
+            for topic, results in self._legacy_engine.search(query, self._config)
+        )

@@ -42,7 +42,6 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
                 name="cmk-unified-search",
                 data=get_unified_search_config,
             ),
-            hide=lambda: True,  # remove to activate unified search in main menu
         )
     )
 

@@ -167,6 +167,7 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
+from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
     ExecutableFinder,
@@ -2283,7 +2284,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         return DeleteHostsResult()
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
-        inv_paths = structured_data.InventoryPaths(cmk.utils.paths.omd_root)
+        inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
         inventory_tree = inv_paths.inventory_tree(hostname)
         inventory_tree_gz = inv_paths.inventory_tree_gz(hostname)
         status_data_tree = inv_paths.status_data_tree(hostname)

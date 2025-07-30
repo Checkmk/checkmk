@@ -25,11 +25,11 @@ import cmk.utils.paths
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
-    InventoryPaths,
     MutableTree,
     parse_visible_raw_path,
     RawIntervalFromConfig,

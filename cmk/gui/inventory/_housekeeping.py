@@ -39,7 +39,8 @@ from cmk.inventory.config import (
     InvHousekeepingParamsOfHosts,
     matches,
 )
-from cmk.utils.structured_data import InventoryPaths, TreePath, TreePathGz
+from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import TreePath, TreePathGz
 
 
 def _vs_file_age(title: str, default_value: int) -> Age:

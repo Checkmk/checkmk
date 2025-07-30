@@ -14,7 +14,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
-from cmk.utils.structured_data import InventoryPaths
+from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.tags import TagID
 
 

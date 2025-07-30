@@ -24,6 +24,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import PermittedPath
+from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.structured_data import (
     HistoryArchivePath,
     HistoryDeltaPath,
@@ -31,7 +32,6 @@ from cmk.utils.structured_data import (
     HistoryStore,
     ImmutableDeltaTree,
     ImmutableTree,
-    InventoryPaths,
     InventoryStore,
     load_history,
     parse_from_raw_status_data_tree,

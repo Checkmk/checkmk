@@ -15,7 +15,9 @@ from typing import TypedDict
 import cmk.ccc.store
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.structured_data import InventoryPaths, TreePath, TreePathGz
+from cmk.utils.structured_data import transform
+
+from .paths import Paths, TreePath, TreePathGz
 
 
 @dataclass(frozen=True)
@@ -49,7 +51,7 @@ def _find_host_tree_paths(
 def _iter_host_tree_paths_or_unknown_file_paths(
     omd_root: Path, all_host_names: Sequence[str]
 ) -> Iterator[_HostTreePath | Path]:
-    inv_paths = InventoryPaths(omd_root)
+    inv_paths = Paths(omd_root)
 
     try:
         inventory_file_paths = list(inv_paths.inventory_dir.iterdir())
@@ -217,7 +219,7 @@ def _compute_bundle(
 
 def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationResult:
     now = time.time()
-    host_tree_path.tree_path.transform(host_tree_path.stat.st_mtime)
+    transform(host_tree_path.tree_path, host_tree_path.stat.st_mtime)
     return TransformationResult(
         host_name=host_tree_path.host_name,
         path=str(host_tree_path.tree_path.legacy),

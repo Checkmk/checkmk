@@ -17,7 +17,8 @@ from cmk.inventory.config import (
     InvHousekeepingParamsCombined,
     InvHousekeepingParamsOfHosts,
 )
-from cmk.utils.structured_data import InventoryPaths, TreePath, TreePathGz
+from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import TreePath, TreePathGz
 
 
 def test_nothing_to_do(tmp_path: Path) -> None:

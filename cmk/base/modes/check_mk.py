@@ -97,6 +97,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.snmplib import (
@@ -128,7 +129,6 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import (
     ImmutableTree,
-    InventoryPaths,
     InventoryStore,
     make_meta,
     MutableTree,

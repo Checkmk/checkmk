@@ -1,0 +1,44 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import CmkIcon from '@/components/CmkIcon.vue'
+
+const props = defineProps<{ type: 'success' | 'warning'; title: string; info: string }>()
+</script>
+
+<template>
+  <div>
+    <div class="cmk-changes-activation-result">
+      <CmkIcon v-if="props.type === 'success'" variant="plain" size="xxlarge" name="save" />
+      <CmkIcon
+        v-if="props.type === 'warning'"
+        variant="plain"
+        size="xxlarge"
+        name="validation-error"
+      />
+      <span class="cmk-changes-activation-result-title">{{ props.title }}</span>
+
+      <span>{{ props.info }}</span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.cmk-changes-activation-result {
+  display: flex;
+  padding: 0px 29px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+}
+
+.cmk-changes-activation-result-title {
+  font-weight: var(--font-weight-bold);
+}
+</style>

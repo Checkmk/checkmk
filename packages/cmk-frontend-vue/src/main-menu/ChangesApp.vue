@@ -30,6 +30,8 @@ import type {
   Site,
   SitesAndChanges
 } from './ChangesInterfaces'
+import ChangesActivating from './ChangesActivating.vue'
+import ChangesActivationResult from './ChangesActivationResult.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -365,53 +367,38 @@ onMounted(() => {
           )
         }}
       </CmkAlertBox>
-      <div v-if="activateChangesInProgress" class="cmk-div-activation-result-container">
-        <div class="cmk-div-activation-result">
-          <span class="cmk-span-activation-result-text">{{
-            t('activating-changes', 'Activating changes...')
-          }}</span>
-          <span class="cmk-span-activation-result-text">{{
-            t(
-              'safely-navigate-away',
-              "You can safely navigate away - we'll keep working in the background"
-            )
-          }}</span>
-          <CmkProgressbar max="unknown"></CmkProgressbar>
-        </div>
-      </div>
-
-      <div
-        v-if="!activateChangesInProgress && recentlyActivatedSites.length > 0"
+      <ChangesActivating
+        v-if="activateChangesInProgress"
         class="cmk-div-activation-result-container"
       >
-        <div class="cmk-div-activation-result">
-          <CmkIcon variant="plain" size="xxlarge" name="save" />
-          <span class="cmk-span-activation-result-text">{{
-            t(
-              'successfully-activated-changes',
-              `Successfully activated ${numberOfChangesLastActivation} changes`
-            )
-          }}</span>
-          <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
-        </div>
-      </div>
+      </ChangesActivating>
 
-      <div
+      <ChangesActivationResult
+        v-if="!activateChangesInProgress && recentlyActivatedSites.length > 0"
+        type="success"
+        :title="
+          t(
+            'successfully-activated-changes',
+            `Successfully activated ${numberOfChangesLastActivation} changes`
+          )
+        "
+        :info="t('everything-is-up-to-date', 'Everything is up to date')"
+        class="cmk-div-activation-result-container"
+      >
+      </ChangesActivationResult>
+
+      <ChangesActivationResult
         v-if="
           noPendingChangesOrWarningsOrErrors &&
           !activateChangesInProgress &&
           recentlyActivatedSites.length === 0
         "
+        type="success"
+        :title="t('no-pending-changes', 'No pending changes')"
+        :info="t('everything-is-up-to-date', 'Everything is up to date')"
         class="cmk-div-activation-result-container"
       >
-        <div class="cmk-div-activation-result">
-          <CmkIcon variant="plain" size="xxlarge" name="save" />
-          <span class="cmk-span-activation-result-text">{{
-            t('no-pending-changes', 'No pending changes')
-          }}</span>
-          <span>{{ t('everything-is-up-to-date', 'Everything is up to date') }}</span>
-        </div>
-      </div>
+      </ChangesActivationResult>
 
       <div
         v-if="
@@ -419,20 +406,16 @@ onMounted(() => {
         "
         class="cmk-div-sites-and-pending-changes-container"
       >
-        <div
+        <ChangesActivationResult
           v-if="sitesWithWarningsOrErrors && !activateChangesInProgress"
           class="cmk-div-activation-result-container"
+          type="warning"
+          :title="t('problems-detected', 'Problems detected during activation')"
+          :info="
+            t('some-things-may-not-be-monitored', 'Some things may not be monitored properly.')
+          "
         >
-          <div class="cmk-div-activation-result">
-            <CmkIcon variant="plain" size="xxlarge" name="validation-error" />
-            <span class="cmk-span-activation-result-text">{{
-              t('problems-detected', 'Problems detected during activation')
-            }}</span>
-            <span>{{
-              t('some-things-may-not-be-monitored', 'Some things may not be monitored properly.')
-            }}</span>
-          </div>
-        </div>
+        </ChangesActivationResult>
 
         <div class="sites-container" :class="{ 'add-flex': sitesAndChanges.sites.length === 1 }">
           <CmkCollapsibleTitle
@@ -602,20 +585,6 @@ onMounted(() => {
   align-self: stretch;
   background-color: var(--ux-theme-4);
   margin-top: 20px;
-}
-
-.cmk-div-activation-result {
-  display: flex;
-  padding: 0px 29px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  align-self: stretch;
-}
-
-.cmk-span-activation-result-text {
-  font-weight: bold;
 }
 
 .cmk-progress-bar-site-activation-in-progress {

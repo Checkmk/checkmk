@@ -15,6 +15,7 @@ import pytest
 from psutil import Process
 
 from tests.testlib.site import Site
+from tests.testlib.utils import run
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
@@ -74,25 +75,27 @@ def backup_path_fixture(site: Site) -> Iterator[str]:
         {"exists": False},
     ],
 )
-def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
+def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> Iterator[None]:
     # This fixture should prepare two possible scenarios:
     # 1) The folder for the backup locks does already exist *and* has the correct permissions
     # 2) The folder does not yet exist.
     # --> In both scenarios mkbackup must not fail
 
-    # In the second case the "omd" command executed as root ensures that the directory is created.
-    # This functionality has been added to the "omd" command, because it is the only command which
-    # can reliably create the directory when started as root.
-    if not request.param["exists"]:
-        subprocess.check_call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
-        assert not mkbackup_lock_dir.exists()
-
+    def _initialize_lock_dir() -> None:
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        site.omd("status")
+        run(["omd", "status", site.id], sudo=True)
+        assert mkbackup_lock_dir.exists()
 
-    assert mkbackup_lock_dir.exists()
+    if request.param["exists"]:
+        _initialize_lock_dir()
+        yield
+    else:
+        run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
+        assert not mkbackup_lock_dir.exists(), f"Expected '{mkbackup_lock_dir}' to be deleted!"
+        yield
+        _initialize_lock_dir()
 
 
 @pytest.fixture(name="test_cfg", scope="function")
@@ -250,7 +253,7 @@ def test_mkbackup_help(site: Site) -> None:
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
     assert stdout.startswith("Usage:")
-    assert p.wait() == 3
+    assert p.wait() == 3  # noqa: PLR2004
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -293,7 +296,7 @@ def test_mkbackup_list_backups_invalid_target(site: Site) -> None:
     )
     stdout, stderr = p.communicate()
     assert stderr.startswith("This backup target does not exist")
-    assert p.wait() == 3
+    assert p.wait() == 3  # noqa: PLR2004
     assert stdout == ""
 
 

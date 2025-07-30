@@ -78,8 +78,7 @@ function checkEmptyBackspace(e: KeyboardEvent) {
   }
 }
 
-searchUtils.shortCuts.onCtrlEnter(onCtrlEnter)
-function onCtrlEnter() {
+function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
       ;(top!.frames as CmkWindow).main.location.href = 'search_open.py?q='.concat(
@@ -142,6 +141,7 @@ function handleDelTagItem(tag: FilterOption) {
             "
             @input="onInput"
             @keydown.delete="checkEmptyBackspace"
+            @keydown.enter="onInputEnter"
           />
           <UnifiedSearchFilters></UnifiedSearchFilters>
         </div>
@@ -159,12 +159,7 @@ function handleDelTagItem(tag: FilterOption) {
 
       <div v-if="isMonitoringSearch()" class="unified-search-info-item">
         <span>{{ t('press', 'Press') }}</span>
-        <CmkChip size="small" :content="t('ctrl', 'Ctrl')"></CmkChip>+<CmkChip
-          class="arrow-key enter"
-          size="small"
-          content=""
-        ></CmkChip
-        ><br />
+        <CmkChip class="arrow-key enter" size="small" content=""></CmkChip><br />
         <span>{{ t('to-view-matching-service', 'to view matching services') }}</span>
       </div>
     </div>

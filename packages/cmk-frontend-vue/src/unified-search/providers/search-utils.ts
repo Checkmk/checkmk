@@ -26,7 +26,7 @@ export interface FilterOption {
 
 const queryInput = ref<string>('')
 const queryFilters = ref<FilterOption[]>([])
-const sort = ref<string>('none')
+const sort = ref<string>('weighted_index')
 
 const suggestionsActive = ref<boolean>(false)
 const query = {

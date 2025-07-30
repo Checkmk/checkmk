@@ -6,49 +6,44 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 import { getSearchUtils } from './providers/search-utils'
-import type { Suggestions } from '@/components/CmkSuggestions.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import ToggleButtonGroup, { type ToggleButtonOption } from '@/components/ToggleButtonGroup.vue'
 
 const { t } = usei18n('unified-search-app')
 
 const searchUtils = getSearchUtils()
 
-const sortSuggestions: Suggestions = {
-  type: 'fixed',
-  suggestions: [
-    {
-      name: 'none',
-      title: 'keep legacy sorting (1. Setup, 2. Monitoring)'
-    },
-    {
-      name: 'alphabetic',
-      title: 'alphabetical'
-    },
-    {
-      name: 'weighted_index',
-      title: 'Weighted Index (Tanja Keyword Match Quality like)'
-    }
-  ]
-}
+const sortOptions: ToggleButtonOption[] = [
+  {
+    value: 'none',
+    label: 'legacy sorting'
+  },
+  {
+    value: 'alphabetic',
+    label: 'alphabetical'
+  },
+  {
+    value: 'weighted_index',
+    label: 'Weighted Index'
+  }
+]
 </script>
 
 <template>
   <div class="unified-search-footer">
     <div class="sorting">
       <label>{{ t('result-sorting', 'Result sorting') }}</label>
-      <CmkDropdown
-        :selected-option="searchUtils.query.sort.value"
-        :options="sortSuggestions"
-        label="Sorting algorythm"
-        @update:selected-option="
-          (sort) => {
-            searchUtils.query.sort.value = sort || 'none'
+      <ToggleButtonGroup
+        v-model="searchUtils.query.sort.value"
+        :options="sortOptions"
+        @update:model-value="
+          (model: string) => {
+            console.log(model)
+            searchUtils.query.sort.value = model || 'none'
             searchUtils.input.setQuery(searchUtils.query.toQueryLike())
           }
         "
         @click.stop
-      >
-      </CmkDropdown>
+      />
     </div>
   </div>
 </template>
@@ -57,7 +52,6 @@ const sortSuggestions: Suggestions = {
 .sorting {
   display: flex;
   flex-direction: row;
-  bottom: -24px;
   align-items: center;
 
   label {
@@ -69,7 +63,7 @@ const sortSuggestions: Suggestions = {
   display: flex;
   flex-direction: column;
   align-items: center;
-  bottom: var(--spacing-double);
+  bottom: var(--spacing);
   position: fixed;
   width: 750px;
 }

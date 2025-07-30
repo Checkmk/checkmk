@@ -40,7 +40,7 @@ from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
 from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath, SDValue
 
 from .registry import (
     inv_paint_funtions,
@@ -86,30 +86,26 @@ def _make_str(title_or_label: TitleFromAPI | LabelFromAPI | str) -> str:
     )
 
 
-class _RenderBool:
+class _PaintBool:
     def __init__(self, field_from_api: BoolFieldFromAPI) -> None:
         self._field = field_from_api
 
-    def __call__(self, value: int | float | str | bool | None) -> tuple[str, str | HTML]:
-        if value is None:
-            return "", ""
+    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, bool):
             raise ValueError(value)
         return "", _make_str(self._field.render_true if value else self._field.render_false)
 
 
-class _RenderChoice:
+class _PaintChoice:
     def __init__(self, field_from_api: ChoiceFieldFromAPI) -> None:
         self._field = field_from_api
 
-    def __call__(self, value: int | float | str | bool | None) -> tuple[str, str | HTML]:
-        if value is None:
-            return "", ""
+    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, (int | float | str)):
             raise ValueError(value)
         return (
             "",
-            f"{value} (%s)" % _("No such value")
+            f"<{value}> (%s)" % _("No such value")
             if (rendered := self._field.mapping.get(value)) is None
             else _make_str(rendered),
         )
@@ -120,13 +116,13 @@ def _make_paint_function(
 ) -> PaintFunction:
     match field_from_api:
         case BoolFieldFromAPI():
-            return _RenderBool(field_from_api)
+            return _PaintBool(field_from_api)
         case NumberFieldFromAPI():
             return lambda v: ("", str(v))  # TODO
         case TextFieldFromAPI():
             return lambda v: ("", str(v))  # TODO
         case ChoiceFieldFromAPI():
-            return _RenderChoice(field_from_api)
+            return _PaintChoice(field_from_api)
         case other:
             assert_never(other)
 

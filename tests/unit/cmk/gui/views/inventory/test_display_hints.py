@@ -19,10 +19,10 @@ from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
     _get_related_legacy_hints,
+    _PaintBool,
+    _PaintChoice,
     _parse_view_name,
     _RelatedLegacyHints,
-    _RenderBool,
-    _RenderChoice,
     _SortFunctionChoice,
     _SortFunctionText,
     AttributeDisplayHint,
@@ -1253,8 +1253,8 @@ def test_render_bool() -> None:
         render_true=LabelFromAPI("It's true"),
         render_false=LabelFromAPI("It's false"),
     )
-    assert _RenderBool(bool_field)(True) == ("", "It's true")
-    assert _RenderBool(bool_field)(False) == ("", "It's false")
+    assert _PaintBool(bool_field)(True) == ("", "It's true")
+    assert _PaintBool(bool_field)(False) == ("", "It's false")
 
 
 def test_render_choice() -> None:
@@ -1262,8 +1262,8 @@ def test_render_choice() -> None:
         TitleFromAPI("A title"),
         mapping={1: LabelFromAPI("One")},
     )
-    assert _RenderChoice(choice_field)(1) == ("", "One")
-    assert _RenderChoice(choice_field)(2) == ("", "2 (No such value)")
+    assert _PaintChoice(choice_field)(1) == ("", "One")
+    assert _PaintChoice(choice_field)(2) == ("", "<2> (No such value)")
 
 
 def test_sort_text() -> None:

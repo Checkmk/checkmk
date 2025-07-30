@@ -185,7 +185,7 @@ function searchResultNotEmpty(): boolean {
         size="small"
         content=""
       ></CmkChip
-      >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip>
+      >|<CmkChip class="arrow-key right" size="small" content=""></CmkChip><br />
       <span>{{ t('to-nav-tabs', 'to navigate between tabs') }}</span>
     </div>
     <CmkTabs v-model="tabModel">
@@ -247,6 +247,7 @@ function searchResultNotEmpty(): boolean {
 <style scoped>
 .cmk-unified-search-tab-info {
   position: absolute;
+  max-width: 200px;
   right: var(--spacing-double);
   margin-top: 3px;
   line-height: 14px;

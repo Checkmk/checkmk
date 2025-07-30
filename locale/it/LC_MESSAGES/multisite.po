@@ -77781,6 +77781,10 @@ msgstr "Unico"
 msgid "Unique ID"
 msgstr "ID unico"
 
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "Questo ID esiste già."
+
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
 "ID univoco utilizzato per identificare l'istanza sull'host all'interno di "
@@ -84236,6 +84240,11 @@ msgstr "Non ti è permesso riconoscere i lavori"
 
 msgid "You are not allowed to activate changes of other users."
 msgstr "Non ti è permesso attivare le modifiche di altri utenti."
+
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "Non ti è permesso cambiare la barra laterale."
 
 msgid "You are not allowed to change the sidebar."
 msgstr "Non ti è permesso cambiare la barra laterale."

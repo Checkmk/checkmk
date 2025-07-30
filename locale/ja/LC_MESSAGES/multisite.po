@@ -73547,6 +73547,10 @@ msgstr "一意"
 msgid "Unique ID"
 msgstr "一意のID"
 
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "接続ID%sはすでに存在します。"
+
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "Checkmk内でホスト上のインスタンスを識別するために使用される一意のID。"
 
@@ -79810,6 +79814,11 @@ msgstr "あなたはwerkを認めることは許されていません"
 
 msgid "You are not allowed to activate changes of other users."
 msgstr "他のユーザーの変更をアクティブ化することは許可されていません。"
+
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "サイドバーを変更することはできません。"
 
 msgid "You are not allowed to change the sidebar."
 msgstr "サイドバーを変更することはできません。"

@@ -78439,6 +78439,10 @@ msgstr "Unieke ID"
 msgid "Unique ID"
 msgstr "Unieke ID"
 
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "Deze ID bestaat al."
+
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
 "Unieke ID die wordt gebruikt om de instantie op de host binnen Checkmk te "
@@ -84956,6 +84960,11 @@ msgstr "Je mag werk niet erkennen"
 msgid "You are not allowed to activate changes of other users."
 msgstr ""
 "Het is u niet toegestaan wijzigingen van andere gebruikers te activeren."
+
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "U mag de zijbalk niet veranderen."
 
 msgid "You are not allowed to change the sidebar."
 msgstr "U mag de zijbalk niet veranderen."

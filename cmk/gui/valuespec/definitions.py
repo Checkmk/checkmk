@@ -5114,7 +5114,19 @@ class TimeHelper:
         return lt.timestamp()
 
 
-TimerangeValue = None | int | str | tuple[str, Any]  # TODO: Be more specific
+type _TimerangeAge = tuple[Literal["age"], int]  # in seconds
+type _TimerangeDate = tuple[Literal["date"], tuple[float, float]]  # as unix timestamps, whole days
+type _TimerangeDateTime = tuple[Literal["time"], tuple[float, float]]  # as unix timestamps
+type _TimerangePnpView = tuple[  # old version compatibility, TODO: when can this be removed
+    Literal["pnp_view"], int
+]
+type _TimerangeNext = tuple[Literal["next"], int]  # in seconds
+type _TimerangeUntil = tuple[Literal["until"], float]  # as unix timestamp
+
+type TimerangeValue = (
+    None | int | str | _TimerangeAge | _TimerangeDate | _TimerangeDateTime | _TimerangePnpView
+)
+type TimerangeValueWithFuture = TimerangeValue | _TimerangeNext | _TimerangeUntil
 
 
 class ComputedTimerange(NamedTuple):
@@ -5273,7 +5285,7 @@ class Timerange(CascadingDropdown):
 
     @staticmethod
     def compute_range(
-        rangespec: TimerangeValue,
+        rangespec: TimerangeValueWithFuture,
     ) -> ComputedTimerange:
         def _date_span(from_time: float, until_time: float) -> str:
             start = AbsoluteDate().value_to_html(from_time)
@@ -5355,7 +5367,8 @@ class Timerange(CascadingDropdown):
                     (int(now), int(rangespec[1])),
                     str(AbsoluteDate().value_to_html(rangespec[1])),
                 )
-            if isinstance(rangespec, tuple) and rangespec[0] in ["date", "time"]:
+            # NOTE: can't use `in` here, because mypy doesn't understand it
+            if isinstance(rangespec, tuple) and (rangespec[0] == "date" or rangespec[0] == "time"):
                 return _fixed_dates(rangespec)
 
             raise NotImplementedError()

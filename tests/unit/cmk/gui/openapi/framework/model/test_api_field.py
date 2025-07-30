@@ -124,7 +124,7 @@ def test_metadata() -> None:
     @dataclasses.dataclass
     class TestModel:
         field: str = api_field(
-            alias="alias",
+            serialization_alias="alias",
             title="title",
             description="description",
             example="example",
@@ -145,7 +145,7 @@ def test_json_schema_metadata() -> None:
     @dataclasses.dataclass
     class TestModel:
         field: str = api_field(
-            alias="alias",
+            serialization_alias="alias",
             title="title",
             description="description",
             example="example",
@@ -168,7 +168,7 @@ def test_json_schema_metadata() -> None:
 def test_alias_serialization() -> None:
     @dataclasses.dataclass
     class TestModel:
-        field: str = api_field(description="test", alias="alias")
+        field: str = api_field(description="test", serialization_alias="alias")
 
     adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
     assert adapter.dump_python(TestModel(field="foo"), by_alias=True) == {"alias": "foo"}
@@ -177,7 +177,7 @@ def test_alias_serialization() -> None:
 def test_alias_deserialization() -> None:
     @dataclasses.dataclass
     class TestModel:
-        field: str = api_field(description="test", alias="alias")
+        field: str = api_field(description="test", serialization_alias="alias")
 
     adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
     assert adapter.validate_python({"alias": "foo"}) == TestModel(field="foo")

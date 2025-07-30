@@ -22,7 +22,7 @@ class PasswordExtension:
     )
     docu_url: str | ApiOmitted = api_field(
         example="localhost",
-        alias="documentation_url",
+        serialization_alias="documentation_url",
         description="A URL pointing to documentation or any other page.",
         default_factory=ApiOmitted,
     )
@@ -40,7 +40,7 @@ class PasswordExtension:
     )
     shared_with: list[str] | ApiOmitted = api_field(
         example=["all"],
-        alias="shared",
+        serialization_alias="shared",
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         default_factory=ApiOmitted,
     )

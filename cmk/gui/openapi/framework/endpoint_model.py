@@ -185,7 +185,7 @@ def _make_parameter_model(
                 default=parameter.default,
                 description=parameter.description,
                 example=parameter.example,
-                alias=parameter.alias,
+                serialization_alias=parameter.alias,
             ),
         )
         for name, parameter in parameters.items()

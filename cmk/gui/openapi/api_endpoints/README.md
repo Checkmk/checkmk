@@ -546,7 +546,7 @@ class UserModel:
     # Field with custom JSON key name
     email_address: str = api_field(
         description="User's email.",
-        alias="emailAddress"
+        serialization_alias="emailAddress"
     )
 
     # Field with default value

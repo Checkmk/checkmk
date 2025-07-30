@@ -37,7 +37,7 @@ class CreatePassword:
         default="",
     )
     documentation_url: str = api_field(
-        alias="docu_url",
+        serialization_alias="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
         default="",
@@ -50,7 +50,7 @@ class CreatePassword:
     owned_by: str | ApiOmitted = api_field(
         example="admin",
         description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        alias="owner",
+        serialization_alias="owner",
         default_factory=ApiOmitted,
         deprecated=True,
     )
@@ -62,7 +62,7 @@ class CreatePassword:
     shared_with: list[str] | ApiOmitted = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        alias="shared",
+        serialization_alias="shared",
         default_factory=ApiOmitted,
     )
     customer: Annotated[
@@ -122,7 +122,7 @@ class UpdatePassword:
         default_factory=ApiOmitted,
     )
     documentation_url: str | ApiOmitted = api_field(
-        alias="docu_url",
+        serialization_alias="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
         default_factory=ApiOmitted,
@@ -136,7 +136,7 @@ class UpdatePassword:
     owned_by: str | ApiOmitted = api_field(
         example="admin",
         description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        alias="owner",
+        serialization_alias="owner",
         default_factory=ApiOmitted,
         deprecated=True,
     )
@@ -148,7 +148,7 @@ class UpdatePassword:
     shared_with: list[str] | ApiOmitted = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        alias="shared",
+        serialization_alias="shared",
         default_factory=ApiOmitted,
     )
     customer: Annotated[

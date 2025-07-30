@@ -22,7 +22,7 @@ def api_field[T](
     *,
     description: str,
     default: T,
-    alias: str | None = None,
+    serialization_alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
@@ -42,7 +42,7 @@ def api_field[T](
     *,
     description: str,
     default_factory: Callable[[], T],
-    alias: str | None = None,
+    serialization_alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
@@ -62,7 +62,7 @@ def api_field(
     *,
     description: str,
     default_factory: type[ApiOmitted] | None = None,
-    alias: str | None = None,
+    serialization_alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
@@ -82,7 +82,7 @@ def api_field(
     description: str,
     default: object = _NOT_SET,
     default_factory: Callable[[], object] | type[ApiOmitted] | None = None,
-    alias: str | None = None,
+    serialization_alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
@@ -105,7 +105,8 @@ def api_field(
         default: Set a default value for the field. Mutually exclusive with `default_factory`.
         default_factory: Set a default value for the field using a callable.
                          Mutually exclusive with `default`.
-        alias: Alias for the field, will be used instead of the field name for (de-)serialization.
+        serialization_alias: Alias for the field, will be used instead of the field name for
+                             (de-)serialization.
         title: Title of the field, used for OpenAPI schema generation.
         example: Serialized example value of the field, used for OpenAPI schema generation.
         pattern: Regular expression pattern for the field, used for OpenAPI schema generation
@@ -124,8 +125,8 @@ def api_field(
     metadata: MutableMapping[str, object] = {
         "description": description,
     }
-    if alias:
-        metadata["alias"] = alias
+    if serialization_alias:
+        metadata["alias"] = serialization_alias
     if title:
         metadata["title"] = title
     if example:

@@ -392,7 +392,7 @@ class DirectMappingModel:
 @dataclass(kw_only=True, slots=True)
 class TranslateNamesModel:
     case: Literal["nop", "lower", "upper"] = api_field(
-        alias="convert_case",
+        serialization_alias="convert_case",
         description="Convert all detected host names to upper- or lower-case.\n\n * `nop` - Do not convert anything\n * `lower` - Convert all host names to lowercase.\n * `upper` - Convert all host names to uppercase.",
         # default="nop",
     )
@@ -411,7 +411,7 @@ class TranslateNamesModel:
         default_factory=ApiOmitted,
     )
     regex: list[RegexpRewritesModel] | ApiOmitted = api_field(
-        alias="regexp_rewrites",
+        serialization_alias="regexp_rewrites",
         description=(
             "Rewrite discovered host names with multiple regular expressions. The "
             "replacements will be done one after another in the order they appear "
@@ -424,7 +424,7 @@ class TranslateNamesModel:
         default_factory=ApiOmitted,
     )
     mapping: list[DirectMappingModel] | ApiOmitted = api_field(
-        alias="hostname_replacement",
+        serialization_alias="hostname_replacement",
         description=(
             "Replace one value with another.\n\n"
             "These will be executed **after**:\n\n"
@@ -483,10 +483,10 @@ class TranslateNamesModel:
 @dataclass(kw_only=True, slots=True)
 class NetworkScanModel:
     ip_ranges: list[IPRangeModel] = api_field(
-        alias="addresses", description="IPv4 addresses to include."
+        serialization_alias="addresses", description="IPv4 addresses to include."
     )
     exclude_ranges: list[IPRangeWithRegexpModel] | ApiOmitted = api_field(
-        alias="exclude_addresses",
+        serialization_alias="exclude_addresses",
         description="IPv4 addresses to exclude.",
         default_factory=ApiOmitted,
     )

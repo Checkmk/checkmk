@@ -163,7 +163,7 @@ class ObjectMemberBaseModel(LinkableModel):
         example="invalid",
     )
     x_ro_invalidReason: str | None = api_field(
-        alias="x-ro-invalidReason",
+        serialization_alias="x-ro-invalidReason",
         description=(
             "Provides the reason why a SET OF proposed values for properties or arguments "
             "is invalid."

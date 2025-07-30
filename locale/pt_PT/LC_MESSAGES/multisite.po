@@ -20232,6 +20232,10 @@ msgstr "Latência do disco"
 msgid "Disk Read Latency"
 msgstr "Latência de leitura do disco"
 
+#, fuzzy
+msgid "Disk Usage"
+msgstr "Utilização do disco"
+
 msgid "Disk Utilization"
 msgstr "Utilização do disco"
 
@@ -39560,6 +39564,10 @@ msgstr "Lista de ficheiros de registo esperados"
 msgid "Lower threshold on open files and sockets"
 msgstr ""
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman containers"
+msgstr "Definir níveis inferiores para o número total de contentores"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -44514,6 +44522,10 @@ msgstr ""
 "ter acesso a esse hospedeiro."
 
 #, fuzzy
+msgid "No such value"
+msgstr "Não existe tal arquivo"
+
+#, fuzzy
 msgid "No tags defined"
 msgstr "Nenhuma fonte de dados definida."
 
@@ -45555,6 +45567,14 @@ msgstr "Número de sondas PING"
 msgid "Number of Placement Groups"
 msgstr "Número de grupos de regras"
 
+#, fuzzy
+msgid "Number of Podman containers"
+msgstr "Número de contentores"
+
+#, fuzzy
+msgid "Number of Podman images"
+msgstr "Número de nós"
+
 msgid "Number of Resources"
 msgstr "Número de Recursos"
 
@@ -45575,6 +45595,14 @@ msgid "Number of access points"
 msgstr "Número de pontos de acesso"
 
 msgid "Number of active Plugs"
+msgstr "Número de Plugs ativos"
+
+#, fuzzy
+msgid "Number of active Podman containers"
+msgstr "Número de instâncias activas"
+
+#, fuzzy
+msgid "Number of active Podman images"
 msgstr "Número de Plugs ativos"
 
 msgid "Number of active instances"
@@ -45661,6 +45689,10 @@ msgstr "Número de linhas de contexto após as mensagens"
 msgid "Number of context lines before messages"
 msgstr "Número de linhas de contexto antes das mensagens"
 
+#, fuzzy
+msgid "Number of created Podman containers"
+msgstr "Número de contentores em execução"
+
 msgid "Number of critical alerts"
 msgstr "Número de alertas críticos"
 
@@ -45690,6 +45722,10 @@ msgstr "Número de pontos de dados"
 msgid "Number of days from now (single page)"
 msgstr "Número de dias a partir de agora (página única)"
 
+#, fuzzy
+msgid "Number of dead Podman containers"
+msgstr "Número de contentores"
+
 msgid "Number of delayed unassigned shards"
 msgstr "Número de fragmentos atrasados não atribuídos"
 
@@ -45716,6 +45752,14 @@ msgstr "Número de eventos num intervalo de tempo definido nível superior"
 
 msgid "Number of evicted keys"
 msgstr "Número de chaves despejadas"
+
+#, fuzzy
+msgid "Number of exited Podman containers"
+msgstr "Número de contentores em execução"
+
+#, fuzzy
+msgid "Number of exited Podman containers (non-zero)"
+msgstr "Número de contentores em execução"
 
 msgid "Number of expected messages"
 msgstr "Número de mensagens esperadas"
@@ -45906,6 +45950,10 @@ msgstr "Número esperado de descritores de ficheiros abertos"
 msgid "Number of packets"
 msgstr "Número de pacotes"
 
+#, fuzzy
+msgid "Number of paused Podman containers"
+msgstr "Número de contentores em execução"
+
 msgid "Number of pending clients in a blocking call"
 msgstr "Número de clientes pendentes numa chamada de bloqueio"
 
@@ -45952,6 +46000,10 @@ msgstr "Número de pedidos de ligação rejeitados"
 msgid "Number of relocating shards"
 msgstr "Número de fragmentos relocalizados"
 
+#, fuzzy
+msgid "Number of removing Podman containers"
+msgstr "Número de contentores em execução"
+
 msgid "Number of requests"
 msgstr "Número de pedidos"
 
@@ -45970,6 +46022,10 @@ msgid "Number of requests with return code class 5xx (server error)"
 msgstr ""
 "Número de pedidos com código de retorno de classe 5xx (erro do servidor)"
 
+#, fuzzy
+msgid "Number of restarting Podman containers"
+msgstr "Número de contentores em execução"
+
 msgid "Number of retries"
 msgstr "Número de tentativas"
 
@@ -45981,6 +46037,10 @@ msgstr ""
 
 msgid "Number of rule groups"
 msgstr "Número de grupos de regras"
+
+#, fuzzy
+msgid "Number of running Podman containers"
+msgstr "Número de contentores em execução"
 
 msgid "Number of running containers"
 msgstr "Número de contentores em execução"
@@ -46097,6 +46157,10 @@ msgstr "Número de caminhos em espera"
 
 msgid "Number of steps aggregated into one data point"
 msgstr "Número de etapas agregadas em um ponto de dados"
+
+#, fuzzy
+msgid "Number of stopped Podman containers"
+msgstr "Número de contentores"
 
 msgid "Number of stuck tasks"
 msgstr "Número de tarefas presas"
@@ -51414,6 +51478,14 @@ msgstr "Recursos do pod: Espaço de nome"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Recursos do pod: StatefulSet"
+
+#, fuzzy
+msgid "Podman Containers"
+msgstr "# Contentores"
+
+#, fuzzy
+msgid "Podman Disk Usage"
+msgstr "Utilização do disco"
 
 #, fuzzy
 msgid "Podman Monitoring"
@@ -59018,6 +59090,43 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of containers"
+msgstr "Definir níveis superiores para o número total de contentores"
+
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of images"
+msgstr "Definir níveis superiores para o número total de contentores"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active containers."
+msgstr "Nível superior para o número total de ligações"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active images."
+msgstr "Nível superior para o número total de mensagens entregues"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of containers."
+msgstr "Nível superior para o número total de ligações"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of images."
+msgstr "Nível superior para o número total de mensagens"
+
+#, fuzzy
+msgid ""
+"Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definir níveis superiores para o número total de contentores"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman containers."
+msgstr "Definir níveis superiores para o número total de contentores"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definir níveis superiores para o número total de contentores"
+
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr ""
 
@@ -64620,6 +64729,12 @@ msgstr "As %s pararam de bater"
 #, python-format
 msgid "The %s you are trying to delete does not exist."
 msgstr "As %s que você está tentando apagar não existem."
+
+msgid ""
+"The 'Manage All Scheduled Reports' permission is required to send scheduled "
+"reports via email to other users. Without this permission, only the report "
+"owner will receive the report."
+msgstr ""
 
 #, fuzzy
 msgid "The 'notification number' value must be greater than 0."
@@ -74601,6 +74716,14 @@ msgid "Thresholds for quality of time"
 msgstr "Limiares para a qualidade do tempo"
 
 #, fuzzy
+msgid "Thresholds for the podman containers service."
+msgstr "Falhas do serviço de lançadores"
+
+#, fuzzy
+msgid "Thresholds for the podman disk usage services."
+msgstr "Níveis superiores para o tamanho de utilização dos registos"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Limiares na contagem de mensagens"
 
@@ -75807,8 +75930,20 @@ msgstr "Contagem total de mensagens níveis superiores"
 msgid "Total non-compliant devices"
 msgstr "Total de dispositivos não conformes"
 
+#, fuzzy
+msgid "Total number of Podman containers"
+msgstr "Número total de instâncias"
+
 msgid "Total number of Sessions"
 msgstr "Número total de Sessões"
+
+#, fuzzy
+msgid "Total number of active containers upper levels"
+msgstr "Número total de estilhaços ativos no nível superior"
+
+#, fuzzy
+msgid "Total number of active images upper levels"
+msgstr "Número total de estilhaços ativos no nível superior"
 
 msgid "Total number of active primary shards lower level"
 msgstr "Número total de estilhaços primários activos nível inferior"
@@ -75846,6 +75981,10 @@ msgstr "Número total de coletores no estado parados no nível inferior"
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Número total de coletores no nível superior do estado parados"
 
+#, fuzzy
+msgid "Total number of containers upper levels"
+msgstr "Número total de cobranças nível superior"
+
 msgid "Total number of data nodes lower level"
 msgstr "Número total de nós de dados de nível inferior"
 
@@ -75872,6 +76011,10 @@ msgstr "Número total de empregos falhados"
 
 msgid "Total number of hosts"
 msgstr "Número total de hospedeiros"
+
+#, fuzzy
+msgid "Total number of images upper levels"
+msgstr "Número total de edições do nível superior"
 
 #, fuzzy
 msgid "Total number of incoming AC get cache request hits"
@@ -75988,6 +76131,14 @@ msgstr "Tempo limite total de consulta"
 #, fuzzy
 msgid "Total read latency"
 msgstr "Latência de leitura do disco"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman containers"
+msgstr "Nome do anfitrião utilizado para os contentores"
+
+#, fuzzy
+msgid "Total reclaimable size upper levels"
+msgstr "Tamanho total do ficheiro de registo: Níveis superiores absolutos"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -78022,6 +78173,14 @@ msgstr "Total de sessões"
 msgid "Total size"
 msgstr "Tamanho total"
 
+#, fuzzy
+msgid "Total size of Podman containers"
+msgstr "Tamanho total dos ficheiros de registo"
+
+#, fuzzy
+msgid "Total size of Podman images"
+msgstr "Tamanho total dos ficheiros de registo"
+
 msgid "Total size of all indexes for the collection"
 msgstr "O tamanho total de todos os índices para a coleção"
 
@@ -78036,6 +78195,10 @@ msgstr "Dimensão total do sítio"
 
 msgid "Total size of the oplog"
 msgstr "Tamanho total do oplog"
+
+#, fuzzy
+msgid "Total size upper levels"
+msgstr "Contentores níveis superiores"
 
 msgid "Total slots"
 msgstr "Total de slots"
@@ -79070,6 +79233,10 @@ msgstr "Único"
 
 msgid "Unique ID"
 msgstr "Identificação única"
+
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "Já existe um pacote de regras com esta identificação."
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
@@ -80247,6 +80414,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Upper threshold on open files and sockets"
+msgstr "Níveis superiores para tomadas de rede abertas"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman containers"
 msgstr "Níveis superiores para tomadas de rede abertas"
 
 #, fuzzy
@@ -85578,6 +85749,11 @@ msgstr "Você não está autorizado a reconhecer werks"
 msgid "You are not allowed to activate changes of other users."
 msgstr "Você não está autorizado a ativar mudanças de outros usuários."
 
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "Não estás autorizado a mudar a barra lateral."
+
 msgid "You are not allowed to change the sidebar."
 msgstr "Não estás autorizado a mudar a barra lateral."
 
@@ -90003,6 +90179,9 @@ msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 
 msgid "{checkname} - {check['title']}"
+msgstr ""
+
+msgid "{property.capitalize()} Podman containers"
 msgstr ""
 
 #, python-brace-format

@@ -20262,6 +20262,10 @@ msgstr "Latența discului"
 msgid "Disk Read Latency"
 msgstr "Latența de citire a discului"
 
+#, fuzzy
+msgid "Disk Usage"
+msgstr "Utilizarea discului"
+
 msgid "Disk Utilization"
 msgstr "Utilizarea discului"
 
@@ -39655,6 +39659,10 @@ msgstr "Lista fișierelor de jurnal așteptate"
 msgid "Lower threshold on open files and sockets"
 msgstr ""
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman containers"
+msgstr "Definirea nivelurilor inferioare pentru numărul total de containere"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -44614,6 +44622,10 @@ msgstr ""
 "posibil să nu aveți acces la această gazdă."
 
 #, fuzzy
+msgid "No such value"
+msgstr "Nu există un astfel de fișier"
+
+#, fuzzy
 msgid "No tags defined"
 msgstr "Nu este definită nicio sursă de date."
 
@@ -45661,6 +45673,14 @@ msgstr "Numărul de sonde PING"
 msgid "Number of Placement Groups"
 msgstr "Numărul de grupuri de reguli"
 
+#, fuzzy
+msgid "Number of Podman containers"
+msgstr "Numărul de containere"
+
+#, fuzzy
+msgid "Number of Podman images"
+msgstr "Numărul de noduri"
+
 msgid "Number of Resources"
 msgstr "Numărul de resurse"
 
@@ -45681,6 +45701,14 @@ msgid "Number of access points"
 msgstr "Numărul de puncte de acces"
 
 msgid "Number of active Plugs"
+msgstr "Număr de prize active"
+
+#, fuzzy
+msgid "Number of active Podman containers"
+msgstr "Numărul de instanțe active"
+
+#, fuzzy
+msgid "Number of active Podman images"
 msgstr "Număr de prize active"
 
 msgid "Number of active instances"
@@ -45767,6 +45795,10 @@ msgstr "Numărul de linii de context după mesaje"
 msgid "Number of context lines before messages"
 msgstr "Numărul de linii de context înainte de mesaje"
 
+#, fuzzy
+msgid "Number of created Podman containers"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of critical alerts"
 msgstr "Numărul de alerte critice"
 
@@ -45796,6 +45828,10 @@ msgstr "Numărul de puncte de date"
 msgid "Number of days from now (single page)"
 msgstr "Numărul de zile de acum încolo (o singură pagină)"
 
+#, fuzzy
+msgid "Number of dead Podman containers"
+msgstr "Numărul de containere"
+
 msgid "Number of delayed unassigned shards"
 msgstr "Numărul de fragmente neatribuite cu întârziere"
 
@@ -45822,6 +45858,14 @@ msgstr "Numărul de evenimente în intervalul de timp definit nivel superior"
 
 msgid "Number of evicted keys"
 msgstr "Numărul de chei evacuate"
+
+#, fuzzy
+msgid "Number of exited Podman containers"
+msgstr "Numărul de containere care rulează"
+
+#, fuzzy
+msgid "Number of exited Podman containers (non-zero)"
+msgstr "Numărul de containere care rulează"
 
 msgid "Number of expected messages"
 msgstr "Numărul de mesaje așteptate"
@@ -46012,6 +46056,10 @@ msgstr "Numărul așteptat de descriptori de fișiere deschise"
 msgid "Number of packets"
 msgstr "Numărul de pachete"
 
+#, fuzzy
+msgid "Number of paused Podman containers"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of pending clients in a blocking call"
 msgstr "Numărul de clienți în așteptare într-un apel de blocare"
 
@@ -46058,6 +46106,10 @@ msgstr "Numărul de cereri de conexiune respinse"
 msgid "Number of relocating shards"
 msgstr "Numărul de fragmente care se relochează"
 
+#, fuzzy
+msgid "Number of removing Podman containers"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of requests"
 msgstr "Numărul de cereri"
 
@@ -46073,6 +46125,10 @@ msgstr "Numărul de cereri cu cod de returnare de clasă 4xx (eroare client)"
 msgid "Number of requests with return code class 5xx (server error)"
 msgstr "Numărul de cereri cu cod de returnare de clasă 5xx (eroare de server)"
 
+#, fuzzy
+msgid "Number of restarting Podman containers"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of retries"
 msgstr "Numărul de încercări repetate"
 
@@ -46086,6 +46142,10 @@ msgstr ""
 
 msgid "Number of rule groups"
 msgstr "Numărul de grupuri de reguli"
+
+#, fuzzy
+msgid "Number of running Podman containers"
+msgstr "Numărul de containere care rulează"
 
 msgid "Number of running containers"
 msgstr "Numărul de containere care rulează"
@@ -46202,6 +46262,10 @@ msgstr "Numărul de căi de așteptare"
 
 msgid "Number of steps aggregated into one data point"
 msgstr "Numărul de etape agregate într-un singur punct de date"
+
+#, fuzzy
+msgid "Number of stopped Podman containers"
+msgstr "Numărul de containere"
 
 msgid "Number of stuck tasks"
 msgstr "Numărul de sarcini blocate"
@@ -51532,6 +51596,14 @@ msgstr "Resursele din pod: Spațiul de nume"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Resursele din pod: StatefulSet"
+
+#, fuzzy
+msgid "Podman Containers"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman Disk Usage"
+msgstr "Utilizarea discului"
 
 #, fuzzy
 msgid "Podman Monitoring"
@@ -59179,6 +59251,43 @@ msgstr ""
 "Framework, ci a Robotmk; o suită Robot poate avea o stare internă OK, dar o "
 "stare WARN în Checkmk."
 
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of containers"
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of images"
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active containers."
+msgstr "Nivelul superior pentru numărul total de conexiuni"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active images."
+msgstr "Nivelul superior pentru numărul total de mesaje livrate"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of containers."
+msgstr "Nivelul superior pentru numărul total de conexiuni"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of images."
+msgstr "Nivelul superior pentru numărul total de mesaje"
+
+#, fuzzy
+msgid ""
+"Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman containers."
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr ""
 
@@ -64798,6 +64907,12 @@ msgstr "%s a încetat să mai bată din aripi"
 #, python-format
 msgid "The %s you are trying to delete does not exist."
 msgstr "%s pe care încercați să îl ștergeți nu există."
+
+msgid ""
+"The 'Manage All Scheduled Reports' permission is required to send scheduled "
+"reports via email to other users. Without this permission, only the report "
+"owner will receive the report."
+msgstr ""
 
 #, fuzzy
 msgid "The 'notification number' value must be greater than 0."
@@ -74921,6 +75036,14 @@ msgid "Thresholds for quality of time"
 msgstr "Praguri pentru calitatea timpului"
 
 #, fuzzy
+msgid "Thresholds for the podman containers service."
+msgstr "Eșecuri ale serviciului de lansare a îmbinării"
+
+#, fuzzy
+msgid "Thresholds for the podman disk usage services."
+msgstr "Niveluri superioare pentru dimensiunea de utilizare a jurnalelor"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Praguri privind numărul de mesaje"
 
@@ -76128,8 +76251,20 @@ msgstr "Numărul total de mesaje niveluri superioare"
 msgid "Total non-compliant devices"
 msgstr "Total dispozitive neconforme"
 
+#, fuzzy
+msgid "Total number of Podman containers"
+msgstr "Numărul total de instanțe"
+
 msgid "Total number of Sessions"
 msgstr "Numărul total de sesiuni"
+
+#, fuzzy
+msgid "Total number of active containers upper levels"
+msgstr "Numărul total de fragmente active nivel superior"
+
+#, fuzzy
+msgid "Total number of active images upper levels"
+msgstr "Numărul total de fragmente active nivel superior"
 
 msgid "Total number of active primary shards lower level"
 msgstr "Numărul total de fragmente primare active la nivelul inferior"
@@ -76169,6 +76304,10 @@ msgstr "Numărul total de colectori în stat a oprit nivelul inferior"
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Numărul total de colectori în stat a oprit nivelul superior"
 
+#, fuzzy
+msgid "Total number of containers upper levels"
+msgstr "Numărul total de colecții nivel superior"
+
 msgid "Total number of data nodes lower level"
 msgstr "Numărul total de noduri de date nivel inferior"
 
@@ -76195,6 +76334,10 @@ msgstr "Numărul total de lucrări eșuate"
 
 msgid "Total number of hosts"
 msgstr "Numărul total de gazde"
+
+#, fuzzy
+msgid "Total number of images upper levels"
+msgstr "Numărul total de numere nivel superior"
 
 #, fuzzy
 msgid "Total number of incoming AC get cache request hits"
@@ -76311,6 +76454,14 @@ msgstr "Timeout total de interogare"
 #, fuzzy
 msgid "Total read latency"
 msgstr "Latența de citire a discului"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman containers"
+msgstr "Numele de gazdă utilizat pentru containere"
+
+#, fuzzy
+msgid "Total reclaimable size upper levels"
+msgstr "Dimensiunea totală a fișierului jurnal: Niveluri superioare absolute"
 
 msgid "Total reservation utilization"
 msgstr "Utilizarea totală a rezervărilor"
@@ -78270,6 +78421,14 @@ msgstr "Total sesiuni"
 msgid "Total size"
 msgstr "Dimensiunea totală"
 
+#, fuzzy
+msgid "Total size of Podman containers"
+msgstr "Dimensiunea totală a fișierelor jurnal"
+
+#, fuzzy
+msgid "Total size of Podman images"
+msgstr "Dimensiunea totală a fișierelor jurnal"
+
 msgid "Total size of all indexes for the collection"
 msgstr "Dimensiunea totală a tuturor indexurilor pentru colecție"
 
@@ -78284,6 +78443,10 @@ msgstr "Dimensiunea totală a sitului"
 
 msgid "Total size of the oplog"
 msgstr "Dimensiunea totală a oplogului"
+
+#, fuzzy
+msgid "Total size upper levels"
+msgstr "Containere niveluri superioare"
 
 msgid "Total slots"
 msgstr "Total sloturi"
@@ -79319,6 +79482,10 @@ msgstr "Unic"
 
 msgid "Unique ID"
 msgstr "ID unic"
+
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "Există deja un pachet de reguli cu acest ID."
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
@@ -80497,6 +80664,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Upper threshold on open files and sockets"
+msgstr "Niveluri superioare pentru prize de rețea deschise"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman containers"
 msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 #, fuzzy
@@ -85875,6 +86046,11 @@ msgstr "Nu aveți voie să recunoașteți lucrări"
 msgid "You are not allowed to activate changes of other users."
 msgstr "Nu aveți voie să activați modificările altor utilizatori."
 
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "Nu aveți voie să modificați bara laterală."
+
 msgid "You are not allowed to change the sidebar."
 msgstr "Nu aveți voie să modificați bara laterală."
 
@@ -90331,6 +90507,9 @@ msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 
 msgid "{checkname} - {check['title']}"
+msgstr ""
+
+msgid "{property.capitalize()} Podman containers"
 msgstr ""
 
 #, python-brace-format

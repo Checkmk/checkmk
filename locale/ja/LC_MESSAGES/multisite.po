@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-28 05:00+0000\n"
+"PO-Revision-Date: 2025-07-30 06:45+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -12620,13 +12620,11 @@ msgstr "クリーンアップメッセージ"
 msgid "Cleanup of working directory"
 msgstr "ワーキングディレクトリのクリーンアップ"
 
-#, fuzzy
 msgid "Cleanup parameters"
-msgstr "デフォルトパラメータ"
+msgstr "クリーンアップパラメータ"
 
-#, fuzzy
 msgid "Cleanup strategy"
-msgstr "クリーンアップメッセージ"
+msgstr "クリーンアップストラテジー"
 
 msgid "Cleanup when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
@@ -17056,13 +17054,11 @@ msgstr "デフォルト(%s)"
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
 
-#, fuzzy
 msgid "Default State"
 msgstr "デフォルトステータス"
 
-#, fuzzy
 msgid "Default cleanup parameters"
-msgstr "デフォルトパラメータ"
+msgstr "デフォルトクリーンアップパラメータ"
 
 msgid "Default color"
 msgstr "デフォルトの色"
@@ -17886,9 +17882,9 @@ msgstr "削除されたホスト %s"
 msgid "Deleted notification parameter %d"
 msgstr "通知パラメータ#%dを削除"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deleted notification rule #%s"
-msgstr "通知ルール#%dを削除"
+msgstr "通知ルール#%sを削除"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -19009,6 +19005,9 @@ msgstr "ディスク遅延"
 
 msgid "Disk Read Latency"
 msgstr "ディスク読み取りレイテンシ"
+
+msgid "Disk Usage"
+msgstr "Disk 使用量"
 
 msgid "Disk Utilization"
 msgstr "ディスク使用率"
@@ -21282,9 +21281,9 @@ msgstr "出力電力"
 msgid "Electrical power"
 msgstr "電力"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
-msgstr "電気張力（%）正常値"
+msgstr "電気張力の正常値に対する割合（%）"
 
 msgid "Electrical voltage"
 msgstr "電圧"
@@ -24698,9 +24697,8 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "特定のSIDの場合"
 
-#, fuzzy
 msgid "For specific hosts"
-msgstr "特定のSIDの場合"
+msgstr "特定のホストの場合"
 
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
@@ -26302,9 +26300,8 @@ msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Window
 msgid "HW/SW Inventory history"
 msgstr "HW/SWインベントリ履歴"
 
-#, fuzzy
 msgid "HW/SW Inventory housekeeping"
-msgstr "HW/SWインベントリプラグイン"
+msgstr "HW/SWインベントリ ハウスキーピング"
 
 msgid "HW/SW Inventory plug-in"
 msgstr "HW/SWインベントリプラグイン"
@@ -29353,9 +29350,8 @@ msgstr "湿度レベル"
 msgid "Humidity levels for devices with a single sensor"
 msgstr "単一センサー搭載機器の湿度レベル"
 
-#, fuzzy
 msgid "Hyper-V Integration Services Status"
-msgstr "Hyper-Vサーバー:VMの状態"
+msgstr "Hyper-V統合サービスの状態"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-Vサーバー:VMの状態"
@@ -37077,6 +37073,10 @@ msgstr "予想されるインターフェイスの下限"
 msgid "Lower threshold on open files and sockets"
 msgstr "開いているファイルとソケットのしきい値を低くする"
 
+#, python-brace-format
+msgid "Lower threshold on {property} number of Podman containers"
+msgstr "Podman コンテナの {property} 番号の下限値を下げます"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr "メール転送スレッドの閾値を低く設定する"
 
@@ -37997,9 +37997,8 @@ msgstr "ホストグループと一致する"
 msgid "Match host labels"
 msgstr "ホストラベルに一致"
 
-#, fuzzy
 msgid "Match host names"
-msgstr "ホストラベルに一致"
+msgstr "ホスト名に一致"
 
 msgid "Match host tags"
 msgstr "ホストタグと一致する"
@@ -41452,9 +41451,8 @@ msgstr "データソースが定義されていません。"
 msgid "No default values can be set for condition choices."
 msgstr "条件の選択肢にデフォルト値を設定することはできません。"
 
-#, fuzzy
 msgid "No defaults"
-msgstr "デフォルトです"
+msgstr "デフォルトではありません"
 
 msgid "No deprecated rule sets found."
 msgstr "非推奨のルールセットは見つかりませんでした。"
@@ -41731,6 +41729,9 @@ msgid ""
 msgstr ""
 "ホスト %s のそのようなインベントリ・ツリーはありません。このホストへのアクセ"
 "ス権がない可能性もあります。"
+
+msgid "No such value"
+msgstr "そのような値はありません"
 
 msgid "No tags defined"
 msgstr "タグの定義なし"
@@ -42709,6 +42710,12 @@ msgstr "PINGプローブの数"
 msgid "Number of Placement Groups"
 msgstr "配置グループの数"
 
+msgid "Number of Podman containers"
+msgstr "Podmamコンテナの数"
+
+msgid "Number of Podman images"
+msgstr "Podmanイメージの数"
+
 msgid "Number of Resources"
 msgstr "リソースの数"
 
@@ -42729,6 +42736,12 @@ msgstr "アクセスポイントの数"
 
 msgid "Number of active Plugs"
 msgstr "アクティブなプラグの数"
+
+msgid "Number of active Podman containers"
+msgstr "Podmanコンテナのアクティブなインスタンス数"
+
+msgid "Number of active Podman images"
+msgstr "アクティブなPodman イメージの数"
 
 msgid "Number of active instances"
 msgstr "アクティブなインスタンス数"
@@ -42812,6 +42825,9 @@ msgstr "メッセージの後のコンテキスト行数"
 msgid "Number of context lines before messages"
 msgstr "メッセージの前のコンテキスト行の数"
 
+msgid "Number of created Podman containers"
+msgstr "作成されたPodmanコンテナの数"
+
 msgid "Number of critical alerts"
 msgstr "重要なアラートの数"
 
@@ -42839,6 +42855,9 @@ msgstr "データポイントの数"
 msgid "Number of days from now (single page)"
 msgstr "今からの日数(1ページ)"
 
+msgid "Number of dead Podman containers"
+msgstr "なくなったPodmanコンテナの数"
+
 msgid "Number of delayed unassigned shards"
 msgstr "遅延した未割り当てのシャードの数"
 
@@ -42865,6 +42884,12 @@ msgstr "定義された期間の上位レベルのアラート数"
 
 msgid "Number of evicted keys"
 msgstr "退去キー数"
+
+msgid "Number of exited Podman containers"
+msgstr "終了したPodmanコンテナの数"
+
+msgid "Number of exited Podman containers (non-zero)"
+msgstr "Podman コンテナの終了した数（0以外）"
 
 msgid "Number of expected messages"
 msgstr "予想されるメッセージの数"
@@ -43041,6 +43066,9 @@ msgstr "開いているファイル記述子の数"
 msgid "Number of packets"
 msgstr "パケット数"
 
+msgid "Number of paused Podman containers"
+msgstr "一時停止中のPodmanコンテナの数"
+
 msgid "Number of pending clients in a blocking call"
 msgstr "ブロッキングコールで保留中のクライアント数"
 
@@ -43086,6 +43114,9 @@ msgstr "拒否された接続リクエスト数"
 msgid "Number of relocating shards"
 msgstr "リローケイトするシャードの数"
 
+msgid "Number of removing Podman containers"
+msgstr "削除されるPodmanコンテナの数"
+
 msgid "Number of requests"
 msgstr "リクエスト数"
 
@@ -43101,6 +43132,9 @@ msgstr "リターンコードクラス4xx（クライアントエラー）のリ
 msgid "Number of requests with return code class 5xx (server error)"
 msgstr "リターンコードクラス5xx（サーバーエラー）のリクエスト数"
 
+msgid "Number of restarting Podman containers"
+msgstr "再起動するPodmanコンテナの数"
+
 msgid "Number of retries"
 msgstr "再試行回数"
 
@@ -43112,6 +43146,9 @@ msgstr "スペシャルエージェントによる再試行の回数。"
 
 msgid "Number of rule groups"
 msgstr "ルールグループの数"
+
+msgid "Number of running Podman containers"
+msgstr "稼動中のPodmanコンテナの数"
 
 msgid "Number of running containers"
 msgstr "稼働中のコンテナ数"
@@ -43224,6 +43261,9 @@ msgstr "スタンバイパスの数"
 
 msgid "Number of steps aggregated into one data point"
 msgstr "1つのデータポイントに集約されたステップ数"
+
+msgid "Number of stopped Podman containers"
+msgstr "停止したPodmanコンテナの数"
 
 msgid "Number of stuck tasks"
 msgstr "スタックしたタスクの数"
@@ -48050,6 +48090,12 @@ msgstr "Podリソース: 名前空間"
 msgid "Pod resources: StatefulSet"
 msgstr "Podリソース: ステータスフルセット"
 
+msgid "Podman Containers"
+msgstr "Podman コンテナ"
+
+msgid "Podman Disk Usage"
+msgstr "Podman Disk 使用量"
+
 msgid "Podman Monitoring"
 msgstr "Podman監視"
 
@@ -50509,9 +50555,8 @@ msgstr "選択したホストのTLS登録を削除する"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "存在する場合は、Windowsファイアウォール構成を削除します"
 
-#, fuzzy
 msgid "Remove abandoned host files older than"
-msgstr "設定日以上経過したホストファイルをクリーンアップする"
+msgstr "設定日より古い放置されたホストファイルを削除"
 
 msgid "Remove acknowledgments"
 msgstr "承認を削除する"
@@ -50546,16 +50591,14 @@ msgstr "明示的な設定を削除する"
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
 
-#, fuzzy
 msgid "Remove history entries older than"
-msgstr "設定期間経過したファイルを削除する"
+msgstr "設定日より古い履歴のエントリを削除"
 
 msgid "Remove history entries right after the"
-msgstr ""
+msgstr "履歴のエントリを直後に削除する"
 
-#, fuzzy
 msgid "Remove history entries which meet the following conditions"
-msgstr "次のパーティションに関する情報を取得する"
+msgstr "以下の条件を満たす履歴エントリを削除"
 
 msgid "Remove name"
 msgstr "名前を削除する"
@@ -55208,6 +55251,34 @@ msgstr ""
 "トが PASS という結果で終了しても、実行時間が超過していれば、Robotmk のテスト"
 "サービスやプランサービスの状態は OK 以外になる可能性があります。"
 
+msgid "Sets the upper levels for the Podman disk usage of containers"
+msgstr "コンテナのPodmanディスク使用量の上限を設定する"
+
+msgid "Sets the upper levels for the Podman disk usage of images"
+msgstr "イメージのPodmanディスク使用量の上限を設定する"
+
+msgid "Sets the upper levels for the total number of active containers."
+msgstr "アクティブなコンテナの総数の上限を設定します。"
+
+msgid "Sets the upper levels for the total number of active images."
+msgstr "アクティブなイメージの総数の上限を設定します。"
+
+msgid "Sets the upper levels for the total number of containers."
+msgstr "コンテナの総数の上限を設定します。"
+
+msgid "Sets the upper levels for the total number of images."
+msgstr "イメージの総数の上限を設定します。"
+
+msgid ""
+"Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Podman コンテナの総再利用可能サイズの上限を設定します。"
+
+msgid "Sets the upper levels for the total size of Podman containers."
+msgstr "Podman コンテナの総サイズの上限を設定します。"
+
+msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Podman イメージの総サイズの上限を設定します。"
+
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "アラートのユーザーを設定します。リクエスト所有者の表示名。"
 
@@ -57050,9 +57121,8 @@ msgstr "スペアディスク"
 msgid "Special Agent"
 msgstr "特別なエージェント"
 
-#, fuzzy
 msgid "Special States"
-msgstr "運用状況"
+msgstr "特別なステート"
 
 msgid "Specific Mappings"
 msgstr "特定のマッピング"
@@ -60475,6 +60545,16 @@ msgstr "%s はフラッピングを止めました"
 msgid "The %s you are trying to delete does not exist."
 msgstr "削除しようとしている %s は存在しません。"
 
+msgid ""
+"The 'Manage All Scheduled Reports' permission is required to send scheduled "
+"reports via email to other users. Without this permission, only the report "
+"owner will receive the report."
+msgstr ""
+"スケジュールされたレポートをメールで他のユーザーに送信するには、'Manage All "
+"Scheduled "
+"Reports'（すべてのスケジュールされたレポートを管理する）の権限が必要です。こ"
+"の権限がない場合、レポートの所有者だけがレポートを受け取ります。"
+
 msgid "The 'notification number' value must be greater than 0."
 msgstr "通知番号は０より大きくなければなりません。"
 
@@ -61928,11 +62008,9 @@ msgstr ""
 "コネクションはこの特定のフォルダにホストを作成します。一度作成されたホストは"
 "別のフォルダに移動することができます。"
 
-#, fuzzy
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
-msgstr ""
-"サイトidは、文字、数字、およびアンダースコアのみで設定する必要があります。"
+msgstr "接続IDは、文字、数字、およびアンダースコアのみで設定する必要があります。"
 
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
@@ -62256,16 +62334,15 @@ msgstr ""
 "エンジンIDは<tt>80000001020304</tt>のような16進文字列で設定する必要がありま"
 "す。"
 
-#, fuzzy
 msgid ""
 "The entire cache is searched in the interval configured here for old values "
 "which shall be written to disk. This only concerns RRD files to which "
 "updates have stopped, so setting this to a high value is acceptable in most "
 "cases."
 msgstr ""
-"ここで設定された間隔でキャッシュ全体が検索され、ディスクに書き込まれる古い値"
-"が検索されます。これは、更新が停止したRRDファイルにのみ関係するため、ほとんど"
-"の場合、これを高い値に設定することは許容されます。"
+"ここで設定された間隔でキャッシュ全体が古い値を検索しディスクに書き込まれます"
+"。これは、更新が停止したRRDファイルにのみに関係するため、ほとんどの場合、これ"
+"を高い値に設定しても問題ありません。"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -63157,12 +63234,10 @@ msgstr "大文字と小文字は区別されません。"
 msgid "The match is case sensitive."
 msgstr "大文字と小文字を区別して実行されます。"
 
-#, fuzzy
 msgid ""
 "The match type is defined by the discovery rule set type of the check plug-"
 "in."
-msgstr ""
-"マッチタイプは、チェックプラグインのディスカバリルールセットタイプによって定"
+msgstr "マッチタイプは、チェックプラグインのディスカバリルールセットタイプによって定"
 "義されます。"
 
 #, python-format
@@ -63447,17 +63522,16 @@ msgstr ""
 msgid "The name of the OMD site to check the status for"
 msgstr "ステータスを確認するOMDサイトの名前"
 
-#, fuzzy
 msgid ""
 "The name of the aggregation to fetch. It will be added to the service name. "
 "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> "
 "within this parameter to make them be replaced by the hosts values. The "
 "aggregation name is the title in the top-level-rule of your BI pack."
 msgstr ""
-"フェッチする集計の名前。サービスの説明に追加されます。このパラメーター内で "
-"<tt>$HOSTADDRESS$</tt> や <tt>$HOSTNAME$</tt> などのマクロを使用して、それら"
-"をホスト値に置き換えることができます。集約名は、BIパックの最上位ルールのタイ"
-"トルです。"
+"フェッチする集計の名前。サービス名に追加されます。このパラメーター内で "
+"<tt>$HOSTADDRESS$</tt> や <tt>$HOSTNAME$</tt> "
+"などのマクロを使用して、それらをホスト値に置き換えることができます。集約名は"
+"、BIパックの最上位ルールのタイトルです。"
 
 msgid "The name of the application server"
 msgstr "アプリケーションサーバーの名前"
@@ -63856,9 +63930,9 @@ msgstr ""
 "ニットコンポ―ネント）の最後のチェック間隔での様々な使用率（CPU、メモリなど）"
 "の集約としての全体的な使用率"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The package is now enabled, but could not be activated on this site: %s"
-msgstr "パッケージは有効ですが、このサイトにはインストールできませんでした:%s"
+msgstr "パッケージは有効ですが、このサイトでは有効化できませんでした:%s"
 
 msgid "The package is now enabled, but not active on this site:"
 msgstr "パッケージは有効ですが、このサイトにはインストールできませんでした:"
@@ -64489,7 +64563,6 @@ msgstr ""
 "セクション名はアイテム名に含まれます。単一ファイル集計を使用するには、セク"
 "ション名に<tt>%s</tt>を追加します。"
 
-#, fuzzy
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
@@ -64497,9 +64570,11 @@ msgid ""
 "central site version is 2.3.0 and this setting will be removed in a future "
 "version."
 msgstr ""
-"選択した自動化ユーザーには、エージェントの登録とダウンロードの権限が必要で"
-"す。ユーザーが選択されていない場合、エージェントベーカリーは[自動化]自動化"
-"ユーザーを見つけようとします。"
+"選択された自動化ユーザーには、エージェントの登録とダウンロードの権限が必要で"
+"す。ユーザーが選択されていない場合、Agent "
+"Bakeryは「automation」という名前の自動化ユーザーを検索します。<br>この設定は"
+"、中央サイトバージョンが2.3.0の場合にのみ適用され、今後のバージョンで削除され"
+"る予定です。"
 
 msgid ""
 "The selected automation user needs rights for registering new agents. I.e., "
@@ -64693,9 +64768,8 @@ msgstr ""
 "サイトIDは、インスタンスの正確な名前と同一(大文字と小文字を区別)である必要が"
 "あります。"
 
-#, fuzzy
 msgid "The site certificate"
-msgstr "証明書を確認する"
+msgstr "サイト証明書"
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -64951,27 +65025,25 @@ msgid ""
 msgstr ""
 "wait_duration_msのしきい値。上記で設定したデフォルトの状態を上書きします。"
 
-#, fuzzy
 msgid ""
 "The time interval for the execution of a sequence of plans must be longer "
 "than the sum of all total plan runtime limits. The total runtime limit of a "
 "plan is calculated as follows: <tt>limit_per_attempt x (1 + "
 "max_number_of_reexecutions).</tt>"
 msgstr ""
-"実行グループが実行される間隔。この間隔は、個々の計画の実行時間制限の合計より"
-"も大きくなければなりません。プランの実行時間制限は以下のように計算される:"
-"<tt>limit_per_attempt x (1 + max_number_of_reexecutions)</tt>"
+"計画のシーケンスの実行にかかる時間間隔は、すべての計画の実行時間制限の合計よ"
+"りも長くなければなりません。計画の総実行時間制限は次のように計算されます："
+"<tt>limit_per_attempt × (1 + max_number_of_reexecutions)</tt>"
 
-#, fuzzy
 msgid ""
 "The time interval for the execution of a sequence of plans. This interval "
 "must be longer than the sum of all total plan runtime limits. The total "
 "runtime limit of a plan is calculated as follows: <tt>limit_per_attempt x (1 "
 "+ max_number_of_reexecutions).</tt>"
 msgstr ""
-"実行グループが実行される間隔。この間隔は、個々の計画の実行時間制限の合計より"
-"も大きくなければなりません。プランの実行時間制限は以下のように計算される:"
-"<tt>limit_per_attempt x (1 + max_number_of_reexecutions)</tt>"
+"計画のシーケンスの実行にかかる時間間隔は、すべての計画の実行時間制限の合計よ"
+"りも長くなければなりません。計画の総実行時間制限は次のように計算されます："
+"<tt>limit_per_attempt × (1 + max_number_of_reexecutions)</tt>"
 
 msgid "The time interval statistical data is saved to disk"
 msgstr "時間間隔の統計データはディスクに保存されます"
@@ -65091,22 +65163,19 @@ msgid ""
 msgstr ""
 "アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s > %s"
 
-#, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
-msgstr "ファイルは有効なキーファイルのようには見えません。"
+msgstr "アップロードされたファイルは有効なZIPファイルではありません。"
 
-#, fuzzy
 msgid "The uploaded file is not a valid tar.gz file."
-msgstr "ファイルは有効なキーファイルのようには見えません。"
+msgstr "アップロードされたファイルは有効なtar.gzファイルではありません。"
 
 msgid "The uploaded file must be either a tar.gz or a zip file."
 msgstr ""
 "アップロードするファイルは、tar.gz または zip ファイルのいずれかでなければな"
 "りません。"
 
-#, fuzzy
 msgid "The upper bound must be greater than 0."
-msgstr "タイムアウトは1秒以上でなければなりません。"
+msgstr "上限は0より大きくなければなりません。"
 
 #, no-python-format
 msgid ""
@@ -65157,13 +65226,12 @@ msgstr "ログイン用のユーザー。"
 msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr "%sコネクタによって返されるユーザー名は文字列(%r)タイプではありません。"
 
-#, fuzzy
 msgid ""
 "The username that should be used for accessing the Gerrit API. Must have (at "
 "least) read permissions."
-msgstr ""
-"GraylogAPIへのアクセスに使用する必要があるユーザー名。少なくとも読み取り権限"
-"が必要です。"
+msgstr "Gerrit API "
+"にアクセスするために使用するユーザー名。読み取り権限（少なくとも）が必要です"
+"。"
 
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
@@ -65251,9 +65319,9 @@ msgstr "値がdict型ではありません。"
 msgid "The value is not valid: '%s'"
 msgstr "このルールの値は無効です。: '%s'"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The value must be of type MetricSpec, but it has type %s"
-msgstr "値はstr型である必要がありますが、%s型です"
+msgstr "値はMetricSpec型でなければなりませんが、現在は%s型です"
 
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
@@ -65398,13 +65466,11 @@ msgstr ""
 "href=\"wato.py?mode=notification_parameters&method=%s\">作成</a>してくださ"
 "い。"
 
-#, fuzzy
 msgid "There are no passwords defined for this selection yet."
-msgstr "この選択にはまだ要素が定義されていません。"
+msgstr "この選択項目には、まだパスワードが設定されていません。"
 
-#, fuzzy
 msgid "There are no rule sets or rules matching your search."
-msgstr "検索に一致するルールセットやルールはありません。"
+msgstr "検索条件に一致するルールセットまたはルールは存在しません。"
 
 msgid "There are no rules defined in this folder."
 msgstr "このフォルダにはルールが定義されていません。"
@@ -65415,15 +65481,14 @@ msgstr "このセットで定義されているルールはありません。"
 msgid "There are no time periods defined yet."
 msgstr "まだ定義されている期間はありません。"
 
-#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
 "activation or ask your colleagues to activate these changes on their own."
 msgstr ""
-"同僚によって行われたいくつかの変更があり、これらの変更をアクティブ化すること"
-"を確認していません。続行するには、アクティブ化を確認するか、同僚にこれらの変"
-"更を自分でアクティブ化するように依頼する必要があります。"
+"他のユーザーにより行われたいくつかの変更がありますが、確認していないためアク"
+"ティブ化されていません。処理を続行するには、あなたがアクティブ化を確認するか"
+"、そのユーザーに変更を自身でアクティブ化するよう依頼する必要があります。"
 
 msgid ""
 "There are some changes made by your colleagues that you can not activate "
@@ -65474,9 +65539,9 @@ msgstr "復元するセットアップのスナップショットはありませ
 msgid "There is no backup job configured"
 msgstr "構成されたバックアップジョブはありません"
 
-#, fuzzy, python-format
+#, python-format
 msgid "There is no graph plug-in with the id '%s'"
-msgstr "idが \"%s\" のグラフテンプレートはありません"
+msgstr "IDが \"%s\" のグラフプラグインはありません"
 
 msgid "There is no manpage for this check."
 msgstr "このチェックのマンページはありません。"
@@ -65689,13 +65754,12 @@ msgstr ""
 "これらのサービスは検出されていますが、ルールセット<i>無効なサービス</i>または"
 "<i>無効なチェック</i>でルールを作成することにより無効になっています。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "These services are mapped to a cluster host by a rule in one of the rule "
 "sets <i>%s</i> or <i>%s</i>."
-msgstr ""
-"これらのサービスは、ルールセット <i>%s</i> または <i>%s</i>いずれかのルールに"
-"よってクラスタホストにマッピングされます。"
+msgstr "これらのサービスは、ルールセット <i>%s</i> または "
+"<i>%s</i>いずれかのルールによってクラスタホストにマッピングされます。"
 
 msgid ""
 "These services are provided by so called active checks. You can also "
@@ -65921,7 +65985,6 @@ msgstr "このIDはすでに存在します。"
 msgid "This ID can not be used as custom attribute"
 msgstr "このIDはカスタム属性として使用できません"
 
-#, fuzzy
 msgid "This ID is already being used by another connection."
 msgstr "このIDはすでに他の接続で使用されています。"
 
@@ -70187,6 +70250,14 @@ msgid "Thresholds for quality of time"
 msgstr "時間のクオリティに対するしきい値"
 
 #, fuzzy
+msgid "Thresholds for the podman containers service."
+msgstr "ジョインランチャーサービスの失敗"
+
+#, fuzzy
+msgid "Thresholds for the podman disk usage services."
+msgstr "ログ使用の上位レベル"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "メッセージ数のしきい値"
 
@@ -71347,8 +71418,20 @@ msgstr "合計メッセージ数の上位レベル"
 msgid "Total non-compliant devices"
 msgstr "非対応機器合計"
 
+#, fuzzy
+msgid "Total number of Podman containers"
+msgstr "インスタンス総数"
+
 msgid "Total number of Sessions"
 msgstr "セッションの総数"
+
+#, fuzzy
+msgid "Total number of active containers upper levels"
+msgstr "アクティブなシャード総数の上位レベル"
+
+#, fuzzy
+msgid "Total number of active images upper levels"
+msgstr "アクティブなシャード総数の上位レベル"
 
 msgid "Total number of active primary shards lower level"
 msgstr "アクティブなプライマリシャード総数の下位レベル"
@@ -71386,6 +71469,10 @@ msgstr "停止状態のコレクター総数の下位レベル"
 msgid "Total number of collectors in state stopped upper level"
 msgstr "停止状態のコレクター総数の上位レベル"
 
+#, fuzzy
+msgid "Total number of containers upper levels"
+msgstr "コレクション総数の上位レベル"
+
 msgid "Total number of data nodes lower level"
 msgstr "データノード総数の下位レベル"
 
@@ -71412,6 +71499,10 @@ msgstr "失敗したジョブの総数"
 
 msgid "Total number of hosts"
 msgstr "ホストの総数"
+
+#, fuzzy
+msgid "Total number of images upper levels"
+msgstr "問題総数の上位レベル"
 
 msgid "Total number of incoming AC get cache request hits"
 msgstr "ACキャッシュリクエスト ミスの総数"
@@ -71525,6 +71616,14 @@ msgstr "合計クエリタイムアウト"
 #, fuzzy
 msgid "Total read latency"
 msgstr "ディスク読み取りの待ち時間"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman containers"
+msgstr "コンテナに使用されるホスト名"
+
+#, fuzzy
+msgid "Total reclaimable size upper levels"
+msgstr "ログファイルの合計サイズ: 絶対上位レベル"
 
 msgid "Total reservation utilization"
 msgstr "合計メモリ使用率"
@@ -73063,6 +73162,14 @@ msgstr "合計セッション"
 msgid "Total size"
 msgstr "全体の大きさ"
 
+#, fuzzy
+msgid "Total size of Podman containers"
+msgstr "ログファイルの合計サイズ"
+
+#, fuzzy
+msgid "Total size of Podman images"
+msgstr "ログファイルの合計サイズ"
+
 msgid "Total size of all indexes for the collection"
 msgstr "コレクションの全てのインデックスの合計サイズ"
 
@@ -73077,6 +73184,10 @@ msgstr "サイトの合計サイズ"
 
 msgid "Total size of the oplog"
 msgstr "oplogの合計サイズ"
+
+#, fuzzy
+msgid "Total size upper levels"
+msgstr "コンテナの上位レベル"
 
 msgid "Total slots"
 msgstr "合計スロット"
@@ -74074,6 +74185,10 @@ msgstr "一意"
 
 msgid "Unique ID"
 msgstr "一意のID"
+
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "接続ID%sはすでに存在します。"
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "Checkmk内でホスト上のインスタンスを識別するために使用される一意のID。"
@@ -75213,6 +75328,10 @@ msgstr "ログの使用サイズの上位パーセントレベル"
 
 #, fuzzy
 msgid "Upper threshold on open files and sockets"
+msgstr "オープンネットワークソケットの上位レベル"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman containers"
 msgstr "オープンネットワークソケットの上位レベル"
 
 #, fuzzy
@@ -80367,6 +80486,11 @@ msgstr "あなたはwerkを認めることは許されていません"
 msgid "You are not allowed to activate changes of other users."
 msgstr "他のユーザーの変更をアクティブ化することは許可されていません。"
 
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "サイドバーを変更することはできません。"
+
 msgid "You are not allowed to change the sidebar."
 msgstr "サイドバーを変更することはできません。"
 
@@ -82916,7 +83040,7 @@ msgid "default (all normal AWS regions)"
 msgstr "デフォルト(すべての通常のAWSリージョン)"
 
 msgid "defensive (both conditions must match)"
-msgstr ""
+msgstr "守備的（両方の条件が一致する必要があります）"
 
 msgid "degraded"
 msgstr "劣化"
@@ -84691,6 +84815,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 
 msgid "{checkname} - {check['title']}"
 msgstr "{checkname} - {check['title']}"
+
+msgid "{property.capitalize()} Podman containers"
+msgstr "{property.capitalize()} Podman コンテナ"
 
 #, python-brace-format
 msgid "{region} ({id_})"

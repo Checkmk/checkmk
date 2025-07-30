@@ -20242,6 +20242,10 @@ msgstr "Schijflatentie"
 msgid "Disk Read Latency"
 msgstr "Schijf lees latentie"
 
+#, fuzzy
+msgid "Disk Usage"
+msgstr "Schijfgebruik"
+
 msgid "Disk Utilization"
 msgstr "Schijfgebruik"
 
@@ -39575,6 +39579,10 @@ msgstr "Lijst van verwachte logfiles"
 msgid "Lower threshold on open files and sockets"
 msgstr ""
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman containers"
+msgstr "Definieer lagere niveaus voor het aantal totale containers"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -44528,6 +44536,10 @@ msgstr ""
 "toegang hebt tot deze host."
 
 #, fuzzy
+msgid "No such value"
+msgstr "No such file"
+
+#, fuzzy
 msgid "No tags defined"
 msgstr "Geen datasource gedefinieerd."
 
@@ -45571,6 +45583,14 @@ msgstr "Aantal PING-sondes"
 msgid "Number of Placement Groups"
 msgstr "Aantal regelgroepen"
 
+#, fuzzy
+msgid "Number of Podman containers"
+msgstr "Aantal containers"
+
+#, fuzzy
+msgid "Number of Podman images"
+msgstr "Aantal knooppunten"
+
 msgid "Number of Resources"
 msgstr "Aantal middelen"
 
@@ -45591,6 +45611,14 @@ msgid "Number of access points"
 msgstr "Aantal toegangspunten"
 
 msgid "Number of active Plugs"
+msgstr "Aantal actieve stekkers"
+
+#, fuzzy
+msgid "Number of active Podman containers"
+msgstr "Aantal actieve instanties"
+
+#, fuzzy
+msgid "Number of active Podman images"
 msgstr "Aantal actieve stekkers"
 
 msgid "Number of active instances"
@@ -45677,6 +45705,10 @@ msgstr "Aantal contextregels na berichten"
 msgid "Number of context lines before messages"
 msgstr "Aantal contextregels vóór berichten"
 
+#, fuzzy
+msgid "Number of created Podman containers"
+msgstr "Aantal lopende containers"
+
 msgid "Number of critical alerts"
 msgstr "Aantal kritische signaleringen"
 
@@ -45706,6 +45738,10 @@ msgstr "Aantal datapunten"
 msgid "Number of days from now (single page)"
 msgstr "Aantal dagen vanaf nu (enkele pagina)"
 
+#, fuzzy
+msgid "Number of dead Podman containers"
+msgstr "Aantal containers"
+
 msgid "Number of delayed unassigned shards"
 msgstr "Aantal vertraagde niet-toegewezen scherven"
 
@@ -45732,6 +45768,14 @@ msgstr "Aantal gebeurtenissen in bepaalde tijdspanne bovenste niveau"
 
 msgid "Number of evicted keys"
 msgstr "Aantal uitgezette sleutels"
+
+#, fuzzy
+msgid "Number of exited Podman containers"
+msgstr "Aantal lopende containers"
+
+#, fuzzy
+msgid "Number of exited Podman containers (non-zero)"
+msgstr "Aantal lopende containers"
 
 msgid "Number of expected messages"
 msgstr "Aantal verwachte berichten"
@@ -45922,6 +45966,10 @@ msgstr "Verwacht aantal open file descriptors"
 msgid "Number of packets"
 msgstr "Aantal pakketten"
 
+#, fuzzy
+msgid "Number of paused Podman containers"
+msgstr "Aantal lopende containers"
+
 msgid "Number of pending clients in a blocking call"
 msgstr "Aantal wachtende cliënten in een blokkerende oproep"
 
@@ -45968,6 +46016,10 @@ msgstr "Aantal afgewezen verbindingsverzoeken"
 msgid "Number of relocating shards"
 msgstr "Aantal verhuizende scherven"
 
+#, fuzzy
+msgid "Number of removing Podman containers"
+msgstr "Aantal lopende containers"
+
 msgid "Number of requests"
 msgstr "Aantal verzoeken"
 
@@ -45983,6 +46035,10 @@ msgstr "Aantal verzoeken met retourcode klasse 4xx (cliëntfout)"
 msgid "Number of requests with return code class 5xx (server error)"
 msgstr "Aantal verzoeken met retourcode klasse 5xx (serverfout)"
 
+#, fuzzy
+msgid "Number of restarting Podman containers"
+msgstr "Aantal lopende containers"
+
 msgid "Number of retries"
 msgstr "Aantal herhalingen"
 
@@ -45994,6 +46050,10 @@ msgstr ""
 
 msgid "Number of rule groups"
 msgstr "Aantal regelgroepen"
+
+#, fuzzy
+msgid "Number of running Podman containers"
+msgstr "Aantal lopende containers"
 
 msgid "Number of running containers"
 msgstr "Aantal lopende containers"
@@ -46111,6 +46171,10 @@ msgstr "Aantal stand-by paden"
 
 msgid "Number of steps aggregated into one data point"
 msgstr "Aantal stappen samengevoegd tot één gegevenspunt"
+
+#, fuzzy
+msgid "Number of stopped Podman containers"
+msgstr "Aantal containers"
 
 msgid "Number of stuck tasks"
 msgstr "Aantal vastgelopen taken"
@@ -51442,6 +51506,14 @@ msgstr "Pod hulpbronnen: Namespace"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Pod bronnen: StatefulSet"
+
+#, fuzzy
+msgid "Podman Containers"
+msgstr "# Containers"
+
+#, fuzzy
+msgid "Podman Disk Usage"
+msgstr "Schijfgebruik"
 
 #, fuzzy
 msgid "Podman Monitoring"
@@ -59037,6 +59109,43 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of containers"
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of images"
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active containers."
+msgstr "Bovenste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active images."
+msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of containers."
+msgstr "Bovenste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of images."
+msgstr "Bovenste niveau voor totaal aantal berichten"
+
+#, fuzzy
+msgid ""
+"Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman containers."
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr ""
 
@@ -64635,6 +64744,12 @@ msgstr "De %s is gestopt met wapperen"
 #, python-format
 msgid "The %s you are trying to delete does not exist."
 msgstr "De %s die u probeert te verwijderen bestaat niet."
+
+msgid ""
+"The 'Manage All Scheduled Reports' permission is required to send scheduled "
+"reports via email to other users. Without this permission, only the report "
+"owner will receive the report."
+msgstr ""
 
 #, fuzzy
 msgid "The 'notification number' value must be greater than 0."
@@ -74647,6 +74762,14 @@ msgid "Thresholds for quality of time"
 msgstr "Drempels voor de kwaliteit van de tijd"
 
 #, fuzzy
+msgid "Thresholds for the podman containers service."
+msgstr "Storingen van de join launcher service"
+
+#, fuzzy
+msgid "Thresholds for the podman disk usage services."
+msgstr "Bovenste niveaus voor de loggebruiksgrootte"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Drempels voor aantal berichten"
 
@@ -75855,8 +75978,20 @@ msgstr "Totaal aantal berichten bovenste niveaus"
 msgid "Total non-compliant devices"
 msgstr "Totaal niet-conforme apparaten"
 
+#, fuzzy
+msgid "Total number of Podman containers"
+msgstr "Totaal aantal gevallen"
+
 msgid "Total number of Sessions"
 msgstr "Totaal aantal sessies"
+
+#, fuzzy
+msgid "Total number of active containers upper levels"
+msgstr "Totaal aantal actieve scherven bovenste niveau"
+
+#, fuzzy
+msgid "Total number of active images upper levels"
+msgstr "Totaal aantal actieve scherven bovenste niveau"
 
 msgid "Total number of active primary shards lower level"
 msgstr "Totaal aantal actieve primaire scherven lager niveau"
@@ -75894,6 +76029,10 @@ msgstr "Totaal aantal inzamelaars in staat gestopt lager niveau"
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Totaal aantal inzamelaars in staat gestopt bovenste niveau"
 
+#, fuzzy
+msgid "Total number of containers upper levels"
+msgstr "Totaal aantal collecties bovenste niveau"
+
 msgid "Total number of data nodes lower level"
 msgstr "Totaal aantal dataknooppunten lager niveau"
 
@@ -75920,6 +76059,10 @@ msgstr "Totaal aantal mislukte opdrachten"
 
 msgid "Total number of hosts"
 msgstr "Totaal aantal hosts"
+
+#, fuzzy
+msgid "Total number of images upper levels"
+msgstr "Totaal aantal uitgiften op hoger niveau"
 
 #, fuzzy
 msgid "Total number of incoming AC get cache request hits"
@@ -76036,6 +76179,14 @@ msgstr "Totale query timeout"
 #, fuzzy
 msgid "Total read latency"
 msgstr "Schijf lees latentie"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman containers"
+msgstr "Hostnaam gebruikt voor containers"
+
+#, fuzzy
+msgid "Total reclaimable size upper levels"
+msgstr "Totale grootte logbestand: Absolute bovenste niveaus"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -78070,6 +78221,14 @@ msgstr "Totaal aantal sessies"
 msgid "Total size"
 msgstr "Totale omvang"
 
+#, fuzzy
+msgid "Total size of Podman containers"
+msgstr "Totale grootte van logbestanden"
+
+#, fuzzy
+msgid "Total size of Podman images"
+msgstr "Totale grootte van logbestanden"
+
 msgid "Total size of all indexes for the collection"
 msgstr "De totale grootte van alle indexen voor de verzameling"
 
@@ -78084,6 +78243,10 @@ msgstr "Totale omvang van het terrein"
 
 msgid "Total size of the oplog"
 msgstr "Totale grootte van het oplog"
+
+#, fuzzy
+msgid "Total size upper levels"
+msgstr "Containers bovenste niveaus"
 
 msgid "Total slots"
 msgstr "Totaal aantal slots"
@@ -79121,6 +79284,10 @@ msgstr "Unieke ID"
 
 msgid "Unique ID"
 msgstr "Unieke ID"
+
+#, fuzzy, python-format
+msgid "Unique ID %s already exists."
+msgstr "Een regelpakket met deze ID bestaat al."
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
@@ -80302,6 +80469,10 @@ msgstr "Maximale percentuele niveaus voor de omvang van het loggebruik"
 
 #, fuzzy
 msgid "Upper threshold on open files and sockets"
+msgstr "Bovenste niveaus voor open netwerk sockets"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman containers"
 msgstr "Bovenste niveaus voor open netwerk sockets"
 
 #, fuzzy
@@ -85672,6 +85843,11 @@ msgid "You are not allowed to activate changes of other users."
 msgstr ""
 "Het is u niet toegestaan wijzigingen van andere gebruikers te activeren."
 
+#, fuzzy
+msgid ""
+"You are not allowed to change the command line of a custom check plug-in."
+msgstr "U mag de zijbalk niet veranderen."
+
 msgid "You are not allowed to change the sidebar."
 msgstr "U mag de zijbalk niet veranderen."
 
@@ -90111,6 +90287,9 @@ msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 
 msgid "{checkname} - {check['title']}"
+msgstr ""
+
+msgid "{property.capitalize()} Podman containers"
 msgstr ""
 
 #, python-brace-format

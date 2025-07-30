@@ -352,19 +352,23 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users, now: datetime) -> None:
-    logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(profiles))}")
+def _update_users(changed_users: Sequence[UserId], all_users: Users, now: datetime) -> None:
+    logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(all_users))}")
 
-    write_contacts_and_users_file(profiles)
+    write_contacts_and_users_file(all_users)
 
     # Execute user connector save hooks
-    hook_save(profiles)
+    hook_save(all_users)
 
-    updated_profiles = _add_custom_macro_attributes(profiles)
+    all_users_with_custom_macros = _add_custom_macro_attributes(all_users)
 
-    _save_auth_serials(updated_profiles)
-    _save_user_profiles(updated_profiles, now)
-    _cleanup_old_user_profiles(updated_profiles)
+    _save_auth_serials(all_users_with_custom_macros)
+    changed_users_with_custom_macros = {
+        changed_user: all_users_with_custom_macros[changed_user] for changed_user in changed_users
+    }
+    # profiles are saved per user, so we need to save the changed users only
+    _save_user_profiles(changed_users_with_custom_macros, now)
+    _cleanup_old_user_profiles(all_users_with_custom_macros)
 
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected
@@ -376,7 +380,15 @@ def save_users(profiles: Users, now: datetime) -> None:
     load_users.cache_clear()  # type: ignore[attr-defined]
 
     # Call the users_saved hook
-    hooks.call("users-saved", updated_profiles)
+    hooks.call("users-saved", all_users_with_custom_macros)
+
+
+def save_users(profiles: Users, now: datetime) -> None:
+    _update_users(list(profiles.keys()), profiles, now)
+
+
+def update_user(changed_user: UserId, all_users: Users, now: datetime) -> None:
+    _update_users([changed_user], all_users, now)
 
 
 # TODO: Isn't this needed only while generating the contacts.mk?

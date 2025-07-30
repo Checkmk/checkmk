@@ -1365,10 +1365,9 @@ class SupportsMonitoringSearchEngine(Protocol):
 
 
 # TODO: rework monitoring search façade to return correct payload for unified search.
-class MonitoringSearchEngine(QuicksearchManager):
-    @override
+class MonitoringSearchEngine:
     def __init__(self) -> None:
-        super().__init__(raise_too_many_rows_error=False)
+        self._legacy_engine = QuicksearchManager(raise_too_many_rows_error=False)
 
     def search(self, query: str) -> SearchResultsByTopic:
-        return super().generate_results(query)
+        return self._legacy_engine.generate_results(query)

@@ -648,17 +648,16 @@ class SupportsSetupSearchEngine(Protocol):
 
 
 # TODO: rework setup search façade to return correct payload for unified search.
-class SetupSearchEngine(IndexSearcher):
-    @override
+class SetupSearchEngine:
     def __init__(
         self,
         redis_client: redis.Redis[str] | None = None,
         permissions_handler: PermissionsHandler | None = None,
     ) -> None:
-        rc = redis_client or get_redis_client()
-        ph = permissions_handler or PermissionsHandler()
-        super().__init__(redis_client=rc, permissions_handler=ph)
+        self._legacy_engine = IndexSearcher(
+            redis_client=redis_client or get_redis_client(),
+            permissions_handler=permissions_handler or PermissionsHandler(),
+        )
 
-    @override
     def search(self, query: str, config: Config) -> SearchResultsByTopic:
-        return super().search(query, config)
+        return self._legacy_engine.search(query, config)

@@ -14,6 +14,7 @@ from .engines.setup import SupportsSetupSearchEngine
 from .sorting import get_sorter
 from .type_defs import (
     Provider,
+    SearchEngine,
     SortType,
     UnifiedSearchResult,
     UnifiedSearchResultCounts,
@@ -29,9 +30,11 @@ class UnifiedSearch:
         self,
         setup_engine: SupportsSetupSearchEngine,
         monitoring_engine: SupportsMonitoringSearchEngine,
+        customize_engine: SearchEngine,
     ) -> None:
         self._setup_engine = setup_engine
         self._monitoring_engine = monitoring_engine
+        self._customize_engine = customize_engine
 
     def search(
         self,
@@ -43,15 +46,19 @@ class UnifiedSearch:
     ) -> UnifiedSearchResult:
         setup_results_by_topic: SearchResultsByTopic = []
         monitoring_results_by_topic: SearchResultsByTopic = []
+        customize_results: list[UnifiedSearchResultItem] = []
 
         match provider:
             case "setup":
                 setup_results_by_topic = self._setup_engine.search(query, config)
             case "monitoring":
                 monitoring_results_by_topic = self._monitoring_engine.search(query)
+            case "customize":
+                customize_results.extend(self._customize_engine.search(query))
             case _:
                 setup_results_by_topic = self._setup_engine.search(query, config)
                 monitoring_results_by_topic = self._monitoring_engine.search(query)
+                customize_results.extend(self._customize_engine.search(query))
 
         setup_results = list(
             itertools.chain.from_iterable(
@@ -65,13 +72,14 @@ class UnifiedSearch:
                 for topic, results in monitoring_results_by_topic
             )
         )
-        search_results = [*setup_results, *monitoring_results]
+        search_results = [*setup_results, *monitoring_results, *customize_results]
         get_sorter(sort_type, query)(search_results)
 
         result_counts = UnifiedSearchResultCounts(
             total=len(search_results),
             setup=len(setup_results),
             monitoring=len(monitoring_results),
+            customize=len(customize_results),
         )
 
         return UnifiedSearchResult(results=search_results, counts=result_counts)

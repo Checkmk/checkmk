@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Literal, Protocol, TypedDict
 
 # NOTE: intentionally not using the `type` syntax because it's not possible to use
 # `typing.get_args` to dynamically check if string is type at runtime.
-Provider = Literal["setup", "monitoring"]
+Provider = Literal["setup", "monitoring", "customize"]
 SortType = Literal["alphabetic", "weighted_index"]
 
 
@@ -42,6 +42,7 @@ class UnifiedSearchResultCountsSerialized(TypedDict):
     total: int
     setup: int
     monitoring: int
+    customize: int
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,12 +50,14 @@ class UnifiedSearchResultCounts:
     total: int
     setup: int
     monitoring: int
+    customize: int
 
     def serialize(self) -> UnifiedSearchResultCountsSerialized:
         return {
             "total": self.total,
             "setup": self.setup,
             "monitoring": self.monitoring,
+            "customize": self.customize,
         }
 
 
@@ -62,3 +65,7 @@ class UnifiedSearchResultCounts:
 class UnifiedSearchResult:
     results: Iterable[UnifiedSearchResultItem]
     counts: UnifiedSearchResultCounts
+
+
+class SearchEngine(Protocol):
+    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]: ...

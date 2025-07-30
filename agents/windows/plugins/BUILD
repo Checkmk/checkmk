@@ -35,6 +35,7 @@ TO_SIGN_SCRIPTS = [
         outs = ["signed/" + n],
         cmd_bat = "$(execpath scripts/signer.bat) $< $@",
         executable = True,
+        target_compatible_with = ["@platforms//os:windows"],
         tools = ["scripts/signer.bat"],
         visibility = ["//visibility:public"],
     )

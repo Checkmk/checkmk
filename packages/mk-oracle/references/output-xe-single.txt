@@ -1,0 +1,754 @@
+<<<oracle_instance>>>
+<<<oracle_sessions>>>
+<<<oracle_logswitches>>>
+<<<oracle_undostat>>>
+<<<oracle_recovery_area>>>
+<<<oracle_processes>>>
+<<<oracle_recovery_status>>>
+<<<oracle_longactivesessions>>>
+<<<oracle_dataguard_stats>>>
+<<<oracle_performance>>>
+<<<oracle_locks>>>
+<<<oracle_systemparameter>>>
+<<<oracle_tablespaces>>>
+<<<oracle_rman>>>
+<<<oracle_jobs>>>
+<<<oracle_resumable>>>
+<<<oracle_iostats>>>
+<<<oracle_instance>>>
+<<<oracle_processes>>>
+<<<oracle_asm_diskgroup>>>
+<<<oracle_instance:sep(124)>>>
+XE|21.3.0.0.0|OPEN|ALLOWED|STOPPED|1496|3073262481|NOARCHIVELOG|PRIMARY|NO|XE|030220252229|TRUE|0||0|||||-1|0|oralinux810.myguest.virtualbox.org
+XE|21.3.0.0.0|OPEN|ALLOWED|STOPPED|1496|3073262481|NOARCHIVELOG|PRIMARY|NO|XE|030220252229|TRUE|2|PDB$SEED|1566296130|READ ONLY|NO|770703360|ENABLED|1483|8192|oralinux810.myguest.virtualbox.org
+XE|21.3.0.0.0|OPEN|ALLOWED|STOPPED|1496|3073262481|NOARCHIVELOG|PRIMARY|NO|XE|030220252229|TRUE|3|XEPDB1|465330812|READ WRITE|NO|870318080|ENABLED|1481|8192|oralinux810.myguest.virtualbox.org
+<<<oracle_sessions:sep(124)>>>
+XE.CDB$ROOT|1
+XE.XEPDB1|1
+XE|61|472|-1
+<<<oracle_logswitches:sep(124)>>>
+XE|0
+<<<oracle_undostat:sep(124)>>>
+XE|160|1|900|0|0
+<<<oracle_recovery_area:sep(124)>>>
+<<<oracle_processes:sep(124)>>>
+XE|66|300
+<<<oracle_recovery_status:sep(124)>>>
+XE|XE|PRIMARY|READ WRITE|1|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE|XE|PRIMARY|READ WRITE|3|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE|XE|PRIMARY|READ WRITE|4|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE.PDB$SEED|XE|PRIMARY|READ WRITE|5|1738622368|15188406|ONLINE||NO|2616894|NOT ACTIVE|0
+XE.PDB$SEED|XE|PRIMARY|READ WRITE|6|1738622368|15188406|ONLINE||NO|2616894|NOT ACTIVE|0
+XE|XE|PRIMARY|READ WRITE|7|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE.PDB$SEED|XE|PRIMARY|READ WRITE|8|1738622368|15188406|ONLINE||NO|2616894|NOT ACTIVE|0
+XE.XEPDB1|XE|PRIMARY|READ WRITE|9|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE.XEPDB1|XE|PRIMARY|READ WRITE|10|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE.XEPDB1|XE|PRIMARY|READ WRITE|11|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+XE.XEPDB1|XE|PRIMARY|READ WRITE|12|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0
+<<<oracle_longactivesessions:sep(124)>>>
+XE.CDB$ROOT||||||||
+XE.XEPDB1||||||||
+XE||||||||
+<<<oracle_dataguard_stats:sep(124)>>>
+<<<oracle_performance:sep(124)>>>
+XE.CDB$ROOT|sys_time_model|DB CPU|16
+XE.XEPDB1|sys_time_model|DB CPU|5
+XE.XEPDB1|sys_time_model|DB time|17
+XE.CDB$ROOT|sys_time_model|DB time|38
+XE.CDB$ROOT|sys_wait_class|Administrative|103|0|103|0
+XE.CDB$ROOT|sys_wait_class|Application|2|0|2|0
+XE.CDB$ROOT|sys_wait_class|Commit|45|44|40|38
+XE.CDB$ROOT|sys_wait_class|Concurrency|93|170|29|74
+XE.CDB$ROOT|sys_wait_class|Configuration|1|22|1|22
+XE.CDB$ROOT|sys_wait_class|Network|1766|0|1691|0
+XE.CDB$ROOT|sys_wait_class|Other|9249|3138|5376|479
+XE.CDB$ROOT|sys_wait_class|Scheduler|130|1097|37|239
+XE.CDB$ROOT|sys_wait_class|System I/O|13853|1220|6971|113
+XE.CDB$ROOT|sys_wait_class|User I/O|8251|2219|4840|887
+XE.PDB$SEED|sys_wait_class|Administrative|102|0|102|0
+XE.PDB$SEED|sys_wait_class|Concurrency|1|0|1|0
+XE.PDB$SEED|sys_wait_class|Other|9|3|9|3
+XE.PDB$SEED|sys_wait_class|System I/O|250|0|250|0
+XE.PDB$SEED|sys_wait_class|User I/O|617|103|612|103
+XE.XEPDB1|sys_wait_class|Administrative|110|0|102|0
+XE.XEPDB1|sys_wait_class|Concurrency|104|288|32|179
+XE.XEPDB1|sys_wait_class|Other|1914|73|1105|2
+XE.XEPDB1|sys_wait_class|Scheduler|79|823|28|324
+XE.XEPDB1|sys_wait_class|System I/O|551|13|456|4
+XE.XEPDB1|sys_wait_class|User I/O|4555|1360|2823|692
+XE.CDB$ROOT|buffer_pool_statistics|DEFAULT|20121|25027|345233|19206|1592|0|17
+XE.CDB$ROOT|SGA_info|Fixed SGA Size|9691632
+XE.CDB$ROOT|SGA_info|Redo Buffers|2887680
+XE.CDB$ROOT|SGA_info|Buffer Cache Size|335544320
+XE.CDB$ROOT|SGA_info|In-Memory Area Size|0
+XE.CDB$ROOT|SGA_info|Shared Pool Size|507510784
+XE.CDB$ROOT|SGA_info|Large Pool Size|4194304
+XE.CDB$ROOT|SGA_info|Java Pool Size|0
+XE.CDB$ROOT|SGA_info|Streams Pool Size|0
+XE.CDB$ROOT|SGA_info|Shared IO Pool Size|37748736
+XE.CDB$ROOT|SGA_info|Data Transfer Cache Size|0
+XE.CDB$ROOT|SGA_info|Granule Size|4194304
+XE.CDB$ROOT|SGA_info|Maximum SGA Size|859828720
+XE.CDB$ROOT|SGA_info|Startup overhead in Shared Pool|202099360
+XE.CDB$ROOT|SGA_info|Free SGA Memory Available|0
+XE.CDB$ROOT|librarycache|SQL AREA|12297|8158|87660|79684|216|351
+XE.CDB$ROOT|librarycache|TABLE/PROCEDURE|19248|14576|34156|29412|49|0
+XE.CDB$ROOT|librarycache|BODY|749|632|1984|1860|2|0
+XE.CDB$ROOT|librarycache|TRIGGER|162|151|158|149|0|0
+XE.CDB$ROOT|librarycache|INDEX|431|261|337|167|0|0
+XE.CDB$ROOT|librarycache|CLUSTER|1135|1107|1243|1216|0|0
+XE.CDB$ROOT|librarycache|PIPE|3|2|3|2|0|0
+XE.CDB$ROOT|librarycache|DIRECTORY|14|10|15|10|0|0
+XE.CDB$ROOT|librarycache|QUEUE|6|4|8|4|0|0
+XE.CDB$ROOT|librarycache|RULESET|1|0|3|2|0|0
+XE.CDB$ROOT|librarycache|SUBSCRIPTION|4|0|4|0|0|0
+XE.CDB$ROOT|librarycache|EDITION|534|532|1062|1057|0|0
+XE.CDB$ROOT|librarycache|DBLINK|89|88|0|0|0|0
+XE.CDB$ROOT|librarycache|OBJECT ID|66|0|0|0|0|0
+XE.CDB$ROOT|librarycache|SCHEMA|7321|7291|0|0|0|0
+XE.CDB$ROOT|librarycache|DBINSTANCE|3|0|0|0|0|0
+XE.CDB$ROOT|librarycache|SQL AREA STATS|2870|123|2870|123|0|0
+XE.CDB$ROOT|librarycache|ACCOUNT_STATUS|132|131|0|0|0|0
+XE.CDB$ROOT|librarycache|SQL AREA BUILD|2860|830|0|0|0|0
+XE.CDB$ROOT|librarycache|PDB|471|467|0|0|0|0
+XE.CDB$ROOT|librarycache|AUDIT POLICY|5084|5080|5084|5080|0|0
+XE.CDB$ROOT|librarycache|PDBOPER|6|0|0|0|0|0
+XE.CDB$ROOT|librarycache|FED APP|31|30|31|30|0|0
+XE.CDB$ROOT|librarycache|APP STATE|12|11|0|0|0|0
+XE.CDB$ROOT|librarycache|CMP|108|0|108|0|0|0
+XE.CDB$ROOT|PGA_info|MGA allocated (under PGA)|0|bytes
+XE.CDB$ROOT|PGA_info|PGA memory freed back to OS|562888704|bytes
+XE.CDB$ROOT|PGA_info|aggregate PGA auto target|71202816|bytes
+XE.CDB$ROOT|PGA_info|aggregate PGA target parameter|285212672|bytes
+XE.CDB$ROOT|PGA_info|bytes processed|366033920|bytes
+XE.CDB$ROOT|PGA_info|cache hit percentage|100|percent
+XE.CDB$ROOT|PGA_info|extra bytes read/written|0|bytes
+XE.CDB$ROOT|PGA_info|global memory bound|57041920|bytes
+XE.CDB$ROOT|PGA_info|max processes count|106|
+XE.CDB$ROOT|PGA_info|maximum DGA allocated|18891776|bytes
+XE.CDB$ROOT|PGA_info|maximum MGA allocated|0|bytes
+XE.CDB$ROOT|PGA_info|maximum PGA allocated|534518784|bytes
+XE.CDB$ROOT|PGA_info|maximum PGA used for auto workareas|26042368|bytes
+XE.CDB$ROOT|PGA_info|maximum PGA used for manual workareas|0|bytes
+XE.CDB$ROOT|PGA_info|over allocation count|6|
+XE.CDB$ROOT|PGA_info|process count|66|
+XE.CDB$ROOT|PGA_info|recompute count (total)|495|
+XE.CDB$ROOT|PGA_info|total PGA allocated|236143616|bytes
+XE.CDB$ROOT|PGA_info|total PGA inuse|209637376|bytes
+XE.CDB$ROOT|PGA_info|total PGA used for auto workareas|0|bytes
+XE.CDB$ROOT|PGA_info|total PGA used for manual workareas|0|bytes
+XE.CDB$ROOT|PGA_info|total freeable PGA memory|2228224|bytes
+XE.XEPDB1|PGA_info|MGA allocated (under PGA)|0|bytes
+XE.XEPDB1|PGA_info|PGA memory freed back to OS|34603008|bytes
+XE.XEPDB1|PGA_info|aggregate PGA auto target|0|bytes
+XE.XEPDB1|PGA_info|aggregate PGA target parameter|0|bytes
+XE.XEPDB1|PGA_info|bytes processed|139876352|bytes
+XE.XEPDB1|PGA_info|cache hit percentage|100|percent
+XE.XEPDB1|PGA_info|extra bytes read/written|0|bytes
+XE.XEPDB1|PGA_info|global memory bound|57041920|bytes
+XE.XEPDB1|PGA_info|max processes count|4|
+XE.XEPDB1|PGA_info|maximum DGA allocated|24576|bytes
+XE.XEPDB1|PGA_info|maximum MGA allocated|0|bytes
+XE.XEPDB1|PGA_info|maximum PGA allocated|77968384|bytes
+XE.XEPDB1|PGA_info|maximum PGA used for auto workareas|26042368|bytes
+XE.XEPDB1|PGA_info|maximum PGA used for manual workareas|0|bytes
+XE.XEPDB1|PGA_info|over allocation count|0|
+XE.XEPDB1|PGA_info|process count|1|
+XE.XEPDB1|PGA_info|recompute count (total)|495|
+XE.XEPDB1|PGA_info|total PGA allocated|4633600|bytes
+XE.XEPDB1|PGA_info|total PGA inuse|3422208|bytes
+XE.XEPDB1|PGA_info|total PGA used for auto workareas|0|bytes
+XE.XEPDB1|PGA_info|total PGA used for manual workareas|0|bytes
+XE.XEPDB1|PGA_info|total freeable PGA memory|196608|bytes
+<<<oracle_locks:sep(124)>>>
+XE.CDB$ROOT|||||||||||||||||
+XE.XEPDB1|||||||||||||||||
+XE|||||||||||||||||
+<<<oracle_systemparameter:sep(124)>>>
+XE|lock_name_space||TRUE
+XE|processes|300|FALSE
+XE|sessions|472|TRUE
+XE|timed_statistics|TRUE|TRUE
+XE|timed_os_statistics|0|TRUE
+XE|resource_limit|TRUE|TRUE
+XE|license_max_sessions|0|TRUE
+XE|license_sessions_warning|0|TRUE
+XE|long_module_action|TRUE|TRUE
+XE|standby_db_preserve_states|NONE|TRUE
+XE|instance_abort_delay_time|0|TRUE
+XE|cpu_count|2|TRUE
+XE|cpu_min_count|2|TRUE
+XE|instance_groups||TRUE
+XE|event||TRUE
+XE|sga_max_size|820M|TRUE
+XE|use_large_pages|TRUE|TRUE
+XE|pre_page_sga|TRUE|TRUE
+XE|shared_memory_address|0|TRUE
+XE|hi_shared_memory_address|0|TRUE
+XE|lock_sga|FALSE|TRUE
+XE|processor_group_name||TRUE
+XE|allow_group_access_to_sga|FALSE|TRUE
+XE|sga_min_size|0|TRUE
+XE|shared_pool_size|0|TRUE
+XE|large_pool_size|0|TRUE
+XE|java_pool_size|0|TRUE
+XE|streams_pool_size|0|TRUE
+XE|shared_pool_reserved_size|25375539|TRUE
+XE|java_soft_sessionspace_limit|0|TRUE
+XE|java_max_sessionspace_size|0|TRUE
+XE|pga_aggregate_limit|2G|TRUE
+XE|spfile|/opt/oracle/dbs/spfileXE.ora|TRUE
+XE|instance_type|RDBMS|TRUE
+XE|ignore_session_set_param_errors||TRUE
+XE|uniform_log_timestamp_format|TRUE|TRUE
+XE|nls_language|AMERICAN|FALSE
+XE|nls_territory|AMERICA|FALSE
+XE|nls_sort||TRUE
+XE|nls_date_language||TRUE
+XE|nls_date_format||TRUE
+XE|nls_currency||TRUE
+XE|nls_numeric_characters||TRUE
+XE|nls_iso_currency||TRUE
+XE|nls_calendar||TRUE
+XE|nls_time_format||TRUE
+XE|nls_timestamp_format||TRUE
+XE|nls_time_tz_format||TRUE
+XE|nls_timestamp_tz_format||TRUE
+XE|nls_dual_currency||TRUE
+XE|nls_comp|BINARY|TRUE
+XE|nls_length_semantics|BYTE|TRUE
+XE|nls_nchar_conv_excp|FALSE|TRUE
+XE|disk_asynch_io|TRUE|TRUE
+XE|tape_asynch_io|TRUE|TRUE
+XE|dbwr_io_slaves|0|TRUE
+XE|backup_tape_io_slaves|FALSE|TRUE
+XE|fileio_network_adapters||TRUE
+XE|filesystemio_options|none|TRUE
+XE|dnfs_batch_size|4096|TRUE
+XE|clonedb|FALSE|TRUE
+XE|instant_restore|FALSE|TRUE
+XE|http_proxy||TRUE
+XE|ssl_wallet||TRUE
+XE|ofs_threads|4|TRUE
+XE|resource_manager_cpu_allocation|0|TRUE
+XE|resource_manager_plan||TRUE
+XE|resource_manager_cpu_scope|INSTANCE_ONLY|TRUE
+XE|db_performance_profile||TRUE
+XE|max_iops|0|TRUE
+XE|max_mbps|0|TRUE
+XE|max_idle_time|0|TRUE
+XE|max_idle_blocker_time|0|TRUE
+XE|hybrid_read_only|FALSE|TRUE
+XE|read_only|FALSE|TRUE
+XE|cluster_interconnects||TRUE
+XE|file_mapping|FALSE|TRUE
+XE|max_datapump_jobs_per_pdb|100|TRUE
+XE|max_datapump_parallel_per_job|50|TRUE
+XE|service_names|XE|TRUE
+XE|threaded_execution|FALSE|TRUE
+XE|clonedb_dir||TRUE
+XE|enable_dnfs_dispatcher|FALSE|TRUE
+XE|dbnest_enable|NONE|TRUE
+XE|dbnest_pdb_fs_conf||TRUE
+XE|kafka_config_file||TRUE
+XE|gcs_server_processes|0|TRUE
+XE|active_instance_count||TRUE
+XE|instance_mode|READ-WRITE|TRUE
+XE|sga_target|820M|FALSE
+XE|memory_target|0|TRUE
+XE|memory_max_target|0|TRUE
+XE|control_files|/opt/oracle/oradata/XE/control01.ctl, /opt/oracle/oradata/XE/control02.ctl|FALSE
+XE|db_file_name_convert||TRUE
+XE|log_file_name_convert||TRUE
+XE|control_file_record_keep_time|7|TRUE
+XE|db_block_buffers|0|TRUE
+XE|db_block_checksum|TYPICAL|TRUE
+XE|db_ultra_safe|OFF|TRUE
+XE|db_block_size|8192|FALSE
+XE|db_cache_size|0|TRUE
+XE|db_2k_cache_size|0|TRUE
+XE|db_4k_cache_size|0|TRUE
+XE|db_8k_cache_size|0|TRUE
+XE|db_16k_cache_size|0|TRUE
+XE|db_32k_cache_size|0|TRUE
+XE|db_keep_cache_size|0|TRUE
+XE|db_recycle_cache_size|0|TRUE
+XE|memoptimize_pool_size|0|TRUE
+XE|db_big_table_cache_percent_target|0|TRUE
+XE|encrypt_new_tablespaces|CLOUD_ONLY|TRUE
+XE|tablespace_encryption_default_algorithm|AES128|TRUE
+XE|db_writer_processes|1|TRUE
+XE|buffer_pool_keep||TRUE
+XE|buffer_pool_recycle||TRUE
+XE|db_flash_cache_file||TRUE
+XE|db_flash_cache_size|0|TRUE
+XE|db_cache_advice|ON|TRUE
+XE|compatible|21.0.0|FALSE
+XE|log_archive_dest_1||TRUE
+XE|log_archive_dest_2||TRUE
+XE|log_archive_dest_3||TRUE
+XE|log_archive_dest_4||TRUE
+XE|log_archive_dest_5||TRUE
+XE|log_archive_dest_6||TRUE
+XE|log_archive_dest_7||TRUE
+XE|log_archive_dest_8||TRUE
+XE|log_archive_dest_9||TRUE
+XE|log_archive_dest_10||TRUE
+XE|log_archive_dest_11||TRUE
+XE|log_archive_dest_12||TRUE
+XE|log_archive_dest_13||TRUE
+XE|log_archive_dest_14||TRUE
+XE|log_archive_dest_15||TRUE
+XE|log_archive_dest_16||TRUE
+XE|log_archive_dest_17||TRUE
+XE|log_archive_dest_18||TRUE
+XE|log_archive_dest_19||TRUE
+XE|log_archive_dest_20||TRUE
+XE|log_archive_dest_21||TRUE
+XE|log_archive_dest_22||TRUE
+XE|log_archive_dest_23||TRUE
+XE|log_archive_dest_24||TRUE
+XE|log_archive_dest_25||TRUE
+XE|log_archive_dest_26||TRUE
+XE|log_archive_dest_27||TRUE
+XE|log_archive_dest_28||TRUE
+XE|log_archive_dest_29||TRUE
+XE|log_archive_dest_30||TRUE
+XE|log_archive_dest_31||TRUE
+XE|log_archive_dest_state_1|enable|TRUE
+XE|log_archive_dest_state_2|enable|TRUE
+XE|log_archive_dest_state_3|enable|TRUE
+XE|log_archive_dest_state_4|enable|TRUE
+XE|log_archive_dest_state_5|enable|TRUE
+XE|log_archive_dest_state_6|enable|TRUE
+XE|log_archive_dest_state_7|enable|TRUE
+XE|log_archive_dest_state_8|enable|TRUE
+XE|log_archive_dest_state_9|enable|TRUE
+XE|log_archive_dest_state_10|enable|TRUE
+XE|log_archive_dest_state_11|enable|TRUE
+XE|log_archive_dest_state_12|enable|TRUE
+XE|log_archive_dest_state_13|enable|TRUE
+XE|log_archive_dest_state_14|enable|TRUE
+XE|log_archive_dest_state_15|enable|TRUE
+XE|log_archive_dest_state_16|enable|TRUE
+XE|log_archive_dest_state_17|enable|TRUE
+XE|log_archive_dest_state_18|enable|TRUE
+XE|log_archive_dest_state_19|enable|TRUE
+XE|log_archive_dest_state_20|enable|TRUE
+XE|log_archive_dest_state_21|enable|TRUE
+XE|log_archive_dest_state_22|enable|TRUE
+XE|log_archive_dest_state_23|enable|TRUE
+XE|log_archive_dest_state_24|enable|TRUE
+XE|log_archive_dest_state_25|enable|TRUE
+XE|log_archive_dest_state_26|enable|TRUE
+XE|log_archive_dest_state_27|enable|TRUE
+XE|log_archive_dest_state_28|enable|TRUE
+XE|log_archive_dest_state_29|enable|TRUE
+XE|log_archive_dest_state_30|enable|TRUE
+XE|log_archive_dest_state_31|enable|TRUE
+XE|log_archive_start|FALSE|TRUE
+XE|log_archive_dest||TRUE
+XE|log_archive_duplex_dest||TRUE
+XE|log_archive_min_succeed_dest|1|TRUE
+XE|fal_client||TRUE
+XE|fal_server||TRUE
+XE|log_archive_trace|0|TRUE
+XE|data_guard_sync_latency|0|TRUE
+XE|log_archive_config||TRUE
+XE|log_archive_format|%t_%s_%r.dbf|TRUE
+XE|data_guard_max_io_time|240|TRUE
+XE|data_guard_max_longio_time|240|TRUE
+XE|redo_transport_user||TRUE
+XE|log_archive_max_processes|4|TRUE
+XE|log_buffer|2636K|TRUE
+XE|log_checkpoint_interval|0|TRUE
+XE|log_checkpoint_timeout|1800|TRUE
+XE|archive_lag_target|0|TRUE
+XE|db_files|200|TRUE
+XE|db_file_multiblock_read_count|73|TRUE
+XE|read_only_open_delayed|FALSE|TRUE
+XE|cluster_database|FALSE|TRUE
+XE|db_create_file_dest||TRUE
+XE|db_create_online_log_dest_1||TRUE
+XE|db_create_online_log_dest_2||TRUE
+XE|db_create_online_log_dest_3||TRUE
+XE|db_create_online_log_dest_4||TRUE
+XE|db_create_online_log_dest_5||TRUE
+XE|db_recovery_file_dest||TRUE
+XE|db_recovery_file_dest_size|0|TRUE
+XE|standby_file_management|MANUAL|TRUE
+XE|db_unrecoverable_scn_tracking|TRUE|TRUE
+XE|thread|0|TRUE
+XE|enabled_PDBs_on_standby|*|TRUE
+XE|fast_start_io_target|0|TRUE
+XE|fast_start_mttr_target|0|TRUE
+XE|log_checkpoints_to_alert|FALSE|TRUE
+XE|db_lost_write_protect|NONE|TRUE
+XE|recovery_parallelism|0|TRUE
+XE|enable_goldengate_replication|FALSE|TRUE
+XE|inmemory_adg_enabled|TRUE|TRUE
+XE|db_flashback_retention_target|1440|TRUE
+XE|data_transfer_cache_size|0|TRUE
+XE|enable_imc_with_mira|FALSE|TRUE
+XE|adg_account_info_tracking|LOCAL|TRUE
+XE|adg_redirect_dml|FALSE|TRUE
+XE|dml_locks|2076|TRUE
+XE|replication_dependency_tracking|TRUE|TRUE
+XE|transactions|519|TRUE
+XE|transactions_per_rollback_segment|5|TRUE
+XE|temp_undo_enabled|FALSE|TRUE
+XE|rollback_segments||TRUE
+XE|undo_management|AUTO|TRUE
+XE|undo_tablespace|UNDOTBS1|FALSE
+XE|undo_retention|900|TRUE
+XE|fast_start_parallel_rollback|LOW|TRUE
+XE|resumable_timeout|0|TRUE
+XE|instance_number|0|TRUE
+XE|heat_map|OFF|TRUE
+XE|inmemory_size|0|TRUE
+XE|inmemory_xmem_size|0|TRUE
+XE|inmemory_prefer_xmem_memcompress||TRUE
+XE|inmemory_prefer_xmem_priority||TRUE
+XE|allow_rowid_column_type|FALSE|TRUE
+XE|db_block_checking|FALSE|TRUE
+XE|recyclebin|on|TRUE
+XE|db_index_compression_inheritance|NONE|TRUE
+XE|db_securefile|PREFERRED|TRUE
+XE|inmemory_clause_default||TRUE
+XE|inmemory_force|DEFAULT|TRUE
+XE|inmemory_query|ENABLE|TRUE
+XE|inmemory_expressions_usage|ENABLE|TRUE
+XE|inmemory_virtual_columns|MANUAL|TRUE
+XE|inmemory_max_populate_servers|0|TRUE
+XE|inmemory_trickle_repopulate_servers_percent|1|TRUE
+XE|inmemory_optimized_arithmetic|DISABLE|TRUE
+XE|inmemory_deep_vectorization|TRUE|TRUE
+XE|inmemory_automatic_level|OFF|TRUE
+XE|create_stored_outlines||TRUE
+XE|serial_reuse|disable|TRUE
+XE|ldap_directory_access|NONE|TRUE
+XE|ldap_directory_sysauth|no|TRUE
+XE|os_roles|FALSE|TRUE
+XE|rdbms_server_dn||TRUE
+XE|remote_os_roles|FALSE|TRUE
+XE|mandatory_user_profile||TRUE
+XE|remote_login_passwordfile|EXCLUSIVE|FALSE
+XE|license_max_users|0|TRUE
+XE|audit_sys_operations|TRUE|TRUE
+XE|DBFIPS_140|FALSE|TRUE
+XE|one_step_plugin_for_pdb_with_tde|FALSE|TRUE
+XE|external_keystore_credential_location||TRUE
+XE|wallet_root||TRUE
+XE|tde_configuration||TRUE
+XE|pkcs11_library_location||TRUE
+XE|tde_key_cache|FALSE|TRUE
+XE|heartbeat_batch_size|5|TRUE
+XE|db_domain||TRUE
+XE|global_names|FALSE|TRUE
+XE|distributed_lock_timeout|60|TRUE
+XE|commit_point_strength|1|TRUE
+XE|global_txn_processes|1|TRUE
+XE|instance_name|XE|TRUE
+XE|dispatchers|(PROTOCOL=TCP) (SERVICE=XEXDB)|FALSE
+XE|shared_servers|1|TRUE
+XE|max_shared_servers||TRUE
+XE|max_dispatchers||TRUE
+XE|circuits||TRUE
+XE|shared_server_sessions||TRUE
+XE|use_dedicated_broker|FALSE|TRUE
+XE|connection_brokers|((TYPE=DEDICATED)(BROKERS=1)), ((TYPE=EMON)(BROKERS=1))|TRUE
+XE|local_listener|LISTENER_XE|FALSE
+XE|forward_listener||TRUE
+XE|remote_listener||TRUE
+XE|listener_networks||TRUE
+XE|cursor_space_for_time|FALSE|TRUE
+XE|session_cached_cursors|50|TRUE
+XE|remote_dependencies_mode|TIMESTAMP|TRUE
+XE|smtp_out_server||TRUE
+XE|plsql_v2_compatibility|FALSE|TRUE
+XE|plsql_warnings|DISABLE:ALL|TRUE
+XE|plsql_code_type|INTERPRETED|TRUE
+XE|plsql_debug|FALSE|TRUE
+XE|plsql_optimize_level|2|TRUE
+XE|plsql_ccflags||TRUE
+XE|plscope_settings|IDENTIFIERS:NONE|TRUE
+XE|permit_92_wrap_format|FALSE|TRUE
+XE|java_jit_enabled|TRUE|TRUE
+XE|java_restrict|none|TRUE
+XE|job_queue_processes|40|TRUE
+XE|scheduler_follow_pdbtz|FALSE|TRUE
+XE|parallel_min_percent|0|TRUE
+XE|create_bitmap_area_size|8388608|TRUE
+XE|bitmap_merge_area_size|1048576|TRUE
+XE|cursor_sharing|EXACT|TRUE
+XE|parallel_min_servers|1|TRUE
+XE|parallel_max_servers|1|TRUE
+XE|parallel_instance_group||TRUE
+XE|parallel_execution_message_size|16384|TRUE
+XE|hash_area_size|131072|TRUE
+XE|timezone_version_upgrade_online|FALSE|TRUE
+XE|private_temp_table_prefix|ORA$PTT_|TRUE
+XE|result_cache_mode|MANUAL|TRUE
+XE|result_cache_max_size|4352K|TRUE
+XE|result_cache_max_result|5|TRUE
+XE|result_cache_remote_expiration|0|TRUE
+XE|result_cache_execution_threshold|2|TRUE
+XE|result_cache_max_temp_size|43520K|TRUE
+XE|result_cache_max_temp_result|5|TRUE
+XE|shadow_core_dump|partial|TRUE
+XE|background_core_dump|partial|TRUE
+XE|background_dump_dest|/opt/oracle/homes/OraDBHome21cXE/rdbms/log|TRUE
+XE|user_dump_dest|/opt/oracle/homes/OraDBHome21cXE/rdbms/log|TRUE
+XE|core_dump_dest|/opt/oracle/diag/rdbms/xe/XE/cdump|TRUE
+XE|audit_file_dest|/opt/oracle/admin/XE/adump|FALSE
+XE|audit_syslog_level||TRUE
+XE|unified_audit_systemlog||TRUE
+XE|unified_audit_common_systemlog||TRUE
+XE|resource_manage_goldengate|FALSE|TRUE
+XE|object_cache_optimal_size|10240000|TRUE
+XE|object_cache_max_size_percent|10|TRUE
+XE|lob_signature_enable|FALSE|TRUE
+XE|session_max_open_files|10|TRUE
+XE|open_links|4|TRUE
+XE|open_links_per_instance|4|TRUE
+XE|commit_write||TRUE
+XE|commit_wait||TRUE
+XE|commit_logging||TRUE
+XE|optimizer_features_enable|21.1.0|TRUE
+XE|fixed_date||TRUE
+XE|audit_trail|DB|FALSE
+XE|sort_area_size|65536|TRUE
+XE|sort_area_retained_size|0|TRUE
+XE|cell_offload_processing|TRUE|TRUE
+XE|cell_offload_decryption|TRUE|TRUE
+XE|cell_offload_parameters||TRUE
+XE|cell_offload_compaction|ADAPTIVE|TRUE
+XE|cell_offload_plan_display|AUTO|TRUE
+XE|db_name|XE|FALSE
+XE|db_unique_name|XE|TRUE
+XE|open_cursors|300|FALSE
+XE|ifile||TRUE
+XE|sql_trace|FALSE|TRUE
+XE|os_authent_prefix|ops$|TRUE
+XE|optimizer_mode|ALL_ROWS|TRUE
+XE|sql92_security|TRUE|TRUE
+XE|blank_trimming|FALSE|TRUE
+XE|star_transformation_enabled|FALSE|TRUE
+XE|parallel_degree_policy|MANUAL|TRUE
+XE|parallel_adaptive_multi_user|FALSE|TRUE
+XE|parallel_threads_per_cpu|1|TRUE
+XE|optimizer_index_cost_adj|100|TRUE
+XE|optimizer_index_caching|0|TRUE
+XE|query_rewrite_enabled|TRUE|TRUE
+XE|query_rewrite_integrity|enforced|TRUE
+XE|pga_aggregate_target|272M|FALSE
+XE|workarea_size_policy|AUTO|TRUE
+XE|optimizer_dynamic_sampling|2|TRUE
+XE|statistics_level|TYPICAL|TRUE
+XE|cursor_bind_capture_destination|memory+disk|TRUE
+XE|skip_unusable_indexes|TRUE|TRUE
+XE|optimizer_ignore_hints|FALSE|TRUE
+XE|optimizer_secure_view_merging|TRUE|TRUE
+XE|ddl_lock_timeout|0|TRUE
+XE|deferred_segment_creation|TRUE|TRUE
+XE|optimizer_use_pending_statistics|FALSE|TRUE
+XE|optimizer_capture_sql_plan_baselines|FALSE|TRUE
+XE|optimizer_use_sql_plan_baselines|TRUE|TRUE
+XE|parallel_min_time_threshold|AUTO|TRUE
+XE|parallel_degree_limit|CPU|TRUE
+XE|parallel_force_local|FALSE|TRUE
+XE|optimizer_use_invisible_indexes|FALSE|TRUE
+XE|dst_upgrade_insert_conv|TRUE|TRUE
+XE|parallel_servers_target|1|TRUE
+XE|max_string_size|STANDARD|TRUE
+XE|optimizer_adaptive_reporting_only|FALSE|TRUE
+XE|optimizer_adaptive_plans|TRUE|TRUE
+XE|optimizer_inmemory_aware|TRUE|TRUE
+XE|cursor_invalidation|IMMEDIATE|TRUE
+XE|approx_for_aggregation|FALSE|TRUE
+XE|approx_for_count_distinct|FALSE|TRUE
+XE|approx_for_percentile|NONE|TRUE
+XE|optimizer_adaptive_statistics|FALSE|TRUE
+XE|optimizer_ignore_parallel_hints|FALSE|TRUE
+XE|parallel_min_degree|1|TRUE
+XE|optimizer_capture_sql_quarantine|FALSE|TRUE
+XE|optimizer_use_sql_quarantine|TRUE|TRUE
+XE|optimizer_session_type|NORMAL|TRUE
+XE|optimizer_cross_shard_resiliency|FALSE|TRUE
+XE|optimizer_real_time_statistics|FALSE|TRUE
+XE|sec_protocol_error_trace_action|TRACE|TRUE
+XE|sec_protocol_error_further_action|(DROP,3)|TRUE
+XE|allow_deprecated_rpcs|YES|TRUE
+XE|sec_max_failed_login_attempts|3|TRUE
+XE|sec_return_server_release_banner|FALSE|TRUE
+XE|enable_ddl_logging|FALSE|TRUE
+XE|client_result_cache_size|0|TRUE
+XE|client_result_cache_lag|3000|TRUE
+XE|outbound_dblink_protocols|ALL|TRUE
+XE|allow_global_dblinks|FALSE|TRUE
+XE|drcp_dedicated_opt|NO|TRUE
+XE|enable_per_pdb_drcp|FALSE|TRUE
+XE|drcp_connection_limit|0|TRUE
+XE|max_auth_servers|25|TRUE
+XE|min_auth_servers|1|TRUE
+XE|client_statistics_level|TYPICAL|TRUE
+XE|aq_tm_processes|1|TRUE
+XE|hs_autoregister|TRUE|TRUE
+XE|xml_db_events|enable|TRUE
+XE|dg_broker_start|FALSE|TRUE
+XE|dg_broker_config_file1|/opt/oracle/homes/OraDBHome21cXE/dbs/dr1XE.dat|TRUE
+XE|dg_broker_config_file2|/opt/oracle/homes/OraDBHome21cXE/dbs/dr2XE.dat|TRUE
+XE|olap_page_pool_size|0|TRUE
+XE|asm_diskstring||TRUE
+XE|asm_preferred_read_failure_groups||TRUE
+XE|control_management_pack_access|NONE|TRUE
+XE|awr_pdb_autoflush_enabled|FALSE|TRUE
+XE|awr_pdb_max_parallel_slaves|10|TRUE
+XE|awr_snapshot_time_offset|0|TRUE
+XE|sqltune_category|DEFAULT|TRUE
+XE|autotask_max_active_pdbs|2|TRUE
+XE|enable_automatic_maintenance_pdb|TRUE|TRUE
+XE|spatial_vector_acceleration|TRUE|TRUE
+XE|diagnostic_dest|/opt/oracle|FALSE
+XE|tracefile_identifier||TRUE
+XE|max_dump_file_size|unlimited|TRUE
+XE|trace_enabled|TRUE|TRUE
+XE|diagnostics_control|IGNORE|TRUE
+XE|cell_offloadgroup_name||TRUE
+XE|enable_pluggable_database|TRUE|FALSE
+XE|pdb_os_credential||TRUE
+XE|pdb_file_name_convert||TRUE
+XE|noncdb_compatible|FALSE|TRUE
+XE|common_user_prefix|C##|TRUE
+XE|target_pdbs|1|TRUE
+XE|max_pdbs|254|TRUE
+XE|cdb_cluster|FALSE|TRUE
+XE|cdb_cluster_name||TRUE
+XE|standby_pdb_source_file_directory||TRUE
+XE|standby_pdb_source_file_dblink||TRUE
+XE|remote_recovery_file_dest||TRUE
+XE|disable_pdb_feature|0|TRUE
+XE|auto_start_pdb_services|FALSE|TRUE
+XE|container_data|ALL|TRUE
+XE|containers_parallel_degree|65535|TRUE
+XE|default_sharing|metadata|TRUE
+XE|pdb_lockdown||TRUE
+XE|pdb_template||TRUE
+XE|shrd_dupl_table_refresh_rate|60|TRUE
+XE|multishard_query_data_consistency|strong|TRUE
+XE|multishard_query_partial_results|not allowed|TRUE
+XE|shard_queries_restricted_by_key|FALSE|TRUE
+XE|native_blockchain_features||TRUE
+XE|blockchain_table_max_no_drop||TRUE
+XE|pmem_filestore||TRUE
+XE|cpu_min_count|2|TRUE
+XE|sga_min_size|0|TRUE
+XE|shared_pool_size|0|TRUE
+XE|resource_manager_plan||TRUE
+XE|db_performance_profile||TRUE
+XE|sga_target|0|FALSE
+XE|db_cache_size|0|TRUE
+XE|undo_tablespace||FALSE
+XE|undo_retention|900|TRUE
+XE|ldap_directory_access|NONE|TRUE
+XE|tde_configuration||TRUE
+XE|private_temp_table_prefix|ORA$PTT_|TRUE
+XE|result_cache_max_temp_size|43520K|TRUE
+XE|unified_audit_systemlog||TRUE
+XE|parallel_servers_target|1|TRUE
+XE|common_user_prefix||TRUE
+XE|shrd_dupl_table_refresh_rate|60|TRUE
+XE|multishard_query_data_consistency|strong|TRUE
+XE|multishard_query_partial_results|not allowed|TRUE
+XE|shard_queries_restricted_by_key|FALSE|TRUE
+XE|cpu_min_count|2|TRUE
+XE|sga_min_size|0|TRUE
+XE|shared_pool_size|0|TRUE
+XE|resource_manager_plan||TRUE
+XE|db_performance_profile||TRUE
+XE|sga_target|0|FALSE
+XE|db_cache_size|0|TRUE
+XE|undo_tablespace|UNDOTBS1|FALSE
+XE|undo_retention|900|TRUE
+XE|ldap_directory_access|NONE|TRUE
+XE|tde_configuration||TRUE
+XE|private_temp_table_prefix|ORA$PTT_|TRUE
+XE|result_cache_max_temp_size|43520K|TRUE
+XE|unified_audit_systemlog||TRUE
+XE|parallel_servers_target|1|TRUE
+XE|common_user_prefix||TRUE
+XE|shrd_dupl_table_refresh_rate|60|TRUE
+XE|multishard_query_data_consistency|strong|TRUE
+XE|multishard_query_partial_results|not allowed|TRUE
+XE|shard_queries_restricted_by_key|FALSE|TRUE
+<<<oracle_tablespaces:sep(124):cached(1753803341,600)>>>
+XE|/opt/oracle/oradata/XE/users01.dbf|USERS|AVAILABLE|YES|640|4194302|512|160|ONLINE|8192|ONLINE|296|PERMANENT|21.0.0.0.0
+XE|/opt/oracle/oradata/XE/sysaux01.dbf|SYSAUX|AVAILABLE|YES|90880|4194302|90752|1280|ONLINE|8192|ONLINE|13960|PERMANENT|21.0.0.0.0
+XE|/opt/oracle/oradata/XE/system01.dbf|SYSTEM|AVAILABLE|YES|171520|4194302|171392|1280|SYSTEM|8192|ONLINE|288|PERMANENT|21.0.0.0.0
+XE|/opt/oracle/oradata/XE/undotbs01.dbf|UNDOTBS1|AVAILABLE|YES|14720|4194302|14592|640|ONLINE|8192|ONLINE|10744|UNDO|21.0.0.0.0
+XE.XEPDB1|/opt/oracle/oradata/XE/XEPDB1/users01.dbf|USERS|AVAILABLE|YES|640|4194302|512|160|ONLINE|8192|ONLINE|512|PERMANENT|21.0.0.0.0
+XE.XEPDB1|/opt/oracle/oradata/XE/XEPDB1/sysaux01.dbf|SYSAUX|AVAILABLE|YES|51200|4194302|51072|1280|ONLINE|8192|ONLINE|3192|PERMANENT|21.0.0.0.0
+XE.XEPDB1|/opt/oracle/oradata/XE/XEPDB1/system01.dbf|SYSTEM|AVAILABLE|YES|37120|4194302|36992|1280|SYSTEM|8192|ONLINE|1088|PERMANENT|21.0.0.0.0
+XE.XEPDB1|/opt/oracle/oradata/XE/XEPDB1/undotbs01.dbf|UNDOTBS1|AVAILABLE|YES|12800|4194302|12672|640|ONLINE|8192|ONLINE|9560|UNDO|21.0.0.0.0
+XE.XEPDB1|/opt/oracle/oradata/XE/XEPDB1/temp01.dbf|TEMP|ONLINE|YES|4480|4194302|4352|80|ONLINE|8192|ONLINE|4480|TEMPORARY|21.0.0.0.0
+XE.CDB$ROOT|/opt/oracle/oradata/XE/temp01.dbf|TEMP|ONLINE|YES|30336|4194302|30208|80|ONLINE|8192|ONLINE|30336|TEMPORARY|21.0.0.0.0
+<<<oracle_rman:sep(124):cached(1753803341,600)>>>
+<<<oracle_jobs:sep(124):cached(1753803341,600)>>>
+XE|CDB$ROOT|ORACLE_OCM|MGMT_STATS_CONFIG_JOB|SCHEDULED|1|3|TRUE|01-AUG-25 01.01.01.502927 AM +01:00|-|SUCCEEDED
+XE|CDB$ROOT|ORACLE_OCM|MGMT_CONFIG_JOB|SCHEDULED|4|16|TRUE|30-JUL-25 01.01.01.678381 AM +01:00|-|SUCCEEDED
+XE|CDB$ROOT|SYS|BSLN_MAINTAIN_STATS_JOB|SCHEDULED|0|8|TRUE|03-AUG-25 12.00.00.423751 AM +00:00|BSLN_MAINTAIN_STATS_SCHED|SUCCEEDED
+XE|CDB$ROOT|SYS|PURGE_LOG|SCHEDULED|3|16|TRUE|30-JUL-25 03.00.00.253666 AM ETC/UTC|DAILY_PURGE_SCHEDULE|SUCCEEDED
+XE|CDB$ROOT|SYS|DRA_REEVALUATE_OPEN_FAILURES|SCHEDULED|0|9|TRUE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|SUCCEEDED
+XE|CDB$ROOT|SYS|ORA$AUTOTASK_CLEAN|SCHEDULED|0|16|TRUE|30-JUL-25 03.00.00.935541 AM ETC/UTC|DAILY_PURGE_SCHEDULE|SUCCEEDED
+XE|XEPDB1|SYS|PURGE_LOG|SCHEDULED|4|16|TRUE|30-JUL-25 03.00.00.460651 AM ETC/UTC|DAILY_PURGE_SCHEDULE|SUCCEEDED
+XE|XEPDB1|SYS|DRA_REEVALUATE_OPEN_FAILURES|SCHEDULED|0|10|TRUE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|SUCCEEDED
+XE|XEPDB1|SYS|ORA$AUTOTASK_CLEAN|SCHEDULED|0|17|TRUE|30-JUL-25 03.00.00.567385 AM ETC/UTC|DAILY_PURGE_SCHEDULE|SUCCEEDED
+XE|XEPDB1|SYS|ORA$_ATSK_AUTOSTS|DISABLED|0|772|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|SUCCEEDED
+XE|XEPDB1|SYS|BSLN_MAINTAIN_STATS_JOB|SCHEDULED|0|8|TRUE|03-AUG-25 12.00.00.529150 AM +00:00|BSLN_MAINTAIN_STATS_SCHED|SUCCEEDED
+XE|CDB$ROOT|SYS|FILE_WATCHER|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|FILE_WATCHER_SCHEDULE|
+XE|CDB$ROOT|SYS|CLEANUP_TRANSIENT_TYPE|SCHEDULED|1|22|TRUE|30-JUL-25 05.15.05.269823 AM +02:00|-|
+XE|XEPDB1|SYS|CLEANUP_NON_EXIST_OBJ|SCHEDULED|2|22|TRUE|30-JUL-25 05.15.08.482227 AM +02:00|-|
+XE|XEPDB1|SYS|CLEANUP_ONLINE_IND_BUILD|SCHEDULED|0|203|TRUE|29-JUL-25 03.58.27.657576 PM +00:00|-|
+XE|CDB$ROOT|SYS|FGR$AUTOPURGE_JOB|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|CDB$ROOT|SYS|PMO_DEFERRED_GIDX_MAINT_JOB|SCHEDULED|0|18|TRUE|30-JUL-25 02.00.00.568116 AM ETC/UTC|PMO_DEFERRED_GIDX_MAINT_SCHED|
+XE|CDB$ROOT|SYS|CLEANUP_TRANSIENT_PKG|SCHEDULED|0|107|TRUE|29-JUL-25 05.26.48.000000 PM +00:00|-|
+XE|XEPDB1|SYS|CLEANUP_TAB_IOT_PMO|SCHEDULED|0|203|TRUE|29-JUL-25 03.58.37.656177 PM +00:00|-|
+XE|XEPDB1|SYS|LOAD_OPATCH_INVENTORY|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|XEPDB1|SYS|PMO_DEFERRED_GIDX_MAINT_JOB|SCHEDULED|1|18|TRUE|30-JUL-25 02.00.00.231916 AM ETC/UTC|PMO_DEFERRED_GIDX_MAINT_SCHED|
+XE|CDB$ROOT|SYS|HM_CREATE_OFFLINE_DICTIONARY|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|
+XE|XEPDB1|SYS|CLEANUP_TRANSIENT_PKG|SCHEDULED|0|108|TRUE|29-JUL-25 03.58.57.000000 PM +00:00|-|
+XE|CDB$ROOT|SYS|XMLDB_NFS_CLEANUP_JOB|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|CDB$ROOT|SYS|FILE_SIZE_UPD|SCHEDULED|0|1|TRUE|03-FEB-26 10.39.49.655459 PM +01:00|-|
+XE|CDB$ROOT|SYS|CLEANUP_NON_EXIST_OBJ|SCHEDULED|1|22|TRUE|30-JUL-25 05.15.06.295947 AM +02:00|-|
+XE|XEPDB1|SYS|FILE_WATCHER|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|FILE_WATCHER_SCHEDULE|
+XE|XEPDB1|SYS|XMLDB_NFS_CLEANUP_JOB|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|CDB$ROOT|SYS|CLEANUP_ONLINE_IND_BUILD|SCHEDULED|0|204|TRUE|29-JUL-25 04.26.18.399027 PM +00:00|-|
+XE|CDB$ROOT|SYS|CLEANUP_TAB_IOT_PMO|SCHEDULED|0|204|TRUE|29-JUL-25 04.26.28.361019 PM +00:00|-|
+XE|CDB$ROOT|SYS|ORA$_ATSK_AUTOSTS|DISABLED|0|1|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|XEPDB1|SYS|CLEANUP_TRANSIENT_TYPE|SCHEDULED|1|22|TRUE|30-JUL-25 05.15.06.038392 AM +02:00|-|
+XE|XEPDB1|SYS|CLEANUP_ONLINE_PMO|SCHEDULED|0|203|TRUE|29-JUL-25 03.59.07.015277 PM +00:00|-|
+XE|XEPDB1|SYS|HM_CREATE_OFFLINE_DICTIONARY|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|
+XE|CDB$ROOT|SYS|LOAD_OPATCH_INVENTORY|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+XE|CDB$ROOT|SYS|CLEANUP_ONLINE_PMO|SCHEDULED|0|204|TRUE|29-JUL-25 04.26.58.765619 PM +00:00|-|
+XE|XEPDB1|SYS|FILE_SIZE_UPD|SCHEDULED|0|1|TRUE|03-FEB-26 10.40.42.693760 PM +01:00|-|
+XE|XEPDB1|SYS|FGR$AUTOPURGE_JOB|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+<<<oracle_resumable:sep(124):cached(1753803341,600)>>>
+XE|||||||||
+<<<oracle_performance:sep(124):cached(1753803341,600)>>>
+XE.CDB$ROOT|iostat_file|Archive Log|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Archive Log Backup|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Control File|9750|16|1029|0|85|66|3561|0|159383552|8388608|16777216|0
+XE.CDB$ROOT|iostat_file|Data File|6283|76|259|7|19048|1500|563|23|61865984|28311552|3145728|1048576
+XE.CDB$ROOT|iostat_file|Data File Backup|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Data File Copy|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Data File Incremental Backup|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Data Pump Dump File|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|External Table|0|1|15|0|0|0|0|0|0|50331648|0|0
+XE.CDB$ROOT|iostat_file|Flashback Log|0|0|0|0|0|0|0|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Log File|11|9|700|7|0|169|4562|45|0|12582912|3145728|2097152
+XE.CDB$ROOT|iostat_file|Other|36|0|60|0|0|0|398|0|0|0|0|0
+XE.CDB$ROOT|iostat_file|Temp File|9|0|0|0|6|0|0|0|0|0|0|0
+XE.PDB$SEED|iostat_file|Data File|686|0|0|0|804|0|0|0|5242880|0|0|0
+XE.PDB$SEED|iostat_file|Temp File|2|0|0|0|0|0|0|0|0|0|0|0
+XE.XEPDB1|iostat_file|Data File|4039|55|454|9|15707|1841|967|24|45088768|20971520|8388608|1048576
+XE.XEPDB1|iostat_file|Temp File|9|0|0|0|3|0|0|0|0|0|0|0

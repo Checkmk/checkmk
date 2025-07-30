@@ -152,13 +152,13 @@ single_version_override(
 
 new_local_repository(
     name = "glib",
-    build_file = "@//omd/packages/glib:BUILD",
+    build_file = "@//omd/packages/glib:BUILD.glib.bazel",
     path = "/usr",
 )
 
 new_local_repository(
     name = "libxml2",
-    build_file = "@//omd/packages/libxml2:BUILD",
+    build_file = "@//omd/packages/libxml2:BUILD.libxml2.bazel",
     path = "/usr",
 )
 

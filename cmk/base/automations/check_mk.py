@@ -2310,7 +2310,8 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         The inventory_archive as well as the performance data is kept
         we do not want to loose any historic data for accidentally deleted hosts.
 
-        These files are cleaned up by the disk space mechanism.
+        These files are cleaned up by the disk space mechanism. The inventory
+        archive/delta cache is cleaned up by the inventory housekeeping job.
         """
         for path in self._single_file_paths(hostname):
             self._delete_if_exists(path)

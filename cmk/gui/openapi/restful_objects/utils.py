@@ -39,6 +39,9 @@ def identify_expected_status_codes(
     ):
         expected_status_codes.add(200)
 
+    if method == "post":
+        expected_status_codes.add(201)  # created
+
     if not has_response:
         # TODO: this can be removed once marshmallow endpoints are gone
         expected_status_codes.add(204)

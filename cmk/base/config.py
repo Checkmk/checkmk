@@ -44,6 +44,7 @@ from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -98,8 +99,8 @@ from cmk.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPSectionMeta,
-    TCPEncryptionHandling,
     TCPFetcher,
+    TCPFetcherConfig,
     TLSConfig,
 )
 from cmk.fetchers.config import make_persisted_section_dir
@@ -147,7 +148,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
     RuleSpec,
     SingleHostRulesetMatcher,
-    SingleHostRulesetMatcherFirst,
     SingleHostRulesetMatcherMerge,
     SingleServiceRulesetMatcherFirst,
 )
@@ -3705,61 +3705,6 @@ def make_parser_config(
             loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
         ),
     )
-
-
-def make_tcp_fetcher_config(
-    loaded_config: LoadedConfigFragment,
-    ruleset_matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
-) -> TCPFetcherConfig:
-    return TCPFetcherConfig(
-        agent_port=SingleHostRulesetMatcherFirst(
-            loaded_config.agent_ports,
-            loaded_config.agent_port,
-            ruleset_matcher,
-            labels_of_host,
-        ),
-        connect_timeout=SingleHostRulesetMatcherFirst(
-            loaded_config.tcp_connect_timeouts,
-            loaded_config.tcp_connect_timeout,
-            ruleset_matcher,
-            labels_of_host,
-        ),
-        encryption_handling=SingleHostRulesetMatcherFirst(
-            loaded_config.encryption_handling,
-            None,
-            ruleset_matcher,
-            labels_of_host,
-        ),
-        symmetric_agent_encryption=SingleHostRulesetMatcherFirst(
-            loaded_config.agent_encryption,
-            None,
-            ruleset_matcher,
-            labels_of_host,
-        ),
-    )
-
-
-@dataclasses.dataclass(frozen=True)
-class TCPFetcherConfig:
-    """Configuration for TCP fetchers"""
-
-    agent_port: Callable[[HostName], int]
-    connect_timeout: Callable[[HostName], float]
-    encryption_handling: Callable[[HostName], Mapping[str, object] | None]
-    symmetric_agent_encryption: Callable[[HostName], str | None]
-
-    def parsed_encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
-        if not (setting := self.encryption_handling(host_name)):
-            return TCPEncryptionHandling.ANY_AND_PLAIN
-        match setting["accept"]:
-            case "tls_encrypted_only":
-                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
-            case "any_encrypted":
-                return TCPEncryptionHandling.ANY_ENCRYPTED
-            case "any_and_plain":
-                return TCPEncryptionHandling.ANY_AND_PLAIN
-        raise ValueError("Unknown setting: %r" % setting)
 
 
 class FetcherFactory:

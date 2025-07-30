@@ -24,6 +24,7 @@ from ._snmp import SNMPFetcher as SNMPFetcher
 from ._snmp import SNMPScanConfig as SNMPScanConfig
 from ._snmp import SNMPSectionMeta as SNMPSectionMeta
 from ._tcp import TCPFetcher as TCPFetcher
+from ._tcp import TCPFetcherConfig as TCPFetcherConfig
 from ._tcp import TLSConfig as TLSConfig
 from ._trigger import FetcherTrigger as FetcherTrigger
 from ._trigger import PlainFetcherTrigger as PlainFetcherTrigger

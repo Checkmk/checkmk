@@ -8,7 +8,7 @@ import logging
 import os
 import socket
 import ssl
-from collections.abc import Buffer
+from collections.abc import Buffer, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -63,6 +63,28 @@ def wrap_tls(sock: socket.socket, server_hostname: str, *, tls_config: TLSConfig
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:
         raise MKFetcherError("Error establishing TLS connection") from e
+
+
+@dataclass(frozen=True)
+class TCPFetcherConfig:
+    """Configuration for TCP fetchers"""
+
+    agent_port: Callable[[HostName], int]
+    connect_timeout: Callable[[HostName], float]
+    encryption_handling: Callable[[HostName], Mapping[str, object] | None]
+    symmetric_agent_encryption: Callable[[HostName], str | None]
+
+    def parsed_encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
+        if not (setting := self.encryption_handling(host_name)):
+            return TCPEncryptionHandling.ANY_AND_PLAIN
+        match setting["accept"]:
+            case "tls_encrypted_only":
+                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
+            case "any_encrypted":
+                return TCPEncryptionHandling.ANY_ENCRYPTED
+            case "any_and_plain":
+                return TCPEncryptionHandling.ANY_AND_PLAIN
+        raise ValueError("Unknown setting: %r" % setting)
 
 
 class TCPFetcher(Fetcher[AgentRawData]):

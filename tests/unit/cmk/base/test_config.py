@@ -15,6 +15,7 @@ from typing import Any, Literal, NoReturn
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.base.configlib.fetchers
 import cmk.ccc.debug
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils.paths
@@ -238,7 +239,7 @@ def test_tcp_fetcher_config_agent_ports_matching(
     config_cache = ts.apply(monkeypatch)
 
     assert (
-        config.make_tcp_fetcher_config(
+        cmk.base.configlib.fetchers.make_tcp_fetcher_config(
             config_cache._loaded_config,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
@@ -723,7 +724,7 @@ def test_make_tcp_fetcher_config_tcp_connect_timeout(
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config.make_tcp_fetcher_config(
+        cmk.base.configlib.fetchers.make_tcp_fetcher_config(
             config_cache._loaded_config,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
@@ -756,7 +757,7 @@ def test_make_tcp_fetcher_config_encryption_handling(
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config.make_tcp_fetcher_config(
+        cmk.base.configlib.fetchers.make_tcp_fetcher_config(
             config_cache._loaded_config,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
@@ -789,7 +790,7 @@ def test_make_tcp_fetcher_config_symmetric_agent_encryption(
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config.make_tcp_fetcher_config(
+        cmk.base.configlib.fetchers.make_tcp_fetcher_config(
             config_cache._loaded_config,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,

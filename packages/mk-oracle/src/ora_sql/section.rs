@@ -29,12 +29,12 @@ pub struct Section {
 impl Section {
     pub fn make_instance_section() -> Self {
         let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
-        Self::new(&config_section, None)
+        Self::new(&config_section, 0)
     }
 
-    pub fn new(section: &config::section::Section, global_cache_age: Option<u32>) -> Self {
+    pub fn new(section: &config::section::Section, global_cache_age: u32) -> Self {
         let cache_age = if section.kind() == config::section::SectionKind::Async {
-            global_cache_age
+            Some(global_cache_age)
         } else {
             None
         };
@@ -211,7 +211,7 @@ mod tests {
             &section::SectionBuilder::new("backup")
                 .set_async(true)
                 .build(),
-            Some(100),
+            100,
         );
         assert_eq!(section.to_plain_header(), "<<<oracle_backup:sep(124)>>>\n");
         assert!(section
@@ -219,7 +219,7 @@ mod tests {
             .starts_with("<<<oracle_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>\n"));
 
-        let section = Section::new(&section::SectionBuilder::new("jobs").build(), Some(100));
+        let section = Section::new(&section::SectionBuilder::new("jobs").build(), 100);
         assert!(section
             .to_work_header()
             .starts_with("<<<oracle_jobs:cached("));
@@ -227,7 +227,7 @@ mod tests {
             &section::SectionBuilder::new("jobs")
                 .set_async(false)
                 .build(),
-            Some(100),
+            100,
         );
         assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(124)>>>\n");
     }

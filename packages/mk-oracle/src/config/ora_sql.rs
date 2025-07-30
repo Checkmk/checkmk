@@ -179,7 +179,7 @@ impl Config {
         "orasql-".to_owned() + &self.hash
     }
 
-    pub fn sections(&self) -> &Sections {
+    pub fn product(&self) -> &Sections {
         &self.sections
     }
 
@@ -665,9 +665,9 @@ piggyback:
         assert_eq!(auth.password(), Some("bar"));
         let conn = c.conn();
         assert_eq!(conn.hostname(), "localhost2".to_string().into());
-        let sections = c.sections();
-        assert_eq!(sections.cache_age(), 501);
-        assert_eq!(sections.sections().len(), 21);
+        let product = c.product();
+        assert_eq!(product.cache_age(), 501);
+        assert_eq!(product.sections().len(), 21);
         assert_eq!(c.piggyback_host(), Some("some_pb_host"));
         assert!(!c.discovery().detect);
         let instances = c.instances();

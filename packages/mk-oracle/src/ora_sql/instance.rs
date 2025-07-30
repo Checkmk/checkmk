@@ -3,6 +3,10 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, OracleConfig};
+use crate::ora_sql::backend::{make_spot, Spot};
+use crate::ora_sql::custom::get_sql_dir;
+use crate::ora_sql::section::Section;
+use crate::ora_sql::system::get_instances;
 use crate::setup::Env;
 use crate::utils;
 
@@ -52,7 +56,101 @@ impl OracleConfig {
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) -> Result<String> {
-    use crate::ora_sql::backend::make_task;
-    let _task = make_task(&ora_sql.endpoint());
+    // TODO: detect instances
+    // TODO: apply to config detected instances
+    // TODO: customize instances
+    // TODO: resulting in the list of endpoints
+    let all = calc_spots(vec![ora_sql.endpoint()]);
+    let connected = connect_spots(all);
+
+    let mut _output = String::new();
+    let _r = connected
+        .into_iter()
+        .map(|spot| {
+            let instances = get_instances(&spot);
+
+            let sections = ora_sql
+                .product()
+                .sections()
+                .iter()
+                .map(|s| Section::new(s, ora_sql.product().cache_age()))
+                .collect::<Vec<_>>();
+            for (_instance, _version) in instances {
+                for section in &sections {
+                    let section_name = section.name();
+                    log::info!("Generating data for instance: {}", section_name);
+                    section.select_query(get_sql_dir(), 0).map_or_else(
+                        || {
+                            log::warn!("No query found for section: {}", section_name);
+                            "No query found".to_string()
+                        },
+                        |query| {
+                            log::info!("Found query for section {}: {}", section_name, query);
+                            // Here you would execute the query and process the results
+                            // For now, we just return the query as a placeholder
+                            format!("Query for {}: {}", section_name, query)
+                        },
+                    );
+                }
+            }
+            // Add more data generation here as needed
+            "section_name".to_owned()
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
     Ok("nothing".to_string())
+}
+
+// tested only in integration tests
+fn connect_spots(spots: Vec<Spot>) -> Vec<Spot> {
+    let connected = spots
+        .into_iter()
+        .filter_map(|mut t| {
+            if let Err(e) = t.connect() {
+                log::error!("Error connecting to instance: {}", e);
+                None
+            } else {
+                log::info!("Connected to instance: {:?}", t.target());
+                Some(t)
+            }
+        })
+        .collect::<Vec<Spot>>();
+    log::info!(
+        "CONNECTED SPOTS: {:?}",
+        connected.iter().map(|t| t.target()).collect::<Vec<_>>()
+    );
+
+    connected
+}
+
+fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<Spot> {
+    log::info!("ENDPOINTS: {:?}", endpoints);
+    endpoints
+        .into_iter()
+        .filter_map(|ep| {
+            make_spot(&ep).map_or_else(
+                |error| {
+                    log::error!("Error creating spot for endpoint {error}");
+                    None
+                },
+                Some,
+            )
+        })
+        .collect::<Vec<Spot>>()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calc_spots() {
+        assert!(calc_spots(vec![]).is_empty());
+        let all = calc_spots(vec![
+            config::ora_sql::Endpoint::default(),
+            config::ora_sql::Endpoint::default(),
+        ]);
+        assert_eq!(all.len(), 2);
+    }
 }

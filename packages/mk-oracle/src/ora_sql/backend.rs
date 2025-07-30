@@ -156,19 +156,19 @@ impl EngineType {
 }
 
 #[derive(Debug, Default)]
-pub struct TaskBuilder {
+pub struct SpotBuilder {
     target: Option<Target>,
     engine_type: Option<EngineType>,
     database: Option<String>,
 }
 
-pub struct Task {
+pub struct Spot {
     target: Target,
     engine: Box<dyn OraDbEngine>,
     _database: Option<String>,
 }
 
-impl Task {
+impl Spot {
     pub fn connect(&mut self) -> Result<()> {
         self.engine.connect(&self.target)?;
         Ok(())
@@ -191,9 +191,9 @@ impl Task {
     }
 }
 
-impl TaskBuilder {
-    pub fn new() -> TaskBuilder {
-        TaskBuilder::default()
+impl SpotBuilder {
+    pub fn new() -> SpotBuilder {
+        SpotBuilder::default()
     }
 
     pub fn database<S: Into<String>>(mut self, database: Option<S>) -> Self {
@@ -222,8 +222,8 @@ impl TaskBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Task> {
-        Ok(Task {
+    pub fn build(self) -> Result<Spot> {
+        Ok(Spot {
             engine: self
                 .engine_type
                 .map(|e| e.create_engine())
@@ -236,17 +236,17 @@ impl TaskBuilder {
     }
 }
 
-pub fn make_task(endpoint: &Endpoint) -> Result<Task> {
-    TaskBuilder::new()
+pub fn make_spot(endpoint: &Endpoint) -> Result<Spot> {
+    SpotBuilder::new()
         .target(endpoint)
         .engine_type(endpoint.conn().engine_tag())
         .build()
 }
 
-pub fn make_custom_task(endpoint: &Endpoint, instance: &InstanceName) -> Result<Task> {
-    make_task(endpoint).map(|mut t| {
-        t.target.instance = Some(instance.to_owned());
-        t
+pub fn make_custom_spot(endpoint: &Endpoint, instance: &InstanceName) -> Result<Spot> {
+    make_spot(endpoint).map(|mut s| {
+        s.target.instance = Some(instance.to_owned());
+        s
     })
 }
 
@@ -293,7 +293,7 @@ oracle:
     #[test]
     fn test_create_client_from_config_correct() {
         let config = make_config_with_auth_type("standard").unwrap();
-        assert!(make_task(&config.endpoint()).is_ok());
+        assert!(make_spot(&config.endpoint()).is_ok());
     }
 
     #[test]

@@ -189,10 +189,10 @@ fn test_local_connection() {
         InstanceName::from(&endpoint.instance),
     );
 
-    let mut task = backend::make_task(&config.endpoint()).unwrap();
-    let r = task.connect();
+    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
+    let r = spot.connect();
     assert!(r.is_ok());
-    let result = task.query(&TEST_SQL_INSTANCE, "");
+    let result = spot.query(&TEST_SQL_INSTANCE, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     eprintln!("Rows: {:?}", rows);
@@ -216,12 +216,12 @@ fn test_remote_mini_connection() {
         &endpoint.host,
     );
 
-    let mut task = backend::make_task(&config.endpoint()).unwrap();
-    let r = task.connect();
+    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
+    let r = spot.connect();
     println!("{:?}", r);
     println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
-    let result = task.query(&TEST_SQL_INSTANCE, "");
+    let result = spot.query(&TEST_SQL_INSTANCE, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(!rows.is_empty());
@@ -245,16 +245,16 @@ fn test_remote_mini_connection_version() {
             &endpoint.host,
         );
 
-        let mut task = backend::make_task(&config.endpoint()).unwrap();
-        task.connect()
+        let mut spot = backend::make_spot(&config.endpoint()).unwrap();
+        spot.connect()
             .expect("Connect failed, check environment variables");
 
-        let version = system::get_version(&task, &InstanceName::from(&endpoint.instance))
+        let version = system::get_version(&spot, &InstanceName::from(&endpoint.instance))
             .unwrap()
             .unwrap();
         assert!(version.starts_with("2"));
         assert!(
-            system::get_version(&task, &InstanceName::from("no-such-db"))
+            system::get_version(&spot, &InstanceName::from("no-such-db"))
                 .unwrap()
                 .is_none()
         );
@@ -275,14 +275,14 @@ fn test_io_stats_query() {
         &endpoint.host,
     );
 
-    let mut task = backend::make_task(&config.endpoint()).unwrap();
-    let r = task.connect();
+    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
+    let r = spot.connect();
     assert!(r.is_ok());
     let q = SqlQuery::new(
         sqls::find_known_query(sqls::Id::IoStats).unwrap(),
         Separator::default(),
     );
-    let result = task.query(&q, "");
+    let result = spot.query(&q, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(rows.len() > 10);

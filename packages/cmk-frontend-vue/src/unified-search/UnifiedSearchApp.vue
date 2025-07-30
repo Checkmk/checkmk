@@ -139,25 +139,4 @@ onMounted(() => {
   width: 750px;
   max-width: 750px;
 }
-
-.unified-search-results {
-  border-top: 1px solid var(--ux-theme-3);
-  border-left: 1px solid var(--ux-theme-3);
-}
-
-.unified-search-results > .results:first-of-type {
-  border-right: 1px solid var(--ux-theme-3);
-}
-
-.results {
-  display: flex;
-  width: 100%;
-  height: calc(100% - 61px);
-}
-
-.results:deep(span.hightlight_query) {
-  display: inline-block;
-  background: var(--color-warning);
-  color: --black;
-}
 </style>

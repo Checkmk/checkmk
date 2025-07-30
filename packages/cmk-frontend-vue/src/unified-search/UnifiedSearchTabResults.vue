@@ -210,7 +210,7 @@ function searchResultNotEmpty(): boolean {
           :key="tab.title"
           class="cmk-unified-search-result-tab-content"
         >
-          <CmkScrollContainer max-height="calc(100vh - 300px)">
+          <CmkScrollContainer max-height="calc(100vh - 240px)">
             <ResultList>
               <ResultItem
                 v-for="(item, idxe) in tab.results"

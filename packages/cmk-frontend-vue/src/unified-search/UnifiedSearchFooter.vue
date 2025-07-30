@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
 import { getSearchUtils } from './providers/search-utils'
 import type { Suggestions } from '@/components/CmkSuggestions.vue'
@@ -51,18 +50,6 @@ const sortSuggestions: Suggestions = {
       >
       </CmkDropdown>
     </div>
-    <div>
-      {{
-        t(
-          'not-found-ask-ai',
-          "You looked through the results and still haven't found what you are looking for?"
-        )
-      }}
-    </div>
-    <div>
-      <CmkIcon variant="inline" name="sparkle" :title="t('ask-ai', 'Ask Checkmk AI')" />
-      <a href="https://chat.checkmk.com/" target="_blank">{{ t('ask-ai', 'Go Ask AI') }}</a>
-    </div>
   </div>
 </template>
 
@@ -82,7 +69,7 @@ const sortSuggestions: Suggestions = {
   display: flex;
   flex-direction: column;
   align-items: center;
-  bottom: calc(3 * var(--spacing));
+  bottom: var(--spacing-double);
   position: fixed;
   width: 750px;
 }

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+
 const scrollContainerVariants = cva('', {
   variants: {
     type: {
@@ -47,6 +48,8 @@ const { type, maxHeight = '100%', height = '100%' } = defineProps<ScrollContaine
 .scroll-container--outer::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-color);
   border-radius: 16px;
-  border: 0;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  width: 8px;
 }
 </style>

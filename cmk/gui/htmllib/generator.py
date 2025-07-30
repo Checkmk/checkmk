@@ -734,10 +734,12 @@ class HTMLWriter:
     def render_ul(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("ul", content, **kwargs)
 
-    def begin_page_content(self) -> None:
+    def begin_page_content(self, enable_scrollbar: bool = True) -> None:
         content_id = "main_page_content"
-        self.open_div(id_=content_id)
-        self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
+        css_classes = [] if enable_scrollbar else ["vue-scrolling"]
+        self.open_div(id_=content_id, class_=css_classes or None)
+        if enable_scrollbar:
+            self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
 
     def end_page_content(self) -> None:
         self.close_div()

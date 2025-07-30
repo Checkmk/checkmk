@@ -19,6 +19,7 @@ def make_header(
     force: bool = False,
     show_body_start: bool = True,
     show_top_heading: bool = True,
+    enable_main_page_scrollbar: bool = True,
 ) -> None:
     if writer.output_format != "html":
         return
@@ -41,4 +42,4 @@ def make_header(
                 browser_reload=writer.browser_reload,
                 debug=active_config.debug,
             )
-    writer.begin_page_content()
+    writer.begin_page_content(enable_scrollbar=enable_main_page_scrollbar)

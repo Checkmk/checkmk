@@ -11,6 +11,7 @@ import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import type { WelcomeUrls, StageInformation } from 'cmk-shared-typing/typescript/welcome'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   urls: WelcomeUrls
@@ -23,27 +24,29 @@ const totalSteps = props.stage_information.total
 </script>
 
 <template>
-  <div class="welcome-app">
-    <WelcomeBanner
-      class="welcome-app__banner"
-      :completed-steps="completedSteps"
-      :total-steps="totalSteps"
-    />
-    <div class="welcome-app__panels">
-      <div class="welcome-app__panel-left">
-        <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
-        <OnboardingStepper
-          :urls="urls"
-          :finished-steps="stage_information.finished"
-          :total-steps="stage_information.total"
-        ></OnboardingStepper>
+  <CmkScrollContainer type="outer">
+    <div class="welcome-app">
+      <WelcomeBanner
+        class="welcome-app__banner"
+        :completed-steps="completedSteps"
+        :total-steps="totalSteps"
+      />
+      <div class="welcome-app__panels">
+        <div class="welcome-app__panel-left">
+          <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
+          <OnboardingStepper
+            :urls="urls"
+            :finished-steps="stage_information.finished"
+            :total-steps="stage_information.total"
+          ></OnboardingStepper>
+        </div>
+        <div class="welcome-app__panel-right">
+          <ResourceLinksPanel :urls="urls" />
+        </div>
       </div>
-      <div class="welcome-app__panel-right">
-        <ResourceLinksPanel :urls="urls" />
-      </div>
+      <WelcomeFooter class="welcome-app__footer" :is_start_url="is_start_url" />
     </div>
-    <WelcomeFooter class="welcome-app__footer" :is_start_url="is_start_url" />
-  </div>
+  </CmkScrollContainer>
 </template>
 
 <style scoped>
@@ -51,6 +54,8 @@ const totalSteps = props.stage_information.total
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 20px);
+  padding-right: 10px;
+  padding-bottom: 10px;
 }
 .welcome-app__banner {
   margin-top: 32px;

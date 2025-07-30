@@ -79,7 +79,13 @@ def make_url_from_registry(id: str) -> str | None:
 
 
 def _welcome_page(config: Config) -> None:
-    make_header(html, "Welcome", breadcrumb=Breadcrumb(), show_top_heading=False)
+    make_header(
+        html,
+        "Welcome",
+        breadcrumb=Breadcrumb(),
+        show_top_heading=False,
+        enable_main_page_scrollbar=False,
+    )
     html.vue_component(
         component_name="cmk-welcome",
         data=asdict(

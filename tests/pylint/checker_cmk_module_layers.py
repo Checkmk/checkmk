@@ -759,6 +759,7 @@ _COMPONENTS = (
             "cmk.special_agents.v0_unstable",
             "cmk.plugins",
             "cmk.inventory_ui.v1_alpha",
+            "cmk.otel_collector.constants",
         ),
     ),
     (

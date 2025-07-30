@@ -16,8 +16,10 @@ from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import ArgsKwargs, core_schema
 from pydantic_core.core_schema import CoreSchema, SerializerFunctionWrapHandler
 
+from ._api_model import api_model
 
-@dataclasses.dataclass(kw_only=True, slots=True)
+
+@api_model
 class WithDynamicFields:
     """This will add support for dynamic fields in the schema.
 

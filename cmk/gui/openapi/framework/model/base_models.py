@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.http import HTTPMethod
-from cmk.gui.openapi.framework.model.api_field import api_field
-from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import link_rel
 from cmk.gui.openapi.restful_objects.type_defs import LinkRelation
 
+from ._api_field import api_field
+from ._api_model import api_model
+from .omitted import ApiOmitted
 
-@dataclass(kw_only=True, slots=True)
+
+@api_model
 class LinkModel:
     rel: str = api_field(
         title="Relation",
@@ -91,7 +92,7 @@ class LinkModel:
         )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class LinkableModel:
     links: list[LinkModel] = api_field(
         title="Links",
@@ -107,7 +108,7 @@ class LinkableModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class DomainObjectModel(LinkableModel):
     domainType: str = api_field(
         title="Domain Type", description='The "domain-type" of the object.', example="host"
@@ -126,7 +127,7 @@ class DomainObjectModel(LinkableModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class DomainObjectCollectionModel(LinkableModel):
     id: str = api_field(description="The name of this collection.")
     domainType: str = api_field(description="The domain type of the objects in the collection.")
@@ -143,7 +144,7 @@ class DomainObjectCollectionModel(LinkableModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class ObjectMemberBaseModel(LinkableModel):
     id: str = api_field(description="The id of this object.")
     disabledReason: str | None = api_field(
@@ -172,7 +173,7 @@ class ObjectMemberBaseModel(LinkableModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class ObjectCollectionMemberModel(ObjectMemberBaseModel):
     memberType: Literal["collection"] = api_field(description="The type of this member.")
     value: list[LinkModel]
@@ -182,7 +183,7 @@ class ObjectCollectionMemberModel(ObjectMemberBaseModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class ObjectActionMemberModel(ObjectMemberBaseModel):
     memberType: Literal["action"] = api_field(description="The type of this member.")
     parameters: dict

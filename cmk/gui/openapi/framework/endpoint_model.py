@@ -28,7 +28,7 @@ from cmk.gui.openapi.framework._types import (
 )
 from cmk.gui.openapi.framework._utils import iter_dataclass_fields
 from cmk.gui.openapi.framework.content_types import convert_request_body
-from cmk.gui.openapi.framework.model.api_field import api_field
+from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 

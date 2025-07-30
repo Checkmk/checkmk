@@ -11,7 +11,7 @@ from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
-from cmk.gui.openapi.framework.model.api_field import api_field
+from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.headers import (
     CONTENT_TYPE,
     ETAG_HEADER,

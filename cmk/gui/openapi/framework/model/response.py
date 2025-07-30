@@ -4,20 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass, field
 
-from cmk.gui.openapi.framework.model.api_field import api_field
-from cmk.gui.openapi.framework.model.omitted import ApiOmitted
+from ._api_field import api_field
+from ._api_model import api_model
+from .omitted import ApiOmitted
 
 type TypedResponse[T] = T | ApiResponse[T]
 
 
-@dataclass(slots=True)
+@dataclass(slots=True)  # this isn't an api model, and we want positional arguments
 class ApiResponse[T]:
     body: T
     status_code: int = 200
     headers: dict[str, str] = field(default_factory=dict)
 
 
-@dataclass(slots=True)
+@api_model
 class ApiErrorDataclass:
     status: int = api_field(
         title="HTTP status code", description="The HTTP status code.", example=404

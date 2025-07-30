@@ -1,0 +1,1422 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""
+Plot performance data from filesystem or database.
+
+This script provides a CLI tool for aggregating, storing, and visualizing performance test results
+from either a PostgreSQL database or the local filesystem.
+
+It supports reading and writing benchmark and resource usage data, generating graphs for execution
+times and resource consumption, and exporting results to JSON files.
+
+Main Features:
+- Read performance test jobs and scenarios from disk or database.
+- Write performance data to disk (JSON) and/or database.
+- Generate benchmark and resource usage graphs using matplotlib.
+- Flexible configuration via command-line arguments for input/output sources, database credentials,
+  and job selection.
+
+Usage:
+    python perftest_plot.py [options] <job_names>
+
+Options:
+    --root-dir, -r           Root directory for job files (default: results/performance).
+    --output-dir, -o         Output directory for graph files.
+    --skip-filesystem-reads  Read only from database.
+    --skip-filesystem-writes Write only to database.
+    --skip-database-reads    Read only from filesystem.
+    --skip-database-writes   Write only to filesystem.
+    --skip-graph-generation  Skip graph generation.
+    --write-json-files       Write JSON files to filesystem.
+    --dbname                 Database name (default: performance).
+    --dbuser                 Database user.
+    --dbpass                 Database password.
+    --dbhost                 Database host (default: localhost).
+    --dbport                 Database port (default: 5432).
+    job_names                List of job names to process.
+
+Example:
+    python perftest_plot.py --dbpass secret 2.5.0-2025.09.10.cce
+"""
+
+import argparse
+import json
+import logging
+import re
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
+from datetime import datetime as Datetime
+from getpass import getpass
+from pathlib import Path
+from sys import exit as sys_exit
+from typing import NamedTuple
+
+import psycopg
+from matplotlib import pyplot
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+Measurements = Mapping[str, object]
+MeasurementsList = list[Measurements]
+
+
+class JobDetails(NamedTuple):
+    """
+    Represents details about a performance test job.
+
+    Attributes:
+        job_id (int): Unique identifier for the job.
+        job_name (str): Name of the job.
+        start_timestamp (Datetime): Timestamp when the job started.
+        end_timestamp (Datetime): Timestamp when the job ended.
+        product_release (str): Product release version associated with the job.
+        system_name (str): Name of the system where the job ran.
+        system_release (str): Release version of the system.
+        system_machine (str): Machine type of the system.
+        host_name (str): Hostname where the job was executed.
+    """
+
+    job_id: int
+    job_name: str
+    start_timestamp: Datetime
+    end_timestamp: Datetime
+    product_release: str
+    system_name: str
+    system_release: str
+    system_machine: str
+    host_name: str
+    log_level: str
+
+
+class ScenarioDetails(NamedTuple):
+    """
+    Represents the details of a test scenario.
+
+    Attributes:
+        scenario_id (int): Unique identifier for the scenario.
+        scenario_name (str): Name of the scenario.
+        scenario_description (str): Description of the scenario.
+    """
+
+    scenario_id: int
+    scenario_name: str
+    scenario_description: str
+
+
+class TestDetails(NamedTuple):
+    """
+    Represents the details of a performance test.
+
+    Attributes:
+        test_id (int): Unique identifier for the test.
+        job_id (int): Identifier for the job associated with the test.
+        scenario_id (int): Identifier for the scenario under which the test was run.
+        start_timestamp (Datetime): Timestamp marking the start of the test.
+        end_timestamp (Datetime): Timestamp marking the end of the test.
+    """
+
+    test_id: int
+    job_id: int
+    scenario_id: int
+    start_timestamp: Datetime
+    end_timestamp: Datetime
+
+
+class PerformanceDb:
+    """
+    PerformanceDb provides an interface for storing and retrieving performance test data
+    in a PostgreSQL database.
+
+    This class manages jobs, scenarios, tests, measurements, and benchmark statistics,
+    supporting insertion and querying operations for performance testing workflows.
+
+    Attributes:
+        dbname (str): Name of the database to connect to.
+        user (str): Database user.
+        password (str): Password for the database user.
+        host (str): Database host address.
+        port (int): Database port number.
+        dsn (str): Data Source Name for PostgreSQL connection.
+        connection: Active psycopg connection to the database.
+    """
+
+    def __init__(
+        self,
+        password: str,
+        dbname: str = "performance",
+        user: str = "performance",
+        host: str = "localhost",
+        port: int = 5432,
+    ):
+        """
+        Initializes a database connection for performance testing.
+
+        Args:
+            password (str): Password for the database user.
+            dbname (str, optional): Name of the database. Defaults to "performance".
+            user (str, optional): Database user name. Defaults to "performance".
+            host (str, optional): Database host address. Defaults to "localhost".
+            port (int, optional): Database port number. Defaults to 5432.
+
+        Attributes:
+            dbname (str): Name of the database.
+            user (str): Database user name.
+            password (str): Password for the database user.
+            host (str): Database host address.
+            port (int): Database port number.
+            dsn (str): Data Source Name for the database connection.
+            connection: Active connection to the database.
+        """
+        self.dbname = dbname
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        self.dsn = "dbname=%s user=%s password=%s host=%s port=%s" % (
+            self.dbname,
+            self.user,
+            self.password,
+            self.host,
+            self.port,
+        )
+        self.connection = psycopg.connect(self.dsn, autocommit=True)
+
+    @contextmanager
+    def cursor(self) -> Iterator[psycopg.cursor.Cursor]:
+        """Return an active cursor in a new autocommit connection."""
+        with self.connection.cursor() as cursor:
+            yield cursor
+
+    def add_job(
+        self,
+        job_name: str,
+        start_timestamp: Datetime,
+        end_timestamp: Datetime,
+        product_release: str,
+        system_name: str,
+        system_release: str,
+        system_machine: str,
+        host_name: str,
+    ) -> int:
+        """Add job details to the database if they do not exist already.
+
+        Returns the ID of the new or existing job entry.
+        """
+        try:
+            return self.get_job(job_name=job_name)[0]
+        except ValueError:
+            with self.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO jobs(
+                        job_name,
+                        start_timestamp,
+                        end_timestamp,
+                        product_release,
+                        system_name,
+                        system_release,
+                        system_machine,
+                        host_name
+                    )
+                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+                    RETURNING job_id
+                    """,
+                    (
+                        job_name,
+                        start_timestamp,
+                        end_timestamp,
+                        product_release,
+                        system_name,
+                        system_release,
+                        system_machine,
+                        host_name,
+                    ),
+                )
+                job_id = result_record[0] if (result_record := cursor.fetchone()) else None
+            if job_id is None:
+                raise ValueError(f'Error adding job "{job_name}"!')
+            return job_id
+
+    def get_job(self, job_name: str) -> JobDetails:
+        """
+        Retrieves job details for a given job name from the database.
+
+        Args:
+            job_name (str): The name of the job to retrieve.
+
+        Returns:
+            JobDetails: An object containing the details of the retrieved job.
+
+        Raises:
+            ValueError: If no job with the specified name is found in the database.
+        """
+        with self.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    job_id,
+                    job_name,
+                    start_timestamp,
+                    end_timestamp,
+                    product_release,
+                    system_name,
+                    system_release,
+                    system_machine,
+                    host_name
+                FROM jobs
+                WHERE job_name = %s
+                """,
+                (job_name,),
+            )
+            job_details = cursor.fetchone()
+        if job_details is None:
+            raise ValueError(f'Error retrieving job "{job_name}"!')
+        return JobDetails(*job_details)
+
+    def check_job(self, job_name: str) -> bool:
+        """
+        Determines whether a job with the specified name exists.
+
+        Args:
+            job_name (str): The name of the job to check.
+
+        Returns:
+            bool: True if the job exists, False otherwise.
+
+        Logs:
+            Errors encountered during job lookup are logged.
+        """
+        try:
+            return self.get_job(job_name=job_name)[0] is not None
+        except ValueError as excp:
+            print(excp)
+            return False
+
+    def add_scenario(self, scenario_name: str, scenario_description: str | None = None) -> int:
+        """
+        Adds a scenario to the database if it does not already exist.
+
+        If the scenario with the given name exists, returns its ID.
+        Otherwise, inserts a new scenario with the provided name and optional description,
+        and returns the newly created scenario's ID.
+
+        Args:
+            scenario_name (str): The name of the scenario to add or retrieve.
+            scenario_description (str | None, optional): An optional description for the scenario.
+
+        Returns:
+            int: The ID of the existing or newly created scenario.
+
+        Raises:
+            ValueError: If there is an error adding the scenario to the database.
+        """
+        try:
+            return self.get_scenario(scenario_name=scenario_name)[0]
+        except ValueError:
+            with self.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO scenarios(
+                        scenario_name,
+                        scenario_description
+                    )
+                    VALUES(%s,%s)
+                    RETURNING scenario_id
+                    """,
+                    (scenario_name, scenario_description),
+                )
+                scenario_id = result_record[0] if (result_record := cursor.fetchone()) else None
+            if scenario_id is None:
+                raise ValueError(f'Error adding scenario "{scenario_name}"!')
+            return scenario_id
+
+    def get_scenario(self, scenario_name: str) -> ScenarioDetails:
+        """
+        Retrieves the details of a scenario from the database by its name.
+
+        Args:
+            scenario_name (str): The name of the scenario to retrieve.
+
+        Returns:
+            ScenarioDetails: An object containing the scenario's ID, name, and description.
+
+        Raises:
+            ValueError: If no scenario with the given name is found in the database.
+        """
+        with self.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    scenario_id,
+                    scenario_name,
+                    scenario_description
+                FROM scenarios
+                WHERE scenario_name = %s
+                """,
+                (scenario_name,),
+            )
+            scenario_details = cursor.fetchone()
+        if scenario_details is None:
+            raise ValueError(f'Error retrieving scenario "{scenario_name}"!')
+        return ScenarioDetails(*scenario_details)
+
+    def get_scenario_names(self) -> list[str]:
+        """
+        Retrieves all unique scenario names from the 'scenarios' table in the database.
+
+        Returns:
+            list[str]: A list containing the distinct scenario names.
+        """
+        with self.cursor() as cursor:
+            cursor.execute("""SELECT DISTINCT scenario_name FROM scenarios""")
+            scenario_names = [_[0] for _ in cursor.fetchall()]
+        return scenario_names
+
+    def add_test(
+        self, job_id: int, scenario_id: int, start_timestamp: Datetime, end_timestamp: Datetime
+    ) -> int:
+        """
+        Adds a test entry to the database if it does not already exist.
+
+        Parameters:
+            job_id (int): The ID of the job associated with the test.
+            scenario_id (int): The ID of the scenario associated with the test.
+            start_timestamp (Datetime): The start timestamp of the test.
+            end_timestamp (Datetime): The end timestamp of the test.
+
+        Returns:
+            int: The ID of the newly created or existing test entry.
+
+        Raises:
+            ValueError: If the test cannot be added to the database.
+
+        """
+        try:
+            return self.get_test(job_id=job_id, scenario_id=scenario_id)[0]
+        except ValueError:
+            with self.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO tests(
+                        job_id,
+                        scenario_id,
+                        start_timestamp,
+                        end_timestamp
+                    )
+                    VALUES(%s,%s,%s,%s)
+                    RETURNING test_id
+                    """,
+                    (job_id, scenario_id, start_timestamp, end_timestamp),
+                )
+                test_id = result_record[0] if (result_record := cursor.fetchone()) else None
+            if test_id is None:
+                raise ValueError(f'Error adding test "{scenario_id}" to job "{job_id}"!')
+            return test_id
+
+    def get_test(self, job_id: int, scenario_id: int) -> TestDetails:
+        """
+        Retrieve the details of a specific test from the database based on job and scenario IDs.
+
+        Args:
+            job_id (int): The ID of the job associated with the test.
+            scenario_id (int): The ID of the scenario associated with the test.
+
+        Returns:
+            TestDetails: An object containing the details of the test.
+
+        Raises:
+            ValueError: If no test details are found for the given job_id and scenario_id.
+        """
+        with self.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    test_id,
+                    job_id,
+                    scenario_id,
+                    start_timestamp,
+                    end_timestamp
+                FROM tests
+                WHERE job_id = %s AND scenario_id = %s""",
+                (job_id, scenario_id),
+            )
+            test_details = cursor.fetchone()
+        if test_details is None:
+            raise ValueError(
+                f'Test details for scenario "{scenario_id}" not found in job "{job_id}"!'
+            )
+        return TestDetails(*test_details)
+
+    def write_measurements(self, test_id: int, measurements: MeasurementsList) -> None:
+        """
+        Inserts measurement data into the 'metrics' database table for a given test.
+
+        Args:
+            test_id (int): The identifier of the test to associate the measurements with.
+            measurements (MeasurementsList): A list of dictionaries, each containing metric names
+                and their corresponding values.
+                Each dictionary must include a "time" key representing the measurement timestamp.
+
+        Notes:
+            - Each metric is inserted as a separate row in the 'metrics' table.
+        """
+        with self.cursor() as cursor:
+            for measurement in measurements:
+                assert isinstance(measurement, dict)
+                for metric_name in measurement:
+                    if metric_name == "time":
+                        continue
+                    cursor.execute(
+                        """
+                        INSERT INTO metrics (
+                            test_id,
+                            metric_name,
+                            measured_value,
+                            measured_at
+                        )
+                        VALUES (%s,%s,%s,%s)
+                        """,
+                        (test_id, metric_name, measurement[metric_name], measurement["time"]),
+                    )
+
+    def write_benchmark_statistics(self, test_id: int, benchmark_statistics: Measurements) -> None:
+        """
+        Writes benchmark statistics to the database for a given test.
+
+        Args:
+            test_id (int): The identifier of the test for which statistics are recorded.
+            benchmark_statistics (Measurements): A dictionary containing benchmark metrics and their values.
+
+        Note:
+            Any value types other than int and float are ignored.
+        """
+        write_benchmark_statistics: dict[str, int | float] = {
+            key: val for key, val in benchmark_statistics.items() if isinstance(val, int | float)
+        }
+        if "data" in benchmark_statistics:
+            assert isinstance(benchmark_statistics["data"], list)
+            for i, value in enumerate(benchmark_statistics["data"]):
+                write_benchmark_statistics[f"data{i}"] = value
+        with self.cursor() as cursor:
+            for metric_name, value in write_benchmark_statistics.items():
+                cursor.execute(
+                    """
+                    INSERT INTO benchmarks (
+                        test_id,
+                        metric_name,
+                        measured_value
+                    )
+                    VALUES (%s,%s,%s)
+                    """,
+                    (test_id, metric_name, value),
+                )
+
+    def read_benchmark_statistics(self, test_id: int) -> Measurements:
+        """
+        Reads benchmark statistics for a given test ID from the database.
+
+        Fetches metric names and their measured values associated with the specified test ID,
+        ignoring any values that are not of type int or float. The results are returned as a
+        dictionary mapping metric names to their float values, sorted by metric name in ascending order.
+
+        Args:
+            test_id (int): The ID of the benchmark test to retrieve statistics for.
+
+        Returns:
+            Measurements: A dictionary containing metric names as keys and their corresponding float values.
+
+        Note:
+            Any value types other than int and float are ignored.
+        """
+        with self.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT metric_name, measured_value
+                    FROM benchmarks
+                    WHERE test_id = %s
+                    ORDER BY metric_name ASC
+                    """,
+                (test_id,),
+            )
+            measurements: dict = {}
+            while len(rows := cursor.fetchmany(100)) > 0:
+                for row in rows:
+                    metric_name, measured_value = row
+                    measurements[metric_name] = float(measured_value)
+
+        return measurements
+
+    def read_measurements(self, test_id: int) -> MeasurementsList:
+        """
+        Retrieves and organizes measurement data for a given test ID from the database.
+
+        Args:
+            test_id (int): The ID of the test for which measurements are to be read.
+
+        Returns:
+            MeasurementsList: A list of dictionaries, each containing a 'time' key (timestamp)
+            and metric name/value pairs for that time.
+
+        Raises:
+            AssertionError: If the database returns a 'measured_at' value that is not a Datetime instance,
+            or if the internal data structures do not match expected types.
+        """
+        with self.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT metric_name, measured_at, measured_value
+                    FROM metrics
+                    WHERE test_id = %s
+                    ORDER BY metric_name ASC, measured_at ASC
+                    """,
+                (test_id,),
+            )
+            raw_measurements: dict = {}
+            while rows := cursor.fetchmany(100):
+                for row in rows:
+                    metric_name, measured_at, measured_value = row
+                    assert isinstance(measured_at, Datetime)
+                    if measured_at not in raw_measurements:
+                        raw_measurements[measured_at] = {}
+                    assert isinstance(raw_measurements[measured_at], dict)
+                    raw_measurements[measured_at].update({metric_name: measured_value})
+
+        measurements: MeasurementsList = []
+        assert isinstance(measurements, list)
+        for time, measurement in raw_measurements.items():
+            measurements.append({"time": time} | measurement)
+
+        return measurements
+
+    def write_performance_data(
+        self,
+        job_name: str,
+        job_starttime: Datetime,
+        job_endtime: Datetime,
+        scenario_name: str,
+        test_starttime: Datetime,
+        test_endtime: Datetime,
+        benchmark_data: Measurements,
+        performance_data: MeasurementsList,
+    ) -> None:
+        """
+        Writes performance data and related metadata to the database.
+
+        This method records job, scenario, and test information, then stores associated performance measurements and benchmark statistics.
+
+        Args:
+            job_name (str): Name of the job.
+            job_starttime (Datetime): Timestamp when the job started.
+            job_endtime (Datetime): Timestamp when the job ended.
+            scenario_name (str): Name of the test scenario.
+            test_starttime (Datetime): Timestamp when the test started.
+            test_endtime (Datetime): Timestamp when the test ended.
+            benchmark_data (Measurements): Dictionary containing benchmark metadata and results.
+            performance_data (MeasurementsList): List of measurement dictionaries for the test.
+
+        Returns:
+            None
+        """
+        if not (
+            "machine_info" in benchmark_data
+            and isinstance((machine_info := benchmark_data["machine_info"]), dict)
+        ):
+            machine_info = {}
+        job_id = self.add_job(
+            job_name=job_name,
+            start_timestamp=job_starttime,
+            end_timestamp=job_endtime,
+            product_release="",
+            system_name=str(machine_info.get("system", "")),
+            system_release=str(machine_info.get("release", "")),
+            system_machine=str(machine_info.get("machine", "")),
+            host_name=str(machine_info.get("node", "")),
+        )
+        scenario_id = self.add_scenario(scenario_name)
+        try:
+            self.get_test(job_id=job_id, scenario_id=scenario_id)[0]
+        except ValueError:
+            test_id = self.add_test(
+                job_id=job_id,
+                scenario_id=scenario_id,
+                start_timestamp=test_starttime,
+                end_timestamp=test_endtime,
+            )
+            self.write_measurements(test_id=test_id, measurements=performance_data)
+            assert isinstance(benchmarks := benchmark_data["benchmarks"], list)
+            benchmark_statistics: Measurements | None = next(
+                (_["stats"] for _ in benchmarks if _["name"] == scenario_name), None
+            )
+            if benchmark_statistics:
+                self.write_benchmark_statistics(
+                    test_id=test_id,
+                    benchmark_statistics=benchmark_statistics,
+                )
+
+
+class PerftestPlotArgs(argparse.Namespace):
+    """
+    Arguments for configuring performance test plotting.
+
+    Attributes:
+        root_dir (Path): The root directory containing performance test data.
+        output_dir (Path | None): Directory to store generated plots and outputs.
+            If None, the path for the highest version job is used.
+        skip_filesystem_reads (bool): If True, skip reading data from the filesystem.
+        skip_filesystem_writes (bool): If True, skip writing data to the filesystem.
+        skip_database_reads (bool): If True, skip reading data from the database.
+        skip_database_writes (bool): If True, skip writing data to the database.
+        skip_graph_generation (bool): If True, skip generating graphs.
+        write_json_files (bool): If True, write output data to JSON files.
+        job_names (list[str]): List of job names to include in the performance test.
+        dbname (str): Name of the database to connect to.
+        dbuser (str): Username for database authentication.
+        dbpass (str): Password for database authentication.
+        dbhost (str): Hostname or IP address of the database server.
+        dbport (int): Port number for the database connection.
+    """
+
+    root_dir: Path
+    output_dir: Path | None
+    skip_filesystem_reads: bool
+    skip_filesystem_writes: bool
+    skip_database_reads: bool
+    skip_database_writes: bool
+    skip_graph_generation: bool
+    write_json_files: bool
+    job_names: list[str]
+    dbname: str
+    dbuser: str
+    dbpass: str
+    dbhost: str
+    dbport: int
+
+
+class PerftestPlot:
+    PerformanceData = dict[str, tuple[Measurements, dict[str, MeasurementsList]]]
+
+    def __init__(self, args: PerftestPlotArgs):
+        """
+        Initializes the performance test plot object with the provided arguments.
+
+        Args:
+            args (PerftestPlotArgs): Configuration arguments for performance test plotting.
+
+        Attributes:
+            args (PerftestPlotArgs): Stores the provided arguments.
+            read_from_database (bool): Whether to read data from the database.
+            read_from_filesystem (bool): Whether to read data from the filesystem.
+            write_to_database (bool): Whether to write data to the database.
+            database (PerformanceDb, optional): Database connection object if enabled.
+            final_benchmark (str): Name of the final benchmark job.
+            write_json_files (bool): Whether to write JSON files.
+            write_graph_files (bool): Whether to write graph files.
+            root_dir (Path): Root directory for performance data.
+            job_names (List[str]): List of job names.
+            scenario_names (List[str]): List of scenario names.
+            jobs (Any): Performance data for jobs.
+            output_dir (Path): Directory for output files.
+
+        Raises:
+            psycopg.OperationalError: If unable to connect to the database.
+        """
+        super().__init__()
+        self.args = args
+        self.read_from_database = not self.args.skip_database_reads
+        self.read_from_filesystem = not self.args.skip_filesystem_reads
+        self.write_to_database = not self.args.skip_database_writes
+        if self.args.dbuser and (self.read_from_database or self.write_to_database):
+            try:
+                self.database = PerformanceDb(
+                    password=getpass(f'Password for database user "{self.args.dbuser}"? '),
+                    dbname=self.args.dbname,
+                    user=self.args.dbuser,
+                    host=self.args.dbhost,
+                    port=self.args.dbport,
+                )
+                print("A connection was successfully established with the database!")
+            except psycopg.OperationalError:
+                print(
+                    'Could not connect to database "%s"; switching to filesystem mode!',
+                    self.args.dbname,
+                )
+                self.read_from_database = self.write_to_database = False
+        else:
+            self.read_from_database = self.write_to_database = False
+
+        self.final_benchmark = "none"
+
+        self.write_json_files = self.args.write_json_files and not self.args.skip_filesystem_writes
+        self.write_graph_files = not (
+            self.args.skip_graph_generation or self.args.skip_filesystem_writes
+        )
+
+        self.root_dir = self.args.root_dir
+        self.job_names = self.read_job_names()
+        self.scenario_names = self.read_scenario_names()
+        self.jobs = self.read_performance_data()
+
+        # select final (i.e. highest version) job
+
+        self.output_dir = self.args.output_dir or (
+            self.job_file_path(self.job_names[-1]).parent if self.job_names else self.root_dir
+        )
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def px(val: int) -> int:
+        """Return a figsize value given in pixels"""
+        return 1 / pyplot.rcParams["figure.dpi"] * val
+
+    @staticmethod
+    def read_json(json_path: Path) -> Measurements | MeasurementsList | None:
+        """
+        Reads and parses a JSON file from the given path.
+
+        Args:
+            json_path (Path): The path to the JSON file.
+
+        Returns:
+            Measurements | MeasurementsList | None: The parsed JSON data as a Measurements or MeasurementsList object,
+            or None if the file is not found or cannot be accessed.
+
+        Raises:
+            Exception: If the JSON file cannot be decoded or another OS error occurs during parsing.
+        """
+        try:
+            with open(json_path, encoding="utf-8") as statistics_file:
+                return json.load(statistics_file)
+        except (FileNotFoundError, PermissionError):
+            return None
+        except (json.JSONDecodeError, OSError) as parse_excp:
+            raise Exception(f'Error decoding JSON file "{json_path}"!') from parse_excp
+
+    def job_file_path(self, job_name: str) -> Path:
+        """
+        Returns the file path to the benchmark JSON file for a given job.
+
+        Args:
+            job_name (str): The name of the job.
+
+        Returns:
+            Path: The path to the benchmark.json file.
+        """
+        return self.root_dir / f"{job_name}/benchmark.json"
+
+    def scenario_file_path(self, job_name: str, scenario_name: str) -> Path:
+        """
+        Constructs the file path for a scenario's resources JSON file within a job's performance directory.
+
+        Args:
+            job_name (str): The name of the job.
+            scenario_name (str): The name of the scenario.
+
+        Returns:
+            Path: The path to the scenario's resources JSON file.
+        """
+        return self.root_dir / f"{job_name}/{scenario_name}.resources.json"
+
+    def _plottable_benchmark_data(
+        self, scenario_name: str
+    ) -> tuple[list[int | float], list[int | float]]:
+        """
+        Extracts plottable mean and standard deviation values for a given benchmark scenario.
+
+        Args:
+            scenario_name (str): The name of the benchmark scenario to extract data for.
+
+        Returns:
+            tuple[list[int | float], list[int | float]]:
+                - A list of mean values for the specified scenario across all jobs.
+                - A list of standard deviation values for the specified scenario across all jobs.
+                If a job does not contain the specified scenario, 0.0 is appended for both mean and stddev.
+        """
+        values: list[float] = []
+        err_values: list[float] = []
+        for _, benchmark_data in self.jobs.items():
+            if not (
+                isinstance(benchmark_data[0], dict)
+                and isinstance(benchmark_data[0]["benchmarks"], list)
+            ):
+                continue
+            if benchmark := next(
+                (
+                    _benchmark
+                    for _benchmark in benchmark_data[0]["benchmarks"]
+                    if isinstance(_benchmark, dict) and str(_benchmark["name"]) == scenario_name
+                ),
+                None,
+            ):
+                values.append(benchmark["stats"]["mean"])
+                err_values.append(benchmark["stats"]["stddev"])
+            else:
+                values.append(0.0)
+                err_values.append(0.0)
+        return values, err_values
+
+    def plot_benchmark_graph(self, graph_file: Path) -> None:
+        """
+        Generates and saves a benchmark graph for each scenario.
+
+        For each scenario, this method retrieves benchmark values and error values,
+        formats the labels, and plots an error bar graph showing execution times per job. The graph includes
+        error bars, grid lines, and custom axis labels. The resulting plot is saved as an image file in the
+        specified location.
+
+        Args:
+            graph_file (Path): The path specifying the output file location and name for the saved graph image.
+
+        Returns:
+            None
+        """
+        for scenario_name in self.scenario_names:
+            values, err_values = self._plottable_benchmark_data(scenario_name)
+            if not (values and err_values) or all(_ == 0 for _ in values):
+                continue
+            graph_file_path = graph_file.parent / f"{scenario_name}.{graph_file.name}"
+            logger.info('Writing graph "%s"...', graph_file_path)
+            alternate = len(self.jobs) > 6
+            max_value = 0
+            names = []
+            for idx, benchmark in enumerate(self.jobs):
+                value = values[idx]
+                err_value = err_values[idx]
+                max_value = int(max(value + err_value + 1, max_value))
+                name = f"{benchmark}\n{round(value, 1)}s (+/-{round(err_value, 1)}s)"
+                if alternate and idx % 2 == 1:
+                    name = f"\n\n{name}"
+                names.append(name)
+
+            fig, times = pyplot.subplots(1)
+            fig.suptitle(f"Execution time: {scenario_name}")
+            fig.set_size_inches(self.px(1920), self.px(1080))
+            times.errorbar(x=names, y=values, yerr=err_values)
+            times.set_ylim(ymin=0)
+            times.set_ylabel("time (s)")
+            times.set_yscale("linear")
+            times.set_yticks(ticks=range(0, max_value, 1), minor=True)
+            times.grid(visible=True, which="both", axis="y", linestyle="dotted")
+            times.set_xlabel("runtime per release (single iteration)")
+            pyplot.savefig(graph_file_path)
+            pyplot.close()
+
+    @staticmethod
+    def _plottable_resource_data(
+        statistics: MeasurementsList, section: str, indicator: str
+    ) -> tuple[list[float], list[float]]:
+        """
+        Extracts and prepares resource usage data for plotting from a list of measurement statistics.
+
+        Args:
+            statistics (MeasurementsList): A list of measurement dictionaries containing timestamp and resource usage data.
+            section (str): The section name used to identify the resource in the statistics.
+            indicator (str): The indicator name used to identify the specific metric in the statistics.
+
+        Returns:
+            tuple[list[float], list[float]]:
+                - A list of durations (in seconds) between each timestamp, suitable for use as the x-axis in a plot.
+                - A list of resource usage measurements (as floats), suitable for use as the y-axis in a plot.
+
+        Notes:
+            - Only statistics that are dictionaries and contain valid timestamp and resource usage values are processed.
+            - The durations are calculated as evenly spaced intervals between the first and last timestamps.
+            - Resource usage values are converted to floats for consistency.
+        """
+
+        def get_durations(timestamps: list[str]) -> list[float]:
+            """
+            Calculates evenly spaced durations between the first and last timestamps.
+
+            Args:
+                timestamps (list[str]): List of ISO format timestamp strings.
+
+            Returns:
+                list[float]: List of durations (in seconds) from the start time, evenly spaced between the first and last timestamp.
+            """
+            start_time = Datetime.fromisoformat(timestamps[0])
+            end_time = Datetime.fromisoformat(timestamps[-1])
+            duration = end_time - start_time
+            interval = round(duration.total_seconds() / len(timestamps))
+            return [i * interval for i in range(len(timestamps))]
+
+        timestamps: list[str] = []
+        measurements: list[float] = []
+        for stats in statistics:
+            if not isinstance(stats, dict):
+                continue
+            timestamp = str(stats["time"])
+            raw_value = stats[f"{section}.{indicator}"]
+            if isinstance(raw_value, int | float | str):
+                value = float(raw_value)
+                timestamps.append(timestamp)
+                measurements.append(value)
+        return get_durations(timestamps), measurements
+
+    def plot_resource_graph(
+        self,
+        graph_file: Path,
+    ) -> None:
+        """
+        Plots resource usage graphs (CPU and memory) for each scenario and saves them as image files.
+
+        For each scenario, this method creates a figure with two subplots:
+        one for CPU usage and one for memory usage. It iterates over all selected jobs, extracts
+        the relevant statistics, and plots the resource usage over time. The average usage is also
+        plotted as a dashed line. Each plot is labeled with the job name and its average usage.
+
+        The resulting graphs are saved to the specified `graph_file` location, with filenames
+        including the scenario name.
+
+        Args:
+            graph_file (Path): The path to save the generated graph images.
+
+        Returns:
+            None
+        """
+        for scenario_name in self.scenario_names:
+            fig, ax = pyplot.subplots(2)
+            fig.suptitle(f"Resource usage: {scenario_name}")
+            fig.set_size_inches(self.px(1920), self.px(1080))
+            graph_file_path = graph_file.parent / f"{scenario_name}.{graph_file.name}"
+            logger.info('Writing graph "%s"...', graph_file_path)
+            for job_name, data in self.jobs.items():
+                statistics = data[1].get(scenario_name, [])
+                xmax = 60
+                for subplot, section, indicator in [
+                    [ax[0], "cpu_info", "cpu_percent"],
+                    [ax[1], "memory_info", "virtual_memory_percent"],
+                ]:
+                    if not statistics:
+                        # no statistics available
+                        continue
+                    durations, values = self._plottable_resource_data(
+                        statistics, section, indicator
+                    )
+                    xmax = int(durations[-1]) if durations[-1] > xmax else xmax
+                    average = sum(values) / len(values)
+                    # total_duration = datetime.timedelta(seconds=durations[-1])
+                    pg = subplot.plot(
+                        durations,
+                        values,
+                        label=f"{job_name} (avg={round(average, 2)}%)",
+                    )
+                    subplot.legend()
+                    # draw a dashed line for the average in the same color
+                    subplot.plot(
+                        [durations[0], durations[-1]],
+                        [average, average],
+                        linestyle="dashed",
+                        color=pg[-1].get_color(),
+                    )
+                    subplot.set(ylabel=indicator, xlabel="time (s)")
+                    subplot.set_ylim(ymin=0, ymax=100)
+                    subplot.set_xlim(xmin=0, xmax=xmax)
+            pyplot.savefig(graph_file_path)
+            pyplot.close()
+
+    def read_job_names(self) -> list[str]:
+        """
+        Retrieves and returns a sorted list of job names that are either present on disk or exist in the database.
+
+        The method checks for job directories in the specified root directory and verifies the existence of corresponding job files.
+        It also checks the database for job names. Only job names specified in `self.args.job_names` that are found on disk or in the database are included.
+
+        Returns:
+            list[str]: A sorted list of valid job names found on disk or in the database.
+        """
+        job_names_on_disk = [
+            job.name
+            for job in Path(self.args.root_dir).iterdir()
+            if job.is_dir() and self.job_file_path(job.name).exists()
+        ]
+        return sorted(
+            [
+                job_name
+                for job_name in self.args.job_names
+                if job_name in job_names_on_disk
+                or (self.read_from_database and self.database.check_job(job_name))
+            ]
+        )
+
+    def read_job_data(self, job_name: str) -> Measurements:
+        """
+        Reads benchmark job data from disk or database.
+
+        If the job data exists on the filesystem and reading from the filesystem is enabled,
+        loads and returns the data from a JSON file. Otherwise, attempts to read the job data
+        from the database if enabled and the job exists in the database.
+
+        For each scenario associated with the job, retrieves benchmark statistics and
+        constructs a list of benchmark dictionaries containing scenario name, description,
+        and statistics.
+
+        Returns:
+            dict: A dictionary containing benchmark data, job datetime, and machine information.
+                  If no data is found, returns a dictionary with an empty 'benchmarks' list.
+
+        Raises:
+            ValueError: If the benchmark data loaded from the filesystem is not a dictionary.
+
+        Args:
+            job_name (str): The name of the job to read data for.
+        """
+        job_file_path = self.job_file_path(job_name)
+        if job_file_path.exists() and self.read_from_filesystem:
+            logger.info('Reading data for job "%s" from the filesystem...', job_name)
+            data = self.read_json(job_file_path)
+            if not isinstance(data, dict):
+                raise ValueError(f"Invalid benchmark data in {job_file_path}")
+            return data
+
+        benchmarks: list[dict[str, str | Measurements]] = []
+        if not (self.read_from_database and self.database.check_job(job_name)):
+            return {"benchmarks": benchmarks}
+        logger.info('Reading data for job "%s" from the database...', job_name)
+        job_details = self.database.get_job(job_name=job_name)
+        for scenario_name in self.scenario_names:
+            scenario_id, _, scenario_description = self.database.get_scenario(scenario_name)
+            test_id = self.database.get_test(job_details.job_id, scenario_id)[0]
+            if benchmark_statistics := self.database.read_benchmark_statistics(test_id):
+                benchmarks.append(
+                    {
+                        "name": scenario_name,
+                        "description": scenario_description,
+                        "stats": benchmark_statistics,
+                    }
+                )
+        return {
+            "benchmarks": benchmarks,
+            "datetime": str(job_details.end_timestamp),
+            "machine_info": {
+                "node": job_details.host_name,
+                "system": job_details.system_name,
+                "release": job_details.system_release,
+                "machine": job_details.system_machine,
+            },
+        }
+
+    def read_scenario_names(self) -> list[str]:
+        """
+        Retrieves a sorted list of scenario names from the filesystem and/or database.
+
+        Scenarios are identified by files matching the pattern '*.resources.json' in the job directories.
+        The scenario name is derived from the file stem, with the '.resources' suffix removed.
+        If enabled, scenario names are also retrieved from the database and combined with those from the filesystem.
+
+        Returns:
+            list[str]: A sorted list of scenario names.
+        """
+        scenario_names = (
+            list(
+                {
+                    _.stem.removesuffix(".resources")
+                    for job_name in self.job_names
+                    if (job_file_path := self.job_file_path(job_name)).exists()
+                    for _ in list(job_file_path.parent.glob("*.resources.json"))
+                }
+            )
+            if self.read_from_filesystem
+            else []
+        )
+        if self.read_from_database:
+            scenario_names += self.database.get_scenario_names()
+        scenario_names.sort()
+        return scenario_names
+
+    def read_scenario_data(self, job_name: str) -> dict[str, MeasurementsList]:
+        """
+        Reads measurement data for each scenario associated with a given job name from either the filesystem or a database.
+
+        Args:
+            job_name (str): The name of the job for which scenario data should be retrieved.
+
+        Returns:
+            dict[str, MeasurementsList]: A dictionary mapping scenario names to lists of measurements.
+
+        Notes:
+            - If `read_from_filesystem` is True and the scenario file exists, data is read from the filesystem.
+            - If `read_from_database` is True and the job exists in the database, data is read from the database.
+            - If no data is found for a scenario, an empty list is returned for that scenario.
+        """
+        scenario_data: dict[str, MeasurementsList] = {}
+        for scenario_name in self.scenario_names:
+            scenario_file_path = self.scenario_file_path(job_name, scenario_name)
+            if scenario_file_path.exists() and self.read_from_filesystem:
+                # read measurements from file
+                scenario_data[scenario_name] = (
+                    data if isinstance(data := self.read_json(scenario_file_path), list) else []
+                )
+            elif self.read_from_database and self.database.check_job(job_name=job_name):
+                # read measurements from database
+                if (job_details := self.database.get_job(job_name=job_name)) is None:
+                    scenario_data[scenario_name] = []
+                    continue
+                job_id = job_details[0]
+                scenario_id = self.database.get_scenario(scenario_name=scenario_name)[0]
+                test_id = self.database.get_test(job_id=job_id, scenario_id=scenario_id)[0]
+                scenario_data[scenario_name] = self.database.read_measurements(test_id=test_id)
+        return scenario_data
+
+    def read_performance_data(self) -> PerformanceData:
+        """
+        Retrieve and aggregate performance data for all selected jobs.
+
+        For each selected job, this method collects job-specific data and scenario-specific data.
+        The results are returned as a sorted dictionary mapping each job name to a tuple containing its
+        job data and scenario data.
+
+        Returns:
+            PerformanceData: A sorted dictionary where each key is a job name and each value is a tuple
+            of (job_data, scenario_data) for that job.
+        """
+        return dict(
+            sorted(
+                {
+                    job_name: (self.read_job_data(job_name), self.read_scenario_data(job_name))
+                    for job_name in self.job_names
+                }.items()
+            )
+        )
+
+    def write_performance_data(self) -> None:
+        """
+        Writes performance data for each job and scenario to JSON files and/or a database.
+
+        For each selected job, this method:
+        - Optionally writes the job's benchmark data to a JSON file if `self.write_json_files` is True.
+        - Iterates through each scenario in the job, optionally writing scenario performance data to a JSON file.
+        - If performance data exists for a scenario, and `self.write_to_database` is True, writes the data to the database, including job and test start/end times.
+
+        Notes:
+            - Test start and end times are extracted from the first and last entries in the scenario's performance data.
+
+        Raises:
+            Any exceptions raised during file or database operations are propagated.
+        """
+        for job_name in self.jobs:
+            benchmark_data, scenario_data = self.jobs[job_name]
+            job_file_path = self.job_file_path(job_name)
+            if self.write_json_files:
+                logger.info('Writing data for job "%s" to the filesystem...', job_name)
+                job_file_path.parent.mkdir(parents=True, exist_ok=True)
+                with job_file_path.open("w", encoding="utf-8") as json_file:
+                    json.dump(benchmark_data, json_file, indent=4, default=str)
+            for scenario_name, performance_data in scenario_data.items():
+                if self.write_json_files:
+                    with self.scenario_file_path(job_name, scenario_name).open(
+                        "w", encoding="utf-8"
+                    ) as json_file:
+                        json.dump(performance_data, json_file, indent=4, default=str)
+
+                if not len(performance_data) > 0:
+                    continue
+
+                if self.write_to_database:
+                    logger.info('Writing data for job "%s" to the database...', job_name)
+                    job_endtime = (
+                        Datetime.fromisoformat(str(_ts))
+                        if (_ts := benchmark_data.get("end_time", benchmark_data.get("datetime")))
+                        else Datetime.now()
+                    )
+                    job_starttime = (
+                        Datetime.fromisoformat(str(_ts))
+                        if (_ts := benchmark_data.get("start_time"))
+                        else job_endtime
+                    )
+                    self.database.write_performance_data(
+                        job_name=job_name,
+                        job_starttime=job_starttime,
+                        job_endtime=job_endtime,
+                        scenario_name=scenario_name,
+                        test_starttime=Datetime.fromisoformat(
+                            str(performance_data[0].get("time", ""))
+                        ),
+                        test_endtime=Datetime.fromisoformat(
+                            str(performance_data[-1].get("time", ""))
+                        ),
+                        benchmark_data=benchmark_data,
+                        performance_data=performance_data,
+                    )
+
+
+def parse_args() -> PerftestPlotArgs:
+    """
+    Parse command line arguments for the performance test plotting tool.
+
+    Returns:
+        PerftestPlotArgs: An object containing parsed command line arguments.
+
+    Raises:
+        argparse.ArgumentTypeError: If a job name does not match the required pattern.
+    """
+
+    def job_name() -> Callable:
+        pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.c[cemrs]e"
+
+        def validator(value: str) -> str:
+            if not (match := re.search(pattern, value)):
+                raise argparse.ArgumentTypeError(
+                    f"Value '{value}' does not match pattern: {pattern}"
+                )
+            return match.group(0)
+
+        return validator
+
+    parser = argparse.ArgumentParser(
+        description="Plots graphs for the given performance test jobs."
+    )
+    parser.add_argument(
+        dest="job_names",
+        type=job_name(),
+        default=[],
+        nargs="*",
+        help="Job names to process (in the format <VERSION>-<DATE>-<EDITION>).",
+    )
+    parser.add_argument(
+        "--root-dir",
+        "-r",
+        dest="root_dir",
+        type=Path,
+        default=Path(__file__).parent.parent.parent / "results" / "performance",
+        help="The root directory for all job files on disk (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--output-dir",
+        "-o",
+        dest="output_dir",
+        type=Path,
+        default=None,
+        help="The output path for the graph files. Defaults to the highest version.",
+    )
+    parser.add_argument(
+        "--skip-filesystem-reads",
+        action=argparse.BooleanOptionalAction,
+        dest="skip_filesystem_reads",
+        type=bool,
+        default=False,
+        help="Specifies to read from the database only and ignore filesystem data"
+        " (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--skip-filesystem-writes",
+        action=argparse.BooleanOptionalAction,
+        dest="skip_filesystem_writes",
+        type=bool,
+        default=False,
+        help="Specifies to update the database only and skip writing to the filesystem (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--skip-database-reads",
+        action=argparse.BooleanOptionalAction,
+        dest="skip_database_reads",
+        type=bool,
+        default=False,
+        help="Specifies to read from the filesystem only and ignore database data (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--skip-database-writes",
+        action=argparse.BooleanOptionalAction,
+        dest="skip_database_writes",
+        type=bool,
+        default=False,
+        help="Specifies to update the filesystem only and skip writing to the database (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--skip-graph-generation",
+        "--skip-graph",
+        action=argparse.BooleanOptionalAction,
+        dest="skip_graph_generation",
+        type=bool,
+        default=False,
+        help="Specifies to skip the graph generation (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--write-json-files",
+        action=argparse.BooleanOptionalAction,
+        dest="write_json_files",
+        type=bool,
+        default=False,
+        help="Specifies to write JSON files back to the filesystem (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--dbname",
+        dest="dbname",
+        type=str,
+        default="performance",
+        help="The database name to connect to (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--dbuser",
+        dest="dbuser",
+        type=str,
+        default=None,
+        help="The user name for the database connection.",
+    )
+    parser.add_argument(
+        "--dbpass",
+        dest="dbpass",
+        type=str,
+        default=None,
+        help="The password for the database connection.",
+    )
+    parser.add_argument(
+        "--dbhost",
+        dest="dbhost",
+        type=str,
+        default="localhost",
+        help="The host name for the database connection (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--dbport",
+        dest="dbport",
+        type=int,
+        default=5432,
+        help="The port for the database connection (default: %(default)d).",
+    )
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        type=str,
+        default="WARNING",
+        help="The log level for the application (default: %(default)d).",
+    )
+    return parser.parse_args(namespace=PerftestPlotArgs())
+
+
+def main():
+    """
+    Runs the CLI application for performance test plotting.
+
+    This function initializes the PerftestPlot application with parsed command-line arguments,
+    checks for the presence of benchmark jobs, writes performance data, generates graph files
+    if requested, and prints the output directory.
+
+    Raises:
+        SystemExit: If no benchmark jobs are provided.
+    """
+    args = parse_args()
+    logger.setLevel(args.log_level)
+    app = PerftestPlot(args=args)
+
+    if len(app.jobs) == 0:
+        print(
+            "Please provide one or more performance test benchmark jobs!\n\n"
+            f'Run "{Path(__file__).name} --help" for more details.'
+        )
+        sys_exit()
+    logger.info("Active jobs: %s", ", ".join(list(app.jobs.keys())))
+
+    app.write_performance_data()
+
+    if app.write_graph_files:
+        app.plot_benchmark_graph(app.output_dir / "benchmark.png")
+        app.plot_resource_graph(app.output_dir / "resources.png")
+
+    print(app.output_dir)
+
+
+if __name__ == "__main__":
+    main()

@@ -30,7 +30,7 @@ from cmk.special_agents.v0_unstable.request_helper import ApiSession
 LOGGER = logging.getLogger()  # root logger for now
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
@@ -901,13 +901,23 @@ class ApiError(Exception):
     pass
 
 
-def main(argv=None):
+def process_config_and_args(argv: list[str]) -> argparse.Namespace:
     if argv is None:
         argv = sys.argv[1:]
+
     config = sys.stdin.read()
     if config:
-        argv += ["--config", config]
-    args = parse_arguments(argv)
+        # keep --config at the beginning of argv.
+        # If not, in some config setups it will end after, e.g., auth_method
+        # causing the subparser of auth_method (inside add_authentication_args),
+        # and not the main parser, to pick it up
+        argv = ["--config", config] + argv
+
+    return parse_arguments(argv)
+
+
+def main(argv=None):
+    args = process_config_and_args(argv)
     try:
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)

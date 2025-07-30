@@ -40,17 +40,73 @@ from cmk.gui.visuals.filter.components import (
 from ._tree import InventoryPath
 
 
-class FilterInvtableText(InputTextFilter):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+class FilterInvBool(FilterOption):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: InventoryPath,
+        is_show_more: bool = True,
+    ) -> None:
         super().__init__(
             title=title,
             sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.TableTextQuery(
-                ident=ident, row_filter=query_filters.filter_by_column_textregex
+            info="host",
+            query_filter=query_filters.TristateQuery(
+                ident=ident,
+                filter_code=lambda x: "",  # No Livestatus filtering right now
+                filter_row=inside_inventory(inventory_path),
             ),
-            show_heading=False,
+            is_show_more=is_show_more,
         )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
+
+
+def _filter_in_host_inventory_range(
+    inventory_path: InventoryPath,
+) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
+    def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
+        if not isinstance(
+            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
+            int | float,
+        ):
+            return False
+        return query_filters.value_in_range(invdata, bounds)
+
+    return row_filter
+
+
+class FilterInvFloat(FilterNumberRange):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: InventoryPath,
+        unit: str | LazyString,
+        scale: float | None,
+        is_show_more: bool = True,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info="host",
+            query_filter=query_filters.NumberRangeQuery(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=_filter_in_host_inventory_range(inventory_path),
+                request_var_suffix="",
+                bound_rescaling=scale if scale is not None else 1.0,
+            ),
+            unit=unit,
+            is_show_more=is_show_more,
+        )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return any(self.query_filter.extractor(value))
 
 
 class FilterInvText(InputTextFilter):
@@ -75,6 +131,117 @@ class FilterInvText(InputTextFilter):
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
+
+
+class FilterInvChoice(FilterOption):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: InventoryPath,
+        options: Sequence[tuple[str, str]],
+        is_show_more: bool = True,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info="host",
+            query_filter=query_filters.SingleOptionQuery(
+                ident=ident,
+                options=list(options),
+                filter_code=lambda x: "",
+                filter_row=lambda selection, row: (selection == "yes")
+                == row.get("invinterface_available"),
+            ),
+            is_show_more=is_show_more,
+        )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
+
+
+def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Rows:
+    values = context.get(ident, {})
+
+    def _add_row(row: Row) -> bool:
+        # Apply filter if and only if a filter value is set
+        value = row.get(ident)
+        if (filter_key := "%s_%s" % (ident, value)) in values:
+            return values[filter_key] == "on"
+        return True
+
+    return [row for row in rows if _add_row(row)]
+
+
+class FilterInvtableChoice(CheckboxRowFilter):
+    def __init__(
+        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident=ident,
+                options=[(f"{ident}_{k}", v) for k, v in options],
+                rows_filter=partial(_filter_table_choices, ident),
+            ),
+        )
+
+
+class FilterInvtableIntegerRange(FilterNumberRange):
+    """Filter for choosing a range in which a certain integer lies"""
+
+    def __init__(
+        self,
+        *,
+        inv_info: str,
+        ident: str,
+        title: str,
+        unit: str | LazyString,
+        scale: float | None,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.NumberRangeQuery(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=query_filters.column_value_in_range,
+                request_var_suffix="",
+                bound_rescaling=scale if scale is not None else 1.0,
+            ),
+            unit=unit,
+            is_show_more=True,
+        )
+
+
+class FilterInvtableText(InputTextFilter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.TableTextQuery(
+                ident=ident, row_filter=query_filters.filter_by_column_textregex
+            ),
+            show_heading=False,
+        )
+
+
+class FilterInvtableDualChoice(DualListFilter):
+    def __init__(
+        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
+            options=lambda i: list(options),
+        )
 
 
 def _filter_by_host_inventory(
@@ -113,77 +280,6 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
             unit="days",
             is_show_more=False,
         )
-
-
-class FilterInvtableIntegerRange(FilterNumberRange):
-    """Filter for choosing a range in which a certain integer lies"""
-
-    def __init__(
-        self,
-        *,
-        inv_info: str,
-        ident: str,
-        title: str,
-        unit: str | LazyString,
-        scale: float | None,
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=query_filters.column_value_in_range,
-                request_var_suffix="",
-                bound_rescaling=scale if scale is not None else 1.0,
-            ),
-            unit=unit,
-        )
-
-
-class FilterInvFloat(FilterNumberRange):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: str,
-        inventory_path: InventoryPath,
-        unit: str | LazyString,
-        scale: float | None,
-        is_show_more: bool = True,
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info="host",
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=_filter_in_host_inventory_range(inventory_path),
-                request_var_suffix="",
-                bound_rescaling=scale if scale is not None else 1.0,
-            ),
-            unit=unit,
-            is_show_more=is_show_more,
-        )
-
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return any(self.query_filter.extractor(value))
-
-
-def _filter_in_host_inventory_range(
-    inventory_path: InventoryPath,
-) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
-        if not isinstance(
-            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
-            int | float,
-        ):
-            return False
-        return query_filters.value_in_range(invdata, bounds)
-
-    return row_filter
 
 
 class FilterInvtableVersion(Filter):
@@ -314,101 +410,6 @@ class FilterInvtableInterfaceType(DualListFilter):
         if not selection:
             return rows  # No types selected, filter is unused
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
-
-
-def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Rows:
-    values = context.get(ident, {})
-
-    def _add_row(row: Row) -> bool:
-        # Apply filter if and only if a filter value is set
-        value = row.get(ident)
-        if (filter_key := "%s_%s" % (ident, value)) in values:
-            return values[filter_key] == "on"
-        return True
-
-    return [row for row in rows if _add_row(row)]
-
-
-class FilterInvtableChoice(CheckboxRowFilter):
-    def __init__(
-        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.MultipleOptionsQuery(
-                ident=ident,
-                options=[(f"{ident}_{k}", v) for k, v in options],
-                rows_filter=partial(_filter_table_choices, ident),
-            ),
-        )
-
-
-class FilterInvtableDualChoice(DualListFilter):
-    def __init__(
-        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
-            options=lambda i: list(options),
-        )
-
-
-class FilterInvBool(FilterOption):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: str,
-        inventory_path: InventoryPath,
-        is_show_more: bool = True,
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info="host",
-            query_filter=query_filters.TristateQuery(
-                ident=ident,
-                filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_row=inside_inventory(inventory_path),
-            ),
-            is_show_more=is_show_more,
-        )
-
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return self.query_filter.selection_value(value) != self.query_filter.ignore
-
-
-class FilterInvChoice(FilterOption):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: str,
-        inventory_path: InventoryPath,
-        options: Sequence[tuple[str, str]],
-        is_show_more: bool = True,
-    ) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info="host",
-            query_filter=query_filters.SingleOptionQuery(
-                ident=ident,
-                options=list(options),
-                filter_code=lambda x: "",
-                filter_row=lambda selection, row: (selection == "yes")
-                == row.get("invinterface_available"),
-            ),
-            is_show_more=is_show_more,
-        )
-
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 # Filter tables

@@ -23,11 +23,11 @@ class PageUnifiedSearch(AjaxPage):
         provider = self._parse_provider_query_param()
         sort_type = self._parse_sort_query_param()
 
-        setup_engine = SetupSearchEngine()
-        monitoring_engine = MonitoringSearchEngine()
-        customize_engine = CustomizeSearchEngine()
-
-        unified_search_engine = UnifiedSearch(setup_engine, monitoring_engine, customize_engine)
+        unified_search_engine = UnifiedSearch(
+            setup_engine=SetupSearchEngine(),
+            monitoring_engine=MonitoringSearchEngine(),
+            customize_engine=CustomizeSearchEngine(),
+        )
 
         response = unified_search_engine.search(
             query,

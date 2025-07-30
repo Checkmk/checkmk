@@ -28,6 +28,7 @@ from .type_defs import (
 class UnifiedSearch:
     def __init__(
         self,
+        *,
         setup_engine: SupportsSetupSearchEngine,
         monitoring_engine: SupportsMonitoringSearchEngine,
         customize_engine: SearchEngine,

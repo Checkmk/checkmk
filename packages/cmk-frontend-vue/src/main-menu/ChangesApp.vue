@@ -22,6 +22,13 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
+import type {
+  ActivatePendingChangesResponse,
+  ActivationStatusResponse,
+  PendingChanges,
+  Site,
+  SitesAndChanges
+} from './ChangesInterfaces'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -52,71 +59,6 @@ const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'defaul
     missing: 'warning'
   }
   return mapping[status] ?? 'warning'
-}
-
-interface StatusPerSiteResponse {
-  site: string
-  phase: 'initialized' | 'queued' | 'started' | 'sync' | 'activate' | 'finishing' | 'done'
-  state: 'warning' | 'success' | 'error'
-  status_text: string
-  status_details: string
-  start_time: string
-  end_time: string
-}
-
-// We only really care about the status_per_site & is_running. The rest is not used in the UI
-interface ActivationExtensionsResponse {
-  sites: Array<string>
-  is_running: boolean
-  force_foreign_changes: boolean
-  time_started: string
-  changes: Array<object>
-  status_per_site: Array<StatusPerSiteResponse>
-}
-
-// We only really care about the extensions. The rest is not used in the UI
-interface ActivationStatusResponse {
-  links: Array<object>
-  domainType: string
-  id: string
-  title: string
-  members: object
-  extensions: ActivationExtensionsResponse
-}
-
-// We only really care about the id. The rest is not used in the UI
-interface ActivatePendingChangesResponse {
-  links: Array<object>
-  domainType: string
-  id: string
-  title: string
-  members: object
-  extensions: object
-}
-
-// Site information as returned by the ajax call
-// The lastActivationStatus is added when activating changes
-interface Site {
-  siteId: string
-  siteName: string
-  onlineStatus: string
-  changes: number
-  version: string
-  lastActivationStatus: StatusPerSiteResponse | undefined
-}
-
-interface PendingChanges {
-  changeId: string
-  changeText: string
-  user: string
-  time: number
-  whichSites: string
-  timestring?: string
-}
-
-interface SitesAndChanges {
-  sites: Array<Site>
-  pendingChanges: Array<PendingChanges>
 }
 
 const sitesAndChanges = ref<SitesAndChanges>({

@@ -80,6 +80,17 @@ def test_pattern() -> None:
         adapter.validate_python({"field": "invalid"})
 
 
+def test_deprecated() -> None:
+    @dataclasses.dataclass
+    class TestModel:
+        field: str = api_field(description="test", deprecated=True)
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    schema = adapter.json_schema()
+    assert "deprecated" in schema["properties"]["field"]
+    assert schema["properties"]["field"]["deprecated"] is True
+
+
 def test_discriminator() -> None:
     @dataclasses.dataclass(kw_only=True, slots=True)
     class OptionOne:

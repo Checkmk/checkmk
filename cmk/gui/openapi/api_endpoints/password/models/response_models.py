@@ -31,7 +31,7 @@ class PasswordExtension:
         example="admin",
         description="Deprecated - use `editable_by` instead. The owner of the password who is able to edit, delete and use existing passwords.",
         default_factory=ApiOmitted,
-        additional_metadata={"deprecated": True},
+        deprecated=True,
     )
     editable_by: str | ApiOmitted = api_field(
         example="admin",

@@ -27,6 +27,7 @@ def api_field[T](
     example: object | None = None,
     pattern: str | None = None,
     discriminator: str | None = None,
+    deprecated: bool = False,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -46,6 +47,7 @@ def api_field[T](
     example: object | None = None,
     pattern: str | None = None,
     discriminator: str | None = None,
+    deprecated: bool = False,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -65,6 +67,7 @@ def api_field(
     example: object | None = None,
     pattern: str | None = None,
     discriminator: str | None = None,
+    deprecated: bool = False,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -84,6 +87,7 @@ def api_field(
     example: object | None = None,
     pattern: str | None = None,
     discriminator: str | None = None,
+    deprecated: bool = False,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -107,6 +111,7 @@ def api_field(
         pattern: Regular expression pattern for the field, used for OpenAPI schema generation
                  and validation.
         discriminator: Discriminator for tagged unions, improves error responses.
+        deprecated: If True, the field is marked as deprecated in the OpenAPI schema.
         init: Include the field in the generated __init__ method.
         repr: Include the field in the generated __repr__ method.
         hash: Include the field in the generated __hash__ method. If None, use the compare behavior.
@@ -129,6 +134,8 @@ def api_field(
         metadata["pattern"] = pattern
     if discriminator:
         metadata["discriminator"] = discriminator
+    if deprecated:
+        metadata["deprecated"] = True
     if additional_metadata:
         metadata.update(additional_metadata)
     return Field(

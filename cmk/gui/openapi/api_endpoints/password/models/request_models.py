@@ -52,7 +52,7 @@ class CreatePassword:
         description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         alias="owner",
         default_factory=ApiOmitted,
-        additional_metadata={"deprecated": True},
+        deprecated=True,
     )
     editable_by: str | ApiOmitted = api_field(
         example="admin",
@@ -138,7 +138,7 @@ class UpdatePassword:
         description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         alias="owner",
         default_factory=ApiOmitted,
-        additional_metadata={"deprecated": True},
+        deprecated=True,
     )
     editable_by: str | ApiOmitted = api_field(
         example="admin",

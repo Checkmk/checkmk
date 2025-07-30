@@ -644,20 +644,23 @@ class SearchIndexBackgroundJob(BackgroundJob):
 
 
 class SupportsSetupSearchEngine(Protocol):
-    def search(self, query: str, config: Config) -> SearchResultsByTopic: ...
+    def search(self, query: str) -> SearchResultsByTopic: ...
 
 
 # TODO: rework setup search façade to return correct payload for unified search.
 class SetupSearchEngine:
     def __init__(
         self,
+        config: Config,
+        *,
         redis_client: redis.Redis[str] | None = None,
         permissions_handler: PermissionsHandler | None = None,
     ) -> None:
+        self._config = config
         self._legacy_engine = IndexSearcher(
             redis_client=redis_client or get_redis_client(),
             permissions_handler=permissions_handler or PermissionsHandler(),
         )
 
-    def search(self, query: str, config: Config) -> SearchResultsByTopic:
-        return self._legacy_engine.search(query, config)
+    def search(self, query: str) -> SearchResultsByTopic:
+        return self._legacy_engine.search(query, self._config)

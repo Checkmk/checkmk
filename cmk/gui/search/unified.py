@@ -6,7 +6,6 @@
 import itertools
 from collections.abc import Iterable
 
-from cmk.gui.config import Config
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 
 from .engines.monitoring import SupportsMonitoringSearchEngine
@@ -41,7 +40,6 @@ class UnifiedSearch:
         self,
         query: SearchQuery,
         *,
-        config: Config,
         provider: Provider | None = None,
         sort_type: SortType | None = None,
     ) -> UnifiedSearchResult:
@@ -51,13 +49,13 @@ class UnifiedSearch:
 
         match provider:
             case "setup":
-                setup_results_by_topic = self._setup_engine.search(query, config)
+                setup_results_by_topic = self._setup_engine.search(query)
             case "monitoring":
                 monitoring_results_by_topic = self._monitoring_engine.search(query)
             case "customize":
                 customize_results.extend(self._customize_engine.search(query))
             case _:
-                setup_results_by_topic = self._setup_engine.search(query, config)
+                setup_results_by_topic = self._setup_engine.search(query)
                 monitoring_results_by_topic = self._monitoring_engine.search(query)
                 customize_results.extend(self._customize_engine.search(query))
 

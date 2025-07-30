@@ -24,14 +24,13 @@ class PageUnifiedSearch(AjaxPage):
         sort_type = self._parse_sort_query_param()
 
         unified_search_engine = UnifiedSearch(
-            setup_engine=SetupSearchEngine(),
+            setup_engine=SetupSearchEngine(config),
             monitoring_engine=MonitoringSearchEngine(),
             customize_engine=CustomizeSearchEngine(),
         )
 
         response = unified_search_engine.search(
             query,
-            config=config,
             provider=provider,
             sort_type=sort_type,
         )

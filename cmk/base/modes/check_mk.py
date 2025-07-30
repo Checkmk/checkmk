@@ -1376,9 +1376,10 @@ def mode_flush(hosts: list[HostName]) -> None:
 
         # inventory
         inventory_tree = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
-        inventory_tree.path.unlink(missing_ok=True)
-        inventory_tree.legacy.unlink(missing_ok=True)
-        print_(tty.bold + tty.yellow + " inventory")
+        if inventory_tree.path.exists() or inventory_tree.legacy.exists():
+            inventory_tree.path.unlink(missing_ok=True)
+            inventory_tree.legacy.unlink(missing_ok=True)
+            print_(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
             print_("(nothing)")

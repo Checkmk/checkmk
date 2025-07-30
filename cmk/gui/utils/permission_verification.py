@@ -60,8 +60,8 @@ class BasePerm(abc.ABC):
         """Verify that a user with these permissions fulfills the requirements."""
         return self.has_permission(FakeUser(permissions))
 
-    def __contains__(self, item):
-        return item in (p.name for p in self.iter_perms())
+    def __contains__(self, item: object) -> bool:
+        return isinstance(item, str) and item in (p.name for p in self.iter_perms())
 
 
 class Optional(BasePerm):
@@ -85,6 +85,9 @@ class Optional(BasePerm):
     def iter_perms(self) -> Iterable[Perm]:
         return self.perm.iter_perms()
 
+    def __contains__(self, item: object) -> bool:
+        return isinstance(item, str) and item in self.perm
+
 
 class Undocumented(Optional):
     """A permission which shall not be documented, but may occur.
@@ -102,6 +105,9 @@ class MultiPerm(BasePerm, abc.ABC):
     def iter_perms(self) -> Iterable[Perm]:
         return itertools.chain(*[perm.iter_perms() for perm in self.perms])
 
+    def __contains__(self, item: object) -> bool:
+        return isinstance(item, str) and any(item in perm for perm in self.perms)
+
 
 class NoPerm(BasePerm):
     """A permission which can never be held.
@@ -118,6 +124,9 @@ class NoPerm(BasePerm):
 
     def iter_perms(self) -> Iterable[Perm]:
         return iter([])
+
+    def __contains__(self, item: object) -> bool:
+        return False
 
 
 class Perm(BasePerm):
@@ -137,6 +146,9 @@ class Perm(BasePerm):
 
     def iter_perms(self) -> Iterable[Perm]:
         return iter([self])
+
+    def __contains__(self, item: object) -> bool:
+        return item == self.name
 
 
 class AllPerm(MultiPerm):
@@ -229,3 +241,27 @@ class OkayToIgnorePerm(Perm):
     Consider this as a workaround since clear separation of edition specific permissions would
     require a restructure of the entire endpoint specific permissions specification system.
     """
+
+
+class PrefixPerm(BasePerm):
+    """Document an entire permission group, like "view" for all view related permissions.
+
+    This is used to specify that an endpoint will check for any permission within this group.
+    For example "view.<view_name>" might be checked when accessing that particular view.
+    """
+
+    def __init__(self, prefix: str) -> None:
+        self.prefix = prefix
+
+    def __repr__(self) -> str:
+        return f"{self.prefix}.*"
+
+    def has_permission(self, user: UserLike) -> bool:
+        return True
+
+    def iter_perms(self) -> Iterable[Perm]:
+        return []
+
+    def __contains__(self, item: object) -> bool:
+        """Check if the given permission is within this prefix."""
+        return isinstance(item, str) and item.startswith(self.prefix + ".")

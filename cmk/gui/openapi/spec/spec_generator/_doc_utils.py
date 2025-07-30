@@ -94,7 +94,7 @@ def build_spec_description(
     if permissions_required is not None:
         # Check that all the names are known to the system.
         for perm in permissions_required.iter_perms():
-            if isinstance(perm, permissions.OkayToIgnorePerm):
+            if isinstance(perm, permissions.OkayToIgnorePerm | permissions.PrefixPerm):
                 continue
 
             if perm.name not in permission_registry:
@@ -261,7 +261,10 @@ def _permission_descriptions(
 
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
-        if isinstance(permission, permissions.Perm | permissions.OkayToIgnorePerm):
+        if isinstance(permission, permissions.PrefixPerm):
+            _description.append(f"{prefix} * Some permissions starting with `{permission.prefix}`:")
+
+        elif isinstance(permission, permissions.Perm | permissions.OkayToIgnorePerm):
             perm_name = permission.name
             try:
                 display_name = permission_registry[perm_name].title

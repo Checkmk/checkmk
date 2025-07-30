@@ -71,9 +71,15 @@ class RegistryConverter[T]:
     def validate(self, value: str) -> str:
         """Validates that the given value is in the registry."""
         if value not in self._registry:
+            valid_options = sorted(self._registry)
+            if len(valid_options) > 20:
+                valid_options_string = ", ".join(f"'{x}'" for x in valid_options[:19])
+                valid_options_string += ", ... (more options available)"
+            else:
+                valid_options_string = ", ".join(f"'{x}'" for x in valid_options)
             raise ValueError(
                 self.custom_error_message
-                or f"Value {value!r} is not allowed, valid options are: {', '.join(sorted(self._registry))}"
+                or f"Value {value!r} is not allowed, valid options are: {valid_options_string}"
             )
 
         return value

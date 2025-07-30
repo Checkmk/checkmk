@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.type_defs import SearchQuery
-
 from .sorting import get_sorter
 from .type_defs import (
     Provider,
@@ -30,7 +28,7 @@ class UnifiedSearch:
 
     def search(
         self,
-        query: SearchQuery,
+        query: str,
         *,
         provider: Provider | None = None,
         sort_type: SortType | None = None,

@@ -5,13 +5,13 @@
 
 #include "pch.h"
 
-#include "wnx/cfg.h"
 #include "common/wtools.h"
 #include "providers/ps.h"
-#include "wnx/service_processor.h"
-#include "watest/test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;

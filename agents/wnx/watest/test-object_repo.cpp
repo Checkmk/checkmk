@@ -6,8 +6,8 @@
 #include <chrono>
 #include <filesystem>
 
-#include "wnx/cfg_details.h"
 #include "common/object_repo.h"
+#include "wnx/cfg_details.h"
 #pragma warning(disable : 4996)  // have to test deprectaed API too
 
 namespace cma {

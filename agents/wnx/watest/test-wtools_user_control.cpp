@@ -6,8 +6,8 @@
 #include <Ntsecapi.h>
 
 #include "common/wtools_user_control.h"
-#include "wnx/logger.h"
 #include "tools/_raii.h"
+#include "wnx/logger.h"
 
 namespace wtools::uc {  // to become friendly for cma::cfg classes
 

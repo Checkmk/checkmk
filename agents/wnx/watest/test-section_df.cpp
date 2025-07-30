@@ -5,9 +5,9 @@
 
 #include <ranges>
 
-#include "wnx/cfg.h"
 #include "common/wtools.h"
 #include "providers/df.h"
+#include "wnx/cfg.h"
 namespace rs = std::ranges;
 
 namespace cma::provider {
@@ -29,7 +29,8 @@ TEST(DfTest, GetDriveVector) {
 TEST(DfTest, GetNamesByVolumeIdOnC) {
     auto [fs_name, volume_name] = df::GetNamesByVolumeId(g_volume_id_c);
     EXPECT_TRUE(fs_name == "NTFS");
-    EXPECT_TRUE(!volume_name.empty()) << "Your volumes should have label for this test\n";
+    EXPECT_TRUE(!volume_name.empty())
+        << "Your volumes should have label for this test\n";
 }
 
 TEST(DfTest, GetSpacesByVolumeIdOnC) {

@@ -28,7 +28,7 @@
 #endif
 
 #ifndef INVALID_HANDLE_VALUE
-#define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
+#define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR) - 1)
 #endif  // INVALID_HANDLE_VALUE
 
 class script_statistics_t {

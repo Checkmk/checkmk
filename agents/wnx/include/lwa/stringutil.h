@@ -9,7 +9,7 @@
 #include <codecvt>
 #include <cstdint>
 #include <iostream>
-//#include <locale>
+// #include <locale>
 #include <array>
 #include <cctype>
 #include <regex>

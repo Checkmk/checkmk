@@ -40,7 +40,7 @@ public:
     UninstallAlert() = default;
     [[nodiscard]] bool isSet() const noexcept {
         return set_;
-    }                       // check during exit from the service
+    }  // check during exit from the service
     void clear() noexcept;  // test only
     void set() noexcept;    // set when command is got from the
                             // transport

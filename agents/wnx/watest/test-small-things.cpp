@@ -3,9 +3,8 @@
 //
 #include "pch.h"
 
-#include "common/cfg_info.h"
-
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "onlyfrom.h"
 
 namespace cma::cfg {

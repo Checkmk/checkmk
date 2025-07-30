@@ -185,7 +185,7 @@ TEST(RealtimeTest, Base_Simulation) {
     using namespace std::chrono;
 
     OnStartTest();
-    ON_OUT_OF_SCOPE( OnStartTest());  // restore original config
+    ON_OUT_OF_SCOPE(OnStartTest());  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled

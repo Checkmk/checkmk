@@ -4,8 +4,8 @@
 //
 #include "pch.h"
 
-#include "wnx/cfg.h"
 #include "common/cfg_info.h"
+#include "wnx/cfg.h"
 #include "wnx/encryption.h"
 
 namespace cma::encrypt {

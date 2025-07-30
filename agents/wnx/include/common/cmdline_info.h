@@ -92,4 +92,4 @@ inline ExeCommandLine ParseExeCommandLine(
 
 // 3-rd param
 // what to execute
-};  // namespace cma
+};  // namespace cma::exe::cmdline

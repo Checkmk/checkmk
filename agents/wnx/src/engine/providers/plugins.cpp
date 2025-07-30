@@ -184,7 +184,7 @@ void PluginsBaseProvider::loadConfig() {
         cfg::GetArray<YAML::Node>(cfg_name_, cfg::vars::kPluginsExecution);
 
     // linking exe units with all plugins in map
-    const auto  exe_units  = cfg::LoadExeUnitsFromYaml(yaml_units);
+    const auto exe_units = cfg::LoadExeUnitsFromYaml(yaml_units);
     UpdatePluginMap(
         getHostSp() == nullptr ? nullptr : getHostSp()->getInternalUsers(), pm_,
         exec_type_, files, exe_units, true);

@@ -17,7 +17,7 @@
 #include "player_api.h"
 
 // print short info about usage plus potential comment about error
-static void PlayerUsage(const std::wstring& Comment) {
+static void PlayerUsage(const std::wstring &Comment) {
     using namespace cma::exe::cmdline;
     if (Comment != L"") {
         printf("Error: %ls\n", Comment.c_str());
@@ -37,7 +37,7 @@ static void PlayerUsage(const std::wstring& Comment) {
 
 namespace cma::player {
 
-constexpr const wchar_t* kUniqueTestId = L"0345246";
+constexpr const wchar_t *kUniqueTestId = L"0345246";
 
 struct TestStorage {
 public:
@@ -49,10 +49,10 @@ public:
 
 static TestStorage S_Storage;
 
-bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                     void* Context) {
+bool MailboxCallback(const cma::MailSlot *Slot, const void *Data, int Len,
+                     void *Context) {
     using namespace std::chrono;
-    auto storage = (TestStorage*)Context;
+    auto storage = (TestStorage *)Context;
     if (!storage) {
         xlog::l("error in param\n");
         return false;
@@ -63,12 +63,12 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
-            xlog::l("log: %s", (const char*)dt->data()).filelog(fname.c_str());
+            xlog::l("log: %s", (const char *)dt->data()).filelog(fname.c_str());
             break;
 
         case cma::carrier::DataType::kSegment:
@@ -77,7 +77,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
             {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
                 S_Storage.buffer_ = vectorized_data;
@@ -97,7 +97,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 // returns not very light object, but used rarely
 // ergo no problem for us
 static std::vector<std::wstring> ConvertArgstoPathArray(int argc,
-                                                        wchar_t const* argv[]) {
+                                                        wchar_t const *argv[]) {
     using namespace std;
     namespace fs = std::filesystem;
     vector<wstring> v;
@@ -126,7 +126,7 @@ static std::vector<std::wstring> ConvertArgstoPathArray(int argc,
 
 // #TODO make this function common
 //  test [parameters]
-int MainTest(int argc, wchar_t const* argv[]) {
+int MainTest(int argc, wchar_t const *argv[]) {
     cma::MailSlot mailbox("WinAgentPlayerTest", 0);
     using namespace cma::carrier;
     using namespace cma::exe;
@@ -149,13 +149,13 @@ int MainTest(int argc, wchar_t const* argv[]) {
 
     auto path_array = ConvertArgstoPathArray(argc, argv);
 
-    const wchar_t* local_argv[32];
+    const wchar_t *local_argv[32];
     local_argv[0] = L"jail";
     local_argv[1] = port_param.c_str();
     local_argv[2] = id_param.c_str();
     local_argv[3] = timeout_param.c_str();
     int local_argc = 4;
-    for (auto& p : path_array) {
+    for (auto &p : path_array) {
         local_argv[local_argc] = p.c_str();
         ++local_argc;
     }
@@ -188,7 +188,7 @@ int MainTest(int argc, wchar_t const* argv[]) {
 }
 
 //  run [parameters]
-int MainRun(int argc, wchar_t const* argv[]) {
+int MainRun(int argc, wchar_t const *argv[]) {
     if (argc < 2) {
         PlayerUsage(L"");
         return 1;
@@ -206,7 +206,7 @@ static bool CheckEnvironment() {
         if (!std::filesystem::exists(value)) return false;
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " Variable {} looks as invalid {} and {}",
                 cfg::envs::kMkStateDirName, value, e.what());
     }
@@ -215,10 +215,10 @@ static bool CheckEnvironment() {
 
 // #TODO make this function common
 // workhorse of execution
-int RunMe(const std::wstring& PeerName,  // assigned by caller
-          const std::wstring& Port,      // format as in carrier.h mail:*
-          const std::wstring& Id,        // answer id, should be set
-          const std::wstring& Timeout,   // how long wait for execution
+int RunMe(const std::wstring &PeerName,  // assigned by caller
+          const std::wstring &Port,      // format as in carrier.h mail:*
+          const std::wstring &Id,        // answer id, should be set
+          const std::wstring &Timeout,   // how long wait for execution
           std::vector<std::wstring> Exe  // files and folders
 ) {
     using namespace std;
@@ -252,7 +252,7 @@ int RunMe(const std::wstring& PeerName,  // assigned by caller
     int count = 0;
 
     box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data) {
+                           uint32_t Code, const std::vector<char> &Data) {
         auto data = wtools::ConditionallyConvertFromUTF16(Data);
         XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                 wtools::ToUtf8(CmdLine), Pid, Code, data.data());
@@ -275,7 +275,7 @@ int RunMe(const std::wstring& PeerName,  // assigned by caller
 //  runonce [parameters]
 // params
 // PORT ID TIMEOUT path1 path2 path3 ...
-int MainRunOnce(int argc, wchar_t const* argv[]) {
+int MainRunOnce(int argc, wchar_t const *argv[]) {
     using namespace std;
     using namespace cma;
     using namespace cma::exe;
@@ -297,7 +297,7 @@ int MainRunOnce(int argc, wchar_t const* argv[]) {
 }
 
 // main
-int MainFunction(int argc, wchar_t const* argv[]) {
+int MainFunction(int argc, wchar_t const *argv[]) {
     // parse command line
     if (argc < 2) {
         PlayerUsage(L"");
@@ -332,7 +332,7 @@ AppType AppDefaultType() { return AppType::exe; }
 
 #if !defined(CMK_TEST)
 // This is our main. PLEASE, do not add code here
-int wmain(int argc, wchar_t const* Argv[]) {
+int wmain(int argc, wchar_t const *Argv[]) {
     return cma::player::MainFunction(argc, Argv);
 }
 #endif

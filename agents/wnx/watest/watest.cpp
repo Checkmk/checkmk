@@ -7,11 +7,11 @@
 #include <processthreadsapi.h>  // for GetCurrentProcess, SetPriorityClass
 #include <winbase.h>            // for HIGH_PRIORITY_CLASS
 
-#include "wnx/carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
 #include "common/wtools.h"  // for SecurityLevel, SecurityLevel::admin, SecurityLevel::standard
 #include "gtest/gtest.h"  // for InitGoogleTest, RUN_ALL_TESTS
-#include "wnx/logger.h"       // for ColoredOutputOnStdio
-#include "wnx/on_start.h"     // for OnStart, AppType, AppType::test
+#include "wnx/carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
+#include "wnx/logger.h"    // for ColoredOutputOnStdio
+#include "wnx/on_start.h"  // for OnStart, AppType, AppType::test
 
 using namespace std::chrono_literals;
 

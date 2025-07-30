@@ -318,7 +318,7 @@ enum Mods : int {
     kInfo      = 0x1400,   // detailed info about state
     kRsrv1     = 0x1800,   //
     kRsrv2     = 0x1c00,   //
-                      // clang-format on
+                    // clang-format on
 
     kNext = 0x2000,
 

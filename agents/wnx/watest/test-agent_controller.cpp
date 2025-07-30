@@ -65,8 +65,7 @@ public:
     static std::vector<std::string> convertTomlToIps(
         std::string_view toml_statement) {
         std::string all{toml_statement};
-        rs::replace_if(
-            all, [](const char c) { return c == '='; }, ':');
+        rs::replace_if(all, [](const char c) { return c == '='; }, ':');
         auto yaml = YAML::Load(all);
         auto actual_ips = yaml["allowed_ip"];
         std::vector<std::string> actual;

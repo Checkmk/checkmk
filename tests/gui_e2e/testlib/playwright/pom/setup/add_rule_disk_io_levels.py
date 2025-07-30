@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import override
+from typing import Literal, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
@@ -16,21 +16,24 @@ from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 logger = logging.getLogger(__name__)
 
 
-class AddRuleFilesystems(CmkPage):
-    """Represent the 'Add rule: Filesystems (used space and growth)' page.
+class AddRuleDiskIOLevels(CmkPage):
+    """Represent the 'Add rule: Disk IO levels' page.
 
-    To navigate: `Setup > Services > Service monitoring rules > Filesystems (used space and growth)
-    > Add rule: Filesystems (used space and growth)`.
+    To navigate: `Setup > Services > Service monitoring rules > Disk IO levels
+    > Add rule: Disk IO levels`.
+
+    Dependent class for value levels configuration:
+        `tests/gui_e2e/testlib/playwright/pom/setup/diskstat_value_levels.py`.
     """
 
-    rule_name = "Filesystems (used space and growth)"
+    rule_name = "Disk IO levels"
     section_name = "Service monitoring rules"
-    url_specific = "%3Afilesystem"
+    url_specific = "%3Adiskstat"
     url_pattern = "varname=checkgroup_parameters%s&mode=new_rule"
 
     @override
     def navigate(self) -> None:
-        service_rules_page = Ruleset(self.page, self.rule_name, self.section_name)
+        service_rules_page = Ruleset(self.page, self.rule_name, self.section_name, exact_rule=True)
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
         service_rules_page.add_rule_button.click()
         self.page.wait_for_url(
@@ -44,7 +47,6 @@ class AddRuleFilesystems(CmkPage):
         logger.info("Validate that current page is 'Add rule: %s' page", self.rule_name)
         self.main_area.check_page_title(f"Add rule: {self.rule_name}")
         expect(self.description_text_field).to_be_visible()
-        expect(self._levels_for_used_free_space_checkbox).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -61,16 +63,21 @@ class AddRuleFilesystems(CmkPage):
     def _value_section(self, value_name: str) -> Locator:
         return self.main_area.locator(f"td[class='dictleft']:has(label:text-is('{value_name}'))")
 
-    @property
-    def _levels_for_used_free_space_checkbox(self) -> Locator:
-        return self._value_section("Levels for used/free space").locator("label")
-
-    @property
-    def levels_for_used_free_space_warning_text_field(self) -> Locator:
-        return self._value_section("Levels for used/free space").locator(
-            "input[name*='_p_levels_0_0_0']"
-        )
-
-    def check_levels_for_user_free_space(self, check: bool) -> None:
-        if self._levels_for_used_free_space_checkbox.is_checked() != check:
-            self._levels_for_used_free_space_checkbox.click()
+    def levels_checkbox(
+        self,
+        text: Literal[
+            "Read throughput",
+            "Write throughput",
+            "Disk Utilization",
+            "Disk Latency",
+            "Disk Read Latency",
+            "Disk Write Latency",
+            "Read wait",
+            "Write wait",
+            "Averaging",
+            "Read operations",
+            "Write operations",
+        ],
+    ) -> Locator:
+        section = self._value_section(text)
+        return section.locator(f"label[for*='levels1_USE']:text('{text}')")

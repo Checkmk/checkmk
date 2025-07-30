@@ -57,7 +57,8 @@ class Ruleset(CmkPage):
 
     @property
     def created_new_rule_message(self) -> Pattern[str]:
-        return re.compile(f'Created new rule in ruleset "{self.rule_name}" .*')
+        escaped = re.escape(self.rule_name)
+        return re.compile(f'Created new rule in ruleset "{escaped}" .*')
 
     @property
     def add_rule_button(self) -> Locator:

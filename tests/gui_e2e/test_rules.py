@@ -17,11 +17,23 @@ from playwright.sync_api import expect
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_cpu_load import AddRuleCPULoad
+from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_disk_io_levels import AddRuleDiskIOLevels
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
     AddRulePeriodicServiceDiscovery,
 )
+from tests.gui_e2e.testlib.playwright.pom.setup.cpu_load_value_levels import CPULoadValueLevels
+from tests.gui_e2e.testlib.playwright.pom.setup.diskstat_value_levels import DiskstatValueLevels
 from tests.gui_e2e.testlib.playwright.pom.setup.host_effective_parameters import (
     HostEffectiveParameters,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.predictive_level_helpers import (
+    BoundLevels,
+    LevelType,
+    PredictionPeriod,
+    PredictiveLevels,
+    PredictiveLevelType,
+    PredictiveLevelTypeShort,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.common.repo import repo_path
@@ -106,7 +118,7 @@ def _create_rule(rule_name: str, pw: Dashboard, tasks: dict[str, list[dict[str, 
 def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     rules_pages = ["Host monitoring rules"]
     tasks = _get_tasks()
-    created_rules = {}
+    created_rules: dict[str, list[str]] = {}
     for rules_page in rules_pages:
         _goto_setup_page(pw, rules_page)
         rule_names = [
@@ -317,3 +329,151 @@ def test_use_default_periodic_service_discovery_rule(
     effective_parameters_page.expand_section("Service discovery rules")
     rule_values = effective_parameters_page.service_discovery_values.all_inner_texts()
     assert default_rule_values == rule_values, "Unexpected rule values"
+
+
+def test_predictive_levels_with_default_values(dashboard_page: Dashboard, test_site: Site) -> None:
+    """Test configuring predictive levels with default values with adding a new rule
+    for 'Disk IO levels' page.
+    """
+
+    rule_description = "Predictive levels rule with default values"
+    logger.info("Add a new rule for 'Disk IO levels' page")
+    is_rule_added = False
+    try:
+        disk_io_levels_page = AddRuleDiskIOLevels(dashboard_page.page)
+        disk_io_levels_page.description_text_field.fill(rule_description)
+        metric = "Read throughput"
+        levels = DiskstatValueLevels(
+            page=disk_io_levels_page,
+            checkbox_label=metric,
+        )
+        levels.enable_levels()
+        levels.set_level_type(LevelType.PREDICTIVE_LEVELS)
+        levels.set_predictive_level_type(PredictiveLevelTypeShort.RELATIVE)
+        disk_io_levels_page.save_button.click()
+        is_rule_added = True
+
+        service_rules_page = Ruleset(
+            dashboard_page.page, disk_io_levels_page.rule_name, navigate_to_page=False
+        )
+        service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
+        assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
+        rule_values = service_rules_page.rule_values(rule_id=0).all_inner_texts()[0]
+
+        # Get default predictive levels for the metric
+        exp_rule = PredictiveLevels(
+            relative_level_type=PredictiveLevelTypeShort.RELATIVE,
+            relative_bound=BoundLevels(warning=10, critical=20),
+        )
+
+        exp_vals = exp_rule.get_checked_values()
+        exp_vals.append(metric)
+        for val in exp_vals:
+            assert val in rule_values, (
+                f"Expected value '{val}' not found in rule values: {rule_values}"
+            )
+
+        disk_io_levels_page.activate_changes(test_site)
+    finally:
+        if is_rule_added:
+            logger.info(
+                "Navigate to the '%s' page and delete the created rule.",
+                disk_io_levels_page.rule_name,
+            )
+            service_rules_page = Ruleset(
+                dashboard_page.page,
+                disk_io_levels_page.rule_name,
+                disk_io_levels_page.section_name,
+                exact_rule=True,
+            )
+            service_rules_page.delete_rule(rule_id=0)
+            service_rules_page.activate_changes(test_site)
+
+
+def test_predictive_levels_with_custom_values(dashboard_page: Dashboard, test_site: Site) -> None:
+    """Test configuring predictive levels with custom values while adding a new rule
+    for 'CPU Load (not utilization!)' page.
+    """
+
+    rule_description = "Predictive levels rule with custom values"
+    logger.info("Add a new rule for 'CPU Load (not utilization!)' page")
+    cpu_load_page = AddRuleCPULoad(dashboard_page.page)
+    cpu_load_page.description_text_field.fill(rule_description)
+
+    is_rule_added = False
+    try:
+        levels = CPULoadValueLevels(
+            page=cpu_load_page,
+            checkbox_label="Levels on CPU load: 1 minute average",
+        )
+        levels.enable_levels()
+
+        # Configure predictive levels with desired options
+        levels.configure_predictive_levels(
+            period_text=PredictionPeriod.HOURLY,
+            horizon_days=30,
+        )
+        levels.upper_bound_checkbox.click()
+        upper_bound = BoundLevels(warning=3.0, critical=6.0)
+        levels.configure_upper_bound_levels(
+            level_type=PredictiveLevelType.ABSOLUTE,
+            warning=upper_bound.warning,
+            critical=upper_bound.critical,
+        )
+
+        levels.lower_bound_checkbox.click()
+        lower_bound = BoundLevels(warning=12.0, critical=18.0)
+        levels.configure_lower_bound_levels(
+            level_type=PredictiveLevelType.RELATIVE,
+            warning=lower_bound.warning,
+            critical=lower_bound.critical,
+        )
+
+        levels.upper_bound_limit_checkbox.click()
+        upper_bound_limit = BoundLevels(warning=0.7, critical=1.2)
+        levels.configure_upper_bound_limits(
+            warning=upper_bound_limit.warning, critical=upper_bound_limit.critical
+        )
+
+        cpu_load_page.save_button.click()
+        is_rule_added = True
+
+        service_rules_page = Ruleset(
+            dashboard_page.page, cpu_load_page.rule_name, navigate_to_page=False
+        )
+        service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
+        assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
+        rule_values = service_rules_page.rule_values(rule_id=0).all_inner_texts()[0]
+
+        exp_rule = PredictiveLevels(
+            period=PredictionPeriod.HOURLY,
+            horizon_days=30,
+            upper_level_type=PredictiveLevelType.ABSOLUTE,
+            upper_bound=BoundLevels(warning=upper_bound.warning, critical=upper_bound.critical),
+            lower_level_type=PredictiveLevelType.RELATIVE,
+            lower_bound=BoundLevels(warning=lower_bound.warning, critical=lower_bound.critical),
+            upper_bound_limit=BoundLevels(
+                warning=upper_bound_limit.warning, critical=upper_bound_limit.critical
+            ),
+        )
+        exp_vals = exp_rule.get_checked_values()
+        for val in exp_vals:
+            assert val in rule_values, (
+                f"Expected value '{val}' not found in rule values: {rule_values}"
+            )
+
+        cpu_load_page.activate_changes(test_site)
+    finally:
+        if is_rule_added:
+            logger.info(
+                "Navigate to the '%s' page and delete the created rule.",
+                cpu_load_page.rule_name,
+            )
+            service_rules_page = Ruleset(
+                dashboard_page.page,
+                cpu_load_page.rule_name,
+                cpu_load_page.section_name,
+                exact_rule=True,
+            )
+            service_rules_page.delete_rule(rule_id=0)
+            service_rules_page.activate_changes(test_site)

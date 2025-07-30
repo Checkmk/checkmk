@@ -207,7 +207,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 for_hosts=[],
                 default=InvHousekeepingParamsDefaultCombined(
                     strategy="and",
-                    file_age=400,
+                    file_age=400 * 86400,
                     number_of_history_entries=100,
                 ),
                 abandoned_file_age=30 * 86400,

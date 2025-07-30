@@ -9,20 +9,12 @@ import { ref, onMounted, computed } from 'vue'
 import usei18n from '@/lib/i18n'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import DefaultPopup from './DefaultPopup.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkIndent from '@/components/CmkIndent.vue'
+
 import CmkButton from '@/components/CmkButton.vue'
 import { Api } from '@/lib/api-client'
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import CmkBadge from '@/components/CmkBadge.vue'
-import CmkZebra from '@/components/CmkZebra.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import PendingChangesList from './components/PendingChangesList.vue'
 import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
@@ -30,8 +22,11 @@ import type {
   Site,
   SitesAndChanges
 } from './ChangesInterfaces'
-import ChangesActivating from './ChangesActivating.vue'
-import ChangesActivationResult from './ChangesActivationResult.vue'
+
+import ChangesActivating from './components/activation/ChangesActivating.vue'
+import ChangesActivationResult from './components/activation/ChangesActivationResult.vue'
+import SiteStatusList from './components/sites/SiteStatusList.vue'
+import PendingChangesList from './components/PendingChangesList.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{
@@ -41,27 +36,14 @@ const props = defineProps<{
 }>()
 
 const numberOfChangesLastActivation = ref<number>(0)
-const selectedSites = ref<Array<string>>([])
-const recentlyActivatedSites = ref<Array<string>>([])
+const selectedSites = ref<string[]>([])
+const recentlyActivatedSites = ref<string[]>([])
 const activationStatusCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
 const activationStartAndEndTimes = ref<string>('')
 const alreadyMadeAjaxCall = ref<boolean>(false)
-const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
-  const mapping: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
-    online: 'success',
-    disabled: 'warning',
-    down: 'danger',
-    unknown: 'default',
-    unreach: 'danger',
-    dead: 'danger',
-    waiting: 'warning',
-    missing: 'warning'
-  }
-  return mapping[status] ?? 'warning'
-}
 
 const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
@@ -289,23 +271,6 @@ const numberOfForeignChanges = computed((): number => {
     .length
 })
 
-function siteRequiresAttention(site: Site): boolean {
-  return (
-    site.changes > 0 ||
-    (site.lastActivationStatus && ['error', 'warning'].includes(site.lastActivationStatus.state)) ||
-    site.onlineStatus !== 'online' ||
-    recentlyActivatedSites.value.includes(site.siteId)
-  )
-}
-
-function toggleSelectedSite(siteId: string) {
-  if (selectedSites.value.includes(siteId)) {
-    selectedSites.value.splice(selectedSites.value.indexOf(siteId), 1)
-  } else {
-    selectedSites.value.push(siteId)
-  }
-}
-
 function calcChangesHeight(): number {
   if (!activationStatusCollapsible.value) {
     return -0.78
@@ -369,12 +334,18 @@ onMounted(() => {
       </CmkAlertBox>
       <ChangesActivating
         v-if="activateChangesInProgress"
-        class="cmk-div-activation-result-container"
+        :activating-on-sites="
+          recentlyActivatedSites.length > 1 ? recentlyActivatedSites : recentlyActivatedSites[0]
+        "
       >
       </ChangesActivating>
 
       <ChangesActivationResult
-        v-if="!activateChangesInProgress && recentlyActivatedSites.length > 0"
+        v-if="
+          !activateChangesInProgress &&
+          recentlyActivatedSites.length > 0 &&
+          !sitesWithWarningsOrErrors
+        "
         type="success"
         :title="
           t(
@@ -417,111 +388,16 @@ onMounted(() => {
         >
         </ChangesActivationResult>
 
-        <div class="sites-container" :class="{ 'add-flex': sitesAndChanges.sites.length === 1 }">
-          <CmkCollapsibleTitle
-            :title="'Sites'"
-            class="collapsible-title"
-            :open="activationStatusCollapsible"
-            @toggle-open="activationStatusCollapsible = !activationStatusCollapsible"
-          />
-
-          <CmkCollapsible
-            :open="activationStatusCollapsible"
-            class="cmk-collapsible-sites"
-            :class="[{ 'display-none': !activationStatusCollapsible }]"
-          >
-            <CmkScrollContainer height="auto" class="cmk-scroll-sites-container">
-              <template v-for="(site, idx) in sitesAndChanges.sites" :key="site.siteId">
-                <CmkZebra :num="idx">
-                  <template v-if="siteRequiresAttention(site)">
-                    <CmkIndent>
-                      <div class="cmk-div-site-status-container">
-                        <div class="cmk-div-site-status-info">
-                          <div class="cmk-div-checkbox-site-status">
-                            <CmkCheckbox
-                              :model-value="selectedSites.includes(site.siteId)"
-                              @update:model-value="toggleSelectedSite(site.siteId)"
-                            />
-                            <div class="cmk-div-site-online-status">
-                              <CmkBadge
-                                :color="statusColor(site.onlineStatus)"
-                                size="small"
-                                class="cmk-div-site-online-status-badge"
-                                >{{ site.onlineStatus }}</CmkBadge
-                              >
-                              <span class="cmk-span-site-name">{{ site.siteName }}</span>
-                            </div>
-                          </div>
-                          <div
-                            v-if="!recentlyActivatedSites.includes(site.siteId)"
-                            class="cmk-div-site-status-changes"
-                          >
-                            <template v-if="site.changes > 0">
-                              <span class="cmk-span-changes-text">{{
-                                t('changes', 'Changes:')
-                              }}</span>
-                              <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
-                            </template>
-                            <span v-else class="cmk-span-changes-text">{{
-                              t('no-changes', 'No Changes')
-                            }}</span>
-                          </div>
-                          <div
-                            v-if="
-                              recentlyActivatedSites.includes(site.siteId) &&
-                              site.lastActivationStatus !== undefined
-                            "
-                            class="cmk-div-site-status-changes"
-                          >
-                            <div
-                              v-if="activateChangesInProgress"
-                              class="cmk-progress-bar-site-activation-in-progress"
-                            >
-                              <CmkProgressbar max="unknown"></CmkProgressbar>
-                            </div>
-                            <div v-else>
-                              {{ site.lastActivationStatus.status_text }}
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          v-if="site.lastActivationStatus?.state === 'warning'"
-                          class="cmk-div-site-activate-warning"
-                        >
-                          <CmkIcon variant="inline" name="validation-error" />
-                          <div class="cmk-div-warning-or-error-message">
-                            <span v-if="site.lastActivationStatus?.state === 'warning'">{{
-                              t('changes-activated-with-warning', 'Warning')
-                            }}</span>
-                            <span class="grey-text">{{
-                              site.lastActivationStatus.status_details
-                            }}</span>
-                          </div>
-                        </div>
-                        <div
-                          v-if="site.lastActivationStatus?.state === 'error'"
-                          class="cmk-div-site-activate-error"
-                        >
-                          <CmkIcon variant="inline" name="alert_crit" />
-                          <div class="cmk-div-warning-or-error-message">
-                            <span v-if="site.lastActivationStatus.state === 'error'">{{
-                              t('changes-failed-to-activate', 'Error')
-                            }}</span>
-                            <span class="grey-text">{{
-                              site.lastActivationStatus.status_details
-                            }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CmkIndent>
-                  </template>
-                </CmkZebra>
-              </template>
-            </CmkScrollContainer>
-          </CmkCollapsible>
-        </div>
+        <SiteStatusList
+          v-if="sitesAndChanges.pendingChanges.length > 0"
+          v-model="selectedSites"
+          :sites="sitesAndChanges.sites"
+          :open="activationStatusCollapsible"
+          :activating="activateChangesInProgress"
+          :recently-activated-sites="recentlyActivatedSites"
+        ></SiteStatusList>
         <PendingChangesList
-          v-if="weHavePendingChanges && recentlyActivatedSites.length === 0"
+          v-if="weHavePendingChanges"
           class="pending-changes-container"
           :pending-changes="sitesAndChanges.pendingChanges"
           :selected-sites="selectedSites"
@@ -587,105 +463,19 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-.cmk-progress-bar-site-activation-in-progress {
-  width: 100%;
-}
-
-.cmk-div-site-activate-warning,
-.cmk-div-site-activate-error {
+.cmk-div-activation-result {
   display: flex;
-  padding: 2px 8px;
-  justify-content: left;
-  align-items: center;
-  gap: 4px;
-  align-self: stretch;
-  border-radius: 4px;
-}
-
-.cmk-div-warning-or-error-message {
-  display: flex;
+  padding: 0px 29px;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px 0px 4px 0px;
-}
-
-.cmk-div-site-activate-error {
-  background: rgba(234, 57, 8, 0.15); /* TODO: Which colour should be used? */
-}
-
-.cmk-div-site-activate-warning {
-  background: rgba(255, 202, 40, 0.15); /* TODO: add var */
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
 }
 
 .pending-changes-container {
   width: 100%;
   height: calc(100vh - 178px - (48px * v-bind('calcChangesHeight()')));
-}
-
-.cmk-div-site-status-container {
-  display: flex;
-  width: inherit;
-  padding: 0 16px 0 3px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.cmk-div-site-status-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  align-self: stretch;
-  width: 100%;
-}
-
-.cmk-div-checkbox-site-status {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.cmk-div-site-online-status {
-  display: flex;
-  padding: 0 8px;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.cmk-div-site-online-status-badge {
-  padding: 0 5px;
-}
-
-.cmk-div-site-status-changes {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 50%;
-  justify-content: flex-end;
-}
-.cmk-span-changes-text {
-  color: var(--font-color-dimmed);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  letter-spacing: 0.36px;
-}
-.cmk-span-changes-number {
-  display: flex;
-  padding: 0 8px;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  border-radius: 80px;
-  background: #ffc31c;
-  color: #000;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  letter-spacing: 0.3px;
 }
 
 .sites-container {
@@ -725,13 +515,15 @@ onMounted(() => {
   margin-top: 16px;
 }
 
-.cmk-scroll-sites-container {
+.cmk-scroll-pending-changes-container {
   width: inherit;
+  display: flex;
+  flex-direction: column;
 }
 
-.cmk-collapsible-sites {
+.cmk-collapsible-pending-changes {
   width: 100%;
-  height: calc(100% - 44px);
+  height: calc(100% - 158px);
 }
 
 :deep(.cmk-collapsible__content) {

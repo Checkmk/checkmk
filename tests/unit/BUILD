@@ -87,6 +87,7 @@ py_test(
             "**/test-files/**",
             "**/tree_test_data/**",
             "**/*.json",
+            "**/*.jsonl",
             "**/*.log",
             "**/*.pem",
             "**/*.xml",

@@ -61,10 +61,11 @@ const totalSteps = props.stage_information.total
 }
 .welcome-app__panel-left {
   margin-right: var(--spacing);
-  width: 100%;
+  flex: 2;
 }
 .welcome-app__panel-right {
   margin-left: auto;
+  flex: 1;
 }
 .welcome-app__footer {
   margin-top: auto;

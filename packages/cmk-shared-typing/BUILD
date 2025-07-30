@@ -21,6 +21,7 @@ SOURCES_COMMON = [
     "user_frontend_config.json",
     "vue_formspec_components.json",
     "welcome.json",
+    "agent_slideout.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

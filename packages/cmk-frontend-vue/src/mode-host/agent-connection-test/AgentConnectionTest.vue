@@ -17,6 +17,8 @@ import {
   type ModeHostAgentConnectionMode
 } from 'cmk-shared-typing/typescript/mode_host'
 
+import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+
 const { t } = usei18n('agent_connection_test')
 
 interface Props {
@@ -33,6 +35,7 @@ interface Props {
   sites: Array<ModeHostSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
   all_agents_url: string
+  agent_slideout: AgentSlideout
 }
 
 const props = defineProps<Props>()
@@ -347,11 +350,16 @@ const warnContainerValues = computed<ContainerValues>(() => {
       <AgentRegisterSlideOutContent
         v-if="isNotRegistered"
         :all_agents_url="all_agents_url"
+        :host_name="hostname"
+        :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         @close="((slideInOpen = false), (isError = false))"
       />
       <AgentInstallSlideOutContent
         v-else
         :all_agents_url="all_agents_url"
+        :host_name="hostname"
+        :agent_install_cmds="agent_slideout.agent_install_cmds"
+        :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         @close="((slideInOpen = false), (isError = false))"
       />
     </CmkSlideInDialog>

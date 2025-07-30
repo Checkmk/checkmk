@@ -21,10 +21,10 @@ export interface AgentSlideOutTabs {
   id: string
   title: string
   install_msg?: string
-  install_cmd?: string
+  install_cmd?: string | undefined
   install_deb_cmd?: string
   install_rpm_cmd?: string
-  install_tgz_cmd?: string
+  install_tgz_cmd?: string | undefined
   registration_msg?: string
   registration_cmd?: string
   toggle_button_options?: PackageOptions

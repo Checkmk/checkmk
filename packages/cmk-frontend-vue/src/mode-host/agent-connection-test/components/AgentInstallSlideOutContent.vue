@@ -5,12 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
+import {
+  type AgentInstallCmds,
+  type AgentRegistrationCmds
+} from 'cmk-shared-typing/typescript/agent_slideout'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
-defineProps<{
+const props = defineProps<{
   all_agents_url: string
+  host_name: string
+  agent_install_cmds: AgentInstallCmds
+  agent_registration_cmds: AgentRegistrationCmds
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
@@ -30,10 +37,6 @@ const close = () => {
   emit('close')
 }
 
-const registrationCommand = t(
-  'agent-windows-register-cmd',
-  'some --placeholder --agent --registration command'
-)
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
@@ -42,12 +45,12 @@ const tabs: AgentSlideOutTabs[] = [
       'agent_windows_install_msg',
       'Run this command on your Windows host to download and install the Checkmk agent.'
     ),
-    install_cmd: `some --windows --placeholder command`,
+    install_cmd: props.agent_install_cmds.windows,
     registration_msg: t(
       'agent-windows-registration-msg',
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller.'
     ),
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.windows.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'linux',
@@ -56,14 +59,14 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-linux-install-msg',
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
-    install_deb_cmd: `some --linux --deb --placeholder command`,
-    install_rpm_cmd: `some --linux --rpm --placeholder command`,
-    install_tgz_cmd: `some --linux --tgz --placeholder command`,
+    install_deb_cmd: props.agent_install_cmds.linux_deb,
+    install_rpm_cmd: props.agent_install_cmds.linux_rpm,
+    install_tgz_cmd: props.agent_install_cmds.linux_tgz,
     registration_msg: t(
       'agent-linux-registration-msg',
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
-    registration_cmd: registrationCommand,
+    registration_cmd: props.agent_registration_cmds.linux.replace('[HOSTNAME]', props.host_name),
     toggle_button_options: toggleButtonOptions
   },
   {
@@ -73,12 +76,12 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-solaris-install-msg',
       'Run this command on your Solaris host to download the Checkmk agent.'
     ),
-    install_cmd: `some --solaris --placeholder command`,
+    install_cmd: props.agent_install_cmds.solaris,
     registration_msg: t(
       'agent-solaris-registration-msg',
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
     ),
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.solaris.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'aix',
@@ -87,12 +90,12 @@ const tabs: AgentSlideOutTabs[] = [
       'agent-aix-install-msg',
       'Run this command on your AIX host to download and install the Checkmk agent.'
     ),
-    install_cmd: `some --aix --placeholder command`,
+    install_cmd: props.agent_install_cmds.aix,
     registration_msg: t(
       'agent-aix-registration-msg',
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'
     ),
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.aix.replace('[HOSTNAME]', props.host_name)
   }
 ]
 </script>

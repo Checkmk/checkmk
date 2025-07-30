@@ -6,11 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
+import { type AgentRegistrationCmds } from 'cmk-shared-typing/typescript/agent_slideout'
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
-defineProps<{
+const props = defineProps<{
   all_agents_url: string
+  host_name: string
+  agent_registration_cmds: AgentRegistrationCmds
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
@@ -24,35 +27,30 @@ const registrationMessage = t(
   'Run this command to register the Checkmk agent controller'
 )
 
-const registrationCommand = t(
-  'agent-windows-register-cmd',
-  'some --placeholder --agent --registration command'
-)
-
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
     title: t('agent-windows', 'Windows'),
     registration_msg: registrationMessage,
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.windows.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'linux',
     title: t('agent-linux', 'Linux'),
     registration_msg: registrationMessage,
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.linux.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'solaris',
     title: t('agent-solaris', 'Solaris'),
     registration_msg: registrationMessage,
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.solaris.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'aix',
     title: t('agent-solaris', 'AIX'),
     registration_msg: registrationMessage,
-    registration_cmd: registrationCommand
+    registration_cmd: props.agent_registration_cmds.aix.replace('[HOSTNAME]', props.host_name)
   }
 ]
 </script>

@@ -15,12 +15,15 @@ import PingHost from '@/mode-host/ping-host/PingHost.vue'
 import { onMounted, ref, type Ref } from 'vue'
 import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnectionTest.vue'
 
+import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+
 const props = defineProps<{
   i18n_ping_host: I18NPingHost
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
   all_agents_url: string
+  agent_slideout: AgentSlideout
   host_name: string
 }>()
 
@@ -143,6 +146,7 @@ function getElementBySelector<T>(selector: string): T {
     :sites="sites"
     :agent-connection-modes="agent_connection_modes"
     :all_agents_url="all_agents_url"
+    :agent_slideout="agent_slideout"
   ></AgentConnectionTest>
 </template>
 

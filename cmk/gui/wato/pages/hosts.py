@@ -18,7 +18,8 @@ import cmk.utils.tags
 from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInput
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.version import omd_version
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -40,6 +41,9 @@ from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.agent_commands import (
+    agent_commands_registry,
+)
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -77,6 +81,9 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.shared_typing.mode_host import (
+    AgentInstallCmds,
+    AgentRegistrationCmds,
+    AgentSlideout,
     I18nPingHost,
     ModeHost,
     ModeHostAgentConnectionMode,
@@ -84,6 +91,7 @@ from cmk.shared_typing.mode_host import (
     ModeHostSite,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
+from cmk.utils.paths import omd_root
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
@@ -300,6 +308,10 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         host_name_attribute_key: Final[str] = "host"
         form_name: Final[str] = "edit_host"
+        omd_config = get_omd_config(omd_root)
+        site = omd_site()
+        ip_address = omd_config["CONFIG_APACHE_TCP_ADDR"]
+        version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(
@@ -345,6 +357,22 @@ class ABCHostMode(WatoMode, abc.ABC):
                         for mode in HostAgentConnectionMode
                     ],
                     all_agents_url=folder_preserving_link([("mode", "agents")]),
+                    agent_slideout=AgentSlideout(
+                        agent_install_cmds=AgentInstallCmds(
+                            **asdict(
+                                agent_commands_registry["agent_commands"].install_cmds(
+                                    site, ip_address, version
+                                )
+                            )
+                        ),
+                        agent_registration_cmds=AgentRegistrationCmds(
+                            **asdict(
+                                agent_commands_registry["agent_commands"].registration_cmds(
+                                    site, ip_address
+                                )
+                            )
+                        ),
+                    ),
                     host_name=self._host.name(),
                 )
             ),

@@ -4,7 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 string_flag(
     name = "edition",
-    build_setting_default = "UNSET",
+    build_setting_default = "cre",
     values = [
         "cre",
         "cce",

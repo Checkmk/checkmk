@@ -174,7 +174,9 @@ filegroup(
         "gcc-13.2.0/lib64/libstdc++.so",
         "gcc-13.2.0/lib64/libstdc++.so.6",
         "gcc-13.2.0/lib64/libstdc++.so.6.0.32",
-    ]),
+    ],
+    allow_empty = True,
+    ),
     visibility = ["//visibility:public"],
 )
     """,

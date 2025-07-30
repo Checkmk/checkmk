@@ -146,7 +146,6 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 description="Test rule 1",
                 disabled=False,
                 notify_plugin=("mail", None),
-                match_ec=False,
             ),
             {
                 "EC_ID": "test1",
@@ -186,7 +185,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "EC_ID": "test3",
             },
-            None,
+            "Notification has been created by the Event Console.",
             id="No matching on Event Console alerts (option unchecked), notification from Event Console",
         ),
         pytest.param(

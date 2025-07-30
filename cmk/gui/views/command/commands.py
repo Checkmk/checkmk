@@ -1802,12 +1802,6 @@ class CommandScheduleDowntimes(Command):
                     Checkbox(
                         title=_("Only for hosts: Set child hosts in downtime"),
                         label=_("Include indirectly connected hosts (recursively)"),
-                        help=_(
-                            "Either verify the server certificate using the "
-                            "site local CA or accept any certificate offered by "
-                            "the server. It is highly recommended to leave this "
-                            "enabled."
-                        ),
                     ),
                 ),
             ],

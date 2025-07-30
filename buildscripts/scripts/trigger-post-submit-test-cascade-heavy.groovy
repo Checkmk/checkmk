@@ -16,6 +16,9 @@ def main() {
         "test-composition-single-f12less-cme",
         "test-composition-single-f12less-cre",
         "test-gui-crawl-f12less",
+        "test-gui-e2e-cce",
+        "test-gui-e2e-cee",
+        "test-gui-e2e-cse",
         "test-integration-agent-plugin",
         "test-integration-single-f12less",
         "test-integration-single-f12less-cme",
@@ -27,7 +30,6 @@ def main() {
         "test-update-single-f12less-cce",
         "test-update-single-f12less-cme",
         "test-update-single-f12less-cre",
-        "trigger-test-gui-e2e",
     ];
 
     print(

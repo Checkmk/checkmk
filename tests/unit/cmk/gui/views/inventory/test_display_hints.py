@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import datetime
+from collections.abc import Callable
 
 # No stub file
 import pytest
@@ -15,12 +16,15 @@ from cmk.gui.inventory.filters import (
     FilterInvText,
 )
 from cmk.gui.num_split import cmp_version
+from cmk.gui.utils.html import HTML
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
     _get_related_legacy_hints,
     _PaintBool,
     _PaintChoice,
+    _PaintNumber,
+    _PaintText,
     _parse_view_name,
     _RelatedLegacyHints,
     _SortFunctionChoice,
@@ -41,11 +45,23 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
+from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
 from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_alpha import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1_alpha import IECNotation as IECNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
+from cmk.inventory_ui.v1_alpha import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_alpha import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1_alpha import (
+    StandardScientificNotation as StandardScientificNotationFromAPI,
+)
 from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
+from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 
@@ -1253,8 +1269,83 @@ def test_render_bool() -> None:
         render_true=LabelFromAPI("It's true"),
         render_false=LabelFromAPI("It's false"),
     )
-    assert _PaintBool(bool_field)(True) == ("", "It's true")
-    assert _PaintBool(bool_field)(False) == ("", "It's false")
+    assert _PaintBool(bool_field)(True) == (
+        "",
+        HTML('<span style="text-align: left">It&#x27;s true</span>', escape=False),
+    )
+    assert _PaintBool(bool_field)(False) == (
+        "",
+        HTML('<span style="text-align: left">It&#x27;s false</span>', escape=False),
+    )
+
+
+@pytest.mark.parametrize(
+    ["render", "value", "expected"],
+    [
+        pytest.param(lambda v: "one" if v == 1 else "more", 1, "one", id="Callable"),
+        pytest.param(
+            UnitFromAPI(notation=DecimalNotationFromAPI("count")),
+            1.00,
+            "1 count",
+            id="DecimalNotation",
+        ),
+        pytest.param(
+            UnitFromAPI(notation=SINotationFromAPI("B")),
+            1000,
+            "1 kB",
+            id="SINotation",
+        ),
+        pytest.param(
+            UnitFromAPI(notation=IECNotationFromAPI("bits")),
+            1024,
+            "1 Kibits",
+            id="IECNotation",
+        ),
+        pytest.param(
+            UnitFromAPI(notation=StandardScientificNotationFromAPI("snakes")),
+            1000,
+            "1e+3 snakes",
+            id="StandardScientificNotation",
+        ),
+        pytest.param(
+            UnitFromAPI(notation=TimeNotationFromAPI()),
+            60,
+            "1 min",
+            id="TimeNotation",
+        ),
+        pytest.param(
+            UnitFromAPI(notation=AgeNotationFromAPI()),
+            datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.UTC).timestamp(),
+            "1 min",
+            id="AgeNotation",
+        ),
+    ],
+)
+def test_render_number(
+    render: Callable[[int | float], LabelFromAPI | str] | UnitFromAPI,
+    value: int | float,
+    expected: str,
+) -> None:
+    number_field = NumberFieldFromAPI(
+        TitleFromAPI("A title"), render=render, style=lambda _: [AlignmentFromAPI.CENTERED]
+    )
+    now = datetime.datetime(2025, 1, 1, 0, 1, 0, tzinfo=datetime.UTC).timestamp()
+    assert _PaintNumber(number_field)(value, now) == (
+        "",
+        HTML(f'<span style="text-align: center">{expected}</span>', escape=False),
+    )
+
+
+def test_render_text() -> None:
+    text_field = TextFieldFromAPI(
+        TitleFromAPI("A title"),
+        render=lambda v: f"hello {v}",
+        style=lambda _: [LabelColorFromAPI.PINK],
+    )
+    assert _PaintText(text_field)("world") == (
+        "",
+        HTML('<span style="color: #ff64ff; text-align: left">hello world</span>', escape=False),
+    )
 
 
 def test_render_choice() -> None:
@@ -1262,8 +1353,14 @@ def test_render_choice() -> None:
         TitleFromAPI("A title"),
         mapping={1: LabelFromAPI("One")},
     )
-    assert _PaintChoice(choice_field)(1) == ("", "One")
-    assert _PaintChoice(choice_field)(2) == ("", "<2> (No such value)")
+    assert _PaintChoice(choice_field)(1) == (
+        "",
+        HTML('<span style="text-align: center">One</span>', escape=False),
+    )
+    assert _PaintChoice(choice_field)(2) == (
+        "",
+        HTML('<span style="text-align: center">&lt;2&gt; (No such value)</span>', escape=False),
+    )
 
 
 def test_sort_text() -> None:

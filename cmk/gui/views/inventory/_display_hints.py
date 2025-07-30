@@ -5,13 +5,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+import time
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import assert_never, Literal, TypeAlias
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui import inventory
+from cmk.gui.color import parse_color_from_api
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
     FilterInvBool,
@@ -30,14 +33,40 @@ from cmk.gui.inventory.filters import (
     FilterInvText,
 )
 from cmk.gui.log import logger
+from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
+from cmk.gui.unit_formatter import (
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    SIFormatter,
+    StandardScientificFormatter,
+    TimeFormatter,
+)
+from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
 from cmk.gui.utils.html import HTML
+from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1_alpha import AutoPrecision as AutoPrecisionFromAPI
+from cmk.inventory_ui.v1_alpha import BackgroundColor as BackgroundColorFromAPI
 from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
 from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_alpha import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1_alpha import (
+    EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
+)
 from cmk.inventory_ui.v1_alpha import entry_point_prefixes
+from cmk.inventory_ui.v1_alpha import IECNotation as IECNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
+from cmk.inventory_ui.v1_alpha import LabelColor as LabelColorFromAPI
 from cmk.inventory_ui.v1_alpha import Node as NodeFromAPI
 from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_alpha import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1_alpha import (
+    StandardScientificNotation as StandardScientificNotationFromAPI,
+)
+from cmk.inventory_ui.v1_alpha import StrictPrecision as StrictPrecisionFromAPI
 from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath, SDValue
@@ -49,8 +78,6 @@ from .registry import (
     PaintFunction,
     SortFunction,
 )
-
-# TODO API: style
 
 
 def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
@@ -86,28 +113,157 @@ def _make_str(title_or_label: TitleFromAPI | LabelFromAPI | str) -> str:
     )
 
 
+def _parse_alignment_from_api(alignment: AlignmentFromAPI) -> Literal["left", "center", "right"]:
+    match alignment:
+        case AlignmentFromAPI.LEFT:
+            return "left"
+        case AlignmentFromAPI.CENTERED:
+            return "center"
+        case AlignmentFromAPI.RIGHT:
+            return "right"
+        case other:
+            assert_never(other)
+
+
+def _add_html_styling(
+    rendered_value: str,
+    styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
+    default_alignment: AlignmentFromAPI,
+) -> HTML:
+    style_elements: MutableMapping[str, str] = {}
+    for style in styles:
+        match style:
+            case AlignmentFromAPI() as alignment:
+                style_elements.setdefault("text-align", _parse_alignment_from_api(alignment))
+            case BackgroundColorFromAPI() as bg_color:
+                style_elements.setdefault("background-color", parse_color_from_api(bg_color))
+            case LabelColorFromAPI() as label_color:
+                style_elements.setdefault("color", parse_color_from_api(label_color))
+            case other:
+                assert_never(other)
+    style_elements.setdefault("text-align", _parse_alignment_from_api(default_alignment))
+
+    return HTMLWriter.render_span(
+        rendered_value, style="; ".join(f"{k}: {v}" for k, v in style_elements.items())
+    )
+
+
 class _PaintBool:
     def __init__(self, field_from_api: BoolFieldFromAPI) -> None:
         self._field = field_from_api
 
+    @property
+    def default_alignment(self) -> AlignmentFromAPI:
+        return AlignmentFromAPI.LEFT
+
     def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, bool):
             raise ValueError(value)
-        return "", _make_str(self._field.render_true if value else self._field.render_false)
+        rendered_value = _make_str(self._field.render_true if value else self._field.render_false)
+        return "", _add_html_styling(
+            rendered_value, self._field.style(value), default_alignment=self.default_alignment
+        )
+
+
+class _PaintNumber:
+    def __init__(self, field_from_api: NumberFieldFromAPI) -> None:
+        self._field = field_from_api
+
+    @property
+    def default_alignment(self) -> AlignmentFromAPI:
+        return AlignmentFromAPI.RIGHT
+
+    def __call__(self, value: SDValue, now: float) -> tuple[str, str | HTML]:
+        if not isinstance(value, (int | float)):
+            raise ValueError(value)
+
+        match self._field.render:
+            case c if callable(c):
+                rendered_value = _make_str(c(value))
+            case UnitFromAPI() as unit:
+                rendered_value = self._render_unit(unit, value, now)
+            case _:
+                assert_never(self._field.render)
+
+        return "", _add_html_styling(
+            rendered_value, self._field.style(value), default_alignment=self.default_alignment
+        )
+
+    def _render_unit(self, unit: UnitFromAPI, value: int | float, now: float) -> str:
+        precision: AutoPrecisionFormatter | StrictPrecisionFormatter
+        match unit.precision:
+            case AutoPrecisionFromAPI():
+                precision = AutoPrecisionFormatter(digits=unit.precision.digits)
+            case StrictPrecisionFromAPI():
+                precision = StrictPrecisionFormatter(digits=unit.precision.digits)
+            case _:
+                assert_never(unit.precision)
+
+        match unit.notation:
+            case DecimalNotationFromAPI():
+                return DecimalFormatter(symbol=unit.notation.symbol, precision=precision).render(
+                    value
+                )
+            case SINotationFromAPI():
+                return SIFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            case IECNotationFromAPI():
+                return IECFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            case StandardScientificNotationFromAPI():
+                return StandardScientificFormatter(
+                    symbol=unit.notation.symbol, precision=precision
+                ).render(value)
+            case EngineeringScientificNotationFromAPI():
+                return EngineeringScientificFormatter(
+                    symbol=unit.notation.symbol, precision=precision
+                ).render(value)
+            case TimeNotationFromAPI():
+                return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            case AgeNotationFromAPI():
+                return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(
+                    now - value
+                )
+            case _:
+                assert_never(unit.notation)
+
+
+class _PaintText:
+    def __init__(self, field_from_api: TextFieldFromAPI) -> None:
+        self._field = field_from_api
+
+    @property
+    def default_alignment(self) -> AlignmentFromAPI:
+        return AlignmentFromAPI.LEFT
+
+    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
+        if not isinstance(value, str):
+            raise ValueError(value)
+
+        return "", _add_html_styling(
+            _make_str(_make_str(self._field.render(value))),
+            self._field.style(value),
+            default_alignment=self.default_alignment,
+        )
 
 
 class _PaintChoice:
     def __init__(self, field_from_api: ChoiceFieldFromAPI) -> None:
         self._field = field_from_api
 
+    @property
+    def default_alignment(self) -> AlignmentFromAPI:
+        return AlignmentFromAPI.CENTERED
+
     def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, (int | float | str)):
             raise ValueError(value)
-        return (
-            "",
+
+        rendered_val = (
             f"<{value}> (%s)" % _("No such value")
             if (rendered := self._field.mapping.get(value)) is None
-            else _make_str(rendered),
+            else _make_str(rendered)
+        )
+        return "", _add_html_styling(
+            rendered_val, self._field.style(value), default_alignment=self.default_alignment
         )
 
 
@@ -118,9 +274,9 @@ def _make_paint_function(
         case BoolFieldFromAPI():
             return _PaintBool(field_from_api)
         case NumberFieldFromAPI():
-            return lambda v: ("", str(v))  # TODO
+            return lambda value: _PaintNumber(field_from_api)(value, time.time())
         case TextFieldFromAPI():
-            return lambda v: ("", str(v))  # TODO
+            return _PaintText(field_from_api)
         case ChoiceFieldFromAPI():
             return _PaintChoice(field_from_api)
         case other:

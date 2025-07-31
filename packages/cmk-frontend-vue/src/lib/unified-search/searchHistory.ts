@@ -43,7 +43,7 @@ export class SearchHistoryService {
     return this.entries.value
       .filter((e) => e.element.provider === provider || provider === null)
       .sort((a, b) => b[by] - a[by])
-      .slice(0, limit ? limit - 1 : limit)
+      .slice(0, limit)
   }
 
   public getQueries(limit?: number): UnifiedSearchQueryLike[] {

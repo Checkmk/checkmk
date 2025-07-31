@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.logged_in import user
@@ -12,7 +11,7 @@ from cmk.gui.openapi.api_endpoints.user_role.models.response_models import (
 )
 from cmk.gui.openapi.api_endpoints.user_role.utils import PERMISSIONS, serialize_role
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
@@ -28,7 +27,7 @@ from cmk.gui.watolib.userroles import get_all_roles
 from .endpoint_family import USER_ROLE_FAMILY
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class UserRoleCollectionModel(DomainObjectCollectionModel):
     domainType: Literal["user_role"] = api_field(
         description="The domain type of the objects in the collection",

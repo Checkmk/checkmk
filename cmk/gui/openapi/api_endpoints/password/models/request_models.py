@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 from typing import Annotated, Self
 
 from annotated_types import MinLen
@@ -11,13 +10,13 @@ from pydantic import AfterValidator, model_validator
 
 from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.utils.password_store import Password
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class CreatePassword:
     ident: Annotated[
         str,
@@ -109,7 +108,7 @@ class CreatePassword:
         return password
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class UpdatePassword:
     title: str | ApiOmitted = api_field(
         example="Kubernetes login",

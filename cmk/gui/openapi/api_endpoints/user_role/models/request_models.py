@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 from typing import Annotated
 
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
     PermissionsConverter,
     TypedPlainValidator,
@@ -29,7 +28,7 @@ BuiltInRoleId = Annotated[
 ]
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class CreateUserRoleModel:
     role_id: ExistingRoleId = api_field(
         description="An existing userrole that you want to clone.",
@@ -53,7 +52,7 @@ class CreateUserRoleModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class EditUserRoleModel:
     new_role_id: NewRoleId | ApiOmitted = api_field(
         description="New role_id for the userrole that must be unique.",

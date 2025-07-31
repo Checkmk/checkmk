@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 from typing import Literal
 
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class UserRoleExtensionsModel:
     alias: str = api_field(
         description="The alias of the user role.",
@@ -32,7 +31,7 @@ class UserRoleExtensionsModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class UserRoleModel(DomainObjectModel):
     domainType: Literal["user_role"] = api_field(
         description="The domain type of the object.",

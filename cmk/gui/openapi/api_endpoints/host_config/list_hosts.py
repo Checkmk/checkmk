@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
 from typing import Annotated, Literal
 
 from cmk import trace
@@ -14,7 +13,7 @@ from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
 from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -32,7 +31,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 tracer = trace.get_tracer()
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostConfigCollectionModel(DomainObjectCollectionModel):
     domainType: Literal["host_config"] = api_field(
         description="The domain type of the objects in the collection",

@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from typing import Annotated, Literal
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.framework import QueryParam
-from cmk.gui.openapi.framework.model import api_field
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.utils.structured_data import ImmutableTree
@@ -17,12 +16,12 @@ from cmk.utils.structured_data import ImmutableTree
 from .._tree import inventory_of_host
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class Attributes:
     pairs: dict[str, int | float | str | bool | None] = api_field(description="Key-value pairs")
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class Table:
     key_columns: Sequence[str] = api_field(
         description="The key columns which are used to identify a row"
@@ -32,7 +31,7 @@ class Table:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class Tree:
     attributes: "Attributes" = api_field(description="A collection of key-value pairs")
     table: "Table" = api_field(description="A collection of rows")
@@ -55,7 +54,7 @@ def _transform_inventory_tree(tree: ImmutableTree) -> Tree:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostInventoryTree:
     host_name: str = api_field(
         description="The HW/SW Inventory tree of the host",
@@ -65,7 +64,7 @@ class HostInventoryTree:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class InventoryTreesCollectionModel(DomainObjectCollectionModel):
     domainType: Literal["inventory"] = api_field(
         description="The domain type of the objects in the collection",

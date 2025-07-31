@@ -22,7 +22,7 @@ from cmk.gui.fields.attributes import (
     PrivacyProtocolType,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import IPv4String, RegexString
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
@@ -43,7 +43,7 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.utils.translations import TranslationOptionsSpec
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostContactGroupModel:
     groups: list[Annotated[str, AfterValidator(GroupConverter(group_type="host").exists)]] = (
         api_field(description="A list of contact groups.", example="all")
@@ -79,13 +79,13 @@ class HostContactGroupModel:
         }
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class SNMPCommunityModel:
     type: Literal["v1_v2_community"] = api_field(description="SNMP v1 or v2 with community")
     community: str = api_field(description="SNMP community (SNMP Versions 1 and 2c)")
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class SNMPv3NoAuthNoPrivacyModel:
     type: Literal["noAuthNoPriv"] = api_field(
         description="SNMPv3 without authentication or privacy"
@@ -103,7 +103,7 @@ class SNMPv3NoAuthNoPrivacyModel:
         return self.type, self.security_name
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class SNMPv3AuthNoPrivacyModel:
     type: Literal["authNoPriv"] = api_field(
         description="SNMPv3 with authentication, but without privacy"
@@ -132,7 +132,7 @@ class SNMPv3AuthNoPrivacyModel:
         )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class SNMPv3AuthPrivacyModel:
     type: Literal["authPriv"] = api_field(description="SNMPv3 with authentication and privacy")
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
@@ -211,7 +211,7 @@ class SNMPCredentialsConverter:
                 raise ValueError(f"Unknown SNMP credentials type: {field.type!r}")
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class IPAddressRangeModel:
     type: Literal["ip_range"] = api_field(description="Select a range of IP addresses")
     from_address: IPv4String = api_field(description="The first IPv4 address of this range.")
@@ -229,7 +229,7 @@ class IPAddressRangeModel:
         return self.type, (str(self.from_address), str(self.to_address))
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class IPNetworkModel:
     type: Literal["ip_network"] = api_field(description="Select an entire network")
     network: IPv4Network = api_field(
@@ -248,7 +248,7 @@ class IPNetworkModel:
         return self.type, (str(self.network.network_address), self.network.prefixlen)
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class IPAddressesModel:
     type: Literal["ip_list"] = api_field(description="Select multiple explicit IP addresses")
     addresses: list[IPv4String] = api_field(description="List of IPv4 addresses")
@@ -264,7 +264,7 @@ class IPAddressesModel:
         return self.type, [HostAddress(x) for x in self.addresses]
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class IPRegexpModel:
     type: Literal["ip_regex_list"] = api_field(description="Deselect IP addresses with regexes")
     regexp_list: list[RegexString] = api_field(
@@ -306,7 +306,7 @@ class IPRangeConverter:
         return IPRangeConverter.from_internal(value)
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class TimeAllowedRangeModel:
     start: dt.time = api_field(
         description="The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped."
@@ -334,7 +334,7 @@ class TimeAllowedRangeModel:
         return (self.start.hour, self.start.minute), (self.end.hour, self.end.minute)
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class RegexpRewritesModel:
     search: Annotated[RegexString, MaxLen(30)] = api_field(
         description="The search regexp. May contain match-groups, conditional matches, etc. This follows the Python regular expression syntax.\n\nFor details see:\n\n * https://docs.python.org/3/library/re.html"
@@ -373,7 +373,7 @@ class RegexpRewritesModel:
         return str(self.search), self.replace_with
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class DirectMappingModel:
     hostname: str = api_field(description="The host name to be replaced.")
     replace_with: str = api_field(description="The replacement string.")
@@ -389,7 +389,7 @@ class DirectMappingModel:
         return self.hostname, self.replace_with
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class TranslateNamesModel:
     case: Literal["nop", "lower", "upper"] = api_field(
         serialization_alias="convert_case",
@@ -480,7 +480,7 @@ class TranslateNamesModel:
         return spec
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class NetworkScanModel:
     ip_ranges: list[IPRangeModel] = api_field(
         serialization_alias="addresses", description="IPv4 addresses to include."
@@ -584,7 +584,7 @@ class NetworkScanModel:
         return spec
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class IPMIParametersModel:  # TODO: this is dumb (or at least the IPMICredentials are)
     username: str | ApiOmitted = api_field(description="IPMI username", default_factory=ApiOmitted)
     password: str | ApiOmitted = api_field(description="IPMI password", default_factory=ApiOmitted)
@@ -605,7 +605,7 @@ class IPMIParametersModel:  # TODO: this is dumb (or at least the IPMICredential
         return spec
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class NetworkScanResultModel:
     start: dt.datetime | None = api_field(
         description="When the scan started",
@@ -640,7 +640,7 @@ class NetworkScanResultModel:
         )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class MetaDataModel:
     created_at: dt.datetime | ApiOmitted = api_field(
         description="When has this object been created.",
@@ -668,7 +668,7 @@ class MetaDataModel:
         )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class LockedByModel:
     site_id: str = api_field(description="Site ID")
     program_id: str = api_field(description="Program ID")
@@ -689,7 +689,7 @@ class LockedByModel:
         return [self.site_id, self.program_id, self.instance_id]
 
 
-@dataclass(kw_only=True)
+@api_model
 class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     """Class for custom host attributes and tag groups."""
 

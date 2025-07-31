@@ -3,17 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 from typing import Literal
 
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
 )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class PasswordExtension:
     comment: str | ApiOmitted = api_field(
         example="Kommentar",
@@ -52,7 +51,7 @@ class PasswordExtension:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class PasswordObject(DomainObjectModel):
     domainType: Literal["password"] = api_field(
         description="The type of the domain-object.",
@@ -62,7 +61,7 @@ class PasswordObject(DomainObjectModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class PasswordCollection(DomainObjectCollectionModel):
     domainType: Literal["password"] = api_field(
         description="The domain type of the objects in the collection.",

@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from dataclasses import dataclass
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -13,7 +12,7 @@ from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostUpdateAttributeModel
 from cmk.gui.openapi.framework import EndpointBehavior, QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -30,7 +29,7 @@ from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class CreateHostModel:
     host_name: Annotated[HostName, TypedPlainValidator(str, HostConverter.not_exists)] = api_field(
         description="The hostname or IP address of the host to be created.",

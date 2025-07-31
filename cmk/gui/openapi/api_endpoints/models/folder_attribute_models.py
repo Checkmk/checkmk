@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from dataclasses import dataclass
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator
@@ -19,12 +18,12 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     SNMPCredentialsModel,
 )
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostTagGroupModel
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import HostConverter
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 
 
-@dataclass(kw_only=True)
+@api_model(slots=False)
 class BaseFolderAttributeModel:
     """Base class for all folder attribute models."""
 
@@ -106,7 +105,7 @@ class BaseFolderAttributeModel:
         return value
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class FolderViewAttributeModel(
     BaseFolderAttributeModel,
     BaseHostTagGroupModel,

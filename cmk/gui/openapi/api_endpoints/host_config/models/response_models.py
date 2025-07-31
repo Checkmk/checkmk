@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator
 
 from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import FolderViewAttributeModel
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
-from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
@@ -22,7 +21,7 @@ from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostExtensionsModel:
     folder: AnnotatedFolder = api_field(description="The folder, in which this host resides.")
     attributes: HostViewAttributeModel = api_field(description="Attributes of this host.")
@@ -41,7 +40,7 @@ class HostExtensionsModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class FolderMembersModel:
     hosts: ObjectCollectionMemberModel = api_field(
         description="A list of links pointing to the actual host-resources."
@@ -51,7 +50,7 @@ class FolderMembersModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class FolderExtensionsModel:
     path: str = api_field(description="The full path of this folder, slash delimited.")
     attributes: FolderViewAttributeModel = api_field(
@@ -59,7 +58,7 @@ class FolderExtensionsModel:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class FolderModel(LinkableModel):
     domainType: Literal["folder_config"] = api_field(
         description="The domain type of the object.",
@@ -72,7 +71,7 @@ class FolderModel(LinkableModel):
     extensions: FolderExtensionsModel = api_field(description="Data and Meta-Data of this object.")
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostMembersModel(DomainObjectModel):
     folder_config: FolderModel = api_field(
         description="The folder in which this host resides. It is represented by a hexadecimal "
@@ -81,7 +80,7 @@ class HostMembersModel(DomainObjectModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostConfigModel(DomainObjectModel):
     domainType: Literal["host_config"] = api_field(description="The domain type of the object.")
     members: HostMembersModel | None = api_field(
@@ -92,7 +91,7 @@ class HostConfigModel(DomainObjectModel):
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@api_model
 class HostConfigCollectionModel(DomainObjectCollectionModel):
     domainType: Literal["host_config"] = api_field(
         description="The domain type of the objects in the collection",

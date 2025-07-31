@@ -6,7 +6,14 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import dataclass, field
 from typing import assert_never, Literal, TypeAlias
 
@@ -71,6 +78,7 @@ from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
 from cmk.utils.structured_data import SDKey, SDNodeName, SDPath, SDValue
 
+from ._paint_functions import inv_paint_generic
 from .registry import (
     inv_paint_funtions,
     InventoryHintSpec,
@@ -158,7 +166,9 @@ class _PaintBool:
 
     def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, bool):
-            raise ValueError(value)
+            # TODO CMK-25119
+            return inv_paint_generic(value)
+
         rendered_value = _make_str(self._field.render_true if value else self._field.render_false)
         return "", _add_html_styling(
             rendered_value, self._field.style(value), default_alignment=self.default_alignment
@@ -175,7 +185,8 @@ class _PaintNumber:
 
     def __call__(self, value: SDValue, now: float) -> tuple[str, str | HTML]:
         if not isinstance(value, (int | float)):
-            raise ValueError(value)
+            # TODO CMK-25119
+            return inv_paint_generic(value)
 
         match self._field.render:
             case c if callable(c):
@@ -236,7 +247,8 @@ class _PaintText:
 
     def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, str):
-            raise ValueError(value)
+            # TODO CMK-25119
+            return inv_paint_generic(value)
 
         return "", _add_html_styling(
             _make_str(_make_str(self._field.render(value))),
@@ -255,7 +267,8 @@ class _PaintChoice:
 
     def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
         if not isinstance(value, (int | float | str)):
-            raise ValueError(value)
+            # TODO CMK-25119
+            return inv_paint_generic(value)
 
         rendered_val = (
             f"<{value}> (%s)" % _("No such value")

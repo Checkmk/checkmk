@@ -498,3 +498,108 @@ def test_abandoned_file_age(tmp_path: Path) -> None:
     assert not unknown_files.delta_cache_tree_3_4.exists()
     assert not unknown_files.delta_cache_tree_4_100.exists()
     assert not unknown_files.delta_cache_tree_4_100.parent.exists()
+
+
+def test_abandoned_file_age_keep_history(tmp_path: Path) -> None:
+    known_files = _setup_files(tmp_path, HostName("known"))
+    unknown_files = _setup_files(tmp_path, HostName("unknown"))
+    InventoryHousekeeping(tmp_path)._run(
+        Config(
+            inventory_housekeeping=InvHousekeepingParams(
+                for_hosts=[],
+                default=None,
+                abandoned_file_age=1,
+            )
+        ),
+        host_names=[HostName("known")],
+        now=100,
+    )
+    assert known_files.inventory_tree.exists()
+    assert known_files.inventory_tree_gz.legacy.exists()
+    assert known_files.status_data_tree.exists()
+    assert known_files.archive_tree_1.exists()
+    assert known_files.archive_tree_2.exists()
+    assert known_files.archive_tree_3.exists()
+    assert known_files.archive_tree_4.exists()
+    assert known_files.delta_cache_tree_None_1.exists()
+    assert known_files.delta_cache_tree_1_2.exists()
+    assert known_files.delta_cache_tree_2_3.exists()
+    assert known_files.delta_cache_tree_3_4.exists()
+    assert known_files.delta_cache_tree_4_100.exists()
+    assert unknown_files.inventory_tree.exists()
+    assert unknown_files.inventory_tree_gz.legacy.exists()
+    assert unknown_files.status_data_tree.exists()
+    assert unknown_files.archive_tree_1.exists()
+    assert unknown_files.archive_tree_2.exists()
+    assert unknown_files.archive_tree_3.exists()
+    assert unknown_files.archive_tree_4.exists()
+    assert unknown_files.archive_tree_4.parent.exists()
+    assert unknown_files.delta_cache_tree_None_1.exists()
+    assert unknown_files.delta_cache_tree_1_2.exists()
+    assert unknown_files.delta_cache_tree_2_3.exists()
+    assert unknown_files.delta_cache_tree_3_4.exists()
+    assert unknown_files.delta_cache_tree_4_100.exists()
+    assert unknown_files.delta_cache_tree_4_100.parent.exists()
+
+
+@dataclass(frozen=True, kw_only=True)
+class _FilesNoHistory:
+    inventory_tree: TreePath
+    inventory_tree_gz: TreePathGz
+    status_data_tree: TreePath
+
+
+def _setup_files_no_history(tmp_path: Path, host_name: HostName) -> _FilesNoHistory:
+    inv_paths = InventoryPaths(tmp_path)
+
+    inventory_tree = inv_paths.inventory_tree(host_name)
+    inventory_tree.legacy.parent.mkdir(parents=True, exist_ok=True)
+    inventory_tree.legacy.touch()
+    os.utime(inventory_tree.legacy, (5, 5))
+
+    inventory_tree_gz = inv_paths.inventory_tree_gz(host_name)
+    inventory_tree_gz.legacy.parent.mkdir(parents=True, exist_ok=True)
+    inventory_tree_gz.legacy.touch()
+    os.utime(inventory_tree_gz.legacy, (5, 5))
+
+    status_data_tree = inv_paths.status_data_tree(host_name)
+    status_data_tree.legacy.parent.mkdir(parents=True, exist_ok=True)
+    status_data_tree.legacy.touch()
+    os.utime(status_data_tree.legacy, (5, 5))
+
+    return _FilesNoHistory(
+        inventory_tree=inventory_tree,
+        inventory_tree_gz=inventory_tree_gz,
+        status_data_tree=status_data_tree,
+    )
+
+
+def test_abandoned_file_age_no_history(tmp_path: Path) -> None:
+    known_files = _setup_files(tmp_path, HostName("known"))
+    unknown_files = _setup_files_no_history(tmp_path, HostName("unknown"))
+    InventoryHousekeeping(tmp_path)._run(
+        Config(
+            inventory_housekeeping=InvHousekeepingParams(
+                for_hosts=[],
+                default=None,
+                abandoned_file_age=96,
+            )
+        ),
+        host_names=[HostName("known")],
+        now=100,
+    )
+    assert known_files.inventory_tree.exists()
+    assert known_files.inventory_tree_gz.legacy.exists()
+    assert known_files.status_data_tree.exists()
+    assert known_files.archive_tree_1.exists()
+    assert known_files.archive_tree_2.exists()
+    assert known_files.archive_tree_3.exists()
+    assert known_files.archive_tree_4.exists()
+    assert known_files.delta_cache_tree_None_1.exists()
+    assert known_files.delta_cache_tree_1_2.exists()
+    assert known_files.delta_cache_tree_2_3.exists()
+    assert known_files.delta_cache_tree_3_4.exists()
+    assert known_files.delta_cache_tree_4_100.exists()
+    assert unknown_files.inventory_tree.exists()
+    assert unknown_files.inventory_tree_gz.legacy.exists()
+    assert unknown_files.status_data_tree.exists()

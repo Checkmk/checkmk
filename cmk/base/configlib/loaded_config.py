@@ -60,6 +60,8 @@ class LoadedConfigFragment:
     tcp_connect_timeouts: Sequence[RuleSpec[float]]
     encryption_handling: Sequence[RuleSpec[Mapping[str, str]]]
     piggyback_translation: Sequence[RuleSpec[Mapping[str, object]]]
+    piggybacked_host_files: Sequence[RuleSpec[Mapping[str, object]]]
+    piggyback_max_cachefile_age: int
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     cmc_real_time_checks: RealTimeChecks | None

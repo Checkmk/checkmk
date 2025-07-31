@@ -651,6 +651,8 @@ def _perform_post_config_loading_actions(
         tcp_connect_timeouts=tcp_connect_timeouts,
         encryption_handling=encryption_handling,
         piggyback_translation=piggyback_translation,
+        piggybacked_host_files=piggybacked_host_files,
+        piggyback_max_cachefile_age=piggyback_max_cachefile_age,
         agent_encryption=agent_encryption,
         agent_exclude_sections=agent_exclude_sections,
         cmc_real_time_checks=cmc_real_time_checks,
@@ -3472,7 +3474,7 @@ class ConfigCache:
 
         raise NotImplementedError(effective_mode)
 
-    def get_piggybacked_hosts_time_settings(
+    def get_piggybacked_hosts_time_settings(  # TODO: None case is obsolete.
         self, piggybacked_hostname: HostName | None = None
     ) -> piggyback_backend.PiggybackTimeSettings:
         all_sources = piggyback_backend.get_piggybacked_host_with_sources(
@@ -3493,16 +3495,6 @@ class ConfigCache:
             # From global settings
             (None, "max_cache_age", piggyback_max_cachefile_age),
         ]
-
-    def get_definitive_piggybacked_data_expiry_age(self) -> float:
-        """Get the interval after which we definitively can get rid of piggybacked data."""
-        return max(
-            (
-                value
-                for _, key, value in self.get_piggybacked_hosts_time_settings()
-                if key in {"max_cache_age", "validity_period"}
-            )
-        )
 
     # TODO: Remove old name one day
     @staticmethod

@@ -12,15 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import (
-    Age,
-    Checkbox,
-    Dictionary,
-    ListOf,
-    Migrate,
-    MonitoringState,
-    RegExp,
-)
+from cmk.gui.valuespec import Age, Dictionary, ListOf, Migrate, MonitoringState, RegExp
 
 REQUIRED_STATE_KEYS_AND_STATES = {"active": 0, "inactive": 0, "failed": 2}
 
@@ -39,18 +31,6 @@ def _parameter_valuespec_systemd_units_summary() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             elements=[
-                (
-                    "disabled_critical",
-                    Checkbox(
-                        default_value=True,
-                        label="Failed units that are disabled will be considered critical",
-                        title=_("Treat failed units that are disabled as critical"),
-                        help=_(
-                            "Failed service that are disabled are also considered for the status of the service. "
-                            "Activating this option will cause the service to be CRIT if a failed service is disabled."
-                        ),
-                    ),
-                ),
                 (
                     "states",
                     Dictionary(

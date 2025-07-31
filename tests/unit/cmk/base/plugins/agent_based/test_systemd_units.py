@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.check_utils import ParametersTypeAlias
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (
     _services_split,
     CHECK_DEFAULT_PARAMETERS_SUMMARY,
@@ -519,7 +519,7 @@ def test_services_split(
                 "├─4075632 /bin/bash /usr/bin/check_mk_agent",
                 "├─4075634 cat",
                 "├─4075658 systemctl status --all --type service --type socket --no-pager --lines 0",
-                "└─4075659 tr -s ",
+                "└─4075659 tr -s " "",
                 "● check-mk-agent.socket - Local Checkmk agent socket",
                 "Loaded: loaded (/lib/systemd/system/check-mk-agent.socket; enabled; vendor preset: enabled)",
                 "Active: active (listening) since Tue 2024-11-12 15:58:09 CET; 1 day 15h ago",
@@ -903,7 +903,6 @@ def test_discover_systemd_units_services_summary(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
             },
             SECTION,
             [
@@ -917,7 +916,6 @@ def test_discover_systemd_units_services_summary(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
             },
             SECTION,
             [
@@ -934,7 +932,6 @@ def test_discover_systemd_units_services_summary(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
             },
             SECTION,
             [
@@ -951,7 +948,6 @@ def test_discover_systemd_units_services_summary(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
             },
             Section(services={}, sockets={}),
             [
@@ -982,7 +978,6 @@ def test_check_systemd_units_services(
                 "else": 2,
                 "states": {"active": 2, "failed": 1, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
             },
             Section(
                 sockets={
@@ -1022,7 +1017,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [],
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
@@ -1042,7 +1036,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 1, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [],
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
@@ -1091,7 +1084,6 @@ def test_check_systemd_units_sockets(
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
-                "disabled_critical": False,
             },
             Section(
                 sockets={},
@@ -1137,7 +1129,6 @@ def test_check_systemd_units_sockets(
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
-                "disabled_critical": False,
             },
             Section(
                 sockets={},
@@ -1170,7 +1161,6 @@ def test_check_systemd_units_sockets(
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
-                "disabled_critical": False,
             },
             Section(
                 sockets={},
@@ -1203,7 +1193,6 @@ def test_check_systemd_units_sockets(
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
-                "disabled_critical": False,
             },
             Section(
                 sockets={},
@@ -1230,7 +1219,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [],
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
@@ -1262,7 +1250,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [
                     "systemd-timesyncd.service",
                     "systemd-ask-password-console",
@@ -1298,7 +1285,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [
                     "systemd.",
                 ],
@@ -1344,7 +1330,6 @@ def test_check_systemd_units_sockets(
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [],
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),
@@ -1372,41 +1357,9 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "disabled_critical": True,
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
-            },
-            Section(
-                sockets={},
-                services={
-                    "systemd-timesyncd.service": UnitEntry(
-                        name="systemd-timesyncd.service",
-                        loaded_status="loaded",
-                        active_status="failed",
-                        current_state="failed",
-                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
-                        enabled_status="disabled",
-                    ),
-                },
-            ),
-            [
-                Result(state=State.OK, summary="Total: 1"),
-                Result(state=State.OK, summary="Disabled: 1"),
-                Result(state=State.CRIT, summary="Failed: 1"),
-            ],
-            id="One disabled, but critical state configured in params -> CRIT",
-        ),
-        pytest.param(
-            {
                 "else": 2,
                 "states": {"active": 0, "failed": 0, "inactive": 0},
                 "states_default": 2,
-                "disabled_critical": False,
                 "ignored": [],
                 "activating_levels": (30, 60),
                 "deactivating_levels": (30, 60),

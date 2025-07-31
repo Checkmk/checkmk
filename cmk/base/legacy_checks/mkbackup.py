@@ -114,8 +114,10 @@ def check_mkbackup(job_state):
             yield 1, "Schedule is currently disabled"
 
         elif next_run is not None:
-            # add a 30 seconds buffer to prevent a critical when the backup is about to start
-            if next_run < time.time() + 30:
+            # add a 120 seconds buffer to prevent a critical when the backup is about to start
+            # 60 seconds in case the check before the backup is delayed and
+            # 60 seconds in case the mkbackup plugin doesn't update its state
+            if next_run < time.time() + 120:
                 state = 2
             else:
                 state = 0

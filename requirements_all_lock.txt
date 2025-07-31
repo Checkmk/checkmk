@@ -754,9 +754,9 @@ execnet==2.1.1 \
     --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
     --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
     # via pytest-xdist
-faker==37.4.2 \
-    --hash=sha256:8e281bbaea30e5658895b8bea21cc50d27aaf3a43db3f2694409ca5701c56b0a \
-    --hash=sha256:b70ed1af57bfe988cbcd0afd95f4768c51eaf4e1ce8a30962e127ac5c139c93f
+faker==37.5.3 \
+    --hash=sha256:386fe9d5e6132a915984bf887fcebcc72d6366a25dd5952905b31b141a17016d \
+    --hash=sha256:8315d8ff4d6f4f588bd42ffe63abd599886c785073e26a44707e10eeba5713dc
     # via polyfactory
 fakeredis[lua]==2.26.1 \
     --hash=sha256:68a5615d7ef2529094d6958677e30a6d30d544e203a5ab852985c19d7ad57e32 \
@@ -3005,9 +3005,9 @@ pyproject-hooks==1.2.0 \
     --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
     --hash=sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913
     # via build
-pyrate-limiter==3.8.1 \
-    --hash=sha256:1b3c1e121191833fc30b475265288393c6b1459cc524bb6766e35f97f47a5608 \
-    --hash=sha256:f012aec33147d7898a189d766decd2fecd72b58acf9d258be557cfadad975b5a
+pyrate-limiter==3.9.0 \
+    --hash=sha256:6b882e2c77cda07a241d3730975daea4258344b39c878f1dd8849df73f70b0ce \
+    --hash=sha256:77357840c8cf97a36d67005d4e090787043f54000c12c2b414ff65657653e378
     # via schemathesis
 pysaml2==7.5.0 \
     --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
@@ -3975,9 +3975,9 @@ twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \
     --hash=sha256:9c6025b203b51521d53e200f4a08b116dee7500a38591668c6a6033117bdc218
     # via -r requirements_dev.txt
-types-awscrt==0.27.4 \
-    --hash=sha256:a8c4b9d9ae66d616755c322aba75ab9bd793c6fef448917e6de2e8b8cdf66fb4 \
-    --hash=sha256:c019ba91a097e8a31d6948f6176ede1312963f41cdcacf82482ac877cbbcf390
+types-awscrt==0.27.5 \
+    --hash=sha256:8eefe50d1709520663b77d3643a772c35ace3d8acfcb296f857627622c84cb4c \
+    --hash=sha256:99ee40e787dfb92ae93a5c956251a03b847de3ac532552f7e06dd5eb6e0fd02f
     # via botocore-stubs
 types-beautifulsoup4==4.12.0.20241020 \
     --hash=sha256:158370d08d0cd448bd11b132a50ff5279237a5d4b5837beba074de152a513059 \

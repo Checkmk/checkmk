@@ -1143,20 +1143,28 @@ async def process_virtual_net_gw(
 
 
 class MetricCache(DataCache):
+    # Semaphore introduced to not reach the maximum number of open files error.
+    # A sempahore should be enough, no need for locks here
+    # since the files are saved per subscription/region/resource type
+    # and the queries are also done per region and resource type
+    _open_cache_semaphore = asyncio.Semaphore(10)
+
     def __init__(
         self,
         *,
         metric_definition: tuple[str, str, str],
         resource_type: str,
         region: str,
+        subscription: str,
         cache_id: str,
         ref_time: datetime.datetime,
         debug: bool = False,
     ) -> None:
         self.metric_definition = metric_definition
         metric_names = metric_definition[0]
+        self._cache_path = self.get_cache_path(cache_id, resource_type, region, subscription)
         super().__init__(
-            self.get_cache_path(cache_id, resource_type, region),
+            self._cache_path,
             metric_names,
             debug=debug,
         )
@@ -1175,10 +1183,10 @@ class MetricCache(DataCache):
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_path(cache_id: str, resource_type: str, region: str) -> Path:
+    def get_cache_path(cache_id: str, resource_type: str, region: str, subscription: str) -> Path:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
-        return AZURE_CACHE_FILE_PATH / cache_id / subdir
+        return AZURE_CACHE_FILE_PATH / cache_id / subscription / subdir
 
     @property
     def cache_interval(self) -> int:
@@ -1271,11 +1279,21 @@ class MetricCache(DataCache):
 
         return metrics
 
+    async def get_cached_data(self):
+        async with MetricCache._open_cache_semaphore:
+            cached_data = super().get_cached_data()
+        return cached_data
+
+    async def _write_to_cache(self, data):
+        async with MetricCache._open_cache_semaphore:
+            super()._write_to_cache(data)
+
     async def get_metrics(self, *args, **kwargs):
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
-                return self.get_cached_data()
+                LOGGER.debug("Reading metrics from cache: %s", self._cache_path)
+                return await self.get_cached_data()
             except (OSError, ValueError) as exc:
                 logging.info("Getting live data (failed to read from cache: %s).", exc)
                 if self.debug:
@@ -1283,7 +1301,7 @@ class MetricCache(DataCache):
 
         live_data = await self.get_live_data(*args)
         try:
-            self._write_to_cache(live_data)
+            await self._write_to_cache(live_data)
         except (OSError, TypeError) as exc:
             logging.info("Failed to write data to cache file: %s", exc)
             if self.debug:
@@ -1329,9 +1347,12 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 
 
 async def process_metrics(
-    mgmt_client: BaseAsyncApiClient, resources: Sequence[AzureResource], args: Args
+    mgmt_client: BaseAsyncApiClient,
+    subscription: str,
+    resources: Sequence[AzureResource],
+    args: Args,
 ) -> None:
-    errors = await _gather_metrics(mgmt_client, resources, args)
+    errors = await _gather_metrics(mgmt_client, subscription, resources, args)
 
     if not errors:
         return
@@ -1343,7 +1364,10 @@ async def process_metrics(
 
 # TODO: to test
 async def _gather_metrics(
-    mgmt_client: BaseAsyncApiClient, all_resources: Sequence[AzureResource], args: Args
+    mgmt_client: BaseAsyncApiClient,
+    subscription: str,
+    all_resources: Sequence[AzureResource],
+    args: Args,
 ) -> IssueCollector:
     """
     Gather metrics for all resources. Metrics are collected per resource type, region, metric
@@ -1359,9 +1383,7 @@ async def _gather_metrics(
         )
 
     tasks = set()
-    for group, resource_ids in grouped_resource_ids.items():
-        resource_type, resource_region = group
-
+    for (resource_type, resource_region), resource_ids in grouped_resource_ids.items():
         if resource_type == FetchedResource.virtual_machines.type:
             if args.piggyback_vms != "self":
                 continue
@@ -1372,6 +1394,7 @@ async def _gather_metrics(
                 metric_definition=metric_definition,
                 resource_type=resource_type,
                 region=resource_region,
+                subscription=subscription,
                 cache_id=args.cache_id,
                 ref_time=NOW,
                 debug=args.debug,
@@ -2009,7 +2032,7 @@ async def main_subscription(
             )
             write_group_info(monitored_groups, selected_resources, group_labels)
 
-            await process_metrics(mgmt_client, selected_resources, args)
+            await process_metrics(mgmt_client, subscription, selected_resources, args)
 
             tasks = {
                 process_usage_details(mgmt_client, monitored_groups, args)

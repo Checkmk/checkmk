@@ -67829,6 +67829,11 @@ msgstr ""
 "Il modello specificato qui deve corrispondere esattamente all'inizio dello "
 "stato del sensore (case sensitive)."
 
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr ""
+"Il testo inserito qui è gestito come un modello di espressione regolare."
+
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "

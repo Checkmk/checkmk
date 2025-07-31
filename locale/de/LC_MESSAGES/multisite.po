@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-30 06:45+0000\n"
+"PO-Revision-Date: 2025-07-30 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -975,7 +975,7 @@ msgid "(never)"
 msgstr "(nie)"
 
 msgid "(no command line, passive check)"
-msgstr "(keine Kommandozeile, passiver Check)"
+msgstr "(keine Befehlszeile, passiver Check)"
 
 msgid "(no conditions)"
 msgstr "(keine Bedingungen)"
@@ -9083,7 +9083,7 @@ msgid ""
 "Best: The plug-in's check function will be applied to each individual node. "
 "The best outcome will determine the overall state of the clustered service."
 msgstr ""
-"Am besten: Die Prüffunktion des Plugins wird auf jeden einzelnen Knoten "
+"Bester Knoten: Die Prüffunktion des Plugins wird auf jeden einzelnen Knoten "
 "angewendet. Das beste Ergebnis bestimmt den Gesamtzustand des geclusterten "
 "Services."
 
@@ -9720,9 +9720,9 @@ msgid ""
 "significant way. Both SNMP modes are features which improve the performance "
 "for large installations and are only available via our subscription."
 msgstr ""
-"Checkmk verwendet standardmäßig Kommandozeilenaufrufe von Net-SNMP-Tools wie "
+"Checkmk verwendet standardmäßig Befehlszeilenaufrufe von Net-SNMP-Tools wie "
 "snmpget oder snmpwalk, um SNMP-Informationen zu sammeln. Für jede Anfrage "
-"wird ein neues Kommandozeilenprogramm ausgeführt. Es ist nun möglich, die "
+"wird ein neues Befehlszeilenprogramm ausgeführt. Es ist nun möglich, die "
 "Inline-SNMP-Implementierung zu verwenden, welche die entsprechenden "
 "Bibliotheken direkt über ihre Python-Bindings aufruft. Dies sollte die "
 "Leistung von SNMP-Checks deutlich erhöhen. Beide SNMP-Modi sind Features, "
@@ -13371,7 +13371,7 @@ msgid "Cluster problems"
 msgstr "Cluster-Probleme"
 
 msgid "Cluster resource aggregation"
-msgstr "Aggregation der Cluster Ressource"
+msgstr "Aggregation der Cluster-Ressource"
 
 msgid "Cluster statistics"
 msgstr "Cluster-Statistiken"
@@ -13380,7 +13380,7 @@ msgid "Cluster status"
 msgstr "Cluster-Status"
 
 msgid "Cluster traffic statistics"
-msgstr "Cluster Durchsatzstatistiken"
+msgstr "Cluster-Durchsatzstatistiken"
 
 msgid "Cluster type"
 msgstr "Cluster-Typ"
@@ -13594,7 +13594,7 @@ msgstr ""
 "Befehls war"
 
 msgid "Command Line"
-msgstr "Kommandozeile"
+msgstr "Befehlszeile"
 
 msgid "Command Name"
 msgstr "Befehlsname"
@@ -13606,7 +13606,7 @@ msgid "Command line to execute"
 msgstr "Auszuführende Befehlszeile"
 
 msgid "Command line:"
-msgstr "Kommandozeile:"
+msgstr "Befehlszeile:"
 
 msgid "Command to execute on remote host."
 msgstr "Dieser Befehl wird auf dem Remote-Host ausgeführt."
@@ -15387,7 +15387,7 @@ msgid ""
 "<a href=\"%s\">%s</a> ruleset."
 msgstr ""
 "Konnte keinen Service für Ihren Cluster finden. Sie müssen zunächst "
-"konfigurieren welche Services der Knoten dem Cluster zugeordnet werden "
+"konfigurieren, welche Services der Knoten dem Cluster zugeordnet werden "
 "sollen. Dies wird mit dem Regelsatz <a href=\"%s\">%s</a> konfiguriert."
 
 #, python-format
@@ -19571,9 +19571,8 @@ msgstr "Plattenlatenz"
 msgid "Disk Read Latency"
 msgstr "Latenzzeit beim Lesen von Datenträgern"
 
-#, fuzzy
 msgid "Disk Usage"
-msgstr "Festplattennutzung"
+msgstr "Festplattenauslastung"
 
 msgid "Disk Utilization"
 msgstr "Festplattenauslastung"
@@ -23845,7 +23844,7 @@ msgid ""
 msgstr ""
 "Erweiterungspaket installiert, aber Regelsatzmigration fehlgeschlagen. Sie "
 "können dieses MKP deaktivieren und die vollständige Fehlermeldung sehen, "
-"indem Sie diesen Befehl auf der Kommandozeile ausführen: %s"
+"indem Sie diesen Befehl auf der Befehlszeile ausführen: %s"
 
 msgid "Extension packages"
 msgstr "Erweiterungspakete"
@@ -26240,8 +26239,8 @@ msgid ""
 "create --api-token)"
 msgstr ""
 "Erstelle den API-Token über die Purity Benutzeroberfläche (System > Users > "
-"Create API Token) oder über die Purity Kommandozeilenschnittstelle "
-"(pureadmin create --api-token)"
+"Create API Token) oder über die Purity Befehlszeilenschnittstelle (pureadmin "
+"create --api-token)"
 
 msgid "Generate this report"
 msgstr "Erstelle diesen Bericht"
@@ -27043,7 +27042,7 @@ msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory housekeeping"
-msgstr ""
+msgstr "Bereinigung der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory plug-in"
 msgstr "Plugin der HW-/SW-Inventur"
@@ -27395,7 +27394,7 @@ msgstr ""
 "Hier können Sie das Cluster-Verhalten auswählen. Der beste Zustand aller "
 "Knoten ist der Standard. Das heißt, wenn Sie mindestens einen Knoten im "
 "Status UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevels sollte "
-"auf jedem Knoten gleich sein. Wenn Sie am schlechtesten wählen, gibt die "
+"auf jedem Knoten gleich sein. Wenn Sie <i>schlechtester</i> wählen, gibt die "
 "Prüfung CRIT zurück, wenn sich mindestens ein Knoten in einem anderen "
 "Zustand als OK befindet. Die Gesundheitslevels sollten auf jedem Knoten "
 "gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
@@ -38107,9 +38106,9 @@ msgstr "Untergrenze der erwarteten Schnittstellen"
 msgid "Lower threshold on open files and sockets"
 msgstr "Unterer Schwellwert für offene Dateien und Sockets"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Lower threshold on {property} number of Podman containers"
-msgstr "Unterer Schwellwert für offene Dateien und Sockets"
+msgstr "Unterer Schwellwert für die {property} Anzahl an Podman-Containern"
 
 msgid "Lower thresholds on mail transfer threads"
 msgstr "Unterer Schwellwert für Mail Transfer Threads"
@@ -39330,7 +39329,7 @@ msgstr "Maximum"
 
 #, python-format
 msgid "Maximum %s instances of duration greater than %s"
-msgstr "Maximale Anzahl von %s Instanzen mit einer Dauer grösser als %s"
+msgstr "Maximale Anzahl von %s Instanzen mit einer Dauer größer als %s"
 
 msgid "Maximum KPI runtime"
 msgstr "Maximale KPI-Laufzeit"
@@ -42837,9 +42836,8 @@ msgstr ""
 "Kein solcher Inventarbaum von Host %s. Möglicherweise haben Sie auch keinen "
 "Zugriff auf diesen Host."
 
-#, fuzzy
 msgid "No such value"
-msgstr "Datei existiert nicht"
+msgstr "Kein derartiger Wert"
 
 msgid "No tags defined"
 msgstr "Keine Merkmale definiert"
@@ -43167,7 +43165,7 @@ msgid ""
 msgstr ""
 "Normalerweise ist dieser Wert <tt>1</tt>. Das bedeutet, dass der beste "
 "Zustand aller Child-Knoten als Gesamtzustand verwendet wird. Wenn er auf "
-"einen grösseren Wert gesetzt wird, dann werden die Knoten mit dem besten "
+"einen größeren Wert gesetzt wird, dann werden die Knoten mit dem besten "
 "Zustand nicht berücksichtigt. Ist der Wert zum Beispiel <tt>2</tt> und die "
 "Child-Knoten haben Zustände CRIT, WARN und OK, so wird der Zustand OK nicht "
 "berücksichtigt und der Gesamtzustand ist WARN."
@@ -43852,13 +43850,11 @@ msgstr "Anzahl von Ping Versuchen"
 msgid "Number of Placement Groups"
 msgstr "Anzahl der Platzierungsgruppen"
 
-#, fuzzy
 msgid "Number of Podman containers"
-msgstr "Anzahl der Container"
+msgstr "Anzahl der Podman-Container"
 
-#, fuzzy
 msgid "Number of Podman images"
-msgstr "Anzahl der Knoten"
+msgstr "Anzahl der Podman Images"
 
 msgid "Number of Resources"
 msgstr "Anzahl von Ressourcen"
@@ -43881,13 +43877,11 @@ msgstr "Anzahl der Zugangspunkte"
 msgid "Number of active Plugs"
 msgstr "Anzahl von aktiven Anschlüssen"
 
-#, fuzzy
 msgid "Number of active Podman containers"
-msgstr "Anzahl der aktiven Instanzen"
+msgstr "Anzahl der aktiven Podman-Container"
 
-#, fuzzy
 msgid "Number of active Podman images"
-msgstr "Anzahl von aktiven Anschlüssen"
+msgstr "Anzahl von aktiven Podman Images"
 
 msgid "Number of active instances"
 msgstr "Anzahl der aktiven Instanzen"
@@ -43971,9 +43965,8 @@ msgstr "Anzahl der Kontextzeilen nach Meldungen"
 msgid "Number of context lines before messages"
 msgstr "Anzahl der Kontextzeilen vor Meldungen"
 
-#, fuzzy
 msgid "Number of created Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der erstellten Podman-Container"
 
 msgid "Number of critical alerts"
 msgstr "Anzahl von kritischen Alerts"
@@ -44002,9 +43995,8 @@ msgstr "Anzahl der Datenpunkte"
 msgid "Number of days from now (single page)"
 msgstr "Mehrere Tage (einzelne Seite)"
 
-#, fuzzy
 msgid "Number of dead Podman containers"
-msgstr "Anzahl der Container"
+msgstr "Anzahl der toten Podman-Container"
 
 msgid "Number of delayed unassigned shards"
 msgstr "Anzahl von verzögerten, nicht zugewiesenen Shards"
@@ -44034,13 +44026,11 @@ msgstr "Obergrenze für die Anzahl der Ereignisse in definierter Zeitspanne"
 msgid "Number of evicted keys"
 msgstr "Anzahl der entzogenen Schlüssel"
 
-#, fuzzy
 msgid "Number of exited Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der beendeten Podman-Container"
 
-#, fuzzy
 msgid "Number of exited Podman containers (non-zero)"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der beendeten Podman-Container (ungleich Null)"
 
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Meldungen"
@@ -44221,9 +44211,8 @@ msgstr "Anzahl an Open File Deskriptoren"
 msgid "Number of packets"
 msgstr "Anzahl von Paketen"
 
-#, fuzzy
 msgid "Number of paused Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der pausierten Podman-Container"
 
 msgid "Number of pending clients in a blocking call"
 msgstr "Anzahl der Kunden, die auf einen blockierenden Aufruf warten"
@@ -44270,9 +44259,8 @@ msgstr "Anzahl abgewiesener Verbindungsanfragen"
 msgid "Number of relocating shards"
 msgstr "Anzahl sich verlagernder Shards"
 
-#, fuzzy
 msgid "Number of removing Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der zu entfernenden Podman-Container"
 
 msgid "Number of requests"
 msgstr "Anzahl der Anfragen"
@@ -44289,9 +44277,8 @@ msgstr "Anzahl der Anfragen mit Rückgabecode Klasse 4xx (Client-Fehler)"
 msgid "Number of requests with return code class 5xx (server error)"
 msgstr "Anzahl der Anfragen mit Rückgabecode Klasse 5xx (Serverfehler)"
 
-#, fuzzy
 msgid "Number of restarting Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der neu startenden Podman-Container"
 
 msgid "Number of retries"
 msgstr "Anzahl von Wiederholungen"
@@ -44306,9 +44293,8 @@ msgstr ""
 msgid "Number of rule groups"
 msgstr "Anzahl der Regelgruppen"
 
-#, fuzzy
 msgid "Number of running Podman containers"
-msgstr "Anzahl der laufenden Container"
+msgstr "Anzahl der laufenden Podman-Container"
 
 msgid "Number of running containers"
 msgstr "Anzahl der laufenden Container"
@@ -44426,9 +44412,8 @@ msgstr "Anzahl von Pfaden im Standby"
 msgid "Number of steps aggregated into one data point"
 msgstr "Anzahl der Schritte, die in einem Datenpunkt aggregiert sind"
 
-#, fuzzy
 msgid "Number of stopped Podman containers"
-msgstr "Anzahl der Container"
+msgstr "Anzahl der gestoppten Podman-Container"
 
 msgid "Number of stuck tasks"
 msgstr "Anzahl der hängengebliebenen Aufgaben"
@@ -46627,41 +46612,41 @@ msgid ""
 "Output of `dpkg -l`. See the corresponding commandline help for more details."
 msgstr ""
 "Ausgabe von `dpkg -l`. Weitere Einzelheiten finden Sie in der entsprechenden "
-"Kommandozeilenhilfe."
+"Befehlszeilenhilfe."
 
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
 msgstr ""
 "Ausgabe von `mkp find --all --json`. Weitere Einzelheiten finden Sie in der "
-"entsprechenden Kommandozeilenhilfe."
+"entsprechenden Befehlszeilenhilfe."
 
 msgid ""
 "Output of `mkp list --json`. See the corresponding commandline help for more "
 "details."
 msgstr ""
 "Ausgabe von `mkp list --json`. Weitere Einzelheiten finden Sie in der "
-"entsprechenden Kommandozeilenhilfe."
+"entsprechenden Befehlszeilenhilfe."
 
 msgid ""
 "Output of `mkp show-all --json`. See the corresponding commandline help for "
 "more details."
 msgstr ""
 "Ausgabe von `mkp show-all --json`. Weitere Einzelheiten finden Sie in der "
-"entsprechenden Kommandozeilenhilfe."
+"entsprechenden Befehlszeilenhilfe."
 
 msgid ""
 "Output of `rpm -qa`. See the corresponding commandline help for more details."
 msgstr ""
 "Ausgabe von `rpm -qa`. Weitere Einzelheiten finden Sie in der entsprechenden "
-"Kommandozeilenhilfe."
+"Befehlszeilenhilfe."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
 "details."
 msgstr ""
 "Ausgabe von `sestatus`. Weitere Einzelheiten finden Sie in der "
-"entsprechenden Kommandozeilenhilfe."
+"entsprechenden Befehlszeilenhilfe."
 
 msgid "Output packets"
 msgstr "Ausgabepakete"
@@ -49386,13 +49371,11 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "Podman Containers"
-msgstr "# Container"
+msgstr "Podman-Container"
 
-#, fuzzy
 msgid "Podman Disk Usage"
-msgstr "Festplattennutzung"
+msgstr "Podman-Festplattennutzung"
 
 msgid "Podman Monitoring"
 msgstr "Podman-Monitoring"
@@ -56645,10 +56628,10 @@ msgid ""
 "all users which are member of a group in LDAP. The specified group name must "
 "match the common name (CN) of the LDAP group."
 msgstr ""
-"Setzt benutzerdefinierte Benutzerattribute basierend auf den "
-"Gruppenmitgliedschaften in LDAP. Dieses Plugin kann verwendet werden, um "
-"benutzerdefinierte Benutzerattribute für alle Benutzer, die Mitglied einer "
-"Gruppe in LDAP sind, auf bestimmte Werte zu setzen. Der angegebene "
+"Legt benutzerdefinierte Benutzerattribute basierend auf den "
+"Gruppenmitgliedschaften in LDAP fest. Dieses Plugin kann verwendet werden, "
+"um benutzerdefinierte Benutzerattribute für alle Benutzer, die Mitglied "
+"einer Gruppe in LDAP sind, auf bestimmte Werte zu setzen. Der angegebene "
 "Gruppenname muss mit dem Common Name (CN) der LDAP-Gruppe übereinstimmen."
 
 msgid "Sets levels on total critical events since last counter reset."
@@ -56678,42 +56661,36 @@ msgstr ""
 "einem PASS-Ergebnis beendet wurde, die Zustände der Robotmk-Test- und -Plan-"
 "Services anders als OK sein können, wenn Laufzeiten überschritten wurden."
 
-#, fuzzy
 msgid "Sets the upper levels for the Podman disk usage of containers"
-msgstr "Definieren Sie die Obergrenzen für die Gesamtzahl der Container"
+msgstr ""
+"Legt die Obergrenzen für die Podman-Festplattenauslastung der Container fest"
 
-#, fuzzy
 msgid "Sets the upper levels for the Podman disk usage of images"
-msgstr "Definieren Sie die Obergrenzen für die verbrauchte CPU-Zeit."
+msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of active containers."
-msgstr "Obergrenzen für Gesamtanzahl der Klient-Verbindungen"
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of active images."
-msgstr "Obergrenze für die Gesamtzahl der zugestellten Meldungen"
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of containers."
-msgstr "Obergrenze für Gesamtanzahl der Verbindungen"
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of images."
-msgstr "Obergrenze für die Gesamtanzahl der Meldungen"
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
 
-#, fuzzy
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr "Definieren Sie die Obergrenzen für die Gesamtzahl der Container"
+msgstr ""
+"Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
+"Containern fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total size of Podman containers."
-msgstr "Definieren Sie die Obergrenzen für die Gesamtzahl der Container"
+msgstr "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total size of Podman images."
-msgstr "Definieren Sie die Obergrenzen für die verbrauchte CPU-Zeit."
+msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
 
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "Legt den Benutzer des Alerts fest. Anzeige-Name des Anfragestellers."
@@ -58430,15 +58407,18 @@ msgid "Sorry, uploading TAR/GZ files is not yet implemented."
 msgstr "Leider ist der Hochladen von TAR/GZ-Dateien noch nicht umgesetzt."
 
 msgid "Sorry, you are not allowed to activate changes of other users."
-msgstr "Sie können Änderungen anderer Benutzer nicht anwenden."
+msgstr ""
+"Entschuldigung, Sie sind nicht berechtigt, Änderungen anderer Benutzer zu "
+"aktivieren."
 
 msgid "Sorry, you are not allowed to clone hosts."
-msgstr "Sie dürfen keine Hosts klonen."
+msgstr "Entschuldigung, Sie sind nicht berechtigt, Hosts zu klonen."
 
 msgid ""
 "Sorry, you are not allowed to download agents without specifying a host name."
 msgstr ""
-"Sie können keine Agenten herunterladen, ohne einen Host-Namen anzugeben."
+"Entschuldigung, Sie sind nicht berechtigt, Agenten herunterzuladen, ohne "
+"einen Host-Namen anzugeben."
 
 #, python-format
 msgid ""
@@ -62143,6 +62123,9 @@ msgid ""
 "reports via email to other users. Without this permission, only the report "
 "owner will receive the report."
 msgstr ""
+"Die Berechtigung 'Alle geplanten Berichte verwalten' ist erforderlich, um "
+"geplante Berichte per E-Mail an andere Benutzer zu senden. Ohne diese "
+"Berechtigung erhält nur der Eigentümer des Berichts den Bericht."
 
 msgid "The 'notification number' value must be greater than 0."
 msgstr "Der Wert der 'Benachrichtigungsnummer' muss größer als 0 sein."
@@ -63511,7 +63494,7 @@ msgid ""
 "firewalls seem to interprete this as some kind of bogus attack and block "
 "such packets."
 msgstr ""
-"Der <tt>Ping</tt>-Befehl, den man von der Kommandozeile kennt, sendet ICMP-"
+"Der <tt>Ping</tt>-Befehl, den man von der Befehlszeile kennt, sendet ICMP-"
 "Pakete mit einer Nutzlast von 40 Bytes. Zusammen mit dem IP- und ICMP-Header "
 "ergibt das eine Paketgröße von 64 Bytes. Um die Erreichbarkeit eines Hosts "
 "zu prüfen, ist an sich keine Nutzlast erforderlich, so dass Smart Ping diese "
@@ -64106,7 +64089,7 @@ msgstr ""
 "auswählen."
 
 msgid "The expected number of nodes in the cluster"
-msgstr "Erwartete Anzahl von Knoten im Cluster"
+msgstr "Die erwartete Anzahl von Knoten im Cluster"
 
 msgid "The expected number of resources in the cluster"
 msgstr "Die erwartete Anzahl von Ressourcen im Cluster"
@@ -65371,7 +65354,7 @@ msgstr ""
 
 msgid "The name of the cluster resource as shown in the service name."
 msgstr ""
-"Der Name der Cluster-Ressource so wie er im Service-Namen angezeigt wird."
+"Der Name der Cluster-Ressource, so wie er im Service-Namen angezeigt wird."
 
 msgid "The name of the dashboard is missing."
 msgstr "Der Name des Dashboards fehlt."
@@ -65900,6 +65883,10 @@ msgid ""
 msgstr ""
 "Das hier angegebene Pattern muss exakt mit dem Anfang des "
 "Sensorzustandstexts übereinstimmen (Groß-/Kleinschreibung beachten)."
+
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr "Der eingegebene Text wird als regulärer Ausdrucks-Pattern behandelt."
 
 msgid ""
 "The performance graph will always display the occupied memory. This is "
@@ -66981,7 +66968,7 @@ msgid ""
 msgstr ""
 "Der Timeout in Sekunden beim Sammeln der Support Diagnostics Daten. Der "
 "Standardwert ist 110 Sekunden. Wenn sehr große Dateien gesammelt werden, ist "
-"es auch möglich, die Support Diagnostics von der Kommandozeile aus mit dem "
+"es auch möglich, die Support Diagnostics von der Befehlszeile aus mit dem "
 "Befehl 'cmk --create-diagnostics-dump' mit den entsprechenden Parametern im "
 "Kontext der betroffenen Instanz aufzurufen. Beachten Sie hierzu %s."
 
@@ -67653,7 +67640,7 @@ msgid ""
 "option \"Arguments file\"."
 msgstr ""
 "Diese Optionen ermöglichen die Angabe der gebräuchlichsten "
-"Kommandozeilenparameter für das Robot Framework. Um andere Parameter zu "
+"Befehlszeilenparameter für das Robot Framework. Um andere Parameter zu "
 "verwenden, können Sie die Option \"Argument-Datei\" nutzen."
 
 msgid ""
@@ -70121,7 +70108,7 @@ msgid ""
 "provide monitoring information of LSI RAID controllers and attached hard "
 "disks. You can download this tool from <a href='http://www.lsi.com/'>LSI</a>."
 msgstr ""
-"Dieses Plugin nutzt das Kommandozeilenwerkzeug <tt>MegaCli.exe</tt>, um "
+"Dieses Plugin nutzt das Befehlszeilenwerkzeug <tt>MegaCli.exe</tt>, um "
 "Monitoring-Informationen von LSI-RAID-Controllern und angeschlossenen "
 "Festplatten zu ermitteln. Sie können es von <a href='http://"
 "www.lsi.com/'>LSI</a> herunterladen."
@@ -70630,8 +70617,8 @@ msgid ""
 "cluster systems. The utilization percentage is shown for the whole cluster."
 msgstr ""
 "Diese Regel konfiguriert Levels für die CPU-Auslastung (nicht die Last) von "
-"Nutanix Cluster-Systemen. Der Prozentsatz der Auslastung wird für das "
-"gesamte Cluster angezeigt."
+"Nutanix Cluster-Systemen. Der Prozentsatz der Auslastung wird für den "
+"gesamten Cluster angezeigt."
 
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Nutanix "
@@ -70678,7 +70665,7 @@ msgid ""
 msgstr ""
 "Diese Regel konfiguriert das Speicherschema für historische Metrikdaten für "
 "Hosts. Bitte beachten Sie, dass diese Einstellungen nur für <i>neue</i> "
-"Hosts gelten. Bestehende RRDs können über die Kommandozeile geändert werden, "
+"Hosts gelten. Bestehende RRDs können über die Befehlszeile geändert werden, "
 "siehe <a href='https://docs.checkmk.com/latest/en/"
 "graphing.html#customise_rrds'>Benutzerhandbuch</a>. Bitte beachten Sie "
 "außerdem, dass Hosts, die über Smart Ping überprüft werden, keine Metriken "
@@ -70692,7 +70679,7 @@ msgid ""
 msgstr ""
 "Diese Regel konfiguriert das Speicherschema für historische Metrikdaten für "
 "Services. Bitte beachten Sie, dass diese Einstellungen nur für <i>neue</i> "
-"Services gelten. Bestehende RRDs können über die Kommandozeile geändert "
+"Services gelten. Bestehende RRDs können über die Befehlszeile geändert "
 "werden, siehe <a href='https://docs.checkmk.com/latest/en/"
 "graphing.html#customise_rrds'>Benutzerhandbuch</a>."
 
@@ -71416,7 +71403,7 @@ msgid ""
 "using real SNMP."
 msgstr ""
 "Dieser Regelsatz hilft bei Test und Entwicklung. Sie können gespeicherte "
-"SNMP-Walks auf der Kommandozeile mit cmk --snmpwalk HOSTNAME erstellen. Ein "
+"SNMP-Walks auf der Befehlszeile mit cmk --snmpwalk HOSTNAME erstellen. Ein "
 "Host, der mit diesem Regelsatz konfiguriert ist, verwendet dann die "
 "Informationen aus dieser Datei anstelle von echtem SNMP."
 
@@ -72419,13 +72406,11 @@ msgstr "Schwellwerte für die Benachrichtigungen pro Kontakt"
 msgid "Thresholds for quality of time"
 msgstr "Schwellwerte für die Zeitqualität"
 
-#, fuzzy
 msgid "Thresholds for the podman containers service."
-msgstr "Fehler im \"Join Launcher\" Dienst"
+msgstr "Schwellwerte für den Service der Podman-Container."
 
-#, fuzzy
 msgid "Thresholds for the podman disk usage services."
-msgstr "Obergrenzen für Log-Nutzungsgröße"
+msgstr "Schwellwerte für die Services der Podman-Festplattenauslastung."
 
 msgid "Thresholds on lower message count"
 msgstr "Schwellwerte für untere Meldungsanzahl"
@@ -73166,7 +73151,7 @@ msgid ""
 "might result in crashes or other unexpected behavior."
 msgstr ""
 "Um das Paket trotzdem zu aktivieren, verwenden Sie den Befehl `mkp` auf der "
-"Kommandozeile. Dessen Option `enable` gibt Ihnen die Möglichkeit, alle "
+"Befehlszeile. Dessen Option `enable` gibt Ihnen die Möglichkeit, alle "
 "Versionsprüfungen zu deaktivieren. Dies kann zu Abstürzen oder anderem "
 "unerwarteten Verhalten führen."
 
@@ -73603,20 +73588,17 @@ msgstr "Obergrenzen für Gesamtanzahl der Meldungen"
 msgid "Total non-compliant devices"
 msgstr "Gesamtzahl nicht-konformer Geräte"
 
-#, fuzzy
 msgid "Total number of Podman containers"
-msgstr "Gesamtzahl der Instanzen"
+msgstr "Gesamtzahl der Podman-Container"
 
 msgid "Total number of Sessions"
 msgstr "Gesamtzahl von Sitzungen"
 
-#, fuzzy
 msgid "Total number of active containers upper levels"
-msgstr "Obergrenze für die Gesamtzahl der aktiven Shards"
+msgstr "Obergrenzen für die Gesamtzahl aktive Container"
 
-#, fuzzy
 msgid "Total number of active images upper levels"
-msgstr "Obergrenze für die Gesamtzahl der aktiven Shards"
+msgstr "Obergrenzen für die Gesamtzahl aktiver Images"
 
 msgid "Total number of active primary shards lower level"
 msgstr "Untergrenze für die Gesamtzahl der aktiven Primary Shards"
@@ -73649,14 +73631,13 @@ msgid "Total number of collectors in state running upper level"
 msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand running"
 
 msgid "Total number of collectors in state stopped lower level"
-msgstr "Gesamte Anzahl an Kollektoren mit Zustand \"stopped lower level\""
+msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
 
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
 
-#, fuzzy
 msgid "Total number of containers upper levels"
-msgstr "Obergrenze für die Gesamtzahl der Kollektionen"
+msgstr "Obergrenzen für die Gesamtzahl für Container"
 
 msgid "Total number of data nodes lower level"
 msgstr "Untergrenze für die Gesamtzahl der Daten-Knoten"
@@ -73685,9 +73666,8 @@ msgstr "Gesamtzahl fehlgeschlagener Aufträge"
 msgid "Total number of hosts"
 msgstr "Gesamtzahl der Hosts"
 
-#, fuzzy
 msgid "Total number of images upper levels"
-msgstr "Obergrenze für die Gesamtzahl der Issues"
+msgstr "Obergrenzen für die Gesamtzahl an Images"
 
 msgid "Total number of incoming AC get cache request hits"
 msgstr "Gesamtzahl der Treffer für eingehende AC-Get-Cache-Anfragen"
@@ -73801,13 +73781,11 @@ msgstr "Gesamttimeout für Anfragen"
 msgid "Total read latency"
 msgstr "Gesamte Lese-Latenz"
 
-#, fuzzy
 msgid "Total reclaimable size of Podman containers"
-msgstr "Für Container verwendeter Host-Name"
+msgstr "Gesamtgröße der wiederverwendbaren Podman-Container"
 
-#, fuzzy
 msgid "Total reclaimable size upper levels"
-msgstr "Gesamtgröße der Log-Datei: Absolute Obergrenzen"
+msgstr "Obergrenzen für die wiederverwendbare Größe"
 
 msgid "Total reservation utilization"
 msgstr "Gesamte Reservierungsauslastung"
@@ -75339,13 +75317,11 @@ msgstr "Gesamte Sitzungen"
 msgid "Total size"
 msgstr "Gesamtgröße"
 
-#, fuzzy
 msgid "Total size of Podman containers"
-msgstr "Gesamtgröße der Log-Dateien"
+msgstr "Gesamtgröße der Podman-Container"
 
-#, fuzzy
 msgid "Total size of Podman images"
-msgstr "Gesamtgröße der Log-Dateien"
+msgstr "Gesamtgröße der Podman Images"
 
 msgid "Total size of all indexes for the collection"
 msgstr "Gesamtgröße aller Indizes der Sammlung"
@@ -75362,9 +75338,8 @@ msgstr "Gesamtgröße der Instanz"
 msgid "Total size of the oplog"
 msgstr "Gesamtgröße des Oplogs"
 
-#, fuzzy
 msgid "Total size upper levels"
-msgstr "Obergrenzen für Container"
+msgstr "Obergrenzen der Gesamtgröße"
 
 msgid "Total slots"
 msgstr "Gesamte Slots"
@@ -76368,9 +76343,9 @@ msgstr "Eindeutig"
 msgid "Unique ID"
 msgstr "Eindeutige ID"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unique ID %s already exists."
-msgstr "Die Verbindungs-ID %s existiert bereits."
+msgstr "Die eindeutige ID %s existiert bereits."
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
@@ -77496,9 +77471,9 @@ msgstr "Prozentuale Obergrenzen für die Log-Nutzungsgröße"
 msgid "Upper threshold on open files and sockets"
 msgstr "Oberer Schwellwert für offene Dateien und Sockets"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Upper threshold on {property} number of Podman containers"
-msgstr "Oberer Schwellwert für offene Dateien und Sockets"
+msgstr "Oberer Schwellwert für die {property} Anzahl an Podman-Containern"
 
 msgid "Upper thresholds"
 msgstr "Obere Schwellwerte"
@@ -80854,7 +80829,7 @@ msgstr ""
 "Konfigurationsdateien mit dem Versionskontrollsystem GIT nachverfolgt. Sie "
 "müssen sicherstellen, dass GIT auf Ihrem Monitoring-Server installiert ist. "
 "Die Versionshistorie kann derzeit nicht über die Web-GUI eingesehen werden. "
-"Bitte verwenden Sie die Git-Kommandozeilen-Tools in Ihrem Checkmk-"
+"Bitte verwenden Sie die Git-Befehlszeilen-Tools in Ihrem Checkmk-"
 "Konfigurationsverzeichnis. Wenn Sie Änderungen an den Konfigurationsdateien "
 "leichter verfolgen wollen, aktivieren Sie einfach die globale "
 "Einstellungsoption <tt>Pretty print configuration files</tt>"
@@ -82005,7 +81980,7 @@ msgstr ""
 "über Backvorgänge mit der angegebenen Protokollstufe in einer speziellen Log-"
 "Datei, die sich in <tt>~/var/log/agent_bakery.log</tt> befindet. Wenn diese "
 "Option deaktiviert ist, werden detaillierte Informationen nur auf der "
-"Kommandozeile angezeigt, wenn Sie als Instanzbenutzer mit dem Befehl <tt>cmk "
+"Befehlszeile angezeigt, wenn Sie als Instanzbenutzer mit dem Befehl <tt>cmk "
 "--bake-agents -v</tt> Agenten backen"
 
 msgid ""
@@ -82352,8 +82327,8 @@ msgid ""
 "node. The worst outcome will determine the overall state of the clustered "
 "service."
 msgstr ""
-"Das Schlimmste: Die Prüffunktion des Plugins wird auf jeden einzelnen Knoten "
-"angewendet. Das schlechteste Ergebnis bestimmt den Gesamtzustand des "
+"Schlechtester Knoten: Die Prüffunktion des Plugins wird auf jeden einzelnen "
+"Knoten angewendet. Das schlechteste Ergebnis bestimmt den Gesamtzustand des "
 "geclusterten Services."
 
 msgid "Write"
@@ -82622,69 +82597,73 @@ msgstr ""
 
 #, python-format
 msgid "You are not allowed to access the host %s."
-msgstr "Sie dürfen nicht auf den Host %s zugreifen."
+msgstr "Sie sind nicht berechtigt, auf den Host %s zuzugreifen."
 
 msgid "You are not allowed to access this page."
 msgstr "Sie sind nicht berechtigt, auf diese Seite zuzugreifen."
 
 #, python-format
 msgid "You are not allowed to acknowledge %s"
-msgstr "Sie dürfen %s nicht bestätigen"
+msgstr "Sie sind nicht berechtigt, %s zu bestätigen"
 
 msgid "You are not allowed to acknowlegde werks"
-msgstr "Sie dürfen Werke nicht quittieren"
+msgstr "Sie sind nicht berechtigt, Werke zu quittieren"
 
 msgid "You are not allowed to activate changes of other users."
-msgstr "Sie können Änderungen anderer Benutzer nicht anwenden."
+msgstr "Sie sind nicht berechtigt, Änderungen anderer Benutzer zu aktivieren."
 
-#, fuzzy
 msgid ""
 "You are not allowed to change the command line of a custom check plug-in."
-msgstr "Sie dürfen die Seitenleiste nicht verändern."
+msgstr ""
+"Sie sind nicht berechtigt, die Befehlszeile eines benutzerdefinierten Check-"
+"Plugins zu ändern."
 
 msgid "You are not allowed to change the sidebar."
-msgstr "Sie dürfen die Seitenleiste nicht verändern."
+msgstr "Sie sind nicht berechtigt, die Seitenleiste zu verändern."
 
 #, python-format
 msgid "You are not allowed to delete this %s."
-msgstr "Sie dürfen diese %s nicht löschen."
+msgstr "Sie sind nicht berechtigt, diese %s zu löschen."
 
 #, python-format
 msgid "You are not allowed to edit %s."
-msgstr "Sie dürfen %s nicht bearbeiten."
+msgstr "Sie sind nicht berechtigt, %s zu bearbeiten."
 
 msgid "You are not allowed to edit dashboards."
-msgstr "Sie dürfen Dashboards nicht bearbeiten."
+msgstr "Sie sind nicht berechtigt, Dashboards zu bearbeiten."
 
 #, python-format
 msgid "You are not allowed to edit foreign %s."
-msgstr "Es ist Ihnen nicht erlaubt, fremde %s zu bearbeiten."
+msgstr "Sie sind nicht berechtigt, fremde %s zu bearbeiten."
 
 #, python-format
 msgid "You are not allowed to edit this %s."
-msgstr "Sie dürfen diese %s nicht bearbeiten."
+msgstr "Sie sind nicht berechtigt, diese %s zu bearbeiten."
 
 msgid "You are not allowed to edit your user profile."
-msgstr "Sie dürfen Ihre Benutzer-Profil nicht bearbeiten."
+msgstr "Sie sind nicht berechtigt, Ihr Benutzer-Profil zu bearbeiten."
 
 msgid ""
 "You are not allowed to perform actions. If you think this is an error, "
 "please ask your administrator grant you the permission to do so."
 msgstr ""
-"Sie dürfen keine Aktionen ausführen. Wenn Sie diese Berechtigungen "
+"Sie sind nicht berechtigt, Aktionen ausführen. Wenn Sie diese Berechtigungen "
 "benötigen, dann wenden Sie sich an den Administrator."
 
 msgid "You are not allowed to use passwords from the password store here."
-msgstr "Sie dürfen hier keine Passwörter aus dem Passwortspeicher nutzen."
+msgstr ""
+"Sie sind nicht berechtigt, hier Passwörter aus dem Passwortspeicher zu "
+"nutzen."
 
 msgid "You are not allowed to use the message module."
-msgstr "Sie dürfen das Meldungsmodul nicht verwenden."
+msgstr "Sie sind nicht berechtigt, das Meldungsmodul zu verwenden."
 
 msgid "You are not allowed to use the setup."
-msgstr "Sie dürfen das Setup nicht verwenden."
+msgstr "Sie sind nicht berechtigt, das Setup zu verwenden."
 
 msgid "You are not allowed to view the failed notifications."
-msgstr "Sie dürfen die fehlgeschlagenen Benachrichtigungen nicht sehen."
+msgstr ""
+"Sie sind nicht berechtigt, die fehlgeschlagenen Benachrichtigungen zu sehen."
 
 msgid "You are not authenticated."
 msgstr "Sie sind nicht authentifiziert."
@@ -84334,7 +84313,7 @@ msgid ""
 "be used to make the objects from your cluster unique in a multi-cluster "
 "setup."
 msgstr ""
-"Sie müssen einen Namen für Ihr Kubernetes-Cluster angeben. Der angegebene "
+"Sie müssen einen Namen für Ihren Kubernetes-Cluster angeben. Der angegebene "
 "Name wird verwendet, um die Objekte Ihres Clusters in einer Einrichtung mit "
 "mehreren Clustern eindeutig zu machen."
 
@@ -87085,7 +87064,7 @@ msgid "{checkname} - {check['title']}"
 msgstr "{checkname} - {check['title']}"
 
 msgid "{property.capitalize()} Podman containers"
-msgstr ""
+msgstr "{property.capitalize()} Podman-Container"
 
 #, python-brace-format
 msgid "{region} ({id_})"

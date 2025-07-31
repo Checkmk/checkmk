@@ -68345,6 +68345,11 @@ msgstr ""
 "O padrão aqui especificado deve corresponder exatamente ao início do estado "
 "do sensor (sensível a maiúsculas e minúsculas)."
 
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr ""
+"O texto aqui introduzido é tratado como um padrão de expressão regular."
+
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "

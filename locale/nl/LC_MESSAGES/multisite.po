@@ -68378,6 +68378,11 @@ msgstr ""
 "Het hier gespecificeerde patroon moet precies overeenkomen met het begin van "
 "de sensortoestand (hoofdlettergevoelig)."
 
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr ""
+"De hier ingevoerde tekst wordt behandeld als een regulier expressiepatroon."
+
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "

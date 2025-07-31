@@ -68563,6 +68563,10 @@ msgstr ""
 "Modelul specificat aici trebuie să se potrivească exact cu începutul stării "
 "senzorului (sensibil la majuscule și minuscule)."
 
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr "Textul introdus aici este tratat ca un model de expresie regulată."
+
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "

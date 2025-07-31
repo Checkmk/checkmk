@@ -68962,6 +68962,10 @@ msgstr ""
 "Le motif spécifié ici doit correspondre exactement au début de l'état du "
 "capteur (sensible à la casse)."
 
+#, fuzzy, python-brace-format
+msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+msgstr "Le texte saisi ici est traité comme un modèle d'expression régulière."
+
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "

@@ -8,13 +8,14 @@ import { TabsContent } from 'radix-vue'
 
 export interface CmkTabContentProps {
   id: string
+  spacing?: 'default' | 'none'
 }
 
 defineProps<CmkTabContentProps>()
 </script>
 
 <template>
-  <TabsContent :value="id" class="cmk-tab-content">
+  <TabsContent :value="id" class="cmk-tab-content" :class="{ 'spacing-none': spacing === 'none' }">
     <slot />
   </TabsContent>
 </template>
@@ -22,13 +23,16 @@ defineProps<CmkTabContentProps>()
 <style scoped>
 .cmk-tab-content {
   margin-top: -1px;
-  padding: var(--spacing) 0;
+  padding: var(--spacing);
   border: 1px solid var(--ux-theme-7);
 
-  &:focus,
-  &:active {
+  &:focus-visible {
     outline: none;
     border: 1px solid var(--success);
+  }
+
+  &.spacing-none {
+    padding: 0;
   }
 }
 </style>

@@ -208,6 +208,7 @@ function searchResultNotEmpty(): boolean {
           v-for="(tab, idx) in tabbedResults"
           :id="idx.toString()"
           :key="tab.title"
+          spacing="none"
           class="cmk-unified-search-result-tab-content"
         >
           <CmkScrollContainer max-height="calc(100vh - 260px)">

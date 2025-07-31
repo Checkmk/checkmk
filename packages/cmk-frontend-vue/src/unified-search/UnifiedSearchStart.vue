@@ -102,7 +102,7 @@ onBeforeUnmount(() => {
     <h2>
       {{ t('recently-searched', 'Recently searched') }}
       <button
-        @click="
+        @click.stop="
           () => {
             searchUtils.history?.resetQueries()
             recentlySearches = []

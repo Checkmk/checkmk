@@ -51,7 +51,7 @@ immediateWatch(
     <h2>
       {{ t('recently-viewed', 'Recently viewed') }}
       <button
-        @click="
+        @click.stop="
           () => {
             searchUtils.history?.resetEntries()
             recentlyViewed = []

@@ -19,7 +19,7 @@ py_library(
         "cmk/events/notification_spool_file.py",
     ],
     data = [
-        ":cmk/events/py.typed",
+        "cmk/events/py.typed",
     ],
     imports = ["."],
     visibility = ["//visibility:public"],
@@ -62,7 +62,15 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-events"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [":cmk-events"],
+    deps = [
+        ":cmk-events",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/events/py.typed"],
 )
 
 package_wheel(

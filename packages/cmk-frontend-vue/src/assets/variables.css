@@ -78,6 +78,7 @@
   --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');
   --icon-edit: url('~cmk-frontend/themes/facelift/images/icon_edit.svg');
   --icon-load-graph: url('~cmk-frontend/themes/facelift/images/load_graph.png');
+  --icon-filter: url('~cmk-frontend/themes/facelift/images/icon_filter.svg');
 
   --icon-help-activated: url('~cmk-frontend/themes/facelift/images/icon_help_activated.svg');
   --icon-connection-tests: url('~cmk-frontend/themes/facelift/images/icon_connection_tests.svg');

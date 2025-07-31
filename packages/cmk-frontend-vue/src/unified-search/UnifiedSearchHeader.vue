@@ -12,6 +12,7 @@ import { getSearchUtils, type FilterOption } from './providers/search-utils'
 
 import CmkButton from '@/components/CmkButton.vue'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -155,6 +156,17 @@ function handleDelTagItem(tag: FilterOption) {
           size="small"
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
+        <CmkIconButton
+          name="filter"
+          size="large"
+          class="unified-search-filter"
+          @click.stop="
+            () => {
+              searchUtils.input.setInputValue('/')
+              searchUtils.input.setFocus()
+            }
+          "
+        ></CmkIconButton>
       </div>
 
       <div v-if="isMonitoringSearch()" class="unified-search-info-item">
@@ -303,6 +315,13 @@ function handleDelTagItem(tag: FilterOption) {
   &::placeholder {
     color: var(--default-form-element-placeholder-color);
   }
+}
+
+.unified-search-filter {
+  margin-left: var(--spacing);
+  margin-top: 3px;
+  position: absolute;
+  right: calc(-3 * var(--spacing));
 }
 
 .unified-search-filter-suggestions {

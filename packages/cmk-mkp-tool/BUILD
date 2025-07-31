@@ -25,7 +25,7 @@ py_library(
         "cmk/mkp_tool/_unsorted.py",
         "cmk/mkp_tool/cli.py",
     ],
-    data = [":pyproject.toml"],
+    data = [],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [

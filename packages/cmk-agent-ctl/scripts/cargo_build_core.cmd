@@ -21,13 +21,15 @@ if "%worker_cur_dir%" == "" powershell Write-Host "worker_cur_dir is not defined
 if "%worker_root_dir%" == "" powershell Write-Host "worker_root_dir is not defined" -Foreground Red && exit /b 79
 if "%worker_exe_name%" == "" powershell Write-Host "worker_exe_name is not defined" -Foreground Red && exit /b 79
 if "%worker_target%" == "" powershell Write-Host "worker_target is not defined" -Foreground Red && exit /b 79
+if "%worker_toolchain%" == "" powershell Write-Host "worker_target is not defined" -Foreground Red && exit /b 79
 
 
 :: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
 where cargo > nul
 if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install it and/or add to PATH" -Foreground Red && exit /b 7
 rustup update
-rustup target add %worker_target%
+echo rustup target add %worker_target% --toolchain %worker_toolchain%
+rustup target add %worker_target% --toolchain %worker_toolchain%
 
 :: 64-bit
 ::set target=x86_64-pc-windows-mscvc
@@ -41,6 +43,7 @@ echo worker_arg_build=%worker_arg_build%
 echo worker_arg_clippy=%worker_arg_clippy%
 echo worker_arg_test=%worker_arg_test%
 echo worker_target=%worker_target%
+echo worker_toolchain=%worker_toolchain%
 
 :: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
 :: which is not provided by libucrt. The latter is needed for static linking.

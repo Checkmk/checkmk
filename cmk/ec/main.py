@@ -1690,6 +1690,9 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["by_host"]["action"],
         )
 
+    def _get_rule_by_id(self, rule_id: str) -> Rule | None:
+        return self._rule_by_id.get(rule_id)
+
     def _create_overflow_event(self, ty: LimitKind, event: Event, limit: int) -> Event:
         now = time.time()
         new_event = Event(
@@ -2256,13 +2259,17 @@ class StatusServer(ECServerThread):
             raise MKClientError("Wrong number of arguments for DELETE")
         event_ids, user = arguments
         ids = {int(event_id) for event_id in event_ids.split(",")}
-        self._event_status.delete_events_by(lambda event: event["id"] in ids, user)
+        self._event_status.delete_events_by(
+            lambda event: event["id"] in ids, user, self._event_server._get_rule_by_id
+        )
 
     def handle_command_delete_events_of_host(self, arguments: list[str]) -> None:
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE_EVENTS_OF_HOST")
         hostname, user = arguments
-        self._event_status.delete_events_by(lambda event: event["host"] == hostname, user)
+        self._event_status.delete_events_by(
+            lambda event: event["host"] == hostname, user, self._event_server._get_rule_by_id
+        )
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_ids, user, acknowledged, comment, contact = arguments
@@ -3051,13 +3058,21 @@ class EventStatus:
             return found  # do event action, return found copy of event
         return None  # do not do event action
 
-    def delete_events_by(self, predicate: Callable[[Event], bool], user: str) -> None:
+    def delete_events_by(
+        self, predicate: Callable[[Event], bool], user: str, get_rule: Callable[[str], Rule | None]
+    ) -> None:
         for event in self._events[:]:
             if predicate(event):
                 event["phase"] = "closed"
                 if user:
                     event["owner"] = user
                 self.remove_event(event, "DELETE", user)
+                rule_id = event["rule_id"]
+                if event["id"] + 1 == self._next_event_id and rule_id in self._interval_starts:
+                    event_rule = get_rule(rule_id)
+                    if event_rule is not None and "expect" in event_rule:
+                        self.clear_interval_start(rule_id)
+                        self.interval_start(rule_id, event_rule["expect"]["interval"])
 
     def get_events(self) -> Iterable[Event]:
         return self._events

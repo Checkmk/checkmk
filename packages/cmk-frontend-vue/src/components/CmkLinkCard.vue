@@ -52,7 +52,7 @@ const classes = computed(() => [
 <style scoped>
 .cmk-link-card--standard {
   background-color: var(--ux-theme-1);
-  border: 1px solid var(--ux-theme-6);
+  border: var(--dimension-border-width-1) solid var(--ux-theme-6);
 }
 .cmk-link-card--borderless {
   background-color: var(--ux-theme-2);
@@ -62,7 +62,7 @@ const classes = computed(() => [
   align-items: center;
   text-decoration: none;
   border-radius: 4px;
-  padding: var(--spacing);
+  padding: var(--dimension-padding-4) var(--dimension-padding-5);
 
   &:hover {
     background-color: var(--ux-theme-5);
@@ -79,9 +79,6 @@ const classes = computed(() => [
 }
 .cmk-link-card__icon {
   margin-right: var(--dimension-item-spacing-7);
-}
-.cmk-link-card__text-area {
-  margin-right: var(--spacing);
 }
 .cmk-link-card__subtitle {
   color: var(--font-color-dimmed);

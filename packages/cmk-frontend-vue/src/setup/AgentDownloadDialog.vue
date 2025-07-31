@@ -83,6 +83,7 @@ const tooltipOpen = ref(true)
       :host_name="host_name"
       :agent_install_cmds="agent_slideout.agent_install_cmds"
       :agent_registration_cmds="agent_slideout.agent_registration_cmds"
+      :legacy_agent_url="agent_slideout.legacy_agent_url"
       :close_button_title="
         t('svc_disc_agent_download_close_title', 'Close & run service discovery')
       "

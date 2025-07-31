@@ -4,7 +4,10 @@
     "title": "agent_slideout",
     "properties": {
         "agent_install_cmds": { "$ref": "#/$defs/agent_install_cmds" },
-        "agent_registration_cmds": { "$ref": "#/$defs/agent_registration_cmds" }
+        "agent_registration_cmds": {
+            "$ref": "#/$defs/agent_registration_cmds"
+        },
+        "legacy_agent_url": { "type": "string" }
     },
     "required": ["agent_install_cmds", "agent_registration_cmds"],
     "$defs": {

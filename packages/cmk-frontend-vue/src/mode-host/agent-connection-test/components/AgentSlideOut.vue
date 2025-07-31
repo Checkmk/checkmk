@@ -19,6 +19,7 @@ import type { PackageOptions } from '@/mode-host/agent-connection-test/component
 import CmkIcon from '@/components/CmkIcon.vue'
 import HelpText from '@/components/HelpText.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkLinkCard from '@/components/CmkLinkCard.vue'
 
 export interface AgentSlideOutTabs {
   id: string
@@ -30,7 +31,15 @@ export interface AgentSlideOutTabs {
   install_tgz_cmd?: string | undefined
   registration_msg?: string
   registration_cmd?: string
+  install_url?: InstallUrl | undefined
   toggle_button_options?: PackageOptions
+}
+
+export interface InstallUrl {
+  title: string
+  url: string
+  msg: string
+  icon?: string
 }
 
 defineProps<{
@@ -102,6 +111,27 @@ watch(model, (newValue) => {
           :code_txt="tab.install_cmd"
           class="code"
         />
+        <div
+          v-if="
+            tab.install_url &&
+            !tab.install_cmd &&
+            !(tab.install_deb_cmd && model === packageFormatDeb) &&
+            !(tab.install_rpm_cmd && model === packageFormatRpm) &&
+            !(tab.install_tgz_cmd && model === packageFormatTgz)
+          "
+          class="install_url__div"
+        >
+          <CmkHeading v-if="tab.install_url.msg" type="h4" class="install_url__heading">{{
+            tab.install_url.msg
+          }}</CmkHeading>
+          <CmkLinkCard
+            :title="tab.install_url.title"
+            :url="tab.install_url.url"
+            :icon-name="tab.install_url.icon"
+            :open-in-new-tab="true"
+          />
+        </div>
+
         <CmkCode
           v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
           :title="tab.install_msg"
@@ -188,5 +218,15 @@ button.all_agents {
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-item-spacing-4);
+}
+
+.install_url__heading {
+  margin-bottom: var(--dimension-item-spacing-3);
+  color: var(--font-color);
+  font-weight: 400;
+}
+
+.install_url__div {
+  margin-bottom: var(--spacing);
 }
 </style>

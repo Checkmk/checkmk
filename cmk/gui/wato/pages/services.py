@@ -705,6 +705,9 @@ class DiscoveryPageRenderer:
                                 )
                             )
                         ),
+                        legacy_agent_url=agent_commands_registry[
+                            "agent_commands"
+                        ].legacy_agent_url(),
                     ),
                     all_agents_url=folder_preserving_link(
                         [("mode", "agent_of_host"), ("host", self._host.name())]

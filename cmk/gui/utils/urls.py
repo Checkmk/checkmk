@@ -392,6 +392,7 @@ class DocReference(Enum):
     ACTIVE_CHECKS_MRPE = "active_checks#mrpe"
     AGENT_LINUX = "agent_linux"
     AGENT_WINDOWS = "agent_windows"
+    AGENT_LINUX_LEGACY = "agent_linux_legacy"
     ALERT_HANDLERS = "alert_handlers"
     ANALYZE_CONFIG = "analyze_configuration"
     ANALYZE_NOTIFICATIONS = "notifications#_rule_evaluation_by_the_notification_module"

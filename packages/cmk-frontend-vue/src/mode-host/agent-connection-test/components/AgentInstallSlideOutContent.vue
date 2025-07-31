@@ -15,6 +15,7 @@ import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/compon
 
 const props = defineProps<{
   all_agents_url: string
+  legacy_agent_url: string | undefined
   host_name: string
   agent_install_cmds: AgentInstallCmds
   agent_registration_cmds: AgentRegistrationCmds
@@ -22,6 +23,8 @@ const props = defineProps<{
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
+
+const legacyInstallTitle = t('agent-linux-install-url-title', 'Install the legacy Checkmk agent')
 
 export type PackageOption = {
   label: 'RPM' | 'DEB' | 'TGZ'
@@ -63,6 +66,17 @@ const tabs: AgentSlideOutTabs[] = [
     install_deb_cmd: props.agent_install_cmds.linux_deb,
     install_rpm_cmd: props.agent_install_cmds.linux_rpm,
     install_tgz_cmd: props.agent_install_cmds.linux_tgz,
+    install_url: props.legacy_agent_url
+      ? {
+          title: legacyInstallTitle,
+          url: props.legacy_agent_url,
+          msg: t(
+            'agent-linux-install-url-msg',
+            'If you want to install the Checkmk agent on Linux, please read how to install the legacy agent'
+          ),
+          icon: 'learning-guide'
+        }
+      : undefined,
     registration_msg: t(
       'agent-linux-registration-msg',
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
@@ -78,6 +92,17 @@ const tabs: AgentSlideOutTabs[] = [
       'Run this command on your Solaris host to download the Checkmk agent.'
     ),
     install_cmd: props.agent_install_cmds.solaris,
+    install_url: props.legacy_agent_url
+      ? {
+          title: legacyInstallTitle,
+          url: props.legacy_agent_url,
+          msg: t(
+            'agent-solaris-install-url-msg',
+            'If you want to install the Checkmk agent on Solaris, please read how to install the legacy agent'
+          ),
+          icon: 'learning-guide'
+        }
+      : undefined,
     registration_msg: t(
       'agent-solaris-registration-msg',
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
@@ -92,6 +117,17 @@ const tabs: AgentSlideOutTabs[] = [
       'Run this command on your AIX host to download and install the Checkmk agent.'
     ),
     install_cmd: props.agent_install_cmds.aix,
+    install_url: props.legacy_agent_url
+      ? {
+          title: legacyInstallTitle,
+          url: props.legacy_agent_url,
+          msg: t(
+            'agent-aix-install-url-msg',
+            'If you want to install the Checkmk agent on AIX, please read how to install the legacy agent'
+          ),
+          icon: 'learning-guide'
+        }
+      : undefined,
     registration_msg: t(
       'agent-aix-registration-msg',
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'

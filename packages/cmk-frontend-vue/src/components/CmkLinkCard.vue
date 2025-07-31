@@ -23,7 +23,7 @@ const cmkLinkCardVariants = cva('', {
 })
 export type CmkLinkCardVariants = VariantProps<typeof cmkLinkCardVariants>
 interface CmkLinkCardProps {
-  iconName?: string
+  iconName?: string | undefined
   title: string
   subtitle?: string
   url: string

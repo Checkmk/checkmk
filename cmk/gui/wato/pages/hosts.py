@@ -47,7 +47,11 @@ from cmk.gui.utils.agent_commands import (
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import DropdownChoice, FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
@@ -378,6 +382,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                                 )
                             )
                         ),
+                        legacy_agent_url=agent_commands_registry[
+                            "agent_commands"
+                        ].legacy_agent_url(),
                     ),
                     host_name=self._host.name(),
                 )

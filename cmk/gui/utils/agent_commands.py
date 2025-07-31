@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistrationCmds
 
 WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {ip_address}/{site}/check_mk/agents/windows/check_mk_agent.msi && ^
@@ -73,6 +74,7 @@ def build_agent_registration_cmds(site: SiteId, ip_address: str) -> AgentRegistr
 class AgentCommands:
     install_cmds: Callable[[SiteId, str, str], AgentInstallCmds]
     registration_cmds: Callable[[SiteId, str], AgentRegistrationCmds]
+    legacy_agent_url: Callable[[], str | None] = lambda: None
 
 
 class AgentCommandsRegistry(Registry[AgentCommands]):
@@ -88,5 +90,6 @@ def register(registry: AgentCommandsRegistry) -> None:
         AgentCommands(
             install_cmds=build_agent_install_cmds,
             registration_cmds=build_agent_registration_cmds,
+            legacy_agent_url=lambda: doc_reference_url(DocReference.AGENT_LINUX_LEGACY),
         )
     )

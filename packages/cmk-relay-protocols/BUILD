@@ -15,6 +15,7 @@ py_library(
         "cmk/relay_protocols/__init__.py",
         "cmk/relay_protocols/monitoring_data.py",
     ],
+    data = ["cmk/relay_protocols/py.typed"],
     imports = ["."],
     visibility = ["//:__subpackages__"],
     deps = [
@@ -53,7 +54,15 @@ py_wheel(
     distribution = "cmk-relay-protocols",
     strip_path_prefixes = ["packages/cmk-relay-protocols"],
     version = "1.0.0",
-    deps = [":cmk-relay-protocols"],
+    deps = [
+        ":cmk-relay-protocols",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/relay_protocols/py.typed"],
 )
 
 package_wheel(

@@ -52,10 +52,13 @@ If you need to change the dependencies you can do so by running pnpm
 inside bazel, for example:
 
 ```sh
-bazel run -- @pnpm//:pnpm --dir $PWD install vue
+# Install package "foo"
+bazel run -- @pnpm//:pnpm --dir $PWD install foo
+# Update package "foo"
+bazel run -- @pnpm//:pnpm --dir $PWD update foo
+# Update lock file if package.json was edited manually
 bazel run -- @pnpm//:pnpm --dir $PWD install --lockfile-only
 ```
 
-Take care that you might add new dependencies to the SRCS variable in
-`BUILD`.
-
+If you add a new package, append a `":node_modules/<new-package>"` item
+to the SRCS list in the `BUILD` file.

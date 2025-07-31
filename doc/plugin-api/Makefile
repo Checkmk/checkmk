@@ -16,7 +16,6 @@ SPHINXBUILD   := $(UVENV) sphinx-build
 BASEDIR       = $(REPO_PATH)/doc/plugin-api
 SOURCEDIR     = $(BASEDIR)/source
 BUILDDIR      = $(BASEDIR)/build
-TEMPDIR       = $(BASEDIR)/templates
 
 .PHONY: help Makefile
 

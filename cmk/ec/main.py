@@ -994,7 +994,7 @@ class EventServer(ECServerThread):
                 if interval_start >= now:
                     continue
 
-                next_interval_start = self._event_status.next_interval_start(
+                next_interval_start = self._event_status.clamp_timestamp_to_interval(
                     interval, interval_start
                 )
                 if next_interval_start > now:
@@ -2695,42 +2695,38 @@ class EventStatus:
                 return event
         return None
 
-    def interval_start(self, rule_id: str, interval: int) -> int:
+    def interval_start(self, rule_id: str, interval: tuple[int, int] | int) -> int:
         """
         Return beginning of current expectation interval. For new rules
         we start with the next interval in future.
         """
         if rule_id not in self._interval_starts:
-            start = self.next_interval_start(interval, time.time())
+            start = self.clamp_timestamp_to_interval(interval, time.time())
             self._interval_starts[rule_id] = start
             return start
         start = self._interval_starts[rule_id]
         # Make sure that if the user switches from day to hour and we
         # are still waiting for the first interval to begin, that we
         # do not wait for the next day.
-        next_interval = self.next_interval_start(interval, time.time())
+        next_interval = self.clamp_timestamp_to_interval(interval, time.time())
         if start > next_interval:
             start = next_interval
             self._interval_starts[rule_id] = start
         return start
 
-    def next_interval_start(self, interval: tuple[int, int] | int, previous_start: float) -> int:
-        if isinstance(interval, tuple):
-            length, offset = interval
-            offset *= 3600
-        else:
-            length = interval
-            offset = 0
+    @staticmethod
+    def clamp_timestamp_to_interval(interval: tuple[int, int] | int, timestamp: float) -> int:
+        length, offset = interval if isinstance(interval, tuple) else (interval, 0)
+        offset *= 3600
 
-        previous_start -= offset  # take into account timezone offset
-        full_parts = divmod(previous_start, length)[0]
-        next_start = (full_parts + 1) * length
+        timestamp -= offset  # take into account timezone offset
+        next_start = (timestamp // length + 1) * length
         next_start += offset
         return int(next_start)
 
-    def start_next_interval(self, rule_id: str, interval: int) -> None:
+    def start_next_interval(self, rule_id: str, interval: tuple[int, int] | int) -> None:
         current_start = self.interval_start(rule_id, interval)
-        next_start = self.next_interval_start(interval, current_start)
+        next_start = self.clamp_timestamp_to_interval(interval, current_start)
         self._interval_starts[rule_id] = next_start
         self._logger.debug(
             "Rule %s: next interval starts %s (i.e. now + %.2f sec)",

@@ -22,6 +22,18 @@ logger = logging.getLogger(__name__)
 
 
 def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
+    """Sanity check for the dashboard page.
+
+    Check that all default dashlets, dropdown buttons and icons are visible on the dashboard page.
+
+    Steps:
+        1. Navigate to the 'Main dashboard' page.
+        2. Check that the page title is correct.
+        3. Check that all default dashlets are visible.
+        4. Check that all dropdown buttons are visible.
+        5. Check that all icons are visible.
+        6. Check that the SVGs for 'Host statistics' and 'Service statistics' dashlets are visible.
+    """
     for dashlet_title in dashboard_page.default_dashlets_list:
         expect(dashboard_page.dashlet(dashlet_title)).to_be_visible()
 
@@ -79,6 +91,14 @@ def test_host_dashboard(
 
     Test that when agent data is available, the dashlets on the 'Linux Hosts'
     and 'Windows Hosts' pages have no errors and contain data.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' or 'Windows Hosts' dashboard page.
+        2. Check that there are no errors on the page.
+        3. Check that scatterplots are visible on dashlets.
+        4. Check that all expected dashlets are presented on the page.
+        5. Check that dashlets with tables are not empty.
+        6. Check that dashlets with charts contain data.
     """
     hosts_count = len(request.getfixturevalue(hosts))
     not_empty_dashboards = dashlets_expected_row_count.keys()
@@ -143,6 +163,13 @@ def test_top_list_dashlets_settings(
 
     Check that 'Service (exact match)' and 'Metric' fields contain expected values
     for some of the 'Top list' dashlets.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' dashboard page.
+        2. Enter layout mode.
+        3. Open settings of the 'Top 10: Memory utilization' or 'Top 10: Disk utilization' dashlet.
+        4. Check that 'Service (exact match)' field contains expected service name.
+        5. Check that 'Metric' field contains expected metric name.
     """
     hosts_dashboard_page = LinuxHostsDashboard(dashboard_page.page)
     hosts_dashboard_page.enter_layout_mode()
@@ -163,6 +190,17 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
 
     Test that after applying 'Site', 'Host label' and both filters together in dashlet settings,
     the dashlet table contains all expected hosts.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' dashboard page.
+        2. Enter layout mode.
+        3. Apply 'Site' filter for 'Top 10: CPU utilization' dashlet.
+        4. Check that dashlet contains all expected hosts.
+        5. Apply 'label' filter for 'Top 10: CPU utilization'
+        6. Check that dashlet contains all expected hosts.
+        7. Delete 'Site' filter.
+        8. Check that dashlet contains all expected hosts.
+        9. Delete 'Label' filter.
     """
     hosts_count = len(linux_hosts)
     dashlet_title = "Top 10: CPU utilization"
@@ -197,7 +235,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
 
-    logger.info("Delete 'label' filter")
+    logger.info("Delete 'Label' filter")
     linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
     edit_element_top_list_page.remove_host_filter_button("Host labels").click()
     edit_element_top_list_page.save_button.click()
@@ -208,6 +246,13 @@ def test_add_top_list_dashlet(dashboard_page: Dashboard, linux_hosts: list[str])
 
     Add 'Top list' dashlet for 'Total execution time' metric to the 'Linux Hosts' dashboard. Check
     that the dashlet is visible and not empty.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' dashboard page.
+        2. Enter layout mode.
+        3. Add 'Top list' dashlet for 'Total execution time' metric.
+        4. Check that the dashlet is visible and not empty.
+        5. Delete the dashlet.
     """
     hosts_count = len(linux_hosts)
     metric = "Total execution time"

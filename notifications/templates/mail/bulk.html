@@ -45,15 +45,16 @@
                                    line-height: 1;
                                    height: 33px">
                             <!--[if mso]>
-                            <div style="margin-top: 5px;">
-                            <![endif]-->
+                            <div style="font-size: 14px; font-weight: 600; line-height: 1.5; display: inline-block; white-space: nowrap; margin-top: 5px;">
+                              &rarr;
+                            </div>
+                          <![endif]-->
+                            <!--[if !mso]><!-- -->
                             <div style="font-size: 14px;
                                         font-weight: 600;
                                         line-height: 1.5;
                                         display: inline-block">&#8211;&#8250;</div>
-                            <!--[if mso]>
-                            </div>
-                            <![endif]-->
+                            <!--<![endif]-->
                         </td>
                         <td style="padding: 0; vertical-align: middle;">
                             <div class="mobile_event_marker_bulk"
@@ -68,10 +69,7 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td align="right"
-                            width="100%"
-                            style="padding: 0;
-                                   vertical-align: middle">{{ entry.LONGDATETIME }}</td>
+                        <td align="right" width="100%" style="padding: 0; vertical-align: middle">{{ entry.LONGDATETIME }}</td>
                     </tr>
                 </table>
                 <table>

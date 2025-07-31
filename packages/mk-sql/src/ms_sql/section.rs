@@ -141,9 +141,8 @@ impl Section {
                 for (min_version, sql_file) in versioned_files {
                     if instance_version >= min_version {
                         return read_to_string(&sql_file)
-                            .map_err(|e| {
+                            .inspect_err(|e| {
                                 log::error!("Can't read file {:?} {}", &sql_file, &e);
-                                e
                             })
                             .ok();
                     }
@@ -193,7 +192,7 @@ fn find_sql_files(dir: &Path, section_name: &str) -> Result<Vec<(u32, PathBuf)>>
         .filter_map(|path| {
             if path
                 .extension()
-                .map_or(false, |ext| ext == constants::SQL_QUERY_EXTENSION)
+                .is_some_and(|ext| ext == constants::SQL_QUERY_EXTENSION)
             {
                 Some(path)
             } else {

@@ -220,7 +220,7 @@ impl Section {
     /// - databases:     # name
     ///   is_async: true    # option
     ///   disabled: true # option
-    /// Note: yaml_rust2 represents such entry as a LinkedHashMap
+    ///   Note: yaml_rust2 represents such entry as a LinkedHashMap
     pub fn from_yaml(entry: &Yaml) -> Result<Self> {
         let mut section = entry
             .as_hash()

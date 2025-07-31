@@ -7,10 +7,10 @@ if "%CI_TEST_SQL_DB_ENDPOINT%" == "" echo "CI_TEST_SQL_DB_ENDPOINT is not define
 set worker_name=mk-sql
 :: artefacts
 set worker_exe_name=mk-sql.exe
-:: relative location 
+:: relative location
 set worker_root_dir=%cd%\..\..
 :: Rust
 set worker_target=i686-pc-windows-msvc
-
+set worker_toolchain=1.87
 
 exit /b 0

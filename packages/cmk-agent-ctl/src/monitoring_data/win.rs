@@ -30,10 +30,9 @@ impl AgentChannel {
     const CHANNEL_PREFIX_SEPARATOR: char = '/';
 
     fn split(&self) -> Vec<&str> {
-        return self
-            .as_ref()
+        self.as_ref()
             .split(Self::CHANNEL_PREFIX_SEPARATOR)
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
     }
 
     /// Parse windows agent channel as a pattern"type/address"
@@ -117,8 +116,8 @@ fn make_yaml_command(own_mailslot: &str, remote_ip: IpAddr) -> String {
 /// NOTE: uses internally BIG timeout, on the timeout returns empty string with log
 async fn async_collect_from_mailslot(agent_mailslot: &str, remote_ip: IpAddr) -> IoResult<Vec<u8>> {
     let own_mailslot = mailslot_transport::build_own_mailslot_name();
-    let mut backend = MailSlotBackend::new(&own_mailslot)
-        .map_err(|e| Error::new(ErrorKind::Other, format!("error: {}", e)))?;
+    let mut backend =
+        MailSlotBackend::new(&own_mailslot).map_err(|e| Error::other(format!("error: {}", e)))?;
     mailslot_transport::send_to_mailslot(
         agent_mailslot,
         mailslot_transport::DataType::Yaml,

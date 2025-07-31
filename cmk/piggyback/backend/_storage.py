@@ -11,7 +11,7 @@ import os
 import shutil
 import tempfile
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Self
@@ -149,6 +149,25 @@ def get_messages_for(
         piggyback_data.append(PiggybackMessage(meta_data, raw_data))
 
     return piggyback_data
+
+
+def get_all_current_piggyback_sources(omd_root: Path) -> Collection[HostName]:
+    return {
+        m.source
+        for meta_infos in get_piggybacked_host_with_sources(omd_root).values()
+        for m in meta_infos
+    }
+
+
+def get_current_piggyback_sources_of_host(
+    omd_root: Path, piggybacked_host_name: HostName
+) -> Collection[HostName]:
+    return {
+        m.source
+        for m in get_piggybacked_host_with_sources(omd_root, piggybacked_host_name).get(
+            piggybacked_host_name, ()
+        )
+    }
 
 
 def get_piggybacked_host_with_sources(

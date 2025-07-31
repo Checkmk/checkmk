@@ -3477,19 +3477,17 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(  # TODO: None case is obsolete.
         self, piggybacked_hostname: HostName | None = None
     ) -> piggyback_backend.PiggybackTimeSettings:
-        all_sources = piggyback_backend.get_piggybacked_host_with_sources(
-            cmk.utils.paths.omd_root, piggybacked_hostname
-        )
-        used_sources = (
-            {m.source for sources in all_sources.values() for m in sources}
+        sources = (
+            piggyback_backend.get_all_current_piggyback_sources(cmk.utils.paths.omd_root)
             if piggybacked_hostname is None
-            else {m.source for m in all_sources.get(piggybacked_hostname, [])}
+            else piggyback_backend.get_current_piggyback_sources_of_host(
+                cmk.utils.paths.omd_root, piggybacked_hostname
+            )
         )
-
         return [
             *(
                 setting
-                for source in sorted(used_sources)
+                for source in sorted(sources)
                 for setting in self._piggybacked_host_files(source)
             ),
             # From global settings

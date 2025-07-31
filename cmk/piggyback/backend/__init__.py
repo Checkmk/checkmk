@@ -9,6 +9,8 @@ from ._config import (
 )
 from ._config import PiggybackTimeSettings as PiggybackTimeSettings
 from ._storage import cleanup_piggyback_files as cleanup_piggyback_files
+from ._storage import get_all_current_piggyback_sources as get_all_current_piggyback_sources
+from ._storage import get_current_piggyback_sources_of_host as get_current_piggyback_sources_of_host
 from ._storage import get_messages_for as get_messages_for
 from ._storage import get_piggybacked_host_with_sources as get_piggybacked_host_with_sources
 from ._storage import move_for_host_rename as move_for_host_rename

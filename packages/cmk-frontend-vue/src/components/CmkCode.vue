@@ -172,7 +172,7 @@ const toggleExpansion = () => {
 
     .fade_overlay {
       position: absolute;
-      z-index: 1;
+      z-index: var(--z-index-base);
       bottom: var(--scroll-bar-thickness);
       left: 0;
       right: 0;
@@ -185,7 +185,7 @@ const toggleExpansion = () => {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 2;
+      z-index: var(--z-index-base) + 1;
     }
 
     &:not(.expanded) .toggle_button_container {
@@ -246,6 +246,8 @@ const toggleExpansion = () => {
   background-color: var(--code-background-color);
   color: var(--font-color);
   white-space: nowrap;
+  position: relative;
+  z-index: var(--z-index-tooltip);
 
   &.error {
     background-color: var(--error-msg-bg-color);

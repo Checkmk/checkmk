@@ -99,7 +99,7 @@ body.inline_help_as_text .help-text__icon {
 }
 
 .help-text__popup {
-  z-index: 1000;
+  z-index: var(--z-index-tooltip);
 }
 
 .help-text__content {

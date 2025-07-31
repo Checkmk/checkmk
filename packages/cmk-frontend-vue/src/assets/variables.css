@@ -50,6 +50,13 @@
   /* Dimensions */
   --form-field-height: 21px;
 
+  /* Z indexes */
+  --z-index-base: 0;
+  --z-index-modal: 1000;
+  --z-index-dropdown: 2000;
+  --z-index-popup: 3000;
+  --z-index-tooltip: 4000;
+
   /* Icons that are only defined for facelift, so without dark variant */
   --icon-checkmark: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
   --icon-checkmark-bare: url('~cmk-frontend/themes/facelift/images/icon_checkmark_bare.svg');

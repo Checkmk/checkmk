@@ -53,7 +53,7 @@ watch(
   display: flex;
   flex-direction: column;
   position: fixed;
-  z-index: 10;
+  z-index: var(--z-index-modal);
   top: 0;
   right: 0;
   bottom: 0;

@@ -5,6 +5,7 @@ pkg_zip(
     name = "oci_light_win_x64",
     srcs = ["@oci-basic-light-win-x64//:srcs"],
     stamp = 1,
+    tags = ["manual"],
 )
 
 clntsh_symlinks = [
@@ -38,24 +39,28 @@ occi_symlinks = [
 [pkg_mklink(
     name = link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = "libclntsh.so.21.1",
 ) for link_name in clntsh_symlinks]
 
 [pkg_mklink(
     name = "core" + link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = "libclntshcore.so.21.1",
 ) for link_name in clntshcore_symlinks]
 
 [pkg_mklink(
     name = "occi" + link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = "libocci.so.21.1",
 ) for link_name in occi_symlinks]
 
 pkg_mklink(
     name = "libocci_gcc53.so",
     link_name = "libocci_gcc53.so",
+    tags = ["manual"],
     target = "libocci_gcc53.so.21.1",
 )
 
@@ -69,4 +74,5 @@ pkg_zip(
            [":occi%s" % link_name for link_name in occi_symlinks],
     mode = "0755",
     stamp = 1,
+    tags = ["manual"],
 )

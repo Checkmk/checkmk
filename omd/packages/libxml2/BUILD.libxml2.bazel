@@ -7,12 +7,14 @@ cc_import(
         },
         no_match_error = "Please build with lsb or fhs filesystem layout",
     ),
+    tags = ["manual"],
 )
 
 cc_library(
     name = "libxml2",
     hdrs = glob(["include/libxml2/**"]),
     includes = ["include/libxml2"],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = [
         ":libxml2_shared",

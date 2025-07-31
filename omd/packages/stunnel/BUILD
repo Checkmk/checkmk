@@ -13,6 +13,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -24,6 +25,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "skel/etc/bash_completion.d",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -32,6 +34,7 @@ pkg_files(
         "@stunnel//:libstunnel.so",
     ],
     prefix = "lib/stunnel",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -41,16 +44,19 @@ pkg_files(
         "skel/etc/stunnel/server.conf",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
     name = "conf.d",
     dirs = ["skel/etc/stunnel/conf.d"],
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "85-stunnel",
     link_name = "skel/etc/rc.d/85-stunnel",
+    tags = ["manual"],
     target = "../init.d/stunnel",
 )
 
@@ -63,6 +69,7 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -73,6 +80,7 @@ pkg_filegroup(
         ":85-stunnel",
         ":conf.d",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -83,5 +91,6 @@ pkg_tar(
         ":lib_pkg",
         ":skel",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

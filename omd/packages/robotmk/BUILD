@@ -12,6 +12,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "share/check_mk/agents/robotmk/linux",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -25,6 +26,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "share/check_mk/agents/robotmk/windows",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -36,6 +38,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "share/check_mk/agents/plugins",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -47,6 +50,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "share/check_mk/agents/windows/plugins",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -57,5 +61,6 @@ pkg_tar(
         ":plugins_linux",
         ":plugins_windows",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

@@ -4,6 +4,7 @@ load(":build-python3-modules.bzl", "build_python_module", "create_requirements_f
 
 config_setting(
     name = "git_ssl_no_verify",
+    tags = ["manual"],
     values = {"define": "git-ssl-no-verify=true"},
 )
 
@@ -27,6 +28,7 @@ config_setting(
     outs = [
         "compiled_%s.tar" % module,
     ],
+    tags = ["manual"],
 ) for module in all_requirements]
 
 # TODO: Switch to official release when netapp has fixed their build process
@@ -43,6 +45,7 @@ build_python_module(
         "compiled_netapp-ontap.tar",
     ],
     requirements = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce",
+    tags = ["manual"],
 )
 
 genrule(
@@ -94,5 +97,6 @@ genrule(
         cd -
 	tar cf $@ -C python3-modules .
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

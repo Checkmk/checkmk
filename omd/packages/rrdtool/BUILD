@@ -23,6 +23,7 @@ rrd_cli_symlinks = [
            chmod u+w $@
            patchelf $@ --force-rpath --set-rpath "\\$$ORIGIN/../lib"
        """,
+    tags = ["manual"],
 ) for binary in rrd_cli_tools]
 
 pkg_files(
@@ -32,6 +33,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -43,12 +45,14 @@ pkg_files(
         mode = "0644",
     ),
     prefix = "lib",
+    tags = ["manual"],
 )
 
 [
     pkg_mklink(
         name = "%s_symlink" % b,
         link_name = "bin/%s" % b,
+        tags = ["manual"],
         target = "rrdupdate",
     )
     for b in rrd_cli_symlinks
@@ -58,6 +62,7 @@ pkg_mklink(
     name = "librrd_symlink",
     # The "8" is the version of the library - no idea yet how to get this
     link_name = "lib/librrd.so.8",
+    tags = ["manual"],
     target = "librrd.so",
 )
 
@@ -69,6 +74,7 @@ pkg_filegroup(
         ":rrdtool_lib",
         ":rrdtool_skel_pkg",
     ] + ["%s_symlink" % b for b in rrd_cli_symlinks],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -76,6 +82,7 @@ pkg_tar(
     name = "rrdtool_tar",
     srcs = [":rrdtool_pkg"],
     package_file_name = "rrdtool.tar",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -91,18 +98,21 @@ copy_directory(
     name = "rrdtool_bindings_workaround",
     src = "@rrdtool//:perl_bindings_gen_dir",
     out = "perl_bindings_dir",
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "rrdtool_perl_bindings_files",
     srcs = [":rrdtool_bindings_workaround"],
     strip_prefix = strip_prefix.from_pkg("perl_bindings_dir"),
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
 pkg_tar(
     name = "rrdtool_perl_bindings",
     srcs = ["rrdtool_perl_bindings_files"],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -115,6 +125,7 @@ pkg_files(
         ],
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )
 
@@ -122,12 +133,14 @@ pkg_files(
     name = "rrdtool_rrdcached_skel",
     srcs = ["skel/etc/init.d/rrdcached"],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )
 
 pkg_mklink(
     name = "20-rrdchached",
     link_name = "skel/etc/rc.d/20-rrdcached",
+    tags = ["manual"],
     target = "../init.d/rrdcached",
 )
 
@@ -138,6 +151,7 @@ pkg_mkdirs(
         "skel/tmp/rrdcached",
         "skel/var/rrdcached",
     ],
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -147,9 +161,11 @@ pkg_filegroup(
         "rrdtool_skel_folders",
         ":rrdtool_skel",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
     name = "rrdtool_skel_tar",
     srcs = [":rrdtool_skel_pkg"],
+    tags = ["manual"],
 )

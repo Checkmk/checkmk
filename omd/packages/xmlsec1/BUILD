@@ -8,6 +8,7 @@ make_deployable_file(
     src = "@xmlsec1//:gen_dir",
     out = "bin/xmlsec1",
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 )
 
 libs = [
@@ -25,6 +26,7 @@ lib_symlinks = {
 [pkg_mklink(
     name = "lib_symlink_%s" % name,
     link_name = "lib/" + name,
+    tags = ["manual"],
     target = target,
 ) for name, target in lib_symlinks.items()]
 
@@ -33,6 +35,7 @@ lib_symlinks = {
     src = "@xmlsec1//:gen_dir",
     out = "lib/" + filename,
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 ) for filename in libs]
 
 make_deployable_file(
@@ -40,6 +43,7 @@ make_deployable_file(
     src = "@xmlsec1//:gen_dir",
     out = "lib/libxmlsec1-gnutls.so.1.3.0",
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 )
 
 make_deployable_file(
@@ -47,6 +51,7 @@ make_deployable_file(
     src = "@xmlsec1//:gen_dir",
     out = "lib/libxmlsec1-nss.so.1.3.0",
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 )
 
 make_deployable_file(
@@ -54,35 +59,41 @@ make_deployable_file(
     src = "@xmlsec1//:gen_dir",
     out = "lib/libxmlsec1-gcrypt.so.1.3.0",
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "lib_symlink_gnutls",
     link_name = "lib/libxmlsec1-gnutls.so",
+    tags = ["manual"],
     target = "lib/libxmlsec1-gnutls.so.1.3.0",
 )
 
 pkg_mklink(
     name = "lib_symlink_nss",
     link_name = "lib/libxmlsec1-nss.so",
+    tags = ["manual"],
     target = "lib/libxmlsec1-nss.so.1.3.0",
 )
 
 pkg_mklink(
     name = "lib_symlink_nss1",
     link_name = "lib/libxmlsec1-nss.so.1",
+    tags = ["manual"],
     target = "lib/libxmlsec1-nss.so.1.3.0",
 )
 
 pkg_mklink(
     name = "lib_symlink_gcrypt",
     link_name = "lib/libxmlsec1-gcrypt.so",
+    tags = ["manual"],
     target = "lib/libxmlsec1-gcrypt.so.1.3.0",
 )
 
 pkg_mklink(
     name = "lib_symlink_gcrypt1",
     link_name = "lib/libxmlsec1-gcrypt.so.1",
+    tags = ["manual"],
     target = "lib/libxmlsec1-gcrypt.so.1.3.0",
 )
 
@@ -105,6 +116,7 @@ filter_directory(
             "lib/libxmlsec1-nss.so.1.3.0",
         ],
     }),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -113,12 +125,14 @@ pkg_files(
         ":rest",
     ],
     strip_prefix = strip_prefix.from_pkg("rest"),
+    tags = ["manual"],
 )
 
 pkg_filegroup(
     name = "rest_fg",
     srcs = [":rest_files"],
     prefix = "",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -130,12 +144,14 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin/",
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "xmlsec1_libs_base",
     srcs = ["xmlsec1_deployable_lib_%s" % f for f in libs],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -161,6 +177,7 @@ pkg_files(
         ],
     }),
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -171,5 +188,6 @@ pkg_tar(
         ":xmlsec1_additional_libs",
         ":xmlsec1_libs_base",
     ] + [":lib_symlink_%s" % link for link in lib_symlinks],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

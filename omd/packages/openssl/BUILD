@@ -48,6 +48,7 @@ genrule(
             | grep ELF | cut -d ':' -f1 \\
             | xargs patchelf --force-rpath --set-rpath "\\$$ORIGIN/../lib"
     """,
+    tags = ["manual"],
 )
 
 genrule(
@@ -59,6 +60,7 @@ genrule(
             cp -L $(location @openssl//:gen_dir)/$${F#$(RULEDIR)/} $$F
         done
     """,
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -68,6 +70,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 write_file(
@@ -77,11 +80,13 @@ write_file(
         "import runpy",
         "runpy.run_module('cmk_dev.binreplace', run_name=('__main__'))",
     ],
+    tags = ["manual"],
 )
 
 py_binary(
     name = "binreplace_binary",
     srcs = [":binreplace.py"],
+    tags = ["manual"],
     deps = [
         requirement("checkmk-dev-tools"),
     ],
@@ -95,6 +100,7 @@ py_binary(
     intermediate_out = "lib/libcrypto.so.3.replaced",
     new_value = "/omd/versions/{version}.%s/" % edition,
     reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
+    tags = ["manual"],
     tool = ":binreplace_binary",
     value = "//bazel/cmk/version",
 ) for edition in [
@@ -113,6 +119,7 @@ py_binary(
     ],
     prefix = "lib",
     renames = {"lib/libcrypto.so.3." + edition: "libcrypto.so.3"},
+    tags = ["manual"],
 ) for edition in [
     "cre",
     "cce",
@@ -124,6 +131,7 @@ py_binary(
 [pkg_mklink(
     name = link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = target,
 ) for link_name, target in symlinks]
 
@@ -134,6 +142,7 @@ pkg_filegroup(
         for link_name, target in lib_symlinks
     ],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -143,6 +152,7 @@ pkg_filegroup(
         for link_name, target in skel_symlinks
     ],
     prefix = "skel/etc/ssl/misc",
+    tags = ["manual"],
 )
 
 # empty dir:
@@ -154,6 +164,7 @@ pkg_mkdirs(
         "skel/etc/ssl/certs",
         "skel/etc/ssl/private",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -165,6 +176,7 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 filter_directory(
@@ -174,6 +186,7 @@ filter_directory(
                ["lib/%s" % i[0] for i in lib_symlinks] +
                ["skel/etc/ssl/misc/%s" % i[0] for i in skel_symlinks] +
                executable_paths,
+    tags = ["manual"],
 )
 
 # This target should contain all files that are not referenced
@@ -184,6 +197,7 @@ pkg_files(
         ":openssl_filtered",
     ],
     strip_prefix = "openssl_filtered",
+    tags = ["manual"],
 )
 
 [pkg_filegroup(
@@ -197,6 +211,7 @@ pkg_files(
         ":openssl_skel_symlinks_pkg",
         ":openssl_lib_with_rpath_pkg_" + edition,
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 ) for edition in [
     "cre",
@@ -210,6 +225,7 @@ pkg_files(
     name = "openssl_tar_" + edition,
     srcs = [":openssl_files_pkg_" + edition],
     package_file_name = "openssl.tar",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 ) for edition in [
     "cre",

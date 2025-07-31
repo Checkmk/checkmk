@@ -6,6 +6,7 @@ exclude_from_filegroup(
     name = "msitools_rest",
     src = "@msitools//:gen_dir",
     excludes = ["bin/*"],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -14,6 +15,7 @@ pkg_files(
         ":msitools_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -26,6 +28,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -34,5 +37,6 @@ pkg_tar(
         ":msitools_bin",
         ":msitools_rest_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

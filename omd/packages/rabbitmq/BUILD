@@ -15,6 +15,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/omd/hooks",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -28,6 +29,7 @@ pkg_files(
         "skel/etc/rabbitmq/enabled_plugins",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -39,17 +41,20 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "85-rabbitmq",
     link_name = "skel/etc/rc.d/85-rabbitmq",
+    tags = ["manual"],
     target = "../init.d/rabbitmq",
 )
 
 pkg_tar(
     name = "rabbitmq_lib",
     package_dir = "lib/rabbitmq",
+    tags = ["manual"],
     deps = [
         "@rabbitmq//:rabbitmq.tar.gz",
     ],
@@ -63,6 +68,7 @@ pkg_tar(
         ":skel",
         ":skel_755",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
     deps = [
         "rabbitmq_lib",

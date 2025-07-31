@@ -20,6 +20,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -44,6 +45,7 @@ pkg_files(
         "navicli-0.7.1/lib/seccli/libssl.so.1.0.0",
     ],
     prefix = "lib/seccli",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -56,6 +58,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/seccli",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -99,6 +102,7 @@ pkg_files(
         "navicli-0.7.1/seccli/CST/xmldsig-core-schema.xsd",
     ],
     prefix = "share/navicli/CST",
+    tags = ["manual"],
 )
 
 file_from_flag(
@@ -113,6 +117,7 @@ file_from_flag(
         "cmk_version": "//bazel/cmk/version",
         "cmk_edition": "//bazel/cmk/edition",
     },
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -122,6 +127,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -133,5 +139,6 @@ pkg_tar(
         "lib_pkg",
         "naviseccli_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

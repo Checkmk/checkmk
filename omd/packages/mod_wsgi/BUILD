@@ -7,6 +7,7 @@ pkg_files(
         "@mod_wsgi//:mod_wsgi.so",
     ],
     prefix = "lib/apache/modules",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -15,6 +16,7 @@ pkg_files(
         ":skel/etc/apache/conf.d/01_wsgi.conf",
     ],
     prefix = "skel/etc/apache/conf.d",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -23,5 +25,6 @@ pkg_tar(
         ":lib_pkg",
         ":skel_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

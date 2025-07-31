@@ -9,6 +9,7 @@ exclude_from_filegroup(
         "bin/*",
         "sbin",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -17,6 +18,7 @@ pkg_files(
         "xinetd_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -28,6 +30,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -36,5 +39,6 @@ pkg_tar(
         ":share",
         ":xinetd_bin",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

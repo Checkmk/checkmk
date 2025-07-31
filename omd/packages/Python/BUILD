@@ -97,6 +97,7 @@ genrule(
             | grep ELF | cut -d ':' -f1 \\
             | xargs patchelf --force-rpath --set-rpath "\\$$ORIGIN/../lib"
     """,
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -108,6 +109,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 make_deployable_dir(
@@ -115,6 +117,7 @@ make_deployable_dir(
     src = "@python//:gen_dir",
     input_dir = "lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR,
     rpath = "\\$ORIGIN/../..",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -124,11 +127,13 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/python%s/" % PYTHON_MAJOR_DOT_MINOR,
+    tags = ["manual"],
 )
 
 [pkg_mklink(
     name = link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = target,
 ) for link_name, target in symlinks]
 
@@ -139,6 +144,7 @@ pkg_filegroup(
         for link_name, target in bin_symlinks
     ],
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -148,6 +154,7 @@ pkg_filegroup(
         for link_name, target in lib_symlinks
     ],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -157,6 +164,7 @@ pkg_filegroup(
         for link_name, target in pkgconfig_symlinks
     ],
     prefix = "lib/pkgconfig",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -166,6 +174,7 @@ pkg_filegroup(
         for link_name, target in share_symlinks
     ],
     prefix = "share/man/man1",
+    tags = ["manual"],
 )
 
 # List all files that are explicitly referenced somewhere else
@@ -184,6 +193,7 @@ exclude_from_filegroup(
                ["lib/%s" % i[0] for i in lib_symlinks] +
                ["lib/pkgconfig/%s" % i[0] for i in pkgconfig_symlinks] +
                ["share/man/man1/%s" % i[0] for i in share_symlinks],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -192,6 +202,7 @@ pkg_files(
         ":python_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -205,6 +216,7 @@ pkg_filegroup(
         ":python_rest_pkg",
         ":python_share_symlinks_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -212,5 +224,6 @@ pkg_tar(
     name = "python_tar",
     srcs = [":python_files_pkg"],
     package_file_name = "python.tar",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

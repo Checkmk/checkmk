@@ -11,6 +11,7 @@ exclude_from_filegroup(
         "etc",
         "lib",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -19,6 +20,7 @@ pkg_files(
         ":freetds_include",
     ],
     strip_prefix = strip_prefix.from_pkg("rest"),
+    tags = ["manual"],
 )
 
 make_deployable_dir(
@@ -26,6 +28,7 @@ make_deployable_dir(
     src = "@freetds//:gen_dir",
     input_dir = "lib",
     rpath = "\\$ORIGIN",
+    tags = ["manual"],
 )
 
 filter_directory(
@@ -37,6 +40,7 @@ filter_directory(
         "libsybdb.so",
         "libsybdb.so.5",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -45,6 +49,7 @@ pkg_files(
         ":freetds_lib_no_symlinks",
     ],
     strip_prefix = strip_prefix.from_pkg("freetds_lib_no_symlinks"),
+    tags = ["manual"],
 )
 
 # target_name -> target
@@ -73,11 +78,13 @@ pkg_filegroup(
         ":freetds_lib_files",
     ] + [i[0] for i in symlinks],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 [pkg_mklink(
     name = link_name,
     link_name = link_name,
+    tags = ["manual"],
     target = target,
 ) for link_name, target in symlinks]
 
@@ -87,6 +94,7 @@ pkg_filegroup(
         ":freetds_include_files",
         ":freetds_lib_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -95,5 +103,6 @@ pkg_tar(
     srcs = [
         ":freetds_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

@@ -10,6 +10,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/nagios/plugins",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -17,5 +18,6 @@ pkg_tar(
     srcs = [
         ":check_nrpe",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

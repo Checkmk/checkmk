@@ -16,6 +16,7 @@ make_deployable_dir(
     src = "@monitoring-plugins//:gen_dir",
     input_dir = "libexec",
     rpath = "\\$ORIGIN/../../../lib",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -28,17 +29,20 @@ pkg_files(
     ),
     prefix = "lib/nagios/plugins/",
     strip_prefix = "libexec",
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "check_icmp_symlink",
     link_name = "lib/nagios/plugins/check_host",
+    tags = ["manual"],
     target = "check_icmp",
 )
 
 pkg_mklink(
     name = "check_ldaps_symlink",
     link_name = "lib/nagios/plugins/check_ldaps",
+    tags = ["manual"],
     target = "check_ldap",
 )
 
@@ -49,6 +53,7 @@ exclude_from_filegroup(
         "libexec/*",
         "include/*",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -60,6 +65,7 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -70,5 +76,6 @@ pkg_tar(
         ":libexec",
         ":share_doc",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

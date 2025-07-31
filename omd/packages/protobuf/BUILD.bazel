@@ -8,24 +8,28 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "protobuf_lib",
     srcs = ["@protobuf//:protoc_lib"],
     excludes = ["libprotoc_lib.a"],
+    tags = ["manual"],
 )
 
 # Workaround as long as we do not build the python wheel with Bazel (CMK-14608)
 pkg_mklink(
     name = "protobuf_lib_link",
     link_name = "libprotobuf.so.31",
+    tags = ["manual"],
     target = "libprotoc_lib.so",
 )
 
 pkg_files(
     name = "well_known_proto_files",
     srcs = ["@protobuf//:well_known_type_protos"],
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -34,6 +38,7 @@ pkg_filegroup(
         ":well_known_proto_files",
     ],
     prefix = "include/google/protobuf",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -43,6 +48,7 @@ pkg_filegroup(
         ":protobuf_lib_link",
     ],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -52,6 +58,7 @@ pkg_filegroup(
         ":protobuf_library",
         ":well_known_protos",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )
 
@@ -59,5 +66,6 @@ pkg_tar(
     name = "protobuf_tar",
     srcs = [":protobuf"],
     package_file_name = "protobuf.tar",
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

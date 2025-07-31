@@ -12,12 +12,14 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 exclude_from_filegroup(
     name = "share",
     src = "@heirloom-pkgtools//:share",
     excludes = ["bin"],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -26,6 +28,7 @@ pkg_files(
         ":share",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -34,5 +37,6 @@ pkg_tar(
         "bin_pkg",
         "share_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

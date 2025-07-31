@@ -14,11 +14,13 @@ load(":rename_perl_packages.bzl", "rename_perl_package")
 filegroup(
     name = "perl_module_list_1",
     srcs = list(PERL_MODULES_LIST_1.keys()),
+    tags = ["manual"],
 )
 
 filegroup(
     name = "perl_module_list_2",
     srcs = list(PERL_MODULES_LIST_2.keys()),
+    tags = ["manual"],
 )
 
 genrule(
@@ -28,6 +30,7 @@ genrule(
     cmd = """
         echo "$(SRCS)" > $(RULEDIR)/perl_module_list_1.txt
     """,
+    tags = ["manual"],
 )
 
 genrule(
@@ -37,6 +40,7 @@ genrule(
     cmd = """
         echo "$(SRCS)" > $(RULEDIR)/perl_module_list_2.txt
     """,
+    tags = ["manual"],
 )
 
 genrule(
@@ -84,5 +88,6 @@ genrule(
 
         tar cf $@ -C perl-modules .
     """,
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

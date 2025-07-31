@@ -31,6 +31,7 @@ bin_paths = [
     src = "@net-snmp//:gen_dir",
     out = "bin/%s" % filename,
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 ) for filename in bin_paths]
 
 make_deployable_dir(
@@ -38,6 +39,7 @@ make_deployable_dir(
     src = "@net-snmp//:gen_dir",
     input_dir = "lib",
     rpath = "\\$ORIGIN/../lib",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -47,12 +49,14 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 exclude_from_filegroup(
     name = "net-snmp_rest",
     src = "@net-snmp//:gen_dir",
     excludes = bin_paths + ["lib/*"],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -61,6 +65,7 @@ pkg_files(
         ":net-snmp_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -68,11 +73,13 @@ pkg_files(
     srcs = [
         ":net-snmp_deployable_lib",
     ],
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
     name = "net-snmp_skel",
     dirs = ["skel/local/share/snmp/mibs/"],
+    tags = ["manual"],
 )
 
 pkg_filegroup(
@@ -83,6 +90,7 @@ pkg_filegroup(
         ":net-snmp_rest_pkg",
         ":net-snmp_skel",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -90,5 +98,6 @@ pkg_tar(
     name = "net-snmp_tar",
     srcs = [":net-snmp_files_pkg"],
     package_file_name = "net-snmp.tar",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

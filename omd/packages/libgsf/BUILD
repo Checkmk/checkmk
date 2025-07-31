@@ -6,6 +6,7 @@ exclude_from_filegroup(
     name = "libgsf_rest",
     src = "@libgsf//:gen_dir",
     excludes = ["bin/*"],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -14,6 +15,7 @@ pkg_files(
         "libgsf_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -27,6 +29,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -35,5 +38,6 @@ pkg_tar(
         ":libgsf_bin",
         ":libgsf_without_bin",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

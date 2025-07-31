@@ -8,12 +8,14 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "patch_man_pkg",
     srcs = ["@patch//:share/man/man1/patch.1"],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -22,5 +24,6 @@ pkg_tar(
         ":patch_bin_pkg",
         ":patch_man_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

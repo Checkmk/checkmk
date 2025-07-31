@@ -7,6 +7,7 @@ pkg_files(
         "@cpp_libs",
     ],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -14,5 +15,6 @@ pkg_tar(
     srcs = [
         "cpp-libs-pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

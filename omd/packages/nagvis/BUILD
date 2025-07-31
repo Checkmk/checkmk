@@ -10,6 +10,7 @@ pkg_files(
         "skel/etc/redis/redis.conf",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -19,6 +20,7 @@ pkg_files(
     ],
     prefix = "share/nagvis/htdocs",
     strip_prefix = strip_prefix.from_pkg("share"),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -27,6 +29,7 @@ pkg_files(
         "@nagvis//:NagVisCompressed_js",
     ],
     prefix = "share/nagvis/htdocs/frontend/nagvis-js/js",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -35,6 +38,7 @@ pkg_files(
         "@nagvis//:doc_general_fg",
     ],
     prefix = "share/doc/nagvis",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -44,6 +48,7 @@ pkg_files(
     ],
     prefix = "share/nagvis/htdocs/docs/de_DE",
     strip_prefix = "docs/de_DE",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -53,6 +58,7 @@ pkg_files(
     ],
     prefix = "share/nagvis/htdocs/docs/en_US",
     strip_prefix = "docs/en_US",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -62,6 +68,7 @@ pkg_files(
     ],
     prefix = "share/nagvis/htdocs/docs/general",
     strip_prefix = "docs/general",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -78,11 +85,13 @@ pkg_files(
         "@nagvis//:etc/conf.d/demo.ini.php": "skel/etc/nagvis/conf.d/demo.ini.php",
     },
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
     name = "var_dir",
     dirs = ["share/nagvis/htdocs/var"],
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
@@ -91,6 +100,7 @@ pkg_mkdirs(
         "share/nagvis/htdocs/userfiles/images/gadgets",
         "share/nagvis/htdocs/userfiles/styles",
     ],
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
@@ -105,6 +115,7 @@ pkg_mkdirs(
         "skel/local/share/nagvis/htdocs/userfiles/styles",
         "skel/local/share/nagvis/htdocs/userfiles/templates",
     ],
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
@@ -114,6 +125,7 @@ pkg_mkdirs(
         "skel/tmp/nagvis/tmpl/cache",
         "skel/tmp/nagvis/tmpl/compile",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -122,6 +134,7 @@ pkg_files(
         "@nagvis//:etc/nagvis.ini.php-sample",
     ],
     renames = {"@nagvis//:etc/nagvis.ini.php-sample": "skel/etc/nagvis/nagvis.ini.php"},
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
@@ -129,6 +142,7 @@ pkg_mkdirs(
     dirs = [
         "skel/var/nagvis/profiles",
     ],
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
@@ -137,6 +151,7 @@ pkg_mkdirs(
         "skel/etc/nagvis/maps",
         "skel/etc/nagvis/geomap",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -157,5 +172,6 @@ pkg_tar(
         "userfiles_empty_dirs",
         "var_dir",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

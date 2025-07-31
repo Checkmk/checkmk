@@ -7,6 +7,7 @@ pkg_files(
         "@snap7//:libsnap7.so",
     ],
     prefix = "lib",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -14,5 +15,6 @@ pkg_tar(
     srcs = [
         ":lib_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

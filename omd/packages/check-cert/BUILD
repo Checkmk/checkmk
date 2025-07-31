@@ -7,6 +7,7 @@ make_deployable_file(
     src = "//packages/check-cert",
     out = "check-cert",
     rpath = "\\$ORIGIN/../../../lib",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -14,10 +15,12 @@ pkg_files(
     srcs = [":deployable_check-cert"],
     attributes = pkg_attributes(mode = "0755"),
     renames = {":deployable_check-cert": "lib/nagios/plugins/check_cert"},
+    tags = ["manual"],
 )
 
 pkg_tar(
     name = "check-cert",
     srcs = [":check-cert_pkg"],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

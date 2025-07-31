@@ -11,11 +11,13 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {"@heirloom-mailx//:mailx": "heirloom-mailx"},
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "mailx_link",
     link_name = "bin/mail",
+    tags = ["manual"],
     target = "./heirloom-mailx",
 )
 
@@ -26,6 +28,7 @@ pkg_tar(
     ],
     extension = "tar.gz",
     package_file_name = "share/man/man1/heirloom-mailx.1.gz",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -34,12 +37,14 @@ pkg_files(
         ":mailx.1",
     ],
     prefix = "share/man/man1",
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "skel_pkg",
     srcs = ["skel/etc/mail.rc"],
     prefix = "skel/etc",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -50,5 +55,6 @@ pkg_tar(
         ":mailx_link",
         ":share_pkg",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )

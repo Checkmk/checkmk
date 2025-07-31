@@ -12,6 +12,7 @@ genrule(
     cmd = """
         cp $(SRCS) $(OUTS)
     """,
+    tags = ["manual"],
 )
 
 genrule(
@@ -26,6 +27,7 @@ genrule(
 	    -f $(SRCS) \
 	    jaeger-%s-linux-amd64/jaeger
     """ % JAEGER_VERSION,
+    tags = ["manual"],
 )
 
 genrule(
@@ -54,6 +56,7 @@ genrule(
             $(execpath @omd_packages//omd/packages/jaeger:TRACE_JAEGER_UI_PORT) \
             $$(realpath $(RULEDIR))/lib/omd/hooks/
     """,
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -63,6 +66,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -78,6 +82,7 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -87,6 +92,7 @@ pkg_files(
         "skel/etc/logrotate.d/jaeger",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -98,11 +104,13 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "08-jaeger",
     link_name = "skel/etc/rc.d/08-jaeger",
+    tags = ["manual"],
     target = "../init.d/jaeger",
 )
 
@@ -115,5 +123,6 @@ pkg_tar(
         ":skel",
         ":skel_755",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

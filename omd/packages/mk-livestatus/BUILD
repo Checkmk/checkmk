@@ -10,6 +10,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -24,6 +25,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/omd/hooks",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -37,11 +39,13 @@ pkg_files(
         "skel/etc/stunnel/conf.d/01-livestatus.conf",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "nagios_cfg",
     link_name = "skel/etc/nagios/nagios.d/mk-livestatus.cfg",
+    tags = ["manual"],
     target = "../../mk-livestatus/nagios.cfg",
 )
 
@@ -53,5 +57,6 @@ pkg_tar(
         ":nagios_cfg",
         ":skel",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

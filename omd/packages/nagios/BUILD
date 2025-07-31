@@ -8,6 +8,7 @@ exclude_from_filegroup(
     name = "nagios_rest",
     src = "@nagios//:gen_dir",
     excludes = ["bin/*"],
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -16,6 +17,7 @@ pkg_files(
         "nagios_rest",
     ],
     strip_prefix = "rest",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -29,6 +31,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -38,6 +41,7 @@ pkg_files(
     ],
     prefix = "share/diskspace/",
     renames = {":diskspace": "nagios"},
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -60,6 +64,7 @@ pkg_files(
         "skel/etc/nagios/ssi/README",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -71,11 +76,13 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "80-nagios",
     link_name = "skel/etc/rc.d/80-nagios",
+    tags = ["manual"],
     target = "../init.d/nagios",
 )
 
@@ -89,6 +96,7 @@ pkg_mkdirs(
         "skel/tmp/nagios/checkresults/",
         "skel/tmp/nagios/tmp/",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -102,5 +110,6 @@ pkg_tar(
         ":skel_755",
         ":skel_dirs",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

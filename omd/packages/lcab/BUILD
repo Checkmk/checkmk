@@ -8,6 +8,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -15,5 +16,6 @@ pkg_tar(
     srcs = [
         "lcab_bin",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

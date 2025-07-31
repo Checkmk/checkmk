@@ -11,11 +11,13 @@ write_file(
         "import runpy",
         "runpy.run_module('cmk.werks.utils', run_name=('__main__'))",
     ],
+    tags = ["manual"],
 )
 
 py_binary(
     name = "werks_utils_binary",
     srcs = [":werks_utils.py"],
+    tags = ["manual"],
     deps = ["//packages/cmk-werks"],
 )
 
@@ -35,6 +37,7 @@ py_binary(
         edition,
         "$(location werks_precompiled_%s)" % edition,
     ],
+    tags = ["manual"],
     tool = ":werks_utils_binary",
 ) for edition in [
     "cre",
@@ -53,6 +56,7 @@ py_binary(
         "$(location changelog_%s)" % edition,
         "$(location werks_precompiled_%s)" % edition,
     ],
+    tags = ["manual"],
     tool = ":werks_utils_binary",
     visibility = ["@@//omd:__subpackages__"],
 ) for edition in [
@@ -68,6 +72,7 @@ py_binary(
     srcs = [":changelog_" + edition],
     prefix = "share/doc/check_mk" + postfix,
     renames = {":changelog_" + edition: "ChangeLog"},
+    tags = ["manual"],
 ) for (edition, postfix) in [
     ("cre", ""),
     ("cce", "_cloud"),
@@ -81,6 +86,7 @@ pkg_files(
     srcs = [":werks_precompiled_cre"],
     prefix = "share/check_mk/werks",
     renames = {":werks_precompiled_cre": "werks"},
+    tags = ["manual"],
 )
 
 [pkg_files(
@@ -88,6 +94,7 @@ pkg_files(
     srcs = [":werks_precompiled_" + edition],
     prefix = "share/check_mk/werks",
     renames = {":werks_precompiled_" + edition: "werks_" + edition},
+    tags = ["manual"],
 ) for edition in [
     "cce",
     "cee",
@@ -98,6 +105,7 @@ pkg_files(
 pkg_mklink(
     name = "changelog_link",
     link_name = "share/doc/ChangeLog",
+    tags = ["manual"],
     target = "check_mk/ChangeLog",
 )
 
@@ -126,5 +134,6 @@ pkg_tar(
             "werks_pkg_cse",
         ],
     }),
+    tags = ["manual"],
     visibility = ["@@//omd:__subpackages__"],
 )

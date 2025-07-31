@@ -12,6 +12,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -24,6 +25,7 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {"diskspace.py": "diskspace"},
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -37,16 +39,19 @@ pkg_files(
         "skel/etc/logrotate.d/diskspace",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mkdirs(
     name = "skel_diskspace",
     dirs = ["skel/local/share/diskspace"],
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "skel_crontab",
     link_name = "skel/etc/rc.d/99-crontab",
+    tags = ["manual"],
     target = "../init.d/crontab",
 )
 
@@ -59,5 +64,6 @@ pkg_tar(
         ":skel_crontab",
         ":skel_diskspace",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

@@ -12,23 +12,27 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "redis-check-aof",
     link_name = "bin/redis-check-aof",
+    tags = ["manual"],
     target = "redis-server",
 )
 
 pkg_mklink(
     name = "redis-check-rdb",
     link_name = "bin/redis-check-rdb",
+    tags = ["manual"],
     target = "redis-server",
 )
 
 pkg_mklink(
     name = "redis-sentinel",
     link_name = "bin/redis-sentinel",
+    tags = ["manual"],
     target = "redis-server",
 )
 
@@ -39,6 +43,7 @@ pkg_files(
         "skel/etc/redis/redis.conf",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -50,11 +55,13 @@ pkg_files(
         mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
 )
 
 pkg_mklink(
     name = "40-redis",
     link_name = "skel/etc/rc.d/40-redis",
+    tags = ["manual"],
     target = "../init.d/redis",
 )
 
@@ -63,6 +70,7 @@ pkg_mkdirs(
     dirs = [
         "skel/var/redis",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
@@ -77,5 +85,6 @@ pkg_tar(
         ":skel_755",
         ":skel_var",
     ],
+    tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

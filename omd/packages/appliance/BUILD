@@ -5,4 +5,5 @@ filegroup(
         "post-install",
         "webconf_snapin.py",
     ],
+    tags = ["manual"],
 )

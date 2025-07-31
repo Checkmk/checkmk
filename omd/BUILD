@@ -17,6 +17,7 @@ pip_compile(
     name = "requirements_lock",
     requirements_in = ":requirements.txt",
     requirements_txt = ":requirements_lock.txt",
+    tags = ["manual"],
 )
 
 create_venv(
@@ -36,6 +37,7 @@ file_from_flag(
         "cmk_version": "//bazel/cmk/version",
         "cmk_edition": "//bazel/cmk/edition",
     },
+    tags = ["manual"],
 )
 
 [pkg_tar(
@@ -47,6 +49,7 @@ file_from_flag(
     ],
     extension = "tar.xz",
     package_dir_file = ":omd_root_dir",
+    tags = ["manual"],
     deps = [
                "//bin:pkg_tar",
                "//active_checks:pkg_tar",
@@ -123,6 +126,7 @@ file_from_flag(
     srcs = edition_skel_permissions[edition],
     outs = ["skel.permissions_" + edition],
     cmd = "cat $(SRCS) > $@",
+    tags = ["manual"],
 ) for edition in [
     "cre",
     "cce",
@@ -134,6 +138,7 @@ file_from_flag(
 py_binary(
     name = "generate_bom_csv_py",
     srcs = ["license_sources/generate_bom_csv.py"],
+    tags = ["manual"],
 )
 
 run_binary(
@@ -146,6 +151,7 @@ run_binary(
         "--out",
         "$(location bill-of-materials.csv)",
     ],
+    tags = ["manual"],
     tool = ":generate_bom_csv_py",
 )
 
@@ -154,6 +160,7 @@ filegroup(
     srcs = glob([
         "license_sources/license_texts/*.txt",
     ]),
+    tags = ["manual"],
 )
 
 py_binary(
@@ -164,6 +171,7 @@ py_binary(
         "license_sources/checkmk_logo.svg",
         ":license_texts",
     ],
+    tags = ["manual"],
     deps = [
         requirement("reportlab"),
         requirement("svglib"),
@@ -180,6 +188,7 @@ run_binary(
         "--csv",
         "$(location :generate_bom_csv)",
     ],
+    tags = ["manual"],
     tool = ":build_bom_texts_pdf_py",
 )
 
@@ -192,6 +201,7 @@ pkg_tar(
     ],
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",
+    tags = ["manual"],
 )
 
 editions = {
@@ -207,6 +217,7 @@ editions = {
     architecture = "amd64",
     cmk_version = "//bazel/cmk/version",
     package = "check-mk-" + editions[edition],
+    tags = ["manual"],
     version = select({
         "@//bazel/cmk/distro:almalinux-8": "el8-38",
         "@//bazel/cmk/distro:almalinux-9": "el9-38",
@@ -246,6 +257,7 @@ editions = {
     prerm = "//omd/debian:prerm",
     priority = "optional",
     section = "admin",
+    tags = ["manual"],
     templates = "//omd/debian:templates",
     version_file = "//omd/distros:distro_version_file",
 ) for edition in [

@@ -40,6 +40,13 @@ export class SearchHistorySearchProvider extends SearchProvider {
           .getEntries()
           .filter((hist) => {
             return (
+              query.filters.length === 0 ||
+              query.filters.findIndex((f) => f.value === hist.element.provider) >= 0
+            )
+          })
+          .filter((hist) => {
+            return (
+              query.input.length === 0 ||
               (hist.query as UnifiedSearchQueryLike).input.indexOf(query.input) >= 0 ||
               hist.element.topic.indexOf(query.input) >= 0 ||
               hist.element.title.indexOf(query.input) >= 0 ||

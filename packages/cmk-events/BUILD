@@ -20,7 +20,6 @@ py_library(
     ],
     data = [
         ":cmk/events/py.typed",
-        ":pyproject.toml",
     ],
     imports = ["."],
     visibility = ["//visibility:public"],

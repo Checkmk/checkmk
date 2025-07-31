@@ -993,9 +993,6 @@ class EventServer(ECServerThread):
                 # Interval has been elapsed. Now comes the truth: do we have enough
                 # rule matches?
 
-                # First do not forget to switch to next interval
-                self._event_status.start_next_interval(rule["id"], interval)
-
                 # First look for case 1: rule that already have at least one hit
                 # and this events in the state "counting" exist.
                 events_to_delete: list[tuple[Event, HistoryWhat]] = []
@@ -1007,7 +1004,8 @@ class EventServer(ECServerThread):
                         if event["count"] < expect["count"]:  # no -> trigger alarm
                             events_to_delete.append((event, "AUTODELETE"))
                             self._handle_absent_event(rule, expect, event["count"], event["last"])
-                        else:  # yes -> everything is fine. Just log.
+                        else:  # yes -> everything is fine.
+                            self._event_status.clear_interval_start(rule["id"])
                             self._logger.info(
                                 "Rule %s/%s has reached %d occurrences (%d required). "
                                 "Starting next period.",
@@ -1023,6 +1021,9 @@ class EventServer(ECServerThread):
                 # Ou ou, no event found at all.
                 else:
                     self._handle_absent_event(rule, expect, 0, interval_start)
+
+                # Do not forget to switch to next interval
+                self._event_status.start_next_interval(rule["id"], interval)
 
                 for event, reason in events_to_delete:
                     self._event_status.remove_event(event, reason)
@@ -2633,15 +2634,21 @@ class EventStatus:
         return int(next_start)
 
     def start_next_interval(self, rule_id: str, interval: ExpectInterval) -> None:
-        current_start = self.interval_start(rule_id, interval)
-        next_start = self.clamp_timestamp_to_interval(interval, current_start, interval_count=1)
-        self._interval_starts[rule_id] = next_start
+        if rule_id not in self._interval_starts:
+            next_start = self.interval_start(rule_id, interval)
+        else:
+            current_start = self.interval_start(rule_id, interval)
+            next_start = self.clamp_timestamp_to_interval(interval, current_start, interval_count=1)
+            self._interval_starts[rule_id] = next_start
         self._logger.debug(
             "Rule %s: next interval starts %s (i.e. now + %.2f sec)",
             rule_id,
             next_start,
             time.time() - next_start,
         )
+
+    def clear_interval_start(self, rule_id: str) -> None:
+        self._interval_starts.pop(rule_id, None)
 
     def pack_status(self) -> PackedEventStatus:
         return PackedEventStatus(

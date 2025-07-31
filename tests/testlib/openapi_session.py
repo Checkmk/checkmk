@@ -1358,16 +1358,13 @@ class Saml2API(BaseAPI):
 
         return (response.json()["extensions"], response.headers["Etag"])
 
-    def create(self, connection_id: str) -> dict[str, Any]:
+    def create(self, connection_id: str, connection_config: dict[str, Any]) -> dict[str, Any]:
         connection = {
             "general_properties": {
                 "id": connection_id,
                 "name": "Test SAML Auth",
             },
-            "connection_config": {
-                "checkmk_server_url": "https://localhost",
-                "identity_provider_metadata": {"type": "url", "url": "https://localhost/saml"},
-            },
+            "connection_config": connection_config,
             "security": {
                 "signing_certificate": {"type": "builtin"},
                 "decrypt_auth_certificate": {"type": "builtin"},

@@ -172,12 +172,19 @@ class SAMLRequestedAuthnContext(TypedDict):
     authn_context_class_ref: Sequence[str]
 
 
+SAML_IDP_METADATA = (
+    tuple[Literal["url"], str]
+    | tuple[Literal["text"], str]
+    | tuple[Literal["file"], tuple[str, str, bytes]]
+)
+
+
 class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     name: str
     description: str
     comment: str
     docu_url: str
-    idp_metadata: tuple[str, str] | tuple[str, tuple[str, str, bytes]]
+    idp_metadata: SAML_IDP_METADATA
     checkmk_entity_id: str
     checkmk_metadata_endpoint: str
     checkmk_assertion_consumer_service_endpoint: str

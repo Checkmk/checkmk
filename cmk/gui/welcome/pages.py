@@ -14,7 +14,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
+from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule
@@ -23,6 +24,7 @@ from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePag
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.notify_types import EventRule
+from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -64,15 +66,37 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
             break
 
 
-def make_url_from_registry(id: str) -> str | None:
+def make_url_from_registry(id: str, permitted: bool = True) -> str | None:
     url = welcome_url_registry.get(id)
-    if url is None:
+    if url is None or not permitted:
         return None
     return makeuri(
         request,
         addvars=url.vars,
         filename=url.filename,
     )
+
+
+WELCOME_PAGE_PERMISSIONS = {
+    "wato.use",
+    "wato.hosts",
+    "wato.edit",
+    "wato.manage_hosts",
+    "wato.service_discovery_to_undecided",
+    "wato.service_discovery_to_monitored",
+    "wato.service_discovery_to_ignored",
+    "wato.service_discovery_to_removed",
+    "wato.download_agents",
+    "wato.download_all_agents",
+    "wato.activate",
+    "wato.timeperiods",
+    "wato.groups",
+    "wato.notifications",
+    "general.force_dashboards",
+    "general.edit_dashboards",
+    "general.see_user_dashboards",
+    "general.see_packaged_dashboards",
+}
 
 
 def _welcome_page(config: Config) -> None:
@@ -83,6 +107,21 @@ def _welcome_page(config: Config) -> None:
         show_top_heading=False,
         enable_main_page_scrollbar=False,
     )
+    if not all(user.may(perm) for perm in WELCOME_PAGE_PERMISSIONS):
+        set_user_attribute("start_url", None)
+        default_start_url = user.start_url or config.start_url
+        if not is_allowed_url(default_start_url):
+            default_start_url = "dashboard.py"
+        html.immediate_browser_redirect(
+            0.1,
+            makeuri_contextless(
+                request,
+                [],
+                filename=default_start_url,
+            ),
+        )
+        return
+
     html.vue_component(
         component_name="cmk-welcome",
         data=asdict(
@@ -142,7 +181,9 @@ def _welcome_page(config: Config) -> None:
                         ],
                         filename="wato.py",
                     ),
-                    synthetic_monitoring=make_url_from_registry("robotmk_managed_robots_overview"),
+                    synthetic_monitoring=make_url_from_registry(
+                        "robotmk_managed_robots_overview", user.may("edit_managed_robots")
+                    ),
                     opentelemetry=make_url_from_registry("otel_collectors"),
                     activate_changes=makeuri(
                         request,

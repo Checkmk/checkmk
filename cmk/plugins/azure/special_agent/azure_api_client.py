@@ -146,11 +146,11 @@ class BaseAsyncApiClient:
         except KeyError:
             raise _make_exception(json_data)
 
-    async def __aenter__(self):
+    async def _login_and_create_session(self) -> aiohttp.ClientSession:
         await self.login_async(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
             proxy_mapping = self._http_proxy_config.to_requests_proxies()
-            self._session = aiohttp.ClientSession(
+            session = aiohttp.ClientSession(
                 # aiohttp session and aiohttp request only accept a string as proxy
                 # (not the mapping with multiple schemes of the classical requests library)
                 # I assume it will always be https since all the url (for management and graph) are https
@@ -159,6 +159,11 @@ class BaseAsyncApiClient:
                 timeout=aiohttp.ClientTimeout(total=30),
             )
 
+        return session
+
+    async def __aenter__(self):
+        if self._session is None or self._session.closed:
+            self._session = await self._login_and_create_session()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -272,3 +277,60 @@ class BaseAsyncApiClient:
             params=params,
             next_page_key=next_page_key,
         )
+
+
+class SharedSessionApiClient(BaseAsyncApiClient):
+    _shared_session: aiohttp.ClientSession | None = None
+    _sessions_count: int = 0
+    _shared_session_lock: asyncio.Lock | None = None
+
+    def __init__(
+        self,
+        authority_urls: _AuthorityURLs,
+        http_proxy_config: HTTPProxyConfig,
+        tenant: str,
+        client: str,
+        secret: str,
+    ):
+        super().__init__(authority_urls, http_proxy_config, tenant, client, secret)
+        if SharedSessionApiClient._shared_session_lock is None:
+            SharedSessionApiClient._shared_session_lock = asyncio.Lock()
+
+    async def __aenter__(self):
+        if SharedSessionApiClient._shared_session_lock is None:
+            raise RuntimeError(
+                "Session lock is not initialized. Ensure that the client is correctly created."
+            )
+
+        async with SharedSessionApiClient._shared_session_lock:
+            LOGGER.debug("Acquiring lock for session setup...")
+            if (
+                SharedSessionApiClient._shared_session is None
+                or SharedSessionApiClient._shared_session.closed
+            ):
+                SharedSessionApiClient._shared_session = await self._login_and_create_session()
+                LOGGER.debug("Created new aiohttp session")
+
+        SharedSessionApiClient._sessions_count += 1
+        self._session = SharedSessionApiClient._shared_session
+        LOGGER.debug("Lock released, session ready")
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if SharedSessionApiClient._shared_session_lock is None:
+            raise RuntimeError(
+                "Session lock is not initialized. Ensure that the client is correctly created."
+            )
+
+        async with SharedSessionApiClient._shared_session_lock:
+            SharedSessionApiClient._sessions_count -= 1
+            if (
+                SharedSessionApiClient._sessions_count <= 0
+                and SharedSessionApiClient._shared_session
+                and not SharedSessionApiClient._shared_session.closed
+            ):
+                await SharedSessionApiClient._shared_session.close()
+                SharedSessionApiClient._shared_session = None
+
+        self._session = None

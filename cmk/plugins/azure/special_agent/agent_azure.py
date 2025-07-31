@@ -37,6 +37,7 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     get_graph_authority_urls,
     get_mgmt_authority_urls,
     NoConsumptionAPIError,
+    SharedSessionApiClient,
 )
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -1992,7 +1993,7 @@ async def main_subscription(
     args: Args, selector: Selector, subscription: str, monitored_services: set[str]
 ) -> None:
     try:
-        async with BaseAsyncApiClient(
+        async with SharedSessionApiClient(
             get_mgmt_authority_urls(args.authority, subscription),
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,

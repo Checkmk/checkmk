@@ -25,7 +25,7 @@ py_library(
         "cmk/mkp_tool/_unsorted.py",
         "cmk/mkp_tool/cli.py",
     ],
-    data = [],
+    data = [":py_typed"],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
@@ -66,7 +66,15 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-mkp-tool"],
     # TODO: Duplicated from pyproject.toml
     version = "3.0.0",
-    deps = [":cmk-mkp-tool"],
+    deps = [
+        ":cmk-mkp-tool",
+        ":py_typed",
+    ],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/mkp_tool/py.typed"],
 )
 
 package_wheel(

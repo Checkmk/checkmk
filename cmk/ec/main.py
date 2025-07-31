@@ -984,7 +984,7 @@ class EventServer(ECServerThread):
                     continue
 
                 next_interval_start = self._event_status.clamp_timestamp_to_interval(
-                    interval, interval_start
+                    interval, interval_start, interval_count=1
                 )
                 if next_interval_start > now:
                     continue
@@ -2599,36 +2599,38 @@ class EventStatus:
 
     def interval_start(self, rule_id: str, interval: ExpectInterval) -> int:
         """
-        Return beginning of current expectation interval. For new rules
-        we start with the next interval in future.
+        Return beginning of current expectation interval.
+        For new rules we should start with the inclusive start time for the event.
         """
         if rule_id not in self._interval_starts:
-            start = self.clamp_timestamp_to_interval(interval, time.time())
+            start = self.clamp_timestamp_to_interval(interval, time.time(), interval_count=0)
             self._interval_starts[rule_id] = start
             return start
         start = self._interval_starts[rule_id]
         # Make sure that if the user switches from day to hour and we
         # are still waiting for the first interval to begin, that we
         # do not wait for the next day.
-        next_interval = self.clamp_timestamp_to_interval(interval, time.time())
-        if start > next_interval:
-            start = next_interval
+        current_interval = self.clamp_timestamp_to_interval(interval, time.time(), interval_count=0)
+        if start > current_interval:
+            start = current_interval
             self._interval_starts[rule_id] = start
         return start
 
     @staticmethod
-    def clamp_timestamp_to_interval(interval: ExpectInterval, timestamp: float) -> int:
+    def clamp_timestamp_to_interval(
+        interval: ExpectInterval, timestamp: float, interval_count: int
+    ) -> int:
         length, offset = interval if isinstance(interval, tuple) else (interval, 0)
         offset *= 3600
 
         timestamp -= offset  # take into account timezone offset
-        next_start = (timestamp // length + 1) * length
+        next_start = (timestamp // length + interval_count) * length
         next_start += offset
         return int(next_start)
 
     def start_next_interval(self, rule_id: str, interval: ExpectInterval) -> None:
         current_start = self.interval_start(rule_id, interval)
-        next_start = self.clamp_timestamp_to_interval(interval, current_start)
+        next_start = self.clamp_timestamp_to_interval(interval, current_start, interval_count=1)
         self._interval_starts[rule_id] = next_start
         self._logger.debug(
             "Rule %s: next interval starts %s (i.e. now + %.2f sec)",

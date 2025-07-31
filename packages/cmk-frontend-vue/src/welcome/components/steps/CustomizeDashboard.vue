@@ -15,6 +15,7 @@ import StepParagraph from '@/welcome/components/steps/components/StepParagraph.v
 const { t } = usei18n('welcome-step-5')
 
 defineProps<{
+  step: number
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -22,7 +23,7 @@ defineProps<{
 
 <template>
   <CmkAccordionStepPanelItem
-    :step="5"
+    :step="step"
     :disabled="false"
     :accomplished="accomplished"
     :title="t('title', 'Customize dashboard')"

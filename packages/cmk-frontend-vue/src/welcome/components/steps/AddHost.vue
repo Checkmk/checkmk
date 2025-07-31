@@ -16,6 +16,7 @@ import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 const { t } = usei18n('welcome-step-2')
 
 defineProps<{
+  step: number
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -23,7 +24,7 @@ defineProps<{
 
 <template>
   <CmkAccordionStepPanelItem
-    :step="2"
+    :step="step"
     :disabled="false"
     :accomplished="accomplished"
     :title="t('title', 'Add your first host')"

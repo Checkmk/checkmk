@@ -13,9 +13,10 @@ import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAcc
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 
-const { t } = usei18n('welcome-step-4')
+const { t } = usei18n('welcome-step-3')
 
 defineProps<{
+  step: number
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -23,64 +24,64 @@ defineProps<{
 
 <template>
   <CmkAccordionStepPanelItem
-    :step="4"
+    :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Enable notifications')"
-    :info="t('time', '10-15 min')"
+    :title="t('title', 'Activate changes and explore your hosts')"
+    :info="t('time', '5-7 min')"
   >
     <StepParagraph>
       {{
         t(
-          'paragraph',
-          'Notifications help you stay on top of problems ' +
-            'without constantly checking the interface. ' +
-            'Start by configuring contact groups, time periods, and host groups ' +
-            'to define who should be notified and when. ' +
-            'Then, add a notification rule and use the test feature ' +
-            'to make sure alerts reach you the way you expect.'
+          'paragraph-1',
+          'After adding hosts and discovering services, ' +
+            'you need to activate your changes to apply the configuration.'
+        )
+      }}
+    </StepParagraph>
+    <StepParagraph>
+      {{
+        t(
+          'paragraph-2',
+          'Once done, dive into your monitoring data: get an overview of all hosts, ' +
+            'check the problem dashboard for critical issues, ' +
+            'or focus on unhandled service problems to start troubleshooting.'
         )
       }}
     </StepParagraph>
 
     <StepHeading>
-      {{ t('prepare', 'Prepare') }}
+      {{ t('activate-changes', 'Activate changes') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard
-        icon-name="contactgroups"
-        :title="t('contact-groups', 'Contact groups')"
-        :url="urls.create_contactgoups"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="timeperiods"
-        :title="t('time-periods', 'Time periods')"
-        :url="urls.time_periods"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="hostgroups"
-        :title="t('hostgroups', 'Host groups')"
-        :url="urls.host_groups"
+        icon-name="main_changes"
+        :title="t('activate-changes', 'Activate pending changes')"
+        :url="urls.activate_changes"
         :open-in-new-tab="false"
       />
     </StepCardsRow>
 
     <StepHeading>
-      {{ t('setup-up-notifications', 'Set up notifications') }}
+      {{ t('explore-host', 'Explore hosts') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard
-        icon-name="notifications"
-        :title="t('add-notification-rule', 'Add notification rule')"
-        :url="urls.add_notification_rule"
+        icon-name="folder"
+        :title="t('all-hosts', 'All hosts')"
+        :url="urls.all_hosts"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
-        icon-name="analysis"
-        :title="t('test-notifications', 'Test notifications')"
-        :url="urls.test_notifications"
+        icon-name="dashboard"
+        :title="t('main-dashboard', 'Main dashboard')"
+        :url="urls.main_dashboard"
+        :open-in-new-tab="false"
+      />
+      <CmkLinkCard
+        icon-name="dashboard-problems"
+        :title="t('problem-dashboard', 'Problem dashboard')"
+        :url="urls.problem_dashboard"
         :open-in-new-tab="false"
       />
     </StepCardsRow>

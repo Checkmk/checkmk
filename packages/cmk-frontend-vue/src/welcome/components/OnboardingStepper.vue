@@ -7,31 +7,32 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import { ref } from 'vue'
-import StepOne from '@/welcome/components/steps/StepOne.vue'
-import StepTwo from '@/welcome/components/steps/StepTwo.vue'
-import StepThree from '@/welcome/components/steps/StepThree.vue'
-import StepFour from '@/welcome/components/steps/StepFour.vue'
-import StepFive from '@/welcome/components/steps/StepFive.vue'
 import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import usei18n from '@/lib/i18n.ts'
 import CmkSpace from '@/components/CmkSpace.vue'
+import { stepComponents } from './steps/stepComponents'
 
 const { t } = usei18n('onboarding-stepper')
 
 const props = defineProps<{
   urls: WelcomeUrls
-  finishedSteps: number[]
-  totalSteps: number
+  finishedSteps: string[]
 }>()
 
 const buildStepId = (step: number): string => `step-${step}`
-const getFirstNotFinishedStep = (finishedStages: number[], totalSteps: number): string[] => {
-  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1)
-  const firstUnfinished = steps.find((step) => !finishedStages.includes(step))
-  return firstUnfinished ? [buildStepId(firstUnfinished)] : []
+const getFirstNotFinishedStep = (finishedStages: string[]): string[] => {
+  const steps = stepComponents.map(({ stepId }) => stepId)
+  const firstUnfinished = steps.find((stepId) => !finishedStages.includes(stepId))
+  return firstUnfinished
+    ? [
+        buildStepId(
+          stepComponents.find(({ stepId }) => stepId === firstUnfinished)?.stepNumber || 1
+        )
+      ]
+    : []
 }
-const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps, props.totalSteps))
+const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
 </script>
 
 <template>
@@ -40,11 +41,14 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps, p
   </CmkHeading>
   <CmkSpace />
   <CmkAccordionStepPanel v-model="openedItems">
-    <StepOne />
-    <StepTwo :urls="urls" :accomplished="finishedSteps.includes(2)" />
-    <StepThree :urls="urls" :accomplished="finishedSteps.includes(3)" />
-    <StepFour :urls="urls" :accomplished="finishedSteps.includes(4)" />
-    <StepFive :urls="urls" :accomplished="finishedSteps.includes(5)" />
+    <component
+      :is="component"
+      v-for="{ component, stepNumber, stepId } in stepComponents"
+      :key="stepNumber"
+      :step="stepNumber"
+      :urls="urls"
+      :accomplished="finishedSteps.includes(stepId)"
+    />
   </CmkAccordionStepPanel>
 </template>
 

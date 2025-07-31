@@ -77,17 +77,20 @@
         "stage_information": {
             "type": "object",
             "properties": {
-                "total": {
-                    "type": "integer"
-                },
                 "finished": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string",
+                        "enum": [
+                            "add_host",
+                            "activate_changes_and_explore_hosts",
+                            "enable_notifications",
+                            "customize_dashboard"
+                        ]
                     }
                 }
             },
-            "required": ["finished", "total"]
+            "required": ["finished"]
         }
     }
 }

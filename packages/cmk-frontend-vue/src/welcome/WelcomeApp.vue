@@ -12,6 +12,7 @@ import NextSteps from '@/welcome/components/NextSteps.vue'
 import type { WelcomeUrls, StageInformation } from 'cmk-shared-typing/typescript/welcome'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import { totalSteps } from './components/steps/stepComponents'
 
 const props = defineProps<{
   urls: WelcomeUrls
@@ -20,7 +21,6 @@ const props = defineProps<{
 }>()
 
 const completedSteps = props.stage_information.finished.length
-const totalSteps = props.stage_information.total
 </script>
 
 <template>
@@ -37,7 +37,6 @@ const totalSteps = props.stage_information.total
           <OnboardingStepper
             :urls="urls"
             :finished-steps="stage_information.finished"
-            :total-steps="stage_information.total"
           ></OnboardingStepper>
         </div>
         <div class="welcome-app__panel-right">

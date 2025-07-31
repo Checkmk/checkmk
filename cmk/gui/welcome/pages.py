@@ -19,7 +19,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule
 from cmk.gui.welcome.registration import welcome_url_registry
-from cmk.shared_typing.welcome import StageInformation, WelcomePage, WelcomeUrls
+from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.notify_types import EventRule
@@ -38,32 +38,29 @@ def _compare_notification_rules(
     }
 
 
-def _get_finished_stages() -> Generator[int]:
-    # Installation (always finished)
-    yield 1
-
+def _get_finished_stages() -> Generator[FinishedEnum]:
     # Creation of first host
     if any(Host.all()):
-        yield 2
+        yield FinishedEnum.add_host
 
     # Activation of the host
     if Query([Hosts.name]).fetchall(sites=sites.live()):
-        yield 3
+        yield FinishedEnum.activate_changes_and_explore_hosts
 
     notification_rules = NotificationRuleConfigFile().load_for_reading()
     # Creation of a new notification rule
     if len(notification_rules) > 1:
-        yield 4
+        yield FinishedEnum.enable_notifications
     # Adjusted the built-in notification rule
     if len(notification_rules) == 1 and not _compare_notification_rules(
         notification_rules[0], get_default_notification_rule()
     ):
-        yield 4
+        yield FinishedEnum.enable_notifications
 
     # Creation of a custom dashboard
     for user_id, _dashboard_name in get_all_dashboards().keys():
         if user_id == user.id:
-            yield 5
+            yield FinishedEnum.customize_dashboard
             break
 
 
@@ -206,7 +203,6 @@ def _welcome_page(config: Config) -> None:
                 is_start_url=user.start_url == "welcome.py",
                 stage_information=StageInformation(
                     finished=list(_get_finished_stages()),
-                    total=5,
                 ),
             )
         ),

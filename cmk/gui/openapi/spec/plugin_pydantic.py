@@ -17,6 +17,7 @@ from pydantic import BaseModel, PydanticInvalidForJsonSchema, TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue, PydanticJsonSchemaWarning
 from pydantic_core import core_schema, PydanticOmit, PydanticSerializationError
 
+from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.utils.object_diff import make_diff
 
@@ -221,7 +222,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
     def encode_default(self, dft: Any) -> Any:
         type_ = type(dft)
         config = self._config
-        adapter = TypeAdapter(  # nosemgrep: type-adapter-detected
+        adapter = get_cached_type_adapter(
             type_,
             config=(
                 None  # can't set config if the type itself supports configs

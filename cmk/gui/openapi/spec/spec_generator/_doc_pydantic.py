@@ -10,6 +10,7 @@ from typing import cast, Literal
 from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 
+from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.headers import (
@@ -66,7 +67,7 @@ class PydanticSchemaDefinitions:
     ) -> TypeAdapter | None:
         if (type_ := self.get_type(schema_type)) is not None:
             # TypeAdapter performance: this is only used during spec generation
-            return TypeAdapter(type_)  # nosemgrep: type-adapter-detected
+            return get_cached_type_adapter(type_)
 
         return None
 
@@ -247,7 +248,9 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
     out: list[OpenAPIParameter] = []
     if schema is not None:
         # TypeAdapter: this is only used during spec generation
-        json_schema = TypeAdapter(schema).json_schema(  # nosemgrep: type-adapter-detected
+        json_schema = get_cached_type_adapter(
+            schema
+        ).json_schema(  # nosemgrep: type-adapter-detected
             by_alias=True, mode="validation", schema_generator=CheckmkGenerateJsonSchema
         )
         # TODO: inline $defs
@@ -426,9 +429,9 @@ class PydanticResponses:
             schema = _api_error_schema("custom", status_code, description)
 
         error_schema = error_schemas.get(status_code, schema)
+        assert error_schema is not None, f"Expected error description for {status_code}"
         # TypeAdapter performance: this is only used during spec generation
-        type_adapter: TypeAdapter[ApiErrorDataclass]
-        type_adapter = TypeAdapter(error_schema)  # nosemgrep: type-adapter-detected
+        type_adapter = get_cached_type_adapter(error_schema)  # nosemgrep: type-adapter-detected
         response: PathItem = {
             "description": f"{http.client.responses[status_code]}: {description}",
             "content": {"application/problem+json": {"schema": type_adapter}},

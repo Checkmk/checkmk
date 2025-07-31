@@ -15,9 +15,10 @@ from typing import (
     TypedDict,
 )
 
-from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, with_config
+from pydantic import BaseModel, ConfigDict, ValidationError, with_config
 
 from cmk import trace
+from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework._types import (
     ApiContext,
     DataclassInstance,
@@ -384,7 +385,7 @@ class EndpointModel[**P, T]:
 
         # validate the input model
         # TypeAdapter performance: once per request
-        input_type_adapter = TypeAdapter(self._input_model)  # nosemgrep: type-adapter-detected
+        input_type_adapter = get_cached_type_adapter(self._input_model)
         input_data = input_type_adapter.validate_python(prepared_data, strict=False)
 
         # unwrap the parameters

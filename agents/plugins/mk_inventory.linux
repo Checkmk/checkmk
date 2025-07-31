@@ -213,7 +213,8 @@ section_lnx_sysctl() {
     # Kernel configuration
     inpath sysctl || return
     echo "<<<lnx_sysctl>>>"
-    sysctl -ae
+    sysctl -ae | grep -v -e '^net\.ipv4\.tcp_fastopen_key' \
+        -e '^net\.ipv6\.conf\..*\.stable_secret'
 }
 
 section_lnx_block_devices() {

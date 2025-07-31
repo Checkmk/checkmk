@@ -11,6 +11,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/tooltip'
 import usei18n from '@/lib/i18n'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const { t } = usei18n('cmk-code')
 
@@ -80,9 +81,9 @@ const toggleExpansion = () => {
   <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
   <div class="code_wrapper">
     <div class="code_container" :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded }">
-      <pre>
-        <code>{{ displayedCode }}</code>
-      </pre>
+      <CmkScrollContainer type="outer" class="code_scroll_container">
+        <pre><code v-text="displayedCode"></code></pre>
+      </CmkScrollContainer>
       <div v-if="shouldShowToggle && !isExpanded" class="fade_overlay"></div>
       <div v-if="shouldShowToggle" class="toggle_button_container">
         <CmkButton variant="secondary" class="toggle_button" @click="toggleExpansion">
@@ -136,6 +137,7 @@ const toggleExpansion = () => {
   align-items: flex-start;
   margin-bottom: var(--spacing);
   gap: 8px;
+  max-width: 100%;
 
   .code_container {
     position: relative;
@@ -144,20 +146,34 @@ const toggleExpansion = () => {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
-    padding: 8px 12px;
+    padding: 8px 12px 4px 12px;
     color: var(--font-color);
     border-radius: var(--border-radius);
     border: var(--border-width-1, 1px) solid var(--ux-theme-0);
     background: var(--ux-theme-0);
+    max-width: 100%;
+    min-width: 0;
+    --scroll-bar-thickness: 20px;
+
+    .code_scroll_container {
+      overflow-x: auto;
+      padding-bottom: 4px; /* Firefox will place the scrollbar on top of it */
+    }
+
+    &.has-toggle:not(.expanded) .code_scroll_container {
+      /* Add more space to avoid the scrollbar being hidden behind the fade overlay */
+      padding-bottom: var(--scroll-bar-thickness);
+    }
 
     pre {
       margin: 0;
-      white-space: pre-line;
+      width: 100%;
     }
 
     .fade_overlay {
       position: absolute;
-      bottom: 0;
+      z-index: 1;
+      bottom: var(--scroll-bar-thickness);
       left: 0;
       right: 0;
       height: 60px;
@@ -169,14 +185,14 @@ const toggleExpansion = () => {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 1;
+      z-index: 2;
     }
 
-    &.has-toggle:not(.expanded) .toggle_button_container {
-      bottom: 12px;
+    &:not(.expanded) .toggle_button_container {
+      bottom: 28px;
     }
 
-    &.has-toggle.expanded .toggle_button_container {
+    &.expanded .toggle_button_container {
       position: relative;
       left: auto;
       transform: none;

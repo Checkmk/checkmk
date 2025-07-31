@@ -24,7 +24,7 @@ $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
-#set target=x86_64-pc-windows-mscvc # 64 bit not used now
+$cargo_toolchain = "1.87" # to be in sync with rust toolchain/bazel/etc
 $cargo_target = "i686-pc-windows-msvc"
 $workspace_dir = Split-Path -Path (Get-Location) -Parent
 $target_dir = Join-Path -Path $workspace_dir -ChildPath "target/$cargo_target"
@@ -199,7 +199,7 @@ try {
         Write-Error "Cargo not found, please install it and/or add to PATH" -ErrorAction Stop
     }
     &rustup update
-    &rustup target add $cargo_target
+    &rustup target add $cargo_target --toolchain $cargo_toolchain
     & rustc -V
     & cargo -V
 

@@ -53,9 +53,9 @@ def _vs_file_age_history_entries() -> Age:
 
 def _vs_number_of_history_entries() -> Integer:
     return Integer(
-        title=_("Remove history entries right after the"),
+        title=_("Remove history entries right after"),
+        label=_("entry number"),
         default_value=100,
-        unit=_("th entry"),
         minvalue=1,
         size=4,
     )
@@ -72,7 +72,7 @@ def _vs_choices() -> CascadingDropdown:
             ),
             (
                 "number_of_history_entries",
-                _("Remove history entries right after the"),
+                _("Remove history entries right after"),
                 _vs_number_of_history_entries(),
             ),
             (

@@ -149,8 +149,8 @@ const toggleExpansion = () => {
     padding: 8px 12px 4px 12px;
     color: var(--font-color);
     border-radius: var(--border-radius);
-    border: var(--border-width-1, 1px) solid var(--ux-theme-0);
-    background: var(--ux-theme-0);
+    border: var(--border-width-1, 1px) solid var(--code-background-color);
+    background: var(--code-background-color);
     max-width: 100%;
     min-width: 0;
     --scroll-bar-thickness: 20px;
@@ -177,7 +177,7 @@ const toggleExpansion = () => {
       left: 0;
       right: 0;
       height: 60px;
-      background: linear-gradient(transparent, var(--ux-theme-0));
+      background: linear-gradient(transparent, var(--code-background-color));
       pointer-events: none;
     }
 
@@ -243,7 +243,7 @@ const toggleExpansion = () => {
   gap: var(--spacing);
   padding: 4px 8px;
   border-radius: var(--border-radius);
-  background-color: var(--ux-theme-0);
+  background-color: var(--code-background-color);
   color: var(--font-color);
   white-space: nowrap;
 

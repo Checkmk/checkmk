@@ -15,8 +15,4 @@ dependencies = { file = ["requirements.txt"] }
 # We keep deploying it with the old name for compatibility for now.
 packages = ["cmk", "cmk.livestatus_client", "livestatus"]
 
-[tool.setuptools.package-data]
-"cmk.livestatus_client" = ["py.typed"]
-"livestatus" = ["py.typed"]
-
 [tool.bandit]

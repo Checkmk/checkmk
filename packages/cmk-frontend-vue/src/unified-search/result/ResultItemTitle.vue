@@ -23,4 +23,10 @@ export default defineComponent({
   color: var(--success);
   line-height: 14px;
 }
+
+span {
+  &::first-letter {
+    text-transform: capitalize;
+  }
+}
 </style>

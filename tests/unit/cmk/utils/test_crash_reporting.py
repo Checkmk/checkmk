@@ -40,6 +40,7 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
         # We need some var so the local_vars are part of the crash report
         some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]  # noqa: F841
+        password = "verysecret"  # noqa: F841
         raise ValueError("XYZ")
     except ValueError:
         return UnitTestCrashReport(

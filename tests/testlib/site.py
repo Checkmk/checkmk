@@ -1595,7 +1595,7 @@ class Site:
             for crash_id in self.listdir(self.crash_report_dir / crash_type)
         ]
 
-    def report_crashes(self):
+    def report_crashes(self) -> None:
         for crash_dir in self.crash_reports_dirs():
             crash_file = crash_dir / "crash.info"
             try:
@@ -1613,6 +1613,11 @@ class Site:
                 continue
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
+                continue
+            if (
+                crash_type == "ValueError"
+                and crash_detail == "This is intended, please move on... Really"
+            ):
                 continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.

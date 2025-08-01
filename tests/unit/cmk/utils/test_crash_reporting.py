@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+import base64
 
+# pylint: disable=protected-access
 # pylint: disable=redefined-outer-name
 import copy
 import itertools
@@ -21,11 +22,11 @@ from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
-    VersionInfo,
+    REDACTED_STRING,
 )
 
 
-class UnitTestCrashReport(ABCCrashReport[VersionInfo]):
+class UnitTestCrashReport(ABCCrashReport):
     @classmethod
     def type(cls):
         return "test"
@@ -39,6 +40,8 @@ def crashdir(tmp_path: Path) -> Path:
 @pytest.fixture()
 def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
+        # We need some var so the local_vars are part of the crash report
+        some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]  # noqa: F841
         raise ValueError("XYZ")
     except ValueError:
         return UnitTestCrashReport.from_exception(
@@ -52,11 +55,28 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
                 "time": 0.0,
                 "os": "Foobuntu",
             },
+            {"vars": {"my_secret": "1234", "not_import": "1234", "auth_token": "1234"}},
         )
 
 
 def test_crash_report_type(crash: ABCCrashReport) -> None:
     assert crash.type() == "test"
+
+
+def test_crash_report_sanitization(crash: ABCCrashReport) -> None:
+    assert crash.crash_info["details"] == {
+        "vars": {
+            "my_secret": REDACTED_STRING,
+            "not_import": "1234",
+            "auth_token": REDACTED_STRING,
+        }
+    }
+
+
+def test_crash_report_sanitization_local_vars(crash: ABCCrashReport) -> None:
+    decoded_local_vars = base64.b64decode(crash.crash_info["local_vars"])
+    assert b"verysecret" not in decoded_local_vars
+    assert b"notsecret" in decoded_local_vars
 
 
 def test_crash_report_ident(crash: ABCCrashReport) -> None:

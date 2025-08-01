@@ -73,10 +73,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
             _x = request.meta
             request_details = RequestDetails(
                 page=requested_file_name(request) + ".py",
-                vars={
-                    key: "***" if value in ["password", "_password"] else value
-                    for key, value in request.itervars()
-                },
+                vars=dict(request.itervars()),
                 username=user.id,
                 user_agent=request.user_agent.string,
                 referer=request.referer,

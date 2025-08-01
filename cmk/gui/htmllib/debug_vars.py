@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cmk.ccc.crash_reporting import REDACTED_STRING, SENSITIVE_KEYWORDS
+
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 
@@ -27,8 +29,8 @@ def debug_vars(
     writer.tr(writer.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
     for name, value in sorted(it):
         oddeven = "even" if oddeven == "odd" else "odd"
-        if name in ["_password", "password"]:
-            value = "***"
+        if any(sensitive_keyword in name.lower() for sensitive_keyword in SENSITIVE_KEYWORDS):
+            value = REDACTED_STRING
         if not prefix or name.startswith(prefix):
             writer.tr(
                 writer.render_td(name, class_="left") + writer.render_td(value, class_="right"),

@@ -22,10 +22,14 @@ from collections.abc import Iterator
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, Generic, NotRequired, Self, Sequence, TypedDict, TypeVar
+from typing import Any, Final, Generic, Mapping, NotRequired, Self, Sequence, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
+
+SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
+
+REDACTED_STRING: Final = "redacted"
 
 
 class BaseDetails(TypedDict):
@@ -246,7 +250,7 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
 def _get_generic_crash_info(
     type_name: str,
     version_info: VersionInfo,
-    details: T,
+    details: T | None,
 ) -> CrashInfo:
     """Produces the crash info data structure.
 
@@ -260,6 +264,14 @@ def _get_generic_crash_info(
         )
     )
 
+    modified_details: dict | T | None = details
+    if isinstance(details, Mapping) and "vars" in details:
+        modified_details = (
+            {k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()}
+            if details
+            else {}
+        )
+
     return CrashInfo(
         id=str(uuid.uuid1()),
         crash_type=type_name,
@@ -267,7 +279,7 @@ def _get_generic_crash_info(
         exc_value=str(exc_value),
         exc_traceback=[tuple(e) for e in tb_list],
         local_vars=_get_local_vars_of_last_exception(),
-        details=details,
+        details=modified_details,
         core=version_info["core"],
         python_version=version_info["python_version"],
         edition=version_info["edition"],
@@ -293,6 +305,15 @@ def _get_local_vars_of_last_exception() -> str:
     ).decode()
 
 
+def _sanitize_variables(unsanitized_variables: dict) -> dict:
+    return {
+        key: REDACTED_STRING
+        if any(sensitive_keyword in key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS)
+        else _format_var_for_export(value)
+        for key, value in unsanitized_variables.items()
+    }
+
+
 def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:
     if maxdepth == 0:
         return "Max recursion depth reached"
@@ -300,7 +321,12 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     if isinstance(val, dict):
         val = val.copy()
         for item_key, item_val in val.items():
-            val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
+            if any(
+                sensitive_keyword in item_key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS
+            ):
+                val[item_key] = REDACTED_STRING
+            else:
+                val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
 
     elif isinstance(val, list):
         val = val[:]

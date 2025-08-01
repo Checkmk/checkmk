@@ -22,6 +22,7 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
+import PendingChangesList from './components/PendingChangesList.vue'
 import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
@@ -41,7 +42,6 @@ const numberOfChangesLastActivation = ref<number>(0)
 const selectedSites = ref<Array<string>>([])
 const recentlyActivatedSites = ref<Array<string>>([])
 const activationStatusCollapsible = ref<boolean>(true)
-const pendingChangesCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
@@ -537,73 +537,14 @@ onMounted(() => {
             </CmkScrollContainer>
           </CmkCollapsible>
         </div>
-        <div
+        <PendingChangesList
           v-if="weHavePendingChanges && recentlyActivatedSites.length === 0"
           class="pending-changes-container"
-        >
-          <CmkCollapsibleTitle
-            :title="`Changes`"
-            class="collapsible-title"
-            :open="pendingChangesCollapsible"
-            @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
-          />
-
-          <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible-pending-changes">
-            <CmkIndent class="cmk-indent-foreign-changes-container">
-              <div class="cmk-div-foreign-changes-text">
-                {{ t(`foreign-changes`, `Foreign changes: `) }}
-              </div>
-              <div class="cmk-div-foreign-changes-text">
-                {{ numberOfForeignChanges }}
-              </div>
-            </CmkIndent>
-
-            <CmkIndent
-              v-if="selectedSites.length === 0"
-              class="cmk-indent-no-sites-selected-container"
-            >
-              <div class="cmk-div-no-sites-selected">
-                {{ t(`no-sites-selected`, `You haven't selected any sites`) }}
-              </div>
-            </CmkIndent>
-            <CmkScrollContainer
-              v-if="selectedSites.length > 0"
-              class="cmk-scroll-pending-changes-container"
-              height="auto"
-            >
-              <div
-                v-for="(change, idx) in sitesAndChanges.pendingChanges"
-                :key="change.changeId"
-                class="cmk-div-pending-changes-container"
-              >
-                <CmkZebra :num="idx">
-                  <CmkIndent
-                    v-if="
-                      change.whichSites.includes('All sites') ||
-                      change.whichSites.some((site) => selectedSites.includes(site))
-                    "
-                    class="cmk-indent-pending-change-container"
-                    :class="{ 'red-text': change.user !== user_name && change.user !== null }"
-                  >
-                    <span class="cmk-span-pending-change-text">{{ change.changeText }}</span>
-
-                    <div
-                      class="cmk-div-pending-change-details"
-                      :class="{ 'grey-text': change.user === user_name || change.user === null }"
-                    >
-                      <div class="cmk-div-user-sites-timestamp">
-                        <span>{{ change.user }}</span>
-                        <span>|</span>
-                        <span>{{ change.whichSites.join(', ') }}</span>
-                      </div>
-                      <span>{{ change.timestring }}</span>
-                    </div>
-                  </CmkIndent>
-                </CmkZebra>
-              </div>
-            </CmkScrollContainer>
-          </CmkCollapsible>
-        </div>
+          :pending-changes="sitesAndChanges.pendingChanges"
+          :selected-sites="selectedSites"
+          :number-of-foreign-changes="numberOfForeignChanges"
+          :user-name="props.user_name"
+        />
       </div>
     </div>
   </DefaultPopup>
@@ -707,17 +648,7 @@ onMounted(() => {
   background: rgba(255, 202, 40, 0.15); /* TODO: add var */
 }
 
-.cmk-indent-foreign-changes-container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 6px;
-  border-bottom: 2px solid var(--ux-theme-4) !important;
-}
-
 .pending-changes-container {
-  display: flex;
-  flex-direction: column;
   width: 100%;
   height: calc(100vh - 178px - (48px * v-bind('calcChangesHeight()')));
 }
@@ -834,17 +765,6 @@ onMounted(() => {
   height: calc(100% - 44px);
 }
 
-.cmk-scroll-pending-changes-container {
-  width: inherit;
-  display: flex;
-  flex-direction: column;
-}
-
-.cmk-collapsible-pending-changes {
-  width: 100%;
-  height: calc(100% - 158px);
-}
-
 :deep(.cmk-collapsible__content) {
   height: 100%;
 }
@@ -858,79 +778,6 @@ onMounted(() => {
   &:not(:last-of-type) {
     border-bottom: 2px solid var(--ux-theme-1);
   }
-}
-
-.cmk-div-pending-change-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  align-self: stretch;
-  color: var(--font-color-dimmed);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  letter-spacing: 0.36px;
-}
-
-.cmk-div-user-sites-timestamp {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.cmk-div-no-sites-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: var(--font-color-dimmed);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  letter-spacing: 0.36px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-}
-
-.cmk-div-pending-changes-container {
-  display: flex;
-  width: 100%;
-  padding: 0px;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.cmk-indent-no-sites-selected-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.cmk-indent-pending-change-container {
-  display: flex;
-  width: 100%;
-  padding: 8px !important;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  box-sizing: border-box;
-}
-
-.cmk-span-pending-change-text {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  align-self: stretch;
-  color: var(--font-color);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  letter-spacing: 0.36px;
 }
 
 .collapsible-title {

@@ -104,10 +104,10 @@ from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
     handle_ip_lookup_failure,
-    LoadedConfigFragment,
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     PassiveServiceNameConfig,
@@ -648,7 +648,7 @@ def _get_discovery_preview(
     on_error: OnError,
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
-    loaded_config: config.LoadedConfigFragment,
+    loaded_config: LoadedConfigFragment,
     service_name_config: PassiveServiceNameConfig,
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
@@ -794,7 +794,7 @@ def _make_compute_check_parameters_of_autocheck(
 
 
 def _execute_discovery(
-    loaded_config: config.LoadedConfigFragment,
+    loaded_config: LoadedConfigFragment,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     host_name: HostName,
@@ -2588,7 +2588,7 @@ def _execute_silently(
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     hosts_config: Hosts,
-    loaded_config: config.LoadedConfigFragment,
+    loaded_config: LoadedConfigFragment,
     plugins: AgentBasedPlugins,
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],

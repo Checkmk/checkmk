@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import assert_never
 
-from cmk.base.config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core_config import MonitoringCore
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition

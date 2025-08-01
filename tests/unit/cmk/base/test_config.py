@@ -32,6 +32,7 @@ from cmk.base import config
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
 from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.ccc.exceptions import MKGeneralException
@@ -2564,7 +2565,7 @@ def test_host_config_add_discovery_check(
 
 
 def test_get_config_file_paths_with_confd(
-    folder_path_test_config: config.LoadedConfigFragment,
+    folder_path_test_config: LoadedConfigFragment,
 ) -> None:
     # NOTE: there are still some globals at play here, otherwise we would have to use
     # the folder_path_test_config somewhere.
@@ -2585,7 +2586,7 @@ def test_get_config_file_paths_with_confd(
     ]
 
 
-def test_load_config_folder_paths(folder_path_test_config: config.LoadedConfigFragment) -> None:
+def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment) -> None:
     config_cache = config.ConfigCache(folder_path_test_config)
 
     assert config_cache.host_path(HostName("main-host")) == "/"
@@ -2640,7 +2641,7 @@ def test_load_config_folder_paths(folder_path_test_config: config.LoadedConfigFr
 @pytest.fixture(name="folder_path_test_config")
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,
-) -> Iterator[config.LoadedConfigFragment]:
+) -> Iterator[LoadedConfigFragment]:
     config_dir = cmk.utils.paths.check_mk_config_dir
     config_dir.mkdir(parents=True, exist_ok=True)
 

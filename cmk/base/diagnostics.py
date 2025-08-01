@@ -30,7 +30,7 @@ import livestatus
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.base.config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.ccc import site, store, tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 

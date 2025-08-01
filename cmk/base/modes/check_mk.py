@@ -46,6 +46,7 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import DiscoveryConfig
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import Mode, modes, Option
@@ -2612,7 +2613,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
 
 # also used in precompiled host checks!
 def run_checking(
-    loaded_config: config.LoadedConfigFragment,
+    loaded_config: LoadedConfigFragment,
     plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,

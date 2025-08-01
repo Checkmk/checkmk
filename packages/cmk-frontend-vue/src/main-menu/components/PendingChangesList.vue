@@ -153,7 +153,7 @@ const pendingChangesCollapsible = ref<boolean>(true)
 }
 
 .cmk-scroll-pending-changes-container {
-  width: inherit;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -168,7 +168,6 @@ const pendingChangesCollapsible = ref<boolean>(true)
 
 .cmk-indent-pending-change-container {
   display: flex;
-  width: 100%;
   padding: 8px !important;
   flex-direction: column;
   align-items: flex-start;

@@ -256,9 +256,6 @@ try {
         Invoke-Cargo-With-Explicit-Package "fmt" "--" "--check"
     }
     if ($packTest) {
-        if (-not (Test-Administrator)) {
-            Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
-        }
         # TODO(timi): move it to CI
         .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"

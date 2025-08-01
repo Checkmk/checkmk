@@ -15,16 +15,20 @@ from typing import Literal
 from cmk.ccc import store
 from cmk.ccc.version import Edition
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.openapi.spec.spec_generator._core import _make_spec, populate_spec
 
 OutputFormat = Literal["yaml", "dict"]
 
 
 def build_spec(
-    output_file: Path, version: APIVersion = APIVersion.V1, format: OutputFormat = "yaml"
+    doc_target: EndpointTarget,
+    output_file: Path,
+    version: APIVersion = APIVersion.V1,
+    format: OutputFormat = "yaml",
 ) -> None:
     spec = _make_spec(version)
-    populate_spec(version, spec, "doc", set(), "checkmk")
+    populate_spec(version, spec, doc_target, set(), "checkmk")
 
     if format == "yaml":
         Path(output_file).write_text(spec.to_yaml())
@@ -99,7 +103,7 @@ def process_version(args: argparse.Namespace) -> None:
     _import_cse_endpoints()
 
     version = APIVersion.from_string(args.version)
-    build_spec(args.out, version, args.format)
+    build_spec(args.target, args.out, version, args.format)
 
 
 if __name__ == "__main__":
@@ -119,6 +123,9 @@ if __name__ == "__main__":
     process_parser = subparsers.add_parser("generate", help="Generate spec for specific version")
     process_parser.add_argument("--version", help="Must be a published versions", required=True)
     process_parser.add_argument("--out", help="Target file", required=True)
+    process_parser.add_argument(
+        "--target", help="Doc target", default="doc", choices=["swagger-ui", "doc"]
+    )
     process_parser.add_argument(
         "--format", help="The output format", default="yaml", choices=["yaml", "dict"]
     )

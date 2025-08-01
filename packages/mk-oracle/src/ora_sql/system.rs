@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::ora_sql::backend::Spot;
+use crate::ora_sql::backend::OpenedSpot;
 use crate::types::{InstanceName, Separator, SqlQuery};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -11,8 +11,8 @@ type _InstanceEntries = HashMap<InstanceName, String>;
 pub struct WorkInstances(_InstanceEntries);
 
 impl WorkInstances {
-    pub fn new(connected_spot: &Spot) -> Self {
-        let hashmap = _get_instances(connected_spot).unwrap_or_else(|e| {
+    pub fn new(spot: &OpenedSpot) -> Self {
+        let hashmap = _get_instances(spot).unwrap_or_else(|e| {
             log::error!("Failed to get instances: {}", e);
             HashMap::<InstanceName, String>::new()
         });
@@ -36,8 +36,8 @@ impl WorkInstances {
     }
 }
 
-fn _get_instances(connected_spot: &Spot) -> Result<_InstanceEntries> {
-    let result = connected_spot.query_table(&SqlQuery::new(
+fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
+    let result = spot.query_table(&SqlQuery::new(
         r"SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance",
         Separator::default(),
     ))?;
@@ -86,6 +86,10 @@ mod tests {
             Ok(())
         }
 
+        fn close(&mut self) -> Result<()> {
+            Ok(())
+        }
+
         fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
             Ok(vec![])
         }
@@ -104,13 +108,14 @@ mod tests {
             .custom_engine(Box::new(TestOra))
             .build()
             .unwrap();
+        let conn = simulated_spot.connect(None).unwrap();
         assert_eq!(
-            &WorkInstances::new(&simulated_spot)
+            &WorkInstances::new(&conn)
                 .get_full_version(&InstanceName::from("INSTANCE1"))
                 .unwrap(),
             "22.1.1"
         );
-        assert!(&WorkInstances::new(&simulated_spot)
+        assert!(&WorkInstances::new(&conn)
             .get_full_version(&InstanceName::from("HURZ"))
             .is_none());
     }

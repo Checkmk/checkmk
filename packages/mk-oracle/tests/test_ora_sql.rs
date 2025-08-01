@@ -190,16 +190,15 @@ fn test_local_connection() {
     );
 
     for i in [None, Some(&InstanceName::from(&endpoint.instance))] {
-        let mut spot1 = backend::make_spot(&config.endpoint()).unwrap();
-        let r = spot1.connect(i);
-        assert!(r.is_ok());
-        let result = spot1.query(&TEST_SQL_INSTANCE, "");
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot.connect(i).unwrap();
+        let result = conn.query(&TEST_SQL_INSTANCE, "");
         assert!(result.is_ok());
         let rows = result.unwrap();
         eprintln!(
             "Rows: {i:?} {:?} {:?}",
             rows,
-            spot1.target().make_connection_string(i)
+            conn.target().make_connection_string(i)
         );
         assert!(!rows.is_empty());
         assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
@@ -222,12 +221,10 @@ fn test_remote_mini_connection() {
         &endpoint.host,
     );
 
-    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-    let r = spot.connect(None);
-    println!("{:?}", r);
-    println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
-    assert!(r.is_ok());
-    let result = spot.query(&TEST_SQL_INSTANCE, "");
+    let spot = backend::make_spot(&config.endpoint()).unwrap();
+    println!("Target {:?}", spot.target());
+    let conn = spot.connect(None).unwrap();
+    let result = conn.query(&TEST_SQL_INSTANCE, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(!rows.is_empty());
@@ -251,10 +248,11 @@ fn test_remote_mini_connection_version() {
             &endpoint.host,
         );
 
-        let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-        spot.connect(None)
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot
+            .connect(None)
             .expect("Connect failed, check environment variables");
-        let instances = system::WorkInstances::new(&spot);
+        let instances = system::WorkInstances::new(&conn);
 
         let version = instances
             .get_full_version(&InstanceName::from(&endpoint.instance))
@@ -280,14 +278,13 @@ fn test_io_stats_query() {
         &endpoint.host,
     );
 
-    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-    let r = spot.connect(None);
-    assert!(r.is_ok());
+    let spot = backend::make_spot(&config.endpoint()).unwrap();
+    let conn = spot.connect(None).unwrap();
     let q = SqlQuery::new(
         sqls::find_known_query(sqls::Id::IoStats).unwrap(),
         Separator::default(),
     );
-    let result = spot.query(&q, "");
+    let result = conn.query(&q, "");
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(rows.len() > 10);

@@ -13,6 +13,7 @@ use anyhow::Context;
 use anyhow::Result;
 use oracle::sql_type::FromSql;
 use oracle::{Connection, Connector, Privilege};
+use std::marker::PhantomData;
 
 #[derive(Debug)]
 pub struct StdEngine {
@@ -21,6 +22,8 @@ pub struct StdEngine {
 
 pub trait OraDbEngine {
     fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()>;
+
+    fn close(&mut self) -> Result<()>;
 
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
 
@@ -52,6 +55,14 @@ impl OraDbEngine for StdEngine {
 
         Ok(())
     }
+
+    fn close(&mut self) -> Result<()> {
+        if let Some(conn) = self.connection.take() {
+            conn.close()?;
+        }
+        Ok(())
+    }
+
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
         let conn = self
             .connection
@@ -114,6 +125,11 @@ impl OraDbEngine for SqlPlusEngine {
     fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
+
+    fn close(&mut self) -> Result<()> {
+        Ok(()) // No operation needed for Sql*Plus
+    }
+
     fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
@@ -128,6 +144,10 @@ impl OraDbEngine for JdbcEngine {
     fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
+    fn close(&mut self) -> Result<()> {
+        Ok(()) // No operation needed for Sql*Plus
+    }
+
     fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
@@ -161,16 +181,46 @@ pub struct SpotBuilder {
     database: Option<String>,
 }
 
-pub struct Spot {
+pub struct Closed;
+pub struct Opened;
+
+pub type OpenedSpot = Spot<Opened>;
+pub type ClosedSpot = Spot<Closed>;
+pub struct Spot<State> {
     target: Target,
     engine: Box<dyn OraDbEngine>,
     _database: Option<String>,
+    _state: PhantomData<State>,
 }
 
-impl Spot {
-    pub fn connect(&mut self, instance: Option<&InstanceName>) -> Result<()> {
+impl Spot<Closed> {
+    pub fn connect(mut self, instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
         self.engine.connect(&self.target, instance)?;
-        Ok(())
+        Ok(Spot {
+            target: self.target,
+            engine: self.engine,
+            _database: self._database,
+            _state: PhantomData::<Opened>,
+        })
+    }
+    pub fn target(&self) -> &Target {
+        &self.target
+    }
+
+    pub fn database(&self) -> Option<&String> {
+        self._database.as_ref()
+    }
+}
+
+impl Spot<Opened> {
+    pub fn close(mut self) -> Result<Spot<Closed>> {
+        self.engine.close()?;
+        Ok(Spot {
+            target: self.target,
+            engine: self.engine,
+            _database: self._database,
+            _state: PhantomData::<Closed>,
+        })
     }
 
     pub fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
@@ -226,7 +276,7 @@ impl SpotBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Spot> {
+    pub fn build(self) -> Result<ClosedSpot> {
         Ok(Spot {
             engine: self
                 .engine_type
@@ -237,18 +287,19 @@ impl SpotBuilder {
                 .target
                 .ok_or_else(|| anyhow::anyhow!("Target is absent"))?,
             _database: self.database,
+            _state: PhantomData::<Closed>,
         })
     }
 }
 
-pub fn make_spot(endpoint: &Endpoint) -> Result<Spot> {
+pub fn make_spot(endpoint: &Endpoint) -> Result<ClosedSpot> {
     SpotBuilder::new()
         .target(endpoint)
         .engine_type(endpoint.conn().engine_tag())
         .build()
 }
 
-pub fn make_custom_spot(endpoint: &Endpoint, instance: &InstanceName) -> Result<Spot> {
+pub fn make_custom_spot(endpoint: &Endpoint, instance: &InstanceName) -> Result<ClosedSpot> {
     make_spot(endpoint).map(|mut s| {
         s.target.instance = Some(instance.to_owned());
         s

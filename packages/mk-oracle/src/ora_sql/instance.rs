@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, OracleConfig};
-use crate::ora_sql::backend::{make_spot, Spot};
+use crate::ora_sql::backend::{make_spot, ClosedSpot, OpenedSpot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
@@ -109,19 +109,20 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
 }
 
 // tested only in integration tests
-fn connect_spots(spots: Vec<Spot>, instance: Option<&InstanceName>) -> Vec<Spot> {
+fn connect_spots(spots: Vec<ClosedSpot>, instance: Option<&InstanceName>) -> Vec<OpenedSpot> {
     let connected = spots
         .into_iter()
-        .filter_map(|mut t| {
-            if let Err(e) = t.connect(instance) {
+        .filter_map(|t| match t.connect(instance) {
+            Ok(opened) => {
+                log::info!("Connected to instance: {:?}", &opened.target());
+                Some(opened)
+            }
+            Err(e) => {
                 log::error!("Error connecting to instance: {}", e);
                 None
-            } else {
-                log::info!("Connected to instance: {:?}", t.target());
-                Some(t)
             }
         })
-        .collect::<Vec<Spot>>();
+        .collect::<Vec<OpenedSpot>>();
     log::info!(
         "CONNECTED SPOTS: {:?}",
         connected.iter().map(|t| t.target()).collect::<Vec<_>>()
@@ -130,7 +131,7 @@ fn connect_spots(spots: Vec<Spot>, instance: Option<&InstanceName>) -> Vec<Spot>
     connected
 }
 
-fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<Spot> {
+fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
     log::info!("ENDPOINTS: {:?}", endpoints);
     endpoints
         .into_iter()
@@ -143,7 +144,7 @@ fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<Spot> {
                 Some,
             )
         })
-        .collect::<Vec<Spot>>()
+        .collect::<Vec<ClosedSpot>>()
 }
 
 #[cfg(test)]

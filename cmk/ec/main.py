@@ -2708,18 +2708,21 @@ class EventStatus:
         Return beginning of current expectation interval.
         For new rules we should start with the inclusive start time for the event.
         """
+        now = time.time()
         if rule_id not in self._interval_starts:
-            start = self.clamp_timestamp_to_interval(interval, time.time(), interval_count=0)
+            start = self.clamp_timestamp_to_interval(interval, now, interval_count=0)
             self._interval_starts[rule_id] = start
             return start
         start = self._interval_starts[rule_id]
+
         # Make sure that if the user switches from day to hour and we
         # are still waiting for the first interval to begin, that we
         # do not wait for the next day.
-        current_interval = self.clamp_timestamp_to_interval(interval, time.time(), interval_count=0)
-        if start > current_interval:
-            start = current_interval
-            self._interval_starts[rule_id] = start
+        # Or if the start interval is stale then reset the interval.
+        previous_interval = self.clamp_timestamp_to_interval(interval, now, interval_count=-1)
+        next_interval = self.clamp_timestamp_to_interval(interval, now, interval_count=0)
+        if not previous_interval <= start <= next_interval:
+            self._interval_starts[rule_id] = start = next_interval
         return start
 
     @staticmethod

@@ -155,6 +155,22 @@ function onArrowUp(cb: typeof arrowUp): string {
   return pushCallBack('arrowUp', cb)
 }
 
+function arrowLeft() {
+  dispatchCallback('arrowLeft')
+}
+
+function onArrowLeft(cb: typeof arrowLeft): string {
+  return pushCallBack('arrowLeft', cb)
+}
+
+function arrowRight() {
+  dispatchCallback('arrowRight')
+}
+
+function onArrowRight(cb: typeof arrowRight): string {
+  return pushCallBack('arrowRight', cb)
+}
+
 function ctrlArrowLeft() {
   dispatchCallback('ctrlArrowLeft')
 }
@@ -206,6 +222,12 @@ function enableShortCuts() {
 
   shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, arrowUp))
 
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'], preventDefault: true }, arrowLeft))
+
+  shortCutEventIds.value.push(
+    shortcuts.on({ key: ['ArrowRight'], preventDefault: true }, arrowRight)
+  )
+
   shortCutEventIds.value.push(
     shortcuts.on({ key: ['ArrowLeft'], ctrl: true, preventDefault: true }, ctrlArrowLeft)
   )
@@ -229,7 +251,6 @@ function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): s
   if (provider.toLowerCase() !== topic.toLowerCase()) {
     breadcrumb.push(topic)
   }
-
   return breadcrumb
 }
 
@@ -239,6 +260,8 @@ export interface SearchShortCuts {
   remove: typeof removeShortCuts
   onArrowDown: typeof onArrowDown
   onArrowUp: typeof onArrowUp
+  onArrowLeft: typeof onArrowLeft
+  onArrowRight: typeof onArrowRight
   onCtrlArrowLeft: typeof onCtrlArrowLeft
   onCtrlArrowRight: typeof onCtrlArrowRight
   onCtrlK: typeof onCtrlK
@@ -293,6 +316,8 @@ export function initSearchUtils(): SearchUtils {
       remove: removeShortCuts,
       onArrowDown,
       onArrowUp,
+      onArrowLeft,
+      onArrowRight,
       onCtrlArrowLeft,
       onCtrlArrowRight,
       onCtrlK,

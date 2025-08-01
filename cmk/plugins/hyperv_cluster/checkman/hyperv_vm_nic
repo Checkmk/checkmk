@@ -1,0 +1,19 @@
+title: Hyper-V VM Network Interface
+agents: windows
+catalog: os/networking
+license: GPLv2
+distribution: check_mk
+
+description:
+ This check monitors the network interface status of virtual machines running on a Microsoft Hyper-V cluster.
+
+ The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
+ the status of each network interface. It monitors various attributes such as
+ connection state, virtual switch, and VLAN ID. The check provides detailed
+ information about the network configuration and connection status of each NIC.
+
+item:
+ The network interface name as discovered by the agent.
+
+inventory:
+ One service per network interface is created, based on the presence of "nic.connectionstate" in the section data.

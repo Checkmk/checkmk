@@ -1087,7 +1087,7 @@ class PendingChangesSummary(TypedDict):
     changeText: str
     user: str
     time: float
-    whichSites: str
+    whichSites: list[str]
 
 
 class ActivationChangesSummary(TypedDict):
@@ -1369,9 +1369,9 @@ class ActivateChanges:
                     changeText=unescape(change["text"]),
                     user=change["user_id"],
                     time=change["time"],
-                    whichSites="All sites"
+                    whichSites=["All sites"]
                     if affects_all_sites(list(activation_sites(sites)), change)
-                    else ", ".join(sorted(change["affected_sites"])),
+                    else change["affected_sites"],
                 )
                 for _, change in changes_that_require_activation
             ],

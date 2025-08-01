@@ -60,7 +60,7 @@ export interface PendingChanges {
   changeText: string
   user: string
   time: number
-  whichSites: string
+  whichSites: Array<string>
   timestring?: string
 }
 

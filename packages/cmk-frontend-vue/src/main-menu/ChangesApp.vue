@@ -579,7 +579,8 @@ onMounted(() => {
                 <CmkZebra :num="idx">
                   <CmkIndent
                     v-if="
-                      change.whichSites === 'All sites' || selectedSites.includes(change.whichSites)
+                      change.whichSites.includes('All sites') ||
+                      change.whichSites.some((site) => selectedSites.includes(site))
                     "
                     class="cmk-indent-pending-change-container"
                     :class="{ 'red-text': change.user !== user_name && change.user !== null }"
@@ -593,7 +594,7 @@ onMounted(() => {
                       <div class="cmk-div-user-sites-timestamp">
                         <span>{{ change.user }}</span>
                         <span>|</span>
-                        <span>{{ change.whichSites }}</span>
+                        <span>{{ change.whichSites.join(', ') }}</span>
                       </div>
                       <span>{{ change.timestring }}</span>
                     </div>

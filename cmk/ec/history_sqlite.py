@@ -247,21 +247,6 @@ class SQLiteHistory(History):
                 ),
             )
 
-    def add_entries(self, entries: Sequence[Sequence[object]]) -> None:
-        """Add multiple entries to the history table.
-
-        Used only by the cmk-update-config during EC history migration to sqlite.
-        The first column is the line number, which is autoincremented, so ignored in TABLE_COLUMNS.
-        """
-        with self.conn as connection:
-            cur = connection.cursor()
-            cur.executemany(
-                f"""INSERT INTO
-                    history ({", ".join(TABLE_COLUMNS[1:])})
-                        VALUES ({", ".join(itertools.repeat("?", len(TABLE_COLUMNS[1:])))});""",  # nosec B608 # BNS:6b6392
-                (entry[1:] for entry in entries),
-            )
-
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         """Retrieve entries from the history table.
 

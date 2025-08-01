@@ -1384,7 +1384,9 @@ def test__find_candidates(
         CheckPluginName("kernel_util"),
         CheckPluginName("mgmt_docker_container_status_uptime"),
         CheckPluginName("mgmt_liebert_fans"),
+        CheckPluginName("mgmt_podman_container_uptime"),
         CheckPluginName("mgmt_uptime"),
+        CheckPluginName("podman_container_uptime"),
         CheckPluginName("uptime"),
     }
 

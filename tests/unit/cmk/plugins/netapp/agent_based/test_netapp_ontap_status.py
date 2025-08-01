@@ -21,59 +21,14 @@ class AlertModelFactory(ModelFactory):
     "alerts_models, expected_result",
     [
         pytest.param(
-            [
-                AlertModelFactory.build(name="alert1", acknowledge=False, suppress=False),
-                AlertModelFactory.build(name="alert2", acknowledge=False, suppress=False),
-            ],
-            [
-                Result(
-                    state=State.CRIT,
-                    summary="Unhandled alerts present, see details",
-                    details="alert1\nalert2",
-                )
-            ],
+            [AlertModelFactory.build(name="alert1"), AlertModelFactory.build(name="alert2")],
+            [Result(state=State.CRIT, summary="Status: Alerts present")],
             id="alerts present",
         ),
         pytest.param(
             [],
-            [Result(state=State.OK, summary="No alerts present")],
+            [Result(state=State.OK, summary="Status: OK")],
             id="no alerts present",
-        ),
-        pytest.param(
-            [
-                AlertModelFactory.build(
-                    name="alert1", acknowledge=True, acknowledger="hhirsch", suppress=False
-                ),
-                AlertModelFactory.build(
-                    name="alert2", acknowledge=False, suppress=True, suppressor="hhirsch"
-                ),
-            ],
-            [
-                Result(
-                    state=State.OK,
-                    summary="Alerts present, but all acknowledged or suppressed, see details",
-                    details="alert1, acknowledged by hhirsch\nalert2, suppressed by hhirsch",
-                )
-            ],
-            id="alerts suppressed",
-        ),
-        pytest.param(
-            [
-                AlertModelFactory.build(
-                    name="alert2", acknowledge=False, suppress=True, suppressor="hhirsch"
-                ),
-                AlertModelFactory.build(
-                    name="alert1", acknowledge=False, acknowledger="hhirsch", suppress=False
-                ),
-            ],
-            [
-                Result(
-                    state=State.CRIT,
-                    summary="Unhandled alerts present, see details",
-                    details="alert1\nalert2, suppressed by hhirsch",
-                )
-            ],
-            id="one alert not suppressed (show it first)",
         ),
     ],
 )

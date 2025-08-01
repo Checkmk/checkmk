@@ -28,7 +28,7 @@ fn make_base_config(
     role: Option<Role>,
     address: &str,
     port: u16,
-    instance_name: InstanceName,
+    instance_name: Option<InstanceName>,
 ) -> Config {
     let role_string = if let Some(r) = role {
         format!("{}", r)
@@ -57,7 +57,7 @@ oracle:
         role_string,
         address,
         port,
-        instance_name
+        instance_name.unwrap_or_default()
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
@@ -186,20 +186,26 @@ fn test_local_connection() {
         Some(Role::SysDba),
         &endpoint.host,
         endpoint.port,
-        InstanceName::from(&endpoint.instance),
+        None,
     );
 
-    let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-    let r = spot.connect();
-    assert!(r.is_ok());
-    let result = spot.query(&TEST_SQL_INSTANCE, "");
-    assert!(result.is_ok());
-    let rows = result.unwrap();
-    eprintln!("Rows: {:?}", rows);
-    assert!(!rows.is_empty());
-    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
-    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
-    assert_eq!(rows.len(), 2);
+    for i in [None, Some(&InstanceName::from(&endpoint.instance))] {
+        let mut spot1 = backend::make_spot(&config.endpoint()).unwrap();
+        let r = spot1.connect(i);
+        assert!(r.is_ok());
+        let result = spot1.query(&TEST_SQL_INSTANCE, "");
+        assert!(result.is_ok());
+        let rows = result.unwrap();
+        eprintln!(
+            "Rows: {i:?} {:?} {:?}",
+            rows,
+            spot1.target().make_connection_string(i)
+        );
+        assert!(!rows.is_empty());
+        assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
+        assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
+        assert_eq!(rows.len(), 2);
+    }
 }
 
 #[test]
@@ -217,7 +223,7 @@ fn test_remote_mini_connection() {
     );
 
     let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-    let r = spot.connect();
+    let r = spot.connect(None);
     println!("{:?}", r);
     println!("{:?}", std::env::var("LD_LIBRARY_PATH"));
     assert!(r.is_ok());
@@ -246,7 +252,7 @@ fn test_remote_mini_connection_version() {
         );
 
         let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-        spot.connect()
+        spot.connect(None)
             .expect("Connect failed, check environment variables");
         let instances = system::WorkInstances::new(&spot);
 
@@ -275,7 +281,7 @@ fn test_io_stats_query() {
     );
 
     let mut spot = backend::make_spot(&config.endpoint()).unwrap();
-    let r = spot.connect();
+    let r = spot.connect(None);
     assert!(r.is_ok());
     let q = SqlQuery::new(
         sqls::find_known_query(sqls::Id::IoStats).unwrap(),

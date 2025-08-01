@@ -17,31 +17,37 @@ pub struct Target {
 }
 
 impl Target {
-    pub fn make_connection_string(&self) -> String {
+    pub fn make_connection_string(&self, optional_instance: Option<&InstanceName>) -> String {
         use std::fmt::Display;
 
-        fn format_entry<T: Display>(instance: &Option<T>, sep: &str) -> String {
+        fn format_entry<T: Display>(instance: Option<&T>, sep: &str) -> String {
             if let Some(inst) = instance {
                 format!("{}{}", sep, inst)
             } else {
                 String::new()
             }
         }
+        let work_instance = if self.instance.is_some() {
+            self.instance.as_ref()
+        } else {
+            optional_instance
+        };
+
         if let Some(service_name) = &self.service_name {
             format!(
                 "{}:{}/{}{}{}",
                 self.host,
                 self.port,
                 service_name,
-                &format_entry(&self.service_type, ":"),
-                &format_entry(&self.instance, "/"),
+                &format_entry(self.service_type.as_ref(), ":"),
+                &format_entry(work_instance, "/"),
             )
         } else {
             format!(
                 "{}:{}{}",
                 self.host,
                 self.port,
-                &format_entry(&self.instance, "/")
+                &format_entry(work_instance, "/")
             )
         }
     }
@@ -72,7 +78,11 @@ authentication:
                 .unwrap(),
         };
         assert_eq!(
-            target.make_connection_string(),
+            target.make_connection_string(Some(InstanceName::from("XYZ")).as_ref()),
+            "localhost:1521/my_service:dedicated/ORCL"
+        );
+        assert_eq!(
+            target.make_connection_string(None),
             "localhost:1521/my_service:dedicated/ORCL"
         );
         let target = Target {
@@ -85,7 +95,7 @@ authentication:
                 .unwrap()
                 .unwrap(),
         };
-        assert_eq!(target.make_connection_string(), "localhost:1521");
+        assert_eq!(target.make_connection_string(None), "localhost:1521");
         let target = Target {
             host: HostName::from("localhost".to_owned()),
             instance: Some(InstanceName::from("orcl")),
@@ -96,6 +106,6 @@ authentication:
                 .unwrap()
                 .unwrap(),
         };
-        assert_eq!(target.make_connection_string(), "localhost:1521/ORCL");
+        assert_eq!(target.make_connection_string(None), "localhost:1521/ORCL");
     }
 }

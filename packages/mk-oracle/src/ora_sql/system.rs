@@ -82,7 +82,7 @@ mod tests {
 
     struct TestOra;
     impl OraDbEngine for TestOra {
-        fn connect(&mut self, _target: &Target) -> Result<()> {
+        fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
             Ok(())
         }
 

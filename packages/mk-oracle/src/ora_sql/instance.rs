@@ -8,6 +8,7 @@ use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
+use crate::types::InstanceName;
 use crate::utils;
 
 use anyhow::Result;
@@ -61,27 +62,30 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
     // TODO: customize instances
     // TODO: resulting in the list of endpoints
     let all = calc_spots(vec![ora_sql.endpoint()]);
-    let connected = connect_spots(all);
+    let connected = connect_spots(all, None);
 
     let mut _output = String::new();
+    let sections = ora_sql
+        .product()
+        .sections()
+        .iter()
+        .map(|s| Section::new(s, ora_sql.product().cache_age()))
+        .collect::<Vec<_>>();
     let _r = connected
         .into_iter()
         .map(|spot| {
             let instances = WorkInstances::new(&spot);
 
-            let sections = ora_sql
-                .product()
-                .sections()
-                .iter()
-                .map(|s| Section::new(s, ora_sql.product().cache_age()))
-                .collect::<Vec<_>>();
-            // TODO: remove it after code is working
-            #[allow(clippy::for_kv_map)]
-            for (_instance, _version) in instances.all() {
+            for instance in instances.all().keys() {
                 for section in &sections {
                     let section_name = section.name();
                     log::info!("Generating data for instance: {}", section_name);
-                    section.select_query(get_sql_dir(), 0).map_or_else(
+                    let version = instances
+                        .get_num_version(instance)
+                        .ok()
+                        .flatten()
+                        .unwrap_or_default();
+                    let _query = section.select_query(get_sql_dir(), version).map_or_else(
                         || {
                             log::warn!("No query found for section: {}", section_name);
                             "No query found".to_string()
@@ -105,11 +109,11 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
 }
 
 // tested only in integration tests
-fn connect_spots(spots: Vec<Spot>) -> Vec<Spot> {
+fn connect_spots(spots: Vec<Spot>, instance: Option<&InstanceName>) -> Vec<Spot> {
     let connected = spots
         .into_iter()
         .filter_map(|mut t| {
-            if let Err(e) = t.connect() {
+            if let Err(e) = t.connect(instance) {
                 log::error!("Error connecting to instance: {}", e);
                 None
             } else {

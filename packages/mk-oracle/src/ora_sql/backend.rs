@@ -20,7 +20,7 @@ pub struct StdEngine {
 }
 
 pub trait OraDbEngine {
-    fn connect(&mut self, target: &Target) -> Result<()>;
+    fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()>;
 
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
 
@@ -28,7 +28,7 @@ pub trait OraDbEngine {
 }
 
 impl OraDbEngine for StdEngine {
-    fn connect(&mut self, target: &Target) -> Result<()> {
+    fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()> {
         if self.connection.is_some() {
             return Ok(());
         }
@@ -38,7 +38,7 @@ impl OraDbEngine for StdEngine {
             let mut connector = Connector::new(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
-                target.make_connection_string(),
+                target.make_connection_string(instance),
             );
             connector.privilege(_to_privilege(role));
             self.connection = Some(connector.connect()?);
@@ -46,7 +46,7 @@ impl OraDbEngine for StdEngine {
             self.connection = Some(Connection::connect(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
-                target.make_connection_string(),
+                target.make_connection_string(instance),
             )?);
         }
 
@@ -111,7 +111,7 @@ fn _to_privilege(role: &Role) -> Privilege {
 pub struct SqlPlusEngine {}
 
 impl OraDbEngine for SqlPlusEngine {
-    fn connect(&mut self, _target: &Target) -> Result<()> {
+    fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
     fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
@@ -125,7 +125,7 @@ impl OraDbEngine for SqlPlusEngine {
 #[derive(Debug)]
 pub struct JdbcEngine {}
 impl OraDbEngine for JdbcEngine {
-    fn connect(&mut self, _target: &Target) -> Result<()> {
+    fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
     fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
@@ -168,8 +168,8 @@ pub struct Spot {
 }
 
 impl Spot {
-    pub fn connect(&mut self) -> Result<()> {
-        self.engine.connect(&self.target)?;
+    pub fn connect(&mut self, instance: Option<&InstanceName>) -> Result<()> {
+        self.engine.connect(&self.target, instance)?;
         Ok(())
     }
 

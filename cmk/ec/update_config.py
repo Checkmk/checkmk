@@ -66,7 +66,10 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
         ):
             history_sqlite.add_entries(parsed_entries)
 
-        # processed files are not needed anymore
-        file.rename(file.with_suffix(".bak"))
-        logger.debug("Renamed file %s", file)
+        # It's possible for a failure in this loop to interrupt the migration.
+        # But it's also MORE possible for customers to run out of space,
+        # or consume more than needed (see SUP-23948).
+        file.unlink()
+        logger.debug("Removed file %s", file)
+
     logger.debug("Migrating history files to sqlite took: %s", timedelta(seconds=time.time() - tic))

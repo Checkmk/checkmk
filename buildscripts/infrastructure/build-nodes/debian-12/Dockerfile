@@ -63,6 +63,7 @@ RUN apt-get install -y --fix-missing \
     libxml2-dev \
     libxmlsec1-dev \
     netcat-openbsd \
+    default-jre \
     openssh-client \
     patch \
     rpcbind \
@@ -178,6 +179,20 @@ common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --host_action_env=DISTRO=${DISTRO}
 common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 EOF
+
+COPY --chmod=444 Checkmk_GmbH_IT_Root_CA.crt /usr/local/share/ca-certificates
+RUN update-ca-certificates \
+    && keytool -importcert -noprompt -keystore /etc/ssl/certs/java/cacerts -storepass changeit -file /usr/local/share/ca-certificates/Checkmk_GmbH_IT_Root_CA.crt
+
+# Add proxy to bazel only
+ARG BAZEL_PROXY_URL
+RUN printf '%s\n' >/opt/bin/bazel \
+    "HTTP_PROXY=${BAZEL_PROXY_URL} " \
+    "HTTPS_PROXY=${BAZEL_PROXY_URL} " \
+    "SSL_CERT_FILE=/usr/local/share/ca-certificates/Checkmk_GmbH_IT_Root_CA.crt " \
+    "REQUESTS_CA_BUNDLE=/usr/local/share/ca-certificates/Checkmk_GmbH_IT_Root_CA.crt "\
+    "/usr/bin/bazel" \
+    && chmod a+x /opt/bin/bazel
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt

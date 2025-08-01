@@ -40,6 +40,7 @@ RUN zypper ref -s \
     gtk-doc \
     intltool \
     iputils \
+    java-17-openjdk \
     jq \
     libXpm-devel \
     libbz2-devel \
@@ -202,6 +203,19 @@ common:ci --host_action_env=DISTRO=${DISTRO}
 common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
 EOF
+
+COPY --chmod=444 Checkmk_GmbH_IT_Root_CA.crt /etc/pki/trust/anchors/
+RUN update-ca-certificates \
+    && mkdir -p /etc/ssl/certs/java/ \
+    && cp /usr/lib64/jvm/java-17-openjdk-17/lib/security/cacerts /etc/ssl/certs/java/cacerts \
+    && keytool -importcert -noprompt -keystore /etc/ssl/certs/java/cacerts -storepass changeit -file /etc/pki/trust/anchors/Checkmk_GmbH_IT_Root_CA.crt
+
+ARG BAZEL_PROXY_URL
+ENV \
+    HTTP_PROXY="${BAZEL_PROXY_URL}" \
+    HTTPS_PROXY="${BAZEL_PROXY_URL}" \
+    SSL_CERT_FILE=/etc/pki/trust/anchors/Checkmk_GmbH_IT_Root_CA.crt \
+    REQUESTS_CA_BUNDLE=/etc/pki/trust/anchors/Checkmk_GmbH_IT_Root_CA.crt
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt

@@ -6,7 +6,7 @@ use crate::config::{self, OracleConfig};
 use crate::ora_sql::backend::{make_spot, Spot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
-use crate::ora_sql::system::get_instances;
+use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
 use crate::utils;
 
@@ -67,7 +67,7 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
     let _r = connected
         .into_iter()
         .map(|spot| {
-            let instances = get_instances(&spot);
+            let instances = WorkInstances::new(&spot);
 
             let sections = ora_sql
                 .product()
@@ -75,7 +75,9 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
                 .iter()
                 .map(|s| Section::new(s, ora_sql.product().cache_age()))
                 .collect::<Vec<_>>();
-            for (_instance, _version) in instances {
+            // TODO: remove it after code is working
+            #[allow(clippy::for_kv_map)]
+            for (_instance, _version) in instances.all() {
                 for section in &sections {
                     let section_name = section.name();
                     log::info!("Generating data for instance: {}", section_name);

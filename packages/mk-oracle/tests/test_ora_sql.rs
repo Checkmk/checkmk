@@ -248,16 +248,15 @@ fn test_remote_mini_connection_version() {
         let mut spot = backend::make_spot(&config.endpoint()).unwrap();
         spot.connect()
             .expect("Connect failed, check environment variables");
+        let instances = system::WorkInstances::new(&spot);
 
-        let version = system::get_version(&spot, &InstanceName::from(&endpoint.instance))
-            .unwrap()
+        let version = instances
+            .get_full_version(&InstanceName::from(&endpoint.instance))
             .unwrap();
         assert!(version.starts_with("2"));
-        assert!(
-            system::get_version(&spot, &InstanceName::from("no-such-db"))
-                .unwrap()
-                .is_none()
-        );
+        assert!(instances
+            .get_full_version(&InstanceName::from("no-such-db"))
+            .is_none());
     }
 }
 

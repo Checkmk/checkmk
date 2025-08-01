@@ -7,27 +7,120 @@ use crate::types::{InstanceName, Separator, SqlQuery};
 use anyhow::Result;
 use std::collections::HashMap;
 
-pub fn get_version(connected_spot: &Spot, instance: &InstanceName) -> Result<Option<String>> {
-    let hashmap = _get_instances(connected_spot)?;
-    Ok(hashmap.get(instance).cloned())
+type _InstanceEntries = HashMap<InstanceName, String>;
+pub struct WorkInstances(_InstanceEntries);
+
+impl WorkInstances {
+    pub fn new(connected_spot: &Spot) -> Self {
+        let hashmap = _get_instances(connected_spot).unwrap_or_else(|e| {
+            log::error!("Failed to get instances: {}", e);
+            HashMap::<InstanceName, String>::new()
+        });
+        WorkInstances(hashmap)
+    }
+    pub fn get_full_version(&self, instance: &InstanceName) -> Option<String> {
+        self.0.get(instance).cloned()
+    }
+
+    /// Returns the version of the given instance as a number in the format `major * 100 + minor`.
+    /// For example, version "19.1.0" will return 1901, and "21.2" will return 2102.
+    /// If the version cannot be parsed, it returns `None`.
+    ///
+    /// If the instance is not found, it returns `None`.
+    pub fn get_num_version(&self, instance: &InstanceName) -> Result<Option<u32>> {
+        Ok(self.0.get(instance).and_then(|v| convert_to_num_version(v)))
+    }
+
+    pub fn all(&self) -> &_InstanceEntries {
+        &self.0
+    }
 }
 
-pub fn _get_instances(connected_spot: &Spot) -> Result<HashMap<InstanceName, String>> {
+fn _get_instances(connected_spot: &Spot) -> Result<_InstanceEntries> {
     let result = connected_spot.query_table(&SqlQuery::new(
         r"SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance",
         Separator::default(),
     ))?;
-    let hashmap: HashMap<InstanceName, String> = result
+    let hashmap: _InstanceEntries = result
         .into_iter()
-        .map(|x| (InstanceName::from(x[0].as_str()), x[1].clone()))
+        .filter_map(|x| {
+            if x.len() < 2 {
+                log::error!(
+                    "Unexpected result from v$instance: expected at least 2 columns, got {}",
+                    x.len()
+                );
+                None
+            } else {
+                Some((InstanceName::from(x[0].as_str()), x[1].clone()))
+            }
+        })
         .collect();
     Ok(hashmap)
 }
 
-pub fn get_instances(connected_spot: &Spot) -> HashMap<InstanceName, String> {
-    let hashmap = _get_instances(connected_spot).unwrap_or_else(|e| {
-        log::error!("Failed to get instances: {}", e);
-        HashMap::<InstanceName, String>::new()
-    });
-    hashmap
+fn convert_to_num_version(version: &str) -> Option<u32> {
+    let tops = version
+        .splitn(3, '.')
+        .take(2)
+        .filter_map(|s| s.parse::<u32>().ok())
+        .collect::<Vec<u32>>();
+    if tops.len() < 2 {
+        log::warn!("Bad version format: '{version}'");
+        None
+    } else {
+        Some(tops[0] * 100 + tops[1])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ora_sql::Endpoint;
+    use crate::ora_sql::backend::OraDbEngine;
+    use crate::ora_sql::backend::SpotBuilder;
+    use crate::ora_sql::types::Target;
+
+    struct TestOra;
+    impl OraDbEngine for TestOra {
+        fn connect(&mut self, _target: &Target) -> Result<()> {
+            Ok(())
+        }
+
+        fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
+            Ok(vec![])
+        }
+        fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
+            if query.as_str() == "SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance" {
+                Ok(vec![vec!["INSTANCE1".to_string(), "22.1.1".to_string()]])
+            } else {
+                Err(anyhow::anyhow!("Query not recognized"))
+            }
+        }
+    }
+    #[test]
+    fn test_get_version() {
+        let simulated_spot = SpotBuilder::new()
+            .target(&Endpoint::default())
+            .custom_engine(Box::new(TestOra))
+            .build()
+            .unwrap();
+        assert_eq!(
+            &WorkInstances::new(&simulated_spot)
+                .get_full_version(&InstanceName::from("INSTANCE1"))
+                .unwrap(),
+            "22.1.1"
+        );
+        assert!(&WorkInstances::new(&simulated_spot)
+            .get_full_version(&InstanceName::from("HURZ"))
+            .is_none());
+    }
+
+    #[test]
+    fn test_convert_to_num_version() {
+        assert_eq!(convert_to_num_version("19.0.0.dd,d"), Some(1900));
+        assert_eq!(convert_to_num_version("19.1.0"), Some(1901));
+        assert_eq!(convert_to_num_version("21.2"), Some(2102));
+        assert!(convert_to_num_version("").is_none());
+        assert!(convert_to_num_version("a.").is_none());
+    }
 }

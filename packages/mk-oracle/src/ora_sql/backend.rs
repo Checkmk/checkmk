@@ -19,13 +19,11 @@ pub struct StdEngine {
     connection: Option<Connection>,
 }
 
-trait OraDbEngine {
+pub trait OraDbEngine {
     fn connect(&mut self, target: &Target) -> Result<()>;
 
-    #[allow(dead_code)]
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
 
-    #[allow(dead_code)]
     fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>>;
 }
 
@@ -155,10 +153,11 @@ impl EngineType {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SpotBuilder {
     target: Option<Target>,
     engine_type: Option<EngineType>,
+    custom_engine: Option<Box<dyn OraDbEngine>>,
     database: Option<String>,
 }
 
@@ -222,11 +221,17 @@ impl SpotBuilder {
         self
     }
 
+    pub fn custom_engine(mut self, engine: Box<dyn OraDbEngine>) -> Self {
+        self.custom_engine = Some(engine);
+        self
+    }
+
     pub fn build(self) -> Result<Spot> {
         Ok(Spot {
             engine: self
                 .engine_type
                 .map(|e| e.create_engine())
+                .or(self.custom_engine)
                 .context("Engine is not defined")?,
             target: self
                 .target

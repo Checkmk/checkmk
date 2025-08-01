@@ -4242,7 +4242,7 @@ def exec_other_omd(version: str) -> NoReturn:
     """Rerun current omd command with other version"""
     omd_path = "/omd/versions/%s/bin/omd" % version
     if not os.path.exists(omd_path):
-        bail_out("Version '%s' is not installed." % version)
+        sys.exit("Version '%s' is not installed." % version)
 
     # Prevent inheriting environment variables from this versions/site environment
     # into the executed omd call. The omd call must import the python version related
@@ -4259,7 +4259,7 @@ def exec_other_omd(version: str) -> NoReturn:
         pass
 
     os.execv(omd_path, sys.argv)
-    bail_out("Cannot run bin/omd of version %s." % version)
+    sys.exit("Cannot run bin/omd of version %s." % version)
 
 
 # .

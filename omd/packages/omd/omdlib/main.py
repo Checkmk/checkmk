@@ -112,6 +112,7 @@ from omdlib.utils import (
     create_skeleton_file,
     create_skeleton_files,
     delete_user_file,
+    exec_other_omd,
     get_editor,
     replace_tags,
     site_exists,
@@ -4236,30 +4237,6 @@ def _parse_command_options(
                 args = args[1:]
             set_options[option.long_opt] = arg
     return (args, set_options)
-
-
-def exec_other_omd(version: str) -> NoReturn:
-    """Rerun current omd command with other version"""
-    omd_path = "/omd/versions/%s/bin/omd" % version
-    if not os.path.exists(omd_path):
-        sys.exit("Version '%s' is not installed." % version)
-
-    # Prevent inheriting environment variables from this versions/site environment
-    # into the executed omd call. The omd call must import the python version related
-    # modules and libraries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
-    # not already set when calling omd.
-    try:
-        del os.environ["PYTHONPATH"]
-    except KeyError:
-        pass
-
-    try:
-        del os.environ["LD_LIBRARY_PATH"]
-    except KeyError:
-        pass
-
-    os.execv(omd_path, sys.argv)
-    sys.exit("Cannot run bin/omd of version %s." % version)
 
 
 # .

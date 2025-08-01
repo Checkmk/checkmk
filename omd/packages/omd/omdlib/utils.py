@@ -8,7 +8,9 @@ import enum
 import os
 import pwd
 import shutil
+import sys
 from pathlib import Path
+from typing import NoReturn
 
 from omdlib.skel_permissions import get_skel_permissions, Permissions
 from omdlib.type_defs import Replacements
@@ -127,6 +129,30 @@ def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
+
+
+def exec_other_omd(version: str) -> NoReturn:
+    """Rerun current omd command with other version"""
+    omd_path = "/omd/versions/%s/bin/omd" % version
+    if not os.path.exists(omd_path):
+        sys.exit("Version '%s' is not installed." % version)
+
+    # Prevent inheriting environment variables from this versions/site environment
+    # into the executed omd call. The omd call must import the python version related
+    # modules and libraries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+    # not already set when calling omd.
+    try:
+        del os.environ["PYTHONPATH"]
+    except KeyError:
+        pass
+
+    try:
+        del os.environ["LD_LIBRARY_PATH"]
+    except KeyError:
+        pass
+
+    os.execv(omd_path, sys.argv)
+    sys.exit("Cannot run bin/omd of version %s." % version)
 
 
 # TODO: move to sites.py, this is currently not possible due to circular import

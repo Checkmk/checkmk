@@ -2,9 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::sqls::{self, find_known_query};
 use crate::config::{self, section, section::names};
 use crate::emit::header;
+use crate::ora_sql::sqls;
 use crate::types::SectionName;
 use crate::{constants, utils};
 use anyhow::Result;
@@ -93,17 +93,8 @@ impl Section {
         self.cache_age.unwrap_or_default()
     }
 
-    /// try to find the section's query in the sql directory for instance with the given version
-    /// or in the known queries if custom sql query is not provided
-    pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
-        match self.header_name.as_str() {
-            names::IO_STATS => find_known_query(sqls::Id::IoStats).map(str::to_string).ok(),
-            _ => self.find_query(sql_dir, instance_version),
-        }
-    }
-
-    fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
-        self.find_provided_query(sql_dir, instance_version)
+    pub fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+        self.find_custom_query(sql_dir, instance_version)
             .or_else(|| {
                 get_sql_id(&self.header_name)
                     .and_then(Self::find_known_query)
@@ -111,7 +102,7 @@ impl Section {
             })
     }
 
-    pub fn find_provided_query(
+    pub fn find_custom_query(
         &self,
         sql_dir: Option<PathBuf>,
         instance_version: u32,
@@ -134,9 +125,9 @@ impl Section {
         None
     }
     fn find_known_query(id: sqls::Id) -> Option<&'static str> {
-        sqls::find_known_query(id)
+        sqls::get_factory_query(id)
             .map_err(|e| {
-                log::error!("{e}");
+                log::error!("Can't find query {id:?} {e}");
                 e
             })
             .ok()

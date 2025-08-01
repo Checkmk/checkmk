@@ -281,7 +281,7 @@ fn test_io_stats_query() {
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
     let q = SqlQuery::new(
-        sqls::find_known_query(sqls::Id::IoStats).unwrap(),
+        sqls::get_factory_query(sqls::Id::IoStats).unwrap(),
         Separator::default(),
     );
     let result = conn.query(&q, "");

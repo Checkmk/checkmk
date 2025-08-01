@@ -85,7 +85,7 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
                         .ok()
                         .flatten()
                         .unwrap_or_default();
-                    let _query = section.select_query(get_sql_dir(), version).map_or_else(
+                    let _query = section.find_query(get_sql_dir(), version).map_or_else(
                         || {
                             log::warn!("No query found for section: {}", section_name);
                             "No query found".to_string()

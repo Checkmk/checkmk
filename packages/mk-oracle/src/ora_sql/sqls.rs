@@ -70,7 +70,7 @@ lazy_static::lazy_static! {
     ]);
 }
 
-pub fn find_known_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
+pub fn get_factory_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
     QUERY_MAP
         .get(query_id.borrow())
         .copied()
@@ -87,7 +87,10 @@ mod tests {
 
     #[test]
     fn test_find_query() {
-        let q = SqlQuery::new(find_known_query(Id::IoStats).unwrap(), Separator::default());
+        let q = SqlQuery::new(
+            get_factory_query(Id::IoStats).unwrap(),
+            Separator::default(),
+        );
         assert!(!q.as_str().is_empty());
     }
 }

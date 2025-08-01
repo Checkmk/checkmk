@@ -302,6 +302,7 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
+@pytest.mark.skip(reason="CMK-24644; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)

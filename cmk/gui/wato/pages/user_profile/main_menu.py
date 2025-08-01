@@ -197,7 +197,7 @@ class ModeAjaxCycleThemes(AjaxPage):
         else:
             new_theme = themes[theme_index + 1]
 
-        _set_user_attribute("ui_theme", new_theme)
+        set_user_attribute("ui_theme", new_theme)
         return {}
 
 
@@ -206,7 +206,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
-        _set_user_attribute(
+        set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
         )
@@ -222,19 +222,19 @@ class ModeAjaxSetStartURL(AjaxPage):
             if request.var("name"):
                 name = request.get_str_input_mandatory("name")
                 if name == "welcome.py":
-                    _set_user_attribute("start_url", repr(name))
+                    set_user_attribute("start_url", repr(name))
                 else:
                     url = makeuri_contextless(request, [("name", name)], "dashboard.py")
                     validate_start_url(url, "")
-                    _set_user_attribute("start_url", repr(url))
+                    set_user_attribute("start_url", repr(url))
             else:
-                _set_user_attribute("start_url", None)
+                set_user_attribute("start_url", None)
         except Exception as e:
             raise MKUserError(None, _("Failed to set start URL: %s") % e)
         return {}
 
 
-def _set_user_attribute(key: str, value: str | None) -> None:
+def set_user_attribute(key: str, value: str | None) -> None:
     assert user.id is not None
     user_id = user.id
 

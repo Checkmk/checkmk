@@ -95,7 +95,7 @@ def fixture_setup_hosts() -> None:
 @pytest.fixture(name="setup_rules")
 def fixture_setup_rules() -> None:
     root_folder = folder_tree().root_folder()
-    ruleset = Ruleset("automatic_host_removal", {})
+    ruleset = Ruleset("automatic_host_removal")
     ruleset.append_rule(
         root_folder,
         Rule(

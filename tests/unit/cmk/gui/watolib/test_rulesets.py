@@ -94,7 +94,7 @@ def _test_hosts(folder: Folder) -> None:
 
 
 def _test_host_ruleset(folder: Folder) -> Ruleset:
-    ruleset = Ruleset("only_hosts", {})
+    ruleset = Ruleset("only_hosts")
     ruleset.append_rule(
         folder,
         Rule(
@@ -200,7 +200,7 @@ def test_analyse_service_ruleset() -> None:
 
 
 def _test_service_ruleset(folder: Folder) -> Ruleset:
-    ruleset = Ruleset("ignored_services", {})
+    ruleset = Ruleset("ignored_services")
     ruleset.append_rule(
         folder,
         Rule(

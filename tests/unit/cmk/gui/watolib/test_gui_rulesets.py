@@ -20,7 +20,6 @@ from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
@@ -35,12 +34,11 @@ from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
-from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
-    return rulesets.Ruleset(ruleset_name, get_tag_to_group_map(active_config.tags))
+    return rulesets.Ruleset(ruleset_name)
 
 
 GEN_ID_COUNT = {"c": 0}
@@ -420,10 +418,7 @@ def test_ruleset_to_config(
     wato_use_git: bool,
     expected_result: str,
 ) -> None:
-    ruleset = rulesets.Ruleset(
-        RuleGroup.CheckgroupParameters("local"),
-        get_tag_to_group_map(active_config.tags),
-    )
+    ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
     ruleset.replace_folder_config(
         folder_tree().root_folder(),
         [
@@ -480,10 +475,7 @@ def test_ruleset_to_config_sub_folder(
     wato_use_git: bool,
     expected_result: str,
 ) -> None:
-    ruleset = rulesets.Ruleset(
-        RuleGroup.CheckgroupParameters("local"),
-        get_tag_to_group_map(active_config.tags),
-    )
+    ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 
     folder_tree().create_missing_folders("abc", pprint_value=False)
     folder = folder_tree().folder("abc")
@@ -1009,7 +1001,7 @@ def test_rules_grouped_by_folder() -> None:
     ]
 
     root: Folder = tree.root_folder()
-    ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
+    ruleset: Ruleset = Ruleset("only_hosts")
     rules: list[tuple[Folder, int, Rule]] = [(root, 0, Rule.from_ruleset_defaults(root, ruleset))]
 
     for nr in range(1, 3):

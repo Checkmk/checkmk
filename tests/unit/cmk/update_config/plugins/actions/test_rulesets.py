@@ -23,7 +23,7 @@ def _instantiate_ruleset(
     param_value: object,
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
-    ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
+    ruleset = Ruleset(ruleset_name, rulespec=rulespec)
     folder = folder_tree().root_folder()
     rule = Rule.from_ruleset_defaults(folder, ruleset)
     rule.value = param_value

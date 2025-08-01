@@ -58,7 +58,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
 )
-from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
+from cmk.utils.tags import TagGroupID, TagID
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file
@@ -357,9 +357,8 @@ class RulesetCollection:
     def _initialize_rulesets(
         only_varname: RulesetName | None = None,
     ) -> Mapping[RulesetName, Ruleset]:
-        tag_to_group_map = get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
-        return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
+        return {varname: Ruleset(varname) for varname in varnames}
 
     def _load_folder_rulesets(
         self, folder: Folder, only_varname: RulesetName | None = None
@@ -664,12 +663,10 @@ class Ruleset:
     def __init__(
         self,
         name: RulesetName,
-        tag_to_group_map: Mapping[TagID, TagGroupID],
         rulespec: Rulespec | None = None,
     ) -> None:
         super().__init__()
         self.name: Final = name
-        self.tag_to_group_map: Final = tag_to_group_map
         self.rulespec: Final = rulespec_registry[name] if rulespec is None else rulespec
 
         # Holds list of the rules. Using the folder paths as keys.
@@ -680,7 +677,7 @@ class Ruleset:
         self.search_matching_rules: list[Rule] = []
 
     def clone(self):
-        cloned = Ruleset(self.name, self.tag_to_group_map, self.rulespec)
+        cloned = Ruleset(self.name, self.rulespec)
         for folder, _rule_index, rule in self.get_rules():
             cloned.append_rule(folder, rule)
         return cloned
@@ -1635,7 +1632,7 @@ class EnabledDisabledServicesEditor:
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = Ruleset("ignored_services", get_tag_to_group_map(active_config.tags))
+            ruleset = Ruleset("ignored_services")
 
         modified_folders = []
 

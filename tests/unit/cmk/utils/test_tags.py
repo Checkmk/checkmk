@@ -5,8 +5,8 @@
 
 
 from cmk.utils.tags import (
+    _get_tag_to_group_map,
     get_effective_tag_config,
-    get_tag_to_group_map,
     TagConfig,
     TagConfigSpec,
     TagGroupID,
@@ -15,7 +15,7 @@ from cmk.utils.tags import (
 )
 
 
-def test_get_tag_to_group_map() -> None:
+def test__get_tag_to_group_map() -> None:
     tag_config = TagConfig.from_config(
         {
             "aux_tags": [{"id": TagID("bla"), "title": "bl\xfcb"}],
@@ -45,7 +45,7 @@ def test_get_tag_to_group_map() -> None:
             ],
         }
     )
-    assert get_tag_to_group_map(tag_config) == {
+    assert _get_tag_to_group_map(tag_config) == {
         "bla": "bla",
         "lan": "networking",
         "prod": "criticality",
@@ -68,7 +68,7 @@ def test_tag_to_group_map() -> None:
         ],
     )
 
-    assert get_tag_to_group_map(get_effective_tag_config(tag_config)) == {
+    assert _get_tag_to_group_map(get_effective_tag_config(tag_config)) == {
         TagID("all-agents"): TagGroupID("agent"),
         TagID("auto-piggyback"): TagGroupID("piggyback"),
         TagID("cmk-agent"): TagGroupID("agent"),

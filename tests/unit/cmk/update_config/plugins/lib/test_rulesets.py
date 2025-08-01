@@ -91,7 +91,7 @@ def _instantiate_ruleset(
     rulespec: Rulespec | None = None,
     conditions: Mapping[str, Any] | None = None,
 ) -> Ruleset:
-    ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
+    ruleset = Ruleset(ruleset_name, rulespec=rulespec)
     folder = folder_tree().root_folder()
     rule = Rule.from_ruleset_defaults(folder, ruleset)
     rule.value = param_value
@@ -155,7 +155,6 @@ def test_transform_replaced_wato_rulesets_and_params(
             ),
             rulespec_with_migration.name: Ruleset(
                 rulespec_with_migration.name,
-                {},
                 rulespec=rulespec_with_migration,
             ),
         }

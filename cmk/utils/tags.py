@@ -45,7 +45,7 @@ class HostTags:
         by the etc/check_mk/conf.d directory that are not managed by WATO. They may use the old style pipe separated
         all_hosts configuration. Detect it and try to be compatible.
         """
-        tag_to_group_map = get_tag_to_group_map(get_effective_tag_config(tag_config_spec))
+        tag_to_group_map = _get_tag_to_group_map(get_effective_tag_config(tag_config_spec))
         tags_sequences = dict[HostName, Sequence[TagID]]()
         tags_maps = {**raw_host_tags}
         for tagged_host in tagged_hosts:
@@ -905,7 +905,7 @@ def fallback_tags(site: str) -> Mapping[TagGroupID, TagID]:
     }
 
 
-def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
+def _get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
     """

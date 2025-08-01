@@ -30,7 +30,6 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
 
     ruleset = Ruleset(
         name=rule_name,
-        tag_to_group_map={},
         rulespec=Rulespec(
             name="foo-rulespec",
             group=RulespecGroupMonitoringConfigurationVarious,

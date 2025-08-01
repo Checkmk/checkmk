@@ -57,10 +57,7 @@ class RulesetSplitMigration:
             new_ruleset = self.all_rulesets.get(new_ruleset_name)
             self.logger.debug("Adding migrated rules to existing ruleset %s", new_ruleset.name)
         except KeyError:
-            new_ruleset = Ruleset(
-                name=new_ruleset_name,
-                tag_to_group_map=old_ruleset.tag_to_group_map,
-            )
+            new_ruleset = Ruleset(name=new_ruleset_name)
             self.all_rulesets.set(new_ruleset_name, new_ruleset)
             self.logger.debug("Created new ruleset %s", new_ruleset.name)
 

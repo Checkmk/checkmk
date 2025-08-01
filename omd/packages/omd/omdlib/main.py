@@ -2764,6 +2764,7 @@ def main_update(
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
+    from_edition, to_edition = get_edition(from_version), get_edition(to_version)
 
     # source and target are identical if 'omd update' is called
     # from within a site. In that case we make the user choose
@@ -2824,7 +2825,6 @@ def main_update(
 
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
-    from_edition, to_edition = get_edition(from_version), get_edition(to_version)
     if from_edition == "managed" and to_edition != "managed" and not global_opts.force:
         sys.exit(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
 

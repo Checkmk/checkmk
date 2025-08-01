@@ -50,7 +50,11 @@ export class SearchHistoryService {
     return this.queries.value
       .filter((q) => q.input !== '')
       .filter((value, index, array) => {
-        return array.indexOf(value) === index
+        return (
+          array.findIndex(
+            (i) => i.input === value.input && i.filters.toString() === value.filters.toString()
+          ) === index
+        )
       })
       .slice(0, limit ? limit - 1 : limit)
   }

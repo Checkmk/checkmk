@@ -24711,6 +24711,12 @@ msgstr "Mislukte verzoeken om Adressbook bestanden"
 msgid "Failed search requests"
 msgstr "Mislukte zoekopdrachten"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -77556,6 +77562,10 @@ msgstr "Transportvertraging"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Transportvertraging"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "Als kritiek beschouwde staten"
 
 #, fuzzy
 msgid "Treat host down as"

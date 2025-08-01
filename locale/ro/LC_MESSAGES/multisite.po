@@ -24758,6 +24758,12 @@ msgstr "Solicitări eșuate la fișierele Adressbook"
 msgid "Failed search requests"
 msgstr "Cereri de căutare eșuate"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -77729,6 +77735,10 @@ msgstr "Decalajul de transport"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Decalajul de transport"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "State tratate ca fiind critice"
 
 #, fuzzy
 msgid "Treat host down as"

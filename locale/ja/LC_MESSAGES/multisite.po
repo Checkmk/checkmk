@@ -23267,6 +23267,12 @@ msgstr "Adressbookファイルへのリクエストの失敗"
 msgid "Failed search requests"
 msgstr "失敗した検索リクエスト"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -72629,6 +72635,10 @@ msgstr "輸送ラグ"
 
 msgid "Transport lag"
 msgstr "トランスポート ラグ"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "クリティカルとして扱われる状態"
 
 msgid "Treat host down as"
 msgstr "ホストDOWNを次のように扱う"

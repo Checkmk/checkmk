@@ -24928,6 +24928,12 @@ msgstr "Échec des demandes d'accès aux fichiers du carnet d'adresses"
 msgid "Failed search requests"
 msgstr "Demandes de recherche échouées"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -78274,6 +78280,10 @@ msgstr "Retard de transport"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Retard de transport"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "États traités comme critiques"
 
 #, fuzzy
 msgid "Treat host down as"

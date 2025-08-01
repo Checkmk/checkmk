@@ -105,7 +105,10 @@ filter_directory(
         "bin/xmlsec1-config",
         "share/aclocal/xmlsec1.m4",
     ] + selects.with_or({
-        "@cmk//distro:almalinux-9": [],
+        (
+            "@cmk//distro:almalinux-9",
+            "@cmk//distro:almalinux-10",
+        ): [],
         (
             "@cmk//distro:almalinux-8",
             "@cmk//distro:sles-15sp5",
@@ -157,7 +160,10 @@ pkg_files(
 pkg_files(
     name = "xmlsec1_additional_libs",
     srcs = selects.with_or({
-        "@cmk//distro:almalinux-9": [],
+        (
+            "@cmk//distro:almalinux-9",
+            "@cmk//distro:almalinux-10",
+        ): [],
         (
             "@cmk//distro:almalinux-8",
             "@cmk//distro:sles-15sp5",

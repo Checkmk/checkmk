@@ -283,6 +283,7 @@ editions = {
     version = select({
         "@cmk//distro:almalinux-8": "el8-38",
         "@cmk//distro:almalinux-9": "el9-38",
+        "@cmk//distro:almalinux-10": "el10-38",
         "@cmk//distro:debian-12": "0.bookworm",
         "@cmk//distro:sles-15sp5": "sles15sp5",
         "@cmk//distro:sles-15sp6": "sles15sp6",

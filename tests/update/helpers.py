@@ -291,7 +291,7 @@ class BaseVersions:
 
 @dataclass
 class InteractiveModeDistros:
-    DISTROS = ["ubuntu-22.04", "almalinux-9"]
+    DISTROS = ["ubuntu-22.04", "almalinux-9", "almalinux-10"]
     assert set(DISTROS).issubset(set(get_supported_distros()))
 
 

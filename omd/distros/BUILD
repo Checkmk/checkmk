@@ -5,6 +5,7 @@ genrule(
         {
             "@cmk//distro:almalinux-8": ["ALMALINUX_8.mk"],
             "@cmk//distro:almalinux-9": ["ALMALINUX_9.mk"],
+            "@cmk//distro:almalinux-10": ["ALMALINUX_10.mk"],
             "@cmk//distro:debian-12": ["DEBIAN_12.mk"],
             "@cmk//distro:sles-15sp5": ["SLES_15SP5.mk"],
             "@cmk//distro:sles-15sp6": ["SLES_15SP6.mk"],
@@ -25,6 +26,7 @@ genrule(
         {
             "@cmk//distro:almalinux-8": ["ALMALINUX_8.mk"],
             "@cmk//distro:almalinux-9": ["ALMALINUX_9.mk"],
+            "@cmk//distro:almalinux-10": ["ALMALINUX_10.mk"],
             "@cmk//distro:debian-12": ["DEBIAN_12.mk"],
             "@cmk//distro:sles-15sp5": ["SLES_15SP5.mk"],
             "@cmk//distro:sles-15sp6": ["SLES_15SP6.mk"],

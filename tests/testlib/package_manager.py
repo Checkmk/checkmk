@@ -41,6 +41,7 @@ DISTRO_CODES = {
     "ubuntu-24.04": "noble",
     "almalinux-8": "el8",
     "almalinux-9": "el9",
+    "almalinux-10": "el10",
     "sles-15sp1": "sles15sp1",
     "sles-15sp2": "sles15sp2",
     "sles-15sp5": "sles15sp5",

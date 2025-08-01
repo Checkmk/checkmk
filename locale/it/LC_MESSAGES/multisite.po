@@ -24699,6 +24699,12 @@ msgstr "Richieste fallite ai file di Adressbook"
 msgid "Failed search requests"
 msgstr "Richieste di ricerca fallite"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -26932,10 +26938,6 @@ msgstr "Ottenere file dal server SFTP"
 
 msgid "Get header only"
 msgstr ""
-
-#, fuzzy
-msgid "Get started (Welcome)"
-msgstr "Stato risultante"
 
 #, fuzzy
 msgid "Getting started"
@@ -45211,6 +45213,10 @@ msgstr "Numero di contenitori"
 msgid "Number of Podman images"
 msgstr "Numero di nodi"
 
+#, fuzzy
+msgid "Number of Podman volumes"
+msgstr "Numero di nodi"
+
 msgid "Number of Resources"
 msgstr "Numero di risorse"
 
@@ -45239,6 +45245,10 @@ msgstr "Numero di istanze attive"
 
 #, fuzzy
 msgid "Number of active Podman images"
+msgstr "Numero di spine attive"
+
+#, fuzzy
+msgid "Number of active Podman volumes"
 msgstr "Numero di spine attive"
 
 msgid "Number of active instances"
@@ -53735,8 +53745,9 @@ msgstr "Rimuovi filtro"
 msgid "Remove history entries older than"
 msgstr "Cancellare i file più vecchi di"
 
-msgid "Remove history entries right after the"
-msgstr ""
+#, fuzzy
+msgid "Remove history entries right after"
+msgstr "Cancellare i file più vecchi di"
 
 #, fuzzy
 msgid "Remove history entries which meet the following conditions"
@@ -58640,11 +58651,19 @@ msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "Definire i livelli superiori per il numero di contenitori totali"
 
 #, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of volumes"
+msgstr "Definire i livelli superiori per il numero di contenitori totali"
+
+#, fuzzy
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "Livello superiore per il numero totale di connessioni"
 
 #, fuzzy
 msgid "Sets the upper levels for the total number of active images."
+msgstr "Livello superiore per il numero totale di messaggi consegnati"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active volumes."
 msgstr "Livello superiore per il numero totale di messaggi consegnati"
 
 #, fuzzy
@@ -58656,8 +58675,16 @@ msgid "Sets the upper levels for the total number of images."
 msgstr "Livello superiore per il numero totale di messaggi"
 
 #, fuzzy
+msgid "Sets the upper levels for the total number of volumes."
+msgstr "Livello superiore per il numero totale di messaggi"
+
+#, fuzzy
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definire i livelli superiori per il numero di contenitori totali"
+
+#, fuzzy
+msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr "Definire i livelli superiori per il numero di contenitori totali"
 
 #, fuzzy
@@ -58666,6 +58693,10 @@ msgstr "Definire i livelli superiori per il numero di contenitori totali"
 
 #, fuzzy
 msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definire i livelli superiori per il numero di contenitori totali"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman volumes."
 msgstr "Definire i livelli superiori per il numero di contenitori totali"
 
 msgid "Sets the user of the alert. Display name of the request owner."
@@ -75423,6 +75454,10 @@ msgstr "Numero totale di frammenti attivi livello inferiore"
 msgid "Total number of active shards upper level"
 msgstr "Numero totale di frammenti attivi livello superiore"
 
+#, fuzzy
+msgid "Total number of active volumes upper levels"
+msgstr "Numero totale di frammenti attivi livello superiore"
+
 msgid "Total number of collections lower level"
 msgstr "Numero totale di collezioni livello inferiore"
 
@@ -75577,6 +75612,10 @@ msgstr "Numero totale di utenti di livello inferiore"
 msgid "Total number of user upper level"
 msgstr "Numero totale di utenti di livello superiore"
 
+#, fuzzy
+msgid "Total number of volumes upper levels"
+msgstr "Numero totale di questioni di livello superiore"
+
 msgid "Total number of zombie jobs"
 msgstr "Numero totale di lavori zombie"
 
@@ -75604,6 +75643,10 @@ msgstr "Latenza di lettura del disco"
 
 #, fuzzy
 msgid "Total reclaimable size of Podman containers"
+msgstr "Nome dell'host usato per i container"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman volumes"
 msgstr "Nome dell'host usato per i container"
 
 #, fuzzy
@@ -77576,6 +77619,10 @@ msgstr "Dimensione totale dei file di log"
 msgid "Total size of Podman images"
 msgstr "Dimensione totale dei file di log"
 
+#, fuzzy
+msgid "Total size of Podman volumes"
+msgstr "Dimensione totale dei file di log"
+
 msgid "Total size of all indexes for the collection"
 msgstr "La dimensione totale di tutti gli indici per l'insieme"
 
@@ -77751,6 +77798,10 @@ msgstr "Ritardo nel trasporto"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Ritardo nel trasporto"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "Stati trattati come critici"
 
 #, fuzzy
 msgid "Treat host down as"
@@ -83112,6 +83163,10 @@ msgstr "Rapporto settimanale"
 msgid "Weekly rate"
 msgstr "Tariffa settimanale"
 
+#, fuzzy
+msgid "Welcome page"
+msgstr "Controlla la pagina del manuale"
+
 msgid "Welcome to Checkmk Mobile."
 msgstr "Benvenuti a Checkmk Mobile."
 
@@ -87904,6 +87959,10 @@ msgstr "voci"
 msgid "entries (max. 50)"
 msgstr ""
 
+#, fuzzy
+msgid "entry number"
+msgstr "Numero di serie"
+
 msgid "estimated duration"
 msgstr "durata stimata"
 
@@ -89227,10 +89286,6 @@ msgstr "test"
 msgid "tests"
 msgstr "test"
 
-#, fuzzy
-msgid "th entry"
-msgstr "Per voce"
-
 msgid "th notification"
 msgstr "la notifica"
 
@@ -89556,6 +89611,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Get started (Welcome)"
+#~ msgstr "Stato risultante"
+
+#, fuzzy
+#~ msgid "th entry"
+#~ msgstr "Per voce"
 
 #, python-format
 #~ msgid "Original %s"

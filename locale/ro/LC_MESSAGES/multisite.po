@@ -24971,6 +24971,12 @@ msgstr "Solicitări eșuate la fișierele Adressbook"
 msgid "Failed search requests"
 msgstr "Cereri de căutare eșuate"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -27215,10 +27221,6 @@ msgstr "Obțineți fișierul de pe serverul SFTP"
 
 msgid "Get header only"
 msgstr "Obține doar antetul"
-
-#, fuzzy
-msgid "Get started (Welcome)"
-msgstr "Starea rezultată"
 
 #, fuzzy
 msgid "Getting started"
@@ -45681,6 +45683,10 @@ msgstr "Numărul de containere"
 msgid "Number of Podman images"
 msgstr "Numărul de noduri"
 
+#, fuzzy
+msgid "Number of Podman volumes"
+msgstr "Numărul de noduri"
+
 msgid "Number of Resources"
 msgstr "Numărul de resurse"
 
@@ -45709,6 +45715,10 @@ msgstr "Numărul de instanțe active"
 
 #, fuzzy
 msgid "Number of active Podman images"
+msgstr "Număr de prize active"
+
+#, fuzzy
+msgid "Number of active Podman volumes"
 msgstr "Număr de prize active"
 
 msgid "Number of active instances"
@@ -54269,8 +54279,9 @@ msgstr "Eliminați filtrul"
 msgid "Remove history entries older than"
 msgstr "Ștergeți fișierele mai vechi de"
 
-msgid "Remove history entries right after the"
-msgstr ""
+#, fuzzy
+msgid "Remove history entries right after"
+msgstr "Ștergeți fișierele mai vechi de"
 
 #, fuzzy
 msgid "Remove history entries which meet the following conditions"
@@ -59260,11 +59271,19 @@ msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
 
 #, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of volumes"
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "Nivelul superior pentru numărul total de conexiuni"
 
 #, fuzzy
 msgid "Sets the upper levels for the total number of active images."
+msgstr "Nivelul superior pentru numărul total de mesaje livrate"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active volumes."
 msgstr "Nivelul superior pentru numărul total de mesaje livrate"
 
 #, fuzzy
@@ -59276,8 +59295,16 @@ msgid "Sets the upper levels for the total number of images."
 msgstr "Nivelul superior pentru numărul total de mesaje"
 
 #, fuzzy
+msgid "Sets the upper levels for the total number of volumes."
+msgstr "Nivelul superior pentru numărul total de mesaje"
+
+#, fuzzy
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
 
 #, fuzzy
@@ -59286,6 +59313,10 @@ msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
 
 #, fuzzy
 msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman volumes."
 msgstr "Definirea nivelurilor superioare pentru numărul total de containere"
 
 msgid "Sets the user of the alert. Display name of the request owner."
@@ -76282,6 +76313,10 @@ msgstr "Numărul total de cioburi active nivel inferior"
 msgid "Total number of active shards upper level"
 msgstr "Numărul total de fragmente active nivel superior"
 
+#, fuzzy
+msgid "Total number of active volumes upper levels"
+msgstr "Numărul total de fragmente active nivel superior"
+
 msgid "Total number of collections lower level"
 msgstr "Număr total de colecții nivel inferior"
 
@@ -76434,6 +76469,10 @@ msgstr "Numărul total de utilizatori nivel inferior"
 msgid "Total number of user upper level"
 msgstr "Numărul total de utilizatori nivel superior"
 
+#, fuzzy
+msgid "Total number of volumes upper levels"
+msgstr "Numărul total de numere nivel superior"
+
 msgid "Total number of zombie jobs"
 msgstr "Numărul total de locuri de muncă zombi"
 
@@ -76461,6 +76500,10 @@ msgstr "Latența de citire a discului"
 
 #, fuzzy
 msgid "Total reclaimable size of Podman containers"
+msgstr "Numele de gazdă utilizat pentru containere"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman volumes"
 msgstr "Numele de gazdă utilizat pentru containere"
 
 #, fuzzy
@@ -78433,6 +78476,10 @@ msgstr "Dimensiunea totală a fișierelor jurnal"
 msgid "Total size of Podman images"
 msgstr "Dimensiunea totală a fișierelor jurnal"
 
+#, fuzzy
+msgid "Total size of Podman volumes"
+msgstr "Dimensiunea totală a fișierelor jurnal"
+
 msgid "Total size of all indexes for the collection"
 msgstr "Dimensiunea totală a tuturor indexurilor pentru colecție"
 
@@ -78608,6 +78655,10 @@ msgstr "Decalajul de transport"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Decalajul de transport"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "State tratate ca fiind critice"
 
 #, fuzzy
 msgid "Treat host down as"
@@ -84005,6 +84056,10 @@ msgstr "Raport săptămânal"
 msgid "Weekly rate"
 msgstr "Tarif săptămânal"
 
+#, fuzzy
+msgid "Welcome page"
+msgstr "Verificați pagina de manual"
+
 msgid "Welcome to Checkmk Mobile."
 msgstr "Bine ați venit la Checkmk Mobile."
 
@@ -88854,6 +88909,10 @@ msgstr "intrări"
 msgid "entries (max. 50)"
 msgstr "intrări (max. 50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "Numărul de serie"
+
 msgid "estimated duration"
 msgstr "durata estimată"
 
@@ -90201,10 +90260,6 @@ msgstr "testare"
 msgid "tests"
 msgstr "teste"
 
-#, fuzzy
-msgid "th entry"
-msgstr "Pe intrare"
-
 msgid "th notification"
 msgstr "a notificare"
 
@@ -90535,6 +90590,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Get started (Welcome)"
+#~ msgstr "Starea rezultată"
+
+#, fuzzy
+#~ msgid "th entry"
+#~ msgstr "Pe intrare"
 
 #, python-format
 #~ msgid "Original %s"

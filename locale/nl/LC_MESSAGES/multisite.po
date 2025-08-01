@@ -24902,6 +24902,12 @@ msgstr "Mislukte verzoeken om Adressbook bestanden"
 msgid "Failed search requests"
 msgstr "Mislukte zoekopdrachten"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -27153,10 +27159,6 @@ msgstr "Bestand van SFTP-server halen"
 
 msgid "Get header only"
 msgstr ""
-
-#, fuzzy
-msgid "Get started (Welcome)"
-msgstr "Resulterende staat"
 
 #, fuzzy
 msgid "Getting started"
@@ -45591,6 +45593,10 @@ msgstr "Aantal containers"
 msgid "Number of Podman images"
 msgstr "Aantal knooppunten"
 
+#, fuzzy
+msgid "Number of Podman volumes"
+msgstr "Aantal knooppunten"
+
 msgid "Number of Resources"
 msgstr "Aantal middelen"
 
@@ -45619,6 +45625,10 @@ msgstr "Aantal actieve instanties"
 
 #, fuzzy
 msgid "Number of active Podman images"
+msgstr "Aantal actieve stekkers"
+
+#, fuzzy
+msgid "Number of active Podman volumes"
 msgstr "Aantal actieve stekkers"
 
 msgid "Number of active instances"
@@ -54186,8 +54196,9 @@ msgstr "Verwijder filter"
 msgid "Remove history entries older than"
 msgstr "Wis bestanden ouder dan"
 
-msgid "Remove history entries right after the"
-msgstr ""
+#, fuzzy
+msgid "Remove history entries right after"
+msgstr "Wis bestanden ouder dan"
 
 #, fuzzy
 msgid "Remove history entries which meet the following conditions"
@@ -59118,11 +59129,19 @@ msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "Definieer bovengrenzen voor aantal totale containers"
 
 #, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of volumes"
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "Bovenste niveau voor totaal aantal verbindingen"
 
 #, fuzzy
 msgid "Sets the upper levels for the total number of active images."
+msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active volumes."
 msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
 
 #, fuzzy
@@ -59134,8 +59153,16 @@ msgid "Sets the upper levels for the total number of images."
 msgstr "Bovenste niveau voor totaal aantal berichten"
 
 #, fuzzy
+msgid "Sets the upper levels for the total number of volumes."
+msgstr "Bovenste niveau voor totaal aantal berichten"
+
+#, fuzzy
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr "Definieer bovengrenzen voor aantal totale containers"
 
 #, fuzzy
@@ -59144,6 +59171,10 @@ msgstr "Definieer bovengrenzen voor aantal totale containers"
 
 #, fuzzy
 msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman volumes."
 msgstr "Definieer bovengrenzen voor aantal totale containers"
 
 msgid "Sets the user of the alert. Display name of the request owner."
@@ -76010,6 +76041,10 @@ msgstr "Totaal aantal actieve scherven lager niveau"
 msgid "Total number of active shards upper level"
 msgstr "Totaal aantal actieve scherven bovenste niveau"
 
+#, fuzzy
+msgid "Total number of active volumes upper levels"
+msgstr "Totaal aantal actieve scherven bovenste niveau"
+
 msgid "Total number of collections lower level"
 msgstr "Totaal aantal collecties lager niveau"
 
@@ -76160,6 +76195,10 @@ msgstr "Totaal aantal gebruikers lager niveau"
 msgid "Total number of user upper level"
 msgstr "Totaal aantal gebruikers bovenste niveau"
 
+#, fuzzy
+msgid "Total number of volumes upper levels"
+msgstr "Totaal aantal uitgiften op hoger niveau"
+
 msgid "Total number of zombie jobs"
 msgstr "Totaal aantal zombiebanen"
 
@@ -76187,6 +76226,10 @@ msgstr "Schijf lees latentie"
 
 #, fuzzy
 msgid "Total reclaimable size of Podman containers"
+msgstr "Hostnaam gebruikt voor containers"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman volumes"
 msgstr "Hostnaam gebruikt voor containers"
 
 #, fuzzy
@@ -78234,6 +78277,10 @@ msgstr "Totale grootte van logbestanden"
 msgid "Total size of Podman images"
 msgstr "Totale grootte van logbestanden"
 
+#, fuzzy
+msgid "Total size of Podman volumes"
+msgstr "Totale grootte van logbestanden"
+
 msgid "Total size of all indexes for the collection"
 msgstr "De totale grootte van alle indexen voor de verzameling"
 
@@ -78411,6 +78458,10 @@ msgstr "Transportvertraging"
 #, fuzzy
 msgid "Transport lag"
 msgstr "Transportvertraging"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "Als kritiek beschouwde staten"
 
 #, fuzzy
 msgid "Treat host down as"
@@ -83808,6 +83859,10 @@ msgstr "Wekelijks verslag"
 msgid "Weekly rate"
 msgstr "Wekelijks tarief"
 
+#, fuzzy
+msgid "Welcome page"
+msgstr "Zie handleiding pagina"
+
 msgid "Welcome to Checkmk Mobile."
 msgstr "Welkom bij Checkmk Mobile."
 
@@ -88643,6 +88698,10 @@ msgstr "inzendingen"
 msgid "entries (max. 50)"
 msgstr ""
 
+#, fuzzy
+msgid "entry number"
+msgstr "Serienummer"
+
 msgid "estimated duration"
 msgstr "geschatte looptijd"
 
@@ -89986,10 +90045,6 @@ msgstr "testen"
 msgid "tests"
 msgstr "Tests uitvoeren"
 
-#, fuzzy
-msgid "th entry"
-msgstr "Per item"
-
 msgid "th notification"
 msgstr "e kennisgeving"
 
@@ -90316,6 +90371,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Get started (Welcome)"
+#~ msgstr "Resulterende staat"
+
+#, fuzzy
+#~ msgid "th entry"
+#~ msgstr "Per item"
 
 #, python-format
 #~ msgid "Original %s"

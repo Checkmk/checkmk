@@ -23414,6 +23414,12 @@ msgstr "Adressbookファイルへのリクエストの失敗"
 msgid "Failed search requests"
 msgstr "失敗した検索リクエスト"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -25562,9 +25568,6 @@ msgstr "SFTPサーバーからファイルを取得する"
 
 msgid "Get header only"
 msgstr "ヘッダーのみを取得"
-
-msgid "Get started (Welcome)"
-msgstr "スタート（ようこそ）"
 
 msgid "Getting started"
 msgstr "スタート"
@@ -42716,6 +42719,10 @@ msgstr "Podmamコンテナの数"
 msgid "Number of Podman images"
 msgstr "Podmanイメージの数"
 
+#, fuzzy
+msgid "Number of Podman volumes"
+msgstr "Podmanイメージの数"
+
 msgid "Number of Resources"
 msgstr "リソースの数"
 
@@ -42741,6 +42748,10 @@ msgid "Number of active Podman containers"
 msgstr "Podmanコンテナのアクティブなインスタンス数"
 
 msgid "Number of active Podman images"
+msgstr "アクティブなPodman イメージの数"
+
+#, fuzzy
+msgid "Number of active Podman volumes"
 msgstr "アクティブなPodman イメージの数"
 
 msgid "Number of active instances"
@@ -50594,7 +50605,8 @@ msgstr "フィルタを取り外します"
 msgid "Remove history entries older than"
 msgstr "設定日より古い履歴のエントリを削除"
 
-msgid "Remove history entries right after the"
+#, fuzzy
+msgid "Remove history entries right after"
 msgstr "履歴のエントリを直後に削除する"
 
 msgid "Remove history entries which meet the following conditions"
@@ -55257,10 +55269,18 @@ msgstr "コンテナのPodmanディスク使用量の上限を設定する"
 msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "イメージのPodmanディスク使用量の上限を設定する"
 
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of volumes"
+msgstr "イメージのPodmanディスク使用量の上限を設定する"
+
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "アクティブなコンテナの総数の上限を設定します。"
 
 msgid "Sets the upper levels for the total number of active images."
+msgstr "アクティブなイメージの総数の上限を設定します。"
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active volumes."
 msgstr "アクティブなイメージの総数の上限を設定します。"
 
 msgid "Sets the upper levels for the total number of containers."
@@ -55269,14 +55289,26 @@ msgstr "コンテナの総数の上限を設定します。"
 msgid "Sets the upper levels for the total number of images."
 msgstr "イメージの総数の上限を設定します。"
 
+#, fuzzy
+msgid "Sets the upper levels for the total number of volumes."
+msgstr "イメージの総数の上限を設定します。"
+
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr "Podman コンテナの総再利用可能サイズの上限を設定します。"
+
+#, fuzzy
+msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr "Podman コンテナの総再利用可能サイズの上限を設定します。"
 
 msgid "Sets the upper levels for the total size of Podman containers."
 msgstr "Podman コンテナの総サイズの上限を設定します。"
 
 msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Podman イメージの総サイズの上限を設定します。"
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman volumes."
 msgstr "Podman イメージの総サイズの上限を設定します。"
 
 msgid "Sets the user of the alert. Display name of the request owner."
@@ -71385,6 +71417,10 @@ msgstr "アクティブなシャード総数の上位レベル"
 msgid "Total number of active shards upper level"
 msgstr "アクティブなシャード総数の上位レベル"
 
+#, fuzzy
+msgid "Total number of active volumes upper levels"
+msgstr "アクティブなイメージ総数の上位レベル"
+
 msgid "Total number of collections lower level"
 msgstr "コレクション総数の下位レベル"
 
@@ -71532,6 +71568,10 @@ msgstr "ユーザー総数の下位レベル"
 msgid "Total number of user upper level"
 msgstr "ユーザー総数の上位レベル"
 
+#, fuzzy
+msgid "Total number of volumes upper levels"
+msgstr "イメージ総数の上位レベル"
+
 msgid "Total number of zombie jobs"
 msgstr "ゾンビジョブの総数"
 
@@ -71554,6 +71594,10 @@ msgid "Total read latency"
 msgstr "総読取レイテンシ"
 
 msgid "Total reclaimable size of Podman containers"
+msgstr "Podman コンテナの総回収可能サイズ"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman volumes"
 msgstr "Podman コンテナの総回収可能サイズ"
 
 msgid "Total reclaimable size upper levels"
@@ -73101,6 +73145,10 @@ msgstr "Podman コンテナの総サイズ"
 msgid "Total size of Podman images"
 msgstr "Podman イメージの総サイズ"
 
+#, fuzzy
+msgid "Total size of Podman volumes"
+msgstr "Podman イメージの総サイズ"
+
 msgid "Total size of all indexes for the collection"
 msgstr "コレクションの全てのインデックスの合計サイズ"
 
@@ -73264,6 +73312,10 @@ msgstr "輸送ラグ"
 
 msgid "Transport lag"
 msgstr "トランスポート ラグ"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "クリティカルとして扱われる状態"
 
 msgid "Treat host down as"
 msgstr "ホストDOWNを次のように扱う"
@@ -78250,6 +78302,10 @@ msgstr "ウィークリーレポート"
 msgid "Weekly rate"
 msgstr "ウィークリーレート"
 
+#, fuzzy
+msgid "Welcome page"
+msgstr "manページを確認する"
+
 msgid "Welcome to Checkmk Mobile."
 msgstr "Checkmk Mobileへようこそ。"
 
@@ -82850,6 +82906,10 @@ msgstr "エントリ"
 msgid "entries (max. 50)"
 msgstr "エントリー数 (最大50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "シリアルナンバー"
+
 msgid "estimated duration"
 msgstr "推定期間"
 
@@ -84129,9 +84189,6 @@ msgstr "テスト"
 msgid "tests"
 msgstr "テスト"
 
-msgid "th entry"
-msgstr "エントリ"
-
 msgid "th notification"
 msgstr "通知"
 
@@ -84460,6 +84517,12 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "Get started (Welcome)"
+#~ msgstr "スタート（ようこそ）"
+
+#~ msgid "th entry"
+#~ msgstr "エントリ"
 
 #, python-format
 #~ msgid "Original %s"

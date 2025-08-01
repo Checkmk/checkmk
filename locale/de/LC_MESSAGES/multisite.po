@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-30 19:35+0000\n"
+"PO-Revision-Date: 2025-07-31 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -24093,6 +24093,12 @@ msgstr "Fehlgeschlagene Anfragen an Adressbuchdateien"
 msgid "Failed search requests"
 msgstr "Fehlgeschlagene Suchanfragen"
 
+msgid ""
+"Failed service that are disabled are also considered for the status of the "
+"service. Activating this option will cause the service to be CRIT if a "
+"failed service is disabled."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to activate changed site configuration.\n"
@@ -26292,9 +26298,6 @@ msgstr "Datei von SFTP-Server holen"
 
 msgid "Get header only"
 msgstr "Nur Header abfragen"
-
-msgid "Get started (Welcome)"
-msgstr "Erste Schritte (Willkommen)"
 
 msgid "Getting started"
 msgstr "Erste Schritte"
@@ -43856,6 +43859,10 @@ msgstr "Anzahl der Podman-Container"
 msgid "Number of Podman images"
 msgstr "Anzahl der Podman Images"
 
+#, fuzzy
+msgid "Number of Podman volumes"
+msgstr "Anzahl der Podman Images"
+
 msgid "Number of Resources"
 msgstr "Anzahl von Ressourcen"
 
@@ -43881,6 +43888,10 @@ msgid "Number of active Podman containers"
 msgstr "Anzahl der aktiven Podman-Container"
 
 msgid "Number of active Podman images"
+msgstr "Anzahl von aktiven Podman Images"
+
+#, fuzzy
+msgid "Number of active Podman volumes"
 msgstr "Anzahl von aktiven Podman Images"
 
 msgid "Number of active instances"
@@ -51913,7 +51924,8 @@ msgstr "Filter entfernen"
 msgid "Remove history entries older than"
 msgstr "Historieneinträge entfernen, die älter sind als"
 
-msgid "Remove history entries right after the"
+#, fuzzy
+msgid "Remove history entries right after"
 msgstr "Historieneinträge entfernen direkt nach"
 
 msgid "Remove history entries which meet the following conditions"
@@ -56668,10 +56680,18 @@ msgstr ""
 msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
 
+#, fuzzy
+msgid "Sets the upper levels for the Podman disk usage of volumes"
+msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
+
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
 
 msgid "Sets the upper levels for the total number of active images."
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
+
+#, fuzzy
+msgid "Sets the upper levels for the total number of active volumes."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
 
 msgid "Sets the upper levels for the total number of containers."
@@ -56680,8 +56700,18 @@ msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
 msgid "Sets the upper levels for the total number of images."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
 
+#, fuzzy
+msgid "Sets the upper levels for the total number of volumes."
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
+
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
+msgstr ""
+"Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
+"Containern fest."
+
+#, fuzzy
+msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr ""
 "Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
 "Containern fest."
@@ -56690,6 +56720,10 @@ msgid "Sets the upper levels for the total size of Podman containers."
 msgstr "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
 
 msgid "Sets the upper levels for the total size of Podman images."
+msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
+
+#, fuzzy
+msgid "Sets the upper levels for the total size of Podman volumes."
 msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
 
 msgid "Sets the user of the alert. Display name of the request owner."
@@ -65884,9 +65918,9 @@ msgstr ""
 "Das hier angegebene Pattern muss exakt mit dem Anfang des "
 "Sensorzustandstexts übereinstimmen (Groß-/Kleinschreibung beachten)."
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "The pattern {value} is not a valid regular expression: {err_msg}"
-msgstr "Der eingegebene Text wird als regulärer Ausdrucks-Pattern behandelt."
+msgstr "Das Pattern {value} ist kein gültiger regulärer Ausdruck:{err_msg}"
 
 msgid ""
 "The performance graph will always display the occupied memory. This is "
@@ -73612,6 +73646,10 @@ msgstr "Untergrenze für die Gesamtzahl der aktiven Shards"
 msgid "Total number of active shards upper level"
 msgstr "Obergrenze für die Gesamtzahl der aktiven Shards"
 
+#, fuzzy
+msgid "Total number of active volumes upper levels"
+msgstr "Obergrenzen für die Gesamtzahl aktiver Images"
+
 msgid "Total number of collections lower level"
 msgstr "Untergrenze für die Gesamtzahl der Kollektionen"
 
@@ -73760,6 +73798,10 @@ msgstr "Untergrenze für die Gesamtzahl der Benutzer"
 msgid "Total number of user upper level"
 msgstr "Obergrenze für die Gesamtzahl der Benutzer"
 
+#, fuzzy
+msgid "Total number of volumes upper levels"
+msgstr "Obergrenzen für die Gesamtzahl an Images"
+
 msgid "Total number of zombie jobs"
 msgstr "Gesamtzahl Zombie Aufträge"
 
@@ -73782,6 +73824,10 @@ msgid "Total read latency"
 msgstr "Gesamte Lese-Latenz"
 
 msgid "Total reclaimable size of Podman containers"
+msgstr "Gesamtgröße der wiederverwendbaren Podman-Container"
+
+#, fuzzy
+msgid "Total reclaimable size of Podman volumes"
 msgstr "Gesamtgröße der wiederverwendbaren Podman-Container"
 
 msgid "Total reclaimable size upper levels"
@@ -75323,6 +75369,10 @@ msgstr "Gesamtgröße der Podman-Container"
 msgid "Total size of Podman images"
 msgstr "Gesamtgröße der Podman Images"
 
+#, fuzzy
+msgid "Total size of Podman volumes"
+msgstr "Gesamtgröße der Podman Images"
+
 msgid "Total size of all indexes for the collection"
 msgstr "Gesamtgröße aller Indizes der Sammlung"
 
@@ -75486,6 +75536,10 @@ msgstr "Transportverzögerung (Lag)"
 
 msgid "Transport lag"
 msgstr "Transportverzögerung (Lag)"
+
+#, fuzzy
+msgid "Treat failed units that are disabled as critical"
+msgstr "Zustände, die als kritisch behandelt werden"
 
 msgid "Treat host down as"
 msgstr "Behandle Host DOWN als"
@@ -80589,6 +80643,10 @@ msgstr "Wöchentlicher Bericht"
 msgid "Weekly rate"
 msgstr "Wöchentliche Rate"
 
+#, fuzzy
+msgid "Welcome page"
+msgstr "Handbuchseite des Checks"
+
 msgid "Welcome to Checkmk Mobile."
 msgstr "Willkommen bei Checkmk Mobil."
 
@@ -85457,6 +85515,10 @@ msgstr "Einträge"
 msgid "entries (max. 50)"
 msgstr "Einträge (max. 50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "Seriennummer"
+
 msgid "estimated duration"
 msgstr "geschätzte Dauer"
 
@@ -86757,9 +86819,6 @@ msgstr "Test läuft"
 msgid "tests"
 msgstr "Tests"
 
-msgid "th entry"
-msgstr ""
-
 msgid "th notification"
 msgstr "te Benachrichtigung"
 
@@ -87090,6 +87149,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Get started (Welcome)"
+#~ msgstr "Erste Schritte (Willkommen)"
 
 #, python-format
 #~ msgid "Original %s"

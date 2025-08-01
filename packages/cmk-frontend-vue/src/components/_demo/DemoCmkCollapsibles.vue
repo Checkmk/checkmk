@@ -15,13 +15,27 @@ const open = ref(false)
 </script>
 
 <template>
-  <CmkCollapsibleTitle
-    :title="'Collapsible Title'"
-    :open="open"
-    :help_text="'Some help text'"
-    @toggle-open="open = !open"
-  />
-  <CmkCollapsible :open="open">
-    <CmkIndent> Some text inside the collapsible </CmkIndent>
-  </CmkCollapsible>
+  <div class="demo-container">
+    <CmkCollapsibleTitle
+      :title="'Collapsible Title'"
+      :side-title="'Side Title'"
+      :open="open"
+      :help_text="'Some help text'"
+      class="collapsible"
+      @toggle-open="open = !open"
+    />
+    <CmkCollapsible :open="open">
+      <CmkIndent> Some text inside the collapsible </CmkIndent>
+    </CmkCollapsible>
+  </div>
 </template>
+
+<style scoped>
+.demo-container {
+  min-width: 400px;
+}
+
+.collapsible {
+  width: 100%;
+}
+</style>

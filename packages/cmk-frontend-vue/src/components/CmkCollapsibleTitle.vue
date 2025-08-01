@@ -10,6 +10,9 @@ interface CollapsibleTitleProps {
   /**@property {string} title - Text to display next to the chevron */
   title: string
 
+  /**@property {string} sideTitle - Text to display on the right side of the title */
+  sideTitle?: string
+
   /** @property {boolean} open - If true, the collapsible element will be open by default,
    * otherwise it will be rendered closed
    */
@@ -32,12 +35,17 @@ defineEmits(['toggleOpen'])
     <span class="cmk-collapsible-title__text">
       {{ title }}
     </span>
+    <span v-if="sideTitle" class="cmk-collapsible-title__side-text">
+      {{ sideTitle }}
+    </span>
     <HelpText v-if="help_text" :help="help_text" />
   </button>
 </template>
 
 <style scoped>
 .cmk-collapsible-title {
+  display: flex;
+  align-items: center;
   position: relative;
   margin-left: 0;
   padding-left: 0;
@@ -91,9 +99,14 @@ defineEmits(['toggleOpen'])
   &.cmk-collapsible-title__chevron--right:before {
     top: 4px;
     left: 0;
-    margin-bottom: 16px;
     transform: rotate(45deg);
     transition: transform 100ms linear;
   }
+}
+
+.cmk-collapsible-title__side-text {
+  color: var(--font-color-dimmed);
+  font-weight: var(--font-weight-default);
+  margin-left: auto;
 }
 </style>

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -17,7 +17,7 @@ import PendingChangeItemText from './PendingChangeItemText.vue'
 
 const { t } = usei18n('changes-app')
 
-defineProps<{
+const props = defineProps<{
   pendingChanges: PendingChanges[]
   selectedSites: string[]
   numberOfForeignChanges: number
@@ -25,27 +25,27 @@ defineProps<{
 }>()
 
 const pendingChangesCollapsible = ref<boolean>(true)
+
+const changesTitle = computed(() => {
+  return `${t('changes', 'Changes')} (${props.pendingChanges.length})`
+})
+
+const changesSideTitle = computed(() => {
+  return `${t('foreign-changes', 'Foreign changes: ')} ${props.numberOfForeignChanges}`
+})
 </script>
 
 <template>
   <div class="pending-changes-container">
     <CmkCollapsibleTitle
-      :title="`Changes`"
+      :title="changesTitle"
+      :side-title="changesSideTitle"
       class="collapsible-title"
       :open="pendingChangesCollapsible"
       @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
     />
 
     <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible-pending-changes">
-      <CmkIndent class="cmk-indent-foreign-changes-container">
-        <div class="cmk-div-foreign-changes-text">
-          {{ t('foreign-changes', 'Foreign changes: ') }}
-        </div>
-        <div class="cmk-div-foreign-changes-text">
-          {{ numberOfForeignChanges }}
-        </div>
-      </CmkIndent>
-
       <CmkIndent v-if="selectedSites.length === 0" class="cmk-indent-no-sites-selected-container">
         <div class="cmk-div-no-sites-selected">
           {{ t('no-sites-selected', "You haven't selected any sites") }}
@@ -112,8 +112,6 @@ const pendingChangesCollapsible = ref<boolean>(true)
   background-color: var(--ux-theme-5);
   width: 100%;
   box-sizing: border-box;
-  display: block;
-  text-align: left;
 }
 
 .cmk-collapsible-pending-changes {
@@ -123,14 +121,6 @@ const pendingChangesCollapsible = ref<boolean>(true)
 
 :deep(.cmk-collapsible__content) {
   height: 100%;
-}
-
-.cmk-indent-foreign-changes-container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 6px;
-  border-bottom: 2px solid var(--ux-theme-4) !important;
 }
 
 .cmk-indent-no-sites-selected-container {

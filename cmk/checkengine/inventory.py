@@ -236,10 +236,16 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
         return False
 
     inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-    if inv_paths.inventory_tree(host_name).exists():
+    if (
+        inv_paths.inventory_tree(host_name).path.exists()
+        or inv_paths.inventory_tree(host_name).legacy.exists()
+    ):
         return False
 
-    if inv_paths.status_data_tree(host_name).exists():
+    if (
+        inv_paths.status_data_tree(host_name).path.exists()
+        or inv_paths.status_data_tree(host_name).legacy.exists()
+    ):
         return False
 
     archive_host = inv_paths.archive_host(host_name)

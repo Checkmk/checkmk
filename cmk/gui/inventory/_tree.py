@@ -288,7 +288,7 @@ def get_short_inventory_filepath(host_name: HostName) -> Path:
     return (
         InventoryPaths(cmk.utils.paths.omd_root)
         .inventory_tree(host_name)
-        .relative_to(cmk.utils.paths.omd_root)
+        .path.relative_to(cmk.utils.paths.omd_root)
     )
 
 

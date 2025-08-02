@@ -1742,12 +1742,12 @@ class SDMeta(TypedDict):
 
 
 def _save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
-    tree_path.parent.mkdir(parents=True, exist_ok=True)
+    tree_path.path.parent.mkdir(parents=True, exist_ok=True)
     store.save_text_to_file(tree_path.path, json.dumps(raw_tree) + "\n")
 
 
 def _save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawTree) -> None:
-    tree_path_gz.parent.mkdir(parents=True, exist_ok=True)
+    tree_path_gz.path.parent.mkdir(parents=True, exist_ok=True)
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
         f.write((json.dumps(meta_and_raw_tree) + "\n").encode("utf-8"))
@@ -1758,7 +1758,7 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
     tree_path = inv_paths.inventory_tree(host_name)
     is_json = False
     try:
-        mtime = tree_path.stat().st_mtime
+        mtime = tree_path.path.stat().st_mtime
         is_json = True
     except FileNotFoundError:
         # TODO CMK-23408
@@ -1768,19 +1768,19 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
             return
 
     tree_path_gz = inv_paths.inventory_tree_gz(host_name)
-    archive_tree_path = inv_paths.archive_tree(host_name, int(mtime))
+    archive_tree = inv_paths.archive_tree(host_name, int(mtime))
 
     if is_json:
-        archive_tree_path.parent.mkdir(parents=True, exist_ok=True)
-        tree_path.rename(archive_tree_path)
-        tree_path_gz.unlink(missing_ok=True)
+        archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
+        tree_path.path.rename(archive_tree.path)
+        tree_path_gz.path.unlink(missing_ok=True)
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
         return
 
     if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
-        archive_tree_path.parent.mkdir(parents=True, exist_ok=True)
-        store.save_text_to_file(archive_tree_path.path, json.dumps(raw_tree))
+        archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
+        store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
 
@@ -1974,11 +1974,11 @@ class InventoryStore:
 
     def remove_inventory_tree(self, *, host_name: HostName) -> None:
         tree_path = self.inv_paths.inventory_tree(host_name)
-        tree_path.unlink(missing_ok=True)
+        tree_path.path.unlink(missing_ok=True)
         tree_path.legacy.unlink(missing_ok=True)
 
         tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
-        tree_path_gz.unlink(missing_ok=True)
+        tree_path_gz.path.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
@@ -1996,7 +1996,7 @@ class InventoryStore:
 
     def remove_status_data_tree(self, *, host_name: HostName) -> None:
         tree_path = self.inv_paths.status_data_tree(host_name)
-        tree_path.unlink(missing_ok=True)
+        tree_path.path.unlink(missing_ok=True)
         tree_path.legacy.unlink(missing_ok=True)
 
     def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
@@ -2074,7 +2074,7 @@ class HistoryStore:
             yield OK(
                 HistoryPath(
                     tree_path=tree_path,
-                    timestamp=int(tree_path.stat().st_mtime),
+                    timestamp=int(tree_path.path.stat().st_mtime),
                 )
             )
         except FileNotFoundError:
@@ -2184,7 +2184,7 @@ class HistoryStore:
             history_entry.previous_timestamp,
             history_entry.current_timestamp,
         )
-        delta_cache_tree.parent.mkdir(parents=True, exist_ok=True)
+        delta_cache_tree.path.parent.mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
             delta_cache_tree.path,
             json.dumps(

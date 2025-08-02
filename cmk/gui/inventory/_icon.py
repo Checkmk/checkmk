@@ -19,11 +19,8 @@ from cmk.utils.tags import TagID
 
 
 def _has_inventory(host_name: HostName) -> bool:
-    return (
-        InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host_name).exists()
-        if host_name
-        else False
-    )
+    inventory_tree = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host_name)
+    return (inventory_tree.path.exists() or inventory_tree.legacy.exists()) if host_name else False
 
 
 def _render_inventory_icon(

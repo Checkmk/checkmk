@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,8 +22,6 @@ class TreePath:
             return
         if self.path.suffix != ".json":
             raise ValueError(self.path)
-        if self.path.with_suffix("") != self.legacy:
-            raise ValueError((self.path, self.legacy))
 
     @classmethod
     def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> TreePath:
@@ -39,27 +36,6 @@ class TreePath:
             else cls(path=Path(f"{file_path}.json"), legacy=file_path)
         )
 
-    @property
-    def parent(self) -> Path:
-        return self.path.parent
-
-    def exists(self) -> bool:
-        return self.path.exists() or self.legacy.exists()
-
-    def rename(self, tree_path: TreePath) -> None:
-        self.path.rename(tree_path.path)
-
-    def unlink(self, missing_ok: bool) -> None:
-        self.path.unlink(missing_ok=missing_ok)
-
-    def stat(self) -> os.stat_result:
-        return self.path.stat()
-
-    def relative_to(self, path: Path) -> Path:
-        return (
-            self.path.relative_to(path) if path.suffix == ".json" else self.legacy.relative_to(path)
-        )
-
 
 # TODO CMK-23408
 @dataclass(frozen=True, kw_only=True)
@@ -72,15 +48,6 @@ class TreePathGz:
             raise ValueError(self.path)
         if self.legacy.suffix != ".gz":
             raise ValueError(self.legacy)
-        if self.path.with_suffix("").with_suffix("") != self.legacy.with_suffix(""):
-            raise ValueError((self.path, self.legacy))
-
-    @property
-    def parent(self) -> Path:
-        return self.path.parent
-
-    def unlink(self, missing_ok: bool) -> None:
-        self.path.unlink(missing_ok=missing_ok)
 
 
 class Paths:

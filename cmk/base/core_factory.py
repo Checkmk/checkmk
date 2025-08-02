@@ -6,10 +6,12 @@
 from collections.abc import Callable, Mapping
 from typing import assert_never
 
+from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core_config import MonitoringCore
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
@@ -35,6 +37,8 @@ def create_core(
     loaded_config: LoadedConfigFragment,
     host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
     snmp_plugin_store: SNMPPluginStore,
+    config_cache: ConfigCache,
+    plugins: AgentBasedPlugins,
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
@@ -43,13 +47,17 @@ def create_core(
             )
             from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
+                make_fetcher_config_writer,
             )
 
             return CmcPb(
                 get_licensing_handler_type(),
-                make_cmc_config(
-                    edition, matcher, label_manager, loaded_config, host_tags, snmp_plugin_store
-                ),
+                make_cmc_config(loaded_config, matcher, label_manager),
+                [
+                    make_fetcher_config_writer(
+                        edition, loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
+                    )
+                ],
             )
         case "nagios":
             from cmk.base.core_nagios import NagiosCore

@@ -1181,6 +1181,8 @@ def _execute_autodiscovery(
         loading_result.loaded_config,
         loading_result.config_cache.host_tags.tags,
         make_plugin_store(ab_plugins),
+        loading_result.config_cache,
+        ab_plugins,
     )
     with config.set_use_core_config(
         autochecks_dir=autochecks_dir,
@@ -2615,6 +2617,8 @@ def _execute_silently(
                     loaded_config,
                     config_cache.host_tags.tags,
                     make_plugin_store(plugins),
+                    config_cache,
+                    plugins,
                 ),
                 plugins,
                 action=action,

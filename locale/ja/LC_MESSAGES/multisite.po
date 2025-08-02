@@ -8967,6 +8967,10 @@ msgstr "両方"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "両方(both)-Podとコンテナの両方のレベルの情報を表示します"
 
+#, fuzzy
+msgid "Both conditions must match (defensive)"
+msgstr "守備的（両方の条件が一致する必要があります）"
+
 msgid "Bottom"
 msgstr "ボトム"
 
@@ -43808,6 +43812,10 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
+
+#, fuzzy
+msgid "One condition needs to match (offensive)"
+msgstr "積極的（1つの条件が一致する必要があります）"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -82747,9 +82755,6 @@ msgstr "デフォルト (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "デフォルト(すべての通常のAWSリージョン)"
 
-msgid "defensive (both conditions must match)"
-msgstr "守備的（両方の条件が一致する必要があります）"
-
 msgid "degraded"
 msgstr "劣化"
 
@@ -83730,9 +83735,6 @@ msgstr "不特定のサービスの"
 
 msgid "off"
 msgstr "オフ"
-
-msgid "offensive (one condition needs to match)"
-msgstr "積極的（1つの条件が一致する必要があります）"
 
 msgid "offline"
 msgstr "オフライン"

@@ -9620,6 +9620,9 @@ msgstr "Zowel"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Toon de informatie voor beide, pod en container, niveaus"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Bodem"
 
@@ -46766,6 +46769,10 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eén RRD per host/service (spaart disk IO, alleen met CMC)"
+
+#, fuzzy
+msgid "One condition needs to match (offensive)"
+msgstr "De regelvoorwaarden komen niet overeen."
 
 msgid "One heartbeat every"
 msgstr "Een hartslag elke"
@@ -88532,9 +88539,6 @@ msgstr "standaard (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "Standaardwaarden instellen voor alle secties"
 
-msgid "defensive (both conditions must match)"
-msgstr ""
-
 msgid "degraded"
 msgstr "gedegradeerd"
 
@@ -89555,10 +89559,6 @@ msgstr "van niet-gespecificeerde dienst"
 
 msgid "off"
 msgstr "van"
-
-#, fuzzy
-msgid "offensive (one condition needs to match)"
-msgstr "De regelvoorwaarden komen niet overeen."
 
 msgid "offline"
 msgstr "offline"

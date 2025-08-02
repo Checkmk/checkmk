@@ -9615,6 +9615,9 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr ""
 "Ambele - Afișează informațiile pentru ambele niveluri, pod și container"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Partea de jos"
 
@@ -46841,6 +46844,10 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Un RRD per gazdă/serviciu (economisește IO pe disc, numai cu CMC)"
+
+#, fuzzy
+msgid "One condition needs to match (offensive)"
+msgstr "Condițiile regulii nu se potrivesc."
 
 msgid "One heartbeat every"
 msgstr "O bătaie de inimă în fiecare"
@@ -88744,9 +88751,6 @@ msgstr "implicit (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "implicit (toate regiunile AWS normale)"
 
-msgid "defensive (both conditions must match)"
-msgstr ""
-
 msgid "degraded"
 msgstr "degradat"
 
@@ -89769,10 +89773,6 @@ msgstr "de serviciu nespecificat"
 
 msgid "off"
 msgstr "off"
-
-#, fuzzy
-msgid "offensive (one condition needs to match)"
-msgstr "Condițiile regulii nu se potrivesc."
 
 msgid "offline"
 msgstr "offline"

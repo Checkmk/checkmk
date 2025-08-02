@@ -9547,6 +9547,9 @@ msgstr ""
 "Entrambi: visualizza le informazioni per entrambi i livelli di baccello e "
 "contenitore."
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "In basso"
 
@@ -46370,6 +46373,10 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Un RRD per host/servizio (salva l'IO del disco, solo con CMC)"
+
+#, fuzzy
+msgid "One condition needs to match (offensive)"
+msgstr "Le condizioni della regola non corrispondono."
 
 msgid "One heartbeat every"
 msgstr "Un battito di cuore ogni"
@@ -87794,9 +87801,6 @@ msgstr "default (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "default (tutte le regioni AWS normali)"
 
-msgid "defensive (both conditions must match)"
-msgstr ""
-
 msgid "degraded"
 msgstr "degradato"
 
@@ -88801,10 +88805,6 @@ msgstr "di servizio non specificato"
 
 msgid "off"
 msgstr "off"
-
-#, fuzzy
-msgid "offensive (one condition needs to match)"
-msgstr "Le condizioni della regola non corrispondono."
 
 msgid "offline"
 msgstr "offline"

@@ -9635,6 +9635,9 @@ msgstr "Ambos"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "Ambos - Mostrar a informação para ambos, cápsula e recipiente, níveis"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Fundo"
 
@@ -46735,6 +46738,10 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Um RRD por host/serviço (salva IO de disco, somente com CMC)"
+
+#, fuzzy
+msgid "One condition needs to match (offensive)"
+msgstr "As condições das regras não coincidem."
 
 msgid "One heartbeat every"
 msgstr "Um batimento cardíaco a cada"
@@ -88432,9 +88439,6 @@ msgstr "padrão (%s)"
 msgid "default (all normal AWS regions)"
 msgstr "predefinição (todas as regiões AWS normais)"
 
-msgid "defensive (both conditions must match)"
-msgstr ""
-
 msgid "degraded"
 msgstr "degradado"
 
@@ -89450,10 +89454,6 @@ msgstr "de serviço não especificado"
 
 msgid "off"
 msgstr "em"
-
-#, fuzzy
-msgid "offensive (one condition needs to match)"
-msgstr "As condições das regras não coincidem."
 
 msgid "offline"
 msgstr "off-line"

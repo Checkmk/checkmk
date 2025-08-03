@@ -42,7 +42,7 @@ tracer = trace.get_tracer()
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-_LockingMode = Literal["abort", "wait"] | None
+type _LockingMode = Literal["abort", "wait"] | None
 
 
 class CoreAction(enum.Enum):

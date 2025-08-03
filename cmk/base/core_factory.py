@@ -30,6 +30,8 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
     return get_available_licensing_handler_type()
 
 
+# TODO: I think it would be much nicer if we had one version of this function
+# for every edition, with the conditional imports at the callsites of this.
 def create_core(
     edition: Edition,
     matcher: RulesetMatcher,
@@ -44,20 +46,34 @@ def create_core(
         case "cmc":
             from cmk.base.cee.microcore_config import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
+                HelperConfigWriter,
             )
             from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
                 make_fetcher_config_writer,
             )
 
+            helper_config_writers: list[HelperConfigWriter] = [
+                make_fetcher_config_writer(
+                    edition, loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
+                )
+            ]
+
+            if edition in (Edition.CCE, Edition.CME, Edition.CSE):
+                from cmk.base.configlib.cce.relay import (
+                    make_relay_config_writer,  # type: ignore[import-not-found, import-untyped, unused-ignore]
+                )
+
+                helper_config_writers.append(
+                    make_relay_config_writer(
+                        loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
+                    )
+                )
+
             return CmcPb(
                 get_licensing_handler_type(),
                 make_cmc_config(loaded_config, matcher, label_manager),
-                [
-                    make_fetcher_config_writer(
-                        edition, loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
-                    )
-                ],
+                helper_config_writers,
             )
         case "nagios":
             from cmk.base.core_nagios import NagiosCore

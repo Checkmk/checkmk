@@ -44,6 +44,18 @@ class UserChangePasswordPage(ABCUserProfilePage):
     def __init__(self) -> None:
         super().__init__("general.change_password")
 
+    @classmethod
+    def _current_pw_field(cls) -> str:
+        return "_cur_password"
+
+    @classmethod
+    def _new_pw_field(cls) -> str:
+        return "_password"
+
+    @classmethod
+    def _repeat_pw_field(cls) -> str:
+        return "_password2"
+
     def _action(self) -> None:
         assert user.id is not None
 
@@ -51,27 +63,35 @@ class UserChangePasswordPage(ABCUserProfilePage):
         user_spec = users[user.id]
 
         cur_password = request.get_validated_type_input(
-            Password, "cur_password", empty_is_none=True
+            Password, self._current_pw_field(), empty_is_none=True
         )
-        password = request.get_validated_type_input(Password, "password", empty_is_none=True)
-        password2 = request.get_validated_type_input(Password, "password2", empty_is_none=True)
+        password = request.get_validated_type_input(
+            Password, self._new_pw_field(), empty_is_none=True
+        )
+        password2 = request.get_validated_type_input(
+            Password, self._repeat_pw_field(), empty_is_none=True
+        )
 
         # Force change pw mode
         if not cur_password:
-            raise MKUserError("cur_password", _("You need to provide your current password."))
+            raise MKUserError(
+                self._current_pw_field(), _("You need to provide your current password.")
+            )
 
         if not password:
-            raise MKUserError("password", _("You need to change your password."))
+            raise MKUserError(self._new_pw_field(), _("You need to change your password."))
 
         if cur_password == password:
-            raise MKUserError("password", _("The new password must differ from your current one."))
+            raise MKUserError(
+                self._new_pw_field(), _("The new password must differ from your current one.")
+            )
 
         now = datetime.now()
         if userdb.check_credentials(user.id, cur_password, now) is False:
-            raise MKUserError("cur_password", _("Your old password is wrong."))
+            raise MKUserError(self._current_pw_field(), _("Your old password is wrong."))
 
         if password2 and password != password2:
-            raise MKUserError("password2", _("New passwords don't match."))
+            raise MKUserError(self._repeat_pw_field(), _("New passwords don't match."))
 
         verify_password_policy(password)
         user_spec["password"] = hash_password(password)
@@ -141,7 +161,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         locked_attributes = userdb.locked_attributes(user_spec.get("connector"))
         if "password" in locked_attributes:
             raise MKUserError(
-                "cur_password",
+                self._current_pw_field(),
                 _("You can not change your password, because it is managed by another system."),
             )
 
@@ -151,14 +171,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
             forms.header(self._page_title())
 
             forms.section(_("Current password"))
-            html.password_input("cur_password", autocomplete="new-password")
+            html.password_input(self._current_pw_field(), autocomplete="new-password")
 
             forms.section(_("New password"))
-            html.password_input("password", autocomplete="new-password")
+            html.password_input(self._new_pw_field(), autocomplete="new-password")
             html.password_meter()
 
             forms.section(_("New password confirmation"))
-            html.password_input("password2", autocomplete="new-password")
+            html.password_input(self._repeat_pw_field(), autocomplete="new-password")
 
             html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 

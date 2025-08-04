@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.config import EnforcedServicesTable, FilterMode, HostCheckTable
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
@@ -64,21 +65,19 @@ def test_cluster_ignores_nodes_parameters(
     )
     ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
 
-    def service_description_callback(
-        hostname: HostName, check_plugin_name: CheckPluginName, item: str | None
-    ) -> ServiceName:
-        return service_name_config.make_name(
+    def service_description_callback(hostname: HostName, sid: ServiceID) -> ServiceName:
+        return service_name_config(
             hostname,
-            check_plugin_name,
-            service_name_template=(
+            sid,
+            (
                 None
-                if (p := get_check_plugin(check_plugin_name, agent_based_plugins.check_plugins))
-                is None
+                if (p := get_check_plugin(sid.name, agent_based_plugins.check_plugins)) is None
                 else p.service_name
             ),
-            item=item,
         )
 
     # a rule for the node:
@@ -161,7 +160,9 @@ def test_check_table_enforced_vs_discovered_precedence(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
     check_plugins = agent_based_plugins.check_plugins
     service_configurer = config_cache.make_service_configurer(check_plugins, service_name_config)
     enforced_services_table = EnforcedServicesTable(
@@ -538,7 +539,9 @@ def test_check_table(
     )
 
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
             config_cache._loaded_config.static_checks,
@@ -622,7 +625,9 @@ def test_check_table_of_mgmt_boards(
     )
 
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
 
     assert (
         list(
@@ -662,7 +667,9 @@ def test_check_table__static_checks_win(
     )
     ts.set_autochecks(hostname, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
             config_cache._loaded_config.static_checks,

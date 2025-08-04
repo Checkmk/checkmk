@@ -18,7 +18,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -59,7 +58,10 @@ class MonitoringCore(abc.ABC):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         hosts_config: Hosts,
-        service_name_config: PassiveServiceNameConfig,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -81,7 +83,8 @@ class MonitoringCore(abc.ABC):
             config_path,
             config_cache,
             hosts_config,
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             get_ip_stack_config,
             default_address_family,
@@ -101,7 +104,10 @@ class MonitoringCore(abc.ABC):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         hosts_config: Hosts,
-        service_name_config: PassiveServiceNameConfig,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -286,7 +292,10 @@ def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -327,7 +336,8 @@ def do_create_config(
                 core,
                 config_cache,
                 hosts_config,
-                service_name_config,
+                final_service_name_config,
+                passive_service_name_config,
                 enforced_services_table,
                 plugins,
                 discovery_rules,
@@ -394,7 +404,10 @@ def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -425,7 +438,8 @@ def _create_core_config(
             config_path,
             config_cache,
             hosts_config,
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             discovery_rules,

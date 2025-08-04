@@ -22,6 +22,7 @@ from cmk.base.checkers import (
     CMKSummarizer,
     SectionPluginMapper,
 )
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.base.modes.check_mk import execute_active_check_inventory
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -140,7 +141,9 @@ def inventory_as_check(
     config_cache = loading_result.config_cache
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_service_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -166,7 +169,7 @@ def inventory_as_check(
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
-            config_cache.make_passive_service_name_config(),
+            service_name_config,
             enforced_service_table,
         ),
         plugins,

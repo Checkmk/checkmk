@@ -18,7 +18,6 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.base import core_config
 from cmk.base.config import ConfigCache
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
@@ -56,7 +55,10 @@ class CoreAction(enum.Enum):
 def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -79,7 +81,8 @@ def do_reload(
     do_restart(
         config_cache,
         hosts_config,
-        service_name_config,
+        final_service_name_config,
+        passive_service_name_config,
         enforced_services_table,
         get_ip_stack_config,
         default_address_family,
@@ -100,7 +103,10 @@ def do_reload(
 def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -127,7 +133,8 @@ def do_restart(
                 core=core,
                 config_cache=config_cache,
                 hosts_config=host_config,
-                service_name_config=service_name_config,
+                final_service_name_config=final_service_name_config,
+                passive_service_name_config=passive_service_name_config,
                 enforced_services_table=enforced_services_table,
                 plugins=plugins,
                 discovery_rules=discovery_rules,

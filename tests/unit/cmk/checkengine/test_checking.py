@@ -192,6 +192,9 @@ class AutocheckEntryLike:
     parameters: Mapping[str, str]
     service_labels: Mapping[str, str]
 
+    def id(self) -> ServiceID:
+        return ServiceID(self.check_plugin_name, self.item)
+
 
 class _CheckingConfig(ABCCheckingConfig):
     def __call__(self, *args: object) -> Sequence[Mapping[str, object]]:
@@ -202,7 +205,7 @@ def test_service_configurer() -> None:
     service_configurer = ServiceConfigurer(
         checking_config=_CheckingConfig(),
         plugins={CheckPluginName("df"): _DUMMY_DF_PLUGIN},
-        get_service_description=lambda _host, check, item: f"{check}-{item}",
+        get_service_description=lambda _host, service: f"{service[0]}-{service[1]}",
         get_effective_host=lambda host, _desc, _labels: host,
         get_service_labels=lambda _host, _desc, labels: labels,
     )

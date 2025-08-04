@@ -24,6 +24,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -1493,7 +1494,9 @@ def test_commandline_discovery(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
     fetcher = CMKFetcher(
         config_cache,
         lambda hn: PlainFetcherTrigger(),

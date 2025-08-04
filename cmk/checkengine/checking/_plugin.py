@@ -48,13 +48,15 @@ class AutocheckEntryProtocol(Protocol):
     @property
     def service_labels(self) -> _DiscoveredLabels: ...
 
+    def id(self) -> ServiceID: ...
+
 
 class ServiceConfigurer:
     def __init__(
         self,
         checking_config: ABCCheckingConfig,
         plugins: Mapping[CheckPluginName, CheckPlugin],
-        get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+        get_service_description: Callable[[HostName, ServiceID], ServiceName],
         get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
         get_service_labels: Callable[[HostName, ServiceName, _DiscoveredLabels], _Labels],
     ) -> None:
@@ -70,9 +72,7 @@ class ServiceConfigurer:
         autocheck_entry: AutocheckEntryProtocol,
     ) -> ConfiguredService:
         # TODO: only call this function when we know "effective host" == hostname and simplify accordingly
-        service_name = self._get_service_description(
-            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-        )
+        service_name = self._get_service_description(hostname, autocheck_entry.id())
         labels = self._get_service_labels(hostname, service_name, autocheck_entry.service_labels)
 
         return ConfiguredService(

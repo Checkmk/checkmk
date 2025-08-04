@@ -47,6 +47,7 @@ from cmk.base.config import (
 )
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import Mode, modes, Option
@@ -632,7 +633,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         raise MKBailOut("Can not be used with cluster hosts")
 
     config_cache = loading_result.config_cache
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_services_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -846,7 +849,9 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
         hosts = all_hosts
 
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(hosts)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_services_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -1320,9 +1325,12 @@ modes.register(
 
 def mode_flush(hosts: list[HostName]) -> None:
     plugins = load_checks()
-    config_cache = load_config(plugins).config_cache
+    loading_result = load_config(plugins)
+    config_cache = loading_result.config_cache
     hosts_config = config_cache.hosts_config
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
 
     effective_host_callback = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, service_name_config
@@ -1470,11 +1478,15 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     else:
         hostnames = sorted(hostnames)
 
-    service_name_config = config_cache.make_passive_service_name_config()
+    final_service_name_config = make_final_service_name_config(
+        loading_result.loaded_config, config_cache.ruleset_matcher
+    )
+    service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
     create_config(
         sys.stdout,
         Path(VersionedConfigPath.next()),
         config_cache,
+        final_service_name_config,
         service_name_config,
         config.EnforcedServicesTable(
             BundledHostRulesetMatcher(
@@ -1570,7 +1582,12 @@ def mode_update() -> None:
     )
 
     bake_on_restart = _make_configured_bake_on_restart(loading_result, hosts_config.hosts)
-    service_name_config = loading_result.config_cache.make_passive_service_name_config()
+    final_service_name_config = make_final_service_name_config(
+        loading_result.loaded_config, loading_result.config_cache.ruleset_matcher
+    )
+    service_name_config = loading_result.config_cache.make_passive_service_name_config(
+        final_service_name_config
+    )
     enfored_services_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -1596,7 +1613,8 @@ def mode_update() -> None:
                 ),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
-                service_name_config=service_name_config,
+                final_service_name_config=final_service_name_config,
+                passive_service_name_config=service_name_config,
                 enforced_services_table=enfored_services_table,
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
@@ -1671,19 +1689,25 @@ def mode_restart(args: Sequence[HostName]) -> None:
     ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
-    service_name_config = loading_result.config_cache.make_passive_service_name_config()
+    final_service_name_config = make_final_service_name_config(
+        loading_result.loaded_config, loading_result.config_cache.ruleset_matcher
+    )
+    passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
+        final_service_name_config
+    )
 
     cmk.base.core.do_restart(
         loading_result.config_cache,
         hosts_config,
-        service_name_config,
+        final_service_name_config,
+        passive_service_name_config,
         config.EnforcedServicesTable(
             BundledHostRulesetMatcher(
                 loading_result.loaded_config.static_checks,
                 loading_result.config_cache.ruleset_matcher,
                 loading_result.config_cache.label_manager.labels_of_host,
             ),
-            service_name_config,
+            passive_service_name_config,
             plugins.check_plugins,
         ),
         ip_lookup_config.ip_stack_config,
@@ -1763,19 +1787,25 @@ def mode_reload(args: Sequence[HostName]) -> None:
     ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
-    service_name_config = loading_result.config_cache.make_passive_service_name_config()
+    final_service_name_config = make_final_service_name_config(
+        loading_result.loaded_config, loading_result.config_cache.ruleset_matcher
+    )
+    passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
+        final_service_name_config
+    )
 
     cmk.base.core.do_reload(
         loading_result.config_cache,
         hosts_config,
-        service_name_config,
+        final_service_name_config,
+        passive_service_name_config,
         config.EnforcedServicesTable(
             BundledHostRulesetMatcher(
                 loading_result.loaded_config.static_checks,
                 loading_result.config_cache.ruleset_matcher,
                 loading_result.config_cache.label_manager.labels_of_host,
             ),
-            service_name_config,
+            passive_service_name_config,
             plugins.check_plugins,
         ),
         ip_lookup_config.ip_stack_config,
@@ -2080,7 +2110,11 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
 
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(
+            loading_result.loaded_config, loading_result.config_cache.ruleset_matcher
+        )
+    )
     autochecks_config = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, service_name_config
     )
@@ -2403,7 +2437,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         loading_result.loaded_config.discovery_rules,
     )
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_services_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -2657,7 +2693,9 @@ def run_checking(
         CheckPluginName,
     )
 
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loaded_config, config_cache.ruleset_matcher)
+    )
     service_configurer = config_cache.make_service_configurer(
         plugins.check_plugins, service_name_config
     )
@@ -2886,7 +2924,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     loading_result = load_config(plugins)
     config_cache = loading_result.config_cache
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
     enforced_service_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loading_result.loaded_config.static_checks,
@@ -3196,8 +3236,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
     loading_result = config.load(discovery_rulesets)
     config_cache = loading_result.config_cache
-    service_name_config = (
-        config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )  # not obvious to me why/if we *really* need this
     enforced_service_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(

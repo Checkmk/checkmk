@@ -33,7 +33,11 @@ from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
+from cmk.base.configlib.servicename import (
+    FinalServiceNameConfig,
+    make_final_service_name_config,
+    PassiveServiceNameConfig,
+)
 from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -1657,12 +1661,11 @@ def test_get_sorted_check_table_no_cmc(
     config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
-    service_name_config = config_cache.make_passive_service_name_config()
     services = config_cache.configured_services(
         host_name,
         {},
-        config_cache.make_service_configurer({}, service_name_config),
-        service_name_config,
+        config_cache.make_service_configurer({}, lambda *a: ""),
+        lambda *a: "",
         enforced_services_table=lambda hn: {},
         service_depends_on=lambda hn, descr: {
             "description A": ["description C"],
@@ -1690,7 +1693,6 @@ def test_resolve_service_dependencies_cyclic(
 
     monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
 
-    service_name_config = config_cache.make_passive_service_name_config()
     with pytest.raises(
         MKGeneralException,
         match=re.escape(
@@ -1703,8 +1705,8 @@ def test_resolve_service_dependencies_cyclic(
         config_cache.configured_services(
             HostName("MyHost"),
             {},
-            config_cache.make_service_configurer({}, service_name_config),
-            service_name_config,
+            config_cache.make_service_configurer({}, lambda *a: ""),
+            lambda *a: "",
             enforced_services_table=lambda hn: {},
             service_depends_on=lambda _hn, descr: {
                 "description A": ["description B"],
@@ -3002,7 +3004,9 @@ def test_check_table_cluster_merging_enforced_and_discovered(
         [AutocheckEntry(CheckPluginName("check1"), "item", {}, {})],
     )
     config_cache = ts.apply(monkeypatch)
-    service_name_config = config_cache.make_passive_service_name_config()
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
 
     assert (
         config_cache.check_table(

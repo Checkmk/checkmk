@@ -27,7 +27,6 @@ import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base.config import ConfigCache, FilterMode, save_packed_config
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -46,6 +45,7 @@ from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import ServiceName
 
 from ._host_check_config import HostCheckConfig
 
@@ -110,7 +110,7 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: Path,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -141,7 +141,7 @@ def precompile_hostchecks(
             )
             host_check = dump_precompiled_hostcheck(
                 config_cache,
-                service_name_config,
+                passive_service_name_config,
                 enforced_services_table,
                 config_path,
                 hostname,
@@ -165,7 +165,7 @@ def precompile_hostchecks(
 
 def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -179,7 +179,7 @@ def dump_precompiled_hostcheck(
     precompile_mode: PrecompileMode,
 ) -> str:
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
-        config_cache, service_name_config, enforced_services_table, hostname, plugins
+        config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
     )
     ip_stack_config = get_ip_stack_config(hostname)
 
@@ -242,7 +242,7 @@ def dump_precompiled_hostcheck(
 
 def _make_needed_plugins_locations(
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -253,7 +253,7 @@ def _make_needed_plugins_locations(
     list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
 ]:
     needed_agent_based_plugins = _get_needed_plugins(
-        config_cache, service_name_config, enforced_services_table, hostname, plugins
+        config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
     )
 
     if hostname in config_cache.hosts_config.clusters:
@@ -262,7 +262,11 @@ def _make_needed_plugins_locations(
             # we're deduplicating later.
             needed_agent_based_plugins.extend(
                 _get_needed_plugins(
-                    config_cache, service_name_config, enforced_services_table, node, plugins
+                    config_cache,
+                    passive_service_name_config,
+                    enforced_services_table,
+                    node,
+                    plugins,
                 )
             )
 
@@ -286,7 +290,7 @@ def _make_needed_plugins_locations(
 
 def _get_needed_plugins(
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -307,9 +311,9 @@ def _get_needed_plugins(
                 host_name,
                 agent_based_plugins.check_plugins,
                 config_cache.make_service_configurer(
-                    agent_based_plugins.check_plugins, service_name_config
+                    agent_based_plugins.check_plugins, passive_service_name_config
                 ),
-                service_name_config,
+                passive_service_name_config,
                 enforced_services_table,
                 filter_mode=FilterMode.INCLUDE_CLUSTERED,
                 skip_ignored=False,

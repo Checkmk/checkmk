@@ -24,7 +24,6 @@ from cmk.base.config import (
     ObjectAttributes,
     ServicegroupName,
 )
-from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import (
     AbstractServiceID,
     CoreCommand,
@@ -78,7 +77,10 @@ class NagiosCore(core_config.MonitoringCore):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         hosts_config: Hosts,
-        service_name_config: PassiveServiceNameConfig,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -99,7 +101,8 @@ class NagiosCore(core_config.MonitoringCore):
         self._config_cache = config_cache
         self._create_core_config(
             Path(config_path),
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins.check_plugins,
             licensing_handler,
@@ -115,7 +118,7 @@ class NagiosCore(core_config.MonitoringCore):
         )
         self._precompile_hostchecks(
             Path(config_path),
-            service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             discovery_rules,
@@ -129,7 +132,10 @@ class NagiosCore(core_config.MonitoringCore):
     def _create_core_config(
         self,
         config_path: Path,
-        service_name_config: PassiveServiceNameConfig,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -158,7 +164,8 @@ class NagiosCore(core_config.MonitoringCore):
             config_buffer,
             config_path,
             self._config_cache,
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             hostnames=sorted(
@@ -181,7 +188,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: Path,
-        service_name_config: PassiveServiceNameConfig,
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -198,7 +205,7 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
-            service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             discovery_rules,
@@ -257,7 +264,10 @@ def create_config(
     outfile: IO[str],
     config_path: Path,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -282,7 +292,8 @@ def create_config(
         all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg,
             config_cache,
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             hostname,
@@ -325,7 +336,10 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -354,7 +368,8 @@ def _create_nagios_config_host(
         service_labels=create_nagios_servicedefs(
             cfg,
             config_cache,
-            service_name_config,
+            final_service_name_config,
+            passive_service_name_config,
             enforced_services_table,
             plugins,
             hostname,
@@ -515,7 +530,7 @@ _ServiceLabels = dict[ServiceName, Labels]
 def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -528,8 +543,8 @@ def _process_services_data(
     host_check_table = config_cache.check_table(
         hostname,
         plugins,
-        config_cache.make_service_configurer(plugins, service_name_config),
-        service_name_config,
+        config_cache.make_service_configurer(plugins, passive_service_name_config),
+        passive_service_name_config,
         enforced_services_table,
     )
     services_ids: dict[ServiceName, AbstractServiceID] = {}
@@ -604,7 +619,10 @@ _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -626,7 +644,7 @@ def create_nagios_servicedefs(
     services_ids, service_labels = _process_services_data(
         cfg,
         config_cache,
-        service_name_config,
+        passive_service_name_config,
         enforced_services_table,
         service_depends_on,
         plugins,
@@ -657,7 +675,7 @@ def create_nagios_servicedefs(
         ip_stack_config,
         host_ip_family,
         host_attrs,
-        service_name_config.final_service_name_config,
+        final_service_name_config,
         ip_address_of,
         stored_passwords,
         password_store.core_password_store_path(),
@@ -738,7 +756,7 @@ def create_nagios_servicedefs(
                 entry,
                 cfg,
                 config_cache,
-                service_name_config,
+                final_service_name_config,
                 hostname,
                 license_counter,
                 services_ids,
@@ -808,7 +826,9 @@ def _create_custom_check(
     entry: dict[str, Any],
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
     hostname: HostName,
     license_counter: Counter,
     services_ids: dict[ServiceName, AbstractServiceID],
@@ -821,7 +841,7 @@ def _create_custom_check(
     #                              If this is missing, we create a passive check
     # "command_name"  (optional)   Name of Monitoring command to define. If missing,
     #                              we use "check-mk-custom"
-    description = service_name_config.final_service_name_config.finalize(
+    description = final_service_name_config(
         entry["service_description"], hostname, config_cache.label_manager.labels_of_host
     )
     command_name = entry.get("command_name", "check-mk-custom")

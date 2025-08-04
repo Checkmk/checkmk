@@ -46,7 +46,7 @@ from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import ParserConfig, SNMPFetcherConfig
@@ -240,7 +240,7 @@ def _aggregate_check_table_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -381,7 +381,7 @@ class _ServiceFilter:
 
 def _get_services_from_cluster_nodes(
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     node_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -407,7 +407,7 @@ def _get_services_from_cluster_nodes(
 
 def _get_clustered_services(
     config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
+    service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     cluster_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -426,10 +426,10 @@ def _get_clustered_services(
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
-            service_name = service_name_config.make_name(
+            service_name = service_name_config(
                 node_name,
-                entry.check_plugin_name,
-                service_name_template=(
+                entry.id(),
+                (
                     None
                     if (
                         p := agent_based_register.get_check_plugin(entry.check_plugin_name, plugins)
@@ -437,7 +437,6 @@ def _get_clustered_services(
                     is None
                     else p.service_name
                 ),
-                item=entry.item,
             )
             service_labels = config_cache.label_manager.labels_of_service(
                 node_name, service_name, entry.service_labels
@@ -1116,25 +1115,24 @@ def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
 
 
 def _make_service_description_cb(
-    passive_service_name_config: PassiveServiceNameConfig,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
+) -> Callable[[HostName, ServiceID], ServiceName]:
     """Replacement for functool.partial(service_description, matcher)
 
     functools.partial is not supported by the mypy type checker.
     """
 
-    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return passive_service_name_config.make_name(
+    def callback(hostname: HostName, service_id: ServiceID) -> ServiceName:
+        return passive_service_name_config(
             hostname,
-            check_plugin_name,
-            service_name_template=(
+            service_id,
+            (
                 None
-                if (p := agent_based_register.get_check_plugin(check_plugin_name, check_plugins))
+                if (p := agent_based_register.get_check_plugin(service_id.name, check_plugins))
                 is None
                 else p.service_name
             ),
-            item=item,
         )
 
     return callback
@@ -1427,7 +1425,7 @@ class AutochecksConfigurer:
         self,
         config_cache: ConfigCache,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     ) -> None:
         self._config_cache = config_cache
         self.service_name_config: Final = service_name_config
@@ -1452,10 +1450,10 @@ class AutochecksConfigurer:
         return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
-        return self.service_name_config.make_name(
+        return self.service_name_config(
             host_name,
-            entry.check_plugin_name,
-            service_name_template=(
+            entry.id(),
+            (
                 None
                 if (
                     p := agent_based_register.get_check_plugin(
@@ -1465,7 +1463,6 @@ class AutochecksConfigurer:
                 is None
                 else p.service_name
             ),
-            item=entry.item,
         )
 
     def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Labels:
@@ -1574,17 +1571,14 @@ class ConfigCache:
         )
         return self
 
-    def make_passive_service_name_config(self) -> PassiveServiceNameConfig:
+    def make_passive_service_name_config(
+        self,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
+    ) -> PassiveServiceNameConfig:
         return PassiveServiceNameConfig(
-            FinalServiceNameConfig(
-                matcher=self.ruleset_matcher,
-                illegal_chars=(
-                    self._loaded_config.cmc_illegal_chars
-                    if self._loaded_config.monitoring_core == "cmc"
-                    else self._loaded_config.nagios_illegal_chars
-                ),
-                translations=self._loaded_config.service_description_translation,
-            ),
+            final_service_name_config,
             user_defined_service_names=self._loaded_config.service_descriptions,
             use_new_names_for=self._loaded_config.use_new_descriptions_for,
             labels_of_host=self.label_manager.labels_of_host,
@@ -1593,7 +1587,7 @@ class ConfigCache:
     def make_service_configurer(
         self,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
-        service_name_config: PassiveServiceNameConfig,
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     ) -> ServiceConfigurer:
         # This function is not part of the checkengine, because it still has
         # hidden dependencies to the loaded config in the global scope of this module.
@@ -1605,7 +1599,7 @@ class ConfigCache:
                 service_rule_groups,
             ),
             check_plugins,
-            _make_service_description_cb(service_name_config, check_plugins),
+            _make_service_description_cb(passive_service_name_config, check_plugins),
             self.effective_host,
             lambda host_name, service_name, discovered_labels: self.label_manager.labels_of_service(
                 host_name, service_name, discovered_labels
@@ -1616,7 +1610,7 @@ class ConfigCache:
         self,
         service_configurer: ServiceConfigurer,
         ip_lookup: ip_lookup.IPLookup,
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -1769,7 +1763,7 @@ class ConfigCache:
         self,
         plugins: AgentBasedPlugins,
         service_configurer: ServiceConfigurer,
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         hostname: HostName,
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
@@ -1839,7 +1833,7 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -1878,7 +1872,7 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
-        service_name_config: PassiveServiceNameConfig,
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
@@ -1886,7 +1880,11 @@ class ConfigCache:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
             self.check_table(
-                hostname, plugins, service_configurer, service_name_config, enforced_services_table
+                hostname,
+                plugins,
+                service_configurer,
+                passive_service_name_config,
+                enforced_services_table,
             ).values(),
             key=lambda service: service.description,
         )
@@ -1896,14 +1894,18 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
-        service_name_config: PassiveServiceNameConfig,
+        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> Sequence[ConfiguredService]:
         services = self._sorted_services(
-            hostname, plugins, service_configurer, service_name_config, enforced_services_table
+            hostname,
+            plugins,
+            service_configurer,
+            passive_service_name_config,
+            enforced_services_table,
         )
         if self._loaded_config.monitoring_core == "cmc":
             return services
@@ -2274,7 +2276,9 @@ class ConfigCache:
         host_ip_stack_config: ip_lookup.IPStackConfig,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         host_attrs: ObjectAttributes,
-        final_service_name_config: FinalServiceNameConfig,
+        final_service_name_config: Callable[
+            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+        ],
         ip_address_of: IPLookup,
         passwords: Mapping[str, str],
         password_store_file: Path,
@@ -2313,9 +2317,7 @@ class ConfigCache:
                 ip_address_of,
             ),
             http_proxies,
-            lambda x: final_service_name_config.finalize(
-                x, host_name, self.label_manager.labels_of_host
-            ),
+            lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
             ExecutableFinder(
@@ -3564,7 +3566,7 @@ class EnforcedServicesTable:
             [HostName],
             Mapping[str, Sequence[Sequence[object]]],
         ],
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         plugins: Mapping[CheckPluginName, CheckPlugin],
     ) -> None:
         self._enforced_services_config = enforced_services_config
@@ -3593,15 +3595,15 @@ class EnforcedServicesTable:
         return self._memoized.setdefault(
             hostname,
             {
-                ServiceID(check_plugin_name, item): (
+                (sid := ServiceID(check_plugin_name, item)): (
                     RulesetName(checkgroup_name),
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=self._service_name_config.make_name(
+                        description=self._service_name_config(
                             hostname,
-                            check_plugin_name,
-                            service_name_template=(
+                            sid,
+                            (
                                 None
                                 if (
                                     p := agent_based_register.get_check_plugin(
@@ -3611,7 +3613,6 @@ class EnforcedServicesTable:
                                 is None
                                 else p.service_name
                             ),
-                            item=item,
                         ),
                         parameters=compute_enforced_service_parameters(
                             self._plugins, check_plugin_name, params
@@ -3770,7 +3771,7 @@ class FetcherFactory:
         tcp_fetcher_config: TCPFetcherConfig,
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
-        service_name_config: PassiveServiceNameConfig,
+        service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],

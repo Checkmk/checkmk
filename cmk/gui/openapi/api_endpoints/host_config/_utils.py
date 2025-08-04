@@ -6,10 +6,6 @@ from collections.abc import Callable
 from typing import get_type_hints
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
-    HostConfigModel,
-    HostExtensionsModel,
-)
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -19,7 +15,13 @@ from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 
-agent_links_hook: Callable[[HostName], list[LinkModel]] = lambda h: []
+from .models.response_models import HostConfigModel, HostExtensionsModel
+
+
+class AgentLinkHook:
+    create_links: Callable[[HostName], list[LinkModel]] = lambda h: []
+
+
 _static_attribute_names = set(get_type_hints(HostAttributes))
 
 
@@ -40,7 +42,7 @@ def serialize_host(
                 title="The folder config of the host.",
             )
         )
-        links.extend(agent_links_hook(host.name()))
+        links.extend(AgentLinkHook.create_links(host.name()))
 
     return HostConfigModel(
         domainType="host_config",

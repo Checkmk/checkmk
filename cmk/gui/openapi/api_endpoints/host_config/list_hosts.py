@@ -7,26 +7,25 @@ from typing import Annotated, Literal
 
 from cmk import trace
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
-    HostConfigModel,
-)
-from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
-from cmk.gui.openapi.framework import QueryParam
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
-from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
-from cmk.gui.openapi.framework.versioned_endpoint import (
+from cmk.gui.openapi.framework import (
+    APIVersion,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
+    QueryParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
+from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+
+from ._utils import serialize_host
+from .models.response_models import HostConfigModel
 
 tracer = trace.get_tracer()
 

@@ -4,24 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
-from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
-    HostConfigModel,
-)
-from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
-from cmk.gui.openapi.framework import EndpointBehavior, PathParam
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
-from cmk.gui.openapi.framework.versioned_endpoint import (
+from cmk.gui.openapi.framework import (
+    APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
+    PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
+
+from ._utils import serialize_host
+from .models.response_models import HostConfigModel
 
 
 def show_host_v1(

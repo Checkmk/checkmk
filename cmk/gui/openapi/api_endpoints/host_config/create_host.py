@@ -6,8 +6,6 @@ from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.api_endpoints.host_config.models.response_models import HostConfigModel
-from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostUpdateAttributeModel
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -28,6 +26,9 @@ from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAM
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
+
+from ._utils import serialize_host
+from .models.response_models import HostConfigModel
 
 
 @api_model

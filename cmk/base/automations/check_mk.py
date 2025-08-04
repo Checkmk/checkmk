@@ -1552,8 +1552,8 @@ class AutomationRenameHosts(Automation):
         actions.extend(
             structured_data.rename(
                 cmk.utils.paths.omd_root,
-                old_name=HostName(oldname),
-                new_name=HostName(newname),
+                old_host_name=HostName(oldname),
+                new_host_name=HostName(newname),
             )
         )
 

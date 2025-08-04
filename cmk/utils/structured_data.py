@@ -1691,15 +1691,15 @@ def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
 
 
 def rename(
-    omd_root: Path, *, old_name: HostName, new_name: HostName
+    omd_root: Path, *, old_host_name: HostName, new_host_name: HostName
 ) -> Sequence[Literal["inv", "invarch"]]:
     inv_paths = InventoryPaths(omd_root)
-    old_inventory_tree = inv_paths.inventory_tree(HostName(old_name))
-    old_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(old_name))
-    old_status_data_tree = inv_paths.status_data_tree(HostName(old_name))
-    new_inventory_tree = inv_paths.inventory_tree(HostName(new_name))
-    new_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(new_name))
-    new_status_data_tree = inv_paths.status_data_tree(HostName(new_name))
+    old_inventory_tree = inv_paths.inventory_tree(HostName(old_host_name))
+    old_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(old_host_name))
+    old_status_data_tree = inv_paths.status_data_tree(HostName(old_host_name))
+    new_inventory_tree = inv_paths.inventory_tree(HostName(new_host_name))
+    new_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(new_host_name))
+    new_status_data_tree = inv_paths.status_data_tree(HostName(new_host_name))
     actions: set[Literal["inv", "invarch"]] = set()
     for old_file_path, new_file_path in [
         (old_inventory_tree.path, new_inventory_tree.path),
@@ -1716,11 +1716,11 @@ def rename(
             pass
 
     for directory in [
-        inv_paths.archive_host(HostName(old_name)),
-        inv_paths.delta_cache_host(HostName(old_name)),
+        inv_paths.archive_host(HostName(old_host_name)),
+        inv_paths.delta_cache_host(HostName(old_host_name)),
     ]:
         try:
-            directory.rename(new_name)
+            directory.rename(new_host_name)
             actions.add("invarch")
         except FileNotFoundError:
             pass

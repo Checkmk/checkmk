@@ -124,7 +124,6 @@ def provide_agent_binaries(Map args) {
                         DISABLE_CACHE: args.disable_cache,
                     ],
                     build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: args.bisect_comment,
                     ],

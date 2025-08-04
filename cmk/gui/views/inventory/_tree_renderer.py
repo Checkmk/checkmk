@@ -347,8 +347,10 @@ def ajax_inv_render_tree(config: Config) -> None:
             user_errors.add(
                 MKUserError(
                     "load_inventory_delta_tree",
-                    _("Cannot load HW/SW Inventory history %s. Please remove the corrupted files.")
-                    % ", ".join(corrupted_history_files),
+                    _(
+                        "Cannot load HW/SW Inventory history of %s. Please remove the corrupted files %s."
+                    )
+                    % (host_name, ", ".join(corrupted_history_files)),
                 )
             )
             return
@@ -365,8 +367,10 @@ def ajax_inv_render_tree(config: Config) -> None:
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",
-                    _("Cannot load HW/SW Inventory tree %s. Please remove the corrupted file.")
-                    % inventory.get_short_inventory_filepath(host_name),
+                    _(
+                        "Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or status data tree files."
+                    )
+                    % host_name,
                 )
             )
             return

@@ -24,7 +24,6 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import PermittedPath
-from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.structured_data import (
     HistoryArchivePath,
     HistoryDeltaPath,
@@ -282,14 +281,6 @@ def inventory_of_host(
         raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
     )
     return tree.filter(filters) if filters else tree
-
-
-def get_short_inventory_filepath(host_name: HostName) -> Path:
-    return (
-        InventoryPaths(cmk.utils.paths.omd_root)
-        .inventory_tree(host_name)
-        .path.relative_to(cmk.utils.paths.omd_root)
-    )
 
 
 def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:

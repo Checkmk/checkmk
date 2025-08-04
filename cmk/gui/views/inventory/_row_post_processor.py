@@ -12,7 +12,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory import get_short_inventory_filepath, load_tree
+from cmk.gui.inventory import load_tree
 from cmk.gui.painter.v0 import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
@@ -71,7 +71,7 @@ def _get_view_macros(view_spec: ViewSpec) -> Sequence[tuple[str, str]] | None:
 
 
 def _add_inventory_data(rows: Rows) -> None:
-    corrupted_inventory_files = set()
+    hosts_with_corrupted_trees = set()
     for row in rows:
         if "host_name" not in row:
             continue
@@ -88,14 +88,16 @@ def _add_inventory_data(rows: Rows) -> None:
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
             row["host_inventory"] = ImmutableTree()
-            corrupted_inventory_files.add(str(get_short_inventory_filepath(row["host_name"])))
+            hosts_with_corrupted_trees.add(row["host_name"])
 
-    if corrupted_inventory_files:
+    if hosts_with_corrupted_trees:
         user_errors.add(
             MKUserError(
                 "load_structured_data_tree",
-                _("Cannot load HW/SW Inventory trees %s. Please remove the corrupted files.")
-                % ", ".join(sorted(corrupted_inventory_files)),
+                _(
+                    "Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or status data tree files."
+                )
+                % ", ".join(sorted(hosts_with_corrupted_trees)),
             )
         )
 

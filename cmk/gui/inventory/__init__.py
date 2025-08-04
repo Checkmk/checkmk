@@ -26,7 +26,6 @@ from ._rulespec import RulespecGroupInventory
 from ._tree import (
     get_history,
     get_raw_status_data_via_livestatus,
-    get_short_inventory_filepath,
     InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
@@ -49,7 +48,6 @@ __all__ = [
     "TreeSource",
     "get_history",
     "get_raw_status_data_via_livestatus",
-    "get_short_inventory_filepath",
     "load_delta_tree",
     "load_latest_delta_tree",
     "load_tree",

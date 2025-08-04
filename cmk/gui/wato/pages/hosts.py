@@ -24,7 +24,6 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
     make_simple_link,
-    makeuri_contextless,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
@@ -38,7 +37,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration

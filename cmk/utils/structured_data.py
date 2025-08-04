@@ -15,6 +15,7 @@ import io
 import json
 import os
 import pprint
+import shutil
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -1715,12 +1716,18 @@ def rename(
         except FileNotFoundError:
             pass
 
-    for directory in [
-        inv_paths.archive_host(HostName(old_host_name)),
-        inv_paths.delta_cache_host(HostName(old_host_name)),
+    for old_directory, new_directory in [
+        (
+            inv_paths.archive_host(HostName(old_host_name)),
+            inv_paths.archive_host(HostName(new_host_name)),
+        ),
+        (
+            inv_paths.delta_cache_host(HostName(old_host_name)),
+            inv_paths.delta_cache_host(HostName(new_host_name)),
+        ),
     ]:
         try:
-            directory.rename(new_host_name)
+            shutil.move(old_directory, new_directory)
             actions.add("invarch")
         except FileNotFoundError:
             pass

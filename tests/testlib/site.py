@@ -861,7 +861,7 @@ class Site:
         return output.strip().split("\n") if output else []
 
     def system_temp_dir(self) -> Iterator[str]:
-        stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])
+        stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])  # nosec
         assert stdout is not None
         path = stdout.strip()
 
@@ -1432,11 +1432,30 @@ class Site:
         # load the config without loading the checks in advance, this leads into an
         # exception.
         # We set this config option here trying to catch this kind of issue.
-        self.openapi.rules.create(
-            ruleset_name="fileinfo_groups",
-            value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
-            folder="/",
-        )
+        try:
+            # Try to create the ruleset with the new API.
+            self.openapi.rules.create(
+                ruleset_name="fileinfo_groups",
+                value={
+                    "group_patterns": [
+                        {
+                            "group_name": "TESTGROUP",
+                            "pattern_configs": {
+                                "include_pattern": "*gwia*",
+                                "exclude_pattern": "",
+                            },
+                        }
+                    ],
+                },
+                folder="/",
+            )
+        except Exception:
+            # Fallback to the old API in case the new API is not available.
+            self.openapi.rules.create(
+                ruleset_name="fileinfo_groups",
+                value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
+                folder="/",
+            )
 
     def enforce_non_localized_gui(self, web: CMKWebSession) -> None:
         r = web.get("user_profile.py")
@@ -1744,7 +1763,7 @@ class Site:
 
     def read_global_settings(self, relative_path: Path) -> dict[str, object]:
         global_settings: dict[str, object] = {}
-        exec(self.read_file(relative_path), {}, global_settings)
+        exec(self.read_file(relative_path), {}, global_settings)  # nosec
         return global_settings
 
     def write_global_settings(
@@ -1767,7 +1786,7 @@ class Site:
         self, relative_path: Path
     ) -> dict[str, dict[str, dict[str, object]]]:
         site_specific_settings: dict[str, dict[str, dict[str, object]]] = {"sites": {}}
-        exec(self.read_file(relative_path), {}, site_specific_settings)
+        exec(self.read_file(relative_path), {}, site_specific_settings)  # nosec
         return site_specific_settings
 
     def write_site_specific_settings(
@@ -2000,7 +2019,7 @@ class SiteFactory:
         target_package: CMKPackageInfo,
         min_version: CMKVersion,
         conflict_mode: str = "keepold",
-        logfile_path: str = "/tmp/sep.out",
+        logfile_path: str = "/tmp/sep.out",  # nosec
         timeout: int = 60,
         abort: bool = False,
         disable_extensions: bool = False,

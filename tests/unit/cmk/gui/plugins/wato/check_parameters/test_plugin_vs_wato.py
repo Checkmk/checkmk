@@ -280,10 +280,6 @@ class ErrorReporter:
 
     KNOWN_WATO_MISSING = {
         # type # instance # wato
-        ("discovery", "fileinfo", "fileinfo_groups"),
-        ("discovery", "fileinfo_groups", "fileinfo_groups"),
-        ("discovery", "sap_hana_fileinfo", "fileinfo_groups"),
-        ("discovery", "sap_hana_fileinfo_groups", "fileinfo_groups"),
         ("discovery", "logwatch_groups", "logwatch_groups"),
         ("discovery", "logwatch", "logwatch_groups"),
         ("inventory", "inv_if", "inv_if"),

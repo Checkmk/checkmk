@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import get_type_hints
 
 from cmk.ccc.hostaddress import HostName
@@ -16,7 +16,11 @@ from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from .models.response_models import HostConfigModel, HostExtensionsModel
+from .models.response_models import (
+    HostConfigCollectionModel,
+    HostConfigModel,
+    HostExtensionsModel,
+)
 
 
 class AgentLinkHook:
@@ -65,6 +69,28 @@ def serialize_host(
             is_offline=host.is_offline(),
             cluster_nodes=host.cluster_nodes(),
         ),
+    )
+
+
+def serialize_host_collection(
+    hosts: Iterable[Host],
+    *,
+    compute_effective_attributes: bool,
+    compute_links: bool,
+) -> HostConfigCollectionModel:
+    return HostConfigCollectionModel(
+        domainType="host_config",
+        id="host",
+        extensions=ApiOmitted(),
+        value=[
+            serialize_host(
+                host=host,
+                compute_links=compute_links,
+                compute_effective_attributes=compute_effective_attributes,
+            )
+            for host in hosts
+        ],
+        links=[LinkModel.create("self", constructors.collection_href("host_config"))],
     )
 
 

@@ -279,16 +279,36 @@ div.snapin {
     }
   }
 
-  div.snapin_buttons {
-    position: absolute;
-    right: 5px;
+  span.moresnapin,
+  div.closesnapin {
+    position: relative;
+    float: right;
+    display: block;
     opacity: 0;
     transition: opacity 50ms ease-in 50ms;
+
+    &.hidden {
+      display: none;
+    }
   }
 
-  &:hover div.snapin_buttons {
+  &:hover span.moresnapin,
+  &:hover div.closesnapin {
     opacity: 1;
     transition: opacity 0s;
+  }
+
+  span.moresnapin a {
+    display: contents;
+  }
+
+  div.closesnapin {
+    margin-top: $spacing-half;
+    img {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+    }
   }
 
   div.content {

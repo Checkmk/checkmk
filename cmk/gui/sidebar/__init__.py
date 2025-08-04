@@ -577,26 +577,14 @@ class SidebarRenderer:
         show_more = snapin_instance.has_show_more_items()
         may_configure = user.may("general.configure_sidebar")
 
-        if show_more or may_configure:
-            html.open_div(class_="snapin_buttons")
-
-            if show_more:
-                html.open_span(class_="moresnapin")
-                html.more_button(more_id, dom_levels_up=4)
-                html.close_span()
-
-            if may_configure:
-                # Button for closing (removing) a snapin
-                html.open_span(class_="closesnapin")
-                close_url = "sidebar_openclose.py?name=%s&state=off" % name
-                html.icon_button(
-                    url=None,
-                    title=_("Remove this element"),
-                    icon="close",
-                    onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url,
-                )
-                html.close_span()
-
+        if show_more:
+            html.open_div()
+            html.open_span(
+                class_=["moresnapin"]
+                + (["hidden"] if snapin.visible == SnapinVisibility.CLOSED else [""])
+            )
+            html.more_button(more_id, dom_levels_up=4)
+            html.close_span()
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
@@ -646,6 +634,20 @@ class SidebarRenderer:
             logger.exception("error rendering snapin %s", name)
             write_snapin_exception(e)
         html.close_div()
+        if may_configure:
+            # Button for closing (removing) a snapin
+            html.open_div(
+                class_=["closesnapin"]
+                + (["hidden"] if snapin.visible == SnapinVisibility.CLOSED else [""])
+            )
+            close_url = "sidebar_openclose.py?name=%s&state=off" % name
+            html.icon_button(
+                url=None,
+                title=_("Remove this element"),
+                icon="delete",
+                onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url,
+            )
+            html.close_div()
         html.close_div()
         return refresh_url
 

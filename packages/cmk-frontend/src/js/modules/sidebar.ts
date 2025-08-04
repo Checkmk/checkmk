@@ -479,8 +479,7 @@ export function add_snapin(name: string) {
 
 // Removes the snapin from the current sidebar and informs the server for persistance
 export function remove_sidebar_snapin(oLink: HTMLButtonElement, url: string) {
-    const container = oLink.parentNode!.parentNode!.parentNode!
-        .parentNode as HTMLElement;
+    const container = oLink.parentNode!.parentNode as HTMLElement;
     const id = container.id.replace("snapin_container_", "");
 
     call_ajax(url, {
@@ -552,11 +551,22 @@ export function toggle_sidebar_snapin(
 
     // FIXME: Does oContent really exist?
     const closed = oContent!.style.display == "none";
+    const snapinContainer = oH2.parentNode!.parentNode
+    const showMore = snapinContainer!.querySelector(".moresnapin") as HTMLElement;
+    const closeSnapin = snapinContainer!.querySelector(".closesnapin") as HTMLElement;
     if (closed) {
+        if ( showMore ) {
+          remove_class(showMore, "hidden")
+        }
+        remove_class(closeSnapin, "hidden")
         oContent!.style.display = "block";
         change_class(oHead!, "closed", "open");
         change_class(oImg!, "closed", "open");
     } else {
+        if ( showMore ) {
+          add_class(showMore, "hidden")
+        }
+        add_class(closeSnapin, "hidden")
         oContent!.style.display = "none";
         change_class(oHead!, "open", "closed");
         change_class(oImg!, "open", "closed");

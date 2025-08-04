@@ -125,7 +125,6 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             ],
             build_params_no_check: [
                 CIPARAM_BISECT_COMMENT: bisect_comment,
-                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                 CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
             ],
             dependency_paths: details.dependency_paths,

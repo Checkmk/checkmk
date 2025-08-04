@@ -16,6 +16,7 @@ import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 export interface AgentSlideOutTabs {
   id: string
@@ -65,6 +66,7 @@ watch(model, (newValue) => {
     class="close_and_test"
     @click="close"
   >
+    <CmkIcon name="connection_tests" />
     {{ t('ads-close-and-test', 'Close & test agent connection') }}
   </CmkButton>
   <CmkButton
@@ -72,6 +74,7 @@ watch(model, (newValue) => {
     class="all_agents"
     @click="() => openAllAgentsPage(all_agents_url)"
   >
+    <CmkIcon name="frameurl" />
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
   <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
@@ -135,9 +138,15 @@ h2.heading {
   margin-bottom: var(--spacing);
 }
 
+button.close_and_test {
+  gap: var(--dimension-item-spacing-4);
+}
+
 button.all_agents {
+  gap: var(--dimension-item-spacing-4);
   margin-left: var(--spacing);
 }
+
 .tabs {
   display: flex;
   flex-direction: row;

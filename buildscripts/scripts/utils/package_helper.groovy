@@ -119,11 +119,14 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
         upstream_build(
             relative_job_name: details.relative_job_name,
             build_params: [
+                CUSTOM_GIT_REF: effective_git_ref,
                 DISABLE_CACHE: disable_cache,
                 VERSION: version,
             ],
             build_params_no_check: [
                 CIPARAM_BISECT_COMMENT: bisect_comment,
+                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
             ],
             dependency_paths: details.dependency_paths,
             no_venv: true,          // run ci-artifacts call without venv

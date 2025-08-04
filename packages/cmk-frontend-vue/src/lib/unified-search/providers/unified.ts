@@ -21,9 +21,16 @@ export const providerIcons: { [key: string]: CmkIconProps } = {
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
 
+export interface UnifiedSearchResultElementInlineButton {
+  icon?: CmkIconProps | undefined
+  title: string
+  url: string
+}
+
 export interface UnifiedSearchResultElement {
   title: string
   url: string
+  inlineButtons?: UnifiedSearchResultElementInlineButton[]
   topic: string
   provider: UnifiedSearchProviderIdentifier
   context: string

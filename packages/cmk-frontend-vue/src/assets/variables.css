@@ -114,6 +114,8 @@
   --icon-analysis: url('~cmk-frontend/themes/facelift/images/icon_analysis.svg');
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
+
+  --icon-topic-host: url('~cmk-frontend/themes/facelift/images/icon_topic_hosts.png');
 }
 
 @layer theme {

@@ -15,6 +15,7 @@ import {
   providerIcons,
   type UnifiedSearchResultElement
 } from '@/lib/unified-search/providers/unified'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { t } = usei18n('unified-search-app')
 
@@ -48,7 +49,7 @@ immediateWatch(
 
 <template>
   <div v-if="recentlyViewed.length > 0" class="recently-viewed">
-    <h2>
+    <CmkHeading type="h2">
       {{ t('recently-viewed', 'Recently viewed') }}
       <button
         @click.stop="
@@ -60,7 +61,7 @@ immediateWatch(
       >
         {{ t('clear-all', 'Clear all') }}
       </button>
-    </h2>
+    </CmkHeading>
     <ResultList>
       <ResultItem
         v-for="(item, idx) in recentlyViewed"
@@ -69,7 +70,12 @@ immediateWatch(
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
-        :icon="providerIcons[item.element.provider]"
+        :icon="
+          item.element.topic.toLowerCase() === 'hosts'
+            ? { name: 'topic-host', title: item.element.topic, size: 'xlarge' }
+            : providerIcons[item.element.provider]
+        "
+        :inline-buttons="item.element.inlineButtons"
         :url="item.element.url"
         :html="searchUtils.highlightQuery(item.element.title)"
         :provider="item.element.provider"

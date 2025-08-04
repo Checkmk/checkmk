@@ -63,11 +63,11 @@ const currentlySelected = ref<number>(-1)
 const isFocused = (i: number): boolean =>
   currentlySelected.value === i && searchUtils.input.suggestionsActive.value === true
 
-const scCallbackIds = ref<string[]>([])
+const shortcutCallbackIds = ref<string[]>([])
 
-scCallbackIds.value.push(searchUtils.shortCuts.onEscape(hideFilterSuggestions))
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onEscape(hideFilterSuggestions))
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
 
 function toggleDown() {
   calcCurrentlySelected(+1)

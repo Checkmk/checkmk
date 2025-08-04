@@ -13,6 +13,7 @@ import type { SearchHistorySearchResult } from '@/lib/unified-search/providers/h
 import { getSearchUtils, type UnifiedSearchQueryLike } from './providers/search-utils'
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { t } = usei18n('unified-search-app')
 
@@ -28,9 +29,9 @@ searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
 })
 
-const scCallbackIds = ref<string[]>([])
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
+const shortcutCallbackIds = ref<string[]>([])
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
 
 function toggleDown() {
   calcCurrentlySelected(+1)
@@ -88,7 +89,7 @@ immediateWatch(
 )
 
 onBeforeUnmount(() => {
-  searchUtils.shortCuts.remove(scCallbackIds.value)
+  searchUtils.shortCuts.remove(shortcutCallbackIds.value)
 })
 </script>
 
@@ -99,7 +100,7 @@ onBeforeUnmount(() => {
   ></UnifiedSearchRecentlyViewed>
 
   <div v-if="recentlySearches.length > 0" class="recent-searches">
-    <h2>
+    <CmkHeading type="h2">
       {{ t('recently-searched', 'Recently searched') }}
       <button
         @click.stop="
@@ -111,7 +112,7 @@ onBeforeUnmount(() => {
       >
         {{ t('clear-all', 'Clear all') }}
       </button>
-    </h2>
+    </CmkHeading>
     <ResultList>
       <ResultItem
         v-for="(q, idx) in recentlySearches"

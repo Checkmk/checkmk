@@ -26,9 +26,9 @@ searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
 })
 
-const scCallbackIds = ref<string[]>([])
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
-scCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
+const shortcutCallbackIds = ref<string[]>([])
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
+shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
 
 function toggleDown() {
   console.log('toggleDown')
@@ -64,7 +64,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
 }
 
 onBeforeUnmount(() => {
-  searchUtils.shortCuts.remove(scCallbackIds.value)
+  searchUtils.shortCuts.remove(shortcutCallbackIds.value)
 })
 </script>
 

@@ -26,7 +26,7 @@ ACTION_MAPPING = {
     "1": ("Action done", State.OK),
     "2": ("Out of service", State.WARN),
     "3": ("Back to service", State.OK),
-    "4": ("Not applicable", State.UNKNOWN),
+    "4": ("Not applicable", State.OK),
 }
 
 STATUS_MAPPING = {
@@ -37,7 +37,7 @@ STATUS_MAPPING = {
     "4": ("Module Back to service start", State.OK),
     "5": ("Module mismatch", State.CRIT),
     "6": ("Module faulty", State.CRIT),
-    "7": ("Not applicable", State.UNKNOWN),
+    "7": ("Not applicable", State.OK),
 }
 
 

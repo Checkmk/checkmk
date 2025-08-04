@@ -51,10 +51,10 @@ def test_discovery_function() -> None:
             "Mediant-4000 CPU Module 67907585",
             _STRING_TABLE_FRU,
             [
-                Result(state=State.UNKNOWN, summary="Action: Not applicable"),
-                Result(state=State.UNKNOWN, summary="Status: Not applicable"),
+                Result(state=State.OK, summary="Action: Not applicable"),
+                Result(state=State.OK, summary="Status: Not applicable"),
             ],
-            id="Everything is UNKNOWN",
+            id="Everything is OK",
         ),
         pytest.param(
             "Mediant-4000 Media Processing Module 67387393",

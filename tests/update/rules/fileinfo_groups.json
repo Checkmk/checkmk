@@ -5,7 +5,7 @@
     "properties": {
       "disabled": false
     },
-    "value_raw": "{'group_patterns': [('TESTGROUP', ('*gwia*', ''))]}",
+    "value_raw": "{'group_patterns': [{'group_name': 'TESTGROUP','pattern_configs': {'include_pattern': '*gwia*','exclude_pattern': ''}}]}",
     "conditions": {
       "host_tags": [],
       "host_label_groups": [],

@@ -3,81 +3,124 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.fileinfo_utils import (
     get_fileinfo_negative_age_tolerance_element,
 )
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    InputHint,
+    LevelDirection,
+    LevelsType,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
+    ServiceState,
+    SIMagnitude,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
 )
-from cmk.gui.valuespec import Age, Dictionary, Filesize, MonitoringState, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_fileinfo():
+def _parameter_valuespec_fileinfo() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "minage",
-                Tuple(
-                    title=_("Minimal age"),
-                    elements=[
-                        Age(title=_("Warning below")),
-                        Age(title=_("Critical below")),
-                    ],
+        elements={
+            "minage": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Minimal age"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_float_simple_levels,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ]
+                    ),
                 ),
             ),
-            (
-                "maxage",
-                Tuple(
-                    title=_("Maximal age"),
-                    elements=[
-                        Age(title=_("Warning at or above")),
-                        Age(title=_("Critical at or above")),
-                    ],
+            "maxage": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Maximal age"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_float_simple_levels,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ]
+                    ),
                 ),
             ),
-            (
-                "minsize",
-                Tuple(
-                    title=_("Minimal size"),
-                    elements=[
-                        Filesize(title=_("Warning below")),
-                        Filesize(title=_("Critical below")),
-                    ],
+            "minsize": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Minimal size"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            SIMagnitude.BYTE,
+                            SIMagnitude.KILO,
+                            SIMagnitude.MEGA,
+                            SIMagnitude.GIGA,
+                            SIMagnitude.TERA,
+                        ]
+                    ),
                 ),
             ),
-            (
-                "maxsize",
-                Tuple(
-                    title=_("Maximal size"),
-                    elements=[
-                        Filesize(title=_("Warning at or above")),
-                        Filesize(title=_("Critical at or above")),
-                    ],
+            "maxsize": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Maximal size"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            SIMagnitude.BYTE,
+                            SIMagnitude.KILO,
+                            SIMagnitude.MEGA,
+                            SIMagnitude.GIGA,
+                            SIMagnitude.TERA,
+                        ]
+                    ),
                 ),
             ),
-            (
-                "state_missing",
-                MonitoringState(default_value=3, title=_("State when file is missing")),
+            "state_missing": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    prefill=DefaultValue(ServiceState.UNKNOWN),
+                    title=Title("State when file is missing"),
+                ),
             ),
-            get_fileinfo_negative_age_tolerance_element(),
-        ],
+            "negative_age_tolerance": get_fileinfo_negative_age_tolerance_element(),
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="fileinfo",
-        group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(
-            title=_("File name"),
-            allow_empty=True,
-            try_max_width=True,
-        ),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_fileinfo,
-        title=lambda: _("Size and age of single files"),
-    )
+rule_spec_fileinfo = CheckParameters(
+    name="fileinfo",
+    title=Title("Size and age of single files"),
+    topic=Topic.STORAGE,
+    parameter_form=_parameter_valuespec_fileinfo,
+    condition=HostAndItemCondition(
+        item_title=Title("File name"),
+    ),
 )

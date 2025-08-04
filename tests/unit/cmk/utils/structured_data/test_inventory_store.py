@@ -73,7 +73,7 @@ def _gzipped_json(raw_tree: SDRawTree) -> bytes:
     return buf.getvalue()
 
 
-def test_load_inventory_tree(tmp_path: Path) -> None:
+def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     raw_tree = _raw_tree("val")
     cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree)
@@ -82,6 +82,19 @@ def test_load_inventory_tree(tmp_path: Path) -> None:
     assert inv_store.load_inventory_tree(host_name=host_name) == deserialize_tree(raw_tree)
     assert (tmp_path / "var/check_mk/inventory/hostname").exists()
     assert not (tmp_path / "var/check_mk/inventory/hostname.json").exists()
+
+
+def test_load_inventory_tree(tmp_path: Path) -> None:
+    host_name = HostName("hostname")
+    raw_tree = _raw_tree("val")
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(raw_tree)
+    )
+
+    inv_store = InventoryStore(tmp_path)
+    assert inv_store.load_inventory_tree(host_name=host_name) == deserialize_tree(raw_tree)
+    assert not (tmp_path / "var/check_mk/inventory/hostname").exists()
+    assert (tmp_path / "var/check_mk/inventory/hostname.json").exists()
 
 
 def test_save_inventory_tree(tmp_path: Path) -> None:
@@ -125,7 +138,7 @@ def test_remove_inventory_tree(tmp_path: Path) -> None:
     assert not (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists()
 
 
-def test_load_status_data_tree(tmp_path: Path) -> None:
+def test_load_status_data_tree_legacy(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     raw_tree = _raw_tree("val")
     cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", raw_tree)
@@ -134,6 +147,19 @@ def test_load_status_data_tree(tmp_path: Path) -> None:
     assert inv_store.load_status_data_tree(host_name=host_name) == deserialize_tree(raw_tree)
     assert (tmp_path / "tmp/check_mk/status_data/hostname").exists()
     assert not (tmp_path / "tmp/check_mk/status_data/hostname.json").exists()
+
+
+def test_load_status_data_tree(tmp_path: Path) -> None:
+    host_name = HostName("hostname")
+    raw_tree = _raw_tree("val")
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "tmp/check_mk/status_data/hostname.json", json.dumps(raw_tree)
+    )
+
+    inv_store = InventoryStore(tmp_path)
+    assert inv_store.load_status_data_tree(host_name=host_name) == deserialize_tree(raw_tree)
+    assert not (tmp_path / "tmp/check_mk/status_data/hostname").exists()
+    assert (tmp_path / "tmp/check_mk/status_data/hostname.json").exists()
 
 
 def test_save_status_data_tree(tmp_path: Path) -> None:

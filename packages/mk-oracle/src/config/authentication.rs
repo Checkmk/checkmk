@@ -101,12 +101,23 @@ impl fmt::Display for Role {
         }
     }
 }
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Authentication {
     username: String,
     password: Option<String>,
     auth_type: AuthType,
     role: Option<Role>,
+}
+
+impl std::fmt::Debug for Authentication {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Authentication")
+            .field("username", &self.username)
+            .field("password", &"***")
+            .field("auth_type", &self.auth_type)
+            .field("role", &self.role)
+            .finish()
+    }
 }
 
 impl Default for Authentication {

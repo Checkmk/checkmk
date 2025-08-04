@@ -100,6 +100,10 @@ mod tests {
                 Err(anyhow::anyhow!("Query not recognized"))
             }
         }
+
+        fn clone_box(&self) -> Box<dyn OraDbEngine> {
+            Box::new(TestOra)
+        }
     }
     #[test]
     fn test_get_version() {

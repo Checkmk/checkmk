@@ -8,11 +8,11 @@ const PREFIX: &str = "oracle";
 
 pub fn header(name: &str, separator: char) -> String {
     let sep = separator as u8;
-    format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
+    format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>")
 }
 
 pub fn piggyback_header(piggyback_host_name: &PiggybackHostName) -> String {
-    format!("<<<<{piggyback_host_name}>>>>\n")
+    format!("<<<<{piggyback_host_name}>>>>")
 }
 
 pub fn piggyback_footer() -> String {

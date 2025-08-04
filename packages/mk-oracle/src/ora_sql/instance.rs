@@ -8,7 +8,7 @@ use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
-use crate::types::InstanceName;
+use crate::types::{InstanceName, Separator, SqlQuery};
 use crate::utils;
 
 use anyhow::Result;
@@ -54,6 +54,9 @@ impl OracleConfig {
     }
 }
 
+type InstanceWorks = (InstanceName, Vec<(SqlQuery, String)>);
+type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
+
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) -> Result<String> {
@@ -61,6 +64,7 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
     // TODO: apply to config detected instances
     // TODO: customize instances
     // TODO: resulting in the list of endpoints
+
     let all = calc_spots(vec![ora_sql.endpoint()]);
     let connected = connect_spots(all, None);
 
@@ -69,43 +73,103 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
         .product()
         .sections()
         .iter()
-        .map(|s| Section::new(s, ora_sql.product().cache_age()))
+        .map(|s| {
+            let s = Section::new(s, ora_sql.product().cache_age());
+            println!("{:?}", s.to_plain_header());
+            s
+        })
         .collect::<Vec<_>>();
-    let _r = connected
+    let works = connected
         .into_iter()
         .map(|spot| {
             let instances = WorkInstances::new(&spot);
+            let closed = spot.close();
 
-            for instance in instances.all().keys() {
-                for section in &sections {
-                    let section_name = section.name();
-                    log::info!("Generating data for instance: {}", section_name);
+            let instance_works = instances
+                .all()
+                .keys()
+                .map(|instance| {
                     let version = instances
                         .get_num_version(instance)
                         .ok()
                         .flatten()
                         .unwrap_or_default();
-                    let _query = section.find_query(get_sql_dir(), version).map_or_else(
-                        || {
-                            log::warn!("No query found for section: {}", section_name);
-                            "No query found".to_string()
-                        },
-                        |query| {
-                            log::info!("Found query for section {}: {}", section_name, query);
-                            // Here you would execute the query and process the results
-                            // For now, we just return the query as a placeholder
-                            format!("Query for {}: {}", section_name, query)
-                        },
-                    );
+                    let queries = sections
+                        .iter()
+                        .filter_map(|section| {
+                            _find_section_query(
+                                section,
+                                version,
+                                Separator::Decorated(section.sep()),
+                            )
+                            .map(|q| (q, section.to_work_header()))
+                        })
+                        .collect::<Vec<(SqlQuery, String)>>();
+                    (instance.clone(), queries)
+                })
+                .collect::<Vec<InstanceWorks>>();
+            (closed, instance_works)
+        })
+        .collect::<Vec<SpotWorks>>();
+
+    for (spot, instance_works) in works {
+        log::info!("Processing spot: {:?}", spot.target());
+        for (instance, queries) in instance_works {
+            let r = spot.clone().connect(Some(&instance));
+            match r {
+                Ok(conn) => {
+                    log::info!("Connected to instance: {}", instance);
+                    for (query, title) in queries {
+                        log::info!(
+                            "Executing query for instance {}: {}",
+                            instance,
+                            query.as_str()
+                        );
+                        // Here you would execute the query and process the results
+                        // For now, we just log it as a placeholder
+                        println!("{title}");
+                        conn.query(&query, "")
+                            .unwrap_or_else(|e| {
+                                log::error!(
+                                    "Failed to execute query for instance {}: {}",
+                                    instance,
+                                    e
+                                );
+                                vec![e.to_string()]
+                            })
+                            .into_iter()
+                            .for_each(|row| {
+                                println!("{row}");
+                            });
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to connect to instance {}: {}", instance, e);
+                    continue; // Skip this instance if connection fails
                 }
             }
-            // Add more data generation here as needed
-            "section_name".to_owned()
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
+        }
+    }
 
-    Ok("nothing".to_string())
+    Ok("".to_string())
+}
+
+fn _find_section_query(section: &Section, version: u32, sep: Separator) -> Option<SqlQuery> {
+    let section_name = section.name();
+    log::info!("Generating data for instance: {}", section_name);
+
+    section.find_query(get_sql_dir(), version).map_or_else(
+        || {
+            log::warn!("No query found for section: {}", section_name);
+            None
+        },
+        |query| {
+            log::info!("Found query for section {}: {}", section_name, query);
+            // Here you would execute the query and process the results
+            // For now, we just return the query as a placeholder
+            Some(SqlQuery::new(query.as_str(), sep))
+        },
+    )
 }
 
 // tested only in integration tests

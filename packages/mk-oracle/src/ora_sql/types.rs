@@ -6,7 +6,7 @@ use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType};
 
 use crate::config::authentication::Authentication;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Target {
     pub host: HostName,
     pub instance: Option<InstanceName>,

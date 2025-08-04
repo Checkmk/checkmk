@@ -20,6 +20,12 @@ pub struct StdEngine {
     connection: Option<Connection>,
 }
 
+impl Clone for StdEngine {
+    fn clone(&self) -> Self {
+        StdEngine { connection: None }
+    }
+}
+
 pub trait OraDbEngine {
     fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()>;
 
@@ -28,24 +34,35 @@ pub trait OraDbEngine {
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
 
     fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>>;
+
+    fn clone_box(&self) -> Box<dyn OraDbEngine>;
 }
 
 impl OraDbEngine for StdEngine {
     fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()> {
         if self.connection.is_some() {
+            log::warn!("Connection already established, closing the previous connection.");
             return Ok(());
         }
         // Here we would normally establish a connection to the database.
         // For now, we just simulate a successful connection.
         if let Some(role) = target.auth.role() {
+            log::warn!("Role {role}");
             let mut connector = Connector::new(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
                 target.make_connection_string(instance),
             );
+            log::warn!(
+                "MEMEMEMEME {} {} {}",
+                target.auth.username(),
+                target.auth.password().unwrap_or(""),
+                target.make_connection_string(instance)
+            );
             connector.privilege(_to_privilege(role));
             self.connection = Some(connector.connect()?);
         } else {
+            log::warn!("Connection no role specified, using default privileges.");
             self.connection = Some(Connection::connect(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
@@ -89,6 +106,16 @@ impl OraDbEngine for StdEngine {
 
         Ok(result)
     }
+
+    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn OraDbEngine> {
+    fn clone(&self) -> Box<dyn OraDbEngine> {
+        self.clone_box()
+    }
 }
 
 fn row_to_string(row: &oracle::Result<oracle::Row>, sep: &str) -> String {
@@ -118,7 +145,7 @@ fn _to_privilege(role: &Role) -> Privilege {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SqlPlusEngine {}
 
 impl OraDbEngine for SqlPlusEngine {
@@ -136,9 +163,12 @@ impl OraDbEngine for SqlPlusEngine {
     fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
+    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+        Box::new(self.clone())
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct JdbcEngine {}
 impl OraDbEngine for JdbcEngine {
     fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
@@ -154,6 +184,9 @@ impl OraDbEngine for JdbcEngine {
 
     fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
+    }
+    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+        Box::new(self.clone())
     }
 }
 #[derive(Debug)]
@@ -193,8 +226,25 @@ pub struct Spot<State> {
     _state: PhantomData<State>,
 }
 
+impl Clone for Spot<Closed> {
+    fn clone(&self) -> Self {
+        Spot {
+            target: self.target.clone(),
+            engine: self.engine.clone(),
+            _database: self._database.clone(),
+            _state: PhantomData::<Closed>,
+        }
+    }
+}
+
 impl Spot<Closed> {
     pub fn connect(mut self, instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
+        log::info!(
+            "{} {:?} -> {}",
+            "Connecting to",
+            self.target,
+            self.target.make_connection_string(instance)
+        );
         self.engine.connect(&self.target, instance)?;
         Ok(Spot {
             target: self.target,
@@ -213,14 +263,17 @@ impl Spot<Closed> {
 }
 
 impl Spot<Opened> {
-    pub fn close(mut self) -> Result<Spot<Closed>> {
-        self.engine.close()?;
-        Ok(Spot {
+    pub fn close(mut self) -> Spot<Closed> {
+        if let Err(e) = self.engine.close() {
+            log::error!("Failed to close the engine: {}", e);
+        };
+
+        Spot {
             target: self.target,
             engine: self.engine,
             _database: self._database,
             _state: PhantomData::<Closed>,
-        })
+        }
     }
 
     pub fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {

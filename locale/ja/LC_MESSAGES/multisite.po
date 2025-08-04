@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-30 18:35+0000\n"
+"PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -17276,10 +17276,10 @@ msgstr ""
 "測定データの繰り返しが予想される周期を定義する（月、週、日、または時間単位）"
 
 msgid "Define the upper levels for memory usage."
-msgstr "メモリ使用量の上限レベルを定義する。"
+msgstr "メモリ使用量の上位レベルを定義する。"
 
 msgid "Define the upper levels for the consumed CPU time."
-msgstr "消費CPU時間の上限レベルを定義する。"
+msgstr "消費CPU時間の上位レベルを定義する。"
 
 msgid ""
 "Define the upper levels for the time, the systemd service is active since."
@@ -23272,6 +23272,9 @@ msgid ""
 "service. Activating this option will cause the service to be CRIT if a "
 "failed service is disabled."
 msgstr ""
+"障害が発生したサービスが停止されている場合も、そのサービスの状態の判定対象と"
+"なります。このオプションを有効にすると、障害が発生したサービスが停止している"
+"時のサービス状態はCRITとなります。"
 
 #, python-format
 msgid ""
@@ -27108,8 +27111,7 @@ msgstr ""
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
 "anti-malware engine."
-msgstr ""
-"ここでは、マルウェア対策エンジンによって検出された感染数の上限レベルを指定で"
+msgstr "ここでは、マルウェア対策エンジンによって検出された感染数の上位レベルを指定で"
 "きます。"
 
 msgid ""
@@ -49557,13 +49559,13 @@ msgid "Recipients: %s"
 msgstr "受信者: %s"
 
 msgid "Reclaimable"
-msgstr "再生可能"
+msgstr "再利用可能"
 
 msgid "Reclaimable kernel allocations"
-msgstr "再生可能なカーネル割り当て"
+msgstr "再利用可能なカーネル割り当て"
 
 msgid "Reclaimable slab"
-msgstr "Reclaimable slab"
+msgstr "再利用可能なｽﾗﾌﾞ"
 
 msgid "Reclaimed"
 msgstr "再生"
@@ -72636,9 +72638,8 @@ msgstr "輸送ラグ"
 msgid "Transport lag"
 msgstr "トランスポート ラグ"
 
-#, fuzzy
 msgid "Treat failed units that are disabled as critical"
-msgstr "クリティカルとして扱われる状態"
+msgstr "故障したユニットで動作不能になったものを重大な問題として扱う"
 
 msgid "Treat host down as"
 msgstr "ホストDOWNを次のように扱う"
@@ -73657,7 +73658,7 @@ msgid "Unreachable hosts"
 msgstr "到達不能なホスト"
 
 msgid "Unreclaimable slab"
-msgstr "Unreclaimable slab"
+msgstr "再利用不可なスラブ"
 
 msgid "Unregistered"
 msgstr "未登録"
@@ -74253,10 +74254,10 @@ msgid "Upper levels for drifted access points"
 msgstr "ドリフトアクセスポイントの上位レベル"
 
 msgid "Upper levels for duration in percent of the timeout"
-msgstr "タイムアウトの継続時間の上限レベル(%)"
+msgstr "タイムアウトの継続時間の上位レベル(%)"
 
 msgid "Upper levels for duration in seconds"
-msgstr "継続時間（秒）の上限レベル"
+msgstr "継続時間（秒）の上位レベル"
 
 msgid "Upper levels for encountered exceptions"
 msgstr "発生した例外の上位レベル"
@@ -74341,13 +74342,13 @@ msgstr "物理容量の上位レベル パーセント"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
-msgstr "プロビジョン済の秒間並行処理過剰実行の上限レベル"
+msgstr "プロビジョン済の秒間並行処理過剰実行の上位レベル"
 
 msgid "Upper levels for provisioned concurrent executions per second"
-msgstr "プロビジョン済の秒間同時実行の上限レベル"
+msgstr "プロビジョン済の秒間同時実行の上位レベル"
 
 msgid "Upper levels for provisioned concurrent invocations per second"
-msgstr "プロビジョン済の秒間同時呼び出しの上限レベル"
+msgstr "プロビジョン済の秒間同時呼び出しの上位レベル"
 
 msgid "Upper levels for queue lengths"
 msgstr "キューの長さの上位レベル"
@@ -74413,7 +74414,7 @@ msgid "Upper levels for the number of registered desktops"
 msgstr "登録済みデスクトップ数の上位レベル"
 
 msgid "Upper levels for the number of replication failures"
-msgstr "レプリケーション失敗回数の上限レベル"
+msgstr "レプリケーション失敗回数の上位レベル"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "拒否されたリクエスト数の上位レベル(spillover)"
@@ -74431,7 +74432,7 @@ msgid "Upper levels for the vault size"
 msgstr "ボールトサイズの上位レベル"
 
 msgid "Upper levels for throttles"
-msgstr "スロットルの上限レベル"
+msgstr "スロットルの上位レベル"
 
 msgid "Upper levels for time consumed by rule engine"
 msgstr "ルールエンジンが消費する時間の上位レベル"
@@ -74464,7 +74465,7 @@ msgid "Upper levels for unblended costs"
 msgstr "混合されていないコストの上位レベル"
 
 msgid "Upper levels for unreserved concurrent executions"
-msgstr "予約なし同時実行の上限レベル"
+msgstr "予約なし同時実行の上位レベル"
 
 msgid ""
 "Upper levels for unreserved concurrent executions in percent of the region "
@@ -83794,7 +83795,7 @@ msgstr "接続オーバーフロー率は %.2f/s です"
 
 #, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "%sのパラメータを%sのいずれかに設定する必要があります。"
+msgstr "%sのパラメータを%sに設定する必要があります。"
 
 msgid "z/OS"
 msgstr "z/OS"

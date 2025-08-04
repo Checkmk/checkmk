@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-30 18:35+0000\n"
+"PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -5372,7 +5372,7 @@ msgid "Alert handler execution"
 msgstr "Alert Handler-Ausführung"
 
 msgid "Alert handler execution, failed"
-msgstr "Alert Handler-Ausführung, gescheitert"
+msgstr "Alert Handler-Ausführung, fehlgeschlagen"
 
 msgid "Alert handler execution, successful"
 msgstr "Alert Handler-Ausführung, erfolgreich"
@@ -5381,7 +5381,7 @@ msgid "Alert handler executions"
 msgstr "Alert Handler-Ausführungen"
 
 msgid "Alert handler failed"
-msgstr "Alert Handler gescheitert"
+msgstr "Alert Handler fehlgeschlagen"
 
 msgid "Alert handler log level"
 msgstr "Log-Level für Alert Handler"
@@ -6177,7 +6177,7 @@ msgid ""
 "Allows to define levels for the counts and size of Docker containers, "
 "images, local volumes, and the build cache."
 msgstr ""
-"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker "
+"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker-"
 "Containern, Images, lokalen Volumes und den Build Cache."
 
 #, python-format
@@ -16852,7 +16852,7 @@ msgid "DNS domain name to discover LDAP servers of"
 msgstr "DNS-Domänenname zur Erkennung von LDAP-Servern von"
 
 msgid "DNS failed queries"
-msgstr "fehlgeschlagen DNS Queries"
+msgstr "fehlgeschlagene DNS Queries"
 
 msgid "DNS host name"
 msgstr "DNS Host-Name"
@@ -18670,7 +18670,7 @@ msgid "Deploy the Checkmk object counts plug-in"
 msgstr "Checkmk-Objektzählungs-Plugin verteilen"
 
 msgid "Deploy the Docker container plug-in"
-msgstr "Plugin des Docker Containers verteilen"
+msgstr "Plugin des Docker-Containers verteilen"
 
 msgid "Deploy the Docker plug-in"
 msgstr "Docker-Plugin verteilen"
@@ -20169,7 +20169,7 @@ msgid "Do not deploy the DNS client plug-in"
 msgstr "DNS client Plugin nicht verteilen"
 
 msgid "Do not deploy the Docker container plug-in"
-msgstr "Plugin für Docker Container nicht verteilen"
+msgstr "Plugin für Docker-Container nicht verteilen"
 
 msgid "Do not deploy the Docker plug-in"
 msgstr "Docker-Plugin nicht verteilen"
@@ -20430,7 +20430,7 @@ msgid "Do you really want to switch the event daemon mode?"
 msgstr "Wollen Sie den Modus des Event Daemon wirklich umschalten?"
 
 msgid "Docker containers"
-msgstr "Docker Container"
+msgstr "Docker-Container"
 
 msgid "Docker images"
 msgstr "Docker Images"
@@ -20442,10 +20442,10 @@ msgid "Docker node"
 msgstr "Docker-Knoten"
 
 msgid "Docker node and containers"
-msgstr "Docker-Knoten und Container"
+msgstr "Docker-Knoten und -Container"
 
 msgid "Docker node container levels"
-msgstr "Docker-Knoten Container Levels"
+msgstr "Docker-Knoten-Container Levels"
 
 msgid "Docker node disk usage"
 msgstr "Docker-Knoten Festplattenauslastung"
@@ -20562,7 +20562,8 @@ msgstr "Informationen über Grenzwerte nicht anzeigen"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
-"Zeige oder warne nicht, wenn \"Failed Actions\" vorhanden sind (default)"
+"Zeige oder warne nicht, wenn \"Fehlgeschlagene Aktionen\" vorhanden sind "
+"(Standard)"
 
 msgid "Don't use HTTP header authentication"
 msgstr "HTTP-Header-Authentifizierung nicht nutzen"
@@ -23898,7 +23899,7 @@ msgid "Failed connections"
 msgstr "Fehlgeschlagene Verbindungen"
 
 msgid "Failed disk"
-msgstr "Defekte Platte"
+msgstr "Defekte Festplatte"
 
 msgid "Failed file requests"
 msgstr "Fehlgeschlagene Dateianfragen"
@@ -23941,6 +23942,10 @@ msgid ""
 "service. Activating this option will cause the service to be CRIT if a "
 "failed service is disabled."
 msgstr ""
+"Ein fehlgeschlagener Service, der deaktiviert ist, wird ebenfalls für den "
+"Status des Services berücksichtigt. Wenn Sie diese Option aktivieren, wird "
+"der Service als CRIT eingestuft, wenn ein fehlgeschlagener Service "
+"deaktiviert ist."
 
 #, python-format
 msgid ""
@@ -23949,14 +23954,14 @@ msgid ""
 "Config: %s\n"
 "Output: %s"
 msgstr ""
-"Fehler beim aktivieren der geänderten Instanzkonfiguration.\n"
+"Fehler beim Aktivieren der geänderten Instanzkonfiguration.\n"
 "Exit-Code: %d\n"
 "Konfiguration: %s\n"
 "Ausgabe: %s"
 
 #, python-format
 msgid "Failed to apply the cronjob config: %s"
-msgstr "Fehler beim erstellen der Cronjob-Konfiguration: %s"
+msgstr "Fehler beim Erstellen der Cronjob-Konfiguration: %s"
 
 #, python-format
 msgid "Failed to bake the agents: %s"
@@ -23974,7 +23979,7 @@ msgid "Failed to compile your module: %s"
 msgstr "Fehler beim Kompilieren Ihres Moduls: %s"
 
 msgid "Failed to compute host name"
-msgstr "Host-Name konnte nicht berechnet werden"
+msgstr "Berechnung des Host-Namens ist fehlgeschlagen"
 
 #, python-format
 msgid ""
@@ -37567,7 +37572,7 @@ msgid "Logwatch state"
 msgstr "Logwatch-Zustand"
 
 msgid "Long - Use the full docker container ID"
-msgstr "Lang - Die gesamte Docker container ID verwenden"
+msgstr "Lang - Die gesamte Docker-Container ID verwenden"
 
 msgid "Long active sessions"
 msgstr "Lang aktive Sitzungen"
@@ -39658,7 +39663,7 @@ msgid "Memory usage of DB2 (Linux, AIX, Solaris)"
 msgstr "Speicherauslastung von DB2 (Linux, AIX, Solaris)"
 
 msgid "Memory usage of Docker containers"
-msgstr "Speicherauslastung für Docker Container"
+msgstr "Speicherauslastung für Docker-Container"
 
 msgid "Memory usage of ESX Clusters"
 msgstr "Speicherauslastung von ESX-Clustern"
@@ -46311,7 +46316,7 @@ msgid ""
 "Overall state of all docker containers, with counts of services in the "
 "various states."
 msgstr ""
-"Gesamtzustand von allen Docker Containern, mit den Anzahlen von Services in "
+"Gesamtzustand von allen Docker-Containern, mit den Anzahlen von Services in "
 "den verschiedenen Zuständen."
 
 msgid ""
@@ -48029,7 +48034,7 @@ msgid "Piggyback services to monitor"
 msgstr "Zu überwachende Piggyback-Services"
 
 msgid "Piggybacked docker containers"
-msgstr "Piggyback Docker Container"
+msgstr "Piggyback Docker-Container"
 
 msgid "Piggybacked host name conditions"
 msgstr "Bedingungen für Piggybacked-Host-Namen"
@@ -56451,7 +56456,7 @@ msgid "Shipped Checkmk plug-ins"
 msgstr "Verschickte Checkmk-Plugins"
 
 msgid "Short - Use the first 12 characters of the docker container ID"
-msgstr "Kurz - Die ersten 12 Zeichen der Docker Container ID verwenden"
+msgstr "Kurz - Die ersten 12 Zeichen der Docker-Container ID verwenden"
 
 msgid "Short ID"
 msgstr "Kurz-ID"
@@ -74821,9 +74826,8 @@ msgstr "Transportverzögerung (Lag)"
 msgid "Transport lag"
 msgstr "Transportverzögerung (Lag)"
 
-#, fuzzy
 msgid "Treat failed units that are disabled as critical"
-msgstr "Zustände, die als kritisch behandelt werden"
+msgstr "Ausgefallene Einheiten, die deaktiviert sind, als kritisch behandeln"
 
 msgid "Treat host down as"
 msgstr "Behandle Host DOWN als"

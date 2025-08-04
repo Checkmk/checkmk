@@ -40,15 +40,15 @@ class ChangePassword(CmkPage):
 
     @property
     def current_password_input(self) -> Locator:
-        return self.main_area.locator("input[name='cur_password']")
+        return self.main_area.locator("input[name='_cur_password']")
 
     @property
     def new_password_input(self) -> Locator:
-        return self.main_area.locator("input[name='password']")
+        return self.main_area.locator("input[name='_password']")
 
     @property
     def new_password_confirm_input(self) -> Locator:
-        return self.main_area.locator("input[name='password2']")
+        return self.main_area.locator("input[name='_password2']")
 
     @property
     def save_button(self) -> Locator:

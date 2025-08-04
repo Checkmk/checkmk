@@ -23,10 +23,10 @@ import cmk.ccc.version as cmk_version
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -37,7 +37,9 @@ from cmk.gui.utils.urls import (
     DocReference,
     get_confirm_link_title,
     makeuri,
-    makeuri_contextless,
+    requested_file_name,
+    urlencode,
+    urlencode_vars,
     youtube_reference_url,
     YouTubeReference,
 )
@@ -381,6 +383,37 @@ class PageMenu:
         )
 
 
+def _make_filtered_url(request_: Request) -> str:
+    """Make a URI from the request, filtering out sensitive variables."""
+    sensitive_markers = ("_password", "_passphrase", "_secret")
+    vars_: HTTPVariables = [
+        (v, val)
+        for v, val in request_.itervars()
+        if v[0] != "_" and not any(marker in v for marker in sensitive_markers)
+    ]
+
+    url = urlencode(requested_file_name(request_)) + ".py"
+    if vars_:
+        url += f"?{urlencode_vars(vars_)}"
+
+    return url
+
+
+def _with_navigation(request_: Request) -> Link:
+    return Link(
+        url=_make_filtered_url(request_),
+        target="_top",
+    )
+
+
+def _without_navigation(request_: Request) -> Link:
+    start_url = _make_filtered_url(request_)
+    return Link(
+        url=f"index.py?{urlencode_vars([('start_url', start_url)])}",
+        target="_top",
+    )
+
+
 def make_display_options_dropdown() -> PageMenuDropdown:
     return PageMenuDropdown(
         name="display",
@@ -393,30 +426,14 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                         title=(_("Show page navigation")),
                         name="hide_navigation",
                         icon_name="toggle_on",
-                        item=PageMenuLink(
-                            Link(
-                                url=(makeuri(request, [])),
-                                target="_top",
-                            )
-                        ),
+                        item=PageMenuLink(_with_navigation(request)),
                         css_classes=["hidden"],
                     ),
                     PageMenuEntry(
                         title=(_("Show page navigation")),
                         name="show_navigation",
                         icon_name="toggle_off",
-                        item=PageMenuLink(
-                            Link(
-                                url=(
-                                    makeuri_contextless(
-                                        request,
-                                        [("start_url", makeuri(request, []))],
-                                        filename="index.py",
-                                    )
-                                ),
-                                target="_top",
-                            )
-                        ),
+                        item=PageMenuLink(_without_navigation(request)),
                     ),
                 ],
                 id_="general_display_options",

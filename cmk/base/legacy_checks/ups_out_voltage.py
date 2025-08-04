@@ -15,7 +15,17 @@ check_info = {}
 
 
 def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:
-    yield from ((item, {}) for item, value, *_rest in info if int(value) > 0)
+    for (
+        item,
+        value,
+    ) in info:
+        try:
+            value_int = int(value)
+        except ValueError:
+            value_int = 0
+
+        if value_int > 0:
+            yield (item, {})
 
 
 def parse_ups_out_voltage(string_table: StringTable) -> StringTable:

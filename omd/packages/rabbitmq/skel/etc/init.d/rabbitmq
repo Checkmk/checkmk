@@ -8,7 +8,6 @@ RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
-RABBITMQ_CONFIG_MANAGEMENT_IP_FILE="${RABBITMQ_CONFIG_FILES}/04-management-ip.conf"
 RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
@@ -100,22 +99,6 @@ ensure_broker_certs() {
     fi
 }
 
-config_mgmt_listener() {
-    printf "Write management listener ip...\n"
-
-    listener_ip="127.0.0.1"
-    if ping -c1 ::1 &>/dev/null; then
-        listener_ip="::1"
-    fi
-
-    cat <<HERE >"${RABBITMQ_CONFIG_MANAGEMENT_IP_FILE}"
-# Management API for self monitoring
-# Ip set by rabbitmq init script etc/init.d/rabbitmq. Better do not edit manually.
-management.tcp.ip = ${listener_ip}
-HERE
-
-}
-
 stop_and_reset_app() {
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" stop_app &>/dev/null
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" reset &>/dev/null
@@ -148,7 +131,6 @@ case "$1" in
 
     start-blocking)
         ensure_broker_certs
-        config_mgmt_listener
 
         RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
             RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \

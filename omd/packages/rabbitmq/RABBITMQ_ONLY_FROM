@@ -16,7 +16,7 @@ fi
 
 case "$1" in
     default)
-        echo ":: 0.0.0.0"
+        echo "::"
         ;;
     choices)
         echo "@{IP_ADDRESS_LIST}"

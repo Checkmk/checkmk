@@ -119,10 +119,13 @@ def provide_agent_binaries(Map args) {
                     use_upstream_build: true,
                     relative_job_name: details.relative_job_name,
                     build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: args.version,
                         DISABLE_CACHE: args.disable_cache,
                     ],
                     build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: args.bisect_comment,
                     ],
                     dest: "${args.artifacts_base_dir}/${job_name}",

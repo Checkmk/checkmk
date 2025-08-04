@@ -58,34 +58,6 @@ def _get_fileinfo_groups_help():
     )
 
 
-def _transform_level_names(conjunctions):
-    """
-    >>> _transform_level_names([(2, [('count', 3), ('largest_size', 8)])])
-    [(2, [('count', 3), ('size_largest', 8)])]
-    """
-    # TODO: Investigate...
-    # Trying to perform this transform directly on the CascadingDropdown resulted in rules.mk
-    # not beeing update with "cmk-update-config". However after saving the rule in the GUI the
-    # values were transformed...
-    transform_map = {
-        "largest_size": "size_largest",
-        "largest_size_lower": "size_largest_lower",
-        "smallest_size": "size_smallest",
-        "smallest_size_lower": "size_smallest_lower",
-        "oldest_age": "age_oldest",
-        "oldest_age_lower": "age_oldest_lower",
-        "newest_age": "age_newest",
-        "newest_age_lower": "age_newest_lower",
-    }
-    return [
-        (
-            monitoring_state,
-            [(transform_map.get(ident, ident), value) for ident, value in conjunction],
-        )
-        for monitoring_state, conjunction in conjunctions
-    ]
-
-
 def _valuespec_fileinfo_groups() -> Dictionary:
     return Dictionary(
         title=_("File grouping patterns"),

@@ -49,7 +49,7 @@ class ApiErrorDataclass:
         description="Detailed error messages on all fields failing validation.",
         example={"field": "error message"},
     )
-    ext: dict[str, str] | ApiOmitted = api_field(
+    ext: dict[str, str] | object | ApiOmitted = api_field(
         default_factory=ApiOmitted,
         title="Error extensions",
         description="Additional information about the error.",

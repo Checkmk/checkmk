@@ -307,9 +307,9 @@ botocore-stubs==1.35.80 \
 bson==0.5.10 \
     --hash=sha256:d6511b2ab051139a9123c184de1a04227262173ad593429d21e443d6462d6590
     # via -r requirements_dev.txt
-build==1.2.2.post1 \
-    --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
-    --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
+build==1.3.0 \
+    --hash=sha256:698edd0ea270bde950f53aed21f3a0135672206f3911e0176261a31e0e07b397 \
+    --hash=sha256:7145f0b5061ba90a1500d60bd1b13ca0a8a4cebdd0cc16ed8adf1c0e739f43b4
     # via
     #   check-manifest
     #   devpi-client
@@ -325,9 +325,9 @@ cachetools==5.5.2 \
     # via
     #   -r requirements_all.txt
     #   google-auth
-certifi==2025.7.14 \
-    --hash=sha256:6b31f564a415d79ee77df69d757bb49a5bb53bd9f756cbbe24394ffd6fc1f4b2 \
-    --hash=sha256:8ea99dbdfaaf2ba2f9bac77b9249ef62ec5218e7c2b2e903378ed5fccf765995
+certifi==2025.8.3 \
+    --hash=sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407 \
+    --hash=sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5
     # via
     #   -r requirements_all.txt
     #   httpcore
@@ -3163,9 +3163,9 @@ python-dateutil==2.9.0.post0 \
     #   recurring-ical-events
     #   time-machine
     #   trickkiste
-python-jenkins==1.8.2 \
-    --hash=sha256:56e7dabb0607bdb8e1d6fc6d2d4301abedbed9165da2b206facbd3071cb6eecb \
-    --hash=sha256:585c9a25042892ce224dcddb1d4b9ff29755ca63da03ac2ce96537d373c0233e
+python-jenkins==1.8.3 \
+    --hash=sha256:2e1766b253e3b2f28f52abfd0de45ffeaa1191f98520cc8d74d2c317786e59d0 \
+    --hash=sha256:8f4761c391ac11e8c1f23f771010920c10440497705ab7175d52358f5a12dc98
     # via checkmk-dev-tools
 python-ldap==3.4.3 \
     --hash=sha256:ab26c519a0ef2a443a2a10391fa3c5cb52d7871323399db949ebfaa9f25ee2a0
@@ -3724,7 +3724,6 @@ six==1.17.0 \
     #   opsgenie-sdk
     #   pyghmi
     #   python-dateutil
-    #   python-jenkins
     #   rfc3339-validator
 smmap==5.0.2 \
     --hash=sha256:26ea65a03958fa0c8a1c7e8c7a58fdc77221b8910f6be2131affade476898ad5 \
@@ -4256,9 +4255,9 @@ vcrpy==7.0.0 \
     --hash=sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
     # via -r requirements_all.txt
-virtualenv==20.32.0 \
-    --hash=sha256:2c310aecb62e5aa1b06103ed7c2977b81e042695de2697d01017ff0f1034af56 \
-    --hash=sha256:886bf75cadfdc964674e6e33eb74d787dff31ca314ceace03ca5810620f4ecf0
+virtualenv==20.33.0 \
+    --hash=sha256:106b6baa8ab1b526d5a9b71165c85c456fbd49b16976c88e2bc9352ee3bc5d3f \
+    --hash=sha256:47e0c0d2ef1801fce721708ccdf2a28b9403fa2307c3268aebd03225976f61d2
     # via pre-commit
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \

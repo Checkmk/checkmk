@@ -50,7 +50,14 @@ check_plugin_fileinfo = CheckPlugin(
     discovery_default_parameters={},
     discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_fileinfo,
-    check_default_parameters={"negative_age_tolerance": 5},
+    check_default_parameters={
+        "minage": ("no_levels", None),
+        "maxage": ("no_levels", None),
+        "minsize": ("no_levels", None),
+        "maxsize": ("no_levels", None),
+        "state_missing": 3,
+        "negative_age_tolerance": 5.0,
+    },
     check_ruleset_name="fileinfo",
 )
 
@@ -63,6 +70,20 @@ check_plugin_fileinfo_groups = CheckPlugin(
     discovery_default_parameters={},
     discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_fileinfo_groups,
-    check_default_parameters={"negative_age_tolerance": 5},
+    check_default_parameters={
+        "minage_oldest": ("no_levels", None),
+        "maxage_oldest": ("no_levels", None),
+        "minage_newest": ("no_levels", None),
+        "maxage_newest": ("no_levels", None),
+        "minsize_smallest": ("no_levels", None),
+        "maxsize_smallest": ("no_levels", None),
+        "minsize_largest": ("no_levels", None),
+        "maxsize_largest": ("no_levels", None),
+        "minsize": ("no_levels", None),
+        "maxsize": ("no_levels", None),
+        "mincount": ("no_levels", None),
+        "maxcount": ("no_levels", None),
+        "negative_age_tolerance": 5.0,
+    },
     check_ruleset_name="fileinfo_groups_checking",
 )

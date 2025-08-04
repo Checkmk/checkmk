@@ -38,7 +38,7 @@ INFO = [
     ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
     ["/var/log/aptitude", "ok", "0", "1543826115"],
     ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-    ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
+    ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],  # nosec
 ]
 INFO_MISSING_TIME_SYSLOG = deepcopy(INFO)
 INFO_MISSING_TIME_SYSLOG[4][3] = ""
@@ -63,9 +63,7 @@ def test_fileinfo_min_max_age_levels() -> None:
     # minage matches
     output_minage = fileinfo_plugin.check_fileinfo(
         item,
-        {
-            "minage": (5, 1),
-        },
+        {"minage": ("fixed", (5.0, 1.0))},
         parsed,
     )
 
@@ -80,9 +78,7 @@ def test_fileinfo_min_max_age_levels() -> None:
     # maxage matches
     output_maxage = fileinfo_plugin.check_fileinfo(
         item,
-        {
-            "maxage": (1, 2),
-        },
+        {"maxage": ("fixed", (1.0, 2.0))},
         parsed,
     )
 
@@ -99,8 +95,8 @@ def test_fileinfo_min_max_age_levels() -> None:
     output_both = fileinfo_plugin.check_fileinfo(
         item,
         {
-            "minage": (5, 1),
-            "maxage": (1, 2),
+            "minage": ("fixed", (5.0, 1.0)),
+            "maxage": ("fixed", (1.0, 2.0)),
         },
         parsed,
     )
@@ -173,7 +169,11 @@ def test_check_fileinfo_group_no_files(
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
-            {"group_patterns": [("/banana/*", "")]},
+            {
+                "group_patterns": [
+                    {"group_pattern_include": "/banana/*", "group_pattern_exclude": ""},
+                ]
+            },
             parsed,
         )
     )
@@ -251,7 +251,11 @@ def test_check_fileinfo_group_no_matching_files(
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
-            {"group_patterns": [("/banana/*", "")]},
+            {
+                "group_patterns": [
+                    {"group_pattern_include": "/banana/*", "group_pattern_exclude": ""},
+                ]
+            },
             parsed,
         )
     )
@@ -268,7 +272,9 @@ def test_check_fileinfo_group_no_matching_files(
             ],
             {
                 # current format
-                "group_patterns": [("/var/log/sys*", "")]
+                "group_patterns": [
+                    {"group_pattern_include": "/var/log/sys*", "group_pattern_exclude": ""},
+                ]
             },
             [
                 Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
@@ -352,7 +358,12 @@ def test_check_fileinfo_group_no_matching_files(
             ],
             {
                 # current format
-                "group_patterns": [("/var/log/sys*", "/var/log/syslog1")]
+                "group_patterns": [
+                    {
+                        "group_pattern_include": "/var/log/sys*",
+                        "group_pattern_exclude": "/var/log/syslog1",
+                    },
+                ]
             },
             [
                 Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
@@ -397,7 +408,7 @@ def test_check_fileinfo_group_patterns(
             "SMS_checked",
             {
                 "group_patterns": [
-                    ("/sms/checked/.*", ""),
+                    {"group_pattern_include": "/sms/checked/.*", "group_pattern_exclude": ""},
                 ]
             },
             [
@@ -469,7 +480,7 @@ def test_check_fileinfo_group_patterns_get_host_values(
                 {
                     "group_patterns": [
                         ("log", ("*syslog*", "")),
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
                     ]
                 }
             ],
@@ -629,10 +640,10 @@ def test_fileinfo_discovery(
             INFO,
             "/var/log/aptitude.2.gz",
             {
-                "minsize": (5120, 10),
-                "maxsize": (5242880, 9663676416),
-                "minage": (60, 30),
-                "maxage": (3600, 10800),
+                "minsize": ("fixed", (5120.0, 10.0)),
+                "maxsize": ("fixed", (5242880.0, 9663676416.0)),
+                "minage": ("fixed", (60.0, 30.0)),
+                "maxage": ("fixed", (3600.0, 10800.0)),
             },
             [
                 Result(state=State.WARN, summary="Size: 3.16 KiB (warn/crit below 5.00 KiB/10 B)"),
@@ -795,7 +806,7 @@ def test_fileinfo_check(
                 {
                     "group_patterns": [
                         ("log", ("*syslog*", "")),
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
                     ]
                 }
             ],
@@ -803,7 +814,8 @@ def test_fileinfo_check(
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(
-                    item="today", parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]}
+                    item="today",
+                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},  # nosec
                 ),
             ],
         ),
@@ -817,7 +829,7 @@ def test_fileinfo_check(
                 },
                 {
                     "group_patterns": [
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
                     ]
                 },
             ],
@@ -825,7 +837,8 @@ def test_fileinfo_check(
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(
-                    item="today", parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]}
+                    item="today",
+                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},  # nosec
                 ),
             ],
         ),
@@ -848,10 +861,12 @@ def test_fileinfo_group_discovery(
             INFO,
             "log",
             {
-                "group_patterns": [("*syslog*", "")],
-                "maxsize": (2, 2097152),
-                "minage_newest": (5, 2),
-                "maxage_oldest": (3600, 3600 * 5),
+                "group_patterns": [
+                    {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                ],
+                "maxsize": ("fixed", (2.0, 2097152.0)),
+                "minage_newest": ("fixed", (5.0, 2.0)),
+                "maxage_oldest": ("fixed", (3600.0, 3600.0 * 5)),
             },
             [
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
@@ -884,7 +899,11 @@ def test_fileinfo_group_discovery(
         pytest.param(
             INFO,
             "today",
-            {"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},
+            {
+                "group_patterns": [
+                    {"group_pattern_include": "/tmp/$DATE:%Y%m%d$.txt", "group_pattern_exclude": ""}  # nosec
+                ],
+            },
             [
                 Result(state=State.OK, notice="Include patterns: /tmp/$DATE:%Y%m%d$.txt"),
                 Result(
@@ -911,10 +930,12 @@ def test_fileinfo_group_discovery(
             INFO,
             "log",
             {
-                "group_patterns": [("*syslog*", "")],
-                "maxsize": (2, 2097152),
-                "minage_newest": (5, 2),
-                "maxage_oldest": (3600, 3600 * 5),
+                "group_patterns": [
+                    {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                ],
+                "maxsize": ("fixed", (2.0, 2097152.0)),
+                "minage_newest": ("fixed", (5.0, 2.0)),
+                "maxage_oldest": ("fixed", (3600.0, 3600.0 * 5)),
                 "shorten_multiline_output": True,
             },
             [
@@ -943,7 +964,12 @@ def test_fileinfo_group_discovery(
         pytest.param(
             INFO_MISSING_TIME_SYSLOG,
             "log",
-            {"group_patterns": [("*syslog*", "")], "timeofday": [((8, 0), (9, 0))]},
+            {
+                "group_patterns": [
+                    {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                ],
+                "timeofday": [((8, 0), (9, 0))],
+            },
             [
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
                 Result(

@@ -47,7 +47,7 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
 
     # Activation of the host
     if Query([Hosts.name]).fetchall(sites=sites.live()):
-        yield FinishedEnum.activate_changes_and_explore_hosts
+        yield FinishedEnum.adjust_services
 
     notification_rules = NotificationRuleConfigFile().load_for_reading()
     # Creation of a new notification rule
@@ -191,10 +191,10 @@ def get_welcome_data() -> WelcomePage:
                 addvars=[("mode", "changelog")],
                 filename="wato.py",
             ),
-            all_hosts=makeuri(
+            setup_hosts=makeuri(
                 request,
-                addvars=[("view_name", "allhosts")],
-                filename="view.py",
+                addvars=[("mode", "folder")],
+                filename="wato.py",
             ),
             main_dashboard=makeuri(
                 request,

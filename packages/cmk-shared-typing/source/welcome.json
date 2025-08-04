@@ -36,7 +36,7 @@
                 "synthetic_monitoring": { "type": "string" },
                 "opentelemetry": { "type": "string" },
                 "activate_changes": { "type": "string" },
-                "all_hosts": { "type": "string" },
+                "setup_hosts": { "type": "string" },
                 "main_dashboard": { "type": "string" },
                 "problem_dashboard": { "type": "string" },
                 "unhandled_service_problems": { "type": "string" },
@@ -62,7 +62,7 @@
                 "azure_quick_setup",
                 "gcp_quick_setup",
                 "activate_changes",
-                "all_hosts",
+                "setup_hosts",
                 "main_dashboard",
                 "problem_dashboard",
                 "unhandled_service_problems",
@@ -83,7 +83,7 @@
                         "type": "string",
                         "enum": [
                             "add_host",
-                            "activate_changes_and_explore_hosts",
+                            "adjust_services",
                             "enable_notifications",
                             "customize_dashboard"
                         ]

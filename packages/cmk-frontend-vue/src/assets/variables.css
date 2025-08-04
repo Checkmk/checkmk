@@ -97,6 +97,8 @@
   --icon-contactgroups: url('~cmk-frontend/themes/facelift/images/icon_contactgroups.svg');
   --icon-licensing: url('~cmk-frontend/themes/facelift/images/icon_licensing.svg');
   --icon-learning-guide: url('~cmk-frontend/themes/facelift/images/icon_learning_guide.svg');
+  --icon-services: url('~cmk-frontend/themes/facelift/images/icon_services.svg');
+  --icon-check-parameters: url('~cmk-frontend/themes/facelift/images/icon_check_parameters.svg');
   --icon-sites: url('~cmk-frontend/themes/facelift/images/icon_sites.svg');
   --icon-folder: url('~cmk-frontend/themes/facelift/images/icon_folder.svg');
   --icon-networking: url('~cmk-frontend/themes/facelift/images/icon_networking.svg');

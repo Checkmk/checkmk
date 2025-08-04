@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-30 19:35+0000\n"
+"PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -8967,9 +8967,8 @@ msgstr "両方"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "両方(both)-Podとコンテナの両方のレベルの情報を表示します"
 
-#, fuzzy
 msgid "Both conditions must match (defensive)"
-msgstr "守備的（両方の条件が一致する必要があります）"
+msgstr "両方の条件が一致する必要があります（防御的）"
 
 msgid "Bottom"
 msgstr "ボトム"
@@ -17353,10 +17352,10 @@ msgstr ""
 "測定データの繰り返しが予想される周期を定義する（月、週、日、または時間単位）"
 
 msgid "Define the upper levels for memory usage."
-msgstr "メモリ使用量の上限レベルを定義する。"
+msgstr "メモリ使用量の上位レベルを定義する。"
 
 msgid "Define the upper levels for the consumed CPU time."
-msgstr "消費CPU時間の上限レベルを定義する。"
+msgstr "消費CPU時間の上位レベルを定義する。"
 
 msgid ""
 "Define the upper levels for the time, the systemd service is active since."
@@ -23423,6 +23422,9 @@ msgid ""
 "service. Activating this option will cause the service to be CRIT if a "
 "failed service is disabled."
 msgstr ""
+"障害が発生したサービスが停止されている場合も、そのサービスの状態の判定対象と"
+"なります。このオプションを有効にすると、障害が発生したサービスが停止している"
+"時のサービス状態はCRITとなります。"
 
 #, python-format
 msgid ""
@@ -27288,8 +27290,7 @@ msgstr ""
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
 "anti-malware engine."
-msgstr ""
-"ここでは、マルウェア対策エンジンによって検出された感染数の上限レベルを指定で"
+msgstr "ここでは、マルウェア対策エンジンによって検出された感染数の上位レベルを指定で"
 "きます。"
 
 msgid ""
@@ -42723,9 +42724,8 @@ msgstr "Podmamコンテナの数"
 msgid "Number of Podman images"
 msgstr "Podmanイメージの数"
 
-#, fuzzy
 msgid "Number of Podman volumes"
-msgstr "Podmanイメージの数"
+msgstr "Podmanボリューム数"
 
 msgid "Number of Resources"
 msgstr "リソースの数"
@@ -42754,9 +42754,8 @@ msgstr "Podmanコンテナのアクティブなインスタンス数"
 msgid "Number of active Podman images"
 msgstr "アクティブなPodman イメージの数"
 
-#, fuzzy
 msgid "Number of active Podman volumes"
-msgstr "アクティブなPodman イメージの数"
+msgstr "アクティブなPodmanボリュームの数"
 
 msgid "Number of active instances"
 msgstr "アクティブなインスタンス数"
@@ -43813,9 +43812,8 @@ msgstr ""
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
 
-#, fuzzy
 msgid "One condition needs to match (offensive)"
-msgstr "積極的（1つの条件が一致する必要があります）"
+msgstr "1つの条件が一致する必要があります（攻撃的）"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -49929,13 +49927,13 @@ msgid "Recipients: %s"
 msgstr "受信者: %s"
 
 msgid "Reclaimable"
-msgstr "再生可能"
+msgstr "再利用可能"
 
 msgid "Reclaimable kernel allocations"
-msgstr "再生可能なカーネル割り当て"
+msgstr "再利用可能なカーネル割り当て"
 
 msgid "Reclaimable slab"
-msgstr "Reclaimable slab"
+msgstr "再利用可能なｽﾗﾌﾞ"
 
 msgid "Reclaimed"
 msgstr "再生"
@@ -50613,9 +50611,8 @@ msgstr "フィルタを取り外します"
 msgid "Remove history entries older than"
 msgstr "設定日より古い履歴のエントリを削除"
 
-#, fuzzy
 msgid "Remove history entries right after"
-msgstr "履歴のエントリを直後に削除する"
+msgstr "この後履歴のエントリを削除する"
 
 msgid "Remove history entries which meet the following conditions"
 msgstr "以下の条件を満たす履歴エントリを削除"
@@ -55277,9 +55274,8 @@ msgstr "コンテナのPodmanディスク使用量の上限を設定する"
 msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "イメージのPodmanディスク使用量の上限を設定する"
 
-#, fuzzy
 msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "イメージのPodmanディスク使用量の上限を設定する"
+msgstr "Podmanのボリュームディスク使用量の上限レベルを設定する"
 
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "アクティブなコンテナの総数の上限を設定します。"
@@ -55287,9 +55283,8 @@ msgstr "アクティブなコンテナの総数の上限を設定します。"
 msgid "Sets the upper levels for the total number of active images."
 msgstr "アクティブなイメージの総数の上限を設定します。"
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of active volumes."
-msgstr "アクティブなイメージの総数の上限を設定します。"
+msgstr "アクティブなボリュームの総数の上限レベルを設定します。"
 
 msgid "Sets the upper levels for the total number of containers."
 msgstr "コンテナの総数の上限を設定します。"
@@ -55297,17 +55292,15 @@ msgstr "コンテナの総数の上限を設定します。"
 msgid "Sets the upper levels for the total number of images."
 msgstr "イメージの総数の上限を設定します。"
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of volumes."
-msgstr "イメージの総数の上限を設定します。"
+msgstr "ボリュームの総数の上限レベルを設定します。"
 
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr "Podman コンテナの総再利用可能サイズの上限を設定します。"
+msgstr "Podman コンテナの総再利用可能サイズの上位レベルを設定します。"
 
-#, fuzzy
 msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
-msgstr "Podman コンテナの総再利用可能サイズの上限を設定します。"
+msgstr "Podman ボリュームの総再利用可能サイズの上位レベルを設定します。"
 
 msgid "Sets the upper levels for the total size of Podman containers."
 msgstr "Podman コンテナの総サイズの上限を設定します。"
@@ -55315,9 +55308,8 @@ msgstr "Podman コンテナの総サイズの上限を設定します。"
 msgid "Sets the upper levels for the total size of Podman images."
 msgstr "Podman イメージの総サイズの上限を設定します。"
 
-#, fuzzy
 msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Podman イメージの総サイズの上限を設定します。"
+msgstr "Podman ボリュームの総サイズの上限レベルを設定します。"
 
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "アラートのユーザーを設定します。リクエスト所有者の表示名。"
@@ -64103,9 +64095,9 @@ msgstr ""
 "ここで指定するパターンは、センサーの状態の始まりと正確に一致する必要がありま"
 "す（大文字と小文字を区別します）。"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "The pattern {value} is not a valid regular expression: {err_msg}"
-msgstr "ここに入力されたテキストは、正規表現パターンとして処理されます。"
+msgstr "パターン {value} は有効な正規表現ではありません: {err_msg}"
 
 msgid ""
 "The performance graph will always display the occupied memory. This is "
@@ -71425,9 +71417,8 @@ msgstr "アクティブなシャード総数の上位レベル"
 msgid "Total number of active shards upper level"
 msgstr "アクティブなシャード総数の上位レベル"
 
-#, fuzzy
 msgid "Total number of active volumes upper levels"
-msgstr "アクティブなイメージ総数の上位レベル"
+msgstr "アクティブなボリュームの総数上位レベル"
 
 msgid "Total number of collections lower level"
 msgstr "コレクション総数の下位レベル"
@@ -71576,9 +71567,8 @@ msgstr "ユーザー総数の下位レベル"
 msgid "Total number of user upper level"
 msgstr "ユーザー総数の上位レベル"
 
-#, fuzzy
 msgid "Total number of volumes upper levels"
-msgstr "イメージ総数の上位レベル"
+msgstr "イメージ総数の上限レベル"
 
 msgid "Total number of zombie jobs"
 msgstr "ゾンビジョブの総数"
@@ -71602,14 +71592,13 @@ msgid "Total read latency"
 msgstr "総読取レイテンシ"
 
 msgid "Total reclaimable size of Podman containers"
-msgstr "Podman コンテナの総回収可能サイズ"
+msgstr "Podman コンテナの総再利用可能なサイズ"
 
-#, fuzzy
 msgid "Total reclaimable size of Podman volumes"
-msgstr "Podman コンテナの総回収可能サイズ"
+msgstr "Podman ボリュームの総再利用可能なサイズ"
 
 msgid "Total reclaimable size upper levels"
-msgstr "総回収可能容量 上位レベル"
+msgstr "総再利用可能な容量 上位ベル"
 
 msgid "Total reservation utilization"
 msgstr "合計メモリ使用率"
@@ -73153,9 +73142,8 @@ msgstr "Podman コンテナの総サイズ"
 msgid "Total size of Podman images"
 msgstr "Podman イメージの総サイズ"
 
-#, fuzzy
 msgid "Total size of Podman volumes"
-msgstr "Podman イメージの総サイズ"
+msgstr "Podman ボリュームの総サイズ"
 
 msgid "Total size of all indexes for the collection"
 msgstr "コレクションの全てのインデックスの合計サイズ"
@@ -73321,9 +73309,8 @@ msgstr "輸送ラグ"
 msgid "Transport lag"
 msgstr "トランスポート ラグ"
 
-#, fuzzy
 msgid "Treat failed units that are disabled as critical"
-msgstr "クリティカルとして扱われる状態"
+msgstr "故障したユニットで動作不能になったものを重大な問題として扱う"
 
 msgid "Treat host down as"
 msgstr "ホストDOWNを次のように扱う"
@@ -74337,7 +74324,7 @@ msgid "Unreachable hosts"
 msgstr "到達不能なホスト"
 
 msgid "Unreclaimable slab"
-msgstr "Unreclaimable slab"
+msgstr "再利用不可なスラブ"
 
 msgid "Unregistered"
 msgstr "未登録"
@@ -74933,10 +74920,10 @@ msgid "Upper levels for drifted access points"
 msgstr "ドリフトアクセスポイントの上位レベル"
 
 msgid "Upper levels for duration in percent of the timeout"
-msgstr "タイムアウトの継続時間の上限レベル(%)"
+msgstr "タイムアウトの継続時間の上位レベル(%)"
 
 msgid "Upper levels for duration in seconds"
-msgstr "継続時間（秒）の上限レベル"
+msgstr "継続時間（秒）の上位レベル"
 
 msgid "Upper levels for encountered exceptions"
 msgstr "発生した例外の上位レベル"
@@ -75021,13 +75008,13 @@ msgstr "物理容量の上位レベル パーセント"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
-msgstr "プロビジョン済の秒間並行処理過剰実行の上限レベル"
+msgstr "プロビジョン済の秒間並行処理過剰実行の上位レベル"
 
 msgid "Upper levels for provisioned concurrent executions per second"
-msgstr "プロビジョン済の秒間同時実行の上限レベル"
+msgstr "プロビジョン済の秒間同時実行の上位レベル"
 
 msgid "Upper levels for provisioned concurrent invocations per second"
-msgstr "プロビジョン済の秒間同時呼び出しの上限レベル"
+msgstr "プロビジョン済の秒間同時呼び出しの上位レベル"
 
 msgid "Upper levels for queue lengths"
 msgstr "キューの長さの上位レベル"
@@ -75093,7 +75080,7 @@ msgid "Upper levels for the number of registered desktops"
 msgstr "登録済みデスクトップ数の上位レベル"
 
 msgid "Upper levels for the number of replication failures"
-msgstr "レプリケーション失敗回数の上限レベル"
+msgstr "レプリケーション失敗回数の上位レベル"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "拒否されたリクエスト数の上位レベル(spillover)"
@@ -75111,7 +75098,7 @@ msgid "Upper levels for the vault size"
 msgstr "ボールトサイズの上位レベル"
 
 msgid "Upper levels for throttles"
-msgstr "スロットルの上限レベル"
+msgstr "スロットルの上位レベル"
 
 msgid "Upper levels for time consumed by rule engine"
 msgstr "ルールエンジンが消費する時間の上位レベル"
@@ -75144,7 +75131,7 @@ msgid "Upper levels for unblended costs"
 msgstr "混合されていないコストの上位レベル"
 
 msgid "Upper levels for unreserved concurrent executions"
-msgstr "予約なし同時実行の上限レベル"
+msgstr "予約なし同時実行の上位レベル"
 
 msgid ""
 "Upper levels for unreserved concurrent executions in percent of the region "
@@ -78310,9 +78297,8 @@ msgstr "ウィークリーレポート"
 msgid "Weekly rate"
 msgstr "ウィークリーレート"
 
-#, fuzzy
 msgid "Welcome page"
-msgstr "manページを確認する"
+msgstr "ウェルカムページ"
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Checkmk Mobileへようこそ。"
@@ -82911,9 +82897,8 @@ msgstr "エントリ"
 msgid "entries (max. 50)"
 msgstr "エントリー数 (最大50)"
 
-#, fuzzy
 msgid "entry number"
-msgstr "シリアルナンバー"
+msgstr "エントリナンバー"
 
 msgid "estimated duration"
 msgstr "推定期間"
@@ -84477,7 +84462,7 @@ msgstr "接続オーバーフロー率は %.2f/s です"
 
 #, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "%sのパラメータを%sのいずれかに設定する必要があります。"
+msgstr "%sのパラメータを%sに設定する必要があります。"
 
 msgid "z/OS"
 msgstr "z/OS"

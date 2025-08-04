@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-07-31 19:35+0000\n"
+"PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5345,7 +5345,7 @@ msgid "Alert handler execution"
 msgstr "Alert Handler-Ausführung"
 
 msgid "Alert handler execution, failed"
-msgstr "Alert Handler-Ausführung, gescheitert"
+msgstr "Alert Handler-Ausführung, fehlgeschlagen"
 
 msgid "Alert handler execution, successful"
 msgstr "Alert Handler-Ausführung, erfolgreich"
@@ -5354,7 +5354,7 @@ msgid "Alert handler executions"
 msgstr "Alert Handler-Ausführungen"
 
 msgid "Alert handler failed"
-msgstr "Alert Handler gescheitert"
+msgstr "Alert Handler fehlgeschlagen"
 
 msgid "Alert handler log level"
 msgstr "Log-Level für Alert Handler"
@@ -6155,7 +6155,7 @@ msgid ""
 "Allows to define levels for the counts and size of Docker containers, "
 "images, local volumes, and the build cache."
 msgstr ""
-"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker "
+"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker-"
 "Containern, Images, lokalen Volumes und den Build Cache."
 
 #, python-format
@@ -9217,9 +9217,8 @@ msgstr "Beide"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Zeige Informationen für das Pod- und das Container-Level"
 
-#, fuzzy
 msgid "Both conditions must match (defensive)"
-msgstr "defensiv (beide Bedingungen müssen zutreffen)"
+msgstr "Beide Bedingungen müssen zutreffen (defensiv)"
 
 msgid "Bottom"
 msgstr "Unten"
@@ -16936,7 +16935,7 @@ msgid "DNS domain name to discover LDAP servers of"
 msgstr "DNS-Domänenname zur Erkennung von LDAP-Servern von"
 
 msgid "DNS failed queries"
-msgstr "fehlgeschlagen DNS Queries"
+msgstr "fehlgeschlagene DNS Queries"
 
 msgid "DNS host name"
 msgstr "DNS Host-Name"
@@ -18754,7 +18753,7 @@ msgid "Deploy the Checkmk object counts plug-in"
 msgstr "Checkmk-Objektzählungs-Plugin verteilen"
 
 msgid "Deploy the Docker container plug-in"
-msgstr "Plugin des Docker Containers verteilen"
+msgstr "Plugin des Docker-Containers verteilen"
 
 msgid "Deploy the Docker plug-in"
 msgstr "Docker-Plugin verteilen"
@@ -20271,7 +20270,7 @@ msgid "Do not deploy the DNS client plug-in"
 msgstr "DNS client Plugin nicht verteilen"
 
 msgid "Do not deploy the Docker container plug-in"
-msgstr "Plugin für Docker Container nicht verteilen"
+msgstr "Plugin für Docker-Container nicht verteilen"
 
 msgid "Do not deploy the Docker plug-in"
 msgstr "Docker-Plugin nicht verteilen"
@@ -20535,7 +20534,7 @@ msgid "Do you really want to switch the event daemon mode?"
 msgstr "Wollen Sie den Modus des Event Daemon wirklich umschalten?"
 
 msgid "Docker containers"
-msgstr "Docker Container"
+msgstr "Docker-Container"
 
 msgid "Docker images"
 msgstr "Docker Images"
@@ -20547,10 +20546,10 @@ msgid "Docker node"
 msgstr "Docker-Knoten"
 
 msgid "Docker node and containers"
-msgstr "Docker-Knoten und Container"
+msgstr "Docker-Knoten und -Container"
 
 msgid "Docker node container levels"
-msgstr "Docker-Knoten Container Levels"
+msgstr "Docker-Knoten-Container Levels"
 
 msgid "Docker node disk usage"
 msgstr "Docker-Knoten Festplattenauslastung"
@@ -20670,7 +20669,8 @@ msgstr "Informationen über Grenzwerte nicht anzeigen"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
-"Zeige oder warne nicht, wenn \"Failed Actions\" vorhanden sind (default)"
+"Zeige oder warne nicht, wenn \"Fehlgeschlagene Aktionen\" vorhanden sind "
+"(Standard)"
 
 msgid "Don't use HTTP header authentication"
 msgstr "HTTP-Header-Authentifizierung nicht nutzen"
@@ -24059,7 +24059,7 @@ msgid "Failed connections"
 msgstr "Fehlgeschlagene Verbindungen"
 
 msgid "Failed disk"
-msgstr "Defekte Platte"
+msgstr "Defekte Festplatte"
 
 msgid "Failed file requests"
 msgstr "Fehlgeschlagene Dateianfragen"
@@ -24102,6 +24102,10 @@ msgid ""
 "service. Activating this option will cause the service to be CRIT if a "
 "failed service is disabled."
 msgstr ""
+"Ein fehlgeschlagener Service, der deaktiviert ist, wird ebenfalls für den "
+"Status des Services berücksichtigt. Wenn Sie diese Option aktivieren, wird "
+"der Service als CRIT eingestuft, wenn ein fehlgeschlagener Service "
+"deaktiviert ist."
 
 #, python-format
 msgid ""
@@ -24110,14 +24114,14 @@ msgid ""
 "Config: %s\n"
 "Output: %s"
 msgstr ""
-"Fehler beim aktivieren der geänderten Instanzkonfiguration.\n"
+"Fehler beim Aktivieren der geänderten Instanzkonfiguration.\n"
 "Exit-Code: %d\n"
 "Konfiguration: %s\n"
 "Ausgabe: %s"
 
 #, python-format
 msgid "Failed to apply the cronjob config: %s"
-msgstr "Fehler beim erstellen der Cronjob-Konfiguration: %s"
+msgstr "Fehler beim Erstellen der Cronjob-Konfiguration: %s"
 
 #, python-format
 msgid "Failed to bake the agents: %s"
@@ -24135,7 +24139,7 @@ msgid "Failed to compile your module: %s"
 msgstr "Fehler beim Kompilieren Ihres Moduls: %s"
 
 msgid "Failed to compute host name"
-msgstr "Host-Name konnte nicht berechnet werden"
+msgstr "Berechnung des Host-Namens ist fehlgeschlagen"
 
 #, python-format
 msgid ""
@@ -37832,7 +37836,7 @@ msgid "Logwatch state"
 msgstr "Logwatch-Zustand"
 
 msgid "Long - Use the full docker container ID"
-msgstr "Lang - Die gesamte Docker container ID verwenden"
+msgstr "Lang - Die gesamte Docker-Container ID verwenden"
 
 msgid "Long active sessions"
 msgstr "Lang aktive Sitzungen"
@@ -39946,7 +39950,7 @@ msgid "Memory usage of DB2 (Linux, AIX, Solaris)"
 msgstr "Speicherauslastung von DB2 (Linux, AIX, Solaris)"
 
 msgid "Memory usage of Docker containers"
-msgstr "Speicherauslastung für Docker Container"
+msgstr "Speicherauslastung für Docker-Container"
 
 msgid "Memory usage of ESX Clusters"
 msgstr "Speicherauslastung von ESX-Clustern"
@@ -43863,9 +43867,8 @@ msgstr "Anzahl der Podman-Container"
 msgid "Number of Podman images"
 msgstr "Anzahl der Podman Images"
 
-#, fuzzy
 msgid "Number of Podman volumes"
-msgstr "Anzahl der Podman Images"
+msgstr "Anzahl der Podman Volumes"
 
 msgid "Number of Resources"
 msgstr "Anzahl von Ressourcen"
@@ -43894,9 +43897,8 @@ msgstr "Anzahl der aktiven Podman-Container"
 msgid "Number of active Podman images"
 msgstr "Anzahl von aktiven Podman Images"
 
-#, fuzzy
 msgid "Number of active Podman volumes"
-msgstr "Anzahl von aktiven Podman Images"
+msgstr "Anzahl der aktiven Podman Volumes"
 
 msgid "Number of active instances"
 msgstr "Anzahl der aktiven Instanzen"
@@ -44972,9 +44974,8 @@ msgstr ""
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eine RRD pro Host/Service (spart Festplatten-E/A, nur mit CMC)"
 
-#, fuzzy
 msgid "One condition needs to match (offensive)"
-msgstr "offensiv (eine Bedingung muss zutreffen)"
+msgstr "Eine Bedingung muss zutreffen (offensiv)"
 
 msgid "One heartbeat every"
 msgstr "Ein Lebenszeichen alle"
@@ -46716,7 +46717,7 @@ msgid ""
 "Overall state of all docker containers, with counts of services in the "
 "various states."
 msgstr ""
-"Gesamtzustand von allen Docker Containern, mit den Anzahlen von Services in "
+"Gesamtzustand von allen Docker-Containern, mit den Anzahlen von Services in "
 "den verschiedenen Zuständen."
 
 msgid ""
@@ -48420,7 +48421,7 @@ msgid "Piggyback services to monitor"
 msgstr "Zu überwachende Piggyback-Services"
 
 msgid "Piggybacked docker containers"
-msgstr "Piggyback Docker Container"
+msgstr "Piggyback Docker-Container"
 
 msgid "Piggybacked host name conditions"
 msgstr "Bedingungen für Piggybacked-Host-Namen"
@@ -51932,7 +51933,6 @@ msgstr "Filter entfernen"
 msgid "Remove history entries older than"
 msgstr "Historieneinträge entfernen, die älter sind als"
 
-#, fuzzy
 msgid "Remove history entries right after"
 msgstr "Historieneinträge entfernen direkt nach"
 
@@ -56688,9 +56688,8 @@ msgstr ""
 msgid "Sets the upper levels for the Podman disk usage of images"
 msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
 
-#, fuzzy
 msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
+msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Volumes fest"
 
 msgid "Sets the upper levels for the total number of active containers."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
@@ -56698,9 +56697,8 @@ msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
 msgid "Sets the upper levels for the total number of active images."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of active volumes."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Volumes fest."
 
 msgid "Sets the upper levels for the total number of containers."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
@@ -56708,9 +56706,8 @@ msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
 msgid "Sets the upper levels for the total number of images."
 msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total number of volumes."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
+msgstr "Legt die Obergrenzen für die Gesamtanzahl von Volumes fest."
 
 msgid ""
 "Sets the upper levels for the total reclaimable size of Podman containers."
@@ -56718,11 +56715,10 @@ msgstr ""
 "Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
 "Containern fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
 msgstr ""
 "Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
-"Containern fest."
+"Volumes fest."
 
 msgid "Sets the upper levels for the total size of Podman containers."
 msgstr "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
@@ -56730,9 +56726,8 @@ msgstr "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
 msgid "Sets the upper levels for the total size of Podman images."
 msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
 
-#, fuzzy
 msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
+msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Volumes fest."
 
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "Legt den Benutzer des Alerts fest. Anzeige-Name des Anfragestellers."
@@ -56938,7 +56933,7 @@ msgid "Shipped Checkmk plug-ins"
 msgstr "Verschickte Checkmk-Plugins"
 
 msgid "Short - Use the first 12 characters of the docker container ID"
-msgstr "Kurz - Die ersten 12 Zeichen der Docker Container ID verwenden"
+msgstr "Kurz - Die ersten 12 Zeichen der Docker-Container ID verwenden"
 
 msgid "Short ID"
 msgstr "Kurz-ID"
@@ -73654,9 +73649,8 @@ msgstr "Untergrenze für die Gesamtzahl der aktiven Shards"
 msgid "Total number of active shards upper level"
 msgstr "Obergrenze für die Gesamtzahl der aktiven Shards"
 
-#, fuzzy
 msgid "Total number of active volumes upper levels"
-msgstr "Obergrenzen für die Gesamtzahl aktiver Images"
+msgstr "Obergrenzen für die Gesamtzahl aktiver Volumes"
 
 msgid "Total number of collections lower level"
 msgstr "Untergrenze für die Gesamtzahl der Kollektionen"
@@ -73806,9 +73800,8 @@ msgstr "Untergrenze für die Gesamtzahl der Benutzer"
 msgid "Total number of user upper level"
 msgstr "Obergrenze für die Gesamtzahl der Benutzer"
 
-#, fuzzy
 msgid "Total number of volumes upper levels"
-msgstr "Obergrenzen für die Gesamtzahl an Images"
+msgstr "Obergrenzen für die Gesamtzahl an Volumes"
 
 msgid "Total number of zombie jobs"
 msgstr "Gesamtzahl Zombie Aufträge"
@@ -73834,9 +73827,8 @@ msgstr "Gesamte Lese-Latenz"
 msgid "Total reclaimable size of Podman containers"
 msgstr "Gesamtgröße der wiederverwendbaren Podman-Container"
 
-#, fuzzy
 msgid "Total reclaimable size of Podman volumes"
-msgstr "Gesamtgröße der wiederverwendbaren Podman-Container"
+msgstr "Gesamtgröße der wiederverwendbaren Podman Volumes"
 
 msgid "Total reclaimable size upper levels"
 msgstr "Obergrenzen für die wiederverwendbare Größe"
@@ -75377,9 +75369,8 @@ msgstr "Gesamtgröße der Podman-Container"
 msgid "Total size of Podman images"
 msgstr "Gesamtgröße der Podman Images"
 
-#, fuzzy
 msgid "Total size of Podman volumes"
-msgstr "Gesamtgröße der Podman Images"
+msgstr "Gesamtgröße der Podman Volumes"
 
 msgid "Total size of all indexes for the collection"
 msgstr "Gesamtgröße aller Indizes der Sammlung"
@@ -75545,9 +75536,8 @@ msgstr "Transportverzögerung (Lag)"
 msgid "Transport lag"
 msgstr "Transportverzögerung (Lag)"
 
-#, fuzzy
 msgid "Treat failed units that are disabled as critical"
-msgstr "Zustände, die als kritisch behandelt werden"
+msgstr "Ausgefallene Einheiten, die deaktiviert sind, als kritisch behandeln"
 
 msgid "Treat host down as"
 msgstr "Behandle Host DOWN als"
@@ -80651,9 +80641,8 @@ msgstr "Wöchentlicher Bericht"
 msgid "Weekly rate"
 msgstr "Wöchentliche Rate"
 
-#, fuzzy
 msgid "Welcome page"
-msgstr "Handbuchseite des Checks"
+msgstr "Begrüßungsseite"
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Willkommen bei Checkmk Mobil."
@@ -85520,9 +85509,8 @@ msgstr "Einträge"
 msgid "entries (max. 50)"
 msgstr "Einträge (max. 50)"
 
-#, fuzzy
 msgid "entry number"
-msgstr "Seriennummer"
+msgstr "Eingangsnummer"
 
 msgid "estimated duration"
 msgstr "geschätzte Dauer"

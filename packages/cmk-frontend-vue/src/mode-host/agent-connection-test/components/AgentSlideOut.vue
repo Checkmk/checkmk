@@ -17,6 +17,8 @@ import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import HelpText from '@/components/HelpText.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 export interface AgentSlideOutTabs {
   id: string
@@ -78,7 +80,7 @@ watch(model, (newValue) => {
     {{ t('ads-all-agents', 'View all agents') }}
   </CmkButton>
   <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
-  <CmkHeading type="h4" class="heading">
+  <CmkHeading type="h4" class="select-heading">
     {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
   </CmkHeading>
   <CmkTabs v-model="openedTab">
@@ -94,48 +96,68 @@ watch(model, (newValue) => {
           v-model="model"
           :options="tab.toggle_button_options"
         />
+        <CmkHeading v-if="tab.install_msg" type="h4">
+          {{ t('download-and-install', 'Download and install') }}
+        </CmkHeading>
         <CmkCode
           v-if="tab.install_msg && tab.install_cmd"
           :title="tab.install_msg"
           :code_txt="tab.install_cmd"
+          class="code"
         />
         <CmkCode
           v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
           :title="tab.install_msg"
           :code_txt="tab.install_deb_cmd"
+          class="code"
         />
         <CmkCode
           v-if="tab.install_msg && tab.install_rpm_cmd && model === packageFormatRpm"
           :title="tab.install_msg"
           :code_txt="tab.install_rpm_cmd"
+          class="code"
         />
         <CmkCode
           v-if="tab.install_msg && tab.install_tgz_cmd && model === packageFormatTgz"
           :title="tab.install_msg"
           :code_txt="tab.install_tgz_cmd"
+          class="code"
         />
-        <CmkCode
-          v-if="tab.registration_msg && tab.registration_cmd"
-          :title="tab.registration_msg"
-          :code_txt="tab.registration_cmd"
-        />
-        <CmkHeading type="h4">
+        <div v-if="tab.registration_msg && tab.registration_cmd">
+          <div class="register-heading-row">
+            <CmkHeading type="h4">
+              {{ t('register-the-agent', 'Register the agent') }}
+            </CmkHeading>
+            <HelpText
+              :help="
+                t(
+                  'register-help-text',
+                  'Agent registration will establish trust between the Agent Controller ' +
+                    'on the host and the Agent Receiver on the Checkmk server.'
+                )
+              "
+            />
+          </div>
+
+          <CmkCode :title="tab.registration_msg" :code_txt="tab.registration_cmd" class="code" />
+        </div>
+        <CmkParagraph>
           {{
             t(
               'agent-download-finish-msg',
               'After installing, you can close the slideout and test the agent connection.'
             )
           }}
-        </CmkHeading>
+        </CmkParagraph>
       </CmkTabContent>
     </template>
   </CmkTabs>
 </template>
 
 <style scoped>
-h2.heading {
-  margin-top: var(--spacing);
-  margin-bottom: var(--spacing);
+.select-heading {
+  margin-top: var(--dimension-item-spacing-5);
+  margin-bottom: var(--dimension-item-spacing-4);
 }
 
 button.close_and_test {
@@ -158,5 +180,16 @@ button.all_agents {
   > .cmk-icon {
     margin-right: 16px;
   }
+}
+
+.code {
+  margin-bottom: var(--dimension-item-spacing-7);
+}
+
+.register-heading-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--dimension-item-spacing-4);
 }
 </style>

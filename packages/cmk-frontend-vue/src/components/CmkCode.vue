@@ -78,50 +78,58 @@ const toggleExpansion = () => {
 </script>
 
 <template>
-  <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
-  <div class="code_wrapper">
-    <div class="code_container" :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded }">
-      <CmkScrollContainer type="outer" class="code_scroll_container">
-        <pre><code v-text="displayedCode"></code></pre>
-      </CmkScrollContainer>
-      <div v-if="shouldShowToggle && !isExpanded" class="fade_overlay"></div>
-      <div v-if="shouldShowToggle" class="toggle_button_container">
-        <CmkButton variant="secondary" class="toggle_button" @click="toggleExpansion">
-          <CmkIcon
-            name="tree-closed"
-            variant="inline"
-            size="small"
-            class="toggle_icon"
-            :class="{ expanded: isExpanded }"
-          />
-          {{
-            isExpanded ? t('cmk-code-show-less', 'Show less') : t('cmk-code-show-more', 'Show more')
-          }}
-        </CmkButton>
-      </div>
-    </div>
-    <TooltipProvider>
-      <Tooltip :open="showMessage" disable-hover-trigger>
-        <TooltipTrigger as-child @click="copyToClipboard">
-          <CmkIconButton name="copied" size="medium" class="copy_button" />
-        </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          align="center"
-          as-child
-          @pointer-down-outside="handlePointerDownOutside"
-        >
-          <div v-if="showMessage" class="tooltip-content" :class="{ error: !!errorMessage }">
-            <CmkIcon :name="errorMessage ? 'cross' : 'checkmark'" variant="inline" size="medium" />
+  <div>
+    <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
+    <div class="code_wrapper">
+      <div class="code_container" :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded }">
+        <CmkScrollContainer type="outer" class="code_scroll_container">
+          <pre><code v-text="displayedCode"></code></pre>
+        </CmkScrollContainer>
+        <div v-if="shouldShowToggle && !isExpanded" class="fade_overlay"></div>
+        <div v-if="shouldShowToggle" class="toggle_button_container">
+          <CmkButton variant="secondary" class="toggle_button" @click="toggleExpansion">
+            <CmkIcon
+              name="tree-closed"
+              variant="inline"
+              size="small"
+              class="toggle_icon"
+              :class="{ expanded: isExpanded }"
+            />
             {{
-              errorMessage
-                ? t('cmk-code-copy-error', 'Copy to clipboard failed with error: ') + errorMessage
-                : t('cmk-code-copy-success', 'Copied to clipboard')
+              isExpanded
+                ? t('cmk-code-show-less', 'Show less')
+                : t('cmk-code-show-more', 'Show more')
             }}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          </CmkButton>
+        </div>
+      </div>
+      <TooltipProvider>
+        <Tooltip :open="showMessage" disable-hover-trigger>
+          <TooltipTrigger as-child @click="copyToClipboard">
+            <CmkIconButton name="copied" size="medium" class="copy_button" />
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="center"
+            as-child
+            @pointer-down-outside="handlePointerDownOutside"
+          >
+            <div v-if="showMessage" class="tooltip-content" :class="{ error: !!errorMessage }">
+              <CmkIcon
+                :name="errorMessage ? 'cross' : 'checkmark'"
+                variant="inline"
+                size="medium"
+              />
+              {{
+                errorMessage
+                  ? t('cmk-code-copy-error', 'Copy to clipboard failed with error: ') + errorMessage
+                  : t('cmk-code-copy-success', 'Copied to clipboard')
+              }}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   </div>
 </template>
 

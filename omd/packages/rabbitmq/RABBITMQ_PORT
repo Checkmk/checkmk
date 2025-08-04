@@ -11,8 +11,6 @@
 # shellcheck disable=SC1091
 if [ -f "$OMD_ROOT"/etc/omd/site.conf ]; then
     . "$OMD_ROOT"/etc/omd/site.conf
-else
-    CONFIG_RABBITMQ_ONLY_FROM=${CONFIG_RABBITMQ_ONLY_FROM::-2}::
 fi
 
 case "$1" in

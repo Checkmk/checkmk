@@ -352,7 +352,8 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :all_agents_url="all_agents_url"
         :host_name="hostname"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
-        @close="((slideInOpen = false), (isError = false))"
+        :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
+        @close="((slideInOpen = false), (isError = false), startAjax())"
       />
       <AgentInstallSlideOutContent
         v-else
@@ -361,7 +362,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :agent_install_cmds="agent_slideout.agent_install_cmds"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
-        @close="((slideInOpen = false), (isError = false))"
+        @close="((slideInOpen = false), (isError = false), startAjax())"
       />
     </CmkSlideInDialog>
   </Teleport>

@@ -5,52 +5,27 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
-import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
+import {
+  getSearchUtils,
+  type FilterOption,
+  type ProviderOption
+} from '../../providers/search-utils'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import FilterOptionEntry from './FilterOptionEntry.vue'
+import { availableFilterOptions, availableProviderOptions } from './QueryOptions'
 
 const { t } = usei18n('unified-search-app')
 const searchUtils = getSearchUtils()
 
-const filterOptions = ref<FilterOption[]>([
-  { type: 'provider', value: 'monitoring', title: 'Only search in monitoring' },
-  { type: 'provider', value: 'customize', title: 'Only search in customize' },
-  { type: 'provider', value: 'setup', title: 'Only search in setup' },
-  { type: 'inline', value: 'h:', title: 'Host', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'hg:', title: 'Host group', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'ad:', title: 'Address', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'al:', title: 'Alias', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'tg:', title: 'Host tag', notAvailableFor: ['setup', 'customize'] },
-  {
-    type: 'inline',
-    value: 'hl:',
-    title: 'Host label (e.g. hl: cmk/os_family:linux)',
-    notAvailableFor: ['setup']
-  },
-  {
-    type: 'inline',
-    value: 'sl:',
-    title: 'Service label (e.g. sl: cmk/os_family:linux)',
-    notAvailableFor: ['setup']
-  },
-  {
-    type: 'inline',
-    value: 'st:',
-    title: 'Service state (e.g. st: crit [ok|warn|crit|unkn|pend])',
-    notAvailableFor: ['setup']
-  }
-])
+const filterOptions = ref<FilterOption[]>(availableFilterOptions)
 const vClickOutside = useClickOutside()
 function handleFilterSelect(selected: FilterOption): void {
   if (selected.type === 'provider') {
-    addFilter(selected)
+    searchUtils.input.setProviderValue(selected as ProviderOption)
     searchUtils.input.setInputValue('')
   } else {
-    console.log(selected.value)
     void nextTick(() => {
       searchUtils.input.setInputValue(selected.value)
     })
@@ -98,23 +73,6 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   }
 }
 
-function addFilter(filterOption: FilterOption) {
-  const filters = searchUtils.query.filters.value.slice(0)
-  if (
-    filters.findIndex((f) => f.type === filterOption.type && f.value === filterOption.value) === -1
-  ) {
-    filters.push(filterOption)
-    searchUtils.input.setFilterValue(filters)
-  }
-}
-
-function popFilter() {
-  const filters = searchUtils.query.filters.value.slice(0)
-
-  filters.pop()
-  searchUtils.input.setFilterValue(filters)
-}
-
 searchUtils.input.onSetInputValue((input?: string) => {
   if (typeof input === 'string') {
     if (input.indexOf('/') === 0) {
@@ -154,8 +112,7 @@ function getFilterOptions(): FilterOption[] {
         searchUtils.query.filters.value.findIndex(
           (f) => fo.notAvailableFor && fo.notAvailableFor?.indexOf(f.value) >= 0
         )) === -1 ||
-        (fo.type === 'provider' &&
-          searchUtils.query.filters.value.findIndex((f) => f.type === 'provider') === -1))
+        (fo.type === 'provider' && searchUtils.query.provider.value !== fo.value))
     )
   })
 }
@@ -163,7 +120,7 @@ function getFilterOptions(): FilterOption[] {
 const deletePressedRef = ref<number>()
 searchUtils.input.onEmptyBackspace(() => {
   if (deletePressedRef.value && Date.now() - deletePressedRef.value < 1000) {
-    popFilter()
+    searchUtils.input.setProviderValue(availableProviderOptions[0])
     return
   }
 

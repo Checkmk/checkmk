@@ -42,7 +42,10 @@ function toggleUp() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (searchUtils.input.suggestionsActive.value === false) {
+  if (
+    searchUtils.input.suggestionsActive.value === false &&
+    searchUtils.input.providerSelectActive.value === false
+  ) {
     if (set) {
       currentlySelected.value = d
     } else {

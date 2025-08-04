@@ -44,7 +44,11 @@ function toggleUp() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (searchUtils.input.suggestionsActive.value === false && searchResultNotEmpty()) {
+  if (
+    searchUtils.input.suggestionsActive.value === false &&
+    searchUtils.input.providerSelectActive.value === false &&
+    searchResultNotEmpty()
+  ) {
     if (set) {
       currentlySelected.value = d
     } else {

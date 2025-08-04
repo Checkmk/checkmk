@@ -13,8 +13,14 @@ import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 
 export interface UnifiedSearchQueryLike {
   input: string
+  provider: QueryProvider
   filters: FilterOption[]
   sort: string
+}
+
+export interface ProviderOption extends FilterOption {
+  type: 'provider'
+  value: QueryProvider
 }
 
 export interface FilterOption {
@@ -24,17 +30,23 @@ export interface FilterOption {
   notAvailableFor?: string[]
 }
 
+export type QueryProvider = 'all' | 'monitoring' | 'customize' | 'setup'
+
 const queryInput = ref<string>('')
+const queryProvider = ref<QueryProvider>('all')
 const queryFilters = ref<FilterOption[]>([])
 const sort = ref<string>('weighted_index')
 
 const suggestionsActive = ref<boolean>(false)
+const providerSelectActive = ref<boolean>(false)
 const query = {
   input: queryInput,
+  provider: queryProvider,
   filters: queryFilters,
   toQueryLike: (): UnifiedSearchQueryLike => {
     return {
       input: queryInput.value,
+      provider: queryProvider.value,
       filters: queryFilters.value,
       sort: sort.value
     }
@@ -89,6 +101,14 @@ function setInputValue(query?: string, noSet?: boolean) {
 
 function onSetInputValue(cb: typeof setInputValue): string {
   return pushCallBack('setInputValue', cb)
+}
+
+function setProviderValue(query?: ProviderOption, noSet?: boolean) {
+  dispatchCallback('setProviderValue', query, noSet)
+}
+
+function onSetProviderValue(cb: typeof setProviderValue): string {
+  return pushCallBack('setProviderValue', cb)
 }
 
 function setFilterValue(query?: FilterOption[], noSet?: boolean) {
@@ -274,6 +294,8 @@ export interface SearchInputUtils {
   onSetQuery: typeof onSetQuery
   setInputValue: typeof setInputValue
   onSetInputValue: typeof onSetInputValue
+  setProviderValue: typeof setProviderValue
+  onSetProviderValue: typeof onSetProviderValue
   setFilterValue: typeof setFilterValue
   onSetFilterValue: typeof onSetFilterValue
   setFocus: typeof setFocus
@@ -283,6 +305,7 @@ export interface SearchInputUtils {
   emptyBackspace: typeof emptyBackspace
   onEmptyBackspace: typeof onEmptyBackspace
   suggestionsActive: typeof suggestionsActive
+  providerSelectActive: typeof providerSelectActive
 }
 
 export interface InitSearchUtils {
@@ -330,17 +353,20 @@ export function initSearchUtils(): SearchUtils {
     input: {
       setQuery,
       onSetQuery,
-      setFilterValue,
-      onSetFilterValue,
       setInputValue,
       onSetInputValue,
+      setProviderValue,
+      onSetProviderValue,
+      setFilterValue,
+      onSetFilterValue,
       setFocus,
       onSetFocus,
       setBlur,
       onSetBlur,
       emptyBackspace,
       onEmptyBackspace,
-      suggestionsActive
+      suggestionsActive,
+      providerSelectActive
     }
   }
 }

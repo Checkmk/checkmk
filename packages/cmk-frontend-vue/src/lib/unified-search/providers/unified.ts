@@ -82,15 +82,7 @@ export class UnifiedSearchProvider extends SearchProvider {
     provider: string
     sort: string
   } {
-    const providers = []
-
-    for (const f of query.filters) {
-      if (f.type === 'provider') {
-        providers.push(f.value)
-      }
-    }
-
-    const provider = providers.length > 0 ? '&provider='.concat(providers.join(',')) : ''
+    const provider = query.provider === 'all' ? '' : '&provider='.concat(query.provider)
 
     const sort = '&sort='.concat(query.sort)
 

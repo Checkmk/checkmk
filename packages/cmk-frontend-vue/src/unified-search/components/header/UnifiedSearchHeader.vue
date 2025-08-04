@@ -9,10 +9,8 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
 import { useTemplateRef } from 'vue'
 import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
-
-import CmkButton from '@/components/CmkButton.vue'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
-import CmkIconButton from '@/components/CmkIconButton.vue'
+import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -93,45 +91,15 @@ function onInputEnter() {
 function isMonitoringSearch(): boolean {
   return searchUtils.query.filters.value.findIndex((f) => f.value === 'setup') === -1
 }
-
-function handleDelTagItem(tag: FilterOption) {
-  const filters = searchUtils.query.filters.value.slice(0)
-  filters.splice(searchUtils.query.filters.value.findIndex((f) => f.value === tag.value))
-  searchUtils.input.setFilterValue(filters)
-  searchUtils.input.setFocus()
-}
 </script>
 
 <template>
   <div class="unified-search-header">
     <div class="unified-search-input-panel">
       <div class="unified-search-input-wrapper" @click="searchUtils.input.setFocus">
-        <CmkIcon class="unified-search-icon" name="search" size="medium"></CmkIcon>
         <div class="unified-search-input-tag-root">
-          <div
-            v-for="filterOption in searchUtils.query.filters.value"
-            :key="['tag-', filterOption.type, filterOption.value].join('-')"
-            :value="filterOption.value"
-            class="unified-search-input-tag"
-            :class="[{ provider: filterOption.type === 'provider' }]"
-          >
-            <span>{{ filterOption.value }}</span>
-            <CmkButton
-              class="unified-search-input-tag-dismiss"
-              @click.stop="
-                () => {
-                  handleDelTagItem(filterOption)
-                }
-              "
-            >
-              <CmkIcon
-                name="close"
-                size="xsmall"
-                class="unified-search-input-tag-dismiss-icon"
-              ></CmkIcon
-            ></CmkButton>
-          </div>
-
+          <UnifiedSearchProviderSelect></UnifiedSearchProviderSelect>
+          <CmkIcon class="unified-search-icon" name="search" size="medium"></CmkIcon>
           <input
             id="unified-search-input"
             ref="unified-search-input"
@@ -156,17 +124,6 @@ function handleDelTagItem(tag: FilterOption) {
           size="small"
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
-        <CmkIconButton
-          name="filter"
-          size="large"
-          class="unified-search-filter"
-          @click.stop="
-            () => {
-              searchUtils.input.setInputValue('/')
-              searchUtils.input.setFocus()
-            }
-          "
-        ></CmkIconButton>
       </div>
 
       <div v-if="isMonitoringSearch()" class="unified-search-info-item">
@@ -237,15 +194,16 @@ function handleDelTagItem(tag: FilterOption) {
   flex-direction: row;
   align-items: center;
   width: 70%;
-  max-width: 500px;
   position: relative;
+  flex: 5;
+  margin-right: var(--dimension-item-spacing-4);
 }
 
 .unified-search-input-tag-root {
   background-color: var(--default-form-element-bg-color);
   box-shadow: none;
   filter: none;
-  padding: 0 35px;
+  padding: 0 35px 0 0;
   width: 100%;
   border-radius: var(--border-radius);
   border: 1px solid var(--default-form-element-border-color);
@@ -309,19 +267,12 @@ function handleDelTagItem(tag: FilterOption) {
   line-height: 15px;
   height: 27px;
   padding: 0;
-  margin-left: var(--spacing-half);
+  margin-left: var(--dimension-padding-4);
   flex-grow: 5;
 
   &::placeholder {
     color: var(--default-form-element-placeholder-color);
   }
-}
-
-.unified-search-filter {
-  margin-left: var(--spacing);
-  margin-top: 3px;
-  position: absolute;
-  right: calc(-3 * var(--spacing));
 }
 
 .unified-search-filter-suggestions {
@@ -340,7 +291,6 @@ function handleDelTagItem(tag: FilterOption) {
 }
 
 .unified-search-icon {
-  position: absolute;
   margin-left: var(--spacing);
   z-index: +1;
 }

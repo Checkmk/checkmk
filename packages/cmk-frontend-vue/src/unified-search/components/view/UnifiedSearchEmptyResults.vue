@@ -31,12 +31,10 @@ shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))
 shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowUp(toggleUp))
 
 function toggleDown() {
-  console.log('toggleDown')
   calcCurrentlySelected(+1)
 }
 
 function toggleUp() {
-  console.log('toggleUp')
   calcCurrentlySelected(-1)
 }
 

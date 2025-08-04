@@ -6,19 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { immediateWatch } from '@/lib/watch'
 import { useTemplateRef } from 'vue'
-import type { FilterOption } from '../..//providers/search-utils'
+import type { ProviderOption } from '../../providers/search-utils'
 import usei18n from '@/lib/i18n'
-import CmkChip from '@/components/CmkChip.vue'
 
-export interface FilterOptemProps {
+export interface ProviderOptionEntryProps {
   idx: number
-  option: FilterOption
+  option: ProviderOption
   focus?: boolean | undefined
   active?: boolean | undefined
 }
 
 const { t } = usei18n('unified-search-app')
-const props = defineProps<FilterOptemProps>()
+const props = defineProps<ProviderOptionEntryProps>()
 
 const focusRef = useTemplateRef('filter-focus')
 immediateWatch(
@@ -34,13 +33,6 @@ immediateWatch(
 <template>
   <li role="option">
     <button ref="filter-focus" :class="{ active }">
-      <span>
-        <CmkChip
-          :color="option.type === 'provider' ? 'success' : 'default'"
-          :content="option.value"
-          size="small"
-        ></CmkChip
-      ></span>
       <span>{{ t(['filter', option.type, option.value].join('-'), option.title) }}</span>
     </button>
   </li>
@@ -54,7 +46,7 @@ li {
     background: transparent;
     border: 1px solid transparent;
     width: 100%;
-    padding: var(--spacing);
+    padding: var(--dimension-padding-2) var(--dimension-padding-4);
     margin: 0;
     text-align: left;
     font-weight: normal;
@@ -72,16 +64,6 @@ li {
 
     > span {
       font-weight: normal;
-    }
-    > span:first-of-type {
-      display: inline-block;
-      width: 45px;
-    }
-  }
-
-  &.provider {
-    > button > span:first-of-type {
-      width: 85px;
     }
   }
 }

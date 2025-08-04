@@ -90,7 +90,10 @@ searchUtils.input.onSetQuery((query?: UnifiedSearchQueryLike) => {
 })
 
 searchUtils.shortCuts.onEscape(() => {
-  if (searchUtils.input.suggestionsActive.value === false) {
+  if (
+    searchUtils.input.suggestionsActive.value === false &&
+    searchUtils.input.providerSelectActive.value === false
+  ) {
     searchUtils.resetSearch()
     searchUtils.closeSearch()
   }

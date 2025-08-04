@@ -37,7 +37,6 @@ const sortOptions: ToggleButtonOption[] = [
         :options="sortOptions"
         @update:model-value="
           (model: string) => {
-            console.log(model)
             searchUtils.query.sort.value = model || 'none'
             searchUtils.input.setQuery(searchUtils.query.toQueryLike())
           }

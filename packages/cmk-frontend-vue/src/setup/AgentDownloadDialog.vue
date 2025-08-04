@@ -7,8 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
 import { TooltipArrow } from 'radix-vue'
+import usei18n from '@/lib/i18n'
+import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+
+const { t } = usei18n('svc_disc_agent_download')
 
 interface Props {
   dialog_title: string
@@ -16,13 +21,14 @@ interface Props {
   slide_in_title: string
   slide_in_button_title: string
   docs_button_title: string
-  url: string
+  host_name: string
+  agent_slideout: AgentSlideout
+  all_agents_url: string
 }
 
 defineProps<Props>()
 
 const slideInOpen = ref(false)
-const externalContent = ref('')
 
 const openDocs = () => {
   window.open('https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents', '_blank')
@@ -72,8 +78,16 @@ const tooltipOpen = ref(true)
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <div v-html="externalContent"></div>
+    <AgentInstallSlideOutContent
+      :all_agents_url="all_agents_url"
+      :host_name="host_name"
+      :agent_install_cmds="agent_slideout.agent_install_cmds"
+      :agent_registration_cmds="agent_slideout.agent_registration_cmds"
+      :close_button_title="
+        t('svc_disc_agent_download_close_title', 'Close & run service discovery')
+      "
+      @close="((slideInOpen = false), (tooltipOpen = false))"
+    />
   </CmkSlideInDialog>
 </template>
 

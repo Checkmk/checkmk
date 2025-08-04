@@ -37,6 +37,7 @@ defineProps<{
   dialog_msg: string
   tabs: AgentSlideOutTabs[]
   all_agents_url: string
+  close_button_title: string
 }>()
 
 const { t } = usei18n('agent_slideout')
@@ -63,13 +64,9 @@ watch(model, (newValue) => {
 </script>
 
 <template>
-  <CmkButton
-    :title="t('ads-close-and-test', 'Close & test agent connection')"
-    class="close_and_test"
-    @click="close"
-  >
+  <CmkButton :title="close_button_title" class="close_and_test" @click="close">
     <CmkIcon name="connection_tests" />
-    {{ t('ads-close-and-test', 'Close & test agent connection') }}
+    {{ close_button_title }}
   </CmkButton>
   <CmkButton
     :title="t('ads-all-agents', 'View all agents')"

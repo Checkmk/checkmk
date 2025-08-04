@@ -17,8 +17,8 @@ from pydantic import BaseModel, Field
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import __version__, Version
+from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.version import __version__, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -45,6 +45,7 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, PermissionName
+from cmk.gui.utils.agent_commands import agent_commands_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -92,11 +93,18 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import mk_repr
-from cmk.shared_typing.setup import AgentDownload, AgentDownloadI18n
+from cmk.shared_typing.setup import (
+    AgentDownload,
+    AgentDownloadI18n,
+    AgentInstallCmds,
+    AgentRegistrationCmds,
+    AgentSlideout,
+)
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
+from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
 from cmk.utils.statename import short_service_state_name
@@ -673,11 +681,32 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def _render_agent_download_tooltip(self) -> None:
+        omd_config = get_omd_config(omd_root)
+        site = omd_site()
+        ip_address = omd_config["CONFIG_APACHE_TCP_ADDR"]
+        version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-agent-download",
             data=asdict(
                 AgentDownload(
-                    url=folder_preserving_link(
+                    host_name=self._host.name(),
+                    agent_slideout=AgentSlideout(
+                        agent_install_cmds=AgentInstallCmds(
+                            **asdict(
+                                agent_commands_registry["agent_commands"].install_cmds(
+                                    site, ip_address, version
+                                )
+                            )
+                        ),
+                        agent_registration_cmds=AgentRegistrationCmds(
+                            **asdict(
+                                agent_commands_registry["agent_commands"].registration_cmds(
+                                    site, ip_address
+                                )
+                            )
+                        ),
+                    ),
+                    all_agents_url=folder_preserving_link(
                         [("mode", "agent_of_host"), ("host", self._host.name())]
                     ),
                     i18n=AgentDownloadI18n(

@@ -12,7 +12,9 @@
         "agent_download": {
             "type": "object",
             "properties": {
-                "url": {
+                "agent_slideout": { "$ref": "agent_slideout.json" },
+                "host_name": { "type": "string" },
+                "all_agents_url": {
                     "type": "string"
                 },
                 "i18n": {
@@ -20,7 +22,12 @@
                     "$ref": "#/$defs/agent_download_i18n"
                 }
             },
-            "required": ["url", "i18n"]
+            "required": [
+                "agent_slideout",
+                "host_name",
+                "all_agents_url",
+                "i18n"
+            ]
         },
         "agent_download_i18n": {
             "type": "object",

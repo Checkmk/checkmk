@@ -360,6 +360,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :host_name="hostname"
         :agent_install_cmds="agent_slideout.agent_install_cmds"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
+        :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
         @close="((slideInOpen = false), (isError = false))"
       />
     </CmkSlideInDialog>

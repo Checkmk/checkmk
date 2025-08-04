@@ -65,6 +65,7 @@ const tabs: AgentSlideOutTabs[] = [
     "
     :tabs="tabs"
     :all_agents_url="all_agents_url"
+    :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
     @close="close"
   />
 </template>

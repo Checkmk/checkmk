@@ -152,6 +152,12 @@ class ABCHostMode(WatoMode, abc.ABC):
             return
 
         yield PageMenuEntry(
+            title=_("Save & edit"),
+            icon_name="save",
+            item=make_form_submit_link(form_name="edit_host", button_name="save_and_edit"),
+        )
+
+        yield PageMenuEntry(
             title=_("Save & run service discovery"),
             shortcut_title=_("Save & run service discovery"),
             icon_name="save_to_services",
@@ -580,7 +586,10 @@ class ModeEditHost(ABCHostMode):
                     "diag_host", folder=folder.path(), host=self._host.name(), _start_on_load="1"
                 )
             )
-        return redirect(mode_url("folder", folder=folder.path()))
+        if request.var("go_to_folder"):
+            return redirect(mode_url("folder", folder=folder.path()))
+
+        return redirect(mode_url("edit_host", folder=folder.path(), host=self._host.name()))
 
     def _should_use_dns_cache(self, site_configs: SiteConfigurations) -> bool:
         site = self._host.effective_attributes()["site"]
@@ -877,7 +886,10 @@ class CreateHostMode(ABCHostMode):
                 mode_url("diag_host", folder=folder.path(), host=self._host.name(), _try="1")
             )
 
-        return redirect(mode_url("folder", folder=folder.path()))
+        if request.var("go_to_folder"):
+            return redirect(mode_url("folder", folder=folder.path()))
+
+        return redirect(mode_url("edit_host", folder=folder.path(), host=self._host.name()))
 
     def _page_form_quick_setup_warning(self) -> None:
         if (

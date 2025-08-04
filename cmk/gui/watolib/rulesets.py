@@ -1764,6 +1764,7 @@ def find_timeperiod_usage_in_time_specific_parameters(
                         ("varname", ruleset.name),
                         ("rulenr", rule_index),
                         ("rule_folder", rule_folder.path()),
+                        ("rule_id", rule.id),
                     ]
                 )
                 used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))

@@ -11,7 +11,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import ResultItemTitle from './ResultItemTitle.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import type { UnifiedSearchResultElementInlineButton } from '@/lib/unified-search/providers/unified'
-import { getSearchUtils } from '../providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 
 export interface ResultItemProps {
   idx: number

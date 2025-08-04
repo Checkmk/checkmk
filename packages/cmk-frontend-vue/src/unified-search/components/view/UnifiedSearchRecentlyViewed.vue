@@ -5,12 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import ResultList from './result/ResultList.vue'
-import ResultItem from './result/ResultItem.vue'
+import ResultList from '../result/ResultList.vue'
+import ResultItem from '../result/ResultItem.vue'
 import { ref } from 'vue'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
-import { getSearchUtils } from './providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import {
   providerIcons,
   type UnifiedSearchResultElement

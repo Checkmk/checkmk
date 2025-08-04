@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
-import { getSearchUtils, type FilterOption } from './providers/search-utils'
+import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'

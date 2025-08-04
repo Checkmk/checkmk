@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import { getSearchUtils } from './providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'

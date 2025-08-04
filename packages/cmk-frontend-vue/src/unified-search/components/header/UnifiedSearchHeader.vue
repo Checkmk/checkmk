@@ -8,7 +8,7 @@ import CmkChip from '@/components/CmkChip.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
 import { useTemplateRef } from 'vue'
-import { getSearchUtils, type FilterOption } from './providers/search-utils'
+import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
 
 import CmkButton from '@/components/CmkButton.vue'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'

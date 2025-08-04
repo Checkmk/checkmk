@@ -7,11 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import { onBeforeUnmount, ref } from 'vue'
 import type { SearchProviderResult, UnifiedSearchResult } from '@/lib/unified-search/unified-search'
-import ResultList from './result/ResultList.vue'
-import ResultItem from './result/ResultItem.vue'
+import ResultList from '../result/ResultList.vue'
+import ResultItem from '../result/ResultItem.vue'
 import { immediateWatch } from '@/lib/watch'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-import { getSearchUtils } from './providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import {
   providerIcons,
   type UnifiedSearchResultElement,

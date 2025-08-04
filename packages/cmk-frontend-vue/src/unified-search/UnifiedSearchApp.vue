@@ -11,14 +11,14 @@ import {
   SearchHistorySearchProvider,
   type SearchHistorySearchResult
 } from '@/lib/unified-search/providers/history'
-import UnifiedSearchHeader from './UnifiedSearchHeader.vue'
-import UnifiedSearchStart from './UnifiedSearchStart.vue'
+import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
+import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchFooter from './UnifiedSearchFooter.vue'
 import { apiServiceProvider } from './providers/api'
 import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import { Api } from '@/lib/api-client'
 import DefaultPopup from '@/main-menu/DefaultPopup.vue'
-import UnifiedSearchTabResults from './UnifiedSearchTabResults.vue'
+import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
 import {
   initSearchUtils,
   provideSearchUtils,

@@ -5,7 +5,7 @@
 
 import abc
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal, override
 
@@ -25,6 +25,29 @@ class _PreFormattedPart:
 class FormattedPart:
     text: str
     unit: str
+
+
+def _join_text_and_unit(formatted_part: FormattedPart) -> str:
+    """
+    >>> _join_text_and_unit(FormattedPart(text="1", unit="s"))
+    '1 s'
+    >>> _join_text_and_unit(FormattedPart(text="1", unit="/s"))
+    '1/s'
+    """
+    return (
+        f"{formatted_part.text}{formatted_part.unit}"
+        if formatted_part.unit.startswith("/")
+        else f"{formatted_part.text} {formatted_part.unit}"
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class Formatted:
+    sign: Literal["", "-"]
+    parts: Sequence[FormattedPart]
+
+    def render(self) -> str:
+        return f"{self.sign}{' '.join(_join_text_and_unit(f).strip() for f in self.parts)}"
 
 
 def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]) -> int:
@@ -116,8 +139,7 @@ class NotationFormatter:
         pre_formatted_parts: Sequence[_PreFormattedPart],
         compute_auto_precision_digits: Callable[[int, int], int],
         use_max_digits_for_labels: bool,
-    ) -> str:
-        results = []
+    ) -> Iterator[FormattedPart]:
         for part in pre_formatted_parts:
             text = self._stringify_formatted_value(
                 self._apply_precision(
@@ -126,25 +148,23 @@ class NotationFormatter:
                     use_max_digits_for_labels,
                 )
             )
-            results.append(
-                _join_text_and_unit(
-                    self._format_text_and_unit(
-                        text=text.rstrip("0").rstrip(".") if "." in text else text,
-                        prefix=part.prefix,
-                        symbol=part.symbol,
-                    )
-                ).strip()
+            yield self._format_text_and_unit(
+                text=text.rstrip("0").rstrip(".") if "." in text else text,
+                prefix=part.prefix,
+                symbol=part.symbol,
             )
-        return " ".join(results)
 
     def render(self, value: int | float) -> str:
-        sign = "" if value >= 0 else "-"
-        postformatted = self._postformat(
-            self._preformat(abs(value)),
-            lambda exponent, digits: max(exponent + 1, digits),
-            True,
-        )
-        return f"{sign}{postformatted}"
+        return Formatted(
+            sign="" if value >= 0 else "-",
+            parts=list(
+                self._postformat(
+                    self._preformat(abs(value)),
+                    lambda exponent, digits: max(exponent + 1, digits),
+                    True,
+                )
+            ),
+        ).render()
 
     @abc.abstractmethod
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
@@ -188,29 +208,20 @@ class NotationFormatter:
         return [
             Label(
                 p,
-                self._postformat(
-                    self._preformat(p, use_prefix=first.prefix, use_symbol=first.symbol),
-                    lambda exponent, digits: exponent + digits,
-                    self.use_max_digits_for_labels,
-                ),
+                Formatted(
+                    sign="",
+                    parts=list(
+                        self._postformat(
+                            self._preformat(p, use_prefix=first.prefix, use_symbol=first.symbol),
+                            lambda exponent, digits: exponent + digits,
+                            self.use_max_digits_for_labels,
+                        )
+                    ),
+                ).render(),
             )
             for i in range(0 if min_y else 1, quotient + 1)
             for p in (min_y + atom * i,)
         ]
-
-
-def _join_text_and_unit(formatted_part: FormattedPart) -> str:
-    """
-    >>> _join_text_and_unit(FormattedPart(text="1", unit="s"))
-    '1 s'
-    >>> _join_text_and_unit(FormattedPart(text="1", unit="/s"))
-    '1/s'
-    """
-    return (
-        f"{formatted_part.text}{formatted_part.unit}"
-        if formatted_part.unit.startswith("/")
-        else f"{formatted_part.text} {formatted_part.unit}"
-    )
 
 
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]

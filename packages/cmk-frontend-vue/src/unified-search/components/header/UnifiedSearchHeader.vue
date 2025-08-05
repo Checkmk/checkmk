@@ -11,6 +11,7 @@ import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
+import CmkChip from '@/components/CmkChip.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -124,6 +125,12 @@ function isMonitoringSearch(): boolean {
           size="small"
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
+
+        <div v-if="isMonitoringSearch()" class="unified-search-info-item">
+          <span>{{ t('press', 'Press') }}</span>
+          <CmkChip class="arrow-key enter" size="small" content=""></CmkChip>
+          <span>{{ t('to-trigger-hosts-service-search', 'to trigger host/service search') }}</span>
+        </div>
       </div>
 
       <UnifiedSearchOperatorSelect v-if="isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
@@ -133,13 +140,13 @@ function isMonitoringSearch(): boolean {
 
 <style scoped>
 .unified-search-header {
-  height: 60px;
-  min-height: 60px !important;
+  height: 75px;
+  min-height: 75px !important;
   z-index: +1;
   width: calc(100% - 2 * var(--spacing-double));
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 0 var(--spacing-double);
   border-bottom: 1px solid var(--ux-theme-3);
 }
@@ -271,5 +278,34 @@ function isMonitoringSearch(): boolean {
   cursor: pointer;
   position: absolute;
   right: 8px;
+}
+
+.unified-search-info-item {
+  color: var(--help-text-font-color);
+  opacity: 0.5;
+  position: absolute;
+  right: 0;
+  top: 35px;
+
+  span {
+    font-size: var(--font-size-small);
+  }
+
+  .arrow-key {
+    width: 11px;
+    display: inline-flex;
+    height: 12px;
+    margin-bottom: -4px;
+
+    &::after {
+      font-size: 21px;
+      position: absolute;
+      margin: -8px 0 0 -1px;
+    }
+
+    &.enter::after {
+      content: '\21B5';
+    }
+  }
 }
 </style>

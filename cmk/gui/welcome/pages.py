@@ -19,7 +19,7 @@ from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule
-from cmk.gui.welcome.registration import welcome_url_registry
+from cmk.gui.welcome.registry import welcome_url_registry
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts

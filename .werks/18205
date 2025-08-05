@@ -1,0 +1,30 @@
+Title: Fix for Inconsistent Timing for Generated Events in Event Console
+Level: 1
+Edition: cre
+Component: ec
+Version: 2.2.0p45
+Date: 1754374952
+Class: fix
+Compatible: compat
+
+Rules for the Event Console have a setting under the <i>"Counting & Timing"</i> section called <i>"Expect regular messages"</i>.
+
+When this setting is enabled and an event matching the rule does not reach the Event Console, events are generated to indicate that the original event did not arrive.
+
+However, with <i>"Expect regular messages"</i> enabled, there were circumstances when the timestamps reported in the <i>"Message"</i> column for the generated events were incorrect.
+
+Specifically, if Checkmk was stopped for a long period of time or if you changed the <i>"Interval"</i> setting of the rule without matching events being detected.
+
+Then, the timestamp of the generated event(s) would be incorrect. 
+
+Furthermore, checking for intervals started later than expected. 
+
+For example, using a 5-minute interval, it would take 10 minutes for the first missing events to be reported in the very first check cycle.
+
+With this fix, both issues are fixed and the message timestamp will always be up to date.
+
+No changes are required and new events should have the correct timestamps.
+
+Any older events which have incorrect timestamp messages are not modified. 
+
+The event time should still correctly reflect the time the event was created.

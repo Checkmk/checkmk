@@ -25,9 +25,8 @@
         "form_keys",
         "sites",
         "i18n_ping_host",
-        "url",
-        "agent_install_cmds",
-        "agent_registration_cmds",
+        "all_agents_url",
+        "agent_slideout",
         "host_name"
     ],
     "$defs": {

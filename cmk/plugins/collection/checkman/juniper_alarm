@@ -8,13 +8,21 @@ description:
 
  The device sends the state by itself:
 
- - normally workinh, online: OK
-
- - offline, warning: WARN
-
- - failed or alert: CRIT
-
+ - OK, good, normally working: OK
+ - alarm, warning, marginally working (minor): WARN
+ - alert, failed, not working (major): CRIT
  - unknown or unavailable: UNKNOWN
+ - OK, online as an active primary: OK
+ - alarm, offline, not running (minor): WARN
+ - off-line, not running: CRIT
+ - entering state of ok, good, normally working: OK
+ - entering state of alarm, warning, marginally working: WARN
+ - entering state of alert, failed, not working: CRIT
+ - entering state of ok, on-line as an active primary: OK
+ - entering state of off-line, not running: WARN
+
+ The device status to state mapping can be configured in the __State of Juniper Alarms__ rule.
+
 
 discovery:
  One service is created.

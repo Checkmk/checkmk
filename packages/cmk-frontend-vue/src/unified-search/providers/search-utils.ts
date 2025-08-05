@@ -39,6 +39,7 @@ const sort = ref<string>('weighted_index')
 
 const suggestionsActive = ref<boolean>(false)
 const providerSelectActive = ref<boolean>(false)
+const searchOperatorSelectActive = ref<boolean>(false)
 const query = {
   input: queryInput,
   provider: queryProvider,
@@ -306,6 +307,7 @@ export interface SearchInputUtils {
   onEmptyBackspace: typeof onEmptyBackspace
   suggestionsActive: typeof suggestionsActive
   providerSelectActive: typeof providerSelectActive
+  searchOperatorSelectActive: typeof searchOperatorSelectActive
 }
 
 export interface InitSearchUtils {
@@ -366,7 +368,8 @@ export function initSearchUtils(): SearchUtils {
       emptyBackspace,
       onEmptyBackspace,
       suggestionsActive,
-      providerSelectActive
+      providerSelectActive,
+      searchOperatorSelectActive
     }
   }
 }

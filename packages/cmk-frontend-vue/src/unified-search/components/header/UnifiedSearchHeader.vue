@@ -4,13 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkChip from '@/components/CmkChip.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
 import { useTemplateRef } from 'vue'
 import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
+import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -89,7 +89,7 @@ function onInputEnter() {
 }
 
 function isMonitoringSearch(): boolean {
-  return searchUtils.query.filters.value.findIndex((f) => f.value === 'setup') === -1
+  return ['all', 'monitoring'].indexOf(searchUtils.query.provider.value) >= 0
 }
 </script>
 
@@ -106,7 +106,7 @@ function isMonitoringSearch(): boolean {
             v-model="searchUtils.query.input.value"
             class="unified-search-input"
             :placeholder="
-              t('search-accross', 'Search across Checkmk – type \'/\' for filter options')
+              t('search-across', 'Search across Checkmk – Type \'/\' for search operators')
             "
             @input="onInput"
             @keydown.delete="checkEmptyBackspace"
@@ -126,11 +126,7 @@ function isMonitoringSearch(): boolean {
         ></CmkIcon>
       </div>
 
-      <div v-if="isMonitoringSearch()" class="unified-search-info-item">
-        <span>{{ t('press', 'Press') }}</span>
-        <CmkChip class="arrow-key enter" size="small" content=""></CmkChip><br />
-        <span>{{ t('to-view-matching-service', 'to view matching services') }}</span>
-      </div>
+      <UnifiedSearchOperatorSelect v-if="isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
     </div>
   </div>
 </template>
@@ -161,32 +157,6 @@ function isMonitoringSearch(): boolean {
   flex-direction: row;
   justify-content: start;
   height: 30px;
-}
-
-.unified-search-info-item {
-  color: var(--help-text-font-color);
-  opacity: 0.5;
-
-  span {
-    font-size: var(--font-size-small);
-  }
-
-  .arrow-key {
-    width: 11px;
-    display: inline-flex;
-    height: 12px;
-    margin-bottom: -4px;
-
-    &::after {
-      font-size: 21px;
-      position: absolute;
-      margin: -8px 0 0 -1px;
-    }
-
-    &.enter::after {
-      content: '\21B5';
-    }
-  }
 }
 
 .unified-search-input-wrapper {

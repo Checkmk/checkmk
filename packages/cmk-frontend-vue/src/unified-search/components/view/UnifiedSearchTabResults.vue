@@ -47,6 +47,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   if (
     searchUtils.input.suggestionsActive.value === false &&
     searchUtils.input.providerSelectActive.value === false &&
+    searchUtils.input.searchOperatorSelectActive.value === false &&
     searchResultNotEmpty()
   ) {
     if (set) {

@@ -39,25 +39,31 @@ function toggleUp() {
 }
 
 function calcCurrentlySelected(d: number, set: boolean = false) {
-  if (set) {
-    currentlySelected.value = d
-  } else {
-    currentlySelected.value += d
-  }
+  if (
+    searchUtils.input.suggestionsActive.value === false &&
+    searchUtils.input.providerSelectActive.value === false &&
+    searchUtils.input.searchOperatorSelectActive.value === false
+  ) {
+    if (set) {
+      currentlySelected.value = d
+    } else {
+      currentlySelected.value += d
+    }
 
-  if (currentlySelected.value === 0) {
-    resetButton.value?.$el.focus()
-  }
+    if (currentlySelected.value === 0) {
+      resetButton.value?.$el.focus()
+    }
 
-  if (currentlySelected.value === -1 || currentlySelected.value > recentlyViewed.value.length) {
-    currentlySelected.value = -1
-    searchUtils.input?.setFocus()
-    return
-  }
+    if (currentlySelected.value === -1 || currentlySelected.value > recentlyViewed.value.length) {
+      currentlySelected.value = -1
+      searchUtils.input?.setFocus()
+      return
+    }
 
-  if (currentlySelected.value < 0) {
-    currentlySelected.value = recentlyViewed.value.length
-    return
+    if (currentlySelected.value < 0) {
+      currentlySelected.value = recentlyViewed.value.length
+      return
+    }
   }
 }
 

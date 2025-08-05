@@ -15,28 +15,13 @@ export const availableProviderOptions: ProviderOption[] = [
 
 export const availableFilterOptions: FilterOption[] = [
   { type: 'inline', value: 'h:', title: 'Host', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'hg:', title: 'Host group', notAvailableFor: ['setup', 'customize'] },
-  { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'hl:', title: 'Host label', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'ad:', title: 'Address', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'al:', title: 'Alias', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'tg:', title: 'Host tag', notAvailableFor: ['setup', 'customize'] },
-  {
-    type: 'inline',
-    value: 'hl:',
-    title: 'Host label (e.g. hl: cmk/os_family:linux)',
-    notAvailableFor: ['setup']
-  },
-  {
-    type: 'inline',
-    value: 'sl:',
-    title: 'Service label (e.g. sl: cmk/os_family:linux)',
-    notAvailableFor: ['setup']
-  },
-  {
-    type: 'inline',
-    value: 'st:',
-    title: 'Service state (e.g. st: crit [ok|warn|crit|unkn|pend])',
-    notAvailableFor: ['setup']
-  }
+  { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'sl:', title: 'Service label', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'st:', title: 'Service state', notAvailableFor: ['setup', 'customize'] }
 ]

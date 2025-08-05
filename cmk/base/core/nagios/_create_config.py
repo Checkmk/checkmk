@@ -6,7 +6,9 @@
 
 import base64
 import itertools
+import os
 import socket
+import subprocess
 import sys
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
@@ -49,7 +51,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.timeperiod import add_builtin_timeperiods
 
-from .._base_core import MonitoringCore
+from .._base_core import CoreAction, MonitoringCore
 from ..config import (
     AbstractServiceID,
     autodetect_plugin,
@@ -78,6 +80,20 @@ class NagiosCore(MonitoringCore):
     @staticmethod
     def is_cmc() -> Literal[False]:
         return False
+
+    def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
+        os.putenv("CORE_NOVERIFY", "yes")
+        return subprocess.run(
+            [
+                # TODO I think there's a constant for this
+                "%s/etc/init.d/core" % cmk.utils.paths.omd_root,
+                action.value,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            check=False,
+        )
 
     def _create_config(
         self,

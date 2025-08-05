@@ -4,21 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
-import enum
-import os
 import socket
-import subprocess
-import sys
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import suppress
 from typing import Literal
 
 import cmk.ccc.debug
 import cmk.utils.paths
-from cmk import trace
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKBailOut
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.store import activation_lock
 from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
@@ -27,10 +20,8 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import MonitoringCore
+from ._base_core import CoreAction, MonitoringCore
 from .config import do_create_config
-
-tracer = trace.get_tracer()
 
 # .
 #   .--Control-------------------------------------------------------------.
@@ -45,13 +36,6 @@ tracer = trace.get_tracer()
 #   '----------------------------------------------------------------------'
 
 type _LockingMode = Literal["abort", "wait"] | None
-
-
-class CoreAction(enum.Enum):
-    START = "start"
-    RESTART = "restart"
-    RELOAD = "reload"
-    STOP = "stop"
 
 
 def do_reload(
@@ -151,52 +135,9 @@ def do_restart(
                 duplicates=duplicates,
                 bake_on_restart=bake_on_restart,
             )
-            do_core_action(action, monitoring_core=core.name())
+            core.run(action)
 
     except Exception as e:
         if cmk.ccc.debug.enabled():
             raise
         raise MKBailOut("An error occurred: %s" % e)
-
-
-def print_(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
-
-
-def do_core_action(
-    action: CoreAction,
-    monitoring_core: Literal["nagios", "cmc"],
-    quiet: bool = False,
-) -> None:
-    with tracer.span(
-        f"do_core_action[{action.value}]",
-        attributes={
-            "cmk.core.config.core": monitoring_core,
-        },
-    ):
-        if not quiet:
-            print_("%sing monitoring core..." % action.value.title())
-
-        if monitoring_core == "nagios":
-            os.putenv("CORE_NOVERIFY", "yes")
-            command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
-        else:
-            command = ["omd", action.value, "cmc"]
-
-        completed_process = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True,
-            check=False,
-        )
-        if completed_process.returncode != 0:
-            if not quiet:
-                print_("ERROR: %r\n" % completed_process.stdout)
-            raise MKGeneralException(
-                f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
-            )
-        if not quiet:
-            print_(tty.ok + "\n")

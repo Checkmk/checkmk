@@ -1484,11 +1484,7 @@ class AutomationRenameHosts(Automation):
         # it now.
         core_was_running = self._core_is_running(loading_result.loaded_config.monitoring_core)
         if core_was_running:
-            cmk.base.core.do_core_action(
-                CoreAction.STOP,
-                quiet=True,
-                monitoring_core=loading_result.loaded_config.monitoring_core,
-            )
+            core.run(CoreAction.STOP, log=lambda x: None)
 
         try:
             for oldname, newname in renamings:

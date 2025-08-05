@@ -6,8 +6,7 @@
 
 from . import config as config  # reconsider the name...
 from . import nagios as nagios
+from ._base_core import CoreAction as CoreAction
 from ._base_core import MonitoringCore as MonitoringCore
-from ._control import CoreAction as CoreAction
-from ._control import do_core_action as do_core_action
 from ._control import do_reload as do_reload
 from ._control import do_restart as do_restart

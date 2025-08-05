@@ -4,11 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import enum
 import socket
+import subprocess
+import sys
 from collections.abc import Callable, Mapping, Sequence
-from typing import Literal
+from contextlib import suppress
+from typing import Final, Literal
 
+from cmk import trace
 from cmk.base.config import ConfigCache
+from cmk.ccc import tty
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.utils import ip_lookup
@@ -20,10 +27,19 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
+tracer = trace.get_tracer()
+
+
+class CoreAction(enum.Enum):
+    START = "start"
+    RESTART = "restart"
+    RELOAD = "reload"
+    STOP = "stop"
+
 
 class MonitoringCore(abc.ABC):
     def __init__(self, licensing_handler_type: type[LicensingHandler]):
-        self._licensing_handler_type = licensing_handler_type
+        self.licensing_handler_type: Final = licensing_handler_type
 
     @classmethod
     @abc.abstractmethod
@@ -59,7 +75,7 @@ class MonitoringCore(abc.ABC):
         hosts_to_update: set[HostName] | None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
-        licensing_handler = self._licensing_handler_type.make()
+        licensing_handler = self.licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
         self._create_config(
             config_path,
@@ -108,3 +124,37 @@ class MonitoringCore(abc.ABC):
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         raise NotImplementedError
+
+    def run(
+        self,
+        action: CoreAction,
+        *,
+        log: Callable[[str], None] | None = None,
+    ) -> None:
+        if log is None:
+            log = _print_
+        with tracer.span(
+            f"do_core_action[{action.value}]",
+            attributes={
+                "cmk.core_config.core": self.name(),
+            },
+        ):
+            log("%sing monitoring core..." % action.value.title())
+
+            completed_process = self._run_command(action)
+            if completed_process.returncode != 0:
+                log("ERROR: %r\n" % completed_process.stdout)
+                raise MKGeneralException(
+                    f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
+                )
+            log(tty.ok + "\n")
+
+    @abc.abstractmethod
+    def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
+        raise NotImplementedError
+
+
+def _print_(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()

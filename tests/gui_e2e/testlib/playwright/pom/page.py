@@ -498,7 +498,7 @@ class Sidebar(LocatorHelper):
         @property
         def close_button(self) -> Locator:
             """Returns the close button of the snapin."""
-            return self._base_locator.locator("div.snapin_buttons >> a")
+            return self._base_locator.locator("div.closesnapin a")
 
         def get_button(self, name: str) -> Locator:
             """Returns the footnote link with the specified text.

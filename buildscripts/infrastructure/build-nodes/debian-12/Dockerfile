@@ -187,7 +187,7 @@ common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
 EOF
 
-COPY --chmod 444 Checkmk_GmbH_IT_Root_CA.crt /usr/local/share/ca-certificates
+COPY --chmod=444 Checkmk_GmbH_IT_Root_CA.crt /usr/local/share/ca-certificates
 RUN update-ca-certificates \
     && keytool -importcert -noprompt -keystore /etc/ssl/certs/java/cacerts -storepass changeit -file /usr/local/share/ca-certificates/Checkmk_GmbH_IT_Root_CA.crt
 

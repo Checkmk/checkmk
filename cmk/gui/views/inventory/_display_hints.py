@@ -502,7 +502,7 @@ def _make_column_filter(
             assert_never(other)
 
 
-def _parse_col_field_from_api_of_view(
+def _parse_col_field_of_view_from_api(
     table_view_name: str,
     node_title: str,
     key: str,
@@ -549,7 +549,7 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
             long_title = f"{long_title} (_make_str(node.table.view.group))"
         table = TableWithView(
             columns={
-                SDKey(k): _parse_col_field_from_api_of_view(table_view_name, title, k, v)
+                SDKey(k): _parse_col_field_of_view_from_api(table_view_name, title, k, v)
                 for k, v in node.table.columns.items()
             },
             name=table_view_name,

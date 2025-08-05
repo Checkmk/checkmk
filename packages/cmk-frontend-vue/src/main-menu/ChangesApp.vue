@@ -26,7 +26,7 @@ import type {
 import ChangesActivating from './components/activation/ChangesActivating.vue'
 import ChangesActivationResult from './components/activation/ChangesActivationResult.vue'
 import SiteStatusList from './components/sites/SiteStatusList.vue'
-import PendingChangesList from './components/PendingChangesList.vue'
+import PendingChangesList from './components/pending-changes/PendingChangesList.vue'
 
 const { t } = usei18n('changes-app')
 const props = defineProps<{

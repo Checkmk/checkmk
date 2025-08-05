@@ -12,7 +12,8 @@ import CmkIndent from '@/components/CmkIndent.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import usei18n from '@/lib/i18n'
-import type { PendingChanges } from '../ChangesInterfaces'
+import type { PendingChanges } from '../../ChangesInterfaces'
+import PendingChangeItemText from './PendingChangeItemText.vue'
 
 const { t } = usei18n('changes-app')
 
@@ -69,7 +70,10 @@ const pendingChangesCollapsible = ref<boolean>(true)
               class="cmk-indent-pending-change-container"
               :class="{ 'red-text': change.user !== userName && change.user !== null }"
             >
-              <span class="cmk-span-pending-change-text">{{ change.changeText }}</span>
+              <PendingChangeItemText
+                :text="change.changeText"
+                class="cmk-span-pending-change-text"
+              ></PendingChangeItemText>
 
               <div
                 class="cmk-div-pending-change-details"
@@ -182,12 +186,12 @@ const pendingChangesCollapsible = ref<boolean>(true)
 .cmk-span-pending-change-text {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  flex-direction: column;
   align-self: stretch;
   color: var(--font-color);
-  font-size: 12px;
+  font-size: var(--font-size-normal);
   font-style: normal;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: normal;
   letter-spacing: 0.36px;
 }

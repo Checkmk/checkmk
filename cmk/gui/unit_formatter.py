@@ -15,7 +15,7 @@ _MAX_DIGITS: Final = 5
 
 
 @dataclass(frozen=True)
-class Preformatted:
+class _PreFormattedPart:
     value: int | float
     prefix: str
     symbol: str
@@ -68,12 +68,12 @@ class NotationFormatter:
     @abc.abstractmethod
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]: ...
+    ) -> Sequence[_PreFormattedPart]: ...
 
     @abc.abstractmethod
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]: ...
+    ) -> Sequence[_PreFormattedPart]: ...
 
     def _apply_precision(
         self,
@@ -96,10 +96,10 @@ class NotationFormatter:
 
     def _preformat(
         self, value: int | float, *, use_prefix: str = "", use_symbol: str = ""
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         assert value >= 0
         if value in (0, 1):
-            return [Preformatted(value, "", self.symbol)]
+            return [_PreFormattedPart(value, "", self.symbol)]
         if value < 1:
             return self._preformat_small_number(value, use_prefix, use_symbol)
         # value > 1
@@ -113,15 +113,15 @@ class NotationFormatter:
 
     def _postformat(
         self,
-        formatted_parts: Sequence[Preformatted],
+        pre_formatted_parts: Sequence[_PreFormattedPart],
         compute_auto_precision_digits: Callable[[int, int], int],
         use_max_digits_for_labels: bool,
     ) -> str:
         results = []
-        for formatted in formatted_parts:
+        for part in pre_formatted_parts:
             text = self._stringify_formatted_value(
                 self._apply_precision(
-                    formatted.value,
+                    part.value,
                     compute_auto_precision_digits,
                     use_max_digits_for_labels,
                 )
@@ -130,8 +130,8 @@ class NotationFormatter:
                 _join_text_and_unit(
                     self._format_text_and_unit(
                         text=text.rstrip("0").rstrip(".") if "." in text else text,
-                        prefix=formatted.prefix,
-                        symbol=formatted.symbol,
+                        prefix=part.prefix,
+                        symbol=part.symbol,
                     )
                 ).strip()
             )
@@ -242,14 +242,14 @@ class DecimalFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        return [Preformatted(value, "", self.symbol)]
+    ) -> Sequence[_PreFormattedPart]:
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        return [Preformatted(value, "", self.symbol)]
+    ) -> Sequence[_PreFormattedPart]:
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _stringify_formatted_value(self, value: int | float) -> str:
@@ -314,28 +314,28 @@ class SIFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _SI_SMALL_PREFIXES)
-            return [Preformatted(value * pow(1000, power), use_prefix, self.symbol)]
+            return [_PreFormattedPart(value * pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _SI_SMALL_PREFIXES:
             if exponent <= exp:
-                return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
-        return [Preformatted(value, "", self.symbol)]
+                return [_PreFormattedPart(value * pow(1000, power), prefix, self.symbol)]
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _SI_LARGE_PREFIXES)
-            return [Preformatted(value / pow(1000, power), use_prefix, self.symbol)]
+            return [_PreFormattedPart(value / pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value))
         for exp, power, prefix in _SI_LARGE_PREFIXES:
             if exponent >= exp:
-                return [Preformatted(value / pow(1000, power), prefix, self.symbol)]
-        return [Preformatted(value, "", self.symbol)]
+                return [_PreFormattedPart(value / pow(1000, power), prefix, self.symbol)]
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
@@ -377,21 +377,21 @@ class IECFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        return [Preformatted(value, "", self.symbol)]
+    ) -> Sequence[_PreFormattedPart]:
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _IEC_LARGE_PREFIXES)
-            return [Preformatted(value / pow(1024, power), use_prefix, self.symbol)]
+            return [_PreFormattedPart(value / pow(1024, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log2(value))
         for exp, power, prefix in _IEC_LARGE_PREFIXES:
             if exponent >= exp:
-                return [Preformatted(value / pow(1024, power), prefix, self.symbol)]
-        return [Preformatted(value, "", self.symbol)]
+                return [_PreFormattedPart(value / pow(1024, power), prefix, self.symbol)]
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
@@ -421,16 +421,16 @@ class StandardScientificFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         exponent = math.floor(math.log10(value))
-        return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
+        return [_PreFormattedPart(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         exponent = math.floor(math.log10(value))
-        return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
+        return [_PreFormattedPart(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
@@ -460,16 +460,16 @@ class EngineeringScientificFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         exponent = math.floor(math.log10(value) / 3) * 3
-        return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
+        return [_PreFormattedPart(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         exponent = math.floor(math.log10(value) // 3) * 3
-        return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
+        return [_PreFormattedPart(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
@@ -549,51 +549,51 @@ class TimeFormatter(NotationFormatter):
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _TIME_SMALL_PREFIXES)
-            return [Preformatted(value * pow(1000, power), use_prefix, self.symbol)]
+            return [_PreFormattedPart(value * pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _TIME_SMALL_PREFIXES:
             if exponent <= exp:
-                return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
-        return [Preformatted(value, "", self.symbol)]
+                return [_PreFormattedPart(value * pow(1000, power), prefix, self.symbol)]
+        return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
+    ) -> Sequence[_PreFormattedPart]:
         if not use_symbol:
             for factor, symbol in _TIME_LARGE_SYMBOLS:
                 if value >= factor:
                     use_symbol = symbol
                     break
         rounded_value = round(value)
-        formatted_parts = []
+        pre_formatted_parts = []
         match use_symbol:
             case "y":
                 years = int(rounded_value // _ONE_YEAR)
-                formatted_parts.append(Preformatted(years, "", "y"))
+                pre_formatted_parts.append(_PreFormattedPart(years, "", "y"))
                 if days := round((rounded_value - years * _ONE_YEAR) / _ONE_DAY):
-                    formatted_parts.append(Preformatted(days, "", "d"))
+                    pre_formatted_parts.append(_PreFormattedPart(days, "", "d"))
             case "d":
                 days = int(rounded_value // _ONE_DAY)
-                formatted_parts.append(Preformatted(days, "", "d"))
+                pre_formatted_parts.append(_PreFormattedPart(days, "", "d"))
                 if days < 10 and (hours := round((rounded_value - days * _ONE_DAY) / _ONE_HOUR)):
-                    formatted_parts.append(Preformatted(hours, "", "h"))
+                    pre_formatted_parts.append(_PreFormattedPart(hours, "", "h"))
             case "h":
                 hours = int(rounded_value // _ONE_HOUR)
-                formatted_parts.append(Preformatted(hours, "", "h"))
+                pre_formatted_parts.append(_PreFormattedPart(hours, "", "h"))
                 if minutes := round((rounded_value - hours * _ONE_HOUR) / _ONE_MINUTE):
-                    formatted_parts.append(Preformatted(minutes, "", "min"))
+                    pre_formatted_parts.append(_PreFormattedPart(minutes, "", "min"))
             case "min":
                 minutes = int(rounded_value // _ONE_MINUTE)
-                formatted_parts.append(Preformatted(minutes, "", "min"))
+                pre_formatted_parts.append(_PreFormattedPart(minutes, "", "min"))
                 if seconds := round(rounded_value - minutes * _ONE_MINUTE):
-                    formatted_parts.append(Preformatted(seconds, "", "s"))
+                    pre_formatted_parts.append(_PreFormattedPart(seconds, "", "s"))
             case _:
-                formatted_parts.append(Preformatted(value, "", "s"))
-        return formatted_parts
+                pre_formatted_parts.append(_PreFormattedPart(value, "", "s"))
+        return pre_formatted_parts
 
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:

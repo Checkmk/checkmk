@@ -7,6 +7,7 @@
 import argparse
 import ast
 import datetime
+import errno
 import fcntl
 import os
 import shlex
@@ -1199,9 +1200,14 @@ def get_werk_filename(werk_id: WerkId, werk_version: WerkVersion) -> Path:
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    goto_werksdir()
-    main_args = parse_arguments(argv or sys.argv[1:])
-    main_args.func(main_args)
+    try:
+        goto_werksdir()
+        main_args = parse_arguments(argv or sys.argv[1:])
+        main_args.func(main_args)
+    except OSError as e:
+        # ignore BrokenPipeError: [Errno 32] Broken pipe
+        if e.errno != errno.EPIPE:
+            raise
 
 
 if __name__ == "__main__":

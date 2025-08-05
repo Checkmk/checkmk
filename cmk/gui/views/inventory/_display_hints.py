@@ -11,7 +11,6 @@ from collections.abc import (
     Iterable,
     Iterator,
     Mapping,
-    MutableMapping,
     Sequence,
 )
 from dataclasses import dataclass, field
@@ -138,21 +137,25 @@ def _add_html_styling(
     styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
     default_alignment: AlignmentFromAPI,
 ) -> HTML:
-    style_elements: MutableMapping[str, str] = {}
+    alignment: dict[str, str] = {}
+    colors: dict[str, str] = {}
     for style in styles:
         match style:
-            case AlignmentFromAPI() as alignment:
-                style_elements.setdefault("text-align", _parse_alignment_from_api(alignment))
-            case BackgroundColorFromAPI() as bg_color:
-                style_elements.setdefault("background-color", parse_color_from_api(bg_color))
-            case LabelColorFromAPI() as label_color:
-                style_elements.setdefault("color", parse_color_from_api(label_color))
+            case AlignmentFromAPI() as alignment_from_api:
+                alignment.setdefault("text-align", _parse_alignment_from_api(alignment_from_api))
+            case BackgroundColorFromAPI() as bg_color_from_api:
+                colors.setdefault("background-color", parse_color_from_api(bg_color_from_api))
+            case LabelColorFromAPI() as label_color_from_api:
+                colors.setdefault("color", parse_color_from_api(label_color_from_api))
             case other:
                 assert_never(other)
-    style_elements.setdefault("text-align", _parse_alignment_from_api(default_alignment))
-
-    return HTMLWriter.render_span(
-        rendered_value, style="; ".join(f"{k}: {v}" for k, v in style_elements.items())
+    alignment.setdefault("text-align", _parse_alignment_from_api(default_alignment))
+    return HTMLWriter.render_div(
+        HTMLWriter.render_span(
+            rendered_value,
+            style="; ".join(f"{k}: {v}" for k, v in colors.items()),
+        ),
+        style=f"text-align: {alignment['text-align']}",
     )
 
 
@@ -171,7 +174,9 @@ class _PaintBool:
 
         rendered_value = _make_str(self._field.render_true if value else self._field.render_false)
         return "", _add_html_styling(
-            rendered_value, self._field.style(value), default_alignment=self.default_alignment
+            rendered_value,
+            self._field.style(value),
+            default_alignment=self.default_alignment,
         )
 
 
@@ -232,7 +237,9 @@ class _PaintNumber:
                 assert_never(self._field.render)
 
         return "", _add_html_styling(
-            rendered_value, self._field.style(value), default_alignment=self.default_alignment
+            rendered_value,
+            self._field.style(value),
+            default_alignment=self.default_alignment,
         )
 
 
@@ -275,7 +282,9 @@ class _PaintChoice:
             else _make_str(rendered)
         )
         return "", _add_html_styling(
-            rendered_val, self._field.style(value), default_alignment=self.default_alignment
+            rendered_val,
+            self._field.style(value),
+            default_alignment=self.default_alignment,
         )
 
 

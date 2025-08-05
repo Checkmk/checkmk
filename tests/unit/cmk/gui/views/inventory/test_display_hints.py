@@ -1271,11 +1271,17 @@ def test_render_bool() -> None:
     )
     assert _PaintBool(bool_field)(True) == (
         "",
-        HTML('<span style="text-align: left">It&#x27;s true</span>', escape=False),
+        HTML(
+            "<div style=\"text-align: left\"><span style=''>It&#x27;s true</span></div>",
+            escape=False,
+        ),
     )
     assert _PaintBool(bool_field)(False) == (
         "",
-        HTML('<span style="text-align: left">It&#x27;s false</span>', escape=False),
+        HTML(
+            "<div style=\"text-align: left\"><span style=''>It&#x27;s false</span></div>",
+            escape=False,
+        ),
     )
 
 
@@ -1332,7 +1338,10 @@ def test_render_number(
     now = datetime.datetime(2025, 1, 1, 0, 1, 0, tzinfo=datetime.UTC).timestamp()
     assert _PaintNumber(number_field)(value, now) == (
         "",
-        HTML(f'<span style="text-align: center">{expected}</span>', escape=False),
+        HTML(
+            f"<div style=\"text-align: center\"><span style=''>{expected}</span></div>",
+            escape=False,
+        ),
     )
 
 
@@ -1344,7 +1353,10 @@ def test_render_text() -> None:
     )
     assert _PaintText(text_field)("world") == (
         "",
-        HTML('<span style="color: #ff64ff; text-align: left">hello world</span>', escape=False),
+        HTML(
+            '<div style="text-align: left"><span style="color: #ff64ff">hello world</span></div>',
+            escape=False,
+        ),
     )
 
 
@@ -1355,11 +1367,14 @@ def test_render_choice() -> None:
     )
     assert _PaintChoice(choice_field)(1) == (
         "",
-        HTML('<span style="text-align: center">One</span>', escape=False),
+        HTML("<div style=\"text-align: center\"><span style=''>One</span></div>", escape=False),
     )
     assert _PaintChoice(choice_field)(2) == (
         "",
-        HTML('<span style="text-align: center">&lt;2&gt; (No such value)</span>', escape=False),
+        HTML(
+            "<div style=\"text-align: center\"><span style=''>&lt;2&gt; (No such value)</span></div>",
+            escape=False,
+        ),
     )
 
 

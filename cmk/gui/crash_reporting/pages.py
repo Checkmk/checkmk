@@ -350,7 +350,7 @@ class PageCrash(ABCCrashReportPage):
         html.show_warning(warn_text)
 
     def _warn_about_sensitive_information(self, crash_info: CrashInfo) -> None:
-        if not (vars_ := crash_info.get("details", {}).get("vars")):
+        if not ((vars_ := crash_info.get("details") or {}).get("vars")):
             return
 
         if any(

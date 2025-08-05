@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.welcome.registration import register
 
-__all__ = ["register"]
+import cmk.gui.welcome.pages as welcome_pages
+from cmk.gui.pages import PageRegistry
+
+
+def register(page_registry: PageRegistry) -> None:
+    welcome_pages.register(page_registry)

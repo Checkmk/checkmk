@@ -394,8 +394,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             },
         )
 
-        # We need to activate this immediately to make syncs to Setup slave sites
-        # possible right after changing the option
+        # We need to activate this immediately to make syncs to distributed
+        # setup remote sites possible right after changing the option
         #
         # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the

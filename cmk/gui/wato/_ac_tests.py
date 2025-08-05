@@ -27,9 +27,9 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
+    distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
-    wato_slave_sites,
 )
 from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
@@ -1089,7 +1089,10 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
     def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
-        return any(site.get("replicate_mkps") for site in wato_slave_sites(site_configs).values())
+        return any(
+            site.get("replicate_mkps")
+            for site in distributed_setup_remote_sites(site_configs).values()
+        )
 
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()

@@ -64,7 +64,11 @@ from cmk.gui.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
 )
-from cmk.gui.site_config import has_distributed_setup_remote_sites, site_is_local, wato_slave_sites
+from cmk.gui.site_config import (
+    distributed_setup_remote_sites,
+    has_distributed_setup_remote_sites,
+    site_is_local,
+)
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
@@ -2520,7 +2524,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 def _get_notification_sync_sites(site_configs: SiteConfigurations) -> list[SiteId]:
     return sorted(
         site_id
-        for site_id in wato_slave_sites(site_configs)
+        for site_id in distributed_setup_remote_sites(site_configs)
         if not site_is_local(site_configs[SiteId(site_id)])
     )
 

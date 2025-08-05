@@ -27,7 +27,7 @@ def enabled_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
 
 
 def has_distributed_setup_remote_sites(site_configs: SiteConfigurations) -> bool:
-    return bool(wato_slave_sites(site_configs))
+    return bool(distributed_setup_remote_sites(site_configs))
 
 
 def is_distributed_setup_remote_site(site_configs: SiteConfigurations) -> bool:
@@ -40,16 +40,16 @@ def _has_distributed_wato_file() -> bool:
 
 
 def get_login_sites(site_configs: SiteConfigurations) -> list[SiteId]:
-    """Returns the Setup slave sites a user may login and the local site"""
-    return get_login_slave_sites(site_configs) + [omd_site()]
+    """Returns the distributed setup remote sites a user may login and the local site"""
+    return login_enabled_distributed_remote_sites(site_configs) + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
-def get_login_slave_sites(site_configs: SiteConfigurations) -> list[SiteId]:
-    """Returns a list of site ids which are Setup slave sites and users can login"""
+def login_enabled_distributed_remote_sites(site_configs: SiteConfigurations) -> list[SiteId]:
+    """Returns a list of site ids which are distributed setup remote sites and users can login"""
     login_sites = []
-    for site_id, site_spec in wato_slave_sites(site_configs).items():
+    for site_id, site_spec in distributed_setup_remote_sites(site_configs).items():
         if site_spec.get("user_login", True) and not site_is_local(site_spec):
             login_sites.append(site_id)
     return login_sites
@@ -59,7 +59,7 @@ def is_replication_enabled(site_config: SiteConfiguration) -> bool:
     return bool(site_config.get("replication"))
 
 
-def wato_slave_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
+def distributed_setup_remote_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
     return SiteConfigurations(
         {site_id: s for site_id, s in site_configs.items() if is_replication_enabled(s)}
     )
@@ -90,4 +90,4 @@ def is_single_local_site(sites: Mapping[SiteId, SiteConfiguration]) -> bool:
 
 
 def wato_site_ids(site_configs: SiteConfigurations) -> list[SiteId]:
-    return [omd_site(), *wato_slave_sites(site_configs)]
+    return [omd_site(), *distributed_setup_remote_sites(site_configs)]

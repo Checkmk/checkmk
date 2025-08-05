@@ -53,11 +53,11 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
+    distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
     is_replication_enabled,
     site_is_local,
-    wato_slave_sites,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
@@ -785,7 +785,8 @@ class ModeEditBrokerConnection(WatoMode):
 
     def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
         replicated_sites_choices = [
-            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites(config.sites).items()
+            (sk, si.get("alias", sk))
+            for sk, si in distributed_setup_remote_sites(config.sites).items()
         ]
 
         return [

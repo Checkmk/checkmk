@@ -17,7 +17,7 @@ from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.log import logger
-from cmk.gui.site_config import is_distributed_setup_remote_site, wato_slave_sites
+from cmk.gui.site_config import distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
@@ -321,7 +321,7 @@ def _execute_sync_remote_sites(config: Config) -> None:
     if not (
         remote_site_configs := [
             (site_id, site_config)
-            for site_id, site_config in wato_slave_sites(config.sites).items()
+            for site_id, site_config in distributed_setup_remote_sites(config.sites).items()
             if "secret" in site_config
         ]
     ):

@@ -24,8 +24,8 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
-    get_login_slave_sites,
     is_distributed_setup_remote_site,
+    login_enabled_distributed_remote_sites,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec, VisualTypeName
@@ -192,7 +192,7 @@ def handle_ldap_sync_finished(
         profiles_to_synchronize,
         remote_sites=[
             (site_id, RemoteAutomationConfig.from_site_config(site_configs[site_id]))
-            for site_id in get_login_slave_sites(site_configs)
+            for site_id in login_enabled_distributed_remote_sites(site_configs)
         ],
         wato_enabled=wato_enabled,
         use_git=use_git,

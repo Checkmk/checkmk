@@ -39,11 +39,11 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
+    distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
     is_replication_enabled,
     site_is_local,
-    wato_slave_sites,
 )
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
@@ -303,7 +303,7 @@ class SiteManagement:
             old_config
             and is_replication_enabled(old_config) != is_replication_enabled(current_config)
         ):
-            connected |= set(wato_slave_sites(site_configs).keys())
+            connected |= set(distributed_setup_remote_sites(site_configs).keys())
             return connected
 
         if old_config is None:

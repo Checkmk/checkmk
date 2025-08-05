@@ -256,9 +256,7 @@ def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
     slideout_close_button.click()
 
     with setup_host.page.expect_popup() as popup_info:
-        main_area.locator(
-            "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-optional"
-        ).click()
+        main_area.locator("button.cmk-button:has-text('Read Checkmk user guide')").click()
 
     docs_page = popup_info.value
 

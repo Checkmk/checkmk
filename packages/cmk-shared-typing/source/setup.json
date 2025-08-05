@@ -13,13 +13,9 @@
             "type": "object",
             "properties": {
                 "output": { "type": "string" },
-                "agent_slideout": { "$ref": "agent_slideout.json" },
-                "host_name": { "type": "string" },
-                "all_agents_url": {
-                    "type": "string"
-                }
+                "agent_slideout": { "$ref": "agent_slideout.json" }
             },
-            "required": ["agent_slideout", "host_name", "all_agents_url"]
+            "required": ["agent_slideout"]
         }
     }
 }

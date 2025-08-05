@@ -689,8 +689,11 @@ class DiscoveryPageRenderer:
             data=asdict(
                 AgentDownload(
                     output=output,
-                    host_name=self._host.name(),
                     agent_slideout=AgentSlideout(
+                        all_agents_url=folder_preserving_link(
+                            [("mode", "agent_of_host"), ("host", self._host.name())]
+                        ),
+                        host_name=self._host.name(),
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(
@@ -708,9 +711,6 @@ class DiscoveryPageRenderer:
                         legacy_agent_url=agent_commands_registry[
                             "agent_commands"
                         ].legacy_agent_url(),
-                    ),
-                    all_agents_url=folder_preserving_link(
-                        [("mode", "agent_of_host"), ("host", self._host.name())]
                     ),
                 ),
             ),

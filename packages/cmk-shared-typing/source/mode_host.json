@@ -17,15 +17,13 @@
             }
         },
         "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
-        "all_agents_url": { "type": "string" },
-        "agent_slideout": { "$ref": "agent_slideout.json" },
-        "host_name": { "type": "string" }
+        "host_name": { "type": "string" },
+        "agent_slideout": { "$ref": "agent_slideout.json" }
     },
     "required": [
         "form_keys",
         "sites",
         "i18n_ping_host",
-        "all_agents_url",
         "agent_slideout",
         "host_name"
     ],

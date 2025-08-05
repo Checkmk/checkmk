@@ -7,9 +7,16 @@
         "agent_registration_cmds": {
             "$ref": "#/$defs/agent_registration_cmds"
         },
+        "host_name": { "type": "string" },
+        "all_agents_url": { "type": "string" },
         "legacy_agent_url": { "type": "string" }
     },
-    "required": ["agent_install_cmds", "agent_registration_cmds"],
+    "required": [
+        "agent_install_cmds",
+        "agent_registration_cmds",
+        "host_name",
+        "all_agents_url"
+    ],
     "$defs": {
         "agent_install_cmds": {
             "type": "object",

@@ -366,8 +366,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                         for mode in HostAgentConnectionMode
                     ],
-                    all_agents_url=folder_preserving_link([("mode", "agents")]),
                     agent_slideout=AgentSlideout(
+                        all_agents_url=folder_preserving_link([("mode", "agents")]),
+                        host_name=self._host.name(),
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(

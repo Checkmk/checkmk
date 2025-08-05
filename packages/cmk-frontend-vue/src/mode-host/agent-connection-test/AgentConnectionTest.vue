@@ -34,7 +34,6 @@ interface Props {
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
-  all_agents_url: string
   agent_slideout: AgentSlideout
 }
 
@@ -350,7 +349,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
     >
       <AgentRegisterSlideOutContent
         v-if="isNotRegistered"
-        :all_agents_url="all_agents_url"
+        :all_agents_url="agent_slideout.all_agents_url"
         :host_name="hostname"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         :close_button_title="closeButtonTitle"
@@ -358,7 +357,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
       />
       <AgentInstallSlideOutContent
         v-else
-        :all_agents_url="all_agents_url"
+        :all_agents_url="agent_slideout.all_agents_url"
         :host_name="hostname"
         :agent_install_cmds="agent_slideout.agent_install_cmds"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"

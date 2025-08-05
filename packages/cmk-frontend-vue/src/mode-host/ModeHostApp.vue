@@ -22,7 +22,6 @@ const props = defineProps<{
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
-  all_agents_url: string
   agent_slideout: AgentSlideout
   host_name: string
 }>()
@@ -145,7 +144,6 @@ function getElementBySelector<T>(selector: string): T {
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"
     :agent-connection-modes="agent_connection_modes"
-    :all_agents_url="all_agents_url"
     :agent_slideout="agent_slideout"
   ></AgentConnectionTest>
 </template>

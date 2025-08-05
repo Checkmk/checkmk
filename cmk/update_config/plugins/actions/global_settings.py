@@ -8,7 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.config import active_config
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
@@ -65,7 +65,7 @@ def _update_installation_wide_global_settings(logger: Logger) -> None:
 
 def _update_site_specific_global_settings(logger: Logger) -> None:
     """Update the sitespecific.mk of the local site (which is a remote site)"""
-    if not is_wato_slave_site(active_config.sites):
+    if not is_distributed_setup_remote_site(active_config.sites):
         return
     save_site_global_settings(
         update_global_config(

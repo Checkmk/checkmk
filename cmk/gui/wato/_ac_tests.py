@@ -27,8 +27,8 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
-    has_wato_slave_sites,
-    is_wato_slave_site,
+    has_distributed_setup_remote_sites,
+    is_distributed_setup_remote_site,
     wato_slave_sites,
 )
 from cmk.gui.userdb import htpasswd
@@ -190,7 +190,7 @@ class ACTestLiveproxyd(ACTest):
                 site_id=site_id,
             )
 
-        if not is_wato_slave_site(site_configs):
+        if not is_distributed_setup_remote_site(site_configs):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
@@ -1084,7 +1084,7 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
     def is_relevant(self) -> bool:
-        return has_wato_slave_sites(active_config.sites) and self._replicates_mkps(
+        return has_distributed_setup_remote_sites(active_config.sites) and self._replicates_mkps(
             active_config.sites
         )
 

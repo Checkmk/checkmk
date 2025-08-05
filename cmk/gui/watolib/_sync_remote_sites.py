@@ -17,7 +17,7 @@ from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.log import logger
-from cmk.gui.site_config import is_wato_slave_site, wato_slave_sites
+from cmk.gui.site_config import is_distributed_setup_remote_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
@@ -315,7 +315,7 @@ class SyncRemoteSitesJob:
 
 
 def _execute_sync_remote_sites(config: Config) -> None:
-    if is_wato_slave_site(config.sites):
+    if is_distributed_setup_remote_site(config.sites):
         return
 
     if not (

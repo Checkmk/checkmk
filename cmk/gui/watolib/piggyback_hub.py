@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.piggyback.hub import HostLocations, publish_persisted_locations
@@ -104,7 +104,7 @@ def _validate_piggyback_hub_config(
 def validate_piggyback_hub_config(
     site_configs: SiteConfigurations, settings_per_site: Mapping[SiteId, GlobalSettings]
 ) -> None:
-    if is_wato_slave_site(site_configs):
+    if is_distributed_setup_remote_site(site_configs):
         return
 
     _validate_piggyback_hub_config(settings_per_site, omd_site())

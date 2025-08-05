@@ -31,7 +31,7 @@ from cmk.gui.form_specs.private import (
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import urlencode_vars
@@ -1165,7 +1165,10 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self, config: Config) -> bool:
-        return not (has_wato_slave_sites(config.sites) or is_wato_slave_site(config.sites))
+        return not (
+            has_distributed_setup_remote_sites(config.sites)
+            or is_distributed_setup_remote_site(config.sites)
+        )
 
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS

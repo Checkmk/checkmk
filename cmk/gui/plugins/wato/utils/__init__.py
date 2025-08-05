@@ -34,7 +34,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.site_config import is_wato_slave_site as is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site as is_wato_slave_site
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText
 from cmk.gui.utils.html import HTML as HTML

@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import create_message, get_gui_messages, MessageText, send_message
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
@@ -441,7 +441,7 @@ def _find_problems_to_send(
 
 
 def execute_deprecation_tests_and_notify_users(config: Config) -> None:
-    if is_wato_slave_site(config.sites):
+    if is_distributed_setup_remote_site(config.sites):
         return
 
     marker_file_store = _MarkerFileStore(paths.var_dir / "deprecations")

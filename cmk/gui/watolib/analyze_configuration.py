@@ -29,7 +29,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.utils import escaping
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -207,7 +207,9 @@ class ACTest:
         return version.startswith("Check_MK")
 
     def _get_effective_global_setting(self, site_id: SiteId, config: Config, varname: str) -> Any:
-        return get_effective_global_setting(site_id, is_wato_slave_site(config.sites), varname)
+        return get_effective_global_setting(
+            site_id, is_distributed_setup_remote_site(config.sites), varname
+        )
 
 
 class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):

@@ -121,7 +121,10 @@ def get_wato_menu_items() -> list[MainMenuTopic]:
 
 
 def _hide_menu() -> bool:
-    return site_config.is_wato_slave_site(active_config.sites) and not active_config.wato_enabled
+    return (
+        site_config.is_distributed_setup_remote_site(active_config.sites)
+        and not active_config.wato_enabled
+    )
 
 
 class SetupSearch(ABCMainMenuSearch):
@@ -368,7 +371,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         )
 
     def show(self, config: Config) -> None:
-        if not site_config.is_wato_slave_site(config.sites):
+        if not site_config.is_distributed_setup_remote_site(config.sites):
             if not config.wato_enabled:
                 html.write_text_permissive(_("Setup is disabled."))
 

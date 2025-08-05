@@ -39,9 +39,9 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
-    has_wato_slave_sites,
+    has_distributed_setup_remote_sites,
+    is_distributed_setup_remote_site,
     is_replication_enabled,
-    is_wato_slave_site,
     site_is_local,
     wato_slave_sites,
 )
@@ -733,11 +733,11 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
 def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
-    if is_wato_slave_site(all_sites):
+    if is_distributed_setup_remote_site(all_sites):
         return True
 
     # Local site: Don't enable site specific locals when no remote sites configured
-    if not has_wato_slave_sites(all_sites):
+    if not has_distributed_setup_remote_sites(all_sites):
         return False
 
     return is_replication_enabled(site) or site_is_local(site)

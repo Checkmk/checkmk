@@ -16,7 +16,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.site_config import is_wato_slave_site as gui_is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -171,10 +171,10 @@ ConfigVariableInventoryHousekeeping = ConfigVariable(
 )
 
 
-def _collect_all_raw_host_names(*, is_wato_slave_site: bool) -> Sequence[str]:
+def _collect_all_raw_host_names(*, is_distributed_setup_remote_site: bool) -> Sequence[str]:
     command = (
         ["check_mk", "--list-hosts", "--include-offline"]
-        if is_wato_slave_site
+        if is_distributed_setup_remote_site
         else ["check_mk", "--list-hosts", "--all-sites", "--include-offline"]
     )
     try:
@@ -592,7 +592,7 @@ class InventoryHousekeeping:
             host_names=[
                 HostName(h)
                 for h in _collect_all_raw_host_names(
-                    is_wato_slave_site=gui_is_wato_slave_site(config.sites)
+                    is_distributed_setup_remote_site=is_distributed_setup_remote_site(config.sites)
                 )
                 if h
             ],

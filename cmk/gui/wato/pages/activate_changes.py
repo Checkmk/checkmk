@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     show_confirm_cancel_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
@@ -257,7 +257,7 @@ class ModeRevertChanges(WatoMode):
         _extract_snapshot(file_to_restore)
         activate_changes.execute_activate_changes(
             [d.get_domain_request([]) for d in ABCConfigDomain.enabled_domains()],
-            is_remote_site=is_wato_slave_site(config.sites),
+            is_remote_site=is_distributed_setup_remote_site(config.sites),
         )
 
         for site_id in activation_sites(config.sites):

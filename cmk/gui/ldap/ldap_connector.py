@@ -78,7 +78,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.site_config import has_wato_slave_sites
+from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb._connections import (
     active_connections,
@@ -386,7 +386,7 @@ def _identify_user_modifications(
 
     if pw_changed:
         sync_user_result.has_changed_passwords = True
-        if not edited and has_wato_slave_sites(active_config.sites):
+        if not edited and has_distributed_setup_remote_sites(active_config.sites):
             sync_user_result.profiles_to_synchronize[checkmk_user_id] = modified_user
 
     if added := modified_user_keys - common_keys:

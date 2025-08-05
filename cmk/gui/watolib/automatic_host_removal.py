@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import is_wato_slave_site, wato_site_ids
+from cmk.gui.site_config import is_distributed_setup_remote_site, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -43,7 +43,7 @@ _LOGGER_BACKGROUND_JOB = _LOGGER.getChild("background_job")
 
 
 def execute_host_removal_job(config: Config) -> None:
-    if is_wato_slave_site(config.sites):
+    if is_distributed_setup_remote_site(config.sites):
         return
 
     if not _load_automatic_host_removal_ruleset():

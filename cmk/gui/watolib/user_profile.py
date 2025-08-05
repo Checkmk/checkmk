@@ -25,7 +25,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
     get_login_slave_sites,
-    is_wato_slave_site,
+    is_distributed_setup_remote_site,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec, VisualTypeName
@@ -199,7 +199,7 @@ def handle_ldap_sync_finished(
         debug=debug,
     )
 
-    if changes and wato_enabled and not is_wato_slave_site(site_configs):
+    if changes and wato_enabled and not is_distributed_setup_remote_site(site_configs):
         add_change(
             action_name="edit-users",
             text="<br>".join(changes),

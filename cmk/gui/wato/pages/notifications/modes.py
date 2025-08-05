@@ -64,7 +64,7 @@ from cmk.gui.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
 )
-from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
+from cmk.gui.site_config import has_distributed_setup_remote_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
@@ -2672,7 +2672,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         use_git: bool,
         site_configs: SiteConfigurations,
     ) -> None:
-        if has_wato_slave_sites(site_configs):
+        if has_distributed_setup_remote_sites(site_configs):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
@@ -3413,7 +3413,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         use_git: bool,
         site_configs: SiteConfigurations,
     ) -> None:
-        if has_wato_slave_sites(site_configs):
+        if has_distributed_setup_remote_sites(site_configs):
             self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
@@ -3430,7 +3430,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             )
 
     def _back_mode(self) -> ActionResult:
-        if has_wato_slave_sites(active_config.sites):
+        if has_distributed_setup_remote_sites(active_config.sites):
             return None
         return redirect(mode_url("user_notifications_p"))
 

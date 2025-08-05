@@ -26,12 +26,12 @@ def enabled_sites(site_configs: SiteConfigurations) -> SiteConfigurations:
     )
 
 
-def has_wato_slave_sites(site_configs: SiteConfigurations) -> bool:
+def has_distributed_setup_remote_sites(site_configs: SiteConfigurations) -> bool:
     return bool(wato_slave_sites(site_configs))
 
 
-def is_wato_slave_site(site_configs: SiteConfigurations) -> bool:
-    return _has_distributed_wato_file() and not has_wato_slave_sites(site_configs)
+def is_distributed_setup_remote_site(site_configs: SiteConfigurations) -> bool:
+    return _has_distributed_wato_file() and not has_distributed_setup_remote_sites(site_configs)
 
 
 def _has_distributed_wato_file() -> bool:

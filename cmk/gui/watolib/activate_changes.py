@@ -77,8 +77,8 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.site_config import (
+    is_distributed_setup_remote_site,
     is_single_local_site,
-    is_wato_slave_site,
     site_is_local,
 )
 from cmk.gui.sites import SiteStatus
@@ -2434,7 +2434,7 @@ def _sync_and_activate(
                         trace.get_current_span(),
                         automation_config,
                         debug,
-                        is_wato_slave_site(all_site_configs),
+                        is_distributed_setup_remote_site(all_site_configs),
                     ),
                     error_callback=_error_callback,
                 )

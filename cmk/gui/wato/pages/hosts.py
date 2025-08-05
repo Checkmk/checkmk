@@ -39,7 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_commands import (
     agent_commands_registry,
@@ -609,7 +609,7 @@ class ModeEditHost(ABCHostMode):
         site = self._host.effective_attributes()["site"]
         return watolib_sites.get_effective_global_setting(
             site,
-            is_wato_slave_site(site_configs),
+            is_distributed_setup_remote_site(site_configs),
             "use_dns_cache",
         )
 

@@ -32,7 +32,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
@@ -270,7 +270,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
                 if not action.continue_on_failure or debug.enabled():
                     raise
 
-        if not has_errors and not is_wato_slave_site(active_config.sites):
+        if not has_errors and not is_distributed_setup_remote_site(active_config.sites):
             # Force synchronization of the config after a successful configuration update
             add_change(
                 action_name="cmk-update-config",

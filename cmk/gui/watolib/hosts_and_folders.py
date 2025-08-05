@@ -48,7 +48,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.session import session
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import Choices, GlobalSettings, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -1893,7 +1893,7 @@ class Folder(FolderProtocol):
             parent = self.parent()
             assert parent is not None
             return parent.site_id()
-        if not is_wato_slave_site(active_config.sites):
+        if not is_distributed_setup_remote_site(active_config.sites):
             return omd_site()
 
         # Placeholder for "central site". This is only relevant when using Setup on a remote site

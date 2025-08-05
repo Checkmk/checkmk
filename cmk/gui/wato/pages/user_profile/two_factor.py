@@ -60,7 +60,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
@@ -203,7 +203,7 @@ def _save_credentials_all_sites(
     if log_event != "alias_changed":
         _log_event_usermanagement(log_event)
         send_security_message(user_id, _sec_notification_event_from_2fa_event(log_event))
-    if has_wato_slave_sites(site_configs):
+    if has_distributed_setup_remote_sites(site_configs):
         raise redirect(
             makeuri_contextless(
                 request, [("back", origtarget)], filename="user_profile_replicate.py"
@@ -474,7 +474,7 @@ class UserTwoFactorOverview(Page):
     def _show_form(self, config: Config) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site(config.sites):
+        if is_distributed_setup_remote_site(config.sites):
             html.user_error(
                 MKUserError(
                     None,
@@ -651,7 +651,7 @@ class UserTwoFactorEnforce(Page):
     def _show_form(self, config: Config) -> None:
         assert user.id is not None
 
-        if is_wato_slave_site(config.sites):
+        if is_distributed_setup_remote_site(config.sites):
             html.user_error(
                 MKUserError(
                     None,
@@ -1107,7 +1107,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         navigation_json = {"status": "OK", "redirect": False, "replicate": False}
-        if has_wato_slave_sites(config.sites):
+        if has_distributed_setup_remote_sites(config.sites):
             navigation_json["replicate"] = True
         if session.session_info.two_factor_required:
             session.session_info.two_factor_required = False
@@ -1278,7 +1278,7 @@ class UserLoginTwoFactor(Page):
                     _log_event_usermanagement(TwoFactorEventType.backup_used)
                     send_security_message(user.id, SecurityNotificationEvent.backup_used)
                     _handle_success_auth(user.id)
-                    if has_wato_slave_sites(site_configs):
+                    if has_distributed_setup_remote_sites(site_configs):
                         raise redirect(
                             makeuri_contextless(
                                 request,

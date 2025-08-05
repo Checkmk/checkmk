@@ -38,7 +38,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib import config_domain_name
@@ -684,7 +684,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         # On a central site, the waiting for the end of the restart is already
         # taken into account by the activate changes background job within
         # async_progress.js. Just execute the omd config change command
-        if is_wato_slave_site(active_config.sites):
+        if is_distributed_setup_remote_site(active_config.sites):
             job = OMDConfigChangeBackgroundJob()
             if (
                 result := job.start(

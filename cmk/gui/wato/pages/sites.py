@@ -53,9 +53,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
-    has_wato_slave_sites,
+    has_distributed_setup_remote_sites,
+    is_distributed_setup_remote_site,
     is_replication_enabled,
-    is_wato_slave_site,
     site_is_local,
     wato_slave_sites,
 )
@@ -1589,7 +1589,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         # 3. Site specific global settings
 
-        if is_wato_slave_site(self._configured_sites):
+        if is_distributed_setup_remote_site(self._configured_sites):
             self._current_settings = dict(load_site_global_settings())
         else:
             self._current_settings = self._site.get("globals", {})
@@ -1696,8 +1696,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             )
         )
 
-        if not is_wato_slave_site(self._configured_sites):
-            if not has_wato_slave_sites(self._configured_sites):
+        if not is_distributed_setup_remote_site(self._configured_sites):
+            if not has_distributed_setup_remote_sites(self._configured_sites):
                 html.show_error(
                     _(
                         "You can not configure site specific global settings "

@@ -311,12 +311,9 @@ module = [
   "cmk.gui.views.sorter.*",
   "cmk.gui.wato.*",
   "cmk.gui.watolib.*",
-  "cmk.gui.watolib.configuration_entity.*",
   "cmk.gui.watolib.mode.*",
-  "cmk.gui.watolib.notification_parameter.*",
   "cmk.gui.watolib.sample_config.*",
   "cmk.gui.wato.pages.*",
-  "cmk.gui.wato._notification_parameter.*",
   "cmk.gui.visuals.*",
   "cmk.gui.wsgi.*",
 ]

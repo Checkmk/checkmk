@@ -95,7 +95,6 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.utils import mk_repr
 from cmk.shared_typing.setup import (
     AgentDownload,
-    AgentDownloadI18n,
     AgentInstallCmds,
     AgentRegistrationCmds,
     AgentSlideout,
@@ -680,7 +679,7 @@ class DiscoveryPageRenderer:
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
 
-    def _render_agent_download_tooltip(self) -> None:
+    def _render_agent_download_tooltip(self, output: str) -> None:
         omd_config = get_omd_config(omd_root)
         site = omd_site()
         ip_address = omd_config["CONFIG_APACHE_TCP_ADDR"]
@@ -689,6 +688,7 @@ class DiscoveryPageRenderer:
             component_name="cmk-agent-download",
             data=asdict(
                 AgentDownload(
+                    output=output,
                     host_name=self._host.name(),
                     agent_slideout=AgentSlideout(
                         agent_install_cmds=AgentInstallCmds(
@@ -711,16 +711,6 @@ class DiscoveryPageRenderer:
                     ),
                     all_agents_url=folder_preserving_link(
                         [("mode", "agent_of_host"), ("host", self._host.name())]
-                    ),
-                    i18n=AgentDownloadI18n(
-                        dialog_title=_("Already installed the agent?"),
-                        dialog_message=_(
-                            "This problem might be caused by a missing agent or "
-                            "the firewall settings."
-                        ),
-                        slide_in_title=_("Agent Download"),
-                        slide_in_button_title=_("Download & install agent"),
-                        docs_button_title=_("Read Checkmk user guide"),
                     ),
                 ),
             ),
@@ -777,7 +767,7 @@ class DiscoveryPageRenderer:
                 )
                 if "[agent]" in output and state == 2:
                     html.open_td()
-                    self._render_agent_download_tooltip()
+                    self._render_agent_download_tooltip(output)
                     html.close_td()
                 html.close_tr()
             html.close_table()

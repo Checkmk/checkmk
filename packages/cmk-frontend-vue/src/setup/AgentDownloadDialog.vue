@@ -8,12 +8,10 @@ import { ref } from 'vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
+import AgentRegisterSlideOutContent from '@/mode-host/agent-connection-test/components/AgentRegisterSlideOutContent.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
 import { TooltipArrow } from 'radix-vue'
-import usei18n from '@/lib/i18n'
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
-
-const { t } = usei18n('svc_disc_agent_download')
 
 interface Props {
   dialog_title: string
@@ -21,9 +19,11 @@ interface Props {
   slide_in_title: string
   slide_in_button_title: string
   docs_button_title: string
+  close_button_title: string
   host_name: string
   agent_slideout: AgentSlideout
   all_agents_url: string
+  is_not_registered: boolean
 }
 
 defineProps<Props>()
@@ -78,15 +78,24 @@ const tooltipOpen = ref(true)
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
+    <AgentRegisterSlideOutContent
+      v-if="is_not_registered"
+      :all_agents_url="all_agents_url"
+      :host_name="host_name"
+      :agent_registration_cmds="agent_slideout.agent_registration_cmds"
+      :close_button_title="close_button_title"
+      ,
+      @close="((slideInOpen = false), (tooltipOpen = false))"
+    />
     <AgentInstallSlideOutContent
+      v-else
       :all_agents_url="all_agents_url"
       :host_name="host_name"
       :agent_install_cmds="agent_slideout.agent_install_cmds"
       :agent_registration_cmds="agent_slideout.agent_registration_cmds"
       :legacy_agent_url="agent_slideout.legacy_agent_url"
-      :close_button_title="
-        t('svc_disc_agent_download_close_title', 'Close & run service discovery')
-      "
+      :close_button_title="close_button_title"
+      ,
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />
   </CmkSlideInDialog>

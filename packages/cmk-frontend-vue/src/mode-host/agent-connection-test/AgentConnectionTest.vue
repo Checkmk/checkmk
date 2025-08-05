@@ -212,6 +212,7 @@ const reTestAgentClick: () => void = startAjax
 const openSlideoutClick: () => void = () => {
   slideInOpen.value = true
 }
+const closeButtonTitle = t('ads-close-and-test', 'Close & test agent connection')
 
 interface ContainerValues {
   header: string
@@ -352,7 +353,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :all_agents_url="all_agents_url"
         :host_name="hostname"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
-        :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
+        :close_button_title="closeButtonTitle"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
       <AgentInstallSlideOutContent
@@ -362,7 +363,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :agent_install_cmds="agent_slideout.agent_install_cmds"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         :legacy_agent_url="agent_slideout.legacy_agent_url"
-        :close_button_title="t('ads-close-and-test', 'Close & test agent connection')"
+        :close_button_title="closeButtonTitle"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
     </CmkSlideInDialog>

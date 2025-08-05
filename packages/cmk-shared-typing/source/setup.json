@@ -12,49 +12,14 @@
         "agent_download": {
             "type": "object",
             "properties": {
+                "output": { "type": "string" },
                 "agent_slideout": { "$ref": "agent_slideout.json" },
                 "host_name": { "type": "string" },
                 "all_agents_url": {
                     "type": "string"
-                },
-                "i18n": {
-                    "type": "object",
-                    "$ref": "#/$defs/agent_download_i18n"
                 }
             },
-            "required": [
-                "agent_slideout",
-                "host_name",
-                "all_agents_url",
-                "i18n"
-            ]
-        },
-        "agent_download_i18n": {
-            "type": "object",
-            "properties": {
-                "dialog_title": {
-                    "type": "string"
-                },
-                "dialog_message": {
-                    "type": "string"
-                },
-                "slide_in_title": {
-                    "type": "string"
-                },
-                "slide_in_button_title": {
-                    "type": "string"
-                },
-                "docs_button_title": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "dialog_title",
-                "dialog_message",
-                "slide_in_title",
-                "slide_in_button_title",
-                "docs_button_title"
-            ]
+            "required": ["agent_slideout", "host_name", "all_agents_url"]
         }
     }
 }

@@ -21,11 +21,10 @@ class Preformatted:
     symbol: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Formatted:
     text: str
-    prefix: str
-    symbol: str
+    unit: str
 
 
 def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]) -> int:
@@ -110,7 +109,7 @@ class NotationFormatter:
         return str(value)
 
     @abc.abstractmethod
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]: ...
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted: ...
 
     def _postformat(
         self,
@@ -128,13 +127,11 @@ class NotationFormatter:
                 )
             )
             results.append(
-                _join_numerical_value_and_unit(
-                    *self._make_rendered_numerical_value_and_unit(
-                        Formatted(
-                            text.rstrip("0").rstrip(".") if "." in text else text,
-                            formatted.prefix,
-                            formatted.symbol,
-                        )
+                _join_text_and_unit(
+                    self._format_text_and_unit(
+                        text=text.rstrip("0").rstrip(".") if "." in text else text,
+                        prefix=formatted.prefix,
+                        symbol=formatted.symbol,
                     )
                 ).strip()
             )
@@ -202,17 +199,18 @@ class NotationFormatter:
         ]
 
 
-def _join_numerical_value_and_unit(
-    numerical_value: str,
-    unit: str,
-) -> str:
+def _join_text_and_unit(formatted: Formatted) -> str:
     """
-    >>> _join_numerical_value_and_unit("1", "s")
+    >>> _join_text_and_unit(Formatted(text="1", unit="s"))
     '1 s'
-    >>> _join_numerical_value_and_unit("1", "/s")
+    >>> _join_text_and_unit(Formatted(text="1", unit="/s"))
     '1/s'
     """
-    return f"{numerical_value}{unit}" if unit.startswith("/") else f"{numerical_value} {unit}"
+    return (
+        f"{formatted.text}{formatted.unit}"
+        if formatted.unit.startswith("/")
+        else f"{formatted.text} {formatted.unit}"
+    )
 
 
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
@@ -267,8 +265,8 @@ class DecimalFormatter(NotationFormatter):
         return f"{value:,}".replace(",", "\N{THIN SPACE}")
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return formatted.text, formatted.symbol
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=text, unit=symbol)
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -340,8 +338,8 @@ class SIFormatter(NotationFormatter):
         return [Preformatted(value, "", self.symbol)]
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return formatted.text, f"{formatted.prefix}{formatted.symbol}"
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -396,8 +394,8 @@ class IECFormatter(NotationFormatter):
         return [Preformatted(value, "", self.symbol)]
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return formatted.text, f"{formatted.prefix}{formatted.symbol}"
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -435,8 +433,8 @@ class StandardScientificFormatter(NotationFormatter):
         return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return f"{formatted.text}{formatted.prefix}", formatted.symbol
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=f"{text}{prefix}", unit=symbol)
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -474,8 +472,8 @@ class EngineeringScientificFormatter(NotationFormatter):
         return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return f"{formatted.text}{formatted.prefix}", formatted.symbol
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=f"{text}{prefix}", unit=symbol)
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -598,8 +596,8 @@ class TimeFormatter(NotationFormatter):
         return formatted_parts
 
     @override
-    def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:
-        return formatted.text, f"{formatted.prefix}{formatted.symbol}"
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> Formatted:
+        return Formatted(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:

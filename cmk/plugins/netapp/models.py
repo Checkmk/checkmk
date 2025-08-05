@@ -400,10 +400,24 @@ class InterfaceCounters(BaseModel):
 class Version(BaseModel):
     """Stores the NetApp ONTAP release version information"""
 
-    full: str
+    full: str = ""
     generation: int
     major: int
     minor: int
+
+    def _tuple(self):
+        return (self.generation, self.major, self.minor)
+
+    # minimum set of used comparison methods
+    def __lt__(self, other):
+        if not isinstance(other, Version):
+            return NotImplemented
+        return self._tuple() < other._tuple()
+
+    def __ge__(self, other):
+        if not isinstance(other, Version):
+            return NotImplemented
+        return self._tuple() >= other._tuple()
 
 
 class NodeModel(BaseModel):
@@ -491,14 +505,13 @@ class ShelfObjectModel(BaseModel):
     list_id: str  # shelf id
     id: int
     state: str  # "ok" or "error"
-    # some api versions do not return the installed field
-    installed: bool | None = None
+    installed: bool | None = None  # subclasses have this field in different versions each
 
     def item_name(self) -> str:
         return f"{self.list_id}/{self.id}"
 
     def consider_installed(self) -> bool:
-        # None means that the field is not present in the API response
+        # safe approach
         return self.installed is None or self.installed
 
 
@@ -513,7 +526,7 @@ class ShelfFanModel(ShelfObjectModel):
     OLD -> NEW:
     ============
     cooling-element-number -> fans.id
-    cooling-element-is-not-installed -> fans.installed  # comment: fans.installed is the inverse of cooling-element-is-not-installed in REST !! NOT WORKING, waiting for discord answer
+    cooling-element-is-not-installed -> fans.installed  # available from  Netapp version 9.13.1
     cooling-element-is-error -> fans.state  # comment: cooling-element-is-error is simplified to "ok" and "error" in REST
     rpm -> fans.rpm
     ============
@@ -531,7 +544,7 @@ class ShelfTemperatureModel(ShelfObjectModel):
     OLD -> NEW:
     ============
     temp-sensor-element-no → temperature_sensors.id
-    temp-sensor-is-not-installed → temperature_sensors.installed comment: temperature_sensors.installed is the inverse of temp-sensor-is-not-installed in REST
+    temp-sensor-is-not-installed → temperature_sensors.installed # available from  Netapp version 9.13.1
     temp-sensor-is-error → temperature_sensors.state comment: temp-sensor-is-error is simplified to "ok" and "error" in REST
 
     temp-sensor-current-temperature → temperature_sensors.temperature
@@ -565,7 +578,7 @@ class ShelfPsuModel(ShelfObjectModel):
     OLD -> NEW:
     ============
     power-supply-element-no → frus.id
-    power-supply-is-not-installed → frus.installed
+    power-supply-is-not-installed → frus.installed  # available from  Netapp version 9.11.1
     power-supply-is-error → frus.state
     ============
     """

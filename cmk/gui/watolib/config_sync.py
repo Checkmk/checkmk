@@ -207,7 +207,7 @@ def _create_distributed_wato_file_for_base(
         "# we only monitor hosts that are assigned to our site.\n\n"
     )
     output += "distributed_wato_site = '%s'\n" % site_id
-    output += "is_wato_slave_site = %r\n" % is_remote
+    output += "is_distributed_setup_remote_site = %r\n" % is_remote
 
     store.save_text_to_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
 

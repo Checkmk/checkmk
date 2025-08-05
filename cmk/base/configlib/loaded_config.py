@@ -73,7 +73,7 @@ class LoadedConfigFragment:
     apply_bake_revision: bool
     bake_agents_on_restart: bool
     agent_bakery_logging: int | None
-    is_wato_slave_site: bool
+    is_distributed_setup_remote_site: bool
     simulation_mode: bool
     use_dns_cache: bool
     ipaddresses: Mapping[HostName, HostAddress]

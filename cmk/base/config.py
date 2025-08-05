@@ -660,7 +660,7 @@ def _perform_post_config_loading_actions(
         agent_bakery_logging=agent_bakery_logging,
         apply_bake_revision=apply_bake_revision,
         bake_agents_on_restart=bake_agents_on_restart,
-        is_wato_slave_site=is_wato_slave_site,
+        is_distributed_setup_remote_site=is_distributed_setup_remote_site,
         simulation_mode=simulation_mode,
         use_dns_cache=use_dns_cache,
         ipaddresses=ipaddresses,

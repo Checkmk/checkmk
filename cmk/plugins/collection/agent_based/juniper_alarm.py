@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -22,31 +23,43 @@ from cmk.plugins.lib.juniper import DETECT_JUNIPER
 @dataclass(frozen=True, kw_only=True)
 class JuniperAlarm:
     state: str
+    state_formatted: str
 
+
+CHECK_DEFAULT_PARAMS = {
+    "state_1": 3,
+    "state_2": 0,
+    "state_3": 1,
+    "state_4": 2,
+    "state_5": 0,
+    "state_6": 1,
+    "state_7": 2,
+    "state_8": 0,
+    "state_9": 1,
+    "state_10": 2,
+    "state_11": 0,
+    "state_12": 1,
+}
 
 _STATE_MAP = {
-    "1": Result(state=State.UNKNOWN, summary="Status: unknown or unavailable"),
-    "2": Result(state=State.OK, summary="Status: OK, good, normally working"),
-    "3": Result(state=State.WARN, summary="Status: alarm, warning, marginally working (minor)"),
-    "4": Result(state=State.CRIT, summary="Status: alert, failed, not working (major)"),
-    "5": Result(state=State.OK, summary="Status: OK, online as an active primary"),
-    "6": Result(state=State.WARN, summary="Status: alarm, offline, not running (minor)"),
-    "7": Result(state=State.CRIT, summary="Status: off-line, not running"),
-    "8": Result(state=State.OK, summary="Status: entering state of ok, good, normally working"),
-    "9": Result(
-        state=State.WARN, summary="Status: entering state of alarm, warning, marginally working"
-    ),
-    "10": Result(state=State.CRIT, summary="Status: entering state of alert, failed, not working"),
-    "11": Result(
-        state=State.OK, summary="Status: entering state of ok, on-line as an active primary"
-    ),
-    "12": Result(state=State.WARN, summary="Status: entering state of off-line, not running"),
+    "state_1": "unknown or unavailable",
+    "state_2": "OK, good, normally working",
+    "state_3": "alarm, warning, marginally working (minor)",
+    "state_4": "alert, failed, not working (major)",
+    "state_5": "OK, online as an active primary",
+    "state_6": "alarm, offline, not running (minor)",
+    "state_7": "off-line, not running",
+    "state_8": "entering state of ok, good, normally working",
+    "state_9": "entering state of alarm, warning, marginally working",
+    "state_10": "entering state of alert, failed, not working",
+    "state_11": "entering state of ok, on-line as an active primary",
+    "state_12": "entering state of off-line, not running",
 }
 
 
 def parse_juniper_alarm(string_table: StringTable) -> JuniperAlarm | None:
     if string_table and string_table[0] and string_table[0][0] != "1":
-        return JuniperAlarm(state=string_table[0][0])
+        return JuniperAlarm(state=string_table[0][0], state_formatted=f"state_{string_table[0][0]}")
     return None
 
 
@@ -65,11 +78,10 @@ def discover_juniper_alarm(section: JuniperAlarm) -> DiscoveryResult:
     yield Service()
 
 
-def check_juniper_alarm(section: JuniperAlarm) -> CheckResult:
-    yield _STATE_MAP.get(
-        section.state,
-        Result(state=State.UNKNOWN, summary="Status: unhandled alarm type '%s'" % section.state),
-    )
+def check_juniper_alarm(params: Mapping[str, int], section: JuniperAlarm) -> CheckResult:
+    state_value = params.get(section.state_formatted, 3)
+    summary = _STATE_MAP.get(section.state_formatted, f"unhandled alarm type '{section.state}'")
+    yield Result(state=State(state_value), summary=f"Status: {summary}")
 
 
 check_plugin_juniper_alarm = CheckPlugin(
@@ -77,4 +89,6 @@ check_plugin_juniper_alarm = CheckPlugin(
     service_name="Chassis",
     discovery_function=discover_juniper_alarm,
     check_function=check_juniper_alarm,
+    check_default_parameters=CHECK_DEFAULT_PARAMS,
+    check_ruleset_name="juniper_alarms",
 )

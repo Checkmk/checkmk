@@ -239,7 +239,7 @@ common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
 EOF
 
-COPY --chmod=444 Checkmk_GmbH_IT_Root_CA.crt /etc/pki/ca-trust/source/anchors
+COPY --chmod 444 Checkmk_GmbH_IT_Root_CA.crt /etc/pki/ca-trust/source/anchors
 RUN update-ca-trust \
     && mkdir -p /etc/ssl/certs/java/ \
     && cp /etc/pki/java/cacerts /etc/ssl/certs/java/cacerts \

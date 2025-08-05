@@ -904,10 +904,14 @@ class ApiError(Exception):
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+
     config = sys.stdin.read()
+
     if config:
-        argv += ["--config", config]
+        argv = ["--config", config] + argv
+
     args = parse_arguments(argv)
+
     try:
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)

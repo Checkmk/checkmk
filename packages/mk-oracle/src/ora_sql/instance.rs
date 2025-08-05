@@ -19,12 +19,12 @@ impl OracleConfig {
             OracleConfig::prepare_cache_sub_dir(environment, &ora_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
-            output.push(
+            output.extend(
                 generate_data(ora_sql, environment)
                     .await
                     .unwrap_or_else(|e| {
                         log::error!("Error generating data at main config: {e}");
-                        format!("{e}\n")
+                        vec![format!("{e}\n")]
                     }),
             );
             for (num, config) in std::iter::zip(0.., ora_sql.configs()) {
@@ -34,11 +34,11 @@ impl OracleConfig {
                     .await
                     .unwrap_or_else(|e| {
                         log::error!("Error generating data at config {num}: {e}");
-                        format!("{e}\n")
+                        vec![format!("{e}\n")]
                     });
-                output.push(configs_data);
+                output.extend(configs_data);
             }
-            Ok(output.join(""))
+            Ok(output.join("\n"))
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")
@@ -59,7 +59,10 @@ type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
 
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
-async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) -> Result<String> {
+async fn generate_data(
+    ora_sql: &config::ora_sql::Config,
+    _environment: &Env,
+) -> Result<Vec<String>> {
     // TODO: detect instances
     // TODO: apply to config detected instances
     // TODO: customize instances
@@ -68,23 +71,27 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
     let all = calc_spots(vec![ora_sql.endpoint()]);
     let connected = connect_spots(all, None);
 
-    let mut _output = String::new();
     let sections = ora_sql
         .product()
         .sections()
         .iter()
         .map(|s| {
             let s = Section::new(s, ora_sql.product().cache_age());
-            println!("{:?}", s.to_plain_header());
             s
         })
         .collect::<Vec<_>>();
-    let works = connected
+    let mut output: Vec<String> = sections.iter().map(|s| s.to_plain_header()).collect();
+    let works = make_spot_works(connected, sections);
+    output.extend(process_spot_works(works));
+    Ok(output)
+}
+
+fn make_spot_works(opened: Vec<OpenedSpot>, sections: Vec<Section>) -> Vec<SpotWorks> {
+    opened
         .into_iter()
         .map(|spot| {
             let instances = WorkInstances::new(&spot);
             let closed = spot.close();
-
             let instance_works = instances
                 .all()
                 .keys()
@@ -110,50 +117,58 @@ async fn generate_data(ora_sql: &config::ora_sql::Config, _environment: &Env) ->
                 .collect::<Vec<InstanceWorks>>();
             (closed, instance_works)
         })
-        .collect::<Vec<SpotWorks>>();
-
-    for (spot, instance_works) in works {
-        log::info!("Processing spot: {:?}", spot.target());
-        for (instance, queries) in instance_works {
-            let r = spot.clone().connect(Some(&instance));
-            match r {
-                Ok(conn) => {
-                    log::info!("Connected to instance: {}", instance);
-                    for (query, title) in queries {
-                        log::info!(
-                            "Executing query for instance {}: {}",
-                            instance,
-                            query.as_str()
-                        );
-                        // Here you would execute the query and process the results
-                        // For now, we just log it as a placeholder
-                        println!("{title}");
-                        conn.query(&query, "")
-                            .unwrap_or_else(|e| {
-                                log::error!(
-                                    "Failed to execute query for instance {}: {}",
-                                    instance,
-                                    e
-                                );
-                                vec![e.to_string()]
-                            })
-                            .into_iter()
-                            .for_each(|row| {
-                                println!("{row}");
-                            });
-                    }
-                }
-                Err(e) => {
-                    log::error!("Failed to connect to instance {}: {}", instance, e);
-                    continue; // Skip this instance if connection fails
-                }
-            }
-        }
-    }
-
-    Ok("".to_string())
+        .collect::<Vec<SpotWorks>>()
 }
 
+fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
+    works
+        .into_iter()
+        .flat_map(|(spot, instance_works)| {
+            log::info!("Spot: {:?}", spot.target());
+            instance_works
+                .iter()
+                .flat_map(|(instance, queries)| {
+                    log::info!("Instance: {}", instance);
+                    queries.iter().map(|(query, title)| {
+                        log::info!("Query: {}", title);
+                        let results =
+                            _exec_queries(&spot, instance, &[(query.clone(), title.clone())]);
+                        results.join("\n")
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>()
+}
+
+fn _exec_queries(
+    spot: &ClosedSpot,
+    instance: &InstanceName,
+    queries: &[(SqlQuery, String)],
+) -> Vec<String> {
+    let r = spot.clone().connect(Some(instance));
+    match r {
+        Ok(conn) => {
+            log::info!("Connected to : {}", instance);
+            queries
+                .iter()
+                .flat_map(|(query, title)| {
+                    log::info!("Executing query: {}", query.as_str());
+                    let mut result = conn.query(query, "").unwrap_or_else(|e| {
+                        log::error!("Failed to execute query for instance {}: {}", instance, e);
+                        vec![e.to_string()]
+                    });
+                    result.insert(0, title.clone());
+                    result
+                })
+                .collect::<Vec<_>>()
+        }
+        Err(e) => {
+            log::error!("Failed to connect to instance {}: {}", instance, e);
+            vec![] // Skip this instance if connection fails
+        }
+    }
+}
 fn _find_section_query(section: &Section, version: u32, sep: Separator) -> Option<SqlQuery> {
     let section_name = section.name();
     log::info!("Generating data for instance: {}", section_name);

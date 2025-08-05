@@ -175,6 +175,41 @@ class _PaintBool:
         )
 
 
+def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
+    precision: AutoPrecisionFormatter | StrictPrecisionFormatter
+    match unit.precision:
+        case AutoPrecisionFromAPI():
+            precision = AutoPrecisionFormatter(digits=unit.precision.digits)
+        case StrictPrecisionFromAPI():
+            precision = StrictPrecisionFormatter(digits=unit.precision.digits)
+        case _:
+            assert_never(unit.precision)
+
+    match unit.notation:
+        case DecimalNotationFromAPI():
+            return DecimalFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+        case SINotationFromAPI():
+            return SIFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+        case IECNotationFromAPI():
+            return IECFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+        case StandardScientificNotationFromAPI():
+            return StandardScientificFormatter(
+                symbol=unit.notation.symbol, precision=precision
+            ).render(value)
+        case EngineeringScientificNotationFromAPI():
+            return EngineeringScientificFormatter(
+                symbol=unit.notation.symbol, precision=precision
+            ).render(value)
+        case TimeNotationFromAPI():
+            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+        case AgeNotationFromAPI():
+            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(
+                now - value
+            )
+        case _:
+            assert_never(unit.notation)
+
+
 class _PaintNumber:
     def __init__(self, field_from_api: NumberFieldFromAPI) -> None:
         self._field = field_from_api
@@ -192,49 +227,13 @@ class _PaintNumber:
             case c if callable(c):
                 rendered_value = _make_str(c(value))
             case UnitFromAPI() as unit:
-                rendered_value = self._render_unit(unit, value, now)
+                rendered_value = _render_unit(unit, value, now)
             case _:
                 assert_never(self._field.render)
 
         return "", _add_html_styling(
             rendered_value, self._field.style(value), default_alignment=self.default_alignment
         )
-
-    def _render_unit(self, unit: UnitFromAPI, value: int | float, now: float) -> str:
-        precision: AutoPrecisionFormatter | StrictPrecisionFormatter
-        match unit.precision:
-            case AutoPrecisionFromAPI():
-                precision = AutoPrecisionFormatter(digits=unit.precision.digits)
-            case StrictPrecisionFromAPI():
-                precision = StrictPrecisionFormatter(digits=unit.precision.digits)
-            case _:
-                assert_never(unit.precision)
-
-        match unit.notation:
-            case DecimalNotationFromAPI():
-                return DecimalFormatter(symbol=unit.notation.symbol, precision=precision).render(
-                    value
-                )
-            case SINotationFromAPI():
-                return SIFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
-            case IECNotationFromAPI():
-                return IECFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
-            case StandardScientificNotationFromAPI():
-                return StandardScientificFormatter(
-                    symbol=unit.notation.symbol, precision=precision
-                ).render(value)
-            case EngineeringScientificNotationFromAPI():
-                return EngineeringScientificFormatter(
-                    symbol=unit.notation.symbol, precision=precision
-                ).render(value)
-            case TimeNotationFromAPI():
-                return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
-            case AgeNotationFromAPI():
-                return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(
-                    now - value
-                )
-            case _:
-                assert_never(unit.notation)
 
 
 class _PaintText:

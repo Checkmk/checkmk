@@ -2005,9 +2005,6 @@ class SiteFactory:
         if not site.version.is_saas_edition():
             _assert_nagvis_server(target_version)
 
-        # open the livestatus port
-        site.open_livestatus_tcp(encrypted=False)
-
         # start the site after manually installing it
         site.start()
 
@@ -2068,9 +2065,6 @@ class SiteFactory:
         _assert_tmpfs(site, base_version)
         if not site.version.is_saas_edition():
             _assert_nagvis_server(target_version)
-
-        # open the livestatus port
-        site.open_livestatus_tcp(encrypted=False)
 
         if start_site_after_update:
             # start the site after manually installing it

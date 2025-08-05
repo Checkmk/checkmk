@@ -264,10 +264,7 @@ class DecimalFormatter(NotationFormatter):
             # '1e-05'
             sign = "" if value > 0 else "-"
             return f"{sign}{_stringify_small_decimal_number(abs(value))}"
-        return f"{value:,}".replace(
-            ",",
-            "\N{THIN SPACE}",
-        )
+        return f"{value:,}".replace(",", "\N{THIN SPACE}")
 
     @override
     def _make_rendered_numerical_value_and_unit(self, formatted: Formatted) -> tuple[str, str]:

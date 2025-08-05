@@ -117,9 +117,9 @@ annotated-types==0.7.0 \
     # via
     #   -r requirements_all.txt
     #   pydantic
-anyio==4.9.0 \
-    --hash=sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028 \
-    --hash=sha256:9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c
+anyio==4.10.0 \
+    --hash=sha256:3f3fae35c96039744587aa5b8371e7e8e603c0702999535961dd336026973ba6 \
+    --hash=sha256:60e474ac86736bbfd6f210f7a61218939c318f43f9972497381f1c5e930ed3d1
     # via
     #   -r requirements_all.txt
     #   httpx
@@ -3984,9 +3984,9 @@ types-beautifulsoup4==4.12.0.20241020 \
     # via
     #   -r requirements_dev.txt
     #   types-lxml
-types-cffi==1.17.0.20250801 \
-    --hash=sha256:3c401b22f45b7873e66586c00c2722415d6138e8e89cdc9b030e68337796d66a \
-    --hash=sha256:67c6b271253efcc7f37938873cb3d56ee47dc3536cfa3dd75e14aec64358abe0
+types-cffi==1.17.0.20250805 \
+    --hash=sha256:0cfb62718c8a1a612d709c4eff186e8fb6f024be0da2bc3f9a8763ebf34772d0 \
+    --hash=sha256:b8e891fc3dcaa41a83f2a20f01ce88ec6e51a058889613306c2690d73b22e8d5
     # via types-pyopenssl
 types-docutils==0.21.0.20241128 \
     --hash=sha256:4dd059805b83ac6ec5a223699195c4e9eeb0446a4f7f2aeff1759a4a7cc17473 \

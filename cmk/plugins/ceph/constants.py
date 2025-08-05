@@ -12,6 +12,7 @@ PG_STATES: Final[frozenset[str]] = frozenset(
         "activating+undersized+degraded",
         "active+clean",
         "active+clean+inconsistent",
+        "active+clean+laggy",
         "active+clean+remapped",
         "active+clean+scrubbing",
         "active+clean+scrubbing+deep",

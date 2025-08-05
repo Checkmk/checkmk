@@ -47,6 +47,12 @@ go_deps.gazelle_override(
     path = "go.opentelemetry.io/collector/pdata/xpdata",
 )
 go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "go.opentelemetry.io/collector/exporter",
+)
+go_deps.gazelle_override(
     build_file_generation = "on",
     path = "github.com/cncf/xds/go",
 )

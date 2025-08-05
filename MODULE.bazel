@@ -189,8 +189,8 @@ UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-arc
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
-    sha256 = "bbf3da6e8e1353d5a6ea2bcc7cc118e8b67e3e8fac74013b0b06fb5704734c9a",
-    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.129.0/ocb_0.129.0_linux_amd64",
+    sha256 = "97094e36179e2b792e8760db67a399f649d3dff041ee4ea2144db612abcd840a",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.131.0/ocb_0.131.0_linux_amd64",
 )
 
 http_file(

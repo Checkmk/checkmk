@@ -52,6 +52,7 @@ def _msteams_msg(
 
     return {
         "type": "message",
+        "summary": substitute_context(title, context),
         "attachments": [
             {
                 "contentType": "application/vnd.microsoft.card.adaptive",

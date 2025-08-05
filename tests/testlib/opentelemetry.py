@@ -18,7 +18,8 @@ from tests.testlib.utils import execute
 
 logger = logging.getLogger(__name__)
 
-OPENTELEMETRY_DIR = Path("tmp/check_mk/otel_collector")
+OPENTELEMETRY_DIR_FILES = Path("var/check_mk/otel_collector")
+OPENTELEMETRY_DIR_AUTOCOMPLETE = Path("tmp/check_mk/otel_collector")
 
 
 class ScriptFileName(enum.Enum):
@@ -78,7 +79,7 @@ def wait_for_opentelemetry_data(
     site: Site, host_name: str, timeout: int = 90, interval: int = 5
 ) -> None:
     """Wait until OpenTelemetry data is available for the specified host."""
-    opentelemetry_data_path = OPENTELEMETRY_DIR / f"host_monitoring/{host_name}"
+    opentelemetry_data_path = OPENTELEMETRY_DIR_FILES / f"host_monitoring/{host_name}"
     wait_until(
         lambda: site.file_exists(opentelemetry_data_path), timeout=timeout, interval=interval
     )
@@ -86,10 +87,10 @@ def wait_for_opentelemetry_data(
 
 def delete_opentelemetry_data(site: Site) -> None:
     """Delete OpenTelemetry data for the site."""
-    host_monitoring_data_path = OPENTELEMETRY_DIR / "host_monitoring"
+    host_monitoring_data_path = OPENTELEMETRY_DIR_FILES / "host_monitoring"
     if site.file_exists(host_monitoring_data_path):
         site.delete_dir(host_monitoring_data_path)
 
-    autocompleter_data_path = OPENTELEMETRY_DIR / "autocompleter"
+    autocompleter_data_path = OPENTELEMETRY_DIR_AUTOCOMPLETE / "autocompleter"
     for file in site.listdir(autocompleter_data_path):
         site.delete_file(autocompleter_data_path / file)

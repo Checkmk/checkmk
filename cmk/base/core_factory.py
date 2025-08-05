@@ -8,7 +8,7 @@ from typing import assert_never
 
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.core.config import MonitoringCore
+from cmk.base.core import MonitoringCore
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.checkengine.plugins import AgentBasedPlugins

@@ -113,8 +113,8 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.core import CoreAction, do_restart
-from cmk.base.core.config import autodetect_plugin, get_service_attributes, MonitoringCore
+from cmk.base.core import CoreAction, do_restart, MonitoringCore
+from cmk.base.core.config import autodetect_plugin, get_service_attributes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump

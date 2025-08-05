@@ -24,6 +24,7 @@ from cmk.base.config import (
     ObjectAttributes,
     ServicegroupName,
 )
+from cmk.base.core import MonitoringCore
 from cmk.base.core.config import (
     AbstractServiceID,
     autodetect_plugin,
@@ -37,7 +38,6 @@ from cmk.base.core.config import (
     get_service_attributes,
     get_tags_with_groups_from_attributes,
     host_check_command,
-    MonitoringCore,
 )
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException

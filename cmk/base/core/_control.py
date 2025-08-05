@@ -27,7 +27,8 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
-from .config import do_create_config, MonitoringCore
+from ._base_core import MonitoringCore
+from .config import do_create_config
 
 tracer = trace.get_tracer()
 

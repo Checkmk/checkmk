@@ -45,7 +45,7 @@ def test_discovery_function() -> None:
             [
                 Result(state=State.OK, summary="Operational state: Enabled"),
                 Result(state=State.OK, notice="Presence: Module present"),
-                Result(state=State.UNKNOWN, summary="HA status: Not applicable"),
+                Result(state=State.OK, summary="HA status: Not applicable"),
             ],
             id="Not applicable HA Status",
         ),

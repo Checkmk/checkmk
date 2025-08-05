@@ -62,7 +62,7 @@ HA_STATUS_MAPPING = {
     "3": HAStatus(name="Redundant", state=State.OK),
     "4": HAStatus(name="Stand alone", state=State.OK),
     "5": HAStatus(name="Redundant - no HA", state=State.WARN),
-    "6": HAStatus(name="Not applicable", state=State.UNKNOWN),
+    "6": HAStatus(name="Not applicable", state=State.OK),
 }
 
 

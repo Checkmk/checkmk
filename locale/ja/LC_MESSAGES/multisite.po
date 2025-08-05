@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -10817,24 +10817,27 @@ msgstr "読み込めません %s: %s"
 
 #, python-format
 msgid ""
-"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
-msgstr ""
-"HW/SWインベントリ履歴%s を読み込めません。破損したファイルを削除してくださ"
-"い。"
-
-#, python-format
-msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "HW/SWインベントリ履歴 %s を読み込めません。破損したファイルを削除してくださ"
 "い。"
 
-#, python-format
-msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory history of %s. Please remove the corrupted files "
+"%s."
 msgstr ""
-"HW/SW インベントリツリー %s を読み込めません。破損したファイルを削除してくだ"
-"さい。"
+"HW/SWインベントリ履歴%s を読み込めません。破損したファイルを削除してくださ"
+"い。"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or "
+"status data tree files."
+msgstr ""
+"HW/SWインベントリ履歴%s を読み込めません。破損したファイルを削除してくださ"
+"い。"
 
 #, python-format
 msgid ""
@@ -10843,13 +10846,6 @@ msgid ""
 msgstr ""
 "ホストのHW/SWインベントリツリー %s をロードできません。破損したファイルを削除"
 "してください。"
-
-#, python-format
-msgid ""
-"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
-msgstr ""
-"HW/SWインベントリツリー %s をロードできません。破損したファイルを削除してくだ"
-"さい。"
 
 #, python-format
 msgid ""
@@ -13447,6 +13443,10 @@ msgstr "計算結果: %s - %s"
 msgid "Compute REST API specification"
 msgstr "REST APIの仕様"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "レートを計算しないでください"
+
 msgid "Compute average over last "
 msgstr "最後の平均を計算する "
 
@@ -13706,6 +13706,14 @@ msgstr "サービスディスカバリを使用せずに強制チェックを構
 
 msgid "Configure fallback email address"
 msgstr "フォールバックメールアドレスの設定"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "すべてのユーザーに適用"
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "特定のメトリクス"
 
 msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
@@ -17250,9 +17258,6 @@ msgstr "通知したいイベントを定義します。"
 msgid "Define host assignment"
 msgstr "ホスト割り当ての定義"
 
-msgid "Define levels for"
-msgstr "レベルを定義"
-
 msgid "Define levels for pending pods"
 msgstr "保留中のPodレベルを定義する"
 
@@ -20030,6 +20035,10 @@ msgstr "一致するサービスのパラメーターを変更しない"
 
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "レートを計算しないでください"
 
 msgid "Don't create a group service for the following groups"
 msgstr "以下のグループにはグループサービスを作成しない"
@@ -27290,7 +27299,8 @@ msgstr ""
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
 "anti-malware engine."
-msgstr "ここでは、マルウェア対策エンジンによって検出された感染数の上位レベルを指定で"
+msgstr ""
+"ここでは、マルウェア対策エンジンによって検出された感染数の上位レベルを指定で"
 "きます。"
 
 msgid ""
@@ -42270,6 +42280,12 @@ msgstr ""
 "注意:レポートで制限も設定した場合、ここで設定した制限がその制限に置き換わりま"
 "す。"
 
+msgid ""
+"Note: Simultaneous monitoring of both Nutanix Prism Element and Nutanix "
+"Prism Central is not supported. Doing so may cause conflicting piggyback "
+"data."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
@@ -52936,6 +52952,10 @@ msgstr "土曜日"
 msgid "Save"
 msgstr "保存する"
 
+#, fuzzy
+msgid "Save & edit"
+msgstr "保存してテストする"
+
 #, python-format
 msgid "Save & go to %s"
 msgstr "保存して%sに移動します"
@@ -55268,49 +55288,6 @@ msgstr ""
 "トが PASS という結果で終了しても、実行時間が超過していれば、Robotmk のテスト"
 "サービスやプランサービスの状態は OK 以外になる可能性があります。"
 
-msgid "Sets the upper levels for the Podman disk usage of containers"
-msgstr "コンテナのPodmanディスク使用量の上限を設定する"
-
-msgid "Sets the upper levels for the Podman disk usage of images"
-msgstr "イメージのPodmanディスク使用量の上限を設定する"
-
-msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "Podmanのボリュームディスク使用量の上限レベルを設定する"
-
-msgid "Sets the upper levels for the total number of active containers."
-msgstr "アクティブなコンテナの総数の上限を設定します。"
-
-msgid "Sets the upper levels for the total number of active images."
-msgstr "アクティブなイメージの総数の上限を設定します。"
-
-msgid "Sets the upper levels for the total number of active volumes."
-msgstr "アクティブなボリュームの総数の上限レベルを設定します。"
-
-msgid "Sets the upper levels for the total number of containers."
-msgstr "コンテナの総数の上限を設定します。"
-
-msgid "Sets the upper levels for the total number of images."
-msgstr "イメージの総数の上限を設定します。"
-
-msgid "Sets the upper levels for the total number of volumes."
-msgstr "ボリュームの総数の上限レベルを設定します。"
-
-msgid ""
-"Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr "Podman コンテナの総再利用可能サイズの上位レベルを設定します。"
-
-msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
-msgstr "Podman ボリュームの総再利用可能サイズの上位レベルを設定します。"
-
-msgid "Sets the upper levels for the total size of Podman containers."
-msgstr "Podman コンテナの総サイズの上限を設定します。"
-
-msgid "Sets the upper levels for the total size of Podman images."
-msgstr "Podman イメージの総サイズの上限を設定します。"
-
-msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Podman ボリュームの総サイズの上限レベルを設定します。"
-
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "アラートのユーザーを設定します。リクエスト所有者の表示名。"
 
@@ -56856,6 +56833,20 @@ msgid ""
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
 "default behavior here."
+msgstr ""
+"一部のメトリクスは、そのレートを考慮した方が意味がある場合があります（例え"
+"ば、ドロップされたネットワークパケットなど）。デフォルトでは、プラグインはメ"
+"トリクスが単調増加カウンターである場合、レートを計算します。これは当然ながら"
+"単なるヒューリスティックであり、すべてのメトリクスに適用できるわけではありま"
+"せん：例えば、アップタイムは「1.0 s/s」と報告されますが、これはあまり有用では"
+"ありません。ここではデフォルトの動作を上書きできます。"
+
+#, fuzzy
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
 msgstr ""
 "一部のメトリクスは、そのレートを考慮した方が意味がある場合があります（例え"
 "ば、ドロップされたネットワークパケットなど）。デフォルトでは、プラグインはメ"
@@ -71399,12 +71390,6 @@ msgstr "Podman コンテナの総数"
 msgid "Total number of Sessions"
 msgstr "セッションの総数"
 
-msgid "Total number of active containers upper levels"
-msgstr "アクティブなコンテナ総数の上位レベル"
-
-msgid "Total number of active images upper levels"
-msgstr "アクティブなイメージ総数の上位レベル"
-
 msgid "Total number of active primary shards lower level"
 msgstr "アクティブなプライマリシャード総数の下位レベル"
 
@@ -71417,7 +71402,8 @@ msgstr "アクティブなシャード総数の上位レベル"
 msgid "Total number of active shards upper level"
 msgstr "アクティブなシャード総数の上位レベル"
 
-msgid "Total number of active volumes upper levels"
+#, fuzzy, python-brace-format
+msgid "Total number of active {property} upper levels"
 msgstr "アクティブなボリュームの総数上位レベル"
 
 msgid "Total number of collections lower level"
@@ -71443,9 +71429,6 @@ msgstr "停止状態のコレクター総数の下位レベル"
 
 msgid "Total number of collectors in state stopped upper level"
 msgstr "停止状態のコレクター総数の上位レベル"
-
-msgid "Total number of containers upper levels"
-msgstr "コンテナ総数の上位レベル"
 
 msgid "Total number of data nodes lower level"
 msgstr "データノード総数の下位レベル"
@@ -71473,9 +71456,6 @@ msgstr "失敗したジョブの総数"
 
 msgid "Total number of hosts"
 msgstr "ホストの総数"
-
-msgid "Total number of images upper levels"
-msgstr "イメージ総数の上位レベル"
 
 msgid "Total number of incoming AC get cache request hits"
 msgstr "ACキャッシュリクエスト ミスの総数"
@@ -71567,11 +71547,12 @@ msgstr "ユーザー総数の下位レベル"
 msgid "Total number of user upper level"
 msgstr "ユーザー総数の上位レベル"
 
-msgid "Total number of volumes upper levels"
-msgstr "イメージ総数の上限レベル"
-
 msgid "Total number of zombie jobs"
 msgstr "ゾンビジョブの総数"
+
+#, fuzzy, python-brace-format
+msgid "Total number of {property} upper levels"
+msgstr "ユーザー総数の上位レベル"
 
 msgid "Total packets maximum"
 msgstr "最大総パケット数"
@@ -82417,9 +82398,6 @@ msgstr "ホスト %s のすべてのログファイル"
 msgid "all logfiles on all hosts"
 msgstr "すべてのホストのすべてのログファイル"
 
-msgid "all metrics"
-msgstr "すべてのメトリック"
-
 msgid "all special agents"
 msgstr "全ての特別なエージェント"
 
@@ -84122,9 +84100,6 @@ msgstr "ソケットは使用されていません"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "ソケットは、ネットワークに残っているパケットを閉じた後、待機しています"
 
-msgid "specific metrics"
-msgstr "特定のメトリクス"
-
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
 
@@ -84478,6 +84453,10 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "{checkname} - {check['title']}"
 msgstr "{checkname} - {check['title']}"
 
+#, fuzzy
+msgid "{property.capitalize()} "
+msgstr "{property.capitalize()} Podman コンテナ"
+
 msgid "{property.capitalize()} Podman containers"
 msgstr "{property.capitalize()} Podman コンテナ"
 
@@ -84504,6 +84483,85 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#~ msgstr ""
+#~ "HW/SW インベントリツリー %s を読み込めません。破損したファイルを削除してく"
+#~ "ださい。"
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
+#~ msgstr ""
+#~ "HW/SWインベントリツリー %s をロードできません。破損したファイルを削除して"
+#~ "ください。"
+
+#~ msgid "Define levels for"
+#~ msgstr "レベルを定義"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of containers"
+#~ msgstr "コンテナのPodmanディスク使用量の上限を設定する"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of images"
+#~ msgstr "イメージのPodmanディスク使用量の上限を設定する"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of volumes"
+#~ msgstr "Podmanのボリュームディスク使用量の上限レベルを設定する"
+
+#~ msgid "Sets the upper levels for the total number of active containers."
+#~ msgstr "アクティブなコンテナの総数の上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total number of active images."
+#~ msgstr "アクティブなイメージの総数の上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total number of active volumes."
+#~ msgstr "アクティブなボリュームの総数の上限レベルを設定します。"
+
+#~ msgid "Sets the upper levels for the total number of containers."
+#~ msgstr "コンテナの総数の上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total number of images."
+#~ msgstr "イメージの総数の上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total number of volumes."
+#~ msgstr "ボリュームの総数の上限レベルを設定します。"
+
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman containers."
+#~ msgstr "Podman コンテナの総再利用可能サイズの上位レベルを設定します。"
+
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman volumes."
+#~ msgstr "Podman ボリュームの総再利用可能サイズの上位レベルを設定します。"
+
+#~ msgid "Sets the upper levels for the total size of Podman containers."
+#~ msgstr "Podman コンテナの総サイズの上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total size of Podman images."
+#~ msgstr "Podman イメージの総サイズの上限を設定します。"
+
+#~ msgid "Sets the upper levels for the total size of Podman volumes."
+#~ msgstr "Podman ボリュームの総サイズの上限レベルを設定します。"
+
+#~ msgid "Total number of active containers upper levels"
+#~ msgstr "アクティブなコンテナ総数の上位レベル"
+
+#~ msgid "Total number of active images upper levels"
+#~ msgstr "アクティブなイメージ総数の上位レベル"
+
+#~ msgid "Total number of containers upper levels"
+#~ msgstr "コンテナ総数の上位レベル"
+
+#~ msgid "Total number of images upper levels"
+#~ msgstr "イメージ総数の上位レベル"
+
+#~ msgid "Total number of volumes upper levels"
+#~ msgstr "イメージ総数の上限レベル"
+
+#~ msgid "all metrics"
+#~ msgstr "すべてのメトリック"
 
 #~ msgid "Get started (Welcome)"
 #~ msgstr "スタート（ようこそ）"

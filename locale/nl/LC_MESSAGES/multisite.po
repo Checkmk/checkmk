@@ -11571,13 +11571,6 @@ msgstr "Kan %s niet laden: %s"
 
 #, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
-msgstr ""
-"Kan HW/SW inventarisgeschiedenisitems %s niet laden. Verwijder alstublieft "
-"de beschadigde bestanden."
-
-#, fuzzy, python-format
-msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
@@ -11585,21 +11578,25 @@ msgstr ""
 "de beschadigde bestanden."
 
 #, fuzzy, python-format
-msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+msgid ""
+"Cannot load HW/SW Inventory history of %s. Please remove the corrupted files "
+"%s."
 msgstr ""
-"Kan HW/SW inventarisboom %s niet laden. Verwijder het beschadigde bestand."
+"Kan HW/SW inventarisgeschiedenisitems %s niet laden. Verwijder alstublieft "
+"de beschadigde bestanden."
+
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or "
+"status data tree files."
+msgstr ""
+"Kan HW/SW inventarisgeschiedenisitems %s niet laden. Verwijder alstublieft "
+"de beschadigde bestanden."
 
 #, fuzzy, python-format
 msgid ""
 "Cannot load HW/SW Inventory tree of host %s. Please remove the corrupted "
 "file."
-msgstr ""
-"Kan HW/SW inventarisbomen %s niet laden. Verwijder alstublieft de "
-"beschadigde bestanden."
-
-#, fuzzy, python-format
-msgid ""
-"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "Kan HW/SW inventarisbomen %s niet laden. Verwijder alstublieft de "
 "beschadigde bestanden."
@@ -14341,6 +14338,10 @@ msgstr "Berekeningsresultaat: %s - %s"
 msgid "Compute REST API specification"
 msgstr "SLA-specificatie"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Snelheid afgeleverde berichten"
+
 msgid "Compute average over last "
 msgstr "Bereken gemiddelde over laatste "
 
@@ -14620,6 +14621,14 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Uitwijkmailadres voor crashmeldingen"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Gebruikers-ID's met kleine letters afdwingen."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Specifieke sites"
 
 msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
@@ -18349,10 +18358,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host toewijzing definiëren"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Definieer niveaus voor in afwachting van pods"
-
 msgid "Define levels for pending pods"
 msgstr "Definieer niveaus voor in afwachting van pods"
 
@@ -21379,6 +21384,10 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 
 msgid "Don't change state"
 msgstr "Verander niet van toestand"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Snelheid afgeleverde berichten"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Maak geen groepsdienst aan voor de volgende groepen"
@@ -45108,6 +45117,12 @@ msgstr ""
 "Opmerking: Indien u in het rapport ook een limiet hebt ingesteld, dan "
 "vervangt de hier ingestelde limiet die limiet."
 
+msgid ""
+"Note: Simultaneous monitoring of both Nutanix Prism Element and Nutanix "
+"Prism Central is not supported. Doing so may cause conflicting piggyback "
+"data."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
@@ -56660,6 +56675,10 @@ msgstr "Zaterdag"
 msgid "Save"
 msgstr "Save"
 
+#, fuzzy
+msgid "Save & edit"
+msgstr "Opslaan en testen"
+
 #, python-format
 msgid "Save & go to %s"
 msgstr "Opslaan en naar %s gaan"
@@ -59127,63 +59146,6 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of containers"
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of images"
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active containers."
-msgstr "Bovenste niveau voor totaal aantal verbindingen"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active images."
-msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active volumes."
-msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of containers."
-msgstr "Bovenste niveau voor totaal aantal verbindingen"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of images."
-msgstr "Bovenste niveau voor totaal aantal berichten"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of volumes."
-msgstr "Bovenste niveau voor totaal aantal berichten"
-
-#, fuzzy
-msgid ""
-"Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman containers."
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman images."
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Definieer bovengrenzen voor aantal totale containers"
-
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr ""
 
@@ -60804,6 +60766,13 @@ msgid ""
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
 "default behavior here."
+msgstr ""
+
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
 msgstr ""
 
 msgid ""
@@ -76028,14 +75997,6 @@ msgstr "Totaal aantal gevallen"
 msgid "Total number of Sessions"
 msgstr "Totaal aantal sessies"
 
-#, fuzzy
-msgid "Total number of active containers upper levels"
-msgstr "Totaal aantal actieve scherven bovenste niveau"
-
-#, fuzzy
-msgid "Total number of active images upper levels"
-msgstr "Totaal aantal actieve scherven bovenste niveau"
-
 msgid "Total number of active primary shards lower level"
 msgstr "Totaal aantal actieve primaire scherven lager niveau"
 
@@ -76048,8 +76009,8 @@ msgstr "Totaal aantal actieve scherven lager niveau"
 msgid "Total number of active shards upper level"
 msgstr "Totaal aantal actieve scherven bovenste niveau"
 
-#, fuzzy
-msgid "Total number of active volumes upper levels"
+#, fuzzy, python-brace-format
+msgid "Total number of active {property} upper levels"
 msgstr "Totaal aantal actieve scherven bovenste niveau"
 
 msgid "Total number of collections lower level"
@@ -76075,10 +76036,6 @@ msgstr "Totaal aantal inzamelaars in staat gestopt lager niveau"
 
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Totaal aantal inzamelaars in staat gestopt bovenste niveau"
-
-#, fuzzy
-msgid "Total number of containers upper levels"
-msgstr "Totaal aantal collecties bovenste niveau"
 
 msgid "Total number of data nodes lower level"
 msgstr "Totaal aantal dataknooppunten lager niveau"
@@ -76106,10 +76063,6 @@ msgstr "Totaal aantal mislukte opdrachten"
 
 msgid "Total number of hosts"
 msgstr "Totaal aantal hosts"
-
-#, fuzzy
-msgid "Total number of images upper levels"
-msgstr "Totaal aantal uitgiften op hoger niveau"
 
 #, fuzzy
 msgid "Total number of incoming AC get cache request hits"
@@ -76202,12 +76155,12 @@ msgstr "Totaal aantal gebruikers lager niveau"
 msgid "Total number of user upper level"
 msgstr "Totaal aantal gebruikers bovenste niveau"
 
-#, fuzzy
-msgid "Total number of volumes upper levels"
-msgstr "Totaal aantal uitgiften op hoger niveau"
-
 msgid "Total number of zombie jobs"
 msgstr "Totaal aantal zombiebanen"
+
+#, fuzzy, python-brace-format
+msgid "Total number of {property} upper levels"
+msgstr "Totaal aantal gebruikers bovenste niveau"
 
 #, fuzzy
 msgid "Total packets maximum"
@@ -88198,10 +88151,6 @@ msgstr "alle logbestanden van host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle logbestanden op alle hosts"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "Ongeldig onderwerp"
-
 msgid "all special agents"
 msgstr "alle speciale agenten"
 
@@ -89986,10 +89935,6 @@ msgstr ""
 "socket wacht na het sluiten op alle pakketten die op het netwerk "
 "achterblijven"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Specifieke sites"
-
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"
 
@@ -90349,6 +90294,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "{checkname} - {check['title']}"
 msgstr ""
 
+msgid "{property.capitalize()} "
+msgstr ""
+
 msgid "{property.capitalize()} Podman containers"
 msgstr ""
 
@@ -90371,6 +90319,105 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#~ msgstr ""
+#~ "Kan HW/SW inventarisboom %s niet laden. Verwijder het beschadigde bestand."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
+#~ msgstr ""
+#~ "Kan HW/SW inventarisbomen %s niet laden. Verwijder alstublieft de "
+#~ "beschadigde bestanden."
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Definieer niveaus voor in afwachting van pods"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of containers"
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of images"
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of volumes"
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active containers."
+#~ msgstr "Bovenste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active images."
+#~ msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active volumes."
+#~ msgstr "Bovenste niveau voor het totale aantal afgeleverde berichten"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of containers."
+#~ msgstr "Bovenste niveau voor totaal aantal verbindingen"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of images."
+#~ msgstr "Bovenste niveau voor totaal aantal berichten"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of volumes."
+#~ msgstr "Bovenste niveau voor totaal aantal berichten"
+
+#, fuzzy
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman containers."
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman volumes."
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman containers."
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman images."
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman volumes."
+#~ msgstr "Definieer bovengrenzen voor aantal totale containers"
+
+#, fuzzy
+#~ msgid "Total number of active containers upper levels"
+#~ msgstr "Totaal aantal actieve scherven bovenste niveau"
+
+#, fuzzy
+#~ msgid "Total number of active images upper levels"
+#~ msgstr "Totaal aantal actieve scherven bovenste niveau"
+
+#, fuzzy
+#~ msgid "Total number of containers upper levels"
+#~ msgstr "Totaal aantal collecties bovenste niveau"
+
+#, fuzzy
+#~ msgid "Total number of images upper levels"
+#~ msgstr "Totaal aantal uitgiften op hoger niveau"
+
+#, fuzzy
+#~ msgid "Total number of volumes upper levels"
+#~ msgstr "Totaal aantal uitgiften op hoger niveau"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "Ongeldig onderwerp"
 
 #, fuzzy
 #~ msgid "Get started (Welcome)"

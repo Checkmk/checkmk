@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-08-04 14:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -11157,24 +11157,27 @@ msgstr "Kann %s nicht laden: %s"
 
 #, python-format
 msgid ""
-"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
-msgstr ""
-"Kann Historie der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
-"beschädigten Dateien."
-
-#, python-format
-msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
 "Kann Historieneinträge der HW-/SW-Inventur %s nicht laden. Bitte entfernen "
 "Sie die beschädigten Dateien."
 
-#, python-format
-msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory history of %s. Please remove the corrupted files "
+"%s."
 msgstr ""
-"Kann den Baum der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
-"beschädigte Datei."
+"Kann Historie der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
+"beschädigten Dateien."
+
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or "
+"status data tree files."
+msgstr ""
+"Kann Historie der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
+"beschädigten Dateien."
 
 #, python-format
 msgid ""
@@ -11183,13 +11186,6 @@ msgid ""
 msgstr ""
 "Kann HW-/SW-Inventur-Baum des Hosts %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
-
-#, python-format
-msgid ""
-"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
-msgstr ""
-"Kann die Bäume der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
-"beschädigten Dateien."
 
 #, python-format
 msgid ""
@@ -13866,6 +13862,10 @@ msgstr "Berechnungsergebnis: %s - %s"
 msgid "Compute REST API specification"
 msgstr "Verarbeite REST-API Spezifikation"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Nie eine Rate berechnen"
+
 msgid "Compute average over last "
 msgstr "Durchschnitt erzeugen über die letzten "
 
@@ -14136,6 +14136,14 @@ msgstr "Konfiguriere forcierte Checks, ohne die Service-Erkennung zu benutzen"
 
 msgid "Configure fallback email address"
 msgstr "Fallback-E-Mail-Adresse konfigurieren"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Für alle Benutzer erzwingen"
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "spezifische Metriken"
 
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Schnittstellen"
@@ -17777,9 +17785,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
 
-msgid "Define levels for"
-msgstr "Levels festlegen für"
-
 msgid "Define levels for pending pods"
 msgstr "Levels für ausstehende Pods festlegen"
 
@@ -20618,6 +20623,10 @@ msgstr "Parameter für übereinstimmende Services nicht austauschen"
 
 msgid "Don't change state"
 msgstr "Zustand nicht ändern"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Nie eine Rate berechnen"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Erstellen Sie keinen Gruppen-Service für die folgenden Gruppen"
@@ -43397,6 +43406,12 @@ msgstr ""
 "Hinweis: Wenn Sie im Bericht selbst ebenfalls eine Begrenzung festlegen, "
 "dann hat diese Vorrang vor der Begrenzung, die hier festgelegt wird."
 
+msgid ""
+"Note: Simultaneous monitoring of both Nutanix Prism Element and Nutanix "
+"Prism Central is not supported. Doing so may cause conflicting piggyback "
+"data."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
@@ -54280,6 +54295,10 @@ msgstr "Samstag"
 msgid "Save"
 msgstr "Speichern"
 
+#, fuzzy
+msgid "Save & edit"
+msgstr "Speichern & testen"
+
 #, python-format
 msgid "Save & go to %s"
 msgstr "Speichern & gehen zu %s"
@@ -56681,54 +56700,6 @@ msgstr ""
 "einem PASS-Ergebnis beendet wurde, die Zustände der Robotmk-Test- und -Plan-"
 "Services anders als OK sein können, wenn Laufzeiten überschritten wurden."
 
-msgid "Sets the upper levels for the Podman disk usage of containers"
-msgstr ""
-"Legt die Obergrenzen für die Podman-Festplattenauslastung der Container fest"
-
-msgid "Sets the upper levels for the Podman disk usage of images"
-msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
-
-msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "Legt die Obergrenzen für die Podman-Festplattennutzung von Volumes fest"
-
-msgid "Sets the upper levels for the total number of active containers."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
-
-msgid "Sets the upper levels for the total number of active images."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
-
-msgid "Sets the upper levels for the total number of active volumes."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Volumes fest."
-
-msgid "Sets the upper levels for the total number of containers."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
-
-msgid "Sets the upper levels for the total number of images."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
-
-msgid "Sets the upper levels for the total number of volumes."
-msgstr "Legt die Obergrenzen für die Gesamtanzahl von Volumes fest."
-
-msgid ""
-"Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr ""
-"Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
-"Containern fest."
-
-msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
-msgstr ""
-"Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
-"Volumes fest."
-
-msgid "Sets the upper levels for the total size of Podman containers."
-msgstr "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
-
-msgid "Sets the upper levels for the total size of Podman images."
-msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
-
-msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Volumes fest."
-
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr "Legt den Benutzer des Alerts fest. Anzeige-Name des Anfragestellers."
 
@@ -58307,6 +58278,20 @@ msgid ""
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
 "default behavior here."
+msgstr ""
+"Einige Metriken sind aussagekräftiger, wenn ihre Rate berücksichtigt wird "
+"(wie z. B. verworfene Netzwerkpakete). Standardmäßig berechnet das Plugin "
+"die Rate, wenn die Metrik ein monotoner Zähler ist. Dies ist natürlich nur "
+"eine Heuristik und funktioniert möglicherweise nicht für alle Metriken: Die "
+"Laufzeit zum Beispiel würde als '1.0 s/s' gemeldet, was nicht sehr nützlich "
+"ist. Sie können das Standardverhalten hier außer Kraft setzen."
+
+#, fuzzy
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
 msgstr ""
 "Einige Metriken sind aussagekräftiger, wenn ihre Rate berücksichtigt wird "
 "(wie z. B. verworfene Netzwerkpakete). Standardmäßig berechnet das Plugin "
@@ -73631,12 +73616,6 @@ msgstr "Gesamtzahl der Podman-Container"
 msgid "Total number of Sessions"
 msgstr "Gesamtzahl von Sitzungen"
 
-msgid "Total number of active containers upper levels"
-msgstr "Obergrenzen für die Gesamtzahl aktive Container"
-
-msgid "Total number of active images upper levels"
-msgstr "Obergrenzen für die Gesamtzahl aktiver Images"
-
 msgid "Total number of active primary shards lower level"
 msgstr "Untergrenze für die Gesamtzahl der aktiven Primary Shards"
 
@@ -73649,7 +73628,8 @@ msgstr "Untergrenze für die Gesamtzahl der aktiven Shards"
 msgid "Total number of active shards upper level"
 msgstr "Obergrenze für die Gesamtzahl der aktiven Shards"
 
-msgid "Total number of active volumes upper levels"
+#, fuzzy, python-brace-format
+msgid "Total number of active {property} upper levels"
 msgstr "Obergrenzen für die Gesamtzahl aktiver Volumes"
 
 msgid "Total number of collections lower level"
@@ -73675,9 +73655,6 @@ msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
 
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
-
-msgid "Total number of containers upper levels"
-msgstr "Obergrenzen für die Gesamtzahl für Container"
 
 msgid "Total number of data nodes lower level"
 msgstr "Untergrenze für die Gesamtzahl der Daten-Knoten"
@@ -73705,9 +73682,6 @@ msgstr "Gesamtzahl fehlgeschlagener Aufträge"
 
 msgid "Total number of hosts"
 msgstr "Gesamtzahl der Hosts"
-
-msgid "Total number of images upper levels"
-msgstr "Obergrenzen für die Gesamtzahl an Images"
 
 msgid "Total number of incoming AC get cache request hits"
 msgstr "Gesamtzahl der Treffer für eingehende AC-Get-Cache-Anfragen"
@@ -73800,11 +73774,12 @@ msgstr "Untergrenze für die Gesamtzahl der Benutzer"
 msgid "Total number of user upper level"
 msgstr "Obergrenze für die Gesamtzahl der Benutzer"
 
-msgid "Total number of volumes upper levels"
-msgstr "Obergrenzen für die Gesamtzahl an Volumes"
-
 msgid "Total number of zombie jobs"
 msgstr "Gesamtzahl Zombie Aufträge"
+
+#, fuzzy, python-brace-format
+msgid "Total number of {property} upper levels"
+msgstr "Obergrenze für die Gesamtzahl der Benutzer"
 
 msgid "Total packets maximum"
 msgstr "Maximale Gesamtzahl Pakete"
@@ -85028,9 +85003,6 @@ msgstr "alle Log-Dateien von Host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle Log-Dateien auf allen Hosts"
 
-msgid "all metrics"
-msgstr "alle Metriken"
-
 msgid "all special agents"
 msgstr "alle Spezialagenten"
 
@@ -86755,9 +86727,6 @@ msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "Socket wartet nach dem Schließen auf Pakete die im Netzwerk verblieben sind"
 
-msgid "specific metrics"
-msgstr "spezifische Metriken"
-
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
 
@@ -87112,6 +87081,10 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "{checkname} - {check['title']}"
 msgstr "{checkname} - {check['title']}"
 
+#, fuzzy
+msgid "{property.capitalize()} "
+msgstr "{property.capitalize()} Podman-Container"
+
 msgid "{property.capitalize()} Podman containers"
 msgstr "{property.capitalize()} Podman-Container"
 
@@ -87139,6 +87112,95 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#~ msgstr ""
+#~ "Kann den Baum der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
+#~ "beschädigte Datei."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
+#~ msgstr ""
+#~ "Kann die Bäume der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie "
+#~ "die beschädigten Dateien."
+
+#~ msgid "Define levels for"
+#~ msgstr "Levels festlegen für"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of containers"
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die Podman-Festplattenauslastung der Container "
+#~ "fest"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of images"
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die Podman-Festplattennutzung von Images fest"
+
+#~ msgid "Sets the upper levels for the Podman disk usage of volumes"
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die Podman-Festplattennutzung von Volumes fest"
+
+#~ msgid "Sets the upper levels for the total number of active containers."
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die Gesamtanzahl von aktiven Containern fest."
+
+#~ msgid "Sets the upper levels for the total number of active images."
+#~ msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Images fest."
+
+#~ msgid "Sets the upper levels for the total number of active volumes."
+#~ msgstr "Legt die Obergrenzen für die Gesamtanzahl von aktiven Volumes fest."
+
+#~ msgid "Sets the upper levels for the total number of containers."
+#~ msgstr "Legt die Obergrenzen für die Gesamtanzahl von Containern fest."
+
+#~ msgid "Sets the upper levels for the total number of images."
+#~ msgstr "Legt die Obergrenzen für die Gesamtanzahl von Images fest."
+
+#~ msgid "Sets the upper levels for the total number of volumes."
+#~ msgstr "Legt die Obergrenzen für die Gesamtanzahl von Volumes fest."
+
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman containers."
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
+#~ "Containern fest."
+
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman volumes."
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die insgesamt wiederverwendbare Größe von Podman-"
+#~ "Volumes fest."
+
+#~ msgid "Sets the upper levels for the total size of Podman containers."
+#~ msgstr ""
+#~ "Legt die Obergrenzen für die Gesamtgröße von Podman-Containern fest."
+
+#~ msgid "Sets the upper levels for the total size of Podman images."
+#~ msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Images fest."
+
+#~ msgid "Sets the upper levels for the total size of Podman volumes."
+#~ msgstr "Legt die Obergrenzen der Gesamtgröße für Podman-Volumes fest."
+
+#~ msgid "Total number of active containers upper levels"
+#~ msgstr "Obergrenzen für die Gesamtzahl aktive Container"
+
+#~ msgid "Total number of active images upper levels"
+#~ msgstr "Obergrenzen für die Gesamtzahl aktiver Images"
+
+#~ msgid "Total number of containers upper levels"
+#~ msgstr "Obergrenzen für die Gesamtzahl für Container"
+
+#~ msgid "Total number of images upper levels"
+#~ msgstr "Obergrenzen für die Gesamtzahl an Images"
+
+#~ msgid "Total number of volumes upper levels"
+#~ msgstr "Obergrenzen für die Gesamtzahl an Volumes"
+
+#~ msgid "all metrics"
+#~ msgstr "alle Metriken"
 
 #~ msgid "Get started (Welcome)"
 #~ msgstr "Erste Schritte (Willkommen)"

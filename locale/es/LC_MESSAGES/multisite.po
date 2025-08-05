@@ -11646,13 +11646,6 @@ msgstr "No se puede cargar %s: %s"
 
 #, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW Inventory history %s. Please remove the corrupted files."
-msgstr ""
-"No se pueden cargar las entradas del historial de inventario de HW/SW %s. "
-"Por favor, elimine los archivos corruptos."
-
-#, fuzzy, python-format
-msgid ""
 "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted "
 "files."
 msgstr ""
@@ -11660,22 +11653,25 @@ msgstr ""
 "Por favor, elimine los archivos corruptos."
 
 #, fuzzy, python-format
-msgid "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+msgid ""
+"Cannot load HW/SW Inventory history of %s. Please remove the corrupted files "
+"%s."
 msgstr ""
-"No se puede cargar el árbol de inventario HW/SW %s. Por favor, elimine el "
-"archivo dañado."
+"No se pueden cargar las entradas del historial de inventario de HW/SW %s. "
+"Por favor, elimine los archivos corruptos."
+
+#, fuzzy, python-format
+msgid ""
+"Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or "
+"status data tree files."
+msgstr ""
+"No se pueden cargar las entradas del historial de inventario de HW/SW %s. "
+"Por favor, elimine los archivos corruptos."
 
 #, fuzzy, python-format
 msgid ""
 "Cannot load HW/SW Inventory tree of host %s. Please remove the corrupted "
 "file."
-msgstr ""
-"No se pueden cargar los árboles de inventario HW/SW %s. Por favor, elimine "
-"los archivos corruptos."
-
-#, fuzzy, python-format
-msgid ""
-"Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
 msgstr ""
 "No se pueden cargar los árboles de inventario HW/SW %s. Por favor, elimine "
 "los archivos corruptos."
@@ -14449,6 +14445,10 @@ msgstr "Resultado del cálculo: %s - %s"
 msgid "Compute REST API specification"
 msgstr "Especificación del SLA"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Tasa de mensajes entregados"
+
 msgid "Compute average over last "
 msgstr "Calcular la media de los últimos "
 
@@ -14733,6 +14733,14 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Dirección de correo de reserva del informe de colisión"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Imponga el uso de minúsculas en los identificadores de usuario."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Sitios específicos"
 
 msgid "Configure grouping of interfaces"
 msgstr "Configurar la agrupación de interfaces"
@@ -18475,10 +18483,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definir la asignación de host"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Definir los niveles de las vainas pendientes"
-
 msgid "Define levels for pending pods"
 msgstr "Definir los niveles de las vainas pendientes"
 
@@ -21549,6 +21553,10 @@ msgstr "Ver y editar los parámetros de este servicio"
 
 msgid "Don't change state"
 msgstr "No cambie de estado"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Tasa de mensajes entregados"
 
 msgid "Don't create a group service for the following groups"
 msgstr "No cree un servicio de grupo para los siguientes grupos"
@@ -45461,6 +45469,12 @@ msgstr ""
 "Nota: Si también ha establecido un límite en el informe, el límite "
 "establecido aquí sustituirá a ese."
 
+msgid ""
+"Note: Simultaneous monitoring of both Nutanix Prism Element and Nutanix "
+"Prism Central is not supported. Doing so may cause conflicting piggyback "
+"data."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
@@ -57134,6 +57148,10 @@ msgstr "Sábado"
 msgid "Save"
 msgstr "Guardar"
 
+#, fuzzy
+msgid "Save & edit"
+msgstr "Guardar y probar"
+
 #, python-format
 msgid "Save & go to %s"
 msgstr "Guardar y pasar a %s"
@@ -59628,63 +59646,6 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of containers"
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of images"
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the Podman disk usage of volumes"
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active containers."
-msgstr "Nivel superior del número total de conexiones"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active images."
-msgstr "Nivel superior del número total de mensajes entregados"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of active volumes."
-msgstr "Nivel superior del número total de mensajes entregados"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of containers."
-msgstr "Nivel superior del número total de conexiones"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of images."
-msgstr "Nivel superior del número total de mensajes"
-
-#, fuzzy
-msgid "Sets the upper levels for the total number of volumes."
-msgstr "Nivel superior del número total de mensajes"
-
-#, fuzzy
-msgid ""
-"Sets the upper levels for the total reclaimable size of Podman containers."
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the total reclaimable size of Podman volumes."
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman containers."
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman images."
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
-#, fuzzy
-msgid "Sets the upper levels for the total size of Podman volumes."
-msgstr "Definir niveles superiores para el número de contenedores totales"
-
 msgid "Sets the user of the alert. Display name of the request owner."
 msgstr ""
 
@@ -61328,6 +61289,13 @@ msgid ""
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
 "default behavior here."
+msgstr ""
+
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
 msgstr ""
 
 msgid ""
@@ -76658,14 +76626,6 @@ msgstr "Número total de instancias"
 msgid "Total number of Sessions"
 msgstr "Número total de sesiones"
 
-#, fuzzy
-msgid "Total number of active containers upper levels"
-msgstr "Número total de fragmentos activos nivel superior"
-
-#, fuzzy
-msgid "Total number of active images upper levels"
-msgstr "Número total de fragmentos activos nivel superior"
-
 msgid "Total number of active primary shards lower level"
 msgstr "Número total de fragmentos primarios activos de nivel inferior"
 
@@ -76678,8 +76638,8 @@ msgstr "Número total de fragmentos activos de nivel inferior"
 msgid "Total number of active shards upper level"
 msgstr "Número total de fragmentos activos nivel superior"
 
-#, fuzzy
-msgid "Total number of active volumes upper levels"
+#, fuzzy, python-brace-format
+msgid "Total number of active {property} upper levels"
 msgstr "Número total de fragmentos activos nivel superior"
 
 msgid "Total number of collections lower level"
@@ -76708,10 +76668,6 @@ msgstr "Número total de colectores en el estado detenido de nivel inferior"
 msgid "Total number of collectors in state stopped upper level"
 msgstr "Número total de colectores en el estado detenido de nivel superior"
 
-#, fuzzy
-msgid "Total number of containers upper levels"
-msgstr "Número total de colecciones de nivel superior"
-
 msgid "Total number of data nodes lower level"
 msgstr "Número total de nodos de datos de nivel inferior"
 
@@ -76738,10 +76694,6 @@ msgstr "Número total de trabajos fallidos"
 
 msgid "Total number of hosts"
 msgstr "Número total de hosts"
-
-#, fuzzy
-msgid "Total number of images upper levels"
-msgstr "Número total de números de nivel superior"
 
 #, fuzzy
 msgid "Total number of incoming AC get cache request hits"
@@ -76834,12 +76786,12 @@ msgstr "Número total de usuarios de nivel inferior"
 msgid "Total number of user upper level"
 msgstr "Número total de usuarios de nivel superior"
 
-#, fuzzy
-msgid "Total number of volumes upper levels"
-msgstr "Número total de números de nivel superior"
-
 msgid "Total number of zombie jobs"
 msgstr "Número total de puestos de trabajo zombis"
+
+#, fuzzy, python-brace-format
+msgid "Total number of {property} upper levels"
+msgstr "Número total de usuarios de nivel superior"
 
 #, fuzzy
 msgid "Total packets maximum"
@@ -88910,10 +88862,6 @@ msgstr "todos los archivos de registro del host %s"
 msgid "all logfiles on all hosts"
 msgstr "todos los archivos de registro en todos los hosts"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "Tema no válido"
-
 msgid "all special agents"
 msgstr "todos los agentes especiales"
 
@@ -90706,10 +90654,6 @@ msgstr "la toma de corriente no se utiliza"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "el socket espera después de cerrarse los paquetes que quedan en la red"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Sitios específicos"
-
 msgid "specify manually ->"
 msgstr "especificar manualmente ->"
 
@@ -91071,6 +91015,9 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "{checkname} - {check['title']}"
 msgstr ""
 
+msgid "{property.capitalize()} "
+msgstr ""
+
 msgid "{property.capitalize()} Podman containers"
 msgstr ""
 
@@ -91093,6 +91040,106 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
+#~ msgstr ""
+#~ "No se puede cargar el árbol de inventario HW/SW %s. Por favor, elimine el "
+#~ "archivo dañado."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW Inventory trees %s. Please remove the corrupted files."
+#~ msgstr ""
+#~ "No se pueden cargar los árboles de inventario HW/SW %s. Por favor, "
+#~ "elimine los archivos corruptos."
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Definir los niveles de las vainas pendientes"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of containers"
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of images"
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the Podman disk usage of volumes"
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active containers."
+#~ msgstr "Nivel superior del número total de conexiones"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active images."
+#~ msgstr "Nivel superior del número total de mensajes entregados"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of active volumes."
+#~ msgstr "Nivel superior del número total de mensajes entregados"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of containers."
+#~ msgstr "Nivel superior del número total de conexiones"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of images."
+#~ msgstr "Nivel superior del número total de mensajes"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total number of volumes."
+#~ msgstr "Nivel superior del número total de mensajes"
+
+#, fuzzy
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman containers."
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid ""
+#~ "Sets the upper levels for the total reclaimable size of Podman volumes."
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman containers."
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman images."
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Sets the upper levels for the total size of Podman volumes."
+#~ msgstr "Definir niveles superiores para el número de contenedores totales"
+
+#, fuzzy
+#~ msgid "Total number of active containers upper levels"
+#~ msgstr "Número total de fragmentos activos nivel superior"
+
+#, fuzzy
+#~ msgid "Total number of active images upper levels"
+#~ msgstr "Número total de fragmentos activos nivel superior"
+
+#, fuzzy
+#~ msgid "Total number of containers upper levels"
+#~ msgstr "Número total de colecciones de nivel superior"
+
+#, fuzzy
+#~ msgid "Total number of images upper levels"
+#~ msgstr "Número total de números de nivel superior"
+
+#, fuzzy
+#~ msgid "Total number of volumes upper levels"
+#~ msgstr "Número total de números de nivel superior"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "Tema no válido"
 
 #, fuzzy
 #~ msgid "Get started (Welcome)"

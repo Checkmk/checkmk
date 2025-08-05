@@ -32,6 +32,7 @@ RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 SYSTEM_TESTS := \
     test-integration \
     test-integration-redfish \
+    test-integration-otel \
     test-composition \
     test-update-cre \
     test-update-cee \
@@ -286,6 +287,10 @@ test-integration:
 test-integration-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath integration_redfish) --session-timeout 1800
+
+test-integration-otel:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(realpath integration_otel) --session-timeout 1800
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \

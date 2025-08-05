@@ -70,21 +70,21 @@ class SDItem:
         # Returns a tuple of two css classes (alignment and coloring) and the HTML value
         # We keep alignment and coloring classes separate as we only need the coloring within
         # tables
-        alignment_class, code = self.paint_function(self.value)
+        css_class, code = self.paint_function(self.value)
         html_value = HTML.with_escaping(code)
         if (
             not html_value
             or self.retention_interval is None
             or self.retention_interval.source == "current"
         ):
-            return alignment_class, "", html_value
+            return css_class, "", html_value
 
         now = int(time.time())
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
         keep_until = valid_until + self.retention_interval.retention_interval
         if now > keep_until:
             return (
-                alignment_class,
+                css_class,
                 "inactive_cell",
                 HTMLWriter.render_span(
                     html_value
@@ -96,7 +96,7 @@ class SDItem:
             )
         if now > valid_until:
             return (
-                alignment_class,
+                css_class,
                 "inactive_cell",
                 HTMLWriter.render_span(
                     html_value,
@@ -108,7 +108,7 @@ class SDItem:
                     css=["muted_text"],
                 ),
             )
-        return alignment_class, "", html_value
+        return css_class, "", html_value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,27 +124,27 @@ class _SDDeltaItem:
         # The coloring class is always an empty string but was added for a consistent fct signature
         # between _SDDeltaItem and SDItem
         if self.old is None and self.new is not None:
-            alignment_class, rendered_value = self.paint_function(self.new)
+            css_class, rendered_value = self.paint_function(self.new)
             return (
-                alignment_class,
+                css_class,
                 "",
                 HTMLWriter.render_span(rendered_value, css="invnew"),
             )
         if self.old is not None and self.new is None:
-            alignment_class, rendered_value = self.paint_function(self.old)
+            css_class, rendered_value = self.paint_function(self.old)
             return (
-                alignment_class,
+                css_class,
                 "",
                 HTMLWriter.render_span(rendered_value, css="invold"),
             )
         if self.old == self.new:
-            alignment_class, rendered_value = self.paint_function(self.old)
-            return alignment_class, "", HTML.with_escaping(rendered_value)
+            css_class, rendered_value = self.paint_function(self.old)
+            return css_class, "", HTML.with_escaping(rendered_value)
         if self.old is not None and self.new is not None:
             _, rendered_old_value = self.paint_function(self.old)
-            alignment_class, rendered_new_value = self.paint_function(self.new)
+            css_class, rendered_new_value = self.paint_function(self.new)
             return (
-                alignment_class,
+                css_class,
                 "",
                 HTMLWriter.render_span(rendered_old_value, css="invold")
                 + " → "
@@ -423,8 +423,8 @@ class TreeRenderer:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
 
-            # TODO separate alignment_class and coloring_class from rendered value
-            _alignment_class, coloring_class, rendered_value = item.compute_cell_spec()
+            # TODO separate css_class and coloring_class from rendered value
+            _css_class, coloring_class, rendered_value = item.compute_cell_spec()
             html.open_td(class_=coloring_class)
             html.write_html(rendered_value)
             html.close_td()
@@ -467,9 +467,9 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                # TODO separate alignment_class and coloring_class from rendered value
-                alignment_class, coloring_class, rendered_value = item.compute_cell_spec()
-                html.open_td(class_=" ".join([alignment_class, coloring_class]))
+                # TODO separate css_class and coloring_class from rendered value
+                css_class, coloring_class, rendered_value = item.compute_cell_spec()
+                html.open_td(class_=" ".join([css_class, coloring_class]))
                 html.write_html(rendered_value)
                 html.close_td()
             html.close_tr()

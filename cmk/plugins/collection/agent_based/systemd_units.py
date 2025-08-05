@@ -124,7 +124,7 @@ _SYSTEMD_UNIT_FILE_STATES = [
 # https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/glyph-util.c#L38
 _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
-MEMORY_PATTERN = re.compile(r"(\d+(\.\d+)?)([BKMG]?)")
+MEMORY_PATTERN = re.compile(r"(\d+(\.\d+)?)([BKMGT]?)")
 
 
 @dataclass(frozen=True)
@@ -147,11 +147,15 @@ class Memory:
         5242880
         >>> Memory.from_raw("14G").bytes
         15032385536
+        >>> Memory.from_raw("1T").bytes
+        1099511627776
         """
         if not (match := MEMORY_PATTERN.match(raw)):
             raise ValueError(f"Cannot create {cls.__name__} from: {raw}")
         value, _, unit = match.groups()
-        return cls(int(float(value) * {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3}[unit]))
+        return cls(
+            int(float(value) * {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3, "T": 1024**4}[unit])
+        )
 
     def render(self):
         return render.bytes(self.bytes)

@@ -114,7 +114,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core import CoreAction, do_restart
-from cmk.base.core.config import autodetect_plugin, get_service_attributes
+from cmk.base.core.config import autodetect_plugin, get_service_attributes, MonitoringCore
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
@@ -1470,6 +1470,16 @@ class AutomationRenameHosts(Automation):
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
+        core = create_core(
+            edition,
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
+            loading_result.loaded_config,
+            loading_result.config_cache.host_tags.tags,
+            make_plugin_store(plugins),
+            loading_result.config_cache,
+            plugins,
+        )
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
         # it now.
@@ -1520,7 +1530,7 @@ class AutomationRenameHosts(Automation):
                 ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
                 _execute_silently(
-                    edition,
+                    core,
                     config_cache,
                     final_service_name_config,
                     passive_service_name_config,
@@ -2565,7 +2575,16 @@ class AutomationRestart(Automation):
         ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
         return _execute_silently(
-            edition,
+            create_core(
+                edition,
+                loading_result.config_cache.ruleset_matcher,
+                loading_result.config_cache.label_manager,
+                loading_result.loaded_config,
+                loading_result.config_cache.host_tags.tags,
+                make_plugin_store(plugins),
+                loading_result.config_cache,
+                plugins,
+            ),
             loading_result.config_cache,
             final_service_name_config,
             passive_service_name_config,
@@ -2650,7 +2669,7 @@ automations.register(AutomationReload())
 
 
 def _execute_silently(
-    edition: cmk_version.Edition,
+    monitoring_core: MonitoringCore,
     config_cache: ConfigCache,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -2688,16 +2707,7 @@ def _execute_silently(
                 default_address_family,
                 ip_address_of,
                 ip_address_of_mgmt,
-                create_core(
-                    edition,
-                    config_cache.ruleset_matcher,
-                    config_cache.label_manager,
-                    loaded_config,
-                    config_cache.host_tags.tags,
-                    make_plugin_store(plugins),
-                    config_cache,
-                    plugins,
-                ),
+                monitoring_core,
                 plugins,
                 action=action,
                 discovery_rules=loaded_config.discovery_rules,

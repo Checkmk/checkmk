@@ -146,7 +146,7 @@ const cmkProgressbaId = useId()
 .small {
   height: 4px;
 
-  &:has(.cmk-progress-label) {
+  &:has(.cmk-progress-label.visible) {
     height: 8px;
   }
 }

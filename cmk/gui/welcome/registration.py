@@ -5,8 +5,11 @@
 
 
 import cmk.gui.welcome.pages as welcome_pages
+import cmk.gui.welcome.snapin as welcome_snapin
 from cmk.gui.pages import PageRegistry
+from cmk.gui.sidebar import SnapinRegistry
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, snapin_registry: SnapinRegistry) -> None:
     welcome_pages.register(page_registry)
+    welcome_snapin.register(snapin_registry)

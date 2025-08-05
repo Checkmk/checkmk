@@ -122,129 +122,128 @@ def _welcome_page(config: Config) -> None:
         )
         return
 
-    html.vue_component(
-        component_name="cmk-welcome",
-        data=asdict(
-            WelcomePage(
-                urls=WelcomeUrls(
-                    checkmk_ai="https://chat.checkmk.com",
-                    checkmk_forum="https://forum.checkmk.com",
-                    checkmk_docs=doc_reference_url(),
-                    create_contactgoups=makeuri(
-                        request,
-                        addvars=[("mode", "contact_groups")],
-                        filename="wato.py",
-                    ),
-                    setup_backup=makeuri(
-                        request,
-                        addvars=[("mode", "backup")],
-                        filename="wato.py",
-                    ),
-                    scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
-                    fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
-                    license_site=makeuri(
-                        request,
-                        addvars=[("mode", "licensing")],
-                        filename="wato.py",
-                    ),
-                    add_host=makeuri(
-                        request,
-                        addvars=[("mode", "newhost")],
-                        filename="wato.py",
-                    ),
-                    network_devices=makeuri(
-                        request,
-                        addvars=[("mode", "newhost"), ("prefill", "snmp")],
-                        filename="wato.py",
-                    ),
-                    aws_quick_setup=makeuri(
-                        request,
-                        addvars=[
-                            ("mode", "new_special_agent_configuration"),
-                            ("varname", "special_agents:aws"),
-                        ],
-                        filename="wato.py",
-                    ),
-                    azure_quick_setup=makeuri(
-                        request,
-                        addvars=[
-                            ("mode", "new_special_agent_configuration"),
-                            ("varname", "special_agents:azure"),
-                        ],
-                        filename="wato.py",
-                    ),
-                    gcp_quick_setup=makeuri(
-                        request,
-                        addvars=[
-                            ("mode", "new_special_agent_configuration"),
-                            ("varname", "special_agents:gcp"),
-                        ],
-                        filename="wato.py",
-                    ),
-                    synthetic_monitoring=make_url_from_registry(
-                        "robotmk_managed_robots_overview", user.may("edit_managed_robots")
-                    ),
-                    opentelemetry=make_url_from_registry("otel_collectors"),
-                    activate_changes=makeuri(
-                        request,
-                        addvars=[("mode", "changelog")],
-                        filename="wato.py",
-                    ),
-                    all_hosts=makeuri(
-                        request,
-                        addvars=[("view_name", "allhosts")],
-                        filename="view.py",
-                    ),
-                    main_dashboard=makeuri(
-                        request,
-                        addvars=[("name", "main")],
-                        filename="dashboard.py",
-                    ),
-                    problem_dashboard=makeuri(
-                        request,
-                        addvars=[("name", "problems")],
-                        filename="dashboard.py",
-                    ),
-                    unhandled_service_problems=makeuri(
-                        request,
-                        addvars=[("view_name", "svcproblems")],
-                        filename="view.py",
-                    ),
-                    time_periods=makeuri(
-                        request,
-                        addvars=[("mode", "timeperiods")],
-                        filename="wato.py",
-                    ),
-                    host_groups=makeuri(
-                        request,
-                        addvars=[("mode", "host_groups")],
-                        filename="wato.py",
-                    ),
-                    add_notification_rule=makeuri(
-                        request,
-                        addvars=[("mode", "notification_rule_quick_setup")],
-                        filename="wato.py",
-                    ),
-                    test_notifications=makeuri(
-                        request,
-                        addvars=[("mode", "test_notifications")],
-                        filename="wato.py",
-                    ),
-                    add_custom_dashboard=makeuri(
-                        request,
-                        addvars=[],
-                        filename="create_dashboard.py",
-                    ),
-                    all_dashboards=makeuri(
-                        request,
-                        addvars=[],
-                        filename="edit_dashboards.py",
-                    ),
-                ),
-                is_start_url=user.start_url == "welcome.py",
-                stage_information=StageInformation(
-                    finished=list(_get_finished_stages()),
-                ),
-            )
+    html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
+
+
+def get_welcome_data() -> WelcomePage:
+    return WelcomePage(
+        urls=WelcomeUrls(
+            checkmk_ai="https://chat.checkmk.com",
+            checkmk_forum="https://forum.checkmk.com",
+            checkmk_docs=doc_reference_url(),
+            create_contactgoups=makeuri(
+                request,
+                addvars=[("mode", "contact_groups")],
+                filename="wato.py",
+            ),
+            setup_backup=makeuri(
+                request,
+                addvars=[("mode", "backup")],
+                filename="wato.py",
+            ),
+            scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
+            fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
+            license_site=makeuri(
+                request,
+                addvars=[("mode", "licensing")],
+                filename="wato.py",
+            ),
+            add_host=makeuri(
+                request,
+                addvars=[("mode", "newhost")],
+                filename="wato.py",
+            ),
+            network_devices=makeuri(
+                request,
+                addvars=[("mode", "newhost"), ("prefill", "snmp")],
+                filename="wato.py",
+            ),
+            aws_quick_setup=makeuri(
+                request,
+                addvars=[
+                    ("mode", "new_special_agent_configuration"),
+                    ("varname", "special_agents:aws"),
+                ],
+                filename="wato.py",
+            ),
+            azure_quick_setup=makeuri(
+                request,
+                addvars=[
+                    ("mode", "new_special_agent_configuration"),
+                    ("varname", "special_agents:azure"),
+                ],
+                filename="wato.py",
+            ),
+            gcp_quick_setup=makeuri(
+                request,
+                addvars=[
+                    ("mode", "new_special_agent_configuration"),
+                    ("varname", "special_agents:gcp"),
+                ],
+                filename="wato.py",
+            ),
+            synthetic_monitoring=make_url_from_registry(
+                "robotmk_managed_robots_overview", user.may("edit_managed_robots")
+            ),
+            opentelemetry=make_url_from_registry("otel_collectors"),
+            activate_changes=makeuri(
+                request,
+                addvars=[("mode", "changelog")],
+                filename="wato.py",
+            ),
+            all_hosts=makeuri(
+                request,
+                addvars=[("view_name", "allhosts")],
+                filename="view.py",
+            ),
+            main_dashboard=makeuri(
+                request,
+                addvars=[("name", "main")],
+                filename="dashboard.py",
+            ),
+            problem_dashboard=makeuri(
+                request,
+                addvars=[("name", "problems")],
+                filename="dashboard.py",
+            ),
+            unhandled_service_problems=makeuri(
+                request,
+                addvars=[("view_name", "svcproblems")],
+                filename="view.py",
+            ),
+            time_periods=makeuri(
+                request,
+                addvars=[("mode", "timeperiods")],
+                filename="wato.py",
+            ),
+            host_groups=makeuri(
+                request,
+                addvars=[("mode", "host_groups")],
+                filename="wato.py",
+            ),
+            add_notification_rule=makeuri(
+                request,
+                addvars=[("mode", "notification_rule_quick_setup")],
+                filename="wato.py",
+            ),
+            test_notifications=makeuri(
+                request,
+                addvars=[("mode", "test_notifications")],
+                filename="wato.py",
+            ),
+            add_custom_dashboard=makeuri(
+                request,
+                addvars=[],
+                filename="create_dashboard.py",
+            ),
+            all_dashboards=makeuri(
+                request,
+                addvars=[],
+                filename="edit_dashboards.py",
+            ),
+        ),
+        is_start_url=user.start_url == "welcome.py",
+        stage_information=StageInformation(
+            finished=list(_get_finished_stages()),
         ),
     )

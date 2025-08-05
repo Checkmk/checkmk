@@ -9,12 +9,16 @@ import usei18n from '@/lib/i18n'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import { type Sizes } from '../../components/CmkProgressbar.vue'
 
 const { t } = usei18n('steps-progress-bar')
 
 export interface StepsProgressBarProps {
   completedSteps?: number
   totalSteps?: number
+  hideHeading?: boolean
+  flexColumn?: boolean
+  size?: Sizes
 }
 
 const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps>()
@@ -22,17 +26,18 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 
 <template>
   <div class="steps-progress-bar">
-    <CmkHeading type="h4">{{ t('your-progress', 'Your progress') }}</CmkHeading>
-    <div class="steps-progress-bar__content">
+    <CmkHeading v-if="!hideHeading" type="h4">{{ t('your-progress', 'Your progress') }}</CmkHeading>
+    <div class="steps-progress-bar__content" :class="{ 'flex-column': flexColumn }">
       <CmkParagraph>
         {{ completedSteps }}/{{ totalSteps }}
         {{ t('steps-complete', 'Steps complete') }}
       </CmkParagraph>
       <CmkProgressbar
         class="steps-progress-bar__bar"
+        :class="{ 'flex-column': flexColumn }"
         :value="completedSteps"
         :max="totalSteps"
-        size="small"
+        :size="size ? size : 'medium'"
       />
     </div>
   </div>
@@ -52,10 +57,20 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
   gap: 8px;
   align-items: center;
   width: 100%;
+
+  &.flex-column {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .steps-progress-bar__bar {
   max-width: 480px;
+  width: 100%;
   flex: 1;
+
+  &.flex-column {
+    flex: none;
+  }
 }
 </style>

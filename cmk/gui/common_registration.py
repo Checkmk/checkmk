@@ -321,7 +321,7 @@ def register(
     configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)
     rulespec.register(rulespec_registry, notification_parameter_registry)
-    welcome.register(page_registry)
+    welcome.register(page_registry, snapin_registry)
     search_registration.register(page_registry)
     filter_api.register(
         endpoint_family_registry,

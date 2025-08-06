@@ -16,9 +16,7 @@ from typing import Literal
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
-from cmk.base import core_config
 from cmk.base.config import ConfigCache
-from cmk.base.core_config import MonitoringCore
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
@@ -27,6 +25,8 @@ from cmk.utils import ip_lookup
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
+
+from .config import do_create_config, MonitoringCore
 
 tracer = trace.get_tracer()
 
@@ -129,7 +129,7 @@ def do_restart(
 ) -> None:
     try:
         with activation_lock(mode=locking_mode):
-            core_config.do_create_config(
+            do_create_config(
                 core=core,
                 config_cache=config_cache,
                 hosts_config=host_config,
@@ -198,7 +198,7 @@ def do_core_action(
     with tracer.span(
         f"do_core_action[{action.value}]",
         attributes={
-            "cmk.core_config.core": monitoring_core,
+            "cmk.core.config.core": monitoring_core,
         },
     ):
         if not quiet:

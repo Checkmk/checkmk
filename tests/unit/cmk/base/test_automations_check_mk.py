@@ -8,11 +8,14 @@ from dataclasses import replace
 
 import pytest
 
+import cmk.base.automations.check_mk
+import cmk.base.cee
+import cmk.base.core.config
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
-from cmk.base import config, core_config
+from cmk.base import config
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -219,7 +222,7 @@ def test_automation_active_check(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
-    monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
+    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
     config_cache = config.ConfigCache(EMPTY_CONFIG)

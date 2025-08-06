@@ -82,7 +82,7 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
 )
-from cmk.base import config, core_config, notify, sources
+from cmk.base import config, notify, sources
 from cmk.base.automations import (
     Automation,
     automations,
@@ -114,6 +114,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core import CoreAction, do_restart
+from cmk.base.core.config import autodetect_plugin, get_service_attributes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
@@ -3650,7 +3651,7 @@ class AutomationActiveCheck(Automation):
                     config_cache=config_cache,
                 )
                 if command_line:
-                    cmd = core_config.autodetect_plugin(command_line)
+                    cmd = autodetect_plugin(command_line)
                     return ActiveCheckResult(*self._execute_check_plugin(cmd))
 
                 return ActiveCheckResult(
@@ -3719,7 +3720,7 @@ class AutomationActiveCheck(Automation):
             hostname, config_cache.get_host_attributes(hostname, ip_family, ip_address_of)
         )
 
-        service_attrs = core_config.get_service_attributes(
+        service_attrs = get_service_attributes(
             config_cache,
             hostname,
             service_desc,
@@ -3739,7 +3740,7 @@ class AutomationActiveCheck(Automation):
         commandline: str,
         config_cache: ConfigCache,
     ) -> str:
-        service_attrs = core_config.get_service_attributes(
+        service_attrs = get_service_attributes(
             config_cache, host_name, service_name, service_labels, extra_icon=None
         )
         service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)

@@ -17,20 +17,27 @@ from socket import AddressFamily
 from typing import Any, assert_never, IO, Literal
 
 import cmk.ccc.debug
-from cmk.base import config, core_config
+from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
     HostgroupName,
     ObjectAttributes,
     ServicegroupName,
 )
-from cmk.base.core_config import (
+from cmk.base.core.config import (
     AbstractServiceID,
+    autodetect_plugin,
+    check_icmp_arguments_of,
     CoreCommand,
     CoreCommandName,
+    duplicate_service_warning,
+    get_cluster_nodes_for_config,
+    get_cmk_passive_service_attributes,
     get_labels_from_attributes,
     get_service_attributes,
     get_tags_with_groups_from_attributes,
+    host_check_command,
+    MonitoringCore,
 )
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
@@ -63,7 +70,7 @@ _ContactgroupName = str
 ObjectSpec = dict[str, Any]
 
 
-class NagiosCore(core_config.MonitoringCore):
+class NagiosCore(MonitoringCore):
     @classmethod
     def name(cls) -> Literal["nagios"]:
         return "nagios"
@@ -397,7 +404,7 @@ def create_nagios_host_spec(
 
     if hostname in config_cache.hosts_config.clusters:
         ip_lookup_config = config_cache.ip_lookup_config()
-        nodes = core_config.get_cluster_nodes_for_config(
+        nodes = get_cluster_nodes_for_config(
             hostname,
             config_cache.nodes(hostname),
             ip_lookup_config.ip_stack_config(hostname),
@@ -459,7 +466,7 @@ def create_nagios_host_spec(
         return command
 
     # Host check command might differ from default
-    command = core_config.host_check_command(
+    command = host_check_command(
         config_cache,
         hostname,
         host_ip_family,
@@ -564,7 +571,7 @@ def _process_services_data(
             continue
 
         if service.description in services_ids:
-            core_config.duplicate_service_warning(
+            duplicate_service_warning(
                 checktype="auto",
                 description=service.description,
                 host_name=hostname,
@@ -579,7 +586,7 @@ def _process_services_data(
 
         plugin = get_check_plugin(service.check_plugin_name, plugins)
         passive_service_attributes = _to_nagios_core_attributes(
-            core_config.get_cmk_passive_service_attributes(
+            get_cmk_passive_service_attributes(
                 config_cache,
                 hostname,
                 service.description,
@@ -688,7 +695,7 @@ def create_nagios_servicedefs(
             continue
 
         if (existing_plugin := services_ids.get(service_data.description)) is not None:
-            core_config.duplicate_service_warning(
+            duplicate_service_warning(
                 checktype="active",
                 description=service_data.description,
                 host_name=hostname,
@@ -854,9 +861,7 @@ def _create_custom_check(
         return
 
     if command_line:
-        command_line = (
-            core_config.autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
-        )
+        command_line = autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
 
     if "freshness" in entry:
         freshness = {
@@ -880,7 +885,7 @@ def _create_custom_check(
         if cn == "custom(%s)" % command_name:
             return
 
-        core_config.duplicate_service_warning(
+        duplicate_service_warning(
             checktype="custom",
             description=description,
             host_name=hostname,
@@ -984,7 +989,7 @@ def _add_ping_service(
         case _:
             assert_never(f"Unexpected ping service name: {ping_service}")
 
-    arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family)
+    arguments = check_icmp_arguments_of(config_cache, host_name, family)
 
     if host_name in config_cache.hosts_config.clusters:
         arguments += " -m 1 " + host_attrs[node_ips_name]  # may raise exception - it's intentional
@@ -1016,7 +1021,7 @@ def _make_ping_only_spec(
             "check_command": f"{ping_command}!{arguments}",
         }
         | _to_nagios_core_attributes(
-            core_config.get_service_attributes(
+            get_service_attributes(
                 config_cache, host_name, service_name, service_labels, extra_icon=None
             )
         )

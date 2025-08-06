@@ -1567,7 +1567,7 @@ def _make_configured_bake_on_restart(
 
 
 def mode_update() -> None:
-    from cmk.base.core_config import do_create_config
+    from cmk.base.core.config import do_create_config
 
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()

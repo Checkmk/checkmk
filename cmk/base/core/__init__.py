@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from . import config as config  # reconsider the name...
 from ._control import activation_lock as activation_lock
 from ._control import CoreAction as CoreAction
 from ._control import do_core_action as do_core_action

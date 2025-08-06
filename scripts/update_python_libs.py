@@ -65,9 +65,9 @@ class RequriementsTxtParser:
 def _diff(before: dict[str, Info], after: dict[str, Info]) -> str:
     deleted = before.keys() - after.keys()
     added = after.keys() - before.keys()
-    updated = set((v.name, v.version) for v in after.values() if v.name not in added) - set(
+    updated = {(v.name, v.version) for v in after.values() if v.name not in added} - {
         (v.name, v.version) for v in before.values()
-    )
+    }
     return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
     for lib, to_version in sorted(updated):
         before_version = before[lib].version

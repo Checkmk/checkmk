@@ -1,7 +1,7 @@
 import base64
 import json
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 

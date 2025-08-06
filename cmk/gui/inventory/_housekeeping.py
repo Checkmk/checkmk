@@ -500,7 +500,7 @@ def _compute_classified_history_files(
     }
     bundles.update({k: f for k, f in delta_cache_files_by_ts.items() if k not in bundles})
 
-    handled_ts = set(ts for p_ts, c_ts in bundles for ts in (p_ts, c_ts))
+    handled_ts = {ts for p_ts, c_ts in bundles for ts in (p_ts, c_ts)}
     return _ClassifiedHistoryFiles(
         delta_cache_from_inventory_tree=delta_cache_from_inventory_tree,
         bundles=list(bundles.values()),

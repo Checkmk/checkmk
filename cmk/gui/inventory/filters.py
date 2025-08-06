@@ -167,7 +167,7 @@ def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Row
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
         value = row.get(ident)
-        if (filter_key := "%s_%s" % (ident, value)) in values:
+        if (filter_key := f"{ident}_{value}") in values:
             return values[filter_key] == "on"
         return True
 

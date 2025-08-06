@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type { FilterOption, ProviderOption } from '@/unified-search/providers/search-utils'
+import type { FilterOption, ProviderOption } from '@/unified-search/providers/search-utils.types'
 
 export const availableProviderOptions: ProviderOption[] = [
   { type: 'provider', value: 'all', title: 'All' },

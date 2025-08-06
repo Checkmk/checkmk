@@ -10,10 +10,11 @@ import ResultItem from '../result/ResultItem.vue'
 import { onBeforeUnmount, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import type { SearchHistorySearchResult } from '@/lib/unified-search/providers/history'
-import { getSearchUtils, type UnifiedSearchQueryLike } from '../../providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 const { t } = usei18n('unified-search-app')
 

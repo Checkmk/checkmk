@@ -7,11 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
 import { useTemplateRef } from 'vue'
-import { getSearchUtils, type FilterOption } from '../../providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import CmkChip from '@/components/CmkChip.vue'
+import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
 interface CmkWindow extends Window {
   main: Window

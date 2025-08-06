@@ -19,15 +19,12 @@ import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import { Api } from '@/lib/api-client'
 import DefaultPopup from '@/main-menu/DefaultPopup.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
-import {
-  initSearchUtils,
-  provideSearchUtils,
-  type UnifiedSearchQueryLike
-} from './providers/search-utils'
+import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import {
   UnifiedSearchProvider,
   type UnifiedSearchProviderIdentifier
 } from '@/lib/unified-search/providers/unified'
+import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any

@@ -11,10 +11,7 @@ import { ref } from 'vue'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 import { getSearchUtils } from '../../providers/search-utils'
-import {
-  providerIcons,
-  type UnifiedSearchResultElement
-} from '@/lib/unified-search/providers/unified'
+import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { t } = usei18n('unified-search-app')
@@ -70,11 +67,7 @@ immediateWatch(
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
-        :icon="
-          item.element.topic.toLowerCase() === 'hosts'
-            ? { name: 'topic-host', title: item.element.topic, size: 'xlarge' }
-            : providerIcons[item.element.provider]
-        "
+        :icon="searchUtils.mapIcon(item.element.topic, item.element.provider)"
         :inline-buttons="item.element.inlineButtons"
         :url="item.element.url"
         :html="searchUtils.highlightQuery(item.element.title)"

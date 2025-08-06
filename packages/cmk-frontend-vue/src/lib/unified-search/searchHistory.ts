@@ -6,7 +6,7 @@
 import type { Ref } from 'vue'
 import usePersistentRef from '../usePersistentRef'
 import type { UnifiedSearchResultElement } from './providers/unified'
-import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export class HistoryEntry {
   public hitCount = 1

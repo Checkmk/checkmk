@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { immediateWatch } from '@/lib/watch'
 import { useTemplateRef } from 'vue'
-import type { ProviderOption } from '../../providers/search-utils'
 import usei18n from '@/lib/i18n'
+import type { ProviderOption } from '@/unified-search/providers/search-utils.types'
 
 export interface ProviderOptionEntryProps {
   idx: number

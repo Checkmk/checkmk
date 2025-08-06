@@ -115,7 +115,39 @@
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
 
+  --icon-topic-administration: url('~cmk-frontend/themes/facelift/images/icon_topic_administration.png');
+  --icon-topic-agents: url('~cmk-frontend/themes/facelift/images/icon_topic_agents.png');
+  --icon-topic-analyze: url('~cmk-frontend/themes/facelift/images/icon_topic_analyze.png');
+  --icon-topic-applications: url('~cmk-frontend/themes/facelift/images/icon_topic_applications.png');
+  --icon-topic-bi: url('~cmk-frontend/themes/facelift/images/icon_topic_bi.png');
+  --icon-topic-change_password: url('~cmk-frontend/themes/facelift/images/icon_topic_change_password.png');
+  --icon-topic-checkmk: url('~cmk-frontend/themes/facelift/images/icon_topic_checkmk.svg');
+  --icon-topic-events: url('~cmk-frontend/themes/facelift/images/icon_topic_events.png');
+  --icon-topic-exporter: url('~cmk-frontend/themes/facelift/images/icon_topic_exporter.svg');
+  --icon-topic-general: url('~cmk-frontend/themes/facelift/images/icon_topic_general.png');
+  --icon-topic-graphs: url('~cmk-frontend/themes/facelift/images/icon_topic_graphs.png');
+  --icon-topic-history: url('~cmk-frontend/themes/facelift/images/icon_topic_history.png');
   --icon-topic-host: url('~cmk-frontend/themes/facelift/images/icon_topic_hosts.png');
+  --icon-topic-inventory: url('~cmk-frontend/themes/facelift/images/icon_topic_inventory.png');
+  --icon-topic-maintenance: url('~cmk-frontend/themes/facelift/images/icon_topic_maintenance.png');
+  --icon-topic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_topic_monitoring.svg');
+  --icon-topic-my_workplace: url('~cmk-frontend/themes/facelift/images/icon_topic_my_workplace.svg');
+  --icon-topic-network: url('~cmk-frontend/themes/facelift/images/icon_topic_network.svg');
+  --icon-topic-other: url('~cmk-frontend/themes/facelift/images/icon_topic_other.png');
+  --icon-topic-overview: url('~cmk-frontend/themes/facelift/images/icon_topic_overview.png');
+  --icon-topic-problems: url('~cmk-frontend/themes/facelift/images/icon_topic_problems.png');
+  --icon-topic-profile: url('~cmk-frontend/themes/facelift/images/icon_topic_profile.png');
+  --icon-topic-quick-setups: url('~cmk-frontend/themes/facelift/images/icon_topic_quick_setups.svg');
+  --icon-topic-reporting: url('~cmk-frontend/themes/facelift/images/icon_topic_reporting.svg');
+  --icon-topic-services: url('~cmk-frontend/themes/facelift/images/icon_topic_services.png');
+  --icon-topic-site: url('~cmk-frontend/themes/facelift/images/icon_topic_site.png');
+  --icon-topic-system: url('~cmk-frontend/themes/facelift/images/icon_topic_system.svg');
+  --icon-topic-two-factor: url('~cmk-frontend/themes/facelift/images/icon_topic_two_factor.png');
+  --icon-topic-user-interface: url('~cmk-frontend/themes/facelift/images/icon_topic_user_interface.svg');
+  --icon-topic-users: url('~cmk-frontend/themes/facelift/images/icon_topic_users.png');
+  --icon-topic-visualization: url('~cmk-frontend/themes/facelift/images/icon_topic_visualization.png');
+  --icon-topic-synthetic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_synthetic_monitoring_topic.svg');
+  --icon-topic-pagetype: url('~cmk-frontend/themes/facelift/images/icon_pagetype_topic.svg');
 }
 
 @layer theme {

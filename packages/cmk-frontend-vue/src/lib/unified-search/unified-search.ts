@@ -6,7 +6,7 @@
 
 import { ref, type Ref } from 'vue'
 import { type Api } from '../api-client'
-import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export interface LegacySearchResult {
   result_code: number

@@ -13,7 +13,6 @@ import { immediateWatch } from '@/lib/watch'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import { getSearchUtils } from '../../providers/search-utils'
 import {
-  providerIcons,
   type UnifiedSearchResultElement,
   type UnifiedSearchResultResponse
 } from '@/lib/unified-search/providers/unified'
@@ -135,11 +134,7 @@ function searchResultNotEmpty(): boolean {
           :idx="idx"
           :title="item.title"
           :context="item.context"
-          :icon="
-            ['hosts', 'host name', 'hostalias'].indexOf(item.topic.toLowerCase()) >= 0
-              ? { name: 'topic-host', title: item.topic, size: 'xlarge' }
-              : providerIcons[item.provider]
-          "
+          :icon="searchUtils.mapIcon(item.topic, item.provider)"
           :inline-buttons="item.inlineButtons"
           :url="item.url"
           :html="searchUtils.highlightQuery(item.title)"

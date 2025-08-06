@@ -5,19 +5,7 @@
  */
 import type { CmkIconProps } from '@/components/CmkIcon.vue'
 import { SearchProvider, type SearchProviderResult } from '../unified-search'
-import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
-
-export const providerIcons: { [key: string]: CmkIconProps } = {
-  monitoring: {
-    name: 'main-monitoring-active',
-    title: 'Monitoring'
-  },
-  customize: { name: 'main-customize-active', title: 'Customize' },
-  setup: {
-    name: 'main-setup-active',
-    title: 'Setup'
-  }
-}
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
 

@@ -6,7 +6,7 @@
 
 import { SearchProvider, type SearchProviderResult } from '../unified-search'
 import type { HistoryEntry, SearchHistoryService } from '../searchHistory'
-import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils'
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export type SearchHistorySearchResult = SearchProviderResult<{
   entries: HistoryEntry[]

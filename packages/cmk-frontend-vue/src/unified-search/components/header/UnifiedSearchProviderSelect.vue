@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue'
-import { getSearchUtils, type ProviderOption } from '../../providers/search-utils'
+import { getSearchUtils } from '../../providers/search-utils'
 import useClickOutside from '@/lib/useClickOutside'
 import DropDownIndicator from './DropDownIndicator.vue'
 import { availableProviderOptions } from './QueryOptions'
 import ProviderOptionEntry from './ProviderOptionEntry.vue'
 import usei18n from '@/lib/i18n'
+import type { ProviderOption } from '@/unified-search/providers/search-utils.types'
 
 const { t } = usei18n('unified-search-app')
 const searchUtils = getSearchUtils()

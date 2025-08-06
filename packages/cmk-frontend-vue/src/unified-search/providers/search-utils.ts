@@ -10,27 +10,15 @@ import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
 import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
-
-export interface UnifiedSearchQueryLike {
-  input: string
-  provider: QueryProvider
-  filters: FilterOption[]
-  sort: string
-}
-
-export interface ProviderOption extends FilterOption {
-  type: 'provider'
-  value: QueryProvider
-}
-
-export interface FilterOption {
-  type: 'provider' | 'inline'
-  value: string
-  title: string
-  notAvailableFor?: string[]
-}
-
-export type QueryProvider = 'all' | 'monitoring' | 'customize' | 'setup'
+import type { CmkIconProps } from '@/components/CmkIcon.vue'
+import { topicIconMapping } from './topic-icon-mapping'
+import type {
+  FilterOption,
+  ProviderOption,
+  QueryProvider,
+  SearchProviderKeys,
+  UnifiedSearchQueryLike
+} from './search-utils.types'
 
 const queryInput = ref<string>('')
 const queryProvider = ref<QueryProvider>('all')
@@ -275,6 +263,27 @@ function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): s
   return breadcrumb
 }
 
+function mapIcon(topic: string, provider: SearchProviderKeys): CmkIconProps {
+  topic = topic
+    .toLowerCase()
+    .replace(/ /g, '_')
+    .replace(/[^a-zA-Z0-9_]+/g, '')
+
+  let name = topicIconMapping[provider][topic]
+  if (!name) {
+    if (name !== null) {
+      console.error('topic', topic, 'not found for provider', provider) // keep in to easily find unmapped icons
+    }
+    name = `main-${provider}-active`
+  } else {
+    name = 'topic-'.concat(name)
+  }
+
+  return {
+    name
+  }
+}
+
 export interface SearchShortCuts {
   enable: typeof enableShortCuts
   disable: typeof disableShortCuts
@@ -323,6 +332,7 @@ export interface InitSearchUtils {
 export interface SearchUtils extends InitSearchUtils {
   highlightQuery: typeof highlightQuery
   breadcrumb: typeof breadcrumb
+  mapIcon: typeof mapIcon
   search?: UnifiedSearch
   history?: SearchHistoryService
 }
@@ -349,8 +359,9 @@ export function initSearchUtils(): SearchUtils {
       onEscape,
       onCtrlEnter
     },
-    highlightQuery: highlightQuery,
+    highlightQuery,
     breadcrumb,
+    mapIcon,
     query: query,
     input: {
       setQuery,

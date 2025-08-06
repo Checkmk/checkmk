@@ -34,7 +34,7 @@ def main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
-    def setup_values = single_tests.common_prepare(version: "daily");
+    def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
     def all_editions = ["cloud", "enterprise", "managed", "raw", "saas", params.EDITION].unique();
 
     print(

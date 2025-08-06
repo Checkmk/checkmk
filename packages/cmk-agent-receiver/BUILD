@@ -76,6 +76,32 @@ py_test(
     ],
 )
 
+py_pytest_main(
+    name = "__component_test__",
+    deps = [
+        requirement("pytest"),
+        requirement("pytest-xdist"),
+    ],
+)
+
+py_test(
+    name = "component",
+    size = "medium",
+    srcs = glob(["tests/component/**/*.py"]) + [":__component_test__.py"],
+    env = {
+        "OMD_ROOT": "/my_component_test_site",  # Needed for running the agent receiver
+    },
+    main = "__component_test__.py",
+    deps = [
+        ":__component_test__",
+        ":cmk-agent-receiver",
+        requirement("pytest"),
+        requirement("fastapi"),
+        requirement("starlette"),
+        requirement("httpx"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-agent-receiver",

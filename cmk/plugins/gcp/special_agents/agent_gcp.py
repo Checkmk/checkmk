@@ -178,11 +178,20 @@ class Metric:
     aggregation: Aggregation
 
     def request(
-        self, interval: monitoring_v3.TimeInterval, groupby: str, project: str
+        self,
+        interval: monitoring_v3.TimeInterval,
+        groupby: str,
+        project: str,
+        resource_type: str | None,
     ) -> Mapping[str, Any]:
+        resource_filter = (
+            f'metric.type = "{self.name}" AND resource.type = "{resource_type}"'
+            if resource_type
+            else f'metric.type = "{self.name}"'
+        )
         return {
             "name": f"projects/{project}",
-            "filter": f'metric.type = "{self.name}"',
+            "filter": resource_filter,
             "interval": interval,
             "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
             "aggregation": self.aggregation.to_obj(groupby),
@@ -194,6 +203,7 @@ class Service:
     metrics: Sequence[Metric]
     name: str
     default_groupby: str
+    resource_type: str | None = None
 
 
 # todo: Do I want to have a class that automatically prepends gcp?
@@ -456,7 +466,12 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
     )
     ts_results: list[Result] = []
     for metric in service.metrics:
-        request = metric.request(interval, groupby=service.default_groupby, project=client.project)
+        request = metric.request(
+            interval,
+            groupby=service.default_groupby,
+            project=client.project,
+            resource_type=service.resource_type,
+        )
         try:
             results = client.list_time_series(request=request)
         except PermissionDenied:
@@ -477,7 +492,7 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
                     ]
                 )
                 continue
-            raise RuntimeError(metric.name) from e
+            raise RuntimeError(f"{e}: {metric.name}") from e
 
         for ts in results:
             result = Result(
@@ -745,6 +760,7 @@ FUNCTIONS = Service(
 
 RUN = Service(
     name="cloud_run",
+    resource_type="cloud_run_revision",
     default_groupby="resource.service_name",
     metrics=[
         Metric(

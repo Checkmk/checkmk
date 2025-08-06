@@ -14133,6 +14133,10 @@ msgstr "Risultato del calcolo: %s - %s"
 msgid "Compute REST API specification"
 msgstr "Specifiche API REST di calcolo"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Tasso di messaggi consegnati"
+
 msgid "Compute average over last "
 msgstr "Calcolare la media sull'ultimo "
 
@@ -14396,6 +14400,14 @@ msgstr "Configurare i controlli forzati senza usare il rilevamento dei servizi"
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Crash report fallback mail address"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Applicare gli ID utente minuscoli."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Siti specifici"
 
 msgid "Configure grouping of interfaces"
 msgstr "Configurare il raggruppamento delle interfacce"
@@ -18058,10 +18070,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definire l'assegnazione dell'host"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Definire i livelli per i pod in attesa"
-
 msgid "Define levels for pending pods"
 msgstr "Definire i livelli per i pod in attesa"
 
@@ -21054,6 +21062,10 @@ msgstr "Non modificare i parametri per i servizi di corrispondenza"
 
 msgid "Don't change state"
 msgstr "Non cambiare stato"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Tasso di messaggi consegnati"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Non creare un servizio di gruppo per i seguenti gruppi"
@@ -59667,6 +59679,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
+msgstr ""
+
+msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
 "represents the Checkmk server of the related site. In case your Checkmk "
 "server is not monitored by itself, but from a different site (which is "
@@ -86530,10 +86549,6 @@ msgstr "tutti i file di log dell'host %s"
 msgid "all logfiles on all hosts"
 msgstr "tutti i file di log su tutti gli host"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "metrica"
-
 msgid "all special agents"
 msgstr "tutti gli agenti speciali"
 
@@ -88314,10 +88329,6 @@ msgstr ""
 "il socket è in attesa, dopo la chiusura, di eventuali pacchetti rimasti "
 "sulla rete"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Siti specifici"
-
 msgid "specify manually ->"
 msgstr "specificare manualmente ->"
 
@@ -88698,6 +88709,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Definire i livelli per i pod in attesa"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "metrica"
 
 #~ msgid "Fail over partner"
 #~ msgstr "Partner di fail over"

@@ -14265,6 +14265,10 @@ msgstr "Berekeningsresultaat: %s - %s"
 msgid "Compute REST API specification"
 msgstr "SLA-specificatie"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Snelheid afgeleverde berichten"
+
 msgid "Compute average over last "
 msgstr "Bereken gemiddelde over laatste "
 
@@ -14530,6 +14534,14 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Uitwijkmailadres voor crashmeldingen"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Gebruikers-ID's met kleine letters afdwingen."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Specifieke sites"
 
 msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
@@ -18235,10 +18247,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host toewijzing definiëren"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Definieer niveaus voor in afwachting van pods"
-
 msgid "Define levels for pending pods"
 msgstr "Definieer niveaus voor in afwachting van pods"
 
@@ -21230,6 +21238,10 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 
 msgid "Don't change state"
 msgstr "Verander niet van toestand"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Snelheid afgeleverde berichten"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Maak geen groepsdienst aan voor de volgende groepen"
@@ -60156,6 +60168,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
+msgstr ""
+
+msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
 "represents the Checkmk server of the related site. In case your Checkmk "
 "server is not monitored by itself, but from a different site (which is "
@@ -87261,10 +87280,6 @@ msgstr "alle logbestanden van host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle logbestanden op alle hosts"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "metrisch"
-
 msgid "all special agents"
 msgstr "alle speciale agenten"
 
@@ -89074,10 +89089,6 @@ msgstr ""
 "socket wacht na het sluiten op alle pakketten die op het netwerk "
 "achterblijven"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Specifieke sites"
-
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"
 
@@ -89461,6 +89472,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Definieer niveaus voor in afwachting van pods"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "metrisch"
 
 #, fuzzy
 #~ msgid "Fail over partner"

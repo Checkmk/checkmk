@@ -14277,6 +14277,10 @@ msgstr "Rezultatul calculului: %s - %s"
 msgid "Compute REST API specification"
 msgstr "Specificația API REST Compute"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Rata mesajelor livrate"
+
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
 
@@ -14542,6 +14546,14 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Adresa de e-mail de rezervă a raportului de accident"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Situri specifice"
 
 msgid "Configure grouping of interfaces"
 msgstr "Configurați gruparea interfețelor"
@@ -18240,10 +18252,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definiți atribuirea gazdei"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Definirea nivelurilor pentru podurile în așteptare"
-
 msgid "Define levels for pending pods"
 msgstr "Definirea nivelurilor pentru podurile în așteptare"
 
@@ -21264,6 +21272,10 @@ msgstr "Nu modificați parametrii pentru serviciile de potrivire"
 
 msgid "Don't change state"
 msgstr "Nu schimbați starea"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Rata mesajelor livrate"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Nu creați un serviciu de grup pentru următoarele grupuri"
@@ -60288,6 +60300,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
+msgstr ""
+
+msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
 "represents the Checkmk server of the related site. In case your Checkmk "
 "server is not monitored by itself, but from a different site (which is "
@@ -87457,10 +87476,6 @@ msgstr "toate fișierele jurnal ale gazdei %s"
 msgid "all logfiles on all hosts"
 msgstr "toate fișierele jurnal de pe toate gazdele"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "metric"
-
 msgid "all special agents"
 msgstr "toți agenții speciali"
 
@@ -89267,10 +89282,6 @@ msgstr "nu este folosită"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Situri specifice"
-
 msgid "specify manually ->"
 msgstr "specificați manual ->"
 
@@ -89656,6 +89667,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Definirea nivelurilor pentru podurile în așteptare"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "metric"
 
 #~ msgid "Fail over partner"
 #~ msgstr "Partenerul Fail over"

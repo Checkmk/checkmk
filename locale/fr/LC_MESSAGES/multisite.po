@@ -14375,6 +14375,10 @@ msgstr "Résultat du calcul : %s - %s"
 msgid "Compute REST API specification"
 msgstr "Spécification SLA"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "Taux de messages délivrés"
+
 msgid "Compute average over last "
 msgstr "Calculer la moyenne sur le dernier "
 
@@ -14645,6 +14649,14 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Adresse de secours pour le rapport d'accident"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "Appliquer les codes d'utilisateur en minuscules."
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "Sites spécifiques"
 
 msgid "Configure grouping of interfaces"
 msgstr "Configurer le regroupement des interfaces"
@@ -18385,10 +18397,6 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Définir l'affectation des hôtes"
 
-#, fuzzy
-msgid "Define levels for"
-msgstr "Définir des niveaux pour les pods en attente"
-
 msgid "Define levels for pending pods"
 msgstr "Définir des niveaux pour les pods en attente"
 
@@ -21408,6 +21416,10 @@ msgstr "Visualiser et modifier les paramètres de ce service"
 
 msgid "Don't change state"
 msgstr "Ne changez pas d'état"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "Taux de messages délivrés"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Ne créez pas de service de groupe pour les groupes suivants"
@@ -60706,6 +60718,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
+msgstr ""
+
+msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
 "represents the Checkmk server of the related site. In case your Checkmk "
 "server is not monitored by itself, but from a different site (which is "
@@ -88134,10 +88153,6 @@ msgstr "tous les fichiers journaux de l'hôte %s"
 msgid "all logfiles on all hosts"
 msgstr "tous les fichiers journaux sur tous les hôtes"
 
-#, fuzzy
-msgid "all metrics"
-msgstr "métrique"
-
 msgid "all special agents"
 msgstr "tous les agents spéciaux"
 
@@ -89945,10 +89960,6 @@ msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "La socket attend, après sa fermeture, les paquets restants sur le réseau"
 
-#, fuzzy
-msgid "specific metrics"
-msgstr "Sites spécifiques"
-
 msgid "specify manually ->"
 msgstr "spécifier manuellement ->"
 
@@ -90331,6 +90342,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Define levels for"
+#~ msgstr "Définir des niveaux pour les pods en attente"
+
+#, fuzzy
+#~ msgid "all metrics"
+#~ msgstr "métrique"
 
 #, fuzzy
 #~ msgid "Fail over partner"

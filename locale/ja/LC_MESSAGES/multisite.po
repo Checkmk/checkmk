@@ -13404,6 +13404,10 @@ msgstr "計算結果: %s - %s"
 msgid "Compute REST API specification"
 msgstr "REST APIの仕様"
 
+#, fuzzy
+msgid "Compute a rate"
+msgstr "レートを計算しないでください"
+
 msgid "Compute average over last "
 msgstr "最後の平均を計算する "
 
@@ -13650,6 +13654,14 @@ msgstr "サービスディスカバリを使用せずに強制チェックを構
 
 msgid "Configure fallback email address"
 msgstr "フォールバックメールアドレスの設定"
+
+#, fuzzy
+msgid "Configure for all metrics"
+msgstr "すべてのユーザーに適用"
+
+#, fuzzy
+msgid "Configure for specific metrics"
+msgstr "特定のメトリクス"
 
 msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
@@ -17181,9 +17193,6 @@ msgstr "通知したいイベントを定義します。"
 msgid "Define host assignment"
 msgstr "ホスト割り当ての定義"
 
-msgid "Define levels for"
-msgstr "レベルを定義"
-
 msgid "Define levels for pending pods"
 msgstr "保留中のPodレベルを定義する"
 
@@ -19934,6 +19943,10 @@ msgstr "一致するサービスのパラメーターを変更しない"
 
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
+
+#, fuzzy
+msgid "Don't compute a rate"
+msgstr "レートを計算しないでください"
 
 msgid "Don't create a group service for the following groups"
 msgstr "以下のグループにはグループサービスを作成しない"
@@ -56422,6 +56435,20 @@ msgstr ""
 "せん：例えば、アップタイムは「1.0 s/s」と報告されますが、これはあまり有用では"
 "ありません。ここではデフォルトの動作を上書きできます。"
 
+#, fuzzy
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). The uptime, for example, would be "
+"reported as '1.0 s/s', which is not too useful. You can override the default "
+"behavior here."
+msgstr ""
+"一部のメトリクスは、そのレートを考慮した方が意味がある場合があります（例え"
+"ば、ドロップされたネットワークパケットなど）。デフォルトでは、プラグインはメ"
+"トリクスが単調増加カウンターである場合、レートを計算します。これは当然ながら"
+"単なるヒューリスティックであり、すべてのメトリクスに適用できるわけではありま"
+"せん：例えば、アップタイムは「1.0 s/s」と報告されますが、これはあまり有用では"
+"ありません。ここではデフォルトの動作を上書きできます。"
+
 msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
 "represents the Checkmk server of the related site. In case your Checkmk "
@@ -81731,9 +81758,6 @@ msgstr "ホスト %s のすべてのログファイル"
 msgid "all logfiles on all hosts"
 msgstr "すべてのホストのすべてのログファイル"
 
-msgid "all metrics"
-msgstr "すべてのメトリック"
-
 msgid "all special agents"
 msgstr "全ての特別なエージェント"
 
@@ -83463,9 +83487,6 @@ msgstr "ソケットは使用されていません"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "ソケットは、ネットワークに残っているパケットを閉じた後、待機しています"
 
-msgid "specific metrics"
-msgstr "特定のメトリクス"
-
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
 
@@ -83845,6 +83866,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Define levels for"
+#~ msgstr "レベルを定義"
+
+#~ msgid "all metrics"
+#~ msgstr "すべてのメトリック"
 
 #~ msgid "Fail over partner"
 #~ msgstr "フェイルオーバーパートナー"

@@ -4,41 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# <<<db2_counters>>>
-# TIMESTAMP 1426610723
-# db2taddm:CMDBS1 deadlocks 0
-# db2taddm:CMDBS1 lockwaits 99
-# db2taddm:CMDBS1 sortoverflows 2387
-# TIMESTAMP 1426610763
-# db2taddm:CMDBS6 deadlocks 99
-# db2taddm:CMDBS6 lockwaits 91
-# db2taddm:CMDBS6 sortoverflows 237
-# Example for database in DPF mode ##
-# TIMESTAMP 1439976757
-# db2ifa:DDST1 node 0 iasv0091 0
-# db2ifa:DDST1 node 1 iasv0091 1
-# db2ifa:DDST1 node 2 iasv0091 2
-# db2ifa:DDST1 node 3 iasv0091 3
-# db2ifa:DDST1 node 4 iasv0091 4
-# db2ifa:DDST1 node 5 iasv0091 5
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 deadlocks 0
-# db2ifa:DDST1 lockwaits 0
-# db2ifa:DDST1 lockwaits 0
-# db2ifa:DDST1 lockwaits 0
-# db2ifa:DDST1 lockwaits 0
-# db2ifa:DDST1 lockwaits 0
-# db2ifa:DDST1 lockwaits 80
-
-
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Mapping
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, Service, StringTable
 
 check_info = {}
 
@@ -47,8 +18,10 @@ db2_counters_map = {
     "lockwaits": "Lockwaits",
 }
 
+type Section = tuple[int, Mapping[str, Mapping[str, object]]]
 
-def parse_db2_counters(string_table):
+
+def parse_db2_counters(string_table: StringTable) -> Section:
     dbs = {}
     timestamp = 0
     node_infos = []
@@ -78,13 +51,13 @@ def parse_db2_counters(string_table):
     return timestamp, dbs
 
 
-def inventory_db2_counters(parsed):
+def discover_db2_counters(parsed):
     if len(parsed) == 2:
         for db in parsed[1]:
-            yield db, {}
+            yield Service(item=db)
 
 
-def check_db2_counters(item, params, parsed):
+def _check_db2_counters(value_store, item, params, parsed):
     default_timestamp = parsed[0]
     db = parsed[1].get(item)
     if not db:
@@ -100,7 +73,7 @@ def check_db2_counters(item, params, parsed):
             continue
 
         try:
-            rate = get_rate(get_value_store(), counter, timestamp, value, raise_overflow=True)
+            rate = get_rate(value_store, counter, timestamp, value, raise_overflow=True)
         except IgnoreResultsError:
             wrapped = True
             continue
@@ -118,11 +91,15 @@ def check_db2_counters(item, params, parsed):
         raise IgnoreResultsError("Some counter(s) wrapped, no data this time")
 
 
+def check_db2_counters(item, params, parsed):
+    yield from _check_db2_counters(get_value_store(), item, params, parsed)
+
+
 check_info["db2_counters"] = LegacyCheckDefinition(
     name="db2_counters",
     parse_function=parse_db2_counters,
     service_name="DB2 Counters %s",
-    discovery_function=inventory_db2_counters,
+    discovery_function=discover_db2_counters,
     check_function=check_db2_counters,
     check_ruleset_name="db2_counters",
     check_default_parameters={},

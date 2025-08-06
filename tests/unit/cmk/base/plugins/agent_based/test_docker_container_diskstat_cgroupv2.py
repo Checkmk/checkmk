@@ -45,6 +45,27 @@ loop9 7:9
 nvme0n1 259:0
 sda 8:0"""
 
+AGENT_OUTPUT_CORRUPT = """[time]
+1753845985
+[io.stat]
+259:5 rbytes=0 wbytes=751738880 rios=0 wios=165736 dbytes=0 dios=0
+[names]
+dm-0 252:0
+dm-1 252:1
+dm-2 252:2
+dm-3 252:3
+loop0 7:0
+loop1 7:1
+loop2 7:2
+loop3 7:3
+loop4 7:4
+loop5 7:5
+loop6 7:6
+loop7 7:7
+nvme0c0n1
+nvme0n1 259:1
+nvme1n1 259:5"""
+
 AGENT_OUTPUT_0_SEC = """[time]
 1614938883
 [io.stat]
@@ -165,5 +186,18 @@ def test_parse_docker_container_diskstat_cgroupv2() -> None:
             "write_ios": 1,
             "write_throughput": 0,
             "timestamp": 1614786439,
+        },
+    }
+
+
+def test_parse_docker_container_diskstat_cgroupv2_corrupt() -> None:
+    string_table = _split(AGENT_OUTPUT_CORRUPT)
+    assert parse_docker_container_diskstat_cgroupv2(string_table) == {
+        "nvme1n1": {
+            "read_ios": 0,
+            "read_throughput": 0,
+            "write_ios": 165736,
+            "write_throughput": 751738880,
+            "timestamp": 1753845985,
         },
     }

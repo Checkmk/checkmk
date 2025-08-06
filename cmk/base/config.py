@@ -603,7 +603,7 @@ def load_packed_config(
     The validations which are performed during load() also don't need to be performed.
 
     See Also:
-        cmk.base.core_nagios._dump_precompiled_hostcheck()
+        cmk.base.core.nagios._dump_precompiled_hostcheck()
 
     """
     _initialize_config()

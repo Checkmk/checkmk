@@ -21,14 +21,14 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.core_nagios._create_config import (
+from cmk.base.core.nagios._create_config import (
     _format_nagios_object,
     create_nagios_config_commands,
     create_nagios_host_spec,
     create_nagios_servicedefs,
     NagiosConfig,
 )
-from cmk.base.core_nagios._precompile_host_checks import (
+from cmk.base.core.nagios._precompile_host_checks import (
     dump_precompiled_hostcheck,
     HostCheckStore,
     PrecompileMode,

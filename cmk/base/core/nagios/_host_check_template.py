@@ -13,7 +13,7 @@ import cmk.base.utils
 import cmk.ccc.debug
 import cmk.utils.log
 from cmk.base import config
-from cmk.base.core_nagios import HostCheckConfig
+from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugin_backend import (

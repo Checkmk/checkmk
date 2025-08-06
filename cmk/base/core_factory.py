@@ -76,7 +76,7 @@ def create_core(
                 helper_config_writers,
             )
         case "nagios":
-            from cmk.base.core_nagios import NagiosCore
+            from cmk.base.core.nagios import NagiosCore
 
             return NagiosCore(get_licensing_handler_type())
         case other_core:

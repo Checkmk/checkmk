@@ -19,7 +19,7 @@ from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 import livestatus
 
 import cmk.base.core
-import cmk.base.core_nagios
+import cmk.base.core.nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
@@ -1478,7 +1478,7 @@ modes.register(
 
 
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
-    from cmk.base.core_nagios import create_config
+    from cmk.base.core.nagios import create_config
     from cmk.utils.config_path import VersionedConfigPath
 
     plugins = load_checks()

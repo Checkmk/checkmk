@@ -10,6 +10,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import CmkLinkCardContainer from '@/components/CmkLinkCardContainer.vue'
 
 const { t } = usei18n('next-steps')
 
@@ -23,58 +24,64 @@ defineProps<{
     {{ t('whats-next', "What's next?") }}
   </CmkHeading>
   <CmkSpace />
-  <CmkLinkCard
-    :title="t('setup-backup', 'Set up backup')"
-    :subtitle="
-      t(
-        'setup-backup-subtitle',
-        'No backup, no mercy! Protect your configuration and data with automated backups.'
-      )
-    "
-    icon-name="backup"
-    :url="urls.setup_backup"
-    variant="borderless"
-    :open-in-new-tab="false"
-  />
-  <CmkLinkCard
-    :title="t('scale-monitoring', 'Scale your monitoring')"
-    :subtitle="
-      t(
-        'scale-monitoring-subtitle',
-        'Add more hosts, sites, or distributed setups as your environment grows.'
-      )
-    "
-    icon-name="sites"
-    :url="urls.scale_monitoring"
-    variant="borderless"
-    :open-in-new-tab="true"
-  />
-  <CmkLinkCard
-    :title="t('fine-tune', 'Fine-tune your monitoring')"
-    :subtitle="
-      t(
-        'fine-tune-subtitle',
-        'Dive deep into the details and learn how to optimize checks, thresholds, and notifications.'
-      )
-    "
-    icon-name="rulesets"
-    :url="urls.fine_tune_monitoring"
-    variant="borderless"
-    :open-in-new-tab="true"
-  />
-  <CmkLinkCard
-    :title="t('license', 'License your site')"
-    :subtitle="
-      t(
-        'license-subtitle',
-        'It’s time to enjoy the full experience! Set up automated licensing for a smooth experience.'
-      )
-    "
-    icon-name="licensing"
-    :url="urls.license_site"
-    variant="borderless"
-    :open-in-new-tab="false"
-  />
+  <CmkLinkCardContainer class="next-link-card-container">
+    <CmkLinkCard
+      :title="t('setup-backup', 'Set up backup')"
+      :subtitle="
+        t(
+          'setup-backup-subtitle',
+          'No backup, no mercy! Protect your configuration and data with automated backups.'
+        )
+      "
+      icon-name="backup"
+      :url="urls.setup_backup"
+      variant="borderless"
+      :open-in-new-tab="false"
+    />
+    <CmkLinkCard
+      :title="t('scale-monitoring', 'Scale your monitoring')"
+      :subtitle="
+        t(
+          'scale-monitoring-subtitle',
+          'Add more hosts, sites, or distributed setups as your environment grows.'
+        )
+      "
+      icon-name="sites"
+      :url="urls.scale_monitoring"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
+      :title="t('fine-tune', 'Fine-tune your monitoring')"
+      :subtitle="
+        t(
+          'fine-tune-subtitle',
+          'Dive deep into the details and learn how to optimize checks, thresholds, and notifications.'
+        )
+      "
+      icon-name="rulesets"
+      :url="urls.fine_tune_monitoring"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
+      :title="t('license', 'License your site')"
+      :subtitle="
+        t(
+          'license-subtitle',
+          'It’s time to enjoy the full experience! Set up automated licensing for a smooth experience.'
+        )
+      "
+      icon-name="licensing"
+      :url="urls.license_site"
+      variant="borderless"
+      :open-in-new-tab="false"
+    />
+  </CmkLinkCardContainer>
 </template>
 
-<style scoped></style>
+<style scoped>
+.next-link-card-container {
+  margin-bottom: 56px;
+}
+</style>

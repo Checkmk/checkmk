@@ -131,4 +131,11 @@ for INSTANCE in $INSTANCES; do
     done
 done
 
+if ! command -v perl >/dev/null 2>&1; then
+    echo "ERROR: perl not found" >&2
+fi
+if ! command -v db2 >/dev/null 2>&1; then
+    echo "ERROR: db2 not found" >&2
+fi
+
 exit 0

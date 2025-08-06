@@ -110,7 +110,7 @@ ConfigVariableInventoryHousekeeping = ConfigVariable(
     domain=ConfigDomainGUI,
     ident="inventory_housekeeping",
     valuespec=lambda: Dictionary(
-        title=_("HW/SW Inventory housekeeping"),
+        title=_("HW/SW Inventory cleanup"),
         elements=[
             (
                 "for_hosts",

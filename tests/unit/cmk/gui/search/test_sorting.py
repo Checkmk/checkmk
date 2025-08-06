@@ -20,7 +20,13 @@ def test_no_op_sorter() -> None:
     sorter = get_sorter(None)
     sorter(results)
 
-    assert results == get_unsorted_results()
+    expected = [
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Charlie", url="/charlie", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
+    ]
+
+    assert results == expected
 
 
 def test_alphabetical_sorter() -> None:

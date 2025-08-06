@@ -51,6 +51,8 @@ def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
     adapter = 0
     enclosure_devid = -181
     predictive_failure_count = None
+    raw_size = None
+    device_id = None
     for line in string_table:
         if line[0] == "adapter":
             current_adapter = {}
@@ -78,6 +80,10 @@ def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
 
         elif line[0] == "Slot":
             slot = int(line[-1])
+        elif line[0] == "Device" and line[1] == "Id:":
+            device_id = line[2]
+        elif line[0] == "Raw" and line[1] == "Size:":
+            raw_size = " ".join(line[2:])
         elif line[0] == "Predictive" and line[1] == "Failure" and line[2] == "Count:":
             predictive_failure_count = int(line[3])
         elif line[0] == "Firmware" and line[1] == "state:":
@@ -89,11 +95,13 @@ def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
             item = f"/c{adapter}/e{enclosure}/s{slot}"
 
             disk = megaraid.PDisk(
-                name, _NORMALIZE_STATE.get(state, state), predictive_failure_count
+                name, _NORMALIZE_STATE.get(state, state), predictive_failure_count, raw_size, device_id
             )
 
             parsed[item] = disk
             predictive_failure_count = None
+            raw_size = None
+            device_id = None
 
             # Add it under the old item name. Not discovered, but can be used when checking
             legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"
@@ -132,13 +140,17 @@ def check_megaraid_pdisks(
     if disk.name != item:
         yield Result(state=State.OK, summary=f"Name: {disk.name}")
 
-    if disk.failures is None:
-        return
+    if disk.raw_size:
+        yield Result(state=State.OK, summary=f"Size: {disk.raw_size}")
 
-    yield Result(
-        state=State.WARN if disk.failures > 0 else State.OK,
-        summary=f"Predictive fail count: {disk.failures}",
-    )
+    if disk.device_id:
+        yield Result(state=State.OK, summary=f"Device ID: {disk.device_id}")
+
+    if disk.failures is not None:
+        yield Result(
+            state=State.WARN if disk.failures > 0 else State.OK,
+            summary=f"Predictive fail count: {disk.failures}",
+        )
 
 
 register.check_plugin(

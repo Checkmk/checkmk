@@ -9,6 +9,7 @@ from .create_cluster_host import ENDPOINT_CREATE_CLUSTER_HOST
 from .create_host import ENDPOINT_CREATE_HOST
 from .list_hosts import ENDPOINT_LIST_HOSTS
 from .show_host import ENDPOINT_SHOW_HOST
+from .update_cluster_nodes import ENDPOINT_UPDATE_CLUSTER_NODES
 
 
 def register(
@@ -23,3 +24,6 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_CREATE_HOST, ignore_duplicates=ignore_duplicates)
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOSTS, ignore_duplicates=ignore_duplicates)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(
+        ENDPOINT_UPDATE_CLUSTER_NODES, ignore_duplicates=ignore_duplicates
+    )

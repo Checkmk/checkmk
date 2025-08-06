@@ -106,7 +106,7 @@ function searchResultNotEmpty(): boolean {
 <template>
   <div v-if="searchResultNotEmpty()" class="cmk-unified-search-result-tabs">
     <div>
-      <CmkHeading type="h2">
+      <CmkHeading type="h4" class="result-heading">
         {{ t('results', 'Results') }} ({{ results.length }})
 
         <div class="cmk-unified-search-tab-info">
@@ -158,7 +158,7 @@ function searchResultNotEmpty(): boolean {
 </template>
 
 <style scoped>
-h2 {
+.result-heading {
   margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;

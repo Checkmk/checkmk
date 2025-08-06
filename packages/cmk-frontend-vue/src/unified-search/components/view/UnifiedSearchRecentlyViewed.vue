@@ -46,7 +46,7 @@ immediateWatch(
 
 <template>
   <div v-if="recentlyViewed.length > 0" class="recently-viewed">
-    <CmkHeading type="h2">
+    <CmkHeading type="h4" class="result-heading">
       {{ t('recently-viewed', 'Recently viewed') }}
       <button
         @click.stop="
@@ -91,7 +91,7 @@ immediateWatch(
 </template>
 
 <style scoped>
-h2 {
+.result-heading {
   margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;

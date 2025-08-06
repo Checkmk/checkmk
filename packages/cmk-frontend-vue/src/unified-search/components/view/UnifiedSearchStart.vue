@@ -105,7 +105,7 @@ onBeforeUnmount(() => {
   ></UnifiedSearchRecentlyViewed>
 
   <div v-if="recentlySearches.length > 0" class="recent-searches">
-    <CmkHeading type="h2">
+    <CmkHeading type="h4" class="result-heading">
       {{ t('recently-searched', 'Recently searched') }}
       <button
         @click.stop="
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-h2 {
+.result-heading {
   margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;

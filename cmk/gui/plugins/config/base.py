@@ -147,6 +147,7 @@ class CREConfig:
 
     sidebar: list[tuple[str, str]] = field(
         default_factory=lambda: [
+            ("a_welcome", "open"),
             ("tactical_overview", "open"),
             ("bookmarks", "open"),
             ("master_control", "closed"),

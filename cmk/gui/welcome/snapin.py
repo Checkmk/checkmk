@@ -9,8 +9,9 @@ from typing import override
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
-from cmk.gui.welcome.pages import get_welcome_data
+from cmk.gui.welcome.pages import get_welcome_data, WELCOME_PAGE_PERMISSIONS
 
 
 def register(snapin_registry: SnapinRegistry) -> None:
@@ -39,6 +40,13 @@ class SidebarWelcomeSnapin(SidebarSnapin):
     @override
     @classmethod
     def refresh_regularly(cls) -> bool:
+        return True
+
+    @override
+    @classmethod
+    def may_see(cls) -> bool:
+        if not all(user.may(perm) for perm in WELCOME_PAGE_PERMISSIONS):
+            return False
         return True
 
     @override

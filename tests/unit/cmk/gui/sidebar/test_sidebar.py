@@ -123,6 +123,7 @@ def test_load_default_config() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     assert user_config.folded is False
     assert user_config.snapins == [
+        UserSidebarSnapin.from_snapin_type_id("a_welcome"),
         UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
         UserSidebarSnapin.from_snapin_type_id("bookmarks"),
         UserSidebarSnapin(

@@ -25,19 +25,20 @@ db2_counters_map = {
     "lockwaits": "Lockwaits",
 }
 
-type Section = tuple[int, Mapping[str, Mapping[str, object]]]
+type Section = tuple[int | None, Mapping[str, Mapping[str, object]]]
 
 
 def parse_db2_counters(string_table: StringTable) -> Section:
     dbs: dict[str, dict[str, object]] = {}
-    timestamp = 0
+    timestamp: int | None = None
     node_infos: list[str] = []
     element_offset: dict[str, int] = {}
     for line in string_table:
         if line[0].startswith("TIMESTAMP"):
             element_offset = {}
             node_infos = []
-            timestamp = int(line[1])
+            # Perl not installed
+            timestamp = int(line[1]) if len(line) >= 2 else None
         elif line[1] == "node":
             node_infos.append(" ".join(line[2:]))
         # Some databases run in DPF mode. Means that the database is split over several nodes
@@ -80,6 +81,8 @@ def _check_db2_counters(
     db = section[1].get(item)
     if not db:
         raise IgnoreResultsError("Login into database failed")
+    if default_timestamp is None:
+        raise IgnoreResultsError("Perl not installed")
 
     wrapped = False
     timestamp: int = db.get("TIMESTAMP", default_timestamp)  # type: ignore[assignment]

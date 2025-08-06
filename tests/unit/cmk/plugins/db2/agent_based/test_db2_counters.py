@@ -55,6 +55,17 @@ STRING_TABLE = [
     ["db2ifa:DDST1", "lockwaits", "80"],
 ]
 
+STRING_TABLE_NO_PERL = [
+    ["TIMESTAMP"],
+    ["db1taddm:CMDBS5", "deadlocks", "0"],
+    ["db1taddm:CMDBS5", "lockwaits", "1"],
+    ["db1taddm:CMDBS5", "sortoverflows", "0"],
+    ["TIMESTAMP"],
+    ["db1taddm:CMDBS6", "deadlocks", "1"],
+    ["db1taddm:CMDBS6", "lockwaits", "0"],
+    ["db1taddm:CMDBS6", "sortoverflows", "0"],
+]
+
 
 @pytest.mark.parametrize(
     "string_table,expected",
@@ -107,6 +118,24 @@ STRING_TABLE = [
                 },
             ),
         ),
+        (
+            STRING_TABLE_NO_PERL,
+            (
+                None,
+                {
+                    "db1taddm:CMDBS5": {
+                        "TIMESTAMP": None,
+                        "deadlocks": "0",
+                        "lockwaits": "1",
+                    },
+                    "db1taddm:CMDBS6": {
+                        "TIMESTAMP": None,
+                        "deadlocks": "1",
+                        "lockwaits": "0",
+                    },
+                },
+            ),
+        ),
     ],
 )
 def test_parse_db2_counters(string_table: StringTable, expected: Section) -> None:
@@ -127,6 +156,13 @@ def test_parse_db2_counters(string_table: StringTable, expected: Section) -> Non
                 Service(item="db2ifa:DDST1 DPF 3 iasv0091 3"),
                 Service(item="db2ifa:DDST1 DPF 4 iasv0091 4"),
                 Service(item="db2ifa:DDST1 DPF 5 iasv0091 5"),
+            ],
+        ),
+        (
+            STRING_TABLE_NO_PERL,
+            [
+                Service(item="db1taddm:CMDBS5"),
+                Service(item="db1taddm:CMDBS6"),
             ],
         ),
     ],
@@ -197,3 +233,11 @@ def test_check_db2_counters(
     results = list(_check_db2_counters(value_store, "db2taddm:CMDBS6", params, section_2))
     # Assert
     assert results == expected
+
+
+def test_check_db2_counters_no_perl() -> None:
+    # Assemble
+    section = parse_db2_counters(STRING_TABLE_NO_PERL)
+    # Act
+    with pytest.raises(IgnoreResultsError, match="Perl"):
+        list(_check_db2_counters({}, "db1taddm:CMDBS6", {}, section))

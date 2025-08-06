@@ -50,7 +50,6 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             _VAxisMinMax((-1.0, 1.0), 2.0, -2.0, 2.0),
             id="default-mirrored",
         ),
-        #
         pytest.param(
             MinimalVerticalRange(min=0.01, max=0.02),
             [],
@@ -83,7 +82,6 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
             id="small-neg-mirrored",
         ),
-        #
         pytest.param(
             MinimalVerticalRange(min=-5.0, max=10.0),
             [],
@@ -229,8 +227,13 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(real_range=(0, 2000.0), distance=2000.0, min_value=0, max_value=3000.0),
-            id="layouted_curves_range_at_least_zero",
+            _VAxisMinMax(
+                real_range=(1000.0, 2000.0),
+                distance=1000.0,
+                min_value=500.0,
+                max_value=2500.0,
+            ),
+            id="layouted_curves_without_zero",
         ),
         pytest.param(
             FixedVerticalRange(min=-500.0, max=1000.0),

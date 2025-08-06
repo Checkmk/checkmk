@@ -17,8 +17,7 @@ def get_unsorted_results() -> list[UnifiedSearchResultItem]:
 
 def test_no_op_sorter() -> None:
     results = get_unsorted_results()
-    sorter = get_sorter(None)
-    sorter(results)
+    get_sorter(None)(results)
 
     expected = [
         UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
@@ -31,8 +30,7 @@ def test_no_op_sorter() -> None:
 
 def test_alphabetical_sorter() -> None:
     results = get_unsorted_results()
-    sorter = get_sorter("alphabetic")
-    sorter(results)
+    get_sorter("alphabetic")(results)
 
     expected = [
         UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
@@ -45,8 +43,7 @@ def test_alphabetical_sorter() -> None:
 
 def test_weighted_sorter() -> None:
     results = get_unsorted_results()
-    sorter = get_sorter("weighted_index", query="bet")
-    sorter(results)
+    get_sorter("weighted_index", query="bet")(results)
 
     expected = [
         UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),

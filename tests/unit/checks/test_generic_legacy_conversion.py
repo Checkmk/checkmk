@@ -295,7 +295,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "db2_backup",
         "db2_bp_hitratios",
         "db2_connections",
-        "db2_counters",
         "db2_logsizes",
         "db2_mem",
         "db2_sort_overflow",

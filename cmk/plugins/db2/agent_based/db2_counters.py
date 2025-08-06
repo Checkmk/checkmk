@@ -3,15 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping
 
-# mypy: disable-error-code="var-annotated"
-
-from collections.abc import Mapping
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, Service, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -22,10 +29,10 @@ type Section = tuple[int, Mapping[str, Mapping[str, object]]]
 
 
 def parse_db2_counters(string_table: StringTable) -> Section:
-    dbs = {}
+    dbs: dict[str, dict[str, object]] = {}
     timestamp = 0
-    node_infos = []
-    element_offset = {}
+    node_infos: list[str] = []
+    element_offset: dict[str, int] = {}
     for line in string_table:
         if line[0].startswith("TIMESTAMP"):
             element_offset = {}
@@ -51,25 +58,37 @@ def parse_db2_counters(string_table: StringTable) -> Section:
     return timestamp, dbs
 
 
-def discover_db2_counters(parsed):
-    if len(parsed) == 2:
-        for db in parsed[1]:
+agent_section_db2_counters = AgentSection(
+    name="db2_counters",
+    parse_function=parse_db2_counters,
+)
+
+
+def discover_db2_counters(section: Section) -> DiscoveryResult:
+    if len(section) == 2:
+        for db in section[1]:
             yield Service(item=db)
 
 
-def _check_db2_counters(value_store, item, params, parsed):
-    default_timestamp = parsed[0]
-    db = parsed[1].get(item)
+def _check_db2_counters(
+    value_store: MutableMapping[str, object],
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+) -> CheckResult:
+    default_timestamp = section[0]
+    db = section[1].get(item)
     if not db:
         raise IgnoreResultsError("Login into database failed")
 
     wrapped = False
-    timestamp = db.get("TIMESTAMP", default_timestamp)
+    timestamp: int = db.get("TIMESTAMP", default_timestamp)  # type: ignore[assignment]
     for counter, label in db2_counters_map.items():
+        db_counter: str = db[counter]  # type: ignore[assignment]
         try:
-            value = float(db[counter])
+            value = float(db_counter)
         except ValueError:
-            yield 2, "Invalid value: " + db[counter]
+            yield Result(state=State.CRIT, summary="Invalid value: " + db_counter)
             continue
 
         try:
@@ -78,26 +97,30 @@ def _check_db2_counters(value_store, item, params, parsed):
             wrapped = True
             continue
 
-        warn, crit = params.get(counter, (None, None))
-        perfdata = [(counter, rate, warn, crit)]
-        if crit is not None and rate >= crit:
-            yield 2, f"{label}: {rate:.1f}/s", perfdata
-        elif warn is not None and rate >= warn:
-            yield 1, f"{label}: {rate:.1f}/s", perfdata
-        else:
-            yield 0, f"{label}: {rate:.1f}/s", perfdata
+        yield from check_levels(
+            value=rate,
+            levels_upper=(
+                ("fixed", param)
+                if (param := params.get(counter)) is not None
+                else ("no_levels", None)
+            ),
+            metric_name=counter,
+            render_func=lambda rate: f"{rate:.1f}/s",
+            label=label,
+        )
 
     if wrapped:
         raise IgnoreResultsError("Some counter(s) wrapped, no data this time")
 
 
-def check_db2_counters(item, params, parsed):
-    yield from _check_db2_counters(get_value_store(), item, params, parsed)
+def check_db2_counters(
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    yield from _check_db2_counters(get_value_store(), item, params, section)
 
 
-check_info["db2_counters"] = LegacyCheckDefinition(
+check_plugin_db2_counters = CheckPlugin(
     name="db2_counters",
-    parse_function=parse_db2_counters,
     service_name="DB2 Counters %s",
     discovery_function=discover_db2_counters,
     check_function=check_db2_counters,

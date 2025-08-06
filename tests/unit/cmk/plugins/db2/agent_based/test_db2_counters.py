@@ -11,10 +11,13 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    Metric,
+    Result,
     Service,
+    State,
     StringTable,
 )
-from cmk.base.legacy_checks.db2_counters import (
+from cmk.plugins.db2.agent_based.db2_counters import (
     _check_db2_counters,
     discover_db2_counters,
     parse_db2_counters,
@@ -139,90 +142,30 @@ def test_discover_db2_counters(string_table: list[list[str]], expected: Discover
         pytest.param(
             {},
             [
-                (
-                    0,
-                    "Deadlocks: 1.1/s",
-                    [
-                        (
-                            "deadlocks",
-                            1.1,
-                            None,
-                            None,
-                        ),
-                    ],
-                ),
-                (
-                    0,
-                    "Lockwaits: 2.0/s",
-                    [
-                        (
-                            "lockwaits",
-                            2.0,
-                            None,
-                            None,
-                        ),
-                    ],
-                ),
+                Result(state=State.OK, summary="Deadlocks: 1.1/s"),
+                Metric("deadlocks", 1.1),
+                Result(state=State.OK, summary="Lockwaits: 2.0/s"),
+                Metric("lockwaits", 2.0),
             ],
             id="no levels",
         ),
         pytest.param(
             {"deadlocks": (1.0, 2.0)},
             [
-                (
-                    1,
-                    "Deadlocks: 1.1/s",
-                    [
-                        (
-                            "deadlocks",
-                            1.1,
-                            1.0,
-                            2.0,
-                        ),
-                    ],
-                ),
-                (
-                    0,
-                    "Lockwaits: 2.0/s",
-                    [
-                        (
-                            "lockwaits",
-                            2.0,
-                            None,
-                            None,
-                        ),
-                    ],
-                ),
+                Result(state=State.WARN, summary="Deadlocks: 1.1/s (warn/crit at 1.0/s/2.0/s)"),
+                Metric("deadlocks", 1.1, levels=(1.0, 2.0)),
+                Result(state=State.OK, summary="Lockwaits: 2.0/s"),
+                Metric("lockwaits", 2.0),
             ],
             id="warn",
         ),
         pytest.param(
             {"lockwaits": (0.1, 0.2)},
             [
-                (
-                    0,
-                    "Deadlocks: 1.1/s",
-                    [
-                        (
-                            "deadlocks",
-                            1.1,
-                            None,
-                            None,
-                        ),
-                    ],
-                ),
-                (
-                    2,
-                    "Lockwaits: 2.0/s",
-                    [
-                        (
-                            "lockwaits",
-                            2.0,
-                            0.1,
-                            0.2,
-                        ),
-                    ],
-                ),
+                Result(state=State.OK, summary="Deadlocks: 1.1/s"),
+                Metric("deadlocks", 1.1),
+                Result(state=State.CRIT, summary="Lockwaits: 2.0/s (warn/crit at 0.1/s/0.2/s)"),
+                Metric("lockwaits", 2.0, levels=(0.1, 0.2)),
             ],
             id="crit",
         ),

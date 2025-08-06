@@ -5173,10 +5173,6 @@ msgstr "Enregistrement de la boulangerie de l'agent"
 msgid "Agent Bakery packages"
 msgstr "Paquets d'agents de boulangerie"
 
-#, fuzzy
-msgid "Agent Download"
-msgstr "Dernier téléchargement"
-
 msgid "Agent Error"
 msgstr "Erreur de l'agent"
 
@@ -6433,10 +6429,6 @@ msgid ""
 msgstr ""
 "Presque tous les filtres disponibles, utilisés pour rechercher des services "
 "et éventuellement effectuer des actions"
-
-#, fuzzy
-msgid "Already installed the agent?"
-msgstr "Toujours installer Python avec l'agent"
 
 msgid "Also bulk outside of time period"
 msgstr "Également en vrac en dehors de la période"
@@ -21645,10 +21637,6 @@ msgstr "Télécharger"
 #, python-format
 msgid "Download %s package of agent for %s"
 msgstr "Télécharger le paquet %s de l'agent pour %s"
-
-#, fuzzy
-msgid "Download & install agent"
-msgstr "Agent téléchargé"
 
 #, fuzzy
 msgid "Download (internet connection)"
@@ -53587,10 +53575,6 @@ msgstr "Lire"
 msgid "Read / Write queue length"
 msgstr "Longueur de la file d'attente de lecture/écriture"
 
-#, fuzzy
-msgid "Read Checkmk user guide"
-msgstr "Le guide officiel de l'utilisateur de Checkmk"
-
 msgid "Read IO operations per second"
 msgstr "Opérations d'E/S de lecture par seconde"
 
@@ -73170,13 +73154,6 @@ msgstr "Ce problème a été reconnu"
 msgid "This problem has been acknowledged."
 msgstr "Ce problème a été reconnu."
 
-#, fuzzy
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"Les problèmes ci-dessus peuvent être dus à des caches manquants. Veuillez "
-"déclencher un nouveau balayage."
-
 msgid "This process may take several minutes, please wait..."
 msgstr ""
 
@@ -91132,6 +91109,32 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "foo.bar"
+#~ msgstr "Joerg's test string"
+
+#, fuzzy
+#~ msgid "Agent Download"
+#~ msgstr "Dernier téléchargement"
+
+#, fuzzy
+#~ msgid "Already installed the agent?"
+#~ msgstr "Toujours installer Python avec l'agent"
+
+#, fuzzy
+#~ msgid "Download & install agent"
+#~ msgstr "Agent téléchargé"
+
+#, fuzzy
+#~ msgid "Read Checkmk user guide"
+#~ msgstr "Le guide officiel de l'utilisateur de Checkmk"
+
+#, fuzzy
+#~ msgid ""
+#~ "This problem might be caused by a missing agent or the firewall settings."
+#~ msgstr ""
+#~ "Les problèmes ci-dessus peuvent être dus à des caches manquants. Veuillez "
+#~ "déclencher un nouveau balayage."
 
 #, fuzzy, python-format
 #~ msgid ""

@@ -4860,9 +4860,6 @@ msgstr "エージェントベーカリーログ"
 msgid "Agent Bakery packages"
 msgstr "エージェントベーカリーパッケージ"
 
-msgid "Agent Download"
-msgstr "エージェントダウンロード"
-
 msgid "Agent Error"
 msgstr "エージェントエラー"
 
@@ -6032,9 +6029,6 @@ msgid ""
 msgstr ""
 "利用可能なほぼすべてのフィルター、サービスの検索やアクションの実行に使用され"
 "ます"
-
-msgid "Already installed the agent?"
-msgstr "すでにエージェントはインストール済？"
 
 msgid "Also bulk outside of time period"
 msgstr "また 期間外のバルク"
@@ -20137,9 +20131,6 @@ msgstr "ダウンロード"
 #, python-format
 msgid "Download %s package of agent for %s"
 msgstr "%sのエージェントの%sパッケージをダウンロードします"
-
-msgid "Download & install agent"
-msgstr "ダウンロード済・インストール済のエージェント"
 
 msgid "Download (internet connection)"
 msgstr "ダウンロード（インターネット接続）"
@@ -49657,9 +49648,6 @@ msgstr "読んだ"
 msgid "Read / Write queue length"
 msgstr "読み取り/書き込みキューの長さ"
 
-msgid "Read Checkmk user guide"
-msgstr "Checkmk公式ユーザーガイドをお読みください"
-
 msgid "Read IO operations per second"
 msgstr "1秒あたりのIO操作の読み取り"
 
@@ -68087,12 +68075,6 @@ msgstr "この問題は承認済です"
 msgid "This problem has been acknowledged."
 msgstr "この問題は承認済みです。"
 
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因である"
-"可能性があります。"
-
 msgid "This process may take several minutes, please wait..."
 msgstr "この処理には数分かかる場合があります。しばらくお待ちください..."
 
@@ -84483,6 +84465,27 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "foo.bar"
+#~ msgstr "Joerg's test string"
+
+#~ msgid "Agent Download"
+#~ msgstr "エージェントダウンロード"
+
+#~ msgid "Already installed the agent?"
+#~ msgstr "すでにエージェントはインストール済？"
+
+#~ msgid "Download & install agent"
+#~ msgstr "ダウンロード済・インストール済のエージェント"
+
+#~ msgid "Read Checkmk user guide"
+#~ msgstr "Checkmk公式ユーザーガイドをお読みください"
+
+#~ msgid ""
+#~ "This problem might be caused by a missing agent or the firewall settings."
+#~ msgstr ""
+#~ "この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因であ"
+#~ "る可能性があります。"
 
 #, python-format
 #~ msgid ""

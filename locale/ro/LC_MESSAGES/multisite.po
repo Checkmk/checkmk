@@ -5150,10 +5150,6 @@ msgstr "Înregistrare agent de panificație"
 msgid "Agent Bakery packages"
 msgstr "Pachete pentru agenți de panificație"
 
-#, fuzzy
-msgid "Agent Download"
-msgstr "Ultima descărcare"
-
 msgid "Agent Error"
 msgstr "Eroare agent"
 
@@ -6403,10 +6399,6 @@ msgid ""
 msgstr ""
 "Aproape toate filtrele disponibile, utilizate pentru căutarea de servicii "
 "și, eventual, pentru efectuarea de acțiuni"
-
-#, fuzzy
-msgid "Already installed the agent?"
-msgstr "Instalați întotdeauna Python cu agentul"
 
 msgid "Also bulk outside of time period"
 msgstr "De asemenea, vrac în afara perioadei de timp"
@@ -21525,10 +21517,6 @@ msgstr "Descarca"
 #, python-format
 msgid "Download %s package of agent for %s"
 msgstr "Descărcați pachetul %s de agent pentru %s."
-
-#, fuzzy
-msgid "Download & install agent"
-msgstr "Agent descărcat"
 
 #, fuzzy
 msgid "Download (internet connection)"
@@ -53257,10 +53245,6 @@ msgstr "Citește"
 msgid "Read / Write queue length"
 msgstr "Lungimea cozii de citire / scriere"
 
-#, fuzzy
-msgid "Read Checkmk user guide"
-msgstr "Ghidul oficial al utilizatorului Checkmk"
-
 msgid "Read IO operations per second"
 msgstr "Operațiuni IO de citire pe secundă"
 
@@ -72778,13 +72762,6 @@ msgstr "Această problemă a fost recunoscută"
 msgid "This problem has been acknowledged."
 msgstr "Această problemă a fost recunoscută."
 
-#, fuzzy
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
-"declanșați o rescanare."
-
 msgid "This process may take several minutes, please wait..."
 msgstr ""
 
@@ -90537,6 +90514,32 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "foo.bar"
+#~ msgstr "Joerg's test string"
+
+#, fuzzy
+#~ msgid "Agent Download"
+#~ msgstr "Ultima descărcare"
+
+#, fuzzy
+#~ msgid "Already installed the agent?"
+#~ msgstr "Instalați întotdeauna Python cu agentul"
+
+#, fuzzy
+#~ msgid "Download & install agent"
+#~ msgstr "Agent descărcat"
+
+#, fuzzy
+#~ msgid "Read Checkmk user guide"
+#~ msgstr "Ghidul oficial al utilizatorului Checkmk"
+
+#, fuzzy
+#~ msgid ""
+#~ "This problem might be caused by a missing agent or the firewall settings."
+#~ msgstr ""
+#~ "Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
+#~ "declanșați o rescanare."
 
 #, fuzzy, python-format
 #~ msgid ""

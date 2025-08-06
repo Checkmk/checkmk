@@ -5,34 +5,7 @@
 
 from collections.abc import Iterator
 
-from .load import load_werk_v2
-from .markup import markdown_to_nowiki
-from .models import Compatibility
 from .parse import WerkV2ParseResult
-
-
-def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
-    werk = load_werk_v2(parsed)
-
-    def generator() -> Iterator[str]:
-        yield f"Title: {werk.title}"
-        yield f"Class: {werk.class_.value}"
-        if werk.compatible == Compatibility.COMPATIBLE:
-            compatible = "compat"
-        elif werk.compatible == Compatibility.NOT_COMPATIBLE:
-            compatible = "incomp"
-        else:
-            raise NotImplementedError()
-        yield f"Compatible: {compatible}"
-        yield f"Component: {werk.component}"
-        yield f"Date: {int(werk.date.timestamp())}"
-        yield f"Edition: {werk.edition.value}"
-        yield f"Level: {werk.level.value}"
-        yield f"Version: {werk.version}"
-        yield ""
-        yield markdown_to_nowiki(werk.description)
-
-    return "\n".join(generator())
 
 
 def _sort_keys(key_value: tuple[str, str]) -> int:

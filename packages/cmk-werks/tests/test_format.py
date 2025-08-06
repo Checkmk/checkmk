@@ -5,7 +5,7 @@
 
 
 from cmk.werks import parse_werk
-from cmk.werks.format import format_as_werk_v1, format_as_werk_v2
+from cmk.werks.format import format_as_werk_v2
 from cmk.werks.parse import parse_werk_v2, WerkV2ParseResult
 
 
@@ -94,28 +94,6 @@ LI: ...entries!
 * a list...
 * ...with...
 * ...entries!"""
-    )
-
-    parsed.metadata["version"] = "77.77.77p77"
-
-    content = format_as_werk_v1(parsed)
-    assert (
-        content
-        == """Title: APT: Fix service discovery when getting unexpected output from apt
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1569225628
-Edition: cre
-Level: 1
-Version: 77.77.77p77
-
-some description and
-
-LI: a list...
-LI: ...with...
-LI: ...entries!
-"""
     )
 
 

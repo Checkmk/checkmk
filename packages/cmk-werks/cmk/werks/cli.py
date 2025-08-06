@@ -29,7 +29,7 @@ from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
-from .format import format_as_werk_v1, format_as_werk_v2
+from .format import format_as_werk_v2
 from .parse import WerkV2ParseResult
 
 T = TypeVar("T", bound="Stash")
@@ -465,7 +465,11 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
         if werk_version == "v2":
             f.write(format_as_werk_v2(werk.content))
         else:
-            f.write(format_as_werk_v1(werk.content))
+            raise NotImplementedError(
+                "Writing v1 werks is no longer supported. "
+                "Please use the werk tool of the 2.2.0 branch.\n"
+                "Contact the component owner of 'Development Tools' if this blocks you."
+            )
 
     save_last_werkid(werk.id)
 

@@ -5,8 +5,6 @@
 
 
 from cmk.werks.convert import werkv1_to_werkv2
-from cmk.werks.format import format_as_werk_v1
-from cmk.werks.parse import parse_werk_v2
 
 WERK_V1_SIMPLE = """Title: Simple Title
 Class: fix
@@ -30,6 +28,32 @@ C-:
 
 smth
 """
+
+WERK_V1_SIMPLE_RESULT = """[//]: # (werk v2)
+# Simple Title
+
+key | value
+--- | ---
+compatible | yes
+version | 2.2.0p1
+date | 2017-07-14T02:40:00+00:00
+level | 1
+class | fix
+component | wato
+edition | cre
+
+Short description
+
+## headline
+
+* one
+* two
+
+```
+code
+```
+
+smth"""
 
 WERK_V1 = """Title: Fix rule analyzation issues on service object parameter page
 Class: fix
@@ -124,5 +148,4 @@ def test_convert_werk_simple() -> None:
 def test_roundtrip() -> None:
     werk2, werk_id = werkv1_to_werkv2(WERK_V1_SIMPLE, 1234)
     assert werk_id == 1234
-    werk1 = format_as_werk_v1(parse_werk_v2(werk2, "1234"))
-    assert werk1 == WERK_V1_SIMPLE
+    assert werk2 == WERK_V1_SIMPLE_RESULT

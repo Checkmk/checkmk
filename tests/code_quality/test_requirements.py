@@ -403,7 +403,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("libcst"): {
         Path("doc/treasures/migration_helpers/legacy_ssc_to_v1.py"),
         Path("doc/treasures/migration_helpers/legacy_checks_to_v2.py"),
-        Path("doc/treasures/migration_helpers/legacy_vs_to_ruleset_v1.py"),
+        Path("doc/treasures/migration_helpers/legacy_vs_to_fs_v1.py"),
     },
     ImportName("pip"): {  # is included by default in python
         Path("omd/packages/Python/pip")

@@ -200,14 +200,26 @@ def assert_hash_matches_package_content(
         with requests.get(
             url, auth=(credentials.username, credentials.password), stream=True, timeout=120
         ) as r:
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as http_error:
+                return AssertResult(
+                    assertion_ok=False, message=f"Retrieving {url} failed: {http_error}"
+                )
+
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
 
         with requests.get(
             hash_url, auth=(credentials.username, credentials.password), stream=True, timeout=20
         ) as r:
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as http_error:
+                return AssertResult(
+                    assertion_ok=False, message=f"Retrieving {hash_url} failed: {http_error}"
+                )
+
             with open(hash_path, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
 

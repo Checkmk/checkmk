@@ -36,13 +36,13 @@ def _file_permissions_is_660(path: Path) -> bool:
 
 
 def test_create_site_certificate(ca: SiteCA) -> None:
-    assert not ca.site_certificate_exists(SITE_ID)
+    assert not ca.site_certificate_exists(ca.cert_dir, SITE_ID)
 
     ca.create_site_certificate(SITE_ID, key_size=1024)
-    assert ca.site_certificate_exists(SITE_ID)
-    assert _file_permissions_is_660(ca._site_certificate_path(SITE_ID))
+    assert ca.site_certificate_exists(ca.cert_dir, SITE_ID)
+    assert _file_permissions_is_660(ca.site_certificate_path(ca.cert_dir, SITE_ID))
 
-    mixed_pem = ca._site_certificate_path(SITE_ID).read_bytes()
+    mixed_pem = ca.site_certificate_path(ca.cert_dir, SITE_ID).read_bytes()
     certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
     private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
 

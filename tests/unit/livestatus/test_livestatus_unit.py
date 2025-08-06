@@ -28,12 +28,12 @@ def prevent_livestatus_connect() -> None:
 
 @pytest.fixture
 def ca(tmp_path: Path) -> SiteCA:
-    p = tmp_path / "etc" / "ssl"
-    ca = SiteCA.load_or_create("test-site", p, key_size=1024)
+    cert_dir = tmp_path / "etc" / "ssl"
+    ca = SiteCA.load_or_create("test-site", cert_dir, key_size=1024)
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
-        f.write((ca.root_ca_path).open(encoding="utf-8").read())
+        f.write((ca.root_ca_path(ca.cert_dir)).open(encoding="utf-8").read())
     return ca
 
 
@@ -182,7 +182,7 @@ def test_create_socket_with_verification_using_custom_trust_store(
     tmp_path: Path,
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
-    ca_file_path = str(ca.root_ca_path)
+    ca_file_path = str(ca.root_ca_path(ca.cert_dir))
 
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=ca_file_path

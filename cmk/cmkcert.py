@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+import argparse
+import os
+import shutil
+import sys
+from collections.abc import Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal
+
+from dateutil.relativedelta import relativedelta
+
+import cmk.utils.paths
+from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
+
+CertificateType = Literal["site", "site-ca", "agent-ca"]
+
+
+@dataclass
+class Args:
+    target_certificate: CertificateType
+    expiry: int
+    replace: bool
+
+
+def _parse_args(args: Sequence[str]) -> Args:
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument(
+        "target_certificate",
+        choices=["site", "site-ca", "agent-ca"],
+        help="specify which certificate to create",
+    )
+    parser.add_argument(
+        "--expiry",
+        type=int,
+        default=90,
+        help="specify the expiry time in days",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        default=False,
+        help="specify if the certificate currently in place has to be replaced",
+    )
+
+    parsed_args = parser.parse_args(args)
+
+    return Args(
+        target_certificate=parsed_args.target_certificate,
+        expiry=parsed_args.expiry,
+        replace=parsed_args.replace,
+    )
+
+
+def _certificate_path(
+    target_certificate: CertificateType,
+    site_id: str,
+    omd_root: Path,
+) -> Path:
+    if target_certificate == "site":
+        return SiteCA.site_certificate_path(cert_dir=cert_dir(omd_root), site_id=site_id)
+    if target_certificate == "site-ca":
+        return SiteCA.root_ca_path(cert_dir=cert_dir(omd_root))
+    if target_certificate == "agent-ca":
+        return agent_root_ca_path(site_root_dir=omd_root)
+
+    raise ValueError(f"Unknown certificate type: {target_certificate}")
+
+
+def replace_site_certificate(
+    site_id: str,
+    certificate_directory: Path,
+    expiry: relativedelta,
+    key_size: int = 4096,
+) -> None:
+    site_ca = SiteCA.load(certificate_directory=certificate_directory)
+
+    site_ca.create_site_certificate(
+        site_id=site_id,
+        expiry=expiry,
+        key_size=key_size,
+    )
+
+
+def replace_site_ca(
+    site_id: str,
+    certificate_directory: Path,
+    expiry: relativedelta,
+    key_size: int = 4096,
+) -> None:
+    SiteCA.create(
+        cert_dir=certificate_directory,
+        site_id=site_id,
+        expiry=expiry,
+        key_size=key_size,
+    )
+
+
+def replace_agent_ca(
+    site_id: str,
+    omd_root: Path,
+    expiry: relativedelta,
+    key_size: int = 4096,
+) -> None:
+    agent_ca_path = agent_root_ca_path(site_root_dir=omd_root)
+
+    RootCA.load_or_create(
+        path=agent_ca_path,
+        name=f"Site '{site_id}' agent signing CA",
+        validity=expiry,
+        key_size=key_size,
+    )
+
+
+def _run_cmkcert(
+    omd_root: Path,
+    site_id: str,
+    target_certificate: CertificateType,
+    expiry: int,
+    replace: bool,
+) -> None:
+    target_certificate_path = _certificate_path(
+        target_certificate=target_certificate,
+        site_id=site_id,
+        omd_root=omd_root,
+    )
+
+    if target_certificate_path.is_file() and not replace:
+        raise ValueError(
+            f"{target_certificate} certificate already exists but '--replace' not given"
+        )
+
+    if target_certificate_path.is_file():
+        shutil.move(target_certificate_path, target_certificate_path.with_suffix(".bak"))
+        sys.stdout.write(
+            f"cmk-cert: Backed up existing {target_certificate} certificate to "
+            f"{target_certificate_path.with_suffix('.bak')}\n"
+        )
+
+    match target_certificate:
+        case "site-ca":
+            replace_site_ca(
+                site_id=site_id,
+                certificate_directory=cert_dir(omd_root),
+                expiry=relativedelta(days=expiry),
+            )
+
+        case "agent-ca":
+            replace_agent_ca(
+                site_id=site_id,
+                omd_root=omd_root,
+                expiry=relativedelta(days=expiry),
+            )
+
+        case "site":
+            replace_site_certificate(
+                site_id=site_id,
+                certificate_directory=cert_dir(omd_root),
+                expiry=relativedelta(days=expiry),
+            )
+
+        case _:
+            raise ValueError(f"Unknown certificate type: {target_certificate}")
+
+
+def main(args: Sequence[str]) -> int:
+    parsed_args = _parse_args(args)
+
+    site_id = os.environ.get("OMD_SITE")
+    if not site_id:
+        sys.stderr.write("cmk-cert: Checkmk can be used only as site user.\n")
+        return -1
+
+    try:
+        _run_cmkcert(
+            omd_root=cmk.utils.paths.omd_root,
+            site_id=site_id,
+            target_certificate=parsed_args.target_certificate,
+            expiry=parsed_args.expiry,
+            replace=parsed_args.replace,
+        )
+    except (OSError, ValueError) as e:
+        sys.stderr.write(f"cmk-cert: {e}\n")
+        return -1
+
+    sys.stdout.write(
+        f"cmk-cert: {parsed_args.target_certificate} certificate rotated successfully."
+    )
+    return 0

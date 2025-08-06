@@ -94,6 +94,10 @@ def agent_root_ca_path(site_root_dir: Path) -> Path:
     return cert_dir(site_root_dir) / "agents" / "ca.pem"
 
 
+def agent_ca_exists(site_root_dir: Path) -> bool:
+    return agent_root_ca_path(site_root_dir).exists()
+
+
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
     """Extract certificate part out of PEM files and concat
     to single cert store file."""
@@ -137,7 +141,7 @@ class SiteCA:
 
         You should probably use `load_or_create` or `load` instead.
         """
-        self._cert_dir = certificate_directory
+        self.cert_dir = certificate_directory
         self.root_ca = root_ca
 
     @classmethod
@@ -153,16 +157,37 @@ class SiteCA:
             return cls.load(certificate_directory)
 
         except FileNotFoundError:
-            return cls(
+            return cls.create(
                 certificate_directory,
-                cls._create_root_certificate(
-                    certificate_directory,
-                    site_id,
-                    CN_TEMPLATE.format(site=site_id),
-                    expiry,
-                    key_size,
-                ),
+                site_id,
+                expiry,
+                key_size,
             )
+
+    @classmethod
+    def create(
+        cls,
+        cert_dir: Path,
+        site_id: str,
+        expiry: relativedelta,
+        key_size: int,
+    ) -> SiteCA:
+        ca = CertificateWithPrivateKey.generate_self_signed(
+            common_name=CN_TEMPLATE.format(site=site_id),
+            organization=f"Checkmk Site {site_id}",
+            expiry=expiry,
+            key_size=key_size,
+            is_ca=True,
+        )
+
+        SiteCA._save_combined_pem(
+            target_file=SiteCA._ca_file(cert_dir),
+            certificate=ca.certificate,
+            private_key=ca.private_key,
+            issuer=None,
+        )
+
+        return cls(cert_dir, ca)
 
     @classmethod
     def load(cls, certificate_directory: Path) -> SiteCA:
@@ -174,15 +199,21 @@ class SiteCA:
             ),
         )
 
-    @property
-    def root_ca_path(self) -> Path:
-        return self._ca_file(self._cert_dir)
+    @classmethod
+    def root_ca_path(cls, cert_dir: Path) -> Path:
+        return cert_dir / "ca.pem"
 
-    def _site_certificate_path(self, site_id: str) -> Path:
-        return (self._cert_dir / "sites" / site_id).with_suffix(".pem")
+    @classmethod
+    def root_ca_exists(cls, cert_dir: Path) -> bool:
+        return cls.root_ca_path(cert_dir).exists()
 
-    def site_certificate_exists(self, site_id: str) -> bool:
-        return self._site_certificate_path(site_id).exists()
+    @classmethod
+    def site_certificate_path(cls, cert_dir: Path, site_id: str) -> Path:
+        return (cert_dir / "sites" / site_id).with_suffix(".pem")
+
+    @classmethod
+    def site_certificate_exists(cls, cert_dir: Path, site_id: str) -> bool:
+        return cls.site_certificate_path(cert_dir, site_id).exists()
 
     def create_site_certificate(
         self,
@@ -200,7 +231,7 @@ class SiteCA:
         )
 
         self._save_combined_pem(
-            target_file=self._site_certificate_path(site_id),
+            target_file=self.site_certificate_path(self.cert_dir, site_id),
             certificate=new_cert,
             private_key=new_key,
             issuer=self.root_ca.certificate,
@@ -226,31 +257,6 @@ class SiteCA:
                 f.write(issuer.dump_pem().bytes)
 
         target_file.chmod(mode=0o660)
-
-    @staticmethod
-    def _create_root_certificate(
-        cert_dir: Path,
-        site_id: str,
-        common_name: str,
-        expiry: relativedelta,
-        key_size: int,
-    ) -> CertificateWithPrivateKey:
-        ca = CertificateWithPrivateKey.generate_self_signed(
-            common_name=common_name,
-            organization=f"Checkmk Site {site_id}",
-            expiry=expiry,
-            key_size=key_size,
-            is_ca=True,
-        )
-
-        SiteCA._save_combined_pem(
-            target_file=SiteCA._ca_file(cert_dir),
-            certificate=ca.certificate,
-            private_key=ca.private_key,
-            issuer=None,
-        )
-
-        return ca
 
 
 class RemoteSiteCertsStore:

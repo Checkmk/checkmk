@@ -634,6 +634,14 @@ def _allow_for_cmkpasswd(
     )
 
 
+def _allow_for_cmkcert(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any((_is_default_allowed_import(imported=imported, component=component),))
+
+
 def _is_allowed_for_rrd(
     *,
     imported: ModuleName,
@@ -702,6 +710,7 @@ _COMPONENTS = (
     ),
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
+    (Component("cmk.cmkcert"), _allow_for_cmkcert),
     (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),
     (Component("cmk.checkengine.value_store"), _allow("cmk.utils", "cmk.ccc")),
     (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
@@ -804,6 +813,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-automation-helper"): Component("cmk.base"),
+    ModulePath("bin/cmk-cert"): Component("cmk.cmkcert"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),

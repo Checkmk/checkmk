@@ -1419,7 +1419,7 @@ def initialize_site_ca(
     ca_path = cert_dir(Path(site_home))
     ca = SiteCA.load_or_create(site.name, ca_path, key_size=root_key_size)
 
-    if not ca.site_certificate_exists(site.name):
+    if not ca.site_certificate_exists(ca.cert_dir, site.name):
         ca.create_site_certificate(site.name, key_size=site_key_size)
 
 

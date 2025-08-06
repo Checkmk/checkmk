@@ -44,13 +44,13 @@ def create_core(
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
-            from cmk.base.cee.microcore_config import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-                CmcPb,
-                HelperConfigWriter,
-            )
             from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
                 make_fetcher_config_writer,
+            )
+            from cmk.base.core.cee.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+                CmcPb,
+                HelperConfigWriter,
             )
 
             helper_config_writers: list[HelperConfigWriter] = [

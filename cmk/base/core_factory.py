@@ -78,6 +78,8 @@ def create_core(
         case "nagios":
             from cmk.base.core.nagios import NagiosCore
 
-            return NagiosCore(get_licensing_handler_type())
+            return NagiosCore(
+                get_licensing_handler_type(), paths.nagios_startscript, paths.nagios_objects_file
+            )
         case other_core:
             assert_never(other_core)

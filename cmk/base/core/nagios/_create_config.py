@@ -16,9 +16,8 @@ from contextlib import suppress
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
-from typing import Any, assert_never, IO, Literal
+from typing import Any, assert_never, Final, IO, Literal
 
-import cmk.ccc.debug
 from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
@@ -73,6 +72,16 @@ ObjectSpec = dict[str, Any]
 
 
 class NagiosCore(MonitoringCore):
+    def __init__(
+        self,
+        licensing_handler_type: type[LicensingHandler],
+        init_script_path: Path,
+        objects_file_path: Path,
+    ) -> None:
+        super().__init__(licensing_handler_type)
+        self.init_script_path: Final = init_script_path
+        self.objects_file_path: Final = objects_file_path
+
     @classmethod
     def name(cls) -> Literal["nagios"]:
         return "nagios"
@@ -84,11 +93,7 @@ class NagiosCore(MonitoringCore):
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
         os.putenv("CORE_NOVERIFY", "yes")
         return subprocess.run(
-            [
-                # TODO I think there's a constant for this
-                "%s/etc/init.d/core" % cmk.utils.paths.omd_root,
-                action.value,
-            ],
+            [str(self.init_script_path), action.value],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             close_fds=True,
@@ -206,7 +211,7 @@ class NagiosCore(MonitoringCore):
             service_depends_on=service_depends_on,
         )
 
-        store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
+        store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
 
     def _precompile_hostchecks(
         self,

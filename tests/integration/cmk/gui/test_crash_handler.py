@@ -46,6 +46,7 @@ def _get_crash_report(site: Site) -> dict | None:
             return crash
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_crash_report(site: Site, faulty_page: None) -> None:
     web = CMKWebSession(site)
     web.login()

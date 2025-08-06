@@ -52,7 +52,7 @@ Components
    arch-comp-agent-controller.rst
    arch-comp-agent-updater.rst
    arch-comp-agent-bakery.rst
-
+   arch-comp-relay.rst
    arch-comp-grafana-connector.rst
 
    arch-comp-template.rst

@@ -386,6 +386,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         legacy_agent_url=agent_commands_registry[
                             "agent_commands"
                         ].legacy_agent_url(),
+                        save_host=self._mode in ["new", "prefill", "clone"],
                     ),
                     host_name=self._host.name(),
                 )

@@ -84,7 +84,7 @@ const tooltipOpen = ref(true)
       :host_name="host_name"
       :agent_registration_cmds="agent_slideout.agent_registration_cmds"
       :close_button_title="close_button_title"
-      ,
+      :save_host="agent_slideout.save_host"
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />
     <AgentInstallSlideOutContent
@@ -95,7 +95,7 @@ const tooltipOpen = ref(true)
       :agent_registration_cmds="agent_slideout.agent_registration_cmds"
       :legacy_agent_url="agent_slideout.legacy_agent_url"
       :close_button_title="close_button_title"
-      ,
+      :save_host="agent_slideout.save_host"
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />
   </CmkSlideInDialog>

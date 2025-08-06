@@ -15,6 +15,7 @@ const props = defineProps<{
   host_name: string
   agent_registration_cmds: AgentRegistrationCmds
   close_button_title: string
+  save_host: boolean
 }>()
 
 const { t } = usei18n('agent_install_slideout_content')
@@ -67,6 +68,7 @@ const tabs: AgentSlideOutTabs[] = [
     :tabs="tabs"
     :all_agents_url="all_agents_url"
     :close_button_title="close_button_title"
+    :save_host="save_host"
     @close="close"
   />
 </template>

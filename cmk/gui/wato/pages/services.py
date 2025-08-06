@@ -711,6 +711,7 @@ class DiscoveryPageRenderer:
                         legacy_agent_url=agent_commands_registry[
                             "agent_commands"
                         ].legacy_agent_url(),
+                        save_host=False,
                     ),
                 ),
             ),

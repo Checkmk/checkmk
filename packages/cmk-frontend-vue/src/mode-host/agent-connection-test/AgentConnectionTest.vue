@@ -67,6 +67,14 @@ const targetElement = ref<HTMLElement>(
 )
 
 onMounted(() => {
+  if (sessionStorage.getItem('reopenSlideIn') === 'true') {
+    void startAjax().then(() => {
+      if (!props.agent_slideout.save_host) {
+        slideInOpen.value = true
+        sessionStorage.removeItem('reopenSlideIn')
+      }
+    })
+  }
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:
@@ -196,18 +204,18 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
 }
 
 // Use general way for AjaxCalls if available
-const startAjax = (): void => {
+const startAjax = (): Promise<void> => {
   isSuccess.value = false
   isError.value = false
 
-  void callAjax('wato_ajax_diag_cmk_agent.py', {
+  return callAjax('wato_ajax_diag_cmk_agent.py', {
     method: 'POST'
   })
 }
 
 const reTestAgentTitle = t('re-test-agent-title', 'Re-test agent connection')
 const reTestAgentButton = t('re-test-agent-button', 'Re-test agent connection')
-const reTestAgentClick: () => void = startAjax
+const reTestAgentClick: () => Promise<void> = startAjax
 const openSlideoutClick: () => void = () => {
   slideInOpen.value = true
 }
@@ -218,10 +226,10 @@ interface ContainerValues {
   txt: string
   buttonOneTitle: string
   buttonOneButton: string
-  buttonOneClick: () => void
+  buttonOneClick: () => void | Promise<void>
   buttonTwoTitle: string
   buttonTwoButton: string
-  buttonTwoClick: () => void
+  buttonTwoClick: () => void | Promise<void>
 }
 
 const warnContainerValues = computed<ContainerValues>(() => {
@@ -229,10 +237,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
   let txt = errorDetails.value
   let buttonOneTitle = reTestAgentTitle
   let buttonOneButton = reTestAgentButton
-  let buttonOneClick = reTestAgentClick
+  let buttonOneClick: () => void | Promise<void> = reTestAgentClick
   let buttonTwoTitle = ''
   let buttonTwoButton = ''
-  let buttonTwoClick = () => {}
+  let buttonTwoClick: () => void | Promise<void> = () => {}
 
   if (errorDetails.value.includes('[Errno 111]')) {
     header = t('test-agent-warning-header', 'Failed to connect to the Checkmk agent')
@@ -353,6 +361,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :host_name="hostname"
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         :close_button_title="closeButtonTitle"
+        :save_host="agent_slideout.save_host"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
       <AgentInstallSlideOutContent
@@ -363,6 +372,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :agent_registration_cmds="agent_slideout.agent_registration_cmds"
         :legacy_agent_url="agent_slideout.legacy_agent_url"
         :close_button_title="closeButtonTitle"
+        :save_host="agent_slideout.save_host"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
     </CmkSlideInDialog>

@@ -9,13 +9,15 @@
         },
         "host_name": { "type": "string" },
         "all_agents_url": { "type": "string" },
-        "legacy_agent_url": { "type": "string" }
+        "legacy_agent_url": { "type": "string" },
+        "save_host": { "type": "boolean" }
     },
     "required": [
         "agent_install_cmds",
         "agent_registration_cmds",
         "host_name",
-        "all_agents_url"
+        "all_agents_url",
+        "save_host"
     ],
     "$defs": {
         "agent_install_cmds": {

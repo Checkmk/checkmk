@@ -47,6 +47,7 @@ defineProps<{
   tabs: AgentSlideOutTabs[]
   all_agents_url: string
   close_button_title: string
+  save_host: boolean
 }>()
 
 const { t } = usei18n('agent_slideout')
@@ -56,7 +57,7 @@ const close = () => {
   emit('close')
 }
 
-const openedTab = ref<string | number>('linux')
+const openedTab = ref<string>(sessionStorage.getItem('slideInTabState') || 'linux')
 
 const openAllAgentsPage = (url: string) => {
   window.open(url, '_blank')
@@ -66,10 +67,21 @@ const packageFormatRpm = 'rpm'
 const packageFormatDeb = 'deb'
 const packageFormatTgz = 'tgz'
 
-const model = ref(packageFormatDeb)
+const model = ref(sessionStorage.getItem('slideInModelState') || packageFormatDeb)
 watch(model, (newValue) => {
   model.value = newValue
 })
+sessionStorage.removeItem('slideInModelState')
+sessionStorage.removeItem('slideInTabState')
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const cmk: any
+function saveHost() {
+  sessionStorage.setItem('reopenSlideIn', 'true')
+  sessionStorage.setItem('slideInModelState', model.value)
+  sessionStorage.setItem('slideInTabState', openedTab.value)
+  cmk.page_menu.form_submit('edit_host', 'save_and_edit')
+}
 </script>
 
 <template>
@@ -121,9 +133,7 @@ watch(model, (newValue) => {
           "
           class="install_url__div"
         >
-          <CmkHeading v-if="tab.install_url.msg" type="h4" class="install_url__heading">{{
-            tab.install_url.msg
-          }}</CmkHeading>
+          <CmkParagraph v-if="tab.install_url.msg">{{ tab.install_url.msg }}</CmkParagraph>
           <CmkLinkCard
             :title="tab.install_url.title"
             :url="tab.install_url.url"
@@ -164,6 +174,27 @@ watch(model, (newValue) => {
                 )
               "
             />
+          </div>
+          <div v-if="save_host" class="save_host__div">
+            <CmkParagraph>
+              {{
+                t(
+                  'register-agent-create-host-text-1',
+                  'Agent registration is only possible for hosts that already exist in Checkmk (they don’t need to be activated yet).'
+                )
+              }}
+            </CmkParagraph>
+            <CmkParagraph>
+              {{
+                t(
+                  'register-agent-create-host-text-2',
+                  'If the host hasn’t been created yet, please do so first by clicking the Create host button below.'
+                )
+              }}
+            </CmkParagraph>
+            <CmkButton class="save_host__button" @click="saveHost">
+              {{ t('save-host', 'Save host') }}
+            </CmkButton>
           </div>
 
           <CmkCode :title="tab.registration_msg" :code_txt="tab.registration_cmd" class="code" />
@@ -220,10 +251,12 @@ button.all_agents {
   gap: var(--dimension-item-spacing-4);
 }
 
-.install_url__heading {
-  margin-bottom: var(--dimension-item-spacing-3);
-  color: var(--font-color);
-  font-weight: 400;
+.save_host__div {
+  margin-bottom: var(--spacing);
+}
+
+.save_host__button {
+  margin-top: var(--dimension-item-spacing-4);
 }
 
 .install_url__div {

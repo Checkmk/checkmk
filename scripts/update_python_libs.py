@@ -94,9 +94,11 @@ def test_diff() -> None:
 
 
 def _main() -> None:
-    before = RequriementsTxtParser.parse(Path("requirements.txt"))
-    subprocess.check_call(["make", "relock_venv"])
-    after = RequriementsTxtParser.parse(Path("requirements.txt"))
+    requirements_txt_path = Path("requirements.txt")
+    before = RequriementsTxtParser.parse(requirements_txt_path)
+    requirements_txt_path.write_text("")
+    subprocess.check_call(["bazel", "run", "//:lock_python_requirements"])
+    after = RequriementsTxtParser.parse(requirements_txt_path)
     # there is also a omd/requirements_lock.txt file, it looks like it will vanish soon
     # I'm not sure how we would want to update that anyways. Special commit or all in one?
     # Therefore let's keep it simple for now.

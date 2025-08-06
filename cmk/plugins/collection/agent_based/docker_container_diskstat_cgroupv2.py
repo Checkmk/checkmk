@@ -36,7 +36,7 @@ class HeadlineParser:
                 current_parser.parse(line)
 
 
-class TimeParagprahParser(ParagraphParser):
+class TimeParagraphParser(ParagraphParser):
     headline = "[time]"
 
     def __init__(self, hp: HeadlineParser) -> None:
@@ -47,7 +47,7 @@ class TimeParagprahParser(ParagraphParser):
         self.time = int(line[0])
 
 
-class NamesParagprahParser(ParagraphParser):
+class NamesParagraphParser(ParagraphParser):
     headline = "[names]"
 
     def __init__(self, hp: HeadlineParser) -> None:
@@ -55,10 +55,12 @@ class NamesParagprahParser(ParagraphParser):
         self.names: dict[str, str] = {}
 
     def parse(self, line: list[str]) -> None:
+        if len(line) < 2:
+            return
         self.names[line[1]] = line[0]
 
 
-class StatParagprahParser(ParagraphParser):
+class StatParagraphParser(ParagraphParser):
     headline = "[io.stat]"
 
     def __init__(self, hp: HeadlineParser) -> None:
@@ -81,9 +83,9 @@ class StatParagprahParser(ParagraphParser):
 class DockerDiskstatParser(HeadlineParser):
     def __init__(self) -> None:
         super().__init__()
-        self.time = TimeParagprahParser(self)
-        self.names = NamesParagprahParser(self)
-        self.stat = StatParagprahParser(self)
+        self.time = TimeParagraphParser(self)
+        self.names = NamesParagraphParser(self)
+        self.stat = StatParagraphParser(self)
 
 
 def parse_docker_container_diskstat_cgroupv2(

@@ -235,8 +235,8 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(2000.0, (0, 3000.0)),
-            id="layouted_curves_at_least_zero",
+            _VAxisMinMax(1000.0, (500.0, 2500.0)),
+            id="layouted_curves_without_zero",
         ),
         pytest.param(
             FixedVerticalRange(min=-500.0, max=1000.0),

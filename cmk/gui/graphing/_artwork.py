@@ -764,7 +764,7 @@ def _compute_min_max(
                 if (lc_values := list(_extract_lc_values(True)))
                 else (None, None)
             )
-            min_values = [lc_min_value, 0]
+            min_values = [lc_min_value]
             max_values = [lc_max_value]
         case _:
             assert_never(explicit_vertical_range)

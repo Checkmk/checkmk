@@ -457,7 +457,9 @@ def test_metric_requests(interval: monitoring_v3.TimeInterval) -> None:
             per_series_aligner=Aligner.ALIGN_MAX, cross_series_reducer=Reducer.REDUCE_NONE
         ),
     )
-    request = metric.request(interval=interval, groupby="resource.thisone", project="fun")
+    request = metric.request(
+        interval=interval, groupby="resource.thisone", project="fun", resource_type=None
+    )
     expected = {
         "name": "projects/fun",
         "filter": 'metric.type = "compute.googleapis.com/instance/uptime"',
@@ -483,7 +485,9 @@ def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeI
             group_by_fields=["metric.thatone", "resource.do_not_forget_me"],
         ),
     )
-    request = metric.request(interval=interval, groupby="resource.thisone", project="fun")
+    request = metric.request(
+        interval=interval, groupby="resource.thisone", project="fun", resource_type=None
+    )
     expected = {
         "name": "projects/fun",
         "filter": 'metric.type = "compute.googleapis.com/instance/uptime"',

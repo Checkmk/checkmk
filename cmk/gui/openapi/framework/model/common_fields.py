@@ -82,8 +82,9 @@ class IPv4String(str):
         return json_schema
 
 
-FieldsFilterType = Annotated[
-    Annotated[FieldsFilter, TypedPlainValidator(str, parse_fields_filter)] | ApiOmitted,
+type _ValidatedFieldsFilter = Annotated[FieldsFilter, TypedPlainValidator(str, parse_fields_filter)]
+type FieldsFilterType = Annotated[
+    _ValidatedFieldsFilter | ApiOmitted,
     QueryParam(
         description="""The fields to include/exclude.
 
@@ -165,7 +166,7 @@ class _FolderValidation:
         return "/" + value.path()
 
 
-AnnotatedFolder = Annotated[
+type AnnotatedFolder = Annotated[
     Folder,
     TypedPlainValidator(str, _FolderValidation.validate),
     PlainSerializer(_FolderValidation.serialize, return_type=str),

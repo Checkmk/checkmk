@@ -244,6 +244,21 @@ def _to_operation_dict(
     return {spec_endpoint.method: operation_spec}
 
 
+def _inline_refs(value: object, defs: dict[str, dict[str, object]]) -> None:
+    """Inline all `$ref` references in the schema, so that `$defs` can be removed."""
+    if isinstance(value, dict):
+        while "$ref" in value:
+            # loop, since some defs just reference other defs
+            ref = str(value.pop("$ref")).removeprefix("#/$defs/")
+            value.update(defs[ref])
+        for _key, val in value.items():
+            _inline_refs(val, defs)
+
+    if isinstance(value, list):
+        for item in value:
+            _inline_refs(item, defs)
+
+
 def _get_parameters(location: LocationType, schema: type | None) -> Sequence[OpenAPIParameter]:
     out: list[OpenAPIParameter] = []
     if schema is not None:
@@ -251,10 +266,15 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
         json_schema = get_cached_type_adapter(
             schema
         ).json_schema(  # nosemgrep: type-adapter-detected
-            by_alias=True, mode="validation", schema_generator=CheckmkGenerateJsonSchema
+            by_alias=True,
+            mode="validation",
+            schema_generator=CheckmkGenerateJsonSchema,
         )
-        # TODO: inline $defs
-        assert json_schema.get("$defs") is None, "$defs not yet supported in this context"
+
+        if defs := json_schema.pop("$defs", None):
+            # TODO: this is a workaround and should be cleaned up when we generate the spec manually
+            _inline_refs(json_schema, defs)
+
         assert json_schema["type"] == "object", f"expected dataclass, got: {schema.__name__}"
         for name, field in json_schema["properties"].items():
             param: OpenAPIParameter = {

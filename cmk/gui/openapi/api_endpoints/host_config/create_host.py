@@ -21,13 +21,14 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from ._utils import serialize_host
+from ._utils import host_etag, serialize_host
 from .models.response_models import HostConfigModel
 
 
@@ -62,7 +63,7 @@ def create_host_v1(
             example="True",
         ),
     ] = False,
-) -> HostConfigModel:
+) -> ApiResponse[HostConfigModel]:
     """Create a hosts."""
     user.need_permission("wato.edit")
     host_name = body.host_name
@@ -76,7 +77,10 @@ def create_host_v1(
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)
 
     host = Host.load_host(host_name)
-    return serialize_host(host, compute_effective_attributes=False, compute_links=True)
+    return ApiResponse(
+        body=serialize_host(host, compute_effective_attributes=False, compute_links=True),
+        etag=host_etag(host),
+    )
 
 
 ENDPOINT_CREATE_HOST = VersionedEndpoint(

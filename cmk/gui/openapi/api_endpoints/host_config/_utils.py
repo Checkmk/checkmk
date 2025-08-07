@@ -8,6 +8,7 @@ from typing import get_type_hints
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
 from cmk.gui.openapi.endpoints.utils import folder_slug
+from cmk.gui.openapi.framework import ETag
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
@@ -64,4 +65,14 @@ def serialize_host(
             is_offline=host.is_offline(),
             cluster_nodes=host.cluster_nodes(),
         ),
+    )
+
+
+def host_etag(host: Host) -> ETag:
+    return ETag(
+        {
+            "name": host.name(),
+            "attributes": {k: v for k, v in host.attributes.items() if k != "meta_data"},
+            "cluster_nodes": host.cluster_nodes(),
+        }
     )

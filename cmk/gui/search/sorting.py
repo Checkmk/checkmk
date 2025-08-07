@@ -29,7 +29,7 @@ def _get_alphabetical_sorter(items: list[UnifiedSearchResultItem]) -> None:
 
 
 def _get_weighted_index_sorter(query: str) -> Sorter:
-    def algorithm(item: UnifiedSearchResultItem) -> int:
+    def algorithm(item: UnifiedSearchResultItem) -> tuple[int, str]:
         weighting = 5
         if (title_idx := item.title.lower().find(query)) >= 0:
             weighting = 1
@@ -41,7 +41,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
         else:
             title_idx = len(item.title)
 
-        return weighting * title_idx
+        return weighting * title_idx, item.title
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)

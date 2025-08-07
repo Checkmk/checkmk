@@ -46,11 +46,11 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
     value = [(result.title, result.topic) for result in results]
     expected = [
         ("Notifications", "Setup"),
-        ("Test notifications", "Setup"),
         ("Analyze recent notifications", "Setup"),
+        ("Test notifications", "Setup"),
         ("Push Notifications (using Pushover)", "Notification Parameter"),
-        ("Notifications of host & services", "Monitor"),
         ("Failed notifications", "Monitor"),
+        ("Notifications of host & services", "Monitor"),
         ("Delay host notifications", "Host monitoring rules"),
         ("Enable/disable notifications for hosts", "Host monitoring rules"),
         ("Periodic notifications during host problems", "Host monitoring rules"),
@@ -58,12 +58,12 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
         ("Enable/disable notifications for services", "Service Monitoring rules"),
         ("Periodic notifications during service problems", "Service Monitoring rules"),
         ("Fallback email address for notifications", "Global settings"),
-        ("Send notifications to remote Event Console", "Global settings"),
-        ("Store notifications for rule analysis", "Global Settings"),
+        ("Interval for checking for ripe bulk notifications", "Global settings"),
         ("Logging of the notification mechanics", "Global Settings"),
         ("Send notifications to Event Console", "Global Settings"),
+        ("Send notifications to remote Event Console", "Global settings"),
+        ("Store notifications for rule analysis", "Global Settings"),
         ("Syslog facility for Event console notifications", "Global settings"),
-        ("Interval for checking for ripe bulk notifications", "Global settings"),
         ("Push Notifications (using Pushover)", "Service Monitoring rules"),
     ]
 

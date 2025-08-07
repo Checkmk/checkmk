@@ -500,10 +500,10 @@ def do_render_availability(
     av_object: AVObjectSpec,
     avoptions: AVOptions,
 ) -> None:
+    availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
     if av_mode == "timeline":
-        render_availability_timelines(what, av_data, avoptions)
+        render_availability_timelines(what, availability_tables, avoptions)
     else:
-        availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
         render_availability_tables(availability_tables, what, avoptions)
 
     annotations = availability.load_annotations()
@@ -542,10 +542,11 @@ def render_availability_tables(
 
 
 def render_availability_timelines(
-    what: AVObjectType, av_data: AVData, avoptions: AVOptions
+    what: AVObjectType, av_groups: AVGroups, avoptions: AVOptions
 ) -> None:
-    for timeline_nr, av_entry in enumerate(av_data):
-        _render_availability_timeline(what, av_entry, avoptions, timeline_nr)
+    for group_title, av_data in av_groups:
+        for timeline_nr, av_entry in enumerate(av_data):
+            _render_availability_timeline(what, av_entry, avoptions, timeline_nr)
 
 
 def _render_availability_timeline(

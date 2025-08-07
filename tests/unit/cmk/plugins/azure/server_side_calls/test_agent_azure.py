@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -16,7 +15,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
 
 
 @pytest.mark.parametrize(
-    ["params", "expected_args"],
+    ["params", "host_config", "expected_args"],
     [
         pytest.param(
             {
@@ -28,6 +27,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "config": {},
                 "services": ["users_count", "Microsoft_DBforMySQL_slash_servers"],
             },
+            HostConfig(name="testhost"),
             [
                 "--tenant",
                 "strawberry",
@@ -60,6 +60,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 },
                 "services": [],
             },
+            HostConfig(name="testhost"),
             [
                 "--tenant",
                 "strawberry",
@@ -83,7 +84,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": "banana",
+                "subscription": "$HOST_AZURE_SUBSCRIPTION_ID$",
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -97,6 +98,10 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "proxy": EnvProxy(),
                 "services": [],
             },
+            HostConfig(
+                name="testhost",
+                macros={"$HOST_AZURE_SUBSCRIPTION_ID$": "apple"},
+            ),
             [
                 "--tenant",
                 "strawberry",
@@ -107,7 +112,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--authority",
                 "global",
                 "--subscription",
-                "banana",
+                "apple",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",
@@ -126,11 +131,11 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
     ],
 )
 def test_azure_argument_parsing(
-    params: Mapping[str, Any],
-    expected_args: Sequence[Any],
+    params: Mapping[str, object],
+    host_config: HostConfig,
+    expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    host_config = HostConfig(name="testhost")
     commands = list(commands_function(AzureParams.model_validate(params), host_config))
     assert len(commands) == 1
     arguments = commands[0].command_arguments

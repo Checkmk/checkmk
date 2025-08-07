@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
     NoProxy,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -87,7 +88,7 @@ def agent_azure_arguments(
             params.authority if params.authority != "global_" else "global",
         ]
     if params.subscription:
-        args += ["--subscription", params.subscription]
+        args += ["--subscription", replace_macros(params.subscription, host_config.macros)]
     if params.piggyback_vms:
         args += ["--piggyback_vms", params.piggyback_vms]
 

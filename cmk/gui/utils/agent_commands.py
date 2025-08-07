@@ -13,10 +13,10 @@ from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistration
 WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {ip_address}/{site}/check_mk/agents/windows/check_mk_agent.msi && ^
 msiexec /i check_mk_agent.msi"""
 
-LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -fOG {ip_address}/{site}/check_mk/agents/linux/check-mk-agent_{version}-1_all.deb && \\
+LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -fOG {ip_address}/{site}/check_mk/agents/check-mk-agent_{version}-1_all.deb && \\
 sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
 
-LINUX_RPM_AGENT_INSTALL_CMD = """curl -fOG {ip_address}/{site}/check_mk/agents/linux/check-mk-agent_{version}-1_noarch.rpm && \\
+LINUX_RPM_AGENT_INSTALL_CMD = """curl -fOG {ip_address}/{site}/check_mk/agents/check-mk-agent_{version}-1_noarch.rpm && \\
 sudo rpm -Uvh check-mk-agent_{version}-1_noarch.rpm"""
 
 

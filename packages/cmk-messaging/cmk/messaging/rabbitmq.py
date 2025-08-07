@@ -414,11 +414,11 @@ def _start_cleanup_unused_definitions(
             ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
         )
 
-    for queue in set(
+    for queue in {
         binding.destination
         for binding in old_definitions.bindings
         if binding.destination_type == "queue" and binding not in new_definitions.bindings
-    ):
+    }:
         # removed bindings are not correctly actualized in rabbitmq
         # we delete the queue to remove the bindings
         yield rabbitmqctl_process(("delete_queue", queue), wait=False)

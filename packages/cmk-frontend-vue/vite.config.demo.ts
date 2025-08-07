@@ -13,7 +13,7 @@ export default defineConfig(() => {
   return {
     plugins: [vue(), VueDevTools()],
     clearScreen: false,
-    root: './src/components/_demo/',
+    root: './demo/',
     build: {
       minify: false
     },

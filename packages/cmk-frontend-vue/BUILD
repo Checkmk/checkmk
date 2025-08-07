@@ -24,7 +24,7 @@ SRCS = [
     "tsconfig.test.json",
     "vite.config.demo.ts",
     "vite.config.ts",
-    "src/components/_demo/index.html",
+    "demo/index.html",
     "//packages/cmk-frontend:dist",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
@@ -54,6 +54,9 @@ SRCS = [
     "src/**/*.ts",
     "src/**/*.vue",
     "src/**/*.css",
+    "demo/**/*.ts",
+    "demo/**/*.vue",
+    "demo/**/*.css",
 ])
 
 npm_link_package(

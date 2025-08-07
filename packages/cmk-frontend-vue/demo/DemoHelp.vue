@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import HelpText from '../HelpText.vue'
+import HelpText from '@/components/HelpText.vue'
 
 const lorem = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.

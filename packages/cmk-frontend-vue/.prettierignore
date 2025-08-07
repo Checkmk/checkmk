@@ -1,2 +1,2 @@
-src/components/_demo/public/mockServiceWorker.js
+demo/public/mockServiceWorker.js
 dist-dev/

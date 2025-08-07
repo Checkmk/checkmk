@@ -41,9 +41,9 @@ FILES_IGNORED = {
     Path(".npmrc"),
     Path("README.md"),
     Path("index.html"),
-    Path("src/components/_demo/index.html"),
+    Path("demo/index.html"),
     Path("env.d.ts"),
-    Path("src/components/_demo/public/mockServiceWorker.js"),  # auto generated
+    Path("demo/public/mockServiceWorker.js"),  # auto generated
 }
 
 ROOT_FOLDERS_IGNORED = {

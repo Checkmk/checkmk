@@ -5,11 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkWizard from '../CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '../CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '../CmkWizard/CmkWizardStep.vue'
-import CmkHeading from '../typography/CmkHeading.vue'
-import CmkParagraph from '../typography/CmkParagraph.vue'
+import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>

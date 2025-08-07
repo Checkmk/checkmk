@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import CmkAccordionStepPanel from '../CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
-import CmkAccordionStepPanelItem from '../CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
+import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

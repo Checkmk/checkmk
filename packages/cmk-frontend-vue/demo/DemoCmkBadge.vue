@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkBadge from '../CmkBadge.vue'
+import CmkBadge from '@/components/CmkBadge.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 
 defineProps<{ screenshotMode: boolean }>()

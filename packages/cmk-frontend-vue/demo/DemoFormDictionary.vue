@@ -13,7 +13,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkDropdown from '../CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

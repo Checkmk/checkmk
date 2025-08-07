@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkChip from '../CmkChip.vue'
+import CmkChip from '@/components/CmkChip.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>

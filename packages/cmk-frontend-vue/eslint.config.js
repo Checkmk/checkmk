@@ -20,7 +20,7 @@ export default [
       '**/dist-dev/**',
       '**/dist-ssr/**',
       '**/coverage/**',
-      'src/components/_demo/public/mockServiceWorker.js'
+      'demo/public/mockServiceWorker.js'
     ]
   },
 
@@ -128,7 +128,7 @@ export default [
   },
 
   {
-    files: ['src/components/_demo/**/*'],
+    files: ['demo/**/*'],
     rules: {
       'vue/no-bare-strings-in-template': 'off'
     }

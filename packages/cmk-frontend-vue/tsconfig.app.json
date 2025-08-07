@@ -1,5 +1,5 @@
 {
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "demo/**/*", "demo/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     /*

@@ -33556,6 +33556,10 @@ msgstr "Ignorare questi livelli"
 msgid "Ignore undo tablespaces (Default)"
 msgstr "Ignora gli spazi tabellari annullati (predefinito)"
 
+#, fuzzy
+msgid "Ignore unrecognized events"
+msgstr "Ignora gli eventi riconosciuti"
+
 msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
 msgstr "Ignorare la convalida non riuscita (in caso di TLS/SSL)"
 
@@ -62524,6 +62528,11 @@ msgstr "Stato: rosso"
 msgid "Status: yellow"
 msgstr "Stato: giallo"
 
+msgid ""
+"Stay on track with a quick overview of your setup progress. The sidebar "
+"keeps everything in view, right where you need it."
+msgstr ""
+
 msgid "Steal"
 msgstr "Ruba"
 
@@ -83102,6 +83111,10 @@ msgstr "Tariffa settimanale"
 #, fuzzy
 msgid "Welcome page"
 msgstr "Controlla la pagina del manuale"
+
+#, fuzzy
+msgid "Welcome to Checkmk"
+msgstr "Benvenuti a Checkmk Mobile."
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Benvenuti a Checkmk Mobile."

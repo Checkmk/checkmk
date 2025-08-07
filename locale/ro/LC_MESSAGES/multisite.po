@@ -33905,6 +33905,10 @@ msgstr "Ignoră aceste niveluri"
 msgid "Ignore undo tablespaces (Default)"
 msgstr "Ignoră anularea Tablespaces (implicit)"
 
+#, fuzzy
+msgid "Ignore unrecognized events"
+msgstr "Ignoră evenimentele recunoscute"
+
 msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
 msgstr "Ignoră validarea nereușită (în cazul TLS/SSL)"
 
@@ -63206,6 +63210,11 @@ msgstr "Stare: roșu"
 msgid "Status: yellow"
 msgstr "Stare: galben"
 
+msgid ""
+"Stay on track with a quick overview of your setup progress. The sidebar "
+"keeps everything in view, right where you need it."
+msgstr ""
+
 msgid "Steal"
 msgstr "Furați"
 
@@ -83995,6 +84004,10 @@ msgstr "Tarif săptămânal"
 #, fuzzy
 msgid "Welcome page"
 msgstr "Verificați pagina de manual"
+
+#, fuzzy
+msgid "Welcome to Checkmk"
+msgstr "Bine ați venit la Checkmk Mobile."
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Bine ați venit la Checkmk Mobile."

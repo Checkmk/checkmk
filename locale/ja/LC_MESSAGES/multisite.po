@@ -31646,6 +31646,10 @@ msgstr "これらのレベルを無視する"
 msgid "Ignore undo tablespaces (Default)"
 msgstr "テーブルスペースの取消を無視する(デフォルト)"
 
+#, fuzzy
+msgid "Ignore unrecognized events"
+msgstr "承認済のイベントを無視する"
+
 msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
 msgstr "検証失敗を無視する(TLS/SSLの場合)"
 
@@ -58981,6 +58985,11 @@ msgstr "ステータス: 赤"
 msgid "Status: yellow"
 msgstr "ステータス:黄色"
 
+msgid ""
+"Stay on track with a quick overview of your setup progress. The sidebar "
+"keeps everything in view, right where you need it."
+msgstr ""
+
 msgid "Steal"
 msgstr "Steal"
 
@@ -78262,6 +78271,10 @@ msgstr "ウィークリーレート"
 
 msgid "Welcome page"
 msgstr "ウェルカムページ"
+
+#, fuzzy
+msgid "Welcome to Checkmk"
+msgstr "Checkmk Mobileへようこそ。"
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Checkmk Mobileへようこそ。"

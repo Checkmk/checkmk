@@ -849,7 +849,9 @@ def _create_custom_check(
     # "command_name"  (optional)   Name of Monitoring command to define. If missing,
     #                              we use "check-mk-custom"
     description = final_service_name_config(
-        entry["service_description"], hostname, config_cache.label_manager.labels_of_host
+        hostname,
+        ServiceName(entry["service_description"]),
+        config_cache.label_manager.labels_of_host,
     )
     command_name = entry.get("command_name", "check-mk-custom")
     command_line = entry.get("command_line", "")

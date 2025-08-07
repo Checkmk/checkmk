@@ -44,6 +44,6 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
         return weighting * title_idx
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
-        items.sort(key=lambda item: algorithm(item))
+        items.sort(key=algorithm)
 
     return sorter

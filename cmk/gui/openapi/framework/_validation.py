@@ -13,7 +13,8 @@ from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, Status
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
-from ._types import ApiContext, HeaderParam, PathParam, QueryParam
+from ._context import ApiContext
+from ._types import HeaderParam, PathParam, QueryParam
 from ._utils import get_stripped_origin, strip_annotated
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted

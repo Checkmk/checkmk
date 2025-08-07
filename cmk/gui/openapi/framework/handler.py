@@ -13,30 +13,26 @@ from cmk import trace
 from cmk.ccc import store
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
-from cmk.gui.openapi.framework._types import ApiContext, DataclassInstance, RawRequestData
-from cmk.gui.openapi.framework._utils import get_stripped_origin, iter_dataclass_fields
-from cmk.gui.openapi.framework.endpoint_model import EndpointModel
-from cmk.gui.openapi.framework.model import json_dump_without_omitted
-from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
-from cmk.gui.openapi.framework.registry import RequestEndpoint
 from cmk.gui.openapi.restful_objects.constructors import etag_of_dict
-from cmk.gui.openapi.restful_objects.utils import (
-    identify_expected_status_codes,
-)
+from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import (
     ContentTypeValidator,
     HeaderValidator,
     PermissionValidator,
     ResponseValidator,
 )
-from cmk.gui.openapi.utils import (
-    EXT,
-    RestAPIResponseException,
-    RestAPIWatoDisabledException,
-)
+from cmk.gui.openapi.utils import EXT, RestAPIResponseException, RestAPIWatoDisabledException
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.utils.paths import configuration_lockfile
+
+from ._context import ApiContext
+from ._types import DataclassInstance, RawRequestData
+from ._utils import get_stripped_origin, iter_dataclass_fields
+from .endpoint_model import EndpointModel
+from .model import json_dump_without_omitted
+from .model.response import ApiResponse, TypedResponse
+from .registry import RequestEndpoint
 
 tracer = trace.get_tracer()
 

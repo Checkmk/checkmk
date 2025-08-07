@@ -208,6 +208,10 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
             "query": self._query_args(),
             "headers": request.headers,
         }
+        api_context = ApiContext.new(
+            config=active_config,
+            version=self.requested_version,
+        )
 
         is_testing = str(request.environ.get("paste.testing", "False")).lower() == "true"
 
@@ -220,7 +224,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         response = handle_endpoint_request(
             endpoint=self.endpoint.request_endpoint(),
             request_data=request_data,
-            api_context=ApiContext(version=self.requested_version),
+            api_context=api_context,
             permission_validator=permission_validator,
             wato_enabled=active_config.wato_enabled,
             wato_use_git=active_config.wato_use_git,

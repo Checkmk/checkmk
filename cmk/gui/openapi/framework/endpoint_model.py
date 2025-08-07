@@ -5,33 +5,20 @@
 import dataclasses
 import inspect
 from collections.abc import Callable, Mapping, Sequence
-from typing import (
-    Annotated,
-    cast,
-    get_args,
-    get_origin,
-    Literal,
-    Self,
-    TypedDict,
-)
+from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypedDict
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
 
 from cmk import trace
-from cmk.gui.openapi._type_adapter import get_cached_type_adapter
-from cmk.gui.openapi.framework._types import (
-    ApiContext,
-    DataclassInstance,
-    HeaderParam,
-    PathParam,
-    QueryParam,
-    RawRequestData,
-)
-from cmk.gui.openapi.framework._utils import iter_dataclass_fields
-from cmk.gui.openapi.framework.content_types import convert_request_body
-from cmk.gui.openapi.framework.model import api_field
-from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+
+from .._type_adapter import get_cached_type_adapter
+from ._context import ApiContext
+from ._types import DataclassInstance, HeaderParam, PathParam, QueryParam, RawRequestData
+from ._utils import iter_dataclass_fields
+from .content_types import convert_request_body
+from .model import api_field
+from .model.response import ApiResponse, TypedResponse
 
 type ApiInputModel[T: type[DataclassInstance]] = T
 """Dataclass with optional fields: body, path, query, headers

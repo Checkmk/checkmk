@@ -904,7 +904,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 Result(state=State.OK, summary="Status: UP"),
                 Result(state=State.OK, summary="Active"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -981,7 +981,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 Result(state=State.UNKNOWN, summary="Unknown status: ASDF"),
                 Result(state=State.OK, summary="Active"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1058,7 +1058,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 Result(state=State.WARN, summary="Status: UP"),
                 Result(state=State.OK, summary="Backup"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1135,7 +1135,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 Result(state=State.OK, summary="Status: UP"),
                 Result(state=State.CRIT, summary="Neither active nor backup"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1288,7 +1288,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 Result(state=State.UNKNOWN, summary="Status: MAINT"),
                 Result(state=State.OK, summary="Active"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1583,7 +1583,9 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             [
                 Result(state=State.OK, summary="Status: UP"),
                 Result(state=State.OK, summary="Active"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="Active Backends: 1.00"),
+                Metric("active_backends", 1.0),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1659,7 +1661,9 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             [
                 Result(state=State.UNKNOWN, summary="Unknown status: ASDF"),
                 Result(state=State.OK, summary="Active"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="Active Backends: 1.00"),
+                Metric("active_backends", 1.0),
+                Result(state=State.OK, summary="ASDF since 4 days 4 hours"),
             ],
         ),
         (
@@ -1735,7 +1739,7 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             [
                 Result(state=State.WARN, summary="Status: UP"),
                 Result(state=State.OK, summary="Backup"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1810,8 +1814,8 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             ],
             [
                 Result(state=State.OK, summary="Status: UP"),
-                Result(state=State.CRIT, summary="Neither active nor backup"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="Neither active nor backup"),
+                Result(state=State.OK, summary="UP since 4 days 4 hours"),
             ],
         ),
         (
@@ -1887,6 +1891,8 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             [
                 Result(state=State.OK, summary="Status: UP"),
                 Result(state=State.OK, summary="Active"),
+                Result(state=State.OK, summary="Active Backends: 1.00"),
+                Metric("active_backends", 1.0),
             ],
         ),
         (
@@ -1962,7 +1968,9 @@ def test_discover_haproxy_backend(info: StringTable, expected_result: DiscoveryR
             [
                 Result(state=State.UNKNOWN, summary="Status: MAINT"),
                 Result(state=State.OK, summary="Active"),
-                Result(state=State.OK, summary="Up since 4 days 4 hours"),
+                Result(state=State.OK, summary="Active Backends: 1.00"),
+                Metric("active_backends", 1.0),
+                Result(state=State.OK, summary="MAINT since 4 days 4 hours"),
             ],
         ),
         (

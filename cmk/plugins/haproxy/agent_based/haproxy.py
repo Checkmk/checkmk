@@ -239,17 +239,35 @@ def haproxy_result(
 
     if data.active:
         yield Result(state=State.OK, summary="Active")
+
+        if isinstance(data, Backend):
+            yield from check_levels(
+                value=data.active, metric_name="active_backends", label="Active Backends"
+            )
     elif data.backup:
         yield Result(state=State.OK, summary="Backup")
     else:
-        yield Result(state=State.CRIT, summary="Neither active nor backup")
+        yield Result(
+            state=State.OK if isinstance(data, Backend) else State.CRIT,
+            summary="Neither active nor backup",
+        )
 
     if isinstance(data, Server):
         yield Result(state=State.OK, summary=f"Layer Check: {data.layer_check}")
 
     uptime = data.uptime
     if uptime is not None:
-        yield Result(state=State.OK, summary=f"Up since {render.timespan(uptime)}")
+        stateStr = "UP"
+        if isinstance(data, Backend):
+            if isinstance(status, HAProxyServerStatus):
+                stateStr = status.value
+            else:
+                stateStr = status
+
+        yield Result(
+            state=State.OK,
+            summary=f"{stateStr} since {render.timespan(uptime)}",
+        )
 
     if data.stot:
         value_store = get_value_store()

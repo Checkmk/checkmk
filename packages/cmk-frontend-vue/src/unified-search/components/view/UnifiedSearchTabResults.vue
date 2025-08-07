@@ -16,7 +16,6 @@ import {
   type UnifiedSearchResultElement,
   type UnifiedSearchResultResponse
 } from '@/lib/unified-search/providers/unified'
-import CmkChip from '@/components/CmkChip.vue'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -108,21 +107,6 @@ function searchResultNotEmpty(): boolean {
     <div>
       <CmkHeading type="h4" class="result-heading">
         {{ t('results', 'Results') }} ({{ results.length }})
-
-        <div class="cmk-unified-search-tab-info">
-          <CmkChip class="arrow-key up" size="small" content=""></CmkChip>|<CmkChip
-            class="arrow-key down"
-            size="small"
-            content=""
-          ></CmkChip>
-          <span>&</span>
-          <CmkChip class="arrow-key left" size="small" content=""></CmkChip>|<CmkChip
-            class="arrow-key right"
-            size="small"
-            content=""
-          ></CmkChip>
-          <span>{{ t('to-nav-results', 'to navigate between results') }}</span>
-        </div>
       </CmkHeading>
     </div>
     <CmkScrollContainer max-height="calc(100vh - 260px)">

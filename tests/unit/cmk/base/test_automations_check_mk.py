@@ -9,7 +9,6 @@ from dataclasses import replace
 import pytest
 
 import cmk.base.automations.check_mk
-import cmk.base.cee
 import cmk.base.core.config
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result

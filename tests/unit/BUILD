@@ -92,6 +92,7 @@ py_test(
             "**/*.pem",
             "**/*.xml",
         ],
+        allow_empty = True,
         exclude = ["**/*.py"],
     ),
     main = ":__test__.py",

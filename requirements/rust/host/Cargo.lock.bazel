@@ -1,5 +1,5 @@
 {
-  "checksum": "631262b304a5a53c512fc6bbd001a86db24b5992b5df883d2a95c92b65c37cbb",
+  "checksum": "cbfa7e73387dd330bdea9b82bfda06f5812be0c03ea7030fcd7b75a26307e367",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -10686,10 +10686,6 @@
             {
               "id": "futures 0.3.31",
               "target": "futures"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
             },
             {
               "id": "log 0.4.25",

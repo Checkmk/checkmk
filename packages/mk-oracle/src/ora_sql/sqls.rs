@@ -5,6 +5,7 @@
 use anyhow::Result;
 use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 pub const UTC_DATE_FIELD: &str = "utc_date";
 
@@ -79,12 +80,12 @@ pub mod query {
 ";
 }
 
-lazy_static::lazy_static! {
-    static ref QUERY_MAP: HashMap<Id, &'static str > = HashMap::from([
+static QUERY_MAP: LazyLock<HashMap<Id, &'static str>> = LazyLock::new(|| {
+    HashMap::from([
         (Id::IoStats, query::IO_STATS),
         (Id::TsQuotas, query::TS_QUOTAS),
-    ]);
-}
+    ])
+});
 
 pub fn get_factory_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
     QUERY_MAP

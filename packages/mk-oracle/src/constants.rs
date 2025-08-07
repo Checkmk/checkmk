@@ -4,8 +4,8 @@
 
 use crate::types::HostName;
 
-use lazy_static::lazy_static;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 pub mod log {
     use flexi_logger::Naming;
     pub const FILE_MAX_SIZE: u64 = 500_000;
@@ -31,25 +31,32 @@ pub mod sqls {
 
 pub const ODBC_CONNECTION_TIMEOUT: u32 = 2;
 
-lazy_static! {
-    pub static ref LOCAL_HOST: HostName = "localhost".to_owned().into();
-    pub static ref DEFAULT_CONFIG_FILE: PathBuf =
-        Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, "."))
-            .join(environment::CONFIG_NAME);
-    pub static ref CONFIG_DIR: PathBuf = Path::new(&get_conf_dir()).to_owned();
-    pub static ref ENV_LOG_DIR: Option<PathBuf> = std::env::var(environment::LOG_DIR_ENV_VAR)
+pub static LOCAL_HOST: LazyLock<HostName> = LazyLock::new(|| "localhost".to_owned().into());
+
+pub static DEFAULT_CONFIG_FILE: LazyLock<PathBuf> = LazyLock::new(|| {
+    Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).join(environment::CONFIG_NAME)
+});
+pub static CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| Path::new(&get_conf_dir()).to_owned());
+pub static ENV_LOG_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+    std::env::var(environment::LOG_DIR_ENV_VAR)
         .ok()
-        .map(PathBuf::from);
-    pub static ref ENV_TEMP_DIR: Option<PathBuf> = std::env::var(environment::TEMP_DIR_ENV_VAR)
+        .map(PathBuf::from)
+});
+pub static ENV_TEMP_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+    std::env::var(environment::TEMP_DIR_ENV_VAR)
         .ok()
-        .map(PathBuf::from);
-    pub static ref ENV_STATE_DIR: Option<PathBuf> = std::env::var(environment::STATE_DIR_ENV_VAR)
+        .map(PathBuf::from)
+});
+pub static ENV_STATE_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+    std::env::var(environment::STATE_DIR_ENV_VAR)
         .ok()
-        .map(PathBuf::from);
-    pub static ref ENV_VAR_DIR: Option<PathBuf> = std::env::var(environment::VAR_DIR_ENV_VAR)
+        .map(PathBuf::from)
+});
+pub static ENV_VAR_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+    std::env::var(environment::VAR_DIR_ENV_VAR)
         .ok()
-        .map(PathBuf::from);
-}
+        .map(PathBuf::from)
+});
 
 fn get_conf_dir() -> PathBuf {
     Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).to_owned()

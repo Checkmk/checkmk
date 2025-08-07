@@ -11,6 +11,7 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 #[derive(Debug, PartialEq)]
 pub enum SectionKind {
@@ -174,11 +175,8 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
     None
 }
 
-lazy_static::lazy_static! {
-    static ref SECTION_MAP: HashMap<&'static str, sqls::Id> = HashMap::from([
-        (names::IO_STATS, sqls::Id::IoStats),
-    ]);
-}
+static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> =
+    LazyLock::new(|| HashMap::from([(names::IO_STATS, sqls::Id::IoStats)]));
 
 pub fn get_sql_id<T: AsRef<str>>(section_name: T) -> Option<sqls::Id> {
     SECTION_MAP.get(section_name.as_ref()).copied()

@@ -165,10 +165,9 @@ authentication:
     assert_ne!(a.password(), Some("$CI_ORA2_DB_TEST"));
 }
 
-lazy_static::lazy_static! {
-    static ref REFERENCE_ENDPOINT: SqlDbEndpoint = reference_endpoint();
-    static ref TEST_SQL_INSTANCE:SqlQuery = SqlQuery::new(
-            r"
+static TEST_SQL_INSTANCE: LazyLock<SqlQuery> = LazyLock::new(|| {
+    SqlQuery::new(
+        r"
     select upper(i.INSTANCE_NAME)
         ||'|'|| 'sys_time_model'
         ||'|'|| S.STAT_NAME
@@ -177,10 +176,10 @@ lazy_static::lazy_static! {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
-            Separator::No,
-        &Vec::new()
-        );
-}
+        Separator::No,
+        &Vec::new(),
+    )
+});
 
 #[cfg(windows)]
 #[test]

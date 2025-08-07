@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
     NoProxy,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -95,7 +96,7 @@ def agent_azure_arguments(
         ...
     elif params.subscription[0] == "explicit_subscriptions":
         args += [
-            item
+            replace_macros(item, host_config.macros)
             for subscription in params.subscription[1]
             for item in ("--subscription", subscription)
         ]

@@ -233,7 +233,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         title=Title("Explicit list of subscription IDs"),
                         parameter_form=List(
                             title=Title("Explicitly specify subscription IDs"),
-                            element_template=String(),
+                            element_template=String(macro_support=True),
                             custom_validate=(validators.LengthInRange(min_value=1),),
                             editable_order=False,
                         ),

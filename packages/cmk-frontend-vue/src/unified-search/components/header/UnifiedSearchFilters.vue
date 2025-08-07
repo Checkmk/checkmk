@@ -84,13 +84,17 @@ async function showFilterSuggestions() {
   searchUtils.input.suggestionsActive.value = true
 }
 
+searchUtils.input.onHideSuggestions(hideFilterSuggestions)
+
 function hideFilterSuggestions() {
   if (searchUtils.input.suggestionsActive.value === true) {
     searchUtils.input.suggestionsActive.value = false
 
-    searchUtils.input.setInputValue('')
-    searchUtils.input.setFocus()
-    currentlySelected.value = -1
+    if (searchUtils.query.input.value.indexOf('/') === 0) {
+      searchUtils.input.setInputValue('')
+      searchUtils.input.setFocus()
+      currentlySelected.value = -1
+    }
   }
 }
 
@@ -105,11 +109,10 @@ function getFilterOptions(): FilterOption[] {
         0 ||
         fo.value.toLowerCase().indexOf(searchUtils.query.input.value.substring(1).toLowerCase()) >=
           0) &&
-      ((fo.type === 'inline' &&
+      (fo.type === 'inline' &&
         searchUtils.query.filters.value.findIndex(
           (f) => fo.notAvailableFor && fo.notAvailableFor?.indexOf(f.value) >= 0
-        )) === -1 ||
-        (fo.type === 'provider' && searchUtils.query.provider.value !== fo.value))
+        )) === -1
     )
   })
 }
@@ -155,13 +158,13 @@ searchUtils.input.onEmptyBackspace(() => {
     <CmkAlertBox variant="info" class="unified-search-filter-suggestions-info">
       {{
         t(
-          'sarch-with-regex',
+          'search-with-regex',
           'Search with regular expressions for menu entries, hosts, services or host and service groups.'
         )
       }}
       <br />
 
-      {{ t('asterrisk-sub', "Note that for simplicity '*' will be substituted with '.*'.") }}
+      {{ t('asterisk-sub', "Note that for simplicity '*' will be substituted with '.*'.") }}
     </CmkAlertBox>
   </div>
 </template>
@@ -177,6 +180,7 @@ searchUtils.input.onEmptyBackspace(() => {
   height: auto;
   border-bottom-left-radius: var(--border-radius-half);
   border-bottom-right-radius: var(--border-radius-half);
+  z-index: +1;
 }
 
 .unified-search-filter-suggestions-list {

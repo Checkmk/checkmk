@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
 import usei18n from '@/lib/i18n'
-import { useTemplateRef } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
@@ -93,6 +93,26 @@ function onInputEnter() {
 function isMonitoringSearch(): boolean {
   return ['all', 'monitoring'].indexOf(searchUtils.query.provider.value) >= 0
 }
+
+const getSearchInputPlaceholder = computed(() => {
+  switch (searchUtils.query.provider.value) {
+    case 'all':
+      return t(
+        'search-across-cmk-type-slash',
+        "Search across Checkmk – Type '/' for search operators"
+      )
+    case 'monitoring':
+      return t(
+        'search-in-monitoring-type-slash',
+        "Search in monitoring – Type '/' for search operators"
+      )
+    default:
+      return t(
+        `search-in-${searchUtils.query.provider.value}`,
+        `Search in ${searchUtils.query.provider.value}`
+      )
+  }
+})
 </script>
 
 <template>
@@ -107,14 +127,12 @@ function isMonitoringSearch(): boolean {
             ref="unified-search-input"
             v-model="searchUtils.query.input.value"
             class="unified-search-input"
-            :placeholder="
-              t('search-across', 'Search across Checkmk – Type \'/\' for search operators')
-            "
+            :placeholder="getSearchInputPlaceholder"
             @input="onInput"
             @keydown.delete="checkEmptyBackspace"
             @keydown.enter="onInputEnter"
           />
-          <UnifiedSearchFilters></UnifiedSearchFilters>
+          <UnifiedSearchFilters v-if="isMonitoringSearch()"></UnifiedSearchFilters>
         </div>
 
         <CmkIcon
@@ -134,7 +152,7 @@ function isMonitoringSearch(): boolean {
         </div>
       </div>
 
-      <UnifiedSearchOperatorSelect v-if="isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
+      <UnifiedSearchOperatorSelect :disabled="!isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
     </div>
   </div>
 </template>

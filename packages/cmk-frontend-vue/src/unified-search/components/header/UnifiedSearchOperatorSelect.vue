@@ -18,6 +18,9 @@ const { t } = usei18n('unified-search-app')
 const searchUtils = getSearchUtils()
 const operatorDropdownBtn = useTemplateRef('unified-search-operator-btn')
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)
+const props = defineProps<{
+  disabled?: boolean | undefined
+}>()
 
 const vClickOutside = useClickOutside()
 function handleOperatorSelect(selected: FilterOption): void {
@@ -77,6 +80,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
 function showOperatorOptions() {
   searchUtils.input.searchOperatorSelectActive.value = true
   searchUtils.input.providerSelectActive.value = false
+  searchUtils.input.hideSuggestions()
 }
 
 function hideOperatorOptions() {
@@ -96,11 +100,17 @@ function toggleOperatorOptions() {
 </script>
 
 <template>
-  <div class="unified-search-operator-switch">
+  <div class="unified-search-operator-switch" :class="{ disabled: props.disabled }">
     <button
       ref="unified-search-operator-btn"
       class="unified-search-operator-switch-button"
       :class="{ active: searchUtils.input.searchOperatorSelectActive.value }"
+      :disabled="props.disabled"
+      :title="
+        props.disabled
+          ? t('only-available-for-all-monitoring', 'Only available for \'Monitoring\' and \'All\'')
+          : ''
+      "
       @click.stop="toggleOperatorOptions"
       @keypres.enter.stop="toggleOperatorOptions"
     >
@@ -182,6 +192,16 @@ function toggleOperatorOptions() {
       border-radius: 99px;
       padding: var(--dimension-padding-3);
       margin-right: var(--dimension-item-spacing-4);
+    }
+  }
+
+  &.disabled {
+    background: transparent;
+
+    .unified-search-operator-switch-indicator,
+    .unified-search-operator-info-icon,
+    .unified-search-operator-info-icon:hover {
+      opacity: 0.5 !important;
     }
   }
 }

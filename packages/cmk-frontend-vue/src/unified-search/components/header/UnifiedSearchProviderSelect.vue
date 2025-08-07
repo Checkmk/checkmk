@@ -81,6 +81,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
 function showProviderOptions() {
   searchUtils.input.providerSelectActive.value = true
   searchUtils.input.searchOperatorSelectActive.value = false
+  searchUtils.input.hideSuggestions()
 }
 
 function hideProviderOptions() {

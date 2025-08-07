@@ -821,3 +821,13 @@ class ReadOnlySpec(TypedDict):
     enabled: bool | tuple[float, float]
     message: str
     rw_users: Sequence[UserId]
+
+
+class AgentControllerCertificates(TypedDict):
+    lifetime_in_months: int
+
+
+class PasswordPolicy(TypedDict):
+    min_length: NotRequired[int]
+    num_groups: NotRequired[int]
+    max_age: NotRequired[int]

@@ -284,7 +284,7 @@ class ObjectProperty(TypedDict, total=False):
     extensions: dict[str, Any]
 
 
-Serializable = dict[str, Any] | CollectionObject | ObjectProperty | DomainObject | ActionResult
+Serializable = Mapping[str, Any] | CollectionObject | ObjectProperty | DomainObject | ActionResult
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = type[Schema]

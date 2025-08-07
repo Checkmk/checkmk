@@ -26,14 +26,13 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
+from cmk.gui.i18n import _
 from cmk.gui.ldap._openapi.error_schemas import GETLdapConnection404
 from cmk.gui.ldap._openapi.internal_to_restapi_interface import (
     LDAPConnectionInterface,
     request_ldap_connection,
     request_ldap_connections,
-    request_to_create_ldap_connection,
-    request_to_delete_ldap_connection,
-    request_to_edit_ldap_connection,
+    update_suffixes,
 )
 from cmk.gui.ldap._openapi.request_schemas import (
     LDAPConnectionConfigCreateRequest,
@@ -57,7 +56,15 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.userdb import (
+    get_ldap_connections,
+    LDAPUserConnectionConfig,
+    SAMLUserConnectionConfig,
+    UserConnectionConfigFile,
+)
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.wato.pages.userdb_common import get_affected_sites
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 RO_PERMISSIONS = permissions.AllPerm(
     [
@@ -145,9 +152,23 @@ def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
     ldap_id = params["ldap_connection_id"]
     if (connection := request_ldap_connection(ldap_id=ldap_id)) is not None:
         require_etag(hash_of_dict(connection.api_response()))
-        request_to_delete_ldap_connection(
-            params["ldap_connection_id"], pprint_value=active_config.wato_pprint_config
+
+        config_file = UserConnectionConfigFile()
+        all_connections = config_file.load_for_modification()
+        updated_connections = [c for c in all_connections if c["id"] != ldap_id]
+        deleted_connection = [c for c in all_connections if c["id"] == ldap_id][0]
+        update_suffixes(updated_connections)
+        config_file.delete(
+            user_id=user.id,
+            cfg=updated_connections,
+            connection_id=ldap_id,
+            connection_type="ldap",
+            sites=get_affected_sites(active_config.sites, deleted_connection),
+            domains=[ConfigDomainGUI()],
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
+
     return Response(status=204)
 
 
@@ -166,9 +187,23 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.seeall")
     user.need_permission("wato.users")
-    connection = request_to_create_ldap_connection(
-        params["body"], pprint_value=active_config.wato_pprint_config
+
+    connection = LDAPConnectionInterface.from_api_request(params["body"])
+    config_file = UserConnectionConfigFile()
+    all_connections = config_file.load_for_modification()
+    all_connections.append(connection.to_mk_format())
+    update_suffixes(all_connections)
+
+    config_file.create(
+        user_id=user.id,
+        cfg=all_connections,
+        connection_type="ldap",
+        sites=get_affected_sites(active_config.sites, connection.to_mk_format()),
+        domains=[ConfigDomainGUI()],
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
+
     return response_with_etag_created_from_dict(
         serve_json(_serialize_ldap_connection(connection)),
         connection.api_response(),
@@ -199,11 +234,40 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
     ldap_data = params["body"]
     ldap_data["general_properties"]["id"] = ldap_id
     try:
-        updated_connection = request_to_edit_ldap_connection(
-            ldap_data=ldap_data,
-            ldap_id=ldap_id,
+        if ldap_data["ldap_connection"]["connection_suffix"]["state"] == "enabled":
+            for ldap_connection in [
+                cnx for ldapid, cnx in get_ldap_connections().items() if ldapid != ldap_id
+            ]:
+                if (suffix := ldap_connection.get("suffix")) is not None:
+                    if suffix == ldap_data["ldap_connection"]["connection_suffix"]["suffix"]:
+                        raise MKUserError(
+                            None,
+                            _("The suffix '%s' is already in use by another LDAP connection.")
+                            % ldap_connection["suffix"],
+                        )
+
+        config_file = UserConnectionConfigFile()
+        ldap_connection_from_request = LDAPConnectionInterface.from_api_request(ldap_data)
+        updated_connection = ldap_connection_from_request.to_mk_format()
+
+        modified_connections: list[LDAPUserConnectionConfig | SAMLUserConnectionConfig] = [
+            updated_connection if connection["id"] == ldap_id else connection
+            for connection in config_file.load_for_modification()
+        ]
+
+        update_suffixes(modified_connections)
+
+        config_file.update(
+            user_id=user.id,
+            cfg=modified_connections,
+            connection_id=ldap_id,
+            connection_type="ldap",
+            sites=get_affected_sites(active_config.sites, updated_connection),
+            domains=[ConfigDomainGUI()],
             pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
+
     except MKUserError as exc:
         raise ProblemException(
             title=f"There was problem when trying to update the LDAP connection with ldap_id {ldap_id}",
@@ -211,8 +275,8 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
         )
 
     return response_with_etag_created_from_dict(
-        serve_json(_serialize_ldap_connection(updated_connection)),
-        updated_connection.api_response(),
+        serve_json(_serialize_ldap_connection(ldap_connection_from_request)),
+        ldap_connection_from_request.api_response(),
     )
 
 

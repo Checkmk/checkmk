@@ -8,9 +8,14 @@ from pathlib import Path
 from typing import Any, cast, Literal, NewType, NotRequired, override, TypedDict
 
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _
 from cmk.gui.type_defs import DisableNotificationsAttribute
+from cmk.gui.watolib import changes as _changes
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -388,6 +393,68 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
             connector_class.config_changed()
 
         clear_user_connection_cache()
+
+    def update(
+        self,
+        user_id: UserId | None,
+        cfg: list[ConfigurableUserConnectionSpec],
+        connection_id: str,
+        connection_type: Literal["ldap", "saml2"],
+        sites: list[SiteId],
+        domains: Sequence[ABCConfigDomain] | None,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
+        _changes.add_change(
+            action_name=f"edit-{connection_type}-connection",
+            text=_("Changed %s connection %s") % (connection_type.upper(), connection_id),
+            user_id=user_id,
+            domains=domains,
+            sites=sites,
+            use_git=use_git,
+        )
+        self.save(cfg, pprint_value=pprint_value)
+
+    def create(
+        self,
+        user_id: UserId | None,
+        cfg: list[ConfigurableUserConnectionSpec],
+        connection_type: Literal["ldap", "saml2"],
+        sites: list[SiteId],
+        domains: Sequence[ABCConfigDomain] | None,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
+        _changes.add_change(
+            action_name=f"new-{connection_type}-connection",
+            text=_("Created new %s connection") % connection_type.upper(),
+            user_id=user_id,
+            domains=domains,
+            sites=sites,
+            use_git=use_git,
+        )
+        self.save(cfg, pprint_value=pprint_value)
+
+    def delete(
+        self,
+        user_id: UserId | None,
+        cfg: list[ConfigurableUserConnectionSpec],
+        connection_id: str,
+        connection_type: Literal["ldap", "saml2"],
+        sites: list[SiteId],
+        domains: Sequence[ABCConfigDomain] | None,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
+        _changes.add_change(
+            action_name=f"delete-{connection_type}-connection",
+            text=_("Deleted %s connection %s") % (connection_type.upper(), connection_id),
+            user_id=user_id,
+            domains=domains,
+            sites=sites,
+            use_git=use_git,
+        )
+        self.save(cfg, pprint_value=pprint_value)
 
 
 def register_config_file(config_file_registry: ConfigFileRegistry) -> None:

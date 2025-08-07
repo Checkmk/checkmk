@@ -212,6 +212,7 @@
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
+    --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
   }
 
   body[data-theme='modern-dark'] {
@@ -277,6 +278,7 @@
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-midnight-grey-100);
+    --wizard-progress-bar-background-color: var(--white);
   }
 }
 

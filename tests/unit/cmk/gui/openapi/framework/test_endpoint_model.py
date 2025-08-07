@@ -11,7 +11,7 @@ from typing import Annotated
 
 import pytest
 from pydantic import AfterValidator, ValidationError
-from werkzeug.datastructures import Headers
+from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
 from cmk.gui.openapi.framework import (
@@ -266,6 +266,7 @@ def _api_context() -> ApiContext:
     return ApiContext.new(
         config=Config(),
         version=APIVersion.UNSTABLE,
+        etag_if_match=ETags(),
     )
 
 

@@ -86,7 +86,7 @@ def _create_response(
         if fields_filter is not None:
             json_object = fields_filter.apply(json_object)
 
-        if add_etag:
+        if add_etag and "ETag" not in headers:
             headers["ETag"] = etag_of_dict(json_object).to_header()
 
         json_text = json.dumps(json_object)
@@ -195,6 +195,7 @@ def handle_endpoint_request(
         with tracer.span("endpoint-body-call"):
             raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
 
+    # Step 5: Create the response object
     with tracer.span("create-response"):
         if isinstance(raw_response, Response):
             _validate_direct_response(raw_response)
@@ -209,7 +210,10 @@ def handle_endpoint_request(
                 is_testing=is_testing,
             )
 
-    # Step 5: Check permissions
+    # Step 6: Validate ETag
+    ResponseValidator.validate_etag_response(response.headers.get("ETag"), endpoint.etag)
+
+    # Step 7: Check permissions
     if response.status_code < 400:
         ResponseValidator.validate_permissions(
             endpoint=endpoint.operation_id,
@@ -219,7 +223,7 @@ def handle_endpoint_request(
             is_testing=is_testing,
         )
 
-    # Step 6: Validate response status code
+    # Step 8: Validate response status code
     allowed_status_codes = identify_expected_status_codes(
         endpoint.method,
         endpoint.doc_group,
@@ -238,7 +242,7 @@ def handle_endpoint_request(
         expected_status_codes=list(allowed_status_codes),
     )
 
-    # Step 7: Update config generation if needed
+    # Step 9: Update config generation if needed
     if (
         endpoint.method != "get"
         and response.status_code < 300

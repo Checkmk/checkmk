@@ -10,19 +10,28 @@ from typing import Annotated, cast, override
 
 import pytest
 from pydantic import PlainSerializer
-from werkzeug.datastructures import Headers
+from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.framework import ApiContext, APIVersion, HeaderParam, PathParam, QueryParam
+from cmk.gui.openapi.framework import (
+    ApiContext,
+    APIVersion,
+    ETag,
+    HeaderParam,
+    PathParam,
+    QueryParam,
+)
 from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
+from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.utils import (
     RestAPIHeaderValidationException,
     RestAPIPermissionException,
     RestAPIRequestGeneralException,
+    RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
 from cmk.gui.utils.permission_verification import AllPerm, Perm
@@ -171,6 +180,7 @@ def _api_context() -> ApiContext:
     return ApiContext.new(
         config=Config(),
         version=APIVersion.UNSTABLE,
+        etag_if_match=ETags(),
     )
 
 
@@ -511,3 +521,45 @@ def test_handle_endpoint_with_context(permission_validator: PermissionValidator)
         wato_use_git=False,
         is_testing=False,
     )
+
+
+def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) -> None:
+    etag = ETag({"key": "value"})
+
+    def handler() -> ApiResponse[None]:
+        return ApiResponse(body=None, etag=etag)
+
+    request_endpoint = RequestEndpointFactory.build(handler=handler, etag="output")
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+    response = handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        wato_enabled=True,
+        wato_use_git=False,
+        is_testing=False,
+    )
+    assert response.headers["ETag"] == f'"{etag.hash()}"'
+
+
+def test_handle_endpoint_missing_etag(permission_validator: PermissionValidator) -> None:
+    def handler() -> None:
+        return None
+
+    request_endpoint = RequestEndpointFactory.build(handler=handler, etag="output")
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+    with pytest.raises(RestAPIResponseException, match="ETag header expected"):
+        handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )

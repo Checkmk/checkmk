@@ -60,7 +60,13 @@ def _return_type(signature: inspect.Signature) -> type | None:
         raise ValueError("Missing return type annotation")
     annotation = signature.return_annotation
     if get_origin(annotation) in (TypedResponse, ApiResponse):
-        return get_args(annotation)[0]
+        type_ = get_args(annotation)[0]
+        if type_ is type(None):
+            # TypedResponse[None] or ApiResponse[None]
+            # instead of `None` we get `NoneType`, so we do the conversion here
+            return None
+        return type_
+
     return annotation
 
 

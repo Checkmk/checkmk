@@ -211,6 +211,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         api_context = ApiContext.new(
             config=active_config,
             version=self.requested_version,
+            etag_if_match=request.if_match,
         )
 
         is_testing = str(request.environ.get("paste.testing", "False")).lower() == "true"

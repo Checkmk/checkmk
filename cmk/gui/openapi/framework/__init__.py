@@ -8,7 +8,7 @@ These types and functions are used to define the versioned REST API of Checkmk.
 Once all endpoints are migrated to the new framework, the old marshmallow-based code can be removed.
 """
 
-from ._context import ApiContext
+from ._context import ApiContext, ETag
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
 from ._validation import EndpointValidator
 from .api_config import APIConfig, APIVersion, DeprecationDetails
@@ -37,6 +37,7 @@ __all__ = [
     "EndpointHandler",
     "EndpointMetadata",
     "EndpointPermissions",
+    "ETag",
     "HandlerFunction",
     "HeaderParam",
     "PathParam",

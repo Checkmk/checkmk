@@ -70,6 +70,7 @@ class EndpointDefinitionFactory(DataclassFactory[registry.EndpointDefinition]):
 class RequestEndpointFactory(DataclassFactory[registry.RequestEndpoint]):
     permissions_required = None
     skip_locking = True
+    etag = None
 
     @classmethod
     def handler(cls) -> versioned_endpoint.HandlerFunction:

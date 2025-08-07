@@ -2,8 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 
+from werkzeug.datastructures import ETags
+
+from .._context import ETag
 from ._api_field import api_field
 from ._api_model import api_model
 from .omitted import ApiOmitted
@@ -16,6 +19,13 @@ class ApiResponse[T]:
     body: T
     status_code: int = 200
     headers: dict[str, str] = field(default_factory=dict)
+    etag: InitVar[ETag | None] = None
+
+    def __post_init__(self, etag: ETag | None) -> None:
+        if etag is not None:
+            if "ETag" in self.headers:
+                raise ValueError("ETag header already set")
+            self.headers["ETag"] = ETags(strong_etags=[etag.hash()]).to_header()
 
 
 @api_model

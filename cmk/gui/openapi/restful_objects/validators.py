@@ -32,7 +32,7 @@ from cmk.gui.openapi.permission_tracking import (
 )
 from cmk.gui.openapi.restful_objects.content_decoder import decode
 from cmk.gui.openapi.restful_objects.params import path_parameters
-from cmk.gui.openapi.restful_objects.type_defs import StatusCodeInt
+from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeInt
 from cmk.gui.openapi.utils import (
     EXT,
     FIELDS,
@@ -500,6 +500,30 @@ class ResponseValidator:
                         "error": str(exc),
                         "orig": data,
                     },
+                ),
+            )
+
+    @staticmethod
+    def validate_etag_response(
+        etag_header: str | None,
+        etag_behaviour: ETagBehaviour | None,
+    ) -> None:
+        """Validate the ETag header in the response."""
+        if etag_behaviour is None or etag_behaviour == "input":
+            if etag_header is None:
+                return
+            raise RestAPIResponseException(
+                title="ETag header not expected",
+                detail=(
+                    "This endpoint is not configured to respond with an ETag header. "
+                    "Please update the endpoint behaviour."
+                ),
+            )
+        if etag_header is None:
+            raise RestAPIResponseException(
+                title="ETag header expected",
+                detail=(
+                    "This endpoint is configured to respond with an ETag header, but none was returned."
                 ),
             )
 

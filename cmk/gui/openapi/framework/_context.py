@@ -3,14 +3,60 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Self
+
+from werkzeug.datastructures import ETags
 
 from livestatus import SiteConfigurations
 
 from cmk.gui.config import Config
+from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AgentControllerCertificates, PasswordPolicy
 
 from .api_config import APIVersion
+
+
+class ETag:
+    """Represents an ETag for an object, which are used to determine if an object has changed.
+
+    The ETag is calculated from a dict, which should contain all values that are needed to fully
+    describe the state of the object."""
+
+    __slots__ = ("_values",)
+
+    def __init__(self, values: dict[str, object]) -> None:
+        self._values = values
+
+    def hash(self) -> ETagHash:
+        """Calculate the ETag hash from the values."""
+        return hash_of_dict(self._values)
+
+
+@dataclass(kw_only=True, slots=True, frozen=True)
+class ApiETagHandler:
+    enabled: bool
+    if_match: ETags
+
+    def verify(self, etag: ETag) -> None:
+        """Check if the ETag matches the If-Match header."""
+        if not self.if_match:
+            raise ProblemException(
+                HTTPStatus.PRECONDITION_REQUIRED,
+                "Precondition required",
+                "If-Match header required for this operation. See documentation.",
+            )
+
+        # this is equivalent to `contains`, but we skip calculating the hash in case of a star tag
+        if self.if_match.star_tag or self.if_match.is_strong(etag.hash()):
+            return
+
+        raise ProblemException(
+            HTTPStatus.PRECONDITION_FAILED,
+            "Precondition failed",
+            f"ETag didn't match. Expected {etag}. Probable cause: Object changed by another user.",
+        )
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
@@ -44,7 +90,15 @@ class ApiConfig:
 class ApiContext:
     config: ApiConfig
     version: APIVersion
+    etag: ApiETagHandler
 
     @classmethod
-    def new(cls, config: Config, version: APIVersion) -> Self:
-        return cls(config=ApiConfig.from_config(config), version=version)
+    def new(cls, config: Config, version: APIVersion, etag_if_match: ETags) -> Self:
+        return cls(
+            config=ApiConfig.from_config(config),
+            version=version,
+            etag=ApiETagHandler(
+                enabled=config.rest_api_etag_locking,
+                if_match=etag_if_match,
+            ),
+        )

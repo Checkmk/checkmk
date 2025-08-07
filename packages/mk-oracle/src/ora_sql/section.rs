@@ -175,8 +175,12 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
     None
 }
 
-static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> =
-    LazyLock::new(|| HashMap::from([(names::IO_STATS, sqls::Id::IoStats)]));
+static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> = LazyLock::new(|| {
+    HashMap::from([
+        (names::IO_STATS, sqls::Id::IoStats),
+        (names::TS_QUOTAS, sqls::Id::TsQuotas),
+    ])
+});
 
 pub fn get_sql_id<T: AsRef<str>>(section_name: T) -> Option<sqls::Id> {
     SECTION_MAP.get(section_name.as_ref()).copied()

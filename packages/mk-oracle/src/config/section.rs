@@ -28,6 +28,7 @@ pub mod names {
     pub const RESUMABLE: &str = "resumable";
     pub const IO_STATS: &str = "iostats";
     pub const ASM_DISK_GROUP: &str = "asm_diskgroup";
+    pub const TS_QUOTAS: &str = "ts_quotas";
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -37,7 +38,7 @@ pub enum SectionKind {
     Disabled,
 }
 
-const PREDEFINED_SECTIONS: [&str; 18] = [
+const PREDEFINED_SECTIONS: [&str; 19] = [
     names::INSTANCE,
     names::SESSIONS,
     names::LOG_SWITCHES,
@@ -56,6 +57,7 @@ const PREDEFINED_SECTIONS: [&str; 18] = [
     names::RESUMABLE,
     names::IO_STATS,
     names::ASM_DISK_GROUP,
+    names::TS_QUOTAS,
 ];
 
 const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
@@ -396,7 +398,7 @@ sections:
                 .unwrap()
                 .sections()
                 .len(),
-            18
+            19
         );
     }
 

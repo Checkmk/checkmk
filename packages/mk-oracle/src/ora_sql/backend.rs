@@ -53,12 +53,6 @@ impl OraDbEngine for StdEngine {
                 target.auth.password().unwrap_or(""),
                 target.make_connection_string(instance),
             );
-            log::warn!(
-                "MEMEMEMEME {} {} {}",
-                target.auth.username(),
-                target.auth.password().unwrap_or(""),
-                target.make_connection_string(instance)
-            );
             connector.privilege(_to_privilege(role));
             self.connection = Some(connector.connect()?);
         } else {

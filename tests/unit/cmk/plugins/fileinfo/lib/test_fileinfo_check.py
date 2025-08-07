@@ -20,9 +20,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import fileinfo as fileinfo_plugin
-from cmk.plugins.lib import fileinfo as fileinfo_utils
-from cmk.plugins.lib.fileinfo import (
+from cmk.plugins.fileinfo.agent_based import agent_fileinfo as fileinfo_plugin
+from cmk.plugins.fileinfo.lib import fileinfo_lib as fileinfo_utils
+from cmk.plugins.fileinfo.lib.fileinfo_lib import (
     discovery_fileinfo_groups,
     DiscoveryParams,
     Fileinfo,

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, Result, RuleSetType, State
-from cmk.plugins.lib.fileinfo import (
+from cmk.plugins.fileinfo.lib.fileinfo_lib import (
     check_fileinfo_data,
     check_fileinfo_groups_data,
     discovery_fileinfo,

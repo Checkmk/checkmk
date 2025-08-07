@@ -43,7 +43,7 @@ def test_alphabetical_sorter() -> None:
 
 def test_weighted_sorter() -> None:
     results = get_unsorted_results()
-    get_sorter("weighted_index", query="bet")(results)
+    get_sorter("weighted_index", query="beta")(results)
 
     expected = [
         UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),

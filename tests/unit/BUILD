@@ -89,6 +89,7 @@ py_test(
             "**/*.jsonl",
             "**/*.log",
         ],
+        allow_empty = True,
         exclude = ["**/*.py"],
     ) + select({
         "@//:gpl_repo": [],

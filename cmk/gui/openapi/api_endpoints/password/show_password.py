@@ -18,12 +18,13 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
+from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.passwords import load_password
 
 from .endpoint_family import PASSWORD_FAMILY
 from .models.response_models import PasswordObject
-from .utils import PERMISSIONS, serialize_password
+from .utils import password_etag, PERMISSIONS, serialize_password
 
 
 def show_password_v1(
@@ -35,10 +36,13 @@ def show_password_v1(
             example="pathname",
         ),
     ],
-) -> PasswordObject:
+) -> ApiResponse[PasswordObject]:
     """Show password store entry"""
     user.need_permission("wato.passwords")
-    return serialize_password(name, load_password(name))
+    password = load_password(name)
+    return ApiResponse(
+        body=serialize_password(name, load_password(name)), etag=password_etag(name, password)
+    )
 
 
 ENDPOINT_SHOW_PASSWORD = VersionedEndpoint(

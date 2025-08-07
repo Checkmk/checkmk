@@ -7,12 +7,6 @@ from typing import Annotated
 from pydantic import AfterValidator
 
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.api_endpoints.password.endpoint_family import PASSWORD_FAMILY
-from cmk.gui.openapi.api_endpoints.password.models.request_models import (
-    UpdatePassword,
-)
-from cmk.gui.openapi.api_endpoints.password.models.response_models import PasswordObject
-from cmk.gui.openapi.api_endpoints.password.utils import RW_PERMISSIONS, serialize_password
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -25,8 +19,14 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
+from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.passwords import load_password, load_password_to_modify, save_password
+
+from .endpoint_family import PASSWORD_FAMILY
+from .models.request_models import UpdatePassword
+from .models.response_models import PasswordObject
+from .utils import password_etag, RW_PERMISSIONS, serialize_password
 
 
 def update_password_v1(
@@ -40,11 +40,15 @@ def update_password_v1(
         ),
     ],
     body: UpdatePassword,
-) -> PasswordObject:
+) -> ApiResponse[PasswordObject]:
     """Update a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
-    password_details = body.update(load_password_to_modify(name))
+    original_password = load_password_to_modify(name)
+    if api_context.etag.enabled:
+        api_context.etag.verify(password_etag(name, original_password))
+
+    password_details = body.update(original_password)
     save_password(
         name,
         password_details,
@@ -53,7 +57,8 @@ def update_password_v1(
         pprint_value=api_context.config.wato_pprint_config,
         use_git=api_context.config.wato_use_git,
     )
-    return serialize_password(name, load_password(name))
+    password = load_password(name)
+    return ApiResponse(body=serialize_password(name, password), etag=password_etag(name, password))
 
 
 ENDPOINT_UPDATE_PASSWORD = VersionedEndpoint(

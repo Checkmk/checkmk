@@ -150,6 +150,28 @@ def test_openapi_password_delete(clients: ClientRegistry) -> None:
 
 
 @managedtest
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
+def test_openapi_password_etag(clients: ClientRegistry) -> None:
+    ident = "test_etag"
+    clients.Password.create(
+        ident=ident,
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        editable_by="admin",
+        customer="provider",
+    )
+
+    clients.Password.edit(
+        ident, title="Updated", expect_ok=False, etag="invalid_etag"
+    ).assert_status_code(412)
+    clients.Password.delete(ident, expect_ok=False, etag="invalid_etag").assert_status_code(412)
+
+    clients.Password.edit(ident, title="Updated", etag="valid_etag")
+    clients.Password.delete(ident, etag="valid_etag")
+
+
+@managedtest
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_password_with_newlines(clients: ClientRegistry) -> None:
     credentials_with_newlines = """{

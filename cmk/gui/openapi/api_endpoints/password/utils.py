@@ -7,6 +7,7 @@ from cmk.gui.openapi.api_endpoints.password.models.response_models import (
     PasswordObject,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
+from cmk.gui.openapi.framework import ETag
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
@@ -44,4 +45,20 @@ def serialize_password(ident: str, details: Password) -> PasswordObject:
             customer=details.get("customer") or ApiOmitted(),
         ),
         links=[LinkModel.create("self", object_href("password", "{name}"))],
+    )
+
+
+def password_etag(ident: str, password: Password) -> ETag:
+    return ETag(
+        {
+            "id": ident,
+            "title": password["title"],
+            "comment": password["comment"],
+            "docu_url": password["docu_url"],
+            "password": password["password"],
+            "owned_by": password["owned_by"],
+            "shared_with": password["shared_with"],
+            "customer": password.get("customer"),
+            "locked_by": password.get("locked_by"),
+        }
     )

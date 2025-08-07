@@ -1489,6 +1489,7 @@ class PasswordClient(RestApiClient):
         shared: Sequence[str] | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         return self.request(
             "put",
@@ -1504,18 +1505,28 @@ class PasswordClient(RestApiClient):
                 }
             ),
             expect_ok=expect_ok,
+            headers=self._set_etag_header(ident, etag),
         )
 
     def delete(
         self,
         ident: str,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{ident}",
             expect_ok=expect_ok,
+            headers=self._set_etag_header(ident, etag),
         )
+
+    def _set_etag_header(
+        self, ident: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(ident).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 class AgentClient(RestApiClient):

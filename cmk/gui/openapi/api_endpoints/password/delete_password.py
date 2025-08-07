@@ -10,6 +10,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -19,12 +20,12 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
 from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.passwords import load_passwords, remove_password
+from cmk.gui.watolib.passwords import load_password_to_modify, remove_password
 
-from ...utils import RestAPIRequestGeneralException
 from .endpoint_family import PASSWORD_FAMILY
-from .utils import RW_PERMISSIONS
+from .utils import password_etag, RW_PERMISSIONS
 
 
 def delete_password_v1(
@@ -41,13 +42,17 @@ def delete_password_v1(
     """Delete a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
-    if password := load_passwords().get(name):
-        if is_locked_by_quick_setup(password.get("locked_by")):
-            raise RestAPIRequestGeneralException(
-                status=400,
-                title=f'The password "{name}" is locked by Quick setup.',
-                detail="Locked passwords cannot be removed.",
-            )
+    password = load_password_to_modify(name)
+    if api_context.etag.enabled:
+        api_context.etag.verify(password_etag(name, password))
+
+    if is_locked_by_quick_setup(password.get("locked_by")):
+        raise RestAPIRequestGeneralException(
+            status=400,
+            title=f'The password "{name}" is locked by Quick setup.',
+            detail="Locked passwords cannot be removed.",
+        )
+
     remove_password(
         name,
         user_id=user.id,
@@ -66,4 +71,5 @@ ENDPOINT_DELETE_PASSWORD = VersionedEndpoint(
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=PASSWORD_FAMILY.name),
     versions={APIVersion.V1: EndpointHandler(handler=delete_password_v1)},
+    behavior=EndpointBehavior(etag="input"),
 )

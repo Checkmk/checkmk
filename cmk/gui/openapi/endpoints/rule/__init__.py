@@ -403,7 +403,10 @@ def edit_rule(param):
         param["rule_id"],
     )
 
-    if rule_entry.rule.conditions != new_rule.conditions:
+    if (
+        is_locked_by_quick_setup(rule_entry.rule.locked_by)
+        and rule_entry.rule.conditions != new_rule.conditions
+    ):
         return problem(
             status=400,
             title="Rule is managed by Quick setup",

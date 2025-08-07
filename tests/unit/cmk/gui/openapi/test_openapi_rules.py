@@ -591,3 +591,29 @@ def test_openapi_cannot_change_locked_rule_conditions(
         expect_ok=False,
     ).assert_status_code(400)
     assert resp.json["detail"] == "Conditions cannot be modified for rules managed by Quick setup."
+
+
+def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
+    # test that for rules that are not locked by Quick setup, the conditions can be edited
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions=RuleConditions(
+            host_name={
+                "operator": "one_of",
+                "match_on": ["example.com"],
+            }
+        ),
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.edit(
+        rule_id=resp.json["id"],
+        conditions=RuleConditions(
+            host_name={
+                "operator": "one_of",
+                "match_on": ["example.com", "localhost"],
+            }
+        ),
+        value_raw=resp.json["extensions"]["value_raw"],
+    )

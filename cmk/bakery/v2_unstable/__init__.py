@@ -91,6 +91,7 @@ from cmk.bakery.v1 import WindowsConfigItems as WindowsConfigItems
 from cmk.bakery.v1 import WindowsGlobalConfigEntry as WindowsGlobalConfigEntry
 from cmk.bakery.v1 import WindowsSystemConfigEntry as WindowsSystemConfigEntry
 
+from ._config import Secret as Secret
 from ._plugins import BakeryPlugin as BakeryPlugin
 from ._plugins import entry_point_prefixes as entry_point_prefixes
 from ._plugins import no_op_parser as no_op_parser

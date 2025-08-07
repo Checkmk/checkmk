@@ -4,13 +4,14 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{MaxConnections, MaxQueries};
+use crate::types::{MaxConnections, MaxQueries, SqlBindParam};
 use anyhow::Result;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Options {
     max_connections: MaxConnections,
     max_queries: MaxQueries,
+    params: Vec<SqlBindParam>,
 }
 
 impl Default for Options {
@@ -18,6 +19,7 @@ impl Default for Options {
         Self {
             max_connections: defaults::MAX_CONNECTIONS.into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
         }
     }
 }
@@ -27,6 +29,7 @@ impl Options {
         Self {
             max_connections,
             max_queries: defaults::MAX_QUERIES.into(),
+            params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
         }
     }
 
@@ -38,6 +41,9 @@ impl Options {
         self.max_queries.clone()
     }
 
+    pub fn params(&self) -> &Vec<SqlBindParam> {
+        &self.params
+    }
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let options = yaml.get(keys::OPTIONS);
         if options.is_badvalue() {
@@ -53,6 +59,12 @@ impl Options {
                 })
                 .into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            params: vec![(
+                keys::IGNORE_DB_NAME.to_string(),
+                options
+                    .get_int::<u8>(keys::IGNORE_DB_NAME)
+                    .unwrap_or_default(),
+            )],
         }))
     }
 }
@@ -67,11 +79,16 @@ mod tests {
         const OPTIONS_YAML: &str = r"
 options:   
     max_connections: 100
+    IGNORE_DB_NAME: 1
     ";
         let yaml = create_yaml(OPTIONS_YAML);
         let options = Options::from_yaml(&yaml).unwrap().unwrap();
         assert_eq!(options.max_connections(), MaxConnections(100));
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
+        assert_eq!(
+            options.params(),
+            &vec![(keys::IGNORE_DB_NAME.to_string(), 1)]
+        );
     }
 
     #[test]
@@ -79,5 +96,9 @@ options:
         let options = Options::default();
         assert_eq!(options.max_connections(), defaults::MAX_CONNECTIONS.into());
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
+        assert_eq!(
+            options.params(),
+            &vec![(keys::IGNORE_DB_NAME.to_string(), 0)]
+        );
     }
 }

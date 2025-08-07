@@ -127,27 +127,47 @@ impl Default for Separator {
     }
 }
 
+pub type SqlBindParam = (String, u8);
+
 #[derive(Debug, Clone, PartialEq, Eq, From)]
 pub struct SqlQuery {
     text: String,
     separator: Separator,
+    params: Vec<SqlBindParam>,
 }
+
 impl SqlQuery {
-    pub fn new<T: AsRef<str> + Sized>(s: T, separator: Separator) -> Self {
+    pub fn new<T: AsRef<str> + Sized>(s: T, separator: Separator, params: &[SqlBindParam]) -> Self {
+        let p: Vec<SqlBindParam> = params
+            .iter()
+            .filter_map(|(k, v)| {
+                if s.as_ref().contains((":".to_string() + k).as_str()) {
+                    Some((k.clone(), *v))
+                } else {
+                    None
+                }
+            })
+            .collect();
         match separator {
             Separator::No => Self {
                 text: s.as_ref().to_owned(),
                 separator: crate::types::Separator::No,
+                params: p,
             },
             Separator::Comma => Self {
                 text: use_sep(s.as_ref(), ","),
                 separator: Separator::Comma,
+                params: p,
             },
             Separator::Decorated(c) => Self {
                 text: use_sep(s, format!("|| '{}' ||", c).as_str()),
                 separator: Separator::Decorated(c),
+                params: p,
             },
         }
+    }
+    pub fn params(&self) -> &Vec<SqlBindParam> {
+        &self.params
     }
 
     pub fn as_str(&self) -> &str {
@@ -178,20 +198,40 @@ mod tests {
     #[test]
     fn test_sql_query() {
         assert_eq!(
-            SqlQuery::new("a {sep} b", Separator::No).as_str(),
+            SqlQuery::new("a {sep} b", Separator::No, &[]).as_str(),
             "a {sep} b"
         );
         assert_eq!(
-            SqlQuery::new("a {sep} b", Separator::Comma).as_str(),
+            SqlQuery::new("a {sep} b", Separator::Comma, &[]).as_str(),
             "a , b"
         );
         assert_eq!(
-            SqlQuery::new("a {sep} b", Separator::default()).as_str(),
+            SqlQuery::new("a {sep} b", Separator::default(), &[]).as_str(),
             "a || '|' || b"
         );
         assert_eq!(
-            SqlQuery::new("a {sep} b", Separator::Decorated('x')).as_str(),
+            SqlQuery::new("a {sep} b", Separator::Decorated('x'), &[]).as_str(),
             "a || 'x' || b"
+        );
+    }
+    #[test]
+    fn test_sql_query_params() {
+        let params = vec![("AAA".to_string(), 1), ("BBB".to_string(), 2)];
+        assert_eq!(
+            SqlQuery::new("a {sep} b", Separator::No, &params).params(),
+            &Vec::new()
+        );
+        assert_eq!(
+            SqlQuery::new("AAA {sep} b", Separator::No, &params).params(),
+            &Vec::new()
+        );
+        assert_eq!(
+            SqlQuery::new(":AAA {sep} b", Separator::No, &params).params(),
+            &vec![("AAA".to_string(), 1)]
+        );
+        assert_eq!(
+            SqlQuery::new(":AAA {sep} b :BBB", Separator::No, &params).params(),
+            &params
         );
     }
 

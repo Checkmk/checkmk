@@ -8,6 +8,7 @@ pub mod keys {
 
     pub const OPTIONS: &str = "options";
     pub const MAX_CONNECTIONS: &str = "max_connections";
+    pub const IGNORE_DB_NAME: &str = "IGNORE_DB_NAME";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";

@@ -40,6 +40,7 @@ fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
     let result = spot.query_table(&SqlQuery::new(
         r"SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance",
         Separator::default(),
+        &Vec::new(),
     ))?;
     let hashmap: _InstanceEntries = result
         .into_iter()

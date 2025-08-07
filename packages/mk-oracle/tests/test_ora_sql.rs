@@ -19,6 +19,7 @@ use mk_oracle::types::{Credentials, InstanceName};
 use mk_oracle::types::{Separator, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
+use std::sync::LazyLock;
 
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
@@ -62,7 +63,7 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
-fn make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
+fn _make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
     let config_str = format!(
         r#"
 ---
@@ -72,19 +73,35 @@ oracle:
        username: "{}"
        password: "{}"
        type: {}
+       role: {}
     connection:
        hostname: {}
        timeout: 10
 "#,
-        credentials.user, credentials.password, auth_type, address,
+        credentials.user,
+        credentials.password,
+        auth_type,
+        if address == "localhost" { "sysdba" } else { "" },
+        address,
     );
     Config::from_string(config_str).unwrap().unwrap()
+}
+
+fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
+    _make_mini_config(
+        &Credentials {
+            user: endpoint.user.clone(),
+            password: endpoint.pwd.clone(),
+        },
+        AuthType::Standard,
+        &endpoint.host,
+    )
 }
 
 fn load_endpoints() -> Vec<SqlDbEndpoint> {
     let mut r = reference_endpoint();
     let content = ORA_TEST_ENDPOINTS.to_owned();
-    content
+    let mut endpoints = content
         .split("\n")
         .filter_map(|s| {
             let cleaned = s.split('#').next().unwrap_or("").trim();
@@ -103,23 +120,30 @@ fn load_endpoints() -> Vec<SqlDbEndpoint> {
             }
         })
         .map(|s| SqlDbEndpoint::from_str(s.as_str()).unwrap())
-        .collect::<Vec<SqlDbEndpoint>>()
+        .collect::<Vec<SqlDbEndpoint>>();
+    if let Ok(local_endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL) {
+        endpoints.push(local_endpoint);
+    } else {
+        eprintln!("No local endpoint found, skipping test_local_connection");
+    };
+    endpoints
 }
 
 fn reference_endpoint() -> SqlDbEndpoint {
     SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap()
 }
 
-lazy_static::lazy_static! {
-    static ref WORKING_ENDPOINTS: Vec<SqlDbEndpoint> = load_endpoints();
-}
+static WORKING_ENDPOINTS: LazyLock<Vec<SqlDbEndpoint>> = LazyLock::new(load_endpoints);
 #[test]
 fn test_endpoints_file() {
     let s = &WORKING_ENDPOINTS;
     let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap();
     assert!(!s.is_empty());
     assert_eq!(s[0], r);
-    for e in &s[1..] {
+    for e in &s[..] {
+        if e.host == "localhost" {
+            continue; // skip local endpoint, it may have strange credentials
+        }
         assert_eq!(e.user, r.user);
         assert_eq!(e.pwd, r.pwd);
     }
@@ -153,7 +177,8 @@ lazy_static::lazy_static! {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
-            Separator::No
+            Separator::No,
+        &Vec::new()
         );
 }
 
@@ -211,15 +236,7 @@ fn test_local_connection() {
 fn test_remote_mini_connection() {
     add_runtime_to_path();
     let endpoint = reference_endpoint();
-
-    let config = make_mini_config(
-        &Credentials {
-            user: endpoint.user,
-            password: endpoint.pwd,
-        },
-        AuthType::Standard,
-        &endpoint.host,
-    );
+    let config = make_mini_config(&endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     println!("Target {:?}", spot.target());
@@ -237,16 +254,8 @@ fn test_remote_mini_connection() {
 fn test_remote_mini_connection_version() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
-        eprintln!("Testing endpoint: {}", endpoint.host);
-
-        let config = make_mini_config(
-            &Credentials {
-                user: endpoint.user.clone(),
-                password: endpoint.pwd.clone(),
-            },
-            AuthType::Standard,
-            &endpoint.host,
-        );
+        eprintln!("Endpoint: {}", endpoint.host);
+        let config = make_mini_config(endpoint);
 
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot
@@ -267,60 +276,76 @@ fn test_remote_mini_connection_version() {
 #[test]
 fn test_io_stats_query() {
     add_runtime_to_path();
-    let endpoint = reference_endpoint();
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        let config = make_mini_config(endpoint);
 
-    let config = make_mini_config(
-        &Credentials {
-            user: endpoint.user,
-            password: endpoint.pwd,
-        },
-        AuthType::Standard,
-        &endpoint.host,
-    );
-
-    let spot = backend::make_spot(&config.endpoint()).unwrap();
-    let conn = spot.connect(None).unwrap();
-    let q = SqlQuery::new(
-        sqls::get_factory_query(sqls::Id::IoStats).unwrap(),
-        Separator::default(),
-    );
-    let result = conn.query(&q, "");
-    assert!(result.is_ok());
-    let rows = result.unwrap();
-    assert!(rows.len() > 10);
-    let name_dot = format!("{}.", &endpoint.instance);
-    for r in &rows {
-        let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
-        assert_eq!(values.len(), 15, "Row does not have enough columns: {}", r);
-        assert!(
-            values[0].starts_with(name_dot.as_str()),
-            "Row does not start with instance name: {}",
-            r
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot.connect(None).unwrap();
+        let q = SqlQuery::new(
+            sqls::get_factory_query(sqls::Id::IoStats).unwrap(),
+            Separator::default(),
+            config.params(),
         );
-        assert_eq!(values[1], "iostat_file");
-        let all_types: HashSet<String> = HashSet::from_iter(
-            vec![
-                "Archive Log",
-                "Archive Log Backup",
-                "Control File",
-                "Data File",
-                "Data File Backup",
-                "Data File Copy",
-                "Data File Incremental Backup",
-                "Data Pump Dump File",
-                "External Table",
-                "Flashback Log",
-                "Log File",
-                "Other",
-                "Temp File",
-            ]
-            .into_iter()
-            .map(|s| s.to_string()),
-        );
-        let the_type = &values[2];
-        assert!(all_types.contains(the_type), "Wrong type: {}", the_type);
-        for v in &values[3..] {
-            assert!(v.parse::<u64>().is_ok(), "Value is not digit: {}", v);
+        let result = conn.query(&q, "");
+        let rows = result.unwrap();
+        assert!(rows.len() > 10);
+        let name_dot = format!("{}.", &endpoint.instance);
+        for r in &rows {
+            let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
+            assert_eq!(values.len(), 15, "Row does not have enough columns: {}", r);
+            assert!(
+                values[0].starts_with(name_dot.as_str()),
+                "Row does not start with instance name: {}",
+                r
+            );
+            assert_eq!(values[1], "iostat_file");
+            let all_types: HashSet<String> = HashSet::from_iter(
+                vec![
+                    "Archive Log",
+                    "Archive Log Backup",
+                    "Control File",
+                    "Data File",
+                    "Data File Backup",
+                    "Data File Copy",
+                    "Data File Incremental Backup",
+                    "Data Pump Dump File",
+                    "External Table",
+                    "Flashback Log",
+                    "Log File",
+                    "Other",
+                    "Temp File",
+                ]
+                .into_iter()
+                .map(|s| s.to_string()),
+            );
+            let the_type = &values[2];
+            assert!(all_types.contains(the_type), "Wrong type: {}", the_type);
+            for v in &values[3..] {
+                assert!(v.parse::<u64>().is_ok(), "Value is not digit: {}", v);
+            }
         }
+    }
+}
+
+#[test]
+fn test_ts_quotas() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let config = make_mini_config(endpoint);
+
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot.connect(None).unwrap();
+        let q = SqlQuery::new(
+            sqls::get_factory_query(sqls::Id::TsQuotas).unwrap(),
+            Separator::default(),
+            config.params(),
+        );
+        let result = conn.query(&q, "");
+        let rows = result.unwrap();
+        assert!(!rows.is_empty());
+        let expected = format!("{}|||", &endpoint.instance);
+        assert_eq!(rows[0], expected);
     }
 }

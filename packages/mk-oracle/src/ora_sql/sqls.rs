@@ -11,6 +11,7 @@ pub const UTC_DATE_FIELD: &str = "utc_date";
 #[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Id {
     IoStats,
+    TsQuotas,
 }
 
 pub mod query {
@@ -62,11 +63,26 @@ pub mod query {
                 JOIN v$database d ON 1 = 1
             ORDER BY vd.con_id,
                 io.filetype_name";
+    pub const TS_QUOTAS: &str = r"
+    select upper(decode(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name))
+    ||'|'|| Q.USERNAME
+    ||'|'|| Q.TABLESPACE_NAME
+    ||'|'|| Q.BYTES
+    ||'|'|| Q.MAX_BYTES
+    from dba_ts_quotas Q, v$database d, v$instance i
+    where max_bytes > 0
+    union all
+    select upper(decode(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
+    ||'|||'
+    from v$database d, v$instance i
+    order by 1
+";
 }
 
 lazy_static::lazy_static! {
     static ref QUERY_MAP: HashMap<Id, &'static str > = HashMap::from([
         (Id::IoStats, query::IO_STATS),
+        (Id::TsQuotas, query::TS_QUOTAS),
     ]);
 }
 
@@ -90,6 +106,7 @@ mod tests {
         let q = SqlQuery::new(
             get_factory_query(Id::IoStats).unwrap(),
             Separator::default(),
+            &Vec::new(),
         );
         assert!(!q.as_str().is_empty());
     }

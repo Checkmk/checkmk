@@ -10,7 +10,7 @@ use crate::config::connection::Connection;
 use crate::config::options::Options;
 use crate::platform::registry::get_instances;
 use crate::platform::InstanceInfo;
-use crate::types::{HostName, InstanceAlias, InstanceName};
+use crate::types::{HostName, InstanceAlias, InstanceName, SqlBindParam};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -186,6 +186,10 @@ impl Config {
     pub fn is_instance_allowed(&self, name: &impl AsRef<str>) -> bool {
         self.discovery
             .is_instance_allowed(&InstanceName::from(name.as_ref()))
+    }
+
+    pub fn params(&self) -> &Vec<SqlBindParam> {
+        self.options.params()
     }
 }
 

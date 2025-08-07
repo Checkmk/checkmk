@@ -8,7 +8,7 @@ use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
-use crate::types::{InstanceName, Separator, SqlQuery};
+use crate::types::{InstanceName, Separator, SqlBindParam, SqlQuery};
 use crate::utils;
 
 use anyhow::Result;
@@ -81,13 +81,17 @@ async fn generate_data(
         })
         .collect::<Vec<_>>();
     let mut output: Vec<String> = sections.iter().map(|s| s.to_plain_header()).collect();
-    let works = make_spot_works(connected, sections);
+    let works = make_spot_works(connected, sections, ora_sql.params());
     output.extend(process_spot_works(works));
     Ok(output)
 }
 
-fn make_spot_works(opened: Vec<OpenedSpot>, sections: Vec<Section>) -> Vec<SpotWorks> {
-    opened
+fn make_spot_works(
+    spots: Vec<OpenedSpot>,
+    sections: Vec<Section>,
+    params: &[SqlBindParam],
+) -> Vec<SpotWorks> {
+    spots
         .into_iter()
         .map(|spot| {
             let instances = WorkInstances::new(&spot);
@@ -108,6 +112,7 @@ fn make_spot_works(opened: Vec<OpenedSpot>, sections: Vec<Section>) -> Vec<SpotW
                                 section,
                                 version,
                                 Separator::Decorated(section.sep()),
+                                params,
                             )
                             .map(|q| (q, section.to_work_header()))
                         })
@@ -169,7 +174,12 @@ fn _exec_queries(
         }
     }
 }
-fn _find_section_query(section: &Section, version: u32, sep: Separator) -> Option<SqlQuery> {
+fn _find_section_query(
+    section: &Section,
+    version: u32,
+    sep: Separator,
+    params: &[SqlBindParam],
+) -> Option<SqlQuery> {
     let section_name = section.name();
     log::info!("Generating data for instance: {}", section_name);
 
@@ -182,7 +192,7 @@ fn _find_section_query(section: &Section, version: u32, sep: Separator) -> Optio
             log::info!("Found query for section {}: {}", section_name, query);
             // Here you would execute the query and process the results
             // For now, we just return the query as a placeholder
-            Some(SqlQuery::new(query.as_str(), sep))
+            Some(SqlQuery::new(query.as_str(), sep, params))
         },
     )
 }

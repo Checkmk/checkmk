@@ -11,7 +11,7 @@ use crate::ora_sql::types::Target;
 use crate::types::{Credentials, InstanceName, SqlQuery};
 use anyhow::Context;
 use anyhow::Result;
-use oracle::sql_type::FromSql;
+use oracle::sql_type::{FromSql, ToSql};
 use oracle::{Connection, Connector, Privilege};
 use std::marker::PhantomData;
 
@@ -79,13 +79,31 @@ impl OraDbEngine for StdEngine {
         }
         Ok(())
     }
-
+    /*
+        let x: &[(&str, &dyn ToSql)] = query
+        .params()
+        .iter()
+        .map(|(k, v)| { (k.as_str(), *v) })
+        .collect::<Vec<(&str, &dyn ToSql)>>()
+        .as_slice();
+        let x2 = &[("sep", 1u8)];
+        let rows = conn.query_named(query.as_str(), x2)?;
+    */
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
         let conn = self
             .connection
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
-        let rows = conn.query(query.as_str(), &[])?;
+        let x = query
+            .params()
+            .iter()
+            .map(|(k, v)| {
+                let z: &dyn ToSql = v;
+                (k.as_str(), z)
+            })
+            .collect::<Vec<(&str, &dyn ToSql)>>();
+
+        let rows = conn.query_named(query.as_str(), x.as_slice())?;
         // Process rows if needed
         let result: Vec<String> = rows
             .map(|row| row_to_string(&row, sep))

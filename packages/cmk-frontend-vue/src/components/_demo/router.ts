@@ -50,6 +50,7 @@ import DemoTypography from './DemoTypography.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkStepPanel from './DemoCmkStepPanel.vue'
 import DemoCmkInput from './DemoCmkInput.vue'
+import DemoCmkWizard from './DemoCmkWizard.vue'
 
 interface Route {
   path: string
@@ -193,6 +194,11 @@ const routes: Route[] = [
     path: '/cmk_dialog',
     name: 'CmkDialog',
     component: DemoCmkDialog
+  },
+  {
+    path: '/cmk_wizard',
+    name: 'CmkWizard',
+    component: DemoCmkWizard
   },
   {
     path: '/form',

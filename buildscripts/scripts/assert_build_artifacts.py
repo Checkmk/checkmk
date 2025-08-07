@@ -197,31 +197,8 @@ def assert_hash_matches_package_content(
         file_path = Path(temp_dir) / filename
         hash_path = Path(temp_dir) / f"{hash_file(filename)}"
 
-        with requests.get(
-            url, auth=(credentials.username, credentials.password), stream=True, timeout=120
-        ) as r:
-            try:
-                r.raise_for_status()
-            except requests.exceptions.HTTPError as http_error:
-                return AssertResult(
-                    assertion_ok=False, message=f"Retrieving {url} failed: {http_error}"
-                )
-
-            with open(file_path, "wb") as f:
-                shutil.copyfileobj(r.raw, f)
-
-        with requests.get(
-            hash_url, auth=(credentials.username, credentials.password), stream=True, timeout=20
-        ) as r:
-            try:
-                r.raise_for_status()
-            except requests.exceptions.HTTPError as http_error:
-                return AssertResult(
-                    assertion_ok=False, message=f"Retrieving {hash_url} failed: {http_error}"
-                )
-
-            with open(hash_path, "wb") as f:
-                shutil.copyfileobj(r.raw, f)
+        _download_file(url, credentials, file_path)
+        _download_file(hash_url, credentials, hash_path)
 
         sha256 = hashlib.sha256()
         with open(file_path, "rb") as f:
@@ -239,6 +216,21 @@ def assert_hash_matches_package_content(
             )
         sys.stdout.write(" OK\n")
         return AssertResult(assertion_ok=True, message="")
+
+
+def _download_file(url, credentials, destination):
+    with requests.get(
+        url, auth=(credentials.username, credentials.password), stream=True, timeout=20
+    ) as r:
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as http_error:
+            return AssertResult(
+                assertion_ok=False, message=f"Retrieving {url} failed: {http_error}"
+            )
+
+        with open(destination, "wb") as f:
+            shutil.copyfileobj(r.raw, f)
 
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:

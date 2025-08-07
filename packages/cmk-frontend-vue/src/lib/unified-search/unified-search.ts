@@ -45,7 +45,7 @@ export abstract class SearchProvider {
     public id: string,
     public title?: string,
     public sort: number = 0,
-    public minInputlength: number = 3
+    public minInputlength: number = 2
   ) {
     if (!this.title) {
       this.title = this.id

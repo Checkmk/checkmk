@@ -65,15 +65,15 @@ pub mod query {
                 io.filetype_name";
     pub const TS_QUOTAS: &str = r"
     select upper(decode(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name))
-    ||'|'|| Q.USERNAME
-    ||'|'|| Q.TABLESPACE_NAME
-    ||'|'|| Q.BYTES
-    ||'|'|| Q.MAX_BYTES
+    {sep} Q.USERNAME
+    {sep} Q.TABLESPACE_NAME
+    {sep} Q.BYTES
+    {sep} Q.MAX_BYTES
     from dba_ts_quotas Q, v$database d, v$instance i
     where max_bytes > 0
     union all
     select upper(decode(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
-    ||'|||'
+    {sep} '' {sep} '' {sep} ''
     from v$database d, v$instance i
     order by 1
 ";

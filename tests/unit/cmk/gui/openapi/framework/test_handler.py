@@ -387,10 +387,10 @@ def test_handle_endpoint_request_complex_handler(
     )
 
     assert response.status_code == 200, response.get_data(as_text=True)
-    assert response.get_data() == b'{"body_field": 123}'
+    assert response.get_data() == b'{"body_field":123}'
     assert dict(response.headers) == {
         "Content-Type": "application/json",
-        "Content-Length": "19",
+        "Content-Length": "18",
     }
 
 

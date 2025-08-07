@@ -13,7 +13,6 @@ from cmk import trace
 from cmk.ccc import store
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
-from cmk.gui.openapi.restful_objects.constructors import etag_of_dict
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import (
     ContentTypeValidator,
@@ -66,7 +65,6 @@ def _create_response(
     content_type: str | None,
     *,
     fields_filter: FieldsFilter | None,
-    add_etag: bool,
     is_testing: bool,
 ) -> Response:
     """Create a Flask response from the endpoint response."""
@@ -81,14 +79,9 @@ def _create_response(
         status_code = 204 if json_text is None else 200
         headers = {}
 
-    if json_text is not None:
+    if json_text is not None and fields_filter is not None:
         json_object = json.loads(json_text)
-        if fields_filter is not None:
-            json_object = fields_filter.apply(json_object)
-
-        if add_etag and "ETag" not in headers:
-            headers["ETag"] = etag_of_dict(json_object).to_header()
-
+        json_object = fields_filter.apply(json_object)
         json_text = json.dumps(json_object)
 
     return Response(
@@ -206,7 +199,6 @@ def handle_endpoint_request(
                 model.response_body_type,
                 endpoint.content_type,
                 fields_filter=_identify_fields_filter(bound_arguments, model.has_request_schema),
-                add_etag=endpoint.etag in ("output", "both"),
                 is_testing=is_testing,
             )
 

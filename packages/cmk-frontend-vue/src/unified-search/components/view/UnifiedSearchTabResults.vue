@@ -109,7 +109,7 @@ function searchResultNotEmpty(): boolean {
         {{ _t('Results') }} ({{ results.length }})
       </CmkHeading>
     </div>
-    <CmkScrollContainer max-height="calc(100vh - 260px)">
+    <CmkScrollContainer max-height="calc(100vh - 210px)">
       <ResultList>
         <ResultItem
           v-for="(item, idx) in results"

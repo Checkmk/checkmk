@@ -26,7 +26,6 @@ import {
 
 import DefaultPopup from '@/main-menu/DefaultPopup.vue'
 
-import UnifiedSearchFooter from './UnifiedSearchFooter.vue'
 import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
@@ -154,7 +153,6 @@ onMounted(() => {
       :result="searchResult"
     >
     </UnifiedSearchTabResults>
-    <UnifiedSearchFooter></UnifiedSearchFooter>
   </DefaultPopup>
 </template>
 

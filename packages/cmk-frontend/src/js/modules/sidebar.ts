@@ -200,6 +200,7 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
     if (targetpos != null)
         before = "&before=" + targetpos.id.replace("snapin_container_", "");
     call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
+    refresh_single_snapin(thisId);
 }
 
 function snapinTerminateDrag(): true | void {
@@ -551,22 +552,26 @@ export function toggle_sidebar_snapin(
 
     // FIXME: Does oContent really exist?
     const closed = oContent!.style.display == "none";
-    const snapinContainer = oH2.parentNode!.parentNode
-    const showMore = snapinContainer!.querySelector(".moresnapin") as HTMLElement;
-    const closeSnapin = snapinContainer!.querySelector(".closesnapin") as HTMLElement;
+    const snapinContainer = oH2.parentNode!.parentNode;
+    const showMore = snapinContainer!.querySelector(
+        ".moresnapin",
+    ) as HTMLElement;
+    const closeSnapin = snapinContainer!.querySelector(
+        ".closesnapin",
+    ) as HTMLElement;
     if (closed) {
-        if ( showMore ) {
-          remove_class(showMore, "hidden")
+        if (showMore) {
+            remove_class(showMore, "hidden");
         }
-        remove_class(closeSnapin, "hidden")
+        remove_class(closeSnapin, "hidden");
         oContent!.style.display = "block";
         change_class(oHead!, "closed", "open");
         change_class(oImg!, "closed", "open");
     } else {
-        if ( showMore ) {
-          add_class(showMore, "hidden")
+        if (showMore) {
+            add_class(showMore, "hidden");
         }
-        add_class(closeSnapin, "hidden")
+        add_class(closeSnapin, "hidden");
         oContent!.style.display = "none";
         change_class(oHead!, "open", "closed");
         change_class(oImg!, "open", "closed");
@@ -1280,7 +1285,6 @@ export function update_message_trigger(msg_text: string, msg_count: number) {
 function mark_message_read(msg_id: string) {
     call_ajax("sidebar_message_read.py?id=" + msg_id);
 }
-
 
 interface AjaxSidebarGetPendingChanges {
     number_of_pending_changes: number;

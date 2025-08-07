@@ -29,7 +29,6 @@ from typing import Any, Literal
 import livestatus
 
 import cmk.base.core
-import cmk.base.nagios_utils
 import cmk.base.parent_scan
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version

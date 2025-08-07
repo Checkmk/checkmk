@@ -36,8 +36,5 @@ def do_check_nagiosconfig() -> bool:
         print_(tty.ok + "\n")
         return True
 
-    print_("ERROR:\n")
-    with suppress(IOError):
-        sys.stderr.write(completed_process.stdout)
-        sys.stdout.flush()
+    print_(f"ERROR:\n{completed_process.stdout}")
     return False

@@ -17,7 +17,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.nagios_utils import do_check_nagiosconfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
@@ -31,6 +30,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
 from ._base_core import MonitoringCore
+from ._nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str

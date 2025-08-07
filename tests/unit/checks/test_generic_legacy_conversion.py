@@ -1021,7 +1021,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "tplink_poe_summary",
         "tsm_drives",
         "tsm_paths",
-        "tsm_scratch",
         "tsm_sessions",
         "tsm_storagepools",
         "ucd_disk",

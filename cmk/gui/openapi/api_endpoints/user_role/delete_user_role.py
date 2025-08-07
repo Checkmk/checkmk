@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi.api_endpoints.user_role.utils import RW_PERMISSIONS
-from cmk.gui.openapi.framework import PathParam
+from cmk.gui.openapi.framework import ApiContext, PathParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator, UserRoleIdConverter
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -23,6 +22,7 @@ from .endpoint_family import USER_ROLE_FAMILY
 
 
 def delete_user_role_v1(
+    api_context: ApiContext,
     role_id: Annotated[
         RoleID,
         TypedPlainValidator(
@@ -36,7 +36,7 @@ def delete_user_role_v1(
     ],
 ) -> None:
     """Delete a user role"""
-    delete_role(RoleID(role_id), pprint_value=active_config.wato_pprint_config)
+    delete_role(RoleID(role_id), pprint_value=api_context.config.wato_pprint_config)
 
 
 ENDPOINT_DELETE_USER_ROLE = VersionedEndpoint(

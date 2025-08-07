@@ -6,9 +6,9 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -28,6 +28,7 @@ from .utils import RW_PERMISSIONS
 
 
 def delete_password_v1(
+    api_context: ApiContext,
     name: Annotated[
         str,
         AfterValidator(PasswordConverter.exists),
@@ -50,8 +51,8 @@ def delete_password_v1(
     remove_password(
         name,
         user_id=user.id,
-        pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pprint_value=api_context.config.wato_pprint_config,
+        use_git=api_context.config.wato_use_git,
     )
 
 

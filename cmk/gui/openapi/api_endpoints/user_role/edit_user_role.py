@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.user_role.utils import (
     RW_PERMISSIONS,
     serialize_role,
 )
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -70,6 +70,7 @@ def _check_and_update_new_role_id(
 
 
 def edit_user_role_v1(
+    api_context: ApiContext,
     role_id: Annotated[
         ExistingRoleId,
         PathParam(description="An existing user role.", example="userx"),
@@ -97,7 +98,7 @@ def edit_user_role_v1(
         role=existing_userrole_copy,
         old_roleid=role_id,
         new_roleid=RoleID(existing_userrole_copy.name),
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=api_context.config.wato_pprint_config,
     )
 
     return serialize_role(existing_userrole_copy)

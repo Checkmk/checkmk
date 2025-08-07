@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.user_role.utils import (
     RW_PERMISSIONS,
     serialize_role,
 )
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.versioned_endpoint import (
+from cmk.gui.openapi.framework import (
+    ApiContext,
+    APIVersion,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -25,7 +25,7 @@ from .models.request_models import CreateUserRoleModel
 from .models.response_models import UserRoleModel
 
 
-def create_user_role_v1(body: CreateUserRoleModel) -> UserRoleModel:
+def create_user_role_v1(api_context: ApiContext, body: CreateUserRoleModel) -> UserRoleModel:
     """Create a user role"""
     user.need_permission("wato.edit")
 
@@ -37,7 +37,7 @@ def create_user_role_v1(body: CreateUserRoleModel) -> UserRoleModel:
             two_factor=body.enforce_two_factor_authentication
             if isinstance(body.enforce_two_factor_authentication, bool)
             else None,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=api_context.config.wato_pprint_config,
         )
     )
 

@@ -6,7 +6,6 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.password.endpoint_family import PASSWORD_FAMILY
 from cmk.gui.openapi.api_endpoints.password.models.request_models import (
@@ -15,6 +14,7 @@ from cmk.gui.openapi.api_endpoints.password.models.request_models import (
 from cmk.gui.openapi.api_endpoints.password.models.response_models import PasswordObject
 from cmk.gui.openapi.api_endpoints.password.utils import RW_PERMISSIONS, serialize_password
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -30,6 +30,7 @@ from cmk.gui.watolib.passwords import load_password, load_password_to_modify, sa
 
 
 def update_password_v1(
+    api_context: ApiContext,
     name: Annotated[
         str,
         AfterValidator(PasswordConverter.exists),
@@ -49,8 +50,8 @@ def update_password_v1(
         password_details,
         new_password=False,
         user_id=user.id,
-        pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pprint_value=api_context.config.wato_pprint_config,
+        use_git=api_context.config.wato_use_git,
     )
     return serialize_password(name, load_password(name))
 

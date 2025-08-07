@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import cast
 
-from cmk.gui.plugins.wato.check_parameters.fileinfo_utils import (
+from cmk.plugins.fileinfo.rulesets.fileinfo_utils import (
     get_fileinfo_negative_age_tolerance_element,
 )
 from cmk.rulesets.v1 import Help, Label, Title

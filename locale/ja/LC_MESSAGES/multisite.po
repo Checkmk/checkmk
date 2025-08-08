@@ -37090,6 +37090,10 @@ msgstr "開いているファイルとソケットのしきい値を低くする
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Podman コンテナの {property} 番号の下限値を下げます"
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman pods"
+msgstr "Podman コンテナの {property} 番号の下限値を下げます"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr "メール転送スレッドの閾値を低く設定する"
 
@@ -40926,6 +40930,10 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
 
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "負の値は不可"
+
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "否定一致(一致するホストをセットから除外)"
 
@@ -42853,6 +42861,10 @@ msgstr "メッセージの前のコンテキスト行の数"
 msgid "Number of created Podman containers"
 msgstr "作成されたPodmanコンテナの数"
 
+#, fuzzy
+msgid "Number of created Podman pods"
+msgstr "作成されたPodmanコンテナの数"
+
 msgid "Number of critical alerts"
 msgstr "重要なアラートの数"
 
@@ -42881,6 +42893,10 @@ msgid "Number of days from now (single page)"
 msgstr "今からの日数(1ページ)"
 
 msgid "Number of dead Podman containers"
+msgstr "なくなったPodmanコンテナの数"
+
+#, fuzzy
+msgid "Number of dead Podman pods"
 msgstr "なくなったPodmanコンテナの数"
 
 msgid "Number of delayed unassigned shards"
@@ -42915,6 +42931,10 @@ msgstr "終了したPodmanコンテナの数"
 
 msgid "Number of exited Podman containers (non-zero)"
 msgstr "Podman コンテナの終了した数（0以外）"
+
+#, fuzzy
+msgid "Number of exited Podman pods"
+msgstr "終了したPodmanコンテナの数"
 
 msgid "Number of expected messages"
 msgstr "予想されるメッセージの数"
@@ -43175,6 +43195,10 @@ msgstr "ルールグループの数"
 msgid "Number of running Podman containers"
 msgstr "稼動中のPodmanコンテナの数"
 
+#, fuzzy
+msgid "Number of running Podman pods"
+msgstr "稼動中のPodmanコンテナの数"
+
 msgid "Number of running containers"
 msgstr "稼働中のコンテナ数"
 
@@ -43288,6 +43312,10 @@ msgid "Number of steps aggregated into one data point"
 msgstr "1つのデータポイントに集約されたステップ数"
 
 msgid "Number of stopped Podman containers"
+msgstr "停止したPodmanコンテナの数"
+
+#, fuzzy
+msgid "Number of stopped Podman pods"
 msgstr "停止したPodmanコンテナの数"
 
 msgid "Number of stuck tasks"
@@ -48126,6 +48154,10 @@ msgstr "Podman Disk 使用量"
 
 msgid "Podman Monitoring"
 msgstr "Podman監視"
+
+#, fuzzy
+msgid "Podman Pods"
+msgstr "Podman コンテナ"
 
 msgid "Podman socket path"
 msgstr "Podman ソケット パス"
@@ -62453,6 +62485,11 @@ msgstr ""
 "ファイル %s は、手動で作成および保守する必要があります。<br>このルールで指定"
 "された設定項目は無視されます。"
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "ファイルにXMLテキストが含まれていません"
 
@@ -70232,6 +70269,10 @@ msgstr "Podman コンテナ サービスのしきい値。"
 msgid "Thresholds for the podman disk usage services."
 msgstr "Podmanのディスク使用量サービスのしきい値。"
 
+#, fuzzy
+msgid "Thresholds for the podman pods service."
+msgstr "Podman コンテナ サービスのしきい値。"
+
 msgid "Thresholds on lower message count"
 msgstr "メッセージの下限数に関するしきい値"
 
@@ -71376,6 +71417,10 @@ msgid "Total non-compliant devices"
 msgstr "非対応機器合計"
 
 msgid "Total number of Podman containers"
+msgstr "Podman コンテナの総数"
+
+#, fuzzy
+msgid "Total number of Podman pods"
 msgstr "Podman コンテナの総数"
 
 msgid "Total number of Sessions"
@@ -75232,6 +75277,10 @@ msgstr "オープンファイルとソケットの上位レベルしきい値"
 
 #, python-brace-format
 msgid "Upper threshold on {property} number of Podman containers"
+msgstr "Podman コンテナの {property} 番号の上位レベルしきい値"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman pods"
 msgstr "Podman コンテナの {property} 番号の上位レベルしきい値"
 
 msgid "Upper thresholds"
@@ -84453,6 +84502,10 @@ msgid "{property.capitalize()} "
 msgstr "{property.capitalize()} Podman コンテナ"
 
 msgid "{property.capitalize()} Podman containers"
+msgstr "{property.capitalize()} Podman コンテナ"
+
+#, fuzzy
+msgid "{property.capitalize()} Podman pods"
 msgstr "{property.capitalize()} Podman コンテナ"
 
 #, python-brace-format

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-06 23:35+0000\n"
+"PO-Revision-Date: 2025-08-08 01:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -38124,6 +38124,10 @@ msgstr "Unterer Schwellwert für offene Dateien und Sockets"
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Unterer Schwellwert für die {property} Anzahl an Podman-Containern"
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman pods"
+msgstr "Unterer Schwellwert für die {property} Anzahl an Podman-Containern"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr "Unterer Schwellwert für Mail Transfer Threads"
 
@@ -42019,6 +42023,10 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Negative Werte sind nicht erlaubt"
+
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
 "Negative Übereinstimmung (Betroffene Hosts von der Auswahl ausschließen)"
@@ -43997,6 +44005,10 @@ msgstr "Anzahl der Kontextzeilen vor Meldungen"
 msgid "Number of created Podman containers"
 msgstr "Anzahl der erstellten Podman-Container"
 
+#, fuzzy
+msgid "Number of created Podman pods"
+msgstr "Anzahl der erstellten Podman-Container"
+
 msgid "Number of critical alerts"
 msgstr "Anzahl von kritischen Alerts"
 
@@ -44025,6 +44037,10 @@ msgid "Number of days from now (single page)"
 msgstr "Mehrere Tage (einzelne Seite)"
 
 msgid "Number of dead Podman containers"
+msgstr "Anzahl der toten Podman-Container"
+
+#, fuzzy
+msgid "Number of dead Podman pods"
 msgstr "Anzahl der toten Podman-Container"
 
 msgid "Number of delayed unassigned shards"
@@ -44060,6 +44076,10 @@ msgstr "Anzahl der beendeten Podman-Container"
 
 msgid "Number of exited Podman containers (non-zero)"
 msgstr "Anzahl der beendeten Podman-Container (ungleich Null)"
+
+#, fuzzy
+msgid "Number of exited Podman pods"
+msgstr "Anzahl der beendeten Podman-Container"
 
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Meldungen"
@@ -44325,6 +44345,10 @@ msgstr "Anzahl der Regelgruppen"
 msgid "Number of running Podman containers"
 msgstr "Anzahl der laufenden Podman-Container"
 
+#, fuzzy
+msgid "Number of running Podman pods"
+msgstr "Anzahl der laufenden Podman-Container"
+
 msgid "Number of running containers"
 msgstr "Anzahl der laufenden Container"
 
@@ -44442,6 +44466,10 @@ msgid "Number of steps aggregated into one data point"
 msgstr "Anzahl der Schritte, die in einem Datenpunkt aggregiert sind"
 
 msgid "Number of stopped Podman containers"
+msgstr "Anzahl der gestoppten Podman-Container"
+
+#, fuzzy
+msgid "Number of stopped Podman pods"
 msgstr "Anzahl der gestoppten Podman-Container"
 
 msgid "Number of stuck tasks"
@@ -47883,6 +47911,9 @@ msgid ""
 "preconfigured in the check. If the format of your counters object is not "
 "compatible then you can adapt the counter offsets manually."
 msgstr ""
+"Standardmäßig sind die Offsets aller Windows-Performance-Zähler in der "
+"Prüfung vorkonfiguriert. Wenn das Format Ihres Zählerobjekts nicht "
+"kompatibel ist, können Sie die Zähler-Offsets manuell anpassen."
 
 msgid ""
 "Per default, Checkmk tries to map the underlying Checkmk host to the Node "
@@ -49407,6 +49438,10 @@ msgstr "Podman-Festplattennutzung"
 
 msgid "Podman Monitoring"
 msgstr "Podman-Monitoring"
+
+#, fuzzy
+msgid "Podman Pods"
+msgstr "Podman-Container"
 
 msgid "Podman socket path"
 msgstr "Pfad zum Podman-Socket"
@@ -60514,6 +60549,9 @@ msgid ""
 "Stay on track with a quick overview of your setup progress. The sidebar "
 "keeps everything in view, right where you need it."
 msgstr ""
+"Behalten Sie den Überblick über den Fortschritt Ihres Setup-Prozesses. Die "
+"Seitenleiste zeigt Ihnen alles auf einen Blick, genau dort, wo Sie es "
+"brauchen."
 
 msgid "Steal"
 msgstr "Stahl"
@@ -64143,6 +64181,11 @@ msgid ""
 msgstr ""
 "Die Datei %s muss manuell erstellt und gepflegt werden.<br>Mit dieser Regel "
 "bereitgestellte Konfigurationseinträge werden ignoriert."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
@@ -72419,6 +72462,10 @@ msgstr "Schwellwerte für den Service der Podman-Container."
 msgid "Thresholds for the podman disk usage services."
 msgstr "Schwellwerte für die Services der Podman-Festplattenauslastung."
 
+#, fuzzy
+msgid "Thresholds for the podman pods service."
+msgstr "Schwellwerte für den Service der Podman-Container."
+
 msgid "Thresholds on lower message count"
 msgstr "Schwellwerte für untere Meldungsanzahl"
 
@@ -73596,6 +73643,10 @@ msgid "Total non-compliant devices"
 msgstr "Gesamtzahl nicht-konformer Geräte"
 
 msgid "Total number of Podman containers"
+msgstr "Gesamtzahl der Podman-Container"
+
+#, fuzzy
+msgid "Total number of Podman pods"
 msgstr "Gesamtzahl der Podman-Container"
 
 msgid "Total number of Sessions"
@@ -77487,6 +77538,10 @@ msgstr "Oberer Schwellwert für offene Dateien und Sockets"
 msgid "Upper threshold on {property} number of Podman containers"
 msgstr "Oberer Schwellwert für die {property} Anzahl an Podman-Containern"
 
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman pods"
+msgstr "Oberer Schwellwert für die {property} Anzahl an Podman-Containern"
+
 msgid "Upper thresholds"
 msgstr "Obere Schwellwerte"
 
@@ -80604,9 +80659,8 @@ msgstr "Wöchentliche Rate"
 msgid "Welcome page"
 msgstr "Begrüßungsseite"
 
-#, fuzzy
 msgid "Welcome to Checkmk"
-msgstr "Willkommen bei Checkmk Mobil."
+msgstr "Willkommen bei Checkmk"
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Willkommen bei Checkmk Mobil."
@@ -87074,6 +87128,10 @@ msgid "{property.capitalize()} "
 msgstr "{property.capitalize()} "
 
 msgid "{property.capitalize()} Podman containers"
+msgstr "{property.capitalize()} Podman-Container"
+
+#, fuzzy
+msgid "{property.capitalize()} Podman pods"
 msgstr "{property.capitalize()} Podman-Container"
 
 #, python-brace-format

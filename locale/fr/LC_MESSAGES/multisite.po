@@ -39887,6 +39887,10 @@ msgstr ""
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Définir des niveaux inférieurs pour le nombre total de conteneurs"
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman pods"
+msgstr "Définir des niveaux inférieurs pour le nombre total de conteneurs"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -43980,6 +43984,10 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate : trouver les hôtes <b>non</b> ayant ce paquet"
 
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Une valeur vide n'est pas autorisée ici"
+
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
 "Correspondance négative (Exclure les hôtes correspondants de l'ensemble)"
@@ -46071,6 +46079,10 @@ msgstr "Nombre de lignes de contexte avant les messages"
 msgid "Number of created Podman containers"
 msgstr "Nombre de conteneurs en cours d'exécution"
 
+#, fuzzy
+msgid "Number of created Podman pods"
+msgstr "Nombre de conteneurs en cours d'exécution"
+
 msgid "Number of critical alerts"
 msgstr "Nombre d'alertes critiques"
 
@@ -46103,6 +46115,10 @@ msgstr "Nombre de jours à partir de maintenant (page unique)"
 
 #, fuzzy
 msgid "Number of dead Podman containers"
+msgstr "Nombre de conteneurs"
+
+#, fuzzy
+msgid "Number of dead Podman pods"
 msgstr "Nombre de conteneurs"
 
 msgid "Number of delayed unassigned shards"
@@ -46138,6 +46154,10 @@ msgstr "Nombre de conteneurs en cours d'exécution"
 
 #, fuzzy
 msgid "Number of exited Podman containers (non-zero)"
+msgstr "Nombre de conteneurs en cours d'exécution"
+
+#, fuzzy
+msgid "Number of exited Podman pods"
 msgstr "Nombre de conteneurs en cours d'exécution"
 
 msgid "Number of expected messages"
@@ -46422,6 +46442,10 @@ msgstr "Nombre de groupes de règles"
 msgid "Number of running Podman containers"
 msgstr "Nombre de conteneurs en cours d'exécution"
 
+#, fuzzy
+msgid "Number of running Podman pods"
+msgstr "Nombre de conteneurs en cours d'exécution"
+
 msgid "Number of running containers"
 msgstr "Nombre de conteneurs en cours d'exécution"
 
@@ -46540,6 +46564,10 @@ msgstr "Nombre d'étapes agrégées en un point de données"
 
 #, fuzzy
 msgid "Number of stopped Podman containers"
+msgstr "Nombre de conteneurs"
+
+#, fuzzy
+msgid "Number of stopped Podman pods"
 msgstr "Nombre de conteneurs"
 
 msgid "Number of stuck tasks"
@@ -51944,6 +51972,10 @@ msgstr "Utilisation du disque"
 #, fuzzy
 msgid "Podman Monitoring"
 msgstr "Surveillance"
+
+#, fuzzy
+msgid "Podman Pods"
+msgstr "# Conteneurs"
 
 msgid "Podman socket path"
 msgstr ""
@@ -67259,6 +67291,11 @@ msgstr ""
 "Le fichier %s doit être créé et maintenu manuellement.<br>Les entrées de "
 "configuration fournies avec cette règle seront ignorées."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Le fichier ne contient pas de texte XML"
 
@@ -75439,6 +75476,10 @@ msgid "Thresholds for the podman disk usage services."
 msgstr "Niveaux supérieurs pour la taille d'utilisation des journaux"
 
 #, fuzzy
+msgid "Thresholds for the podman pods service."
+msgstr "Défaillances du service de lancement de jointures"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Seuils sur le nombre de messages"
 
@@ -76648,6 +76689,10 @@ msgstr "Total des dispositifs non conformes"
 
 #, fuzzy
 msgid "Total number of Podman containers"
+msgstr "Nombre total d'instances"
+
+#, fuzzy
+msgid "Total number of Podman pods"
 msgstr "Nombre total d'instances"
 
 msgid "Total number of Sessions"
@@ -81173,6 +81218,10 @@ msgstr "Niveaux supérieurs pour les sockets réseau ouverts"
 
 #, fuzzy, python-brace-format
 msgid "Upper threshold on {property} number of Podman containers"
+msgstr "Niveaux supérieurs pour les sockets réseau ouverts"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman pods"
 msgstr "Niveaux supérieurs pour les sockets réseau ouverts"
 
 #, fuzzy
@@ -91101,6 +91150,9 @@ msgid "{property.capitalize()} "
 msgstr ""
 
 msgid "{property.capitalize()} Podman containers"
+msgstr ""
+
+msgid "{property.capitalize()} Podman pods"
 msgstr ""
 
 #, python-brace-format

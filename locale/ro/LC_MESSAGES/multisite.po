@@ -39668,6 +39668,10 @@ msgstr ""
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Definirea nivelurilor inferioare pentru numărul total de containere"
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman pods"
+msgstr "Definirea nivelurilor inferioare pentru numărul total de containere"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -43744,6 +43748,10 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
 
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Aici nu este permisă o valoare goală."
+
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Potrivire negativă (Excludeți gazdele corespunzătoare din set)"
 
@@ -45818,6 +45826,10 @@ msgstr "Numărul de linii de context înainte de mesaje"
 msgid "Number of created Podman containers"
 msgstr "Numărul de containere care rulează"
 
+#, fuzzy
+msgid "Number of created Podman pods"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of critical alerts"
 msgstr "Numărul de alerte critice"
 
@@ -45849,6 +45861,10 @@ msgstr "Numărul de zile de acum încolo (o singură pagină)"
 
 #, fuzzy
 msgid "Number of dead Podman containers"
+msgstr "Numărul de containere"
+
+#, fuzzy
+msgid "Number of dead Podman pods"
 msgstr "Numărul de containere"
 
 msgid "Number of delayed unassigned shards"
@@ -45884,6 +45900,10 @@ msgstr "Numărul de containere care rulează"
 
 #, fuzzy
 msgid "Number of exited Podman containers (non-zero)"
+msgstr "Numărul de containere care rulează"
+
+#, fuzzy
+msgid "Number of exited Podman pods"
 msgstr "Numărul de containere care rulează"
 
 msgid "Number of expected messages"
@@ -46166,6 +46186,10 @@ msgstr "Numărul de grupuri de reguli"
 msgid "Number of running Podman containers"
 msgstr "Numărul de containere care rulează"
 
+#, fuzzy
+msgid "Number of running Podman pods"
+msgstr "Numărul de containere care rulează"
+
 msgid "Number of running containers"
 msgstr "Numărul de containere care rulează"
 
@@ -46284,6 +46308,10 @@ msgstr "Numărul de etape agregate într-un singur punct de date"
 
 #, fuzzy
 msgid "Number of stopped Podman containers"
+msgstr "Numărul de containere"
+
+#, fuzzy
+msgid "Number of stopped Podman pods"
 msgstr "Numărul de containere"
 
 msgid "Number of stuck tasks"
@@ -51631,6 +51659,10 @@ msgstr "Utilizarea discului"
 #, fuzzy
 msgid "Podman Monitoring"
 msgstr "Monitorizare"
+
+#, fuzzy
+msgid "Podman Pods"
+msgstr "# Containere"
 
 msgid "Podman socket path"
 msgstr ""
@@ -66866,6 +66898,11 @@ msgstr ""
 "Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
 "furnizate cu această regulă vor fi ignorate."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Fișierul nu conține text XML"
 
@@ -75040,6 +75077,10 @@ msgid "Thresholds for the podman disk usage services."
 msgstr "Niveluri superioare pentru dimensiunea de utilizare a jurnalelor"
 
 #, fuzzy
+msgid "Thresholds for the podman pods service."
+msgstr "Eșecuri ale serviciului de lansare a îmbinării"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Praguri privind numărul de mesaje"
 
@@ -76249,6 +76290,10 @@ msgstr "Total dispozitive neconforme"
 
 #, fuzzy
 msgid "Total number of Podman containers"
+msgstr "Numărul total de instanțe"
+
+#, fuzzy
+msgid "Total number of Podman pods"
 msgstr "Numărul total de instanțe"
 
 msgid "Total number of Sessions"
@@ -80668,6 +80713,10 @@ msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 #, fuzzy, python-brace-format
 msgid "Upper threshold on {property} number of Podman containers"
+msgstr "Niveluri superioare pentru prize de rețea deschise"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman pods"
 msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 #, fuzzy
@@ -90506,6 +90555,9 @@ msgid "{property.capitalize()} "
 msgstr ""
 
 msgid "{property.capitalize()} Podman containers"
+msgstr ""
+
+msgid "{property.capitalize()} Podman pods"
 msgstr ""
 
 #, python-brace-format

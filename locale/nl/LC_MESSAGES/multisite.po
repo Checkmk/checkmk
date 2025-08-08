@@ -39589,6 +39589,10 @@ msgstr ""
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Definieer lagere niveaus voor het aantal totale containers"
 
+#, fuzzy, python-brace-format
+msgid "Lower threshold on {property} number of Podman pods"
+msgstr "Definieer lagere niveaus voor het aantal totale containers"
+
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
 
@@ -43651,6 +43655,10 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negeren: zoek hosts <b>die dit pakket niet</b> hebben"
 
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Een lege waarde is hier niet toegestaan."
+
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Negatieve overeenkomst (sluit overeenkomende hosts uit van de set)"
 
@@ -45729,6 +45737,10 @@ msgstr "Aantal contextregels vóór berichten"
 msgid "Number of created Podman containers"
 msgstr "Aantal lopende containers"
 
+#, fuzzy
+msgid "Number of created Podman pods"
+msgstr "Aantal lopende containers"
+
 msgid "Number of critical alerts"
 msgstr "Aantal kritische signaleringen"
 
@@ -45760,6 +45772,10 @@ msgstr "Aantal dagen vanaf nu (enkele pagina)"
 
 #, fuzzy
 msgid "Number of dead Podman containers"
+msgstr "Aantal containers"
+
+#, fuzzy
+msgid "Number of dead Podman pods"
 msgstr "Aantal containers"
 
 msgid "Number of delayed unassigned shards"
@@ -45795,6 +45811,10 @@ msgstr "Aantal lopende containers"
 
 #, fuzzy
 msgid "Number of exited Podman containers (non-zero)"
+msgstr "Aantal lopende containers"
+
+#, fuzzy
+msgid "Number of exited Podman pods"
 msgstr "Aantal lopende containers"
 
 msgid "Number of expected messages"
@@ -46075,6 +46095,10 @@ msgstr "Aantal regelgroepen"
 msgid "Number of running Podman containers"
 msgstr "Aantal lopende containers"
 
+#, fuzzy
+msgid "Number of running Podman pods"
+msgstr "Aantal lopende containers"
+
 msgid "Number of running containers"
 msgstr "Aantal lopende containers"
 
@@ -46194,6 +46218,10 @@ msgstr "Aantal stappen samengevoegd tot één gegevenspunt"
 
 #, fuzzy
 msgid "Number of stopped Podman containers"
+msgstr "Aantal containers"
+
+#, fuzzy
+msgid "Number of stopped Podman pods"
 msgstr "Aantal containers"
 
 msgid "Number of stuck tasks"
@@ -51542,6 +51570,10 @@ msgstr "Schijfgebruik"
 #, fuzzy
 msgid "Podman Monitoring"
 msgstr "Toezicht"
+
+#, fuzzy
+msgid "Podman Pods"
+msgstr "# Containers"
 
 msgid "Podman socket path"
 msgstr ""
@@ -66695,6 +66727,11 @@ msgstr ""
 "Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij deze "
 "regel verstrekte configuratie-items worden genegeerd."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Het bestand bevat geen XML-tekst"
 
@@ -74768,6 +74805,10 @@ msgid "Thresholds for the podman disk usage services."
 msgstr "Bovenste niveaus voor de loggebruiksgrootte"
 
 #, fuzzy
+msgid "Thresholds for the podman pods service."
+msgstr "Storingen van de join launcher service"
+
+#, fuzzy
 msgid "Thresholds on lower message count"
 msgstr "Drempels voor aantal berichten"
 
@@ -75978,6 +76019,10 @@ msgstr "Totaal niet-conforme apparaten"
 
 #, fuzzy
 msgid "Total number of Podman containers"
+msgstr "Totaal aantal gevallen"
+
+#, fuzzy
+msgid "Total number of Podman pods"
 msgstr "Totaal aantal gevallen"
 
 msgid "Total number of Sessions"
@@ -80475,6 +80520,10 @@ msgstr "Bovenste niveaus voor open netwerk sockets"
 
 #, fuzzy, python-brace-format
 msgid "Upper threshold on {property} number of Podman containers"
+msgstr "Bovenste niveaus voor open netwerk sockets"
+
+#, fuzzy, python-brace-format
+msgid "Upper threshold on {property} number of Podman pods"
 msgstr "Bovenste niveaus voor open netwerk sockets"
 
 #, fuzzy
@@ -90288,6 +90337,9 @@ msgid "{property.capitalize()} "
 msgstr ""
 
 msgid "{property.capitalize()} Podman containers"
+msgstr ""
+
+msgid "{property.capitalize()} Podman pods"
 msgstr ""
 
 #, python-brace-format

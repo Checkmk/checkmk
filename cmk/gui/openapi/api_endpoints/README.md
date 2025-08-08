@@ -580,3 +580,75 @@ class UserModel:
 
 * the `cast_to_dict` functionality in some marshmallow schemas can be ignored
   in the API model, as the model will automatically handle this.
+
+
+## The API context
+The API context is a special handler parameter that provides access to various
+information about the request and other global state.
+It can be added to a handler function by adding an `api_context: ApiContext`
+parameter, similar to how request bodies work.
+
+Instead of using the `active_config` directly, you should use the `config` from
+the `api_context`.
+
+## ETags
+ETags are used as a sort of identifier for a specific version of a resource.
+Mostly, this is used to determine if the resource has changed since the last
+time it was accessed. This tries to prevent the "lost update problem", where
+two concurrent requests modify the same resource, and one of them overwrites
+the changes made by the other.
+
+### Returning an ETag
+To return an ETag, you need to set the `ETag` header in the response.
+This can be done by returning an `ApiResponse`, which provides an easy way to
+set this correctly.
+
+```python
+from cmk.gui.openapi.framework import ETag
+from cmk.gui.openapi.framework.model.response import ApiResponse
+
+def handler() -> ApiResponse[None]:
+    # this should contain everything that makes up this resource
+    # not just fields that are returned!
+    etag = ETag({"key": "value"})
+    return ApiResponse(
+        body=None,  # or some response body
+        etag=etag,
+    )
+```
+
+### Validating an ETag
+To validate the ETag, you need to check the `If-Match` header in the request.
+This header is automatically handled by the framework, and added to the
+`api_context`.
+
+```python
+from cmk.gui.openapi.framework import ETag, ApiContext
+
+def handler(api_context: ApiContext) -> None:
+    # lock the resource before checking the ETag!
+
+    if api_context.etag.enabled:
+        # this must be the same ETag as the one returned in the response
+        api_context.etag.verify(ETag({"key": "value"}))
+
+    # continue with the rest of the handler logic...
+```
+
+### Endpoint configuration
+To enable ETags for an endpoint, you need to set the `etag` parameter in the
+`EndpointBehavior` of the `VersionedEndpoint`. This will include the ETag
+headers in the schema. Generation and validation of the ETag is done manually
+in the handler function, as seen above.
+
+There are 4 possible values for the `etag` parameter:
+
+* `None`: the endpoint does not support ETags (list, some actions, etc.)
+* `"input"`: the endpoint checks the `If-Match` header,
+but does not return an ETag (delete)
+* `"output"`: the endpoint only returns an ETag (create, show)
+* `"both"`: the endpoint validates and returns an ETag (update)
+
+The framework will raise an error, when the ETag header is missing for the
+`"output"` or `"both"` cases. However, doesn't ensure that the ETag is validated
+in the handler function.

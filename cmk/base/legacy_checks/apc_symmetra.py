@@ -176,7 +176,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
         }.get(battery_replace, (3, "Battery needs replacing: unknown"))
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
             yield 2, "%i batteries need replacing" % int(battery_num_batt_packs)
-        elif state:
+        else:
             yield state, state_readable
 
     if output_status:

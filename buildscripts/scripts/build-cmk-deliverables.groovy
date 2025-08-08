@@ -85,6 +85,46 @@ def main() {
         |===================================================
         """.stripMargin());
 
+    // All following jobs (source package and distro specific packages)
+    // require a BOM file. We create this first to ensure that it is
+    // built before we attempt to build our packages.
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        smart_stage(
+                name: "Build BOM",
+                raiseOnError: false,
+            ) {
+            def build_instance = null;
+
+            build_instance = smart_build(
+                // see global-defaults.yml, needs to run in minimal container
+                use_upstream_build: true,
+                relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
+                build_params: [
+                    CUSTOM_GIT_REF: effective_git_ref,
+                    VERSION: params.VERSION,
+                    EDITION: params.EDITION,
+                    DISABLE_CACHE: params.DISABLE_CACHE,
+                ],
+                build_params_no_check: [
+                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                ],
+                no_remove_others: true, // do not delete other files in the dest dir
+                download: false,    // use copyArtifacts to avoid nested directories
+            );
+
+            if (build_instance) {
+                copyArtifacts(
+                    projectName: "${branch_base_folder}/builders/build-cmk-bom",
+                    selector: specific(build_instance.getId()),
+                    target: relative_deliverables_dir,
+                    fingerprintArtifacts: true,
+                );
+            }
+        }
+    }
+
     /// In order to ensure a fixed order for stages executed in parallel,
     /// we wait an increasing amount of time (N * 100ms).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
@@ -132,46 +172,6 @@ def main() {
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
                 )
-            }
-        },
-        "Build BOM": {
-            sleep(0.1 * timeOffsetForOrder++);
-            def build_instance = null;
-
-            smart_stage(
-                name: "Build BOM",
-                raiseOnError: false,
-            ) {
-                build_instance = smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
-                    build_params: [
-                        CUSTOM_GIT_REF: effective_git_ref,
-                        VERSION: params.VERSION,
-                        EDITION: params.EDITION,
-                        DISABLE_CACHE: params.DISABLE_CACHE,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
-                );
-            }
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: false,
-            ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-bom",
-                    selector: specific(build_instance.getId()),
-                    target: relative_deliverables_dir,
-                    fingerprintArtifacts: true,
-                );
             }
         }
     ];

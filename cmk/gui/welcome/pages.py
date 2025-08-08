@@ -66,8 +66,8 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
             break
 
 
-def make_url_from_registry(id: str, permitted: bool = True) -> str | None:
-    url = welcome_url_registry.get(id)
+def make_url_from_registry(identifier: str, permitted: bool = True) -> str | None:
+    url = welcome_url_registry.get(identifier)
     if url is None or not permitted:
         return None
     return makeuri(

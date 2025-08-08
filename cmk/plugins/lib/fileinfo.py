@@ -309,8 +309,8 @@ def _fileinfo_check_function(
 
             continue
 
-        max_levels = params.get("max" + metric.key, ("no_levels", (None, None)))[1]
-        min_levels = params.get("min" + metric.key, ("no_levels", (None, None)))[1]
+        max_levels = params.get("max" + metric.key, (None, None))
+        min_levels = params.get("min" + metric.key, (None, None))
 
         yield from check_levels_v1(
             adjusted_metric_value,
@@ -471,9 +471,7 @@ def _fileinfo_check_conjunctions(
     params: Mapping[str, Any],
 ) -> CheckResult:
     conjunctions = params.get("conjunctions", [])
-    for conj_obj in conjunctions:
-        conjunction_state = conj_obj["monitoring_state"]
-        levels = conj_obj["configs"]
+    for conjunction_state, levels in conjunctions:
         levels = dict(levels)
         match_texts = []
         matches = 0
@@ -518,10 +516,7 @@ def check_fileinfo_groups_data(
         yield Result(state=State.UNKNOWN, summary="No group pattern found.")
         return
 
-    group_patterns = {
-        (p, "") if isinstance(p, str) else (p["group_pattern_include"], p["group_pattern_exclude"])
-        for p in raw_group_patterns
-    }
+    group_patterns = {(p, "") if isinstance(p, str) else p for p in raw_group_patterns}
 
     include_patterns = [i for i, _e in group_patterns]
     exclude_patterns = [e for _i, e in group_patterns if e != ""]

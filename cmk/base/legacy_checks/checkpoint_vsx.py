@@ -11,7 +11,7 @@ from collections.abc import Callable
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
-from cmk.plugins.lib.detection import DETECT_NEVER
+from cmk.plugins.lib.checkpoint import DETECT
 
 check_info = {}
 
@@ -137,7 +137,7 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
     name="checkpoint_vsx",
-    detect=DETECT_NEVER,
+    detect=DETECT,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.16.22.1.1",

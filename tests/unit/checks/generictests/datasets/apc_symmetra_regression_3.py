@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# fmt: off
+# mypy: disable-error-code=var-annotated
+
+checkname = "apc_symmetra"
+
+info = [
+    [],
+    [
+        [
+            '1',
+            '2',
+            '2',
+            '99',
+            '1',
+            '',
+            '5182500',
+            '2',
+            '05/23/2025',
+            '21',
+            '',
+            '0001010000000000001000000000000000000000000000000000000000000000'
+        ]
+    ],
+    [
+        ['0010000000000000'],
+        ['0000000000000000'],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        [''],
+        ['']
+    ]
+]
+
+discovery = {
+    "": [(None, {})],
+    "elphase": [],
+    "temp": [("Battery", {})]
+}
+
+checks = {
+    "": [
+        (
+            None,
+            {"capacity": (95, 80), "calibration_state": 0, "battery_replace_state": 0},
+            [
+                (0, "Battery status: normal", []),
+                (0, "No battery needs replacing", []),
+                (0, "Output status: on line (calibration invalid)", []),
+                (0, "Capacity: 99%", [("capacity", 99, 95, 80, 0, 100)]),
+                (0, "Time remaining: 14 hours 23 minutes", [("runtime", 863.75, None, None, None, None)]),
+                (1, "Battery pack cartridge 0: Needs Replacement", []),
+                (0, "Battery pack cartridge 1: OK", [])
+            ],
+        ),
+    ],
+    "temp": [
+        ("Battery", {"levels": (50, 60)}, [(0, "21.0 \xb0C", [("temp", 21.0, 50, 60, None, None)])])
+    ],
+}

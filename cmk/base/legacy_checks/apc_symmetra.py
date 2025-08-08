@@ -7,6 +7,7 @@
 # mypy: disable-error-code="var-annotated,arg-type,list-item"
 
 import time
+from typing import Any
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -54,8 +55,13 @@ check_info = {}
 
 
 def parse_apc_symmetra(string_table):
-    sensor_info, string_table = string_table
-    parsed = {}
+    if len(string_table) == 2:
+        sensor_info, string_table = string_table
+        cartridge_info = []
+    else:
+        sensor_info, string_table, cartridge_info = string_table
+
+    parsed: dict[str, Any] = {}  # TODO: Use a TypedDict after migration
 
     for name, temp in sensor_info:
         parsed.setdefault("temp", {})[name] = int(temp)
@@ -78,6 +84,8 @@ def parse_apc_symmetra(string_table):
         battery_current,
         state_output_state,
     ) = string_table[0]
+
+    parsed["cartridge_states"] = [row[0] for row in cartridge_info]
 
     if state_output_state != "":
         # string contains a bitmask, convert to int
@@ -148,6 +156,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
     battery_time_remain = data.get("time_remain")
     calib_result = data.get("calib")
     last_diag_date = data.get("diag_date")
+    cartridge_states = parsed["cartridge_states"]
 
     alt_crit_capacity = None
     # the last_diag_date is reported as %m/%d/%Y or %y
@@ -285,6 +294,30 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
 
         yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
 
+    cartridge_bits = {
+        0: "Disconnected",
+        1: "Overvoltage",
+        2: "Needs Replacement",
+        3: "Overtemperature Critical",
+        4: "Charger",
+        5: "Temperature Sensor",
+        6: "Bus Soft Start",
+        7: "Overtemperature Warning",
+        8: "General Error",
+        9: "Communication",
+        10: "Disconnected Frame",
+        11: "Firmware Mismatch",
+    }
+    for cart_idx, bitmask in enumerate(cartridge_states):
+        if not bitmask:
+            continue
+
+        translated_bits = [cartridge_bits[idx] for idx, bit in enumerate(bitmask) if bit == "1"]
+        if translated_bits:
+            yield 1, f"Battery pack cartridge {cart_idx}: {', '.join(translated_bits)}"
+        else:
+            yield 0, f"Battery pack cartridge {cart_idx}: OK"
+
 
 check_info["apc_symmetra"] = LegacyCheckDefinition(
     name="apc_symmetra",
@@ -310,6 +343,10 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
                 "2.2.9.0",
                 "11.1.1.0",
             ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.318.1.1.1.2.3.10.2.1",
+            oids=["10"],
         ),
     ],
     parse_function=parse_apc_symmetra,

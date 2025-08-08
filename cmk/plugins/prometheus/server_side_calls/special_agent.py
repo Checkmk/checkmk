@@ -143,7 +143,7 @@ def _commands_function(
         case ("auth_token", AuthToken(token=token)):
             args += [
                 "auth_token",
-                "--token",
+                "--token-reference",
                 token,
             ]
     yield SpecialAgentCommand(command_arguments=args, stdin=stdin)

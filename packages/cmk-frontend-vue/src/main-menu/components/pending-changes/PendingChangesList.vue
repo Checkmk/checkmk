@@ -61,15 +61,15 @@ const changesSideTitle = computed(() => {
           :key="change.changeId"
           class="cmk-div-pending-changes-container"
         >
-          <CmkZebra :num="idx">
-            <CmkIndent
-              v-if="
-                change.whichSites.includes('All sites') ||
-                change.whichSites.some((site) => selectedSites.includes(site))
-              "
-              class="cmk-indent-pending-change-container"
-              :class="{ 'red-text': change.user !== userName && change.user !== null }"
-            >
+          <CmkIndent
+            v-if="
+              change.whichSites.includes('All sites') ||
+              change.whichSites.some((site) => selectedSites.includes(site))
+            "
+            class="cmk-indent-pending-change-container"
+            :class="{ 'red-text': change.user !== userName && change.user !== null }"
+          >
+            <CmkZebra :num="idx" class="pending-change__zebra">
               <PendingChangeItemText
                 :text="change.changeText"
                 class="cmk-span-pending-change-text"
@@ -86,8 +86,8 @@ const changesSideTitle = computed(() => {
                 </div>
                 <span>{{ change.timestring }}</span>
               </div>
-            </CmkIndent>
-          </CmkZebra>
+            </CmkZebra>
+          </CmkIndent>
         </div>
       </CmkScrollContainer>
     </CmkCollapsible>
@@ -99,17 +99,15 @@ const changesSideTitle = computed(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
+  margin-top: var(--dimension-item-spacing-8);
+  margin-bottom: var(--dimension-item-spacing-6);
 }
 
 .collapsible-title {
   position: relative;
   height: auto;
-  padding: 4px 10px 3px 9px;
-  margin-top: 16px;
-
+  padding: 0 0 var(--dimension-padding-4) var(--dimension-padding-2);
   font-weight: bold;
-  letter-spacing: 1px;
-  background-color: var(--ux-theme-5);
   width: 100%;
   box-sizing: border-box;
 }
@@ -127,7 +125,7 @@ const changesSideTitle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--dimension-item-spacing-3);
 }
 
 .cmk-div-no-sites-selected {
@@ -137,13 +135,8 @@ const changesSideTitle = computed(() => {
   width: 100%;
   height: 100%;
   color: var(--font-color-dimmed);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  letter-spacing: 0.36px;
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin-top: var(--dimension-item-spacing-6);
+  margin-bottom: var(--dimension-item-spacing-6);
 }
 
 .cmk-scroll-pending-changes-container {
@@ -161,11 +154,23 @@ const changesSideTitle = computed(() => {
 }
 
 .cmk-indent-pending-change-container {
+  --margin-left: var(--dimension-item-spacing-4);
   display: flex;
-  padding: 8px !important;
+  padding: 0 0 0 var(--dimension-padding-4) !important;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--dimension-item-spacing-3);
+  box-sizing: border-box;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: var(--margin-left);
+  width: calc(100% - var(--margin-left));
+}
+
+.pending-change__zebra {
+  background-color: var(--default-bg-color);
+  padding: var(--dimension-padding-4);
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -179,11 +184,6 @@ const changesSideTitle = computed(() => {
   flex-direction: column;
   align-self: stretch;
   color: var(--font-color);
-  font-size: var(--font-size-normal);
-  font-style: normal;
-  font-weight: var(--font-weight-bold);
-  line-height: normal;
-  letter-spacing: 0.36px;
 }
 
 .cmk-div-pending-change-details {
@@ -192,11 +192,6 @@ const changesSideTitle = computed(() => {
   align-items: center;
   align-self: stretch;
   color: var(--font-color-dimmed);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  letter-spacing: 0.36px;
 }
 
 .grey-text {
@@ -206,6 +201,6 @@ const changesSideTitle = computed(() => {
 .cmk-div-user-sites-timestamp {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--dimension-item-spacing-3);
 }
 </style>

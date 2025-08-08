@@ -189,7 +189,8 @@ class MainMenu(LocatorHelper):
             _loc.click()
             if show_more:
                 self.page.get_by_role(role="link", name="show more", exact=True)
-            _loc = self.page.get_by_role(role="link", name=sub_menu, exact=exact)
+            _popup_menu = self.page.locator("div.popup_trigger.active").locator("div.popup_menu")
+            _loc = _popup_menu.get_by_role(role="link", name=sub_menu, exact=exact)
         self._unique_web_element(_loc)
         return _loc
 

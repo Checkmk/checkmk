@@ -252,6 +252,12 @@ Most code in this repository is run under a fairly recent version of Python3.
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
+### File extensions
+
+All python files must have a `.py`-extension. 
+Vice versa all files with `.py`-extension must be valid python files.  
+Executable python scripts without file extension can be achieved via symbolic links.
+
 ### Agent plugins: Supported Python versions
 
 The agent plugins are also written for Python 3, but have to be compatible with Python 3.4 or newer.

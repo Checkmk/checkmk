@@ -321,6 +321,16 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-requirements-junit.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_requirements/"
 
+    - NAME: "Python only Py-Extensions"
+      DIR: "tests"
+      ENV_VARS:
+          PYTEST_ADDOPTS: "--color=no"
+      COMMAND: "make test-py-extensions &> ${RESULTS}/python-extensions.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/python-extensions.txt"
+      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_py_extensions/"
+
     - NAME: "Python File Content Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FILES_REL
       DIR: "tests"

@@ -379,6 +379,9 @@ test-license-headers:
 test-requirements:
 	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
 
+test-py-extensions:
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_python_extensions.py) --python-files='*' -k 'py_extension';
+
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \

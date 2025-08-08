@@ -25,6 +25,21 @@ from cmk.base.config import (
     ObjectAttributes,
     ServicegroupName,
 )
+from cmk.base.core.interface import CoreAction, MonitoringCore
+from cmk.base.core.shared import (
+    AbstractServiceID,
+    autodetect_plugin,
+    check_icmp_arguments_of,
+    CoreCommand,
+    CoreCommandName,
+    duplicate_service_warning,
+    get_cluster_nodes_for_config,
+    get_cmk_passive_service_attributes,
+    get_labels_from_attributes,
+    get_service_attributes,
+    get_tags_with_groups_from_attributes,
+    host_check_command,
+)
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -50,21 +65,6 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.timeperiod import add_builtin_timeperiods
 
-from .._base_core import CoreAction, MonitoringCore
-from ..config import (
-    AbstractServiceID,
-    autodetect_plugin,
-    check_icmp_arguments_of,
-    CoreCommand,
-    CoreCommandName,
-    duplicate_service_warning,
-    get_cluster_nodes_for_config,
-    get_cmk_passive_service_attributes,
-    get_labels_from_attributes,
-    get_service_attributes,
-    get_tags_with_groups_from_attributes,
-    host_check_command,
-)
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str

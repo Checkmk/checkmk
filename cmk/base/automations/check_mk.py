@@ -112,8 +112,8 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.core import CoreAction, do_restart, MonitoringCore
-from cmk.base.core.config import autodetect_plugin, get_service_attributes
+from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
+from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
@@ -1235,7 +1235,7 @@ def _execute_autodiscovery(
 
             # reset these to their original value to create a correct config
             if loading_result.loaded_config.monitoring_core == "cmc":
-                cmk.base.core.do_reload(
+                do_reload(
                     config_cache,
                     hosts_config,
                     final_service_name_config,
@@ -1262,7 +1262,7 @@ def _execute_autodiscovery(
                     bake_on_restart=bake_on_restart,
                 )
             else:
-                cmk.base.core.do_restart(
+                do_restart(
                     config_cache,
                     hosts_config,
                     final_service_name_config,

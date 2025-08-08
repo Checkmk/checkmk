@@ -3,34 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import shutil
 import socket
-import sys
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, suppress
-from pathlib import Path
+from collections.abc import Callable, Iterable, Sequence
 from typing import Literal
 
 import cmk.ccc.debug
-import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.plugins import ServiceID
 from cmk.utils import config_warnings, ip_lookup
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-from ._base_core import MonitoringCore
-from ._nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str
@@ -196,184 +184,6 @@ def check_icmp_arguments_of(
 #   +----------------------------------------------------------------------+
 #   | Code for managing the core configuration creation.                   |
 #   '----------------------------------------------------------------------'
-
-
-def do_create_config(
-    core: MonitoringCore,
-    config_cache: ConfigCache,
-    hosts_config: Hosts,
-    final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-    ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-    enforced_services_table: Callable[
-        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-    ],
-    plugins: AgentBasedPlugins,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ],
-    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    hosts_to_update: set[HostName] | None,
-    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    *,
-    duplicates: Collection[HostName],
-    bake_on_restart: Callable[[], None],
-) -> None:
-    """Creating the monitoring core configuration and additional files
-
-    Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
-    and available for starting the monitoring.
-    """
-    with suppress(IOError):
-        sys.stdout.write(
-            "Generating configuration for core (type %s)...\n" % core.name(),
-        )
-        sys.stdout.flush()
-
-    try:
-        with tracer.span(
-            "create_core_config",
-            attributes={
-                "cmk.core_config.core": core.name(),
-                "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
-            },
-        ):
-            _create_core_config(
-                core,
-                config_cache,
-                hosts_config,
-                final_service_name_config,
-                passive_service_name_config,
-                enforced_services_table,
-                plugins,
-                discovery_rules,
-                get_ip_stack_config,
-                default_address_family,
-                ip_address_of,
-                ip_address_of_mgmt,
-                hosts_to_update=hosts_to_update,
-                service_depends_on=service_depends_on,
-                duplicates=duplicates,
-            )
-    except Exception as e:
-        if cmk.ccc.debug.enabled():
-            raise
-        raise MKGeneralException("Error creating configuration: %s" % e)
-
-    with tracer.span("bake_on_restart"):
-        bake_on_restart()
-
-
-@contextmanager
-def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
-    if core.name() == "nagios":
-        objects_file = str(cmk.utils.paths.nagios_objects_file)
-    else:
-        objects_file = str(cmk.utils.paths.var_dir / "core/config")
-
-    backup_path = None
-    if os.path.exists(objects_file):
-        backup_path = objects_file + ".save"
-        shutil.copy2(objects_file, backup_path)
-
-    try:
-        try:
-            yield None
-        except Exception:
-            if backup_path:
-                os.rename(backup_path, objects_file)
-            raise
-
-        if (
-            core.name() == "nagios"
-            and cmk.utils.paths.nagios_config_file.exists()
-            and not do_check_nagiosconfig()
-        ):
-            broken_config_path = cmk.utils.paths.tmp_dir / "check_mk_objects.cfg.broken"
-            shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
-
-            if backup_path:
-                os.rename(backup_path, objects_file)
-            elif os.path.exists(objects_file):
-                os.remove(objects_file)
-
-            raise MKGeneralException(
-                "Configuration for monitoring core is invalid. Rolling back. "
-                'The broken file has been copied to "%s" for analysis.' % broken_config_path
-            )
-    finally:
-        if backup_path and os.path.exists(backup_path):
-            os.remove(backup_path)
-
-
-def _create_core_config(
-    core: MonitoringCore,
-    config_cache: ConfigCache,
-    hosts_config: Hosts,
-    final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-    ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-    enforced_services_table: Callable[
-        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-    ],
-    plugins: AgentBasedPlugins,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ],
-    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    hosts_to_update: set[HostName] | None,
-    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    *,
-    duplicates: Collection[HostName],
-) -> None:
-    config_warnings.initialize()
-
-    _verify_non_duplicate_hosts(duplicates)
-
-    # recompute and save passwords, to ensure consistency:
-    passwords = config_cache.collect_passwords()
-    cmk.utils.password_store.save(passwords, cmk.utils.password_store.pending_password_store_path())
-
-    config_path = VersionedConfigPath.next()
-    with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
-        core.create_config(
-            config_path,
-            config_cache,
-            hosts_config,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            discovery_rules,
-            get_ip_stack_config,
-            default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            hosts_to_update=hosts_to_update,
-            service_depends_on=service_depends_on,
-            passwords=passwords,
-        )
-
-    cmk.utils.password_store.save(
-        passwords, cmk.utils.password_store.core_password_store_path(Path(config_path))
-    )
-
-
-def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
-    if duplicates:
-        config_warnings.warn(
-            "The following host names have duplicates: %s. "
-            "This might lead to invalid/incomplete monitoring for these hosts."
-            % ", ".join(duplicates)
-        )
 
 
 def get_cmk_passive_service_attributes(

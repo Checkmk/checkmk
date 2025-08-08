@@ -18,8 +18,6 @@ from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
-import cmk.base.core
-import cmk.base.core.nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
@@ -48,6 +46,7 @@ from cmk.base.config import (
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
+from cmk.base.core import interface as core_interface
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import Mode, modes, Option
@@ -1599,8 +1598,6 @@ def _make_configured_bake_on_restart(
 
 
 def mode_update() -> None:
-    from cmk.base.core.config import do_create_config
-
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()
     loading_result = load_config(plugins)
@@ -1634,7 +1631,7 @@ def mode_update() -> None:
         with activation_lock(
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=config.restart_locking
         ):
-            do_create_config(
+            core_interface.do_create_config(
                 core=create_core(
                     edition,
                     loading_result.config_cache.ruleset_matcher,
@@ -1730,7 +1727,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         final_service_name_config
     )
 
-    cmk.base.core.do_restart(
+    core_interface.do_restart(
         loading_result.config_cache,
         hosts_config,
         final_service_name_config,
@@ -1828,7 +1825,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         final_service_name_config
     )
 
-    cmk.base.core.do_reload(
+    core_interface.do_reload(
         loading_result.config_cache,
         hosts_config,
         final_service_name_config,

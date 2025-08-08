@@ -186,7 +186,7 @@ def check_audiocodes_system_events(
 
 check_plugin_audiocodes_system_events = CheckPlugin(
     name="audiocodes_system_events",
-    service_name="System Events",
+    service_name="System events",
     discovery_function=discover_audiocodes_system_events,
     check_function=check_audiocodes_system_events,
     check_ruleset_name="audiocodes_system_events",

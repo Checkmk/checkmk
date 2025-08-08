@@ -73,6 +73,6 @@ rule_spec_audiocodes_system_events = CheckParameters(
     name="audiocodes_system_events",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_audiocores_system_events,
-    title=Title("AudioCodes System Events"),
+    title=Title("AudioCodes system events"),
     condition=HostCondition(),
 )

@@ -24,6 +24,8 @@ description:
 
  - last diagnostic date
 
+ - battery cartridge status
+
  You can configure {WARN} and {CRIT} levels for capacity (default: 80, 95 percent).
 
  You can configure the state for calibration (default: {OK}) and
@@ -53,6 +55,12 @@ description:
  - {CRIT}: No calibration in progress and none of the states (2, 4, 12)
 
  - {UNKNOWN}: None of the states (1-20)
+
+ - {OK}: In all other cases
+
+ Battery pack cartridge:
+
+ - {WARN}: If any bit indicates a deviation from normal operation (Overvoltage, Overtemperature, Firmware mismatch, ...)
 
  - {OK}: In all other cases
 

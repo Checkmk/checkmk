@@ -171,7 +171,7 @@ std::tuple<std::string, RRDFetchHeader, std::vector<double>> recvFetchReply(
 
     auto rawheader = std::vector<std::string>{};
     if (retcode < 0 || std::size_t(retcode) < RRDFetchHeader::size()) {
-        throw std::runtime_error{"invalid header"};
+        throw std::runtime_error{"invalid header: " + status};
     }
     for (std::size_t ii = 0; ii < RRDFetchHeader::size(); ++ii) {
         auto line = sock.readLine();
@@ -309,13 +309,24 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
 
     auto fetch = std::ostringstream{} << "FETCHBIN " << location.path_.string()
                                       << " " << *cf << " " << args_.start_time
-                                      << " " << args_.end_time << " " << dsname;
+                                      << " " << args_.end_time << " " << dsname
+                                      << "\n";
     if (logger->isLoggable(LogLevel::debug)) {
-        Debug(logger) << "Send rrd data as " << fetch.view();
+        Debug(logger) << "Send rrd data as "
+                      << fetch.view().substr(0, fetch.view().length() - 1);
     }
-    fetch << "\n";
     sendFetchBin(sock, fetch.view(), logger);
-    const auto &&[status, header, rawdata] = recvFetchReply(sock);
+    auto fetch_result =
+        std::tuple<std::string, RRDFetchHeader, std::vector<double>>{};
+    try {
+        fetch_result = recvFetchReply(sock);
+    } catch (const std::runtime_error &e) {
+        Error(logger) << e.what() << " ["
+                      << fetch.view().substr(0, fetch.view().length() - 1)
+                      << "]";
+        return {};
+    }
+    auto &&[status, header, rawdata] = fetch_result;
     std::vector<double> values;
     values.reserve(rawdata.size());
     std::ranges::transform(

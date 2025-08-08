@@ -3,32 +3,38 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::ora_sql::backend::OpenedSpot;
-use crate::types::{InstanceName, Separator, SqlQuery};
+use crate::ora_sql::sqls;
+use crate::types::{
+    InstanceName, InstanceNumVersion, InstanceVersion, Separator, SqlQuery, Tenant,
+};
 use anyhow::Result;
 use std::collections::HashMap;
 
-type _InstanceEntries = HashMap<InstanceName, String>;
+type _InstanceEntries = HashMap<InstanceName, (InstanceVersion, Tenant)>;
+#[derive(Debug)]
 pub struct WorkInstances(_InstanceEntries);
 
 impl WorkInstances {
     pub fn new(spot: &OpenedSpot) -> Self {
         let hashmap = _get_instances(spot).unwrap_or_else(|e| {
             log::error!("Failed to get instances: {}", e);
-            HashMap::<InstanceName, String>::new()
+            _InstanceEntries::new()
         });
         WorkInstances(hashmap)
     }
-    pub fn get_full_version(&self, instance: &InstanceName) -> Option<String> {
-        self.0.get(instance).cloned()
+    pub fn get_full_version(&self, instance: &InstanceName) -> Option<InstanceVersion> {
+        self.0.get(instance).cloned().map(|(version, _)| version)
     }
 
-    /// Returns the version of the given instance as a number in the format `major * 100 + minor`.
-    /// For example, version "19.1.0" will return 1901, and "21.2" will return 2102.
+    /// Returns the version of the given instance as a number.
+    /// For example, version "19.1.1.1" will return 19010101.
     /// If the version cannot be parsed, it returns `None`.
     ///
     /// If the instance is not found, it returns `None`.
-    pub fn get_num_version(&self, instance: &InstanceName) -> Result<Option<u32>> {
-        Ok(self.0.get(instance).and_then(|v| convert_to_num_version(v)))
+    pub fn get_info(&self, instance: &InstanceName) -> Option<(InstanceNumVersion, Tenant)> {
+        self.0
+            .get(instance)
+            .map(|(v, c)| (convert_to_num_version(v).unwrap_or_default(), *c))
     }
 
     pub fn all(&self) -> &_InstanceEntries {
@@ -38,7 +44,7 @@ impl WorkInstances {
 
 fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
     let result = spot.query_table(&SqlQuery::new(
-        r"SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance",
+        sqls::query::internal::INSTANCE_INFO_SQL_TEXT,
         Separator::default(),
         &Vec::new(),
     ))?;
@@ -52,24 +58,29 @@ fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
                 );
                 None
             } else {
-                Some((InstanceName::from(x[0].as_str()), x[1].clone()))
+                Some((
+                    InstanceName::from(x[0].as_str()),
+                    (InstanceVersion::from(x[2].clone()), Tenant::new(&x[4])),
+                ))
             }
         })
         .collect();
     Ok(hashmap)
 }
 
-fn convert_to_num_version(version: &str) -> Option<u32> {
-    let tops = version
-        .splitn(3, '.')
-        .take(2)
+fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVersion> {
+    let tops = String::from(version.clone())
+        .splitn(5, '.')
+        .take(4)
         .filter_map(|s| s.parse::<u32>().ok())
         .collect::<Vec<u32>>();
-    if tops.len() < 2 {
+    if tops.len() < 4 {
         log::warn!("Bad version format: '{version}'");
         None
     } else {
-        Some(tops[0] * 100 + tops[1])
+        const BASE: u32 = 100;
+        let result = tops.iter().fold(0, |acc, &x| acc * BASE + x);
+        Some(InstanceNumVersion::from(result))
     }
 }
 
@@ -79,6 +90,7 @@ mod tests {
     use crate::config::ora_sql::Endpoint;
     use crate::ora_sql::backend::OraDbEngine;
     use crate::ora_sql::backend::SpotBuilder;
+    use crate::ora_sql::sqls::query;
     use crate::ora_sql::types::Target;
 
     struct TestOra;
@@ -95,8 +107,14 @@ mod tests {
             Ok(vec![])
         }
         fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-            if query.as_str() == "SELECT INSTANCE_NAME, VERSION_FULL FROM v$instance" {
-                Ok(vec![vec!["INSTANCE1".to_string(), "22.1.1".to_string()]])
+            if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT {
+                Ok(vec![vec![
+                    "free".to_string(),       // instance name
+                    "0".to_string(),          // CON_ID
+                    "22.1.1.6.0".to_string(), // VERSION_FULL
+                    "FREE".to_string(),       // database name
+                    "YES".to_string(),        // cdb
+                ]])
             } else {
                 Err(anyhow::anyhow!("Query not recognized"))
             }
@@ -116,9 +134,9 @@ mod tests {
         let conn = simulated_spot.connect(None).unwrap();
         assert_eq!(
             &WorkInstances::new(&conn)
-                .get_full_version(&InstanceName::from("INSTANCE1"))
+                .get_full_version(&InstanceName::from("fREe"))
                 .unwrap(),
-            "22.1.1"
+            &InstanceVersion::from("22.1.1.6.0".to_string())
         );
         assert!(&WorkInstances::new(&conn)
             .get_full_version(&InstanceName::from("HURZ"))
@@ -127,10 +145,17 @@ mod tests {
 
     #[test]
     fn test_convert_to_num_version() {
-        assert_eq!(convert_to_num_version("19.0.0.dd,d"), Some(1900));
-        assert_eq!(convert_to_num_version("19.1.0"), Some(1901));
-        assert_eq!(convert_to_num_version("21.2"), Some(2102));
-        assert!(convert_to_num_version("").is_none());
-        assert!(convert_to_num_version("a.").is_none());
+        assert_eq!(
+            convert_to_num_version(&InstanceVersion::from("19.1.2.3.4".to_string())),
+            Some(InstanceNumVersion::from(19010203))
+        );
+        assert_eq!(
+            convert_to_num_version(&InstanceVersion::from("19.1.2.3".to_string())),
+            Some(InstanceNumVersion::from(19010203))
+        );
+        assert!(convert_to_num_version(&InstanceVersion::from("19.1.0".to_string())).is_none());
+        assert!(convert_to_num_version(&InstanceVersion::from("21.2".to_string())).is_none());
+        assert!(convert_to_num_version(&InstanceVersion::from("".to_string())).is_none());
+        assert!(convert_to_num_version(&InstanceVersion::from("a.".to_string())).is_none());
     }
 }

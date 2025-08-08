@@ -15,7 +15,7 @@ use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
-use mk_oracle::types::{Credentials, InstanceName};
+use mk_oracle::types::{Credentials, InstanceName, Tenant};
 use mk_oracle::types::{Separator, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -262,10 +262,11 @@ fn test_remote_mini_connection_version() {
             .expect("Connect failed, check environment variables");
         let instances = system::WorkInstances::new(&conn);
 
-        let version = instances
-            .get_full_version(&InstanceName::from(&endpoint.instance))
-            .unwrap();
-        assert!(version.starts_with("2"));
+        dbg!(&instances);
+        let r = instances.get_full_version(&InstanceName::from(&endpoint.instance));
+        dbg!(&r);
+        let version = r.unwrap();
+        assert!(String::from(version).starts_with("2"));
         assert!(instances
             .get_full_version(&InstanceName::from("no-such-db"))
             .is_none());
@@ -282,7 +283,7 @@ fn test_io_stats_query() {
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot.connect(None).unwrap();
         let q = SqlQuery::new(
-            sqls::get_factory_query(sqls::Id::IoStats).unwrap(),
+            sqls::get_factory_query(sqls::Id::IoStats, None, Tenant::All, None).unwrap(),
             Separator::default(),
             config.params(),
         );
@@ -337,7 +338,7 @@ fn test_ts_quotas() {
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot.connect(None).unwrap();
         let q = SqlQuery::new(
-            sqls::get_factory_query(sqls::Id::TsQuotas).unwrap(),
+            sqls::get_factory_query(sqls::Id::TsQuotas, None, Tenant::All, None).unwrap(),
             Separator::default(),
             config.params(),
         );

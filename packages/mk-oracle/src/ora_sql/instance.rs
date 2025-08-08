@@ -8,7 +8,7 @@ use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
-use crate::types::{InstanceName, Separator, SqlBindParam, SqlQuery};
+use crate::types::{InstanceName, InstanceNumVersion, Separator, SqlBindParam, SqlQuery, Tenant};
 use crate::utils;
 
 use anyhow::Result;
@@ -99,18 +99,22 @@ fn make_spot_works(
             let instance_works = instances
                 .all()
                 .keys()
-                .map(|instance| {
-                    let version = instances
-                        .get_num_version(instance)
-                        .ok()
-                        .flatten()
-                        .unwrap_or_default();
+                .filter_map(|instance| {
+                    if let Some(info) = instances.get_info(instance) {
+                        Some((instance, info))
+                    } else {
+                        log::warn!("No info found for instance: {}", instance);
+                        None
+                    }
+                })
+                .map(|(instance, info)| {
                     let queries = sections
                         .iter()
                         .filter_map(|section| {
                             _find_section_query(
                                 section,
-                                version,
+                                info.0,
+                                info.1,
                                 Separator::Decorated(section.sep()),
                                 params,
                             )
@@ -176,25 +180,33 @@ fn _exec_queries(
 }
 fn _find_section_query(
     section: &Section,
-    version: u32,
+    version: InstanceNumVersion,
+    tenant: Tenant,
     sep: Separator,
     params: &[SqlBindParam],
 ) -> Option<SqlQuery> {
     let section_name = section.name();
     log::info!("Generating data for instance: {}", section_name);
 
-    section.find_query(get_sql_dir(), version).map_or_else(
-        || {
-            log::warn!("No query found for section: {}", section_name);
-            None
-        },
-        |query| {
-            log::info!("Found query for section {}: {}", section_name, query);
-            // Here you would execute the query and process the results
-            // For now, we just return the query as a placeholder
-            Some(SqlQuery::new(query.as_str(), sep, params))
-        },
-    )
+    section
+        .find_query(get_sql_dir(), version, tenant)
+        .map_or_else(
+            || {
+                log::warn!(
+                    "No query found for section: {} {} {:?}",
+                    section_name,
+                    version,
+                    tenant
+                );
+                None
+            },
+            |query| {
+                log::info!("Found query for section {}: {}", section_name, query);
+                // Here you would execute the query and process the results
+                // For now, we just return the query as a placeholder
+                Some(SqlQuery::new(query.as_str(), sep, params))
+            },
+        )
 }
 
 // tested only in integration tests

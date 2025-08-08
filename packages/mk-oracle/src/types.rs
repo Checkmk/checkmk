@@ -67,6 +67,27 @@ pub struct InstanceEdition(String);
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceVersion(String);
 
+#[derive(PartialEq, From, Clone, Copy, Debug, Display, Default, Into, PartialOrd)]
+pub struct InstanceNumVersion(u32);
+
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+pub enum Tenant {
+    All,
+    Cdb,
+    NoCdb,
+}
+
+impl Tenant {
+    pub fn new(tenant: &str) -> Self {
+        match tenant.to_lowercase().as_str() {
+            "all" => Tenant::All,
+            "cdb" | "yes" => Tenant::Cdb,
+            "nocdb" | "no" => Tenant::NoCdb,
+            _ => panic!("Unknown tenant type: {}", tenant),
+        }
+    }
+}
+
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceCluster(String);
 
@@ -239,5 +260,17 @@ mod tests {
     fn test_make_query() {
         const QUERY: &str = "a{sep}b{sep}c";
         assert_eq!(use_sep(QUERY, ","), "a,b,c");
+    }
+
+    #[test]
+    fn test_tenant() {
+        assert_eq!(Tenant::new("all"), Tenant::All);
+        assert_eq!(Tenant::new("cdb"), Tenant::Cdb);
+        assert_eq!(Tenant::new("nocdb"), Tenant::NoCdb);
+        assert_eq!(Tenant::new("yEs"), Tenant::Cdb);
+        assert_eq!(Tenant::new("no"), Tenant::NoCdb);
+        // panic on unknown tenant
+        let result = std::panic::catch_unwind(|| Tenant::new("unknown"));
+        assert!(result.is_err());
     }
 }

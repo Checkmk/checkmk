@@ -43,6 +43,10 @@ rust_library(
         ":version.rs",  # invalidates cache
     ],
     aliases = aliases(),
+    compile_data = [
+        "sqls/io_stats.sql",
+        "sqls/ts_quotas.sql",
+    ],
     crate_name = "mk_oracle",
     edition = "2021",
     proc_macro_deps = all_crate_deps(

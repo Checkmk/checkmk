@@ -5,7 +5,7 @@
 import dataclasses
 import inspect
 from collections.abc import Callable, Mapping, Sequence
-from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypedDict
+from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
 
@@ -88,6 +88,11 @@ class ParameterInfo:
 
 
 def _collect_sources(type_: type) -> Sequence[SourceAnnotation]:
+    if isinstance(type_, TypeAliasType):
+        if type_.__type_params__:
+            # TypeAliasType with type parameters, we cannot handle this case
+            raise ValueError(f"Unsupported TypeAliasType with type parameters: {type_}")
+        return _collect_sources(type_.__value__)
     if get_origin(type_) is Annotated:
         return [
             annotation

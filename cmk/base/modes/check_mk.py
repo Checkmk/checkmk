@@ -58,6 +58,7 @@ from cmk.ccc import store, tty
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.store import activation_lock
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
@@ -1630,7 +1631,9 @@ def mode_update() -> None:
     )
 
     try:
-        with cmk.base.core.activation_lock(mode=config.restart_locking):
+        with activation_lock(
+            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=config.restart_locking
+        ):
             do_create_config(
                 core=create_core(
                     edition,

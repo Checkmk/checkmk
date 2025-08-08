@@ -14,8 +14,9 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import assert_never, Literal
 
-from cmk.ccc.exceptions import MKConfigLockTimeout, MKTimeout
+from cmk.ccc.exceptions import MKBailOut, MKConfigLockTimeout, MKTimeout
 from cmk.ccc.i18n import _
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "cleanup_locks",
     "have_lock",
     "lock_checkmk_configuration",
+    "activation_lock",
     "locked",
     "release_all_locks",
     "release_lock",
@@ -62,6 +64,35 @@ def lock_checkmk_configuration(lockfile: Path) -> Iterator[None]:
         yield
     finally:
         release_lock(lockfile)
+
+
+# TODO: lock_checkmk_configuration is doing something similar. It looks like we
+# should unify these both locks. But: The lock_checkmk_configuration is currently acquired by the
+# GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
+# processes. We'll have to check whether or not we can move the locking.
+@contextmanager
+def activation_lock(main_mk_file: Path, mode: Literal["abort", "wait"] | None) -> Iterator[None]:
+    """Try to acquire the activation lock and raise exception in case it was not possible"""
+    match mode:
+        case None:
+            # TODO: We really should purge this strange case from being configurable
+            yield None  # No locking at all
+            return
+
+        case "abort":
+            with try_locked(main_mk_file) as result:
+                if result is False:
+                    raise MKBailOut("Other restart currently in progress. Aborting.")
+                yield None
+            return
+
+        case "wait":
+            with locked(main_mk_file):
+                yield None
+            return
+
+        case _:
+            assert_never(mode)
 
 
 # .

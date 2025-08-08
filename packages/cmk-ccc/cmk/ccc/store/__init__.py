@@ -30,6 +30,7 @@ from cmk.ccc.store._file import (
 )
 from cmk.ccc.store._locks import (
     acquire_lock,
+    activation_lock,
     cleanup_locks,
     have_lock,
     lock_checkmk_configuration,
@@ -42,6 +43,7 @@ from cmk.ccc.store._locks import (
 from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 
 __all__ = [
+    "activation_lock",
     "BytesSerializer",
     "DimSerializer",
     "FileIo",

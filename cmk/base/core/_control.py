@@ -9,17 +9,18 @@ import os
 import socket
 import subprocess
 import sys
-from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, suppress
+from collections.abc import Callable, Mapping, Sequence
+from contextlib import suppress
 from typing import Literal
 
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache
-from cmk.ccc import store, tty
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.store import activation_lock
 from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.utils import ip_lookup
 from cmk.utils.rulesets import RuleSetName
@@ -128,7 +129,9 @@ def do_restart(
     bake_on_restart: Callable[[], None],
 ) -> None:
     try:
-        with activation_lock(mode=locking_mode):
+        with activation_lock(
+            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=locking_mode
+        ):
             do_create_config(
                 core=core,
                 config_cache=config_cache,
@@ -153,35 +156,6 @@ def do_restart(
         if cmk.ccc.debug.enabled():
             raise
         raise MKBailOut("An error occurred: %s" % e)
-
-
-# TODO: The store.lock_checkmk_configuration is doing something similar. It looks like we
-# should unify these both locks. But: The lock_checkmk_configuration is currently acquired by the
-# GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
-# processes. We'll have to check whether or not we can move the locking.
-@contextmanager
-def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
-    """Try to acquire the activation lock and raise exception in case it was not possible"""
-    if mode is None:
-        # TODO: We really should purge this strange case from being configurable
-        yield None  # No locking at all
-        return
-
-    lock_file = str(cmk.utils.paths.default_config_dir / "main.mk")
-
-    if mode == "abort":
-        with store.try_locked(lock_file) as result:
-            if result is False:
-                raise MKBailOut("Other restart currently in progress. Aborting.")
-            yield None
-        return
-
-    if mode == "wait":
-        with store.locked(lock_file):
-            yield None
-        return
-
-    raise ValueError(f"Invalid lock mode: {mode}")
 
 
 def print_(txt: str) -> None:

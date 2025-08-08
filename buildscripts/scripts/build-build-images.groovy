@@ -24,7 +24,6 @@ def main() {
     check_environment_variables([
         "ARTIFACT_STORAGE",
         "NEXUS_ARCHIVES_URL",
-        "BAZEL_PROXY_URL",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -115,7 +114,6 @@ def main() {
                         + " --build-arg NEXUS_USERNAME='${NEXUS_USERNAME}'"
                         + " --build-arg NEXUS_PASSWORD='${NEXUS_PASSWORD}'"
                         + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
-                        + " --build-arg BAZEL_PROXY_URL='${BAZEL_PROXY_URL}'"
 
                         + " -f 'buildscripts/infrastructure/build-nodes/${distro}/Dockerfile'"
                         + " temp-build-context"
@@ -125,10 +123,7 @@ def main() {
                         docker_build_args = "--no-cache " + docker_build_args;
                     }
                     dir("${checkout_dir}") {
-                        withCredentials([file(credentialsId: "Checkmk_GmbH_IT_Root_CA", variable: "root_ca_file")]) {
-                            sh("rm -f temp-build-context/Checkmk_GmbH_IT_Root_CA.crt && cp ${root_ca_file} temp-build-context/Checkmk_GmbH_IT_Root_CA.crt")
-                                image = docker.build(image_name, docker_build_args);
-                        }
+                        image = docker.build(image_name, docker_build_args);
                     }
                 }
 

@@ -67,6 +67,7 @@ nagios_startscript = _omd_path("etc/init.d/core")
 nagios_binary = _omd_path("bin/nagios")
 htpasswd_file = _omd_path("etc/htpasswd")
 livestatus_unix_socket = _omd_path("tmp/run/live")
+raw_data_socket = _omd_path("tmp/run/raw-data")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
 autodiscovery_dir = _omd_path("var/check_mk/autodiscovery")

@@ -183,7 +183,9 @@ class ModeDiagHost(WatoMode):
                 return_message.append(_("SNMP credentials"))
                 attributes["snmp_community"] = new["snmp_community"]
 
-            self._host.update_attributes(attributes, pprint_value=config.wato_pprint_config)
+            self._host.update_attributes(
+                attributes, pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
+            )
 
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(

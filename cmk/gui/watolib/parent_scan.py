@@ -98,13 +98,16 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         with job_interface.gui_context():
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
             for task in tasks:
-                self._process_task(task, settings, pprint_value=pprint_value, debug=debug)
+                self._process_task(
+                    task, settings, pprint_value=pprint_value, debug=debug, use_git=use_git
+                )
 
             self._logger.info("Summary:")
             for title, value in [
@@ -132,7 +135,13 @@ class ParentScanBackgroundJob(BackgroundJob):
         self._num_errors = 0
 
     def _process_task(
-        self, task: ParentScanTask, settings: ParentScanSettings, *, pprint_value: bool, debug: bool
+        self,
+        task: ParentScanTask,
+        settings: ParentScanSettings,
+        *,
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         self._num_hosts_total += 1
 
@@ -143,6 +152,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 self._execute_parent_scan(task, settings, debug=debug),
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
         except Exception as e:
             self._num_errors += 1
@@ -177,6 +187,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         for result in results:
             if result.state in ["direct", "root", "gateway"]:
@@ -184,7 +195,12 @@ class ParentScanBackgroundJob(BackgroundJob):
                 # until it has been saved needs to be locked.
                 with store.lock_checkmk_configuration(configuration_lockfile):
                     self._configure_host_and_gateway(
-                        task, settings, result.gateway, pprint_value=pprint_value, debug=debug
+                        task,
+                        settings,
+                        result.gateway,
+                        pprint_value=pprint_value,
+                        debug=debug,
+                        use_git=use_git,
                     )
             else:
                 self._logger.error(result.message)
@@ -211,6 +227,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         tree = folder_tree()
         tree.invalidate_caches()
@@ -244,10 +261,10 @@ class ParentScanBackgroundJob(BackgroundJob):
             settings.force_explicit
             or host.folder().effective_attributes().get("parents") != parents
         ):
-            host.update_attributes({"parents": parents}, pprint_value=pprint_value)
+            host.update_attributes({"parents": parents}, pprint_value=pprint_value, use_git=use_git)
         elif "parents" in host.attributes:
             # Check which parents the host would have inherited
-            host.clean_attributes(["parents"], pprint_value=pprint_value)
+            host.clean_attributes(["parents"], pprint_value=pprint_value, use_git=use_git)
 
         if parents:
             self._logger.info("Set parents to %s", ",".join(parents))
@@ -370,6 +387,7 @@ def start_parent_scan(
     site_configs: Mapping[SiteId, SiteConfiguration],
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> Result[None, AlreadyRunningError | StartupError]:
     return job.start(
         JobTarget(
@@ -387,6 +405,7 @@ def start_parent_scan(
                 settings=settings,
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             ),
         ),
         InitialStatusArgs(
@@ -403,11 +422,17 @@ class ParentScanJobArgs(BaseModel, frozen=True):
     settings: ParentScanSettings
     pprint_value: bool
     debug: bool
+    use_git: bool
 
 
 def parent_scan_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ParentScanJobArgs
 ) -> None:
     ParentScanBackgroundJob().do_execute(
-        args.settings, args.tasks, job_interface, pprint_value=args.pprint_value, debug=args.debug
+        args.settings,
+        args.tasks,
+        job_interface,
+        pprint_value=args.pprint_value,
+        debug=args.debug,
+        use_git=args.use_git,
     )

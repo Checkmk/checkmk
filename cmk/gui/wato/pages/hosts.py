@@ -583,7 +583,10 @@ class ModeEditHost(ABCHostMode):
             return None
 
         host.edit(
-            attributes, self._get_cluster_nodes(attributes), pprint_value=config.wato_pprint_config
+            attributes,
+            self._get_cluster_nodes(attributes),
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
         self._host = folder.load_host(self._host.name())
 

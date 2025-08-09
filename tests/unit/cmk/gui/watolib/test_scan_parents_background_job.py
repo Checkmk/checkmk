@@ -93,6 +93,7 @@ def test_scan_parents_job(
         },
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
 
     # THEN

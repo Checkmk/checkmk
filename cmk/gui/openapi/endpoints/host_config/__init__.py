@@ -511,7 +511,12 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     nodes = body["nodes"]
     host: Host = Host.load_host(host_name)
     _require_host_etag(host)
-    host.edit(host.attributes, nodes, pprint_value=active_config.wato_pprint_config)
+    host.edit(
+        host.attributes,
+        nodes,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
 
     return serve_json(
         constructors.object_sub_property(
@@ -577,11 +582,18 @@ def update_host(params: Mapping[str, Any]) -> Response:
     if new_attributes := body.get("attributes"):
         new_attributes["meta_data"] = host.attributes.get("meta_data", {})
         host.edit(
-            new_attributes, host.cluster_nodes(), pprint_value=active_config.wato_pprint_config
+            new_attributes,
+            host.cluster_nodes(),
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
 
     if update_attributes := body.get("update_attributes"):
-        host.update_attributes(update_attributes, pprint_value=active_config.wato_pprint_config)
+        host.update_attributes(
+            update_attributes,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
 
     if remove_attributes := body.get("remove_attributes"):
         faulty_attributes = []
@@ -590,7 +602,9 @@ def update_host(params: Mapping[str, Any]) -> Response:
                 faulty_attributes.append(attribute)
 
         host.clean_attributes(
-            remove_attributes, pprint_value=active_config.wato_pprint_config
+            remove_attributes,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )  # silently ignores missing attributes
 
         if faulty_attributes:
@@ -677,7 +691,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         if pending_changes:
             folder.save_hosts(pprint_value=active_config.wato_pprint_config)
             for host, diff, affected_sites in pending_changes:
-                host.add_edit_host_change(diff, affected_sites)
+                host.add_edit_host_change(diff, affected_sites, use_git=active_config.wato_use_git)
 
     return _bulk_host_action_response(failed_hosts, succeeded_hosts)
 

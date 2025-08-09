@@ -3491,7 +3491,9 @@ class Host:
 
         return diff, affected_sites
 
-    def add_edit_host_change(self, diff: str, affected_sites: list[SiteId]) -> None:
+    def add_edit_host_change(
+        self, diff: str, affected_sites: list[SiteId], *, use_git: bool
+    ) -> None:
         add_change(
             action_name="edit-host",
             text=_l("Modified host %s.") % self.name(),
@@ -3501,7 +3503,7 @@ class Host:
             diff_text=diff,
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([self.name()]),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def edit(
@@ -3510,21 +3512,25 @@ class Host:
         cluster_nodes: Sequence[HostName] | None,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         diff, affected_sites = self.apply_edit(attributes, cluster_nodes)
         self.folder().save_hosts(pprint_value=pprint_value)
-        self.add_edit_host_change(diff, affected_sites)
+        self.add_edit_host_change(diff, affected_sites, use_git=use_git)
 
-    def update_attributes(self, changed_attributes: HostAttributes, *, pprint_value: bool) -> None:
+    def update_attributes(
+        self, changed_attributes: HostAttributes, *, pprint_value: bool, use_git: bool
+    ) -> None:
         new_attributes = self.attributes.copy()
         new_attributes.update(changed_attributes)
-        self.edit(new_attributes, self._cluster_nodes, pprint_value=pprint_value)
+        self.edit(new_attributes, self._cluster_nodes, pprint_value=pprint_value, use_git=use_git)
 
     def clean_attributes(
         self,
         attrnames_to_clean: Sequence[str],
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         # 1. Check preconditions
         if "contactgroups" in attrnames_to_clean:
@@ -3552,7 +3558,7 @@ class Host:
             diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([self.name()]),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def _need_folder_write_permissions(self) -> None:

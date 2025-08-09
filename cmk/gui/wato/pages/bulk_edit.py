@@ -98,7 +98,11 @@ class ModeBulkEdit(WatoMode):
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
             host = self._folder.load_host(host_name)
-            host.update_attributes(changed_attributes, pprint_value=config.wato_pprint_config)
+            host.update_attributes(
+                changed_attributes,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
+            )
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
@@ -223,7 +227,9 @@ class ModeBulkCleanup(WatoMode):
             host.permissions.need_permission("write")
 
         for host in hosts:
-            host.clean_attributes(to_clean, pprint_value=config.wato_pprint_config)
+            host.clean_attributes(
+                to_clean, pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
+            )
 
         return redirect(self._folder.url())
 

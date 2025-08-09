@@ -36,7 +36,9 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
             if locked_by := _update_locked_by(old_site_id, new_site_id, host.locked_by()):
                 logger.debug("Host %s: Update dynamic site configuration", host.name())
                 host.update_attributes(
-                    {"locked_by": locked_by}, pprint_value=active_config.wato_pprint_config
+                    {"locked_by": locked_by},
+                    pprint_value=active_config.wato_pprint_config,
+                    use_git=active_config.wato_use_git,
                 )
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no

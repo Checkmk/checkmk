@@ -80,6 +80,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
             site_configs=active_config.sites,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
+            use_git=active_config.wato_use_git,
         )
     ).is_error():
         raise result.error

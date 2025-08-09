@@ -1842,7 +1842,6 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
                 # files around. The real FOLDER_PATH will be added dynamically while
                 # loading the file in cmk.base.config
                 "".join(content).replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH"),
-                add_header=not active_config.wato_use_git,
             )
         finally:
             if may_use_redis():

@@ -755,11 +755,18 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 use_git=config.wato_use_git,
             )
 
-        self._save(entries, pprint_value=config.wato_pprint_config, debug=config.debug)
+        self._save(
+            entries,
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+        )
 
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
-    def _save(self, entries: dict[str, _T], *, pprint_value: bool, debug: bool) -> None:
+    def _save(
+        self, entries: dict[str, _T], *, pprint_value: bool, debug: bool, use_git: bool
+    ) -> None:
         self._store.save(entries, pprint_value=pprint_value)
 
     def page(self, config: Config, form_name: str = "edit") -> None:

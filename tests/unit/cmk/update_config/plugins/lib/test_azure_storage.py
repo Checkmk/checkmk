@@ -32,7 +32,7 @@ def test_migrate_empty() -> None:
         migration = AzureStorageMigration(logger, all_rulesets)
         old_ruleset = all_rulesets.get(migration.old_ruleset_name)
         for rule in old_ruleset.rules:
-            old_ruleset.delete_rule(rule)
+            old_ruleset.delete_rule(rule, create_change=True, use_git=False)
 
         _migrate_and_assert(migration)
 
@@ -76,7 +76,7 @@ def test_migrate(
         migration = AzureStorageMigration(logger, all_rulesets)
         old_ruleset = all_rulesets.get(migration.old_ruleset_name)
         for rule in old_ruleset.rules:
-            old_ruleset.delete_rule(rule)
+            old_ruleset.delete_rule(rule, create_change=True, use_git=False)
 
         folder = Folder.load(tree=FolderTree(), name="Main", parent_folder=None)
         old_rule = Rule.from_ruleset_defaults(folder, old_ruleset)

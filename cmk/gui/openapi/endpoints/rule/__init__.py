@@ -231,7 +231,7 @@ def create_rule(param):
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
-    ruleset.add_new_rule_change(index, folder, rule)
+    ruleset.add_new_rule_change(index, folder, rule, use_git=active_config.wato_use_git)
     rule_entry = _get_rule_by_id(rule.id)
     return serve_json(_serialize_rule(rule_entry))
 
@@ -351,7 +351,7 @@ def delete_rule(param):
                         title="Rule is managed by Quick setup",
                         detail="Rules managed by Quick setup cannot be deleted.",
                     )
-                ruleset.delete_rule(rule)
+                ruleset.delete_rule(rule, create_change=True, use_git=active_config.wato_use_git)
                 all_rulesets.save(
                     pprint_value=active_config.wato_pprint_config, debug=active_config.debug
                 )
@@ -417,7 +417,7 @@ def edit_rule(param):
             detail="Conditions cannot be modified for rules managed by Quick setup.",
         )
 
-    ruleset.edit_rule(current_rule, new_rule)
+    ruleset.edit_rule(current_rule, new_rule, use_git=active_config.wato_use_git)
     rulesets.save_folder(
         folder, pprint_value=active_config.wato_pprint_config, debug=active_config.debug
     )

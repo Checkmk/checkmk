@@ -215,6 +215,7 @@ class ModeTags(ABCTagMode):
                 OperationRemoveTagGroup(del_id),
                 pprint_value=pprint_value,
                 debug=debug,
+                use_git=use_git,
             )
             if message is False:
                 return FinalizeRequest(code=200)
@@ -284,6 +285,7 @@ class ModeTags(ABCTagMode):
             OperationRemoveAuxTag(TagGroupID(del_id)),
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
         if message is False:
             return FinalizeRequest(code=200)
@@ -573,15 +575,24 @@ class ModeTagUsage(ABCTagMode):
         return _("Tag usage")
 
     def page(self, config: Config) -> None:
-        self._show_tag_list(pprint_value=config.wato_pprint_config, debug=config.debug)
-        self._show_aux_tag_list(pprint_value=config.wato_pprint_config, debug=config.debug)
+        self._show_tag_list(
+            pprint_value=config.wato_pprint_config, debug=config.debug, use_git=config.wato_use_git
+        )
+        self._show_aux_tag_list(
+            pprint_value=config.wato_pprint_config, debug=config.debug, use_git=config.wato_use_git
+        )
 
-    def _show_tag_list(self, *, pprint_value: bool, debug: bool) -> None:
+    def _show_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         with table_element("tag_usage", _("Tags")) as table:
             for tag_group in self._effective_config.tag_groups:
                 for tag in tag_group.tags:
                     self._show_tag_row(
-                        table, tag_group, tag, pprint_value=pprint_value, debug=debug
+                        table,
+                        tag_group,
+                        tag,
+                        pprint_value=pprint_value,
+                        debug=debug,
+                        use_git=use_git,
                     )
 
     def _show_tag_row(
@@ -592,6 +603,7 @@ class ModeTagUsage(ABCTagMode):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         table.row()
 
@@ -612,6 +624,7 @@ class ModeTagUsage(ABCTagMode):
             TagCleanupMode.CHECK,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -640,13 +653,21 @@ class ModeTagUsage(ABCTagMode):
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
-    def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool) -> None:
+    def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
-                self._show_aux_tag_row(table, aux_tag, pprint_value=pprint_value, debug=debug)
+                self._show_aux_tag_row(
+                    table, aux_tag, pprint_value=pprint_value, debug=debug, use_git=use_git
+                )
 
     def _show_aux_tag_row(
-        self, table: Table, aux_tag: cmk.utils.tags.AuxTag, *, pprint_value: bool, debug: bool
+        self,
+        table: Table,
+        aux_tag: cmk.utils.tags.AuxTag,
+        *,
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         table.row()
 
@@ -666,6 +687,7 @@ class ModeTagUsage(ABCTagMode):
             TagCleanupMode.CHECK,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -862,7 +884,11 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(
-            self.breadcrumb(), operation, pprint_value=config.wato_pprint_config, debug=config.debug
+            self.breadcrumb(),
+            operation,
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
         )
         if message is False:
             return FinalizeRequest(code=200)
@@ -971,6 +997,7 @@ def _rename_tags_after_confirmation(
     *,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> bool | str:
     """Handle renaming and deletion of tags
 
@@ -997,6 +1024,7 @@ def _rename_tags_after_confirmation(
             mode,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
         return _("Modified folders: %d, modified hosts: %d, modified rule sets: %d") % (
@@ -1011,6 +1039,7 @@ def _rename_tags_after_confirmation(
         TagCleanupMode.CHECK,
         pprint_value=pprint_value,
         debug=debug,
+        use_git=use_git,
     )
 
     if affected_folders:

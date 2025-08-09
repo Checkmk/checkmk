@@ -19,7 +19,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class UpdateRulesets(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        all_rulesets = load_and_transform(logger)
+        all_rulesets = load_and_transform(logger, use_git=active_config.wato_use_git)
         validate_rule_values(logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 

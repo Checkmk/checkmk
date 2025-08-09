@@ -249,7 +249,11 @@ def _validate_and_prepare_create_calls(
     if entities.rules:
         create_functions.append(
             _prepare_create_rules(
-                bundle_ident, entities.rules, pprint_value=pprint_value, debug=debug
+                bundle_ident,
+                entities.rules,
+                pprint_value=pprint_value,
+                debug=debug,
+                use_git=use_git,
             )
         )
     if entities.dcd_connections:
@@ -388,7 +392,7 @@ def delete_config_bundle_objects(
 ) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
-        _delete_rules(references.rules, pprint_value=pprint_value, debug=debug)
+        _delete_rules(references.rules, pprint_value=pprint_value, debug=debug, use_git=use_git)
     if references.hosts:
         _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug)
     if references.passwords:
@@ -579,7 +583,12 @@ def _collect_rules(
 
 
 def _prepare_create_rules(
-    bundle_ident: GlobalIdent, rules: Iterable[CreateRule], *, pprint_value: bool, debug: bool
+    bundle_ident: GlobalIdent,
+    rules: Iterable[CreateRule],
+    *,
+    pprint_value: bool,
+    debug: bool,
+    use_git: bool,
 ) -> CreateFunction:
     validated_data = []
     # sort by folder, then ruleset
@@ -608,14 +617,14 @@ def _prepare_create_rules(
         for f, rulesets, new_rules in validated_data:
             for rule in new_rules:
                 index = rule.ruleset.append_rule(f, rule)
-                rule.ruleset.add_new_rule_change(index, f, rule)
+                rule.ruleset.add_new_rule_change(index, f, rule, use_git=use_git)
 
             rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     return create
 
 
-def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool) -> None:
+def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool, use_git: bool) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
     for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
@@ -624,7 +633,9 @@ def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool) -> 
             # the rule objects loaded into `rulesets` are different instances
             ruleset = rulesets.get(rule.ruleset.name)
             actual_rule = ruleset.get_rule_by_id(rule.id)
-            rulesets.get(rule.ruleset.name).delete_rule(actual_rule)
+            rulesets.get(rule.ruleset.name).delete_rule(
+                actual_rule, create_change=True, use_git=use_git
+            )
 
         rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 

@@ -210,5 +210,7 @@ def test_transform_remove_null_host_tag_conditions_from_rulesets(
     expected_keys_after = {"a", "b", "c", "d"}
 
     assert ruleset.get_rules()[0][2].get_rule_conditions().host_tags.keys() == expected_keys_before
-    rulesets_updater.transform_remove_null_host_tag_conditions_from_rulesets(getLogger(), rulesets)
+    rulesets_updater.transform_remove_null_host_tag_conditions_from_rulesets(
+        getLogger(), rulesets, raise_errors=False, use_git=False
+    )
     assert ruleset.get_rules()[0][2].get_rule_conditions().host_tags.keys() == expected_keys_after

@@ -188,6 +188,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
             allow_repair=body["repair"],
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
+            use_git=active_config.wato_use_git,
         )
     except RepairError:
         return problem(
@@ -234,6 +235,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
         TagCleanupMode.CHECK,
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
+        use_git=active_config.wato_use_git,
     )
     if any(affected):
         mode = TagCleanupMode(params["mode"] or ("delete" if params["repair"] else "abort"))
@@ -267,6 +269,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
             mode,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
+            use_git=active_config.wato_use_git,
         )
 
     tag_config = load_tag_config()

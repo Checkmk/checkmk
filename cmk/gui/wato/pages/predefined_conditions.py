@@ -282,7 +282,12 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         ]
 
     def _save(
-        self, entries: dict[str, PredefinedConditionSpec], *, pprint_value: bool, debug: bool
+        self,
+        entries: dict[str, PredefinedConditionSpec],
+        *,
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
@@ -290,7 +295,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super()._save(entries, pprint_value=pprint_value, debug=debug)
+        super()._save(entries, pprint_value=pprint_value, debug=debug, use_git=use_git)
 
         assert self._ident is not None
         conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])
@@ -298,13 +303,19 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         # Update rules of source folder in case the folder was changed
         if old_path is not None and old_path != conditions.host_folder:
             self._move_rules_for_conditions(
-                conditions, old_path, pprint_value=pprint_value, debug=debug
+                conditions, old_path, pprint_value=pprint_value, debug=debug, use_git=use_git
             )
 
         self._rewrite_rules_for(conditions, pprint_value=pprint_value, debug=debug)
 
     def _move_rules_for_conditions(
-        self, conditions: RuleConditions, old_path: str, *, pprint_value: bool, debug: bool
+        self,
+        conditions: RuleConditions,
+        old_path: str,
+        *,
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         """Apply changed folder of predefined condition to rules"""
         tree = folder_tree()
@@ -317,7 +328,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         for old_ruleset in old_rulesets.get_rulesets().values():
             for rule in old_ruleset.get_folder_rules(old_folder):
                 if rule.predefined_condition_id() == self._ident:
-                    old_ruleset.delete_rule(rule)
+                    old_ruleset.delete_rule(rule, create_change=True, use_git=use_git)
 
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)

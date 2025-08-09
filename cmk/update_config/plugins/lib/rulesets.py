@@ -57,7 +57,7 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 }
 
 
-def load_and_transform(logger: Logger) -> AllRulesets:
+def load_and_transform(logger: Logger, *, use_git: bool) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets()
 
     if "http" not in config.use_new_descriptions_for:
@@ -87,6 +87,7 @@ def load_and_transform(logger: Logger) -> AllRulesets:
         logger,
         all_rulesets,
         raise_errors=debug.enabled(),
+        use_git=use_git,
     )
     return all_rulesets
 
@@ -254,7 +255,9 @@ def _filter_out_null_host_tags(
 def transform_remove_null_host_tag_conditions_from_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
-    raise_errors: bool = False,
+    *,
+    raise_errors: bool,
+    use_git: bool,
 ) -> Collection[RulesetName]:
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
@@ -279,7 +282,7 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
                 new_rule = old_rule.clone(preserve_id=True)
                 new_rule.update_conditions(new_rule_conditions)
 
-                ruleset.edit_rule(old_rule, new_rule)
+                ruleset.edit_rule(old_rule, new_rule, use_git=use_git)
                 migrated_rulesets.add(ruleset.name)
             except Exception as e:
                 if raise_errors:

@@ -22,7 +22,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.htmllib.html import html
@@ -737,7 +736,7 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def clone_rule(self, orig_rule: Rule, rule: Rule) -> None:
+    def clone_rule(self, orig_rule: Rule, rule: Rule, *, use_git: bool) -> None:
         if rule.folder == orig_rule.folder:
             self.insert_rule_after(rule, orig_rule)
         else:
@@ -751,7 +750,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def move_to_folder(
@@ -786,7 +785,7 @@ class Ruleset:
         self._on_change()
         return index
 
-    def add_new_rule_change(self, index: int, folder: Folder, rule: Rule) -> None:
+    def add_new_rule_change(self, index: int, folder: Folder, rule: Rule, *, use_git: bool) -> None:
         add_change(
             action_name="new-rule",
             text=_('Created new rule #%d in ruleset "%s" in folder "%s"')
@@ -795,7 +794,7 @@ class Ruleset:
             sites=folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
@@ -969,7 +968,7 @@ class Ruleset:
             return make_diff_text({}, new.to_log())
         return old.diff_to(new)
 
-    def edit_rule(self, orig_rule: Rule, rule: Rule) -> None:
+    def edit_rule(self, orig_rule: Rule, rule: Rule, *, use_git: bool) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
 
@@ -983,11 +982,11 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
             object_ref=rule.object_ref(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         self._on_change()
 
-    def delete_rule(self, rule: Rule, create_change: bool = True) -> None:
+    def delete_rule(self, rule: Rule, *, create_change: bool, use_git: bool) -> None:
         folder_rules = self._rules[rule.folder.path()]
         index = folder_rules.index(rule)
 
@@ -1002,11 +1001,11 @@ class Ruleset:
                 user_id=user.id,
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
         self._on_change()
 
-    def move_rule_to(self, rule: Rule, index: int) -> int:
+    def move_rule_to(self, rule: Rule, *, index: int, use_git: bool) -> int:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         index = self.get_index_for_move(rule.folder, rule, index)
@@ -1022,7 +1021,7 @@ class Ruleset:
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         return index
 
@@ -1589,6 +1588,7 @@ class EnabledDisabledServicesEditor:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         self._save_service_enable_disable_rules(
             to_enable,
@@ -1596,6 +1596,7 @@ class EnabledDisabledServicesEditor:
             automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
         self._save_service_enable_disable_rules(
             to_disable,
@@ -1603,6 +1604,7 @@ class EnabledDisabledServicesEditor:
             automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
     def _save_service_enable_disable_rules(
@@ -1613,6 +1615,7 @@ class EnabledDisabledServicesEditor:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         """
         Load all disabled services rules from the folder, then check whether or not there is a
@@ -1638,7 +1641,7 @@ class EnabledDisabledServicesEditor:
 
         service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._remove_from_rule_of_host(
-            ruleset, service_patterns, value=not value
+            ruleset, service_patterns, value=not value, use_git=use_git
         )
 
         # Check whether or not the service still needs a host specific setting after removing
@@ -1672,6 +1675,8 @@ class EnabledDisabledServicesEditor:
         ruleset: Ruleset,
         service_patterns: Sequence[HostOrServiceConditionRegex],
         value: Any,
+        *,
+        use_git: bool,
     ) -> list[Folder]:
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule and isinstance(other_rule.conditions.service_description, list):
@@ -1680,7 +1685,7 @@ class EnabledDisabledServicesEditor:
                     other_rule.conditions.service_description.remove(service_condition)
 
             if not other_rule.conditions.service_description:
-                ruleset.delete_rule(other_rule)
+                ruleset.delete_rule(other_rule, create_change=True, use_git=use_git)
 
             return [other_rule.folder]
 

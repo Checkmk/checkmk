@@ -1157,10 +1157,12 @@ class ModeEditRuleset(WatoMode):
         if action == "delete":
             if is_locked_by_quick_setup(rule.locked_by):
                 raise MKUserError(None, _("Cannot delete rules that are managed by quick setup."))
-            ruleset.delete_rule(rule)
+            ruleset.delete_rule(rule, create_change=True, use_git=config.wato_use_git)
         elif action == "move_to":
             target_idx = request.get_integer_input_mandatory("_index")
-            if target_idx != ruleset.move_rule_to(rule, target_idx):
+            if target_idx != ruleset.move_rule_to(
+                rule, index=target_idx, use_git=config.wato_use_git
+            ):
                 flash(
                     _(
                         "This rule cannot be moved above rules that "
@@ -2152,7 +2154,11 @@ class ABCEditRuleMode(WatoMode):
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
-            self._save_rule(pprint_value=config.wato_pprint_config, debug=config.debug)
+            self._save_rule(
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+                use_git=config.wato_use_git,
+            )
 
         elif is_locked_by_quick_setup(self._rule.locked_by):
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
@@ -2161,7 +2167,9 @@ class ABCEditRuleMode(WatoMode):
         else:
             # Move rule to new folder during editing
             self._remove_from_orig_folder(
-                pprint_value=config.wato_pprint_config, debug=config.debug
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+                use_git=config.wato_use_git,
             )
 
             # Set new folder
@@ -2257,10 +2265,10 @@ class ABCEditRuleMode(WatoMode):
         return RuleConditions(**store_entries[condition_id]["conditions"])
 
     @abc.abstractmethod
-    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None: ...
+    def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...
 
-    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool) -> None:
-        self._ruleset.delete_rule(self._orig_rule, create_change=False)
+    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
+        self._ruleset.delete_rule(self._orig_rule, create_change=False, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     def _success_message(self) -> str:
@@ -3164,9 +3172,9 @@ class ModeEditRule(ABCEditRuleMode):
         request.set_var(cls.VAR_RULE_ID, rule_id)
         request.set_var(cls.VAR_RULE_SPEC_NAME, rule_spec_name)
 
-    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         # Just editing without moving to other folder
-        self._ruleset.edit_rule(self._orig_rule, self._rule)
+        self._ruleset.edit_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
 
@@ -3182,11 +3190,11 @@ class ModeCloneRule(ABCEditRuleMode):
         super()._set_rule()
         self._rule = self._orig_rule.clone(preserve_id=False)
 
-    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
-        self._ruleset.clone_rule(self._orig_rule, self._rule)
+    def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
+        self._ruleset.clone_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
-    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool) -> None:
+    def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
 
     def _page_form_quick_setup_warning(self) -> None:
@@ -3268,10 +3276,10 @@ class ModeNewRule(ABCEditRuleMode):
             )
         )
 
-    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
-        self._ruleset.add_new_rule_change(index, self._folder, self._rule)
+        self._ruleset.add_new_rule_change(index, self._folder, self._rule, use_git=use_git)
 
     def _success_message(self) -> str:
         return _('Created new rule in ruleset "%s" in folder "%s"') % (
@@ -3288,7 +3296,7 @@ class ModeExportRule(ABCEditRuleMode):
     def title(self) -> str:
         return _("Rule representation: %s") % self._rulespec.title
 
-    def _save_rule(self, *, pprint_value: bool, debug: bool) -> None:
+    def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass
 
     def page(self, config: Config) -> None:
@@ -3611,10 +3619,12 @@ class ModeUnknownRulesets(WatoMode):
                             table, unknown_ruleset_name, rule_nr, folder_path, rulespec
                         )
 
-    def _delete_cp_rule(self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule) -> None:
+    def _delete_cp_rule(
+        self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule, *, use_git: bool
+    ) -> None:
         if is_locked_by_quick_setup(rule.locked_by):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
-        ruleset.delete_rule(rule)
+        ruleset.delete_rule(rule, create_change=True, use_git=use_git)
 
     def _bulk_delete_selected_rules(
         self,
@@ -3623,6 +3633,7 @@ class ModeUnknownRulesets(WatoMode):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         do_reset = False
@@ -3637,7 +3648,7 @@ class ModeUnknownRulesets(WatoMode):
 
         for folder, rulesets_and_rules in by_folder.items():
             for ruleset, rule in rulesets_and_rules:
-                self._delete_cp_rule(rulesets, ruleset, rule)
+                self._delete_cp_rule(rulesets, ruleset, rule, use_git=use_git)
             rulesets.save_folder(folder, pprint_value=pprint_value, debug=debug)
 
         do_save = False
@@ -3656,7 +3667,12 @@ class ModeUnknownRulesets(WatoMode):
         return redirect(self.mode_url())
 
     def _delete_selected_cp_rule(
-        self, selected_ruleset_name: str, selected_rule_id: str, pprint_value: bool, debug: bool
+        self,
+        selected_ruleset_name: str,
+        selected_rule_id: str,
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         if not (ruleset := rulesets.get_rulesets().get(selected_ruleset_name)):
@@ -3665,7 +3681,7 @@ class ModeUnknownRulesets(WatoMode):
         for rules in ruleset.rules.values():
             for rule in rules:
                 if rule.id == selected_rule_id:
-                    self._delete_cp_rule(rulesets, ruleset, rule)
+                    self._delete_cp_rule(rulesets, ruleset, rule, use_git=use_git)
                     rulesets.save_folder(
                         rule.folder,
                         pprint_value=pprint_value,
@@ -3708,6 +3724,7 @@ class ModeUnknownRulesets(WatoMode):
                 d_rule_ids,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
+                use_git=config.wato_use_git,
             )
 
         if (d_ruleset_name := request.var("_delete_cp_ruleset_name")) and (
@@ -3718,6 +3735,7 @@ class ModeUnknownRulesets(WatoMode):
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
+                use_git=config.wato_use_git,
             )
 
         if (d_ruleset_name := request.var("_delete_ruleset_name")) and (

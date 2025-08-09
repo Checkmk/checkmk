@@ -692,7 +692,7 @@ def test_ruleset_ordering_move_to(
 ) -> None:
     ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
     ruleset.append_rule(folder, rule)
-    ruleset.move_rule_to(rule, 0)
+    ruleset.move_rule_to(rule, index=0, use_git=False)
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
 

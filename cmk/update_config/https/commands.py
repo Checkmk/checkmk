@@ -153,12 +153,14 @@ def finalize_main(search: SearchArgs) -> None:
                     rule_v2.rule_options, comment=comment
                 )
                 _strip_postfix(new_rule_v2.value)
-                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                ruleset_v2.edit_rule(rule_v2, new_rule_v2, use_git=active_config.wato_use_git)
                 rulecount_v2 += 1
                 if rule_v1 is not None:
                     rulecount_v1 += 1
                     sys.stdout.write(f"Deleted v1 counter-part #{rule_v1.index()}.\n")
-                    ruleset_v1.delete_rule(rule_v1)
+                    ruleset_v1.delete_rule(
+                        rule_v1, create_change=True, use_git=active_config.wato_use_git
+                    )
                 sys.stdout.write(f"Finalized v2 rule #{rule_index}.\n")
         print_summary_finalize(rulecount_v1, rulecount_v2)
         if rulecount_v1 or rulecount_v2:
@@ -178,7 +180,9 @@ def delete_main(search: SearchArgs) -> None:
                 sys.stdout.write(f"{rule_str}\n")
                 sys.stdout.write("Deleting rule.\n")
                 count += 1
-                ruleset_v2.delete_rule(rule_v2)
+                ruleset_v2.delete_rule(
+                    rule_v2, create_change=True, use_git=active_config.wato_use_git
+                )
         print_summary_delete(count)
         if count:
             sys.stdout.write("Saving rule sets...\n")
@@ -202,7 +206,7 @@ def activate_main(search: SearchArgs) -> None:
                     new_rule_v2.rule_options = dataclasses.replace(
                         rule_v2.rule_options, disabled=False
                     )
-                    ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                    ruleset_v2.edit_rule(rule_v2, new_rule_v2, use_git=active_config.wato_use_git)
                 else:
                     sys.stdout.write("Already active.\n")
         print_summary_activated(count)
@@ -228,7 +232,7 @@ def deactivate_main(search: SearchArgs) -> None:
                     new_rule_v2.rule_options = dataclasses.replace(
                         rule_v2.rule_options, disabled=True
                     )
-                    ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                    ruleset_v2.edit_rule(rule_v2, new_rule_v2, use_git=active_config.wato_use_git)
                 else:
                     sys.stdout.write("Already deactivated.\n")
         print_summary_deactivated(count)

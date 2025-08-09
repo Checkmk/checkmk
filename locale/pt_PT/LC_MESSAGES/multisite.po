@@ -43642,10 +43642,6 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: find hosts <b>not</b> tendo este pacote"
 
-#, fuzzy
-msgid "Negative age tolerance"
-msgstr "Um valor vazio não é permitido aqui."
-
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Combinação negativa (Excluir hospedeiros correspondentes do conjunto)"
 
@@ -66702,11 +66698,6 @@ msgid ""
 msgstr ""
 "O ficheiro %s tem de ser criado e mantido manualmente.<br>As entradas de "
 "configuração fornecidas com esta regra serão ignoradas."
-
-msgid ""
-"The file age of files with creation time from the future will be set to 0 if "
-"the creation time is within the tolerance period."
-msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "O ficheiro não contém texto XML"
@@ -90252,6 +90243,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Negative age tolerance"
+#~ msgstr "Um valor vazio não é permitido aqui."
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

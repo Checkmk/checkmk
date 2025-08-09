@@ -43655,10 +43655,6 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negeren: zoek hosts <b>die dit pakket niet</b> hebben"
 
-#, fuzzy
-msgid "Negative age tolerance"
-msgstr "Een lege waarde is hier niet toegestaan."
-
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Negatieve overeenkomst (sluit overeenkomende hosts uit van de set)"
 
@@ -66726,11 +66722,6 @@ msgid ""
 msgstr ""
 "Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij deze "
 "regel verstrekte configuratie-items worden genegeerd."
-
-msgid ""
-"The file age of files with creation time from the future will be set to 0 if "
-"the creation time is within the tolerance period."
-msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Het bestand bevat geen XML-tekst"
@@ -90361,6 +90352,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Negative age tolerance"
+#~ msgstr "Een lege waarde is hier niet toegestaan."
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

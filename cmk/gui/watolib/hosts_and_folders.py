@@ -2678,7 +2678,9 @@ class Folder(FolderProtocol):
         folder_path = target_folder.path()
         folder_lookup_cache().add_hosts([(x, folder_path) for x in host_names])
 
-    def rename_host(self, oldname: HostName, newname: HostName, *, pprint_value: bool) -> None:
+    def rename_host(
+        self, oldname: HostName, newname: HostName, *, pprint_value: bool, use_git: bool
+    ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -2693,7 +2695,7 @@ class Folder(FolderProtocol):
             )
 
         # 2. Actual modification
-        host.rename(newname)
+        host.rename(newname, use_git=use_git)
         assert self._hosts is not None
         del self._hosts[oldname]
         self._hosts[newname] = host
@@ -2703,7 +2705,9 @@ class Folder(FolderProtocol):
 
         self.save_hosts(pprint_value=pprint_value)
 
-    def rename_parent(self, oldname, newname, *, pprint_value):
+    def rename_parent(
+        self, oldname: HostName, newname: HostName, *, pprint_value: bool, use_git: bool
+    ) -> bool:
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
         new_parents = [str(p) for p in self.attributes["parents"]]
@@ -2719,7 +2723,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         self.save(pprint_value=pprint_value)
         return True
@@ -3593,7 +3597,7 @@ class Host:
             self.folder().save_hosts(pprint_value=pprint_value)
 
     def rename_cluster_node(
-        self, oldname: HostName, newname: HostName, *, pprint_value: bool
+        self, oldname: HostName, newname: HostName, *, pprint_value: bool, use_git: bool
     ) -> bool:
         # We must not check permissions here. Permissions
         # on the renamed host must be sufficient. If we would
@@ -3613,12 +3617,14 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
         return True
 
-    def rename_parent(self, oldname: HostName, newname: HostName, *, pprint_value: bool) -> bool:
+    def rename_parent(
+        self, oldname: HostName, newname: HostName, *, pprint_value: bool, use_git: bool
+    ) -> bool:
         # Same is with rename_cluster_node()
         new_parents = [str(e) for e in self.attributes["parents"]]
         changed = rename_host_in_list(new_parents, oldname, newname)
@@ -3632,12 +3638,12 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
         return True
 
-    def rename(self, new_name: HostName) -> None:
+    def rename(self, new_name: HostName, *, use_git: bool) -> None:
         add_change(
             action_name="rename-host",
             text=_l("Renamed host from %s into %s.") % (self.name(), new_name),
@@ -3645,7 +3651,7 @@ class Host:
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         self._name = new_name
 

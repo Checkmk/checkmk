@@ -1636,9 +1636,7 @@ class EnabledDisabledServicesEditor:
 
         modified_folders = []
 
-        service_patterns: HostOrServiceConditions = [
-            service_description_to_condition(s) for s in services
-        ]
+        service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._remove_from_rule_of_host(
             ruleset, service_patterns, value=not value
         )
@@ -1669,7 +1667,12 @@ class EnabledDisabledServicesEditor:
         for folder in modified_folders:
             rulesets.save_folder(folder, pprint_value=pprint_value, debug=debug)
 
-    def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
+    def _remove_from_rule_of_host(
+        self,
+        ruleset: Ruleset,
+        service_patterns: Sequence[HostOrServiceConditionRegex],
+        value: Any,
+    ) -> list[Folder]:
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule and isinstance(other_rule.conditions.service_description, list):
             for service_condition in service_patterns:
@@ -1684,14 +1687,17 @@ class EnabledDisabledServicesEditor:
         return []
 
     def _update_rule_of_host(
-        self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
+        self, ruleset: Ruleset, service_patterns: Sequence[HostOrServiceConditionRegex], value: Any
     ) -> list[Folder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
-        if rule:
+        if rule and isinstance(rule.conditions.service_description, list):
+            rule_service_conditions = cast(
+                list[HostOrServiceConditionRegex], rule.conditions.service_description
+            )
             for service_condition in service_patterns:
-                if service_condition not in rule.conditions.service_description:
+                if service_condition not in rule_service_conditions:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
@@ -1699,7 +1705,8 @@ class EnabledDisabledServicesEditor:
             conditions = RuleConditions(
                 folder.path(),
                 host_name=[self._host.name()],
-                service_description=sorted(service_patterns, key=lambda x: x["$regex"]),
+                # Mypy seems to get the type wrong. Didn't investigate a lot
+                service_description=sorted(service_patterns, key=lambda x: x["$regex"]),  # type: ignore[index]
             )
             rule.update_conditions(conditions)
 
@@ -1710,7 +1717,7 @@ class EnabledDisabledServicesEditor:
             return [rule.folder]
         return []
 
-    def _get_rule_of_host(self, ruleset, value):
+    def _get_rule_of_host(self, ruleset: Ruleset, value: Any) -> Rule | None:
         for _folder, _index, rule in ruleset.get_rules():
             if rule.is_disabled():
                 continue

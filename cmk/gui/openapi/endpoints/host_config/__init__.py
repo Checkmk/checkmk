@@ -852,7 +852,10 @@ def move(params: Mapping[str, Any]) -> Response:
         if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host():
             raise MKAuthException
         current_folder.move_hosts(
-            [host_name], target_folder, pprint_value=active_config.wato_pprint_config
+            [host_name],
+            target_folder,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
     except MKAuthException:
         return problem(

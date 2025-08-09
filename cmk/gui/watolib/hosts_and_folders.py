@@ -2630,6 +2630,7 @@ class Folder(FolderProtocol):
         target_folder: Folder,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
@@ -2665,7 +2666,7 @@ class Folder(FolderProtocol):
                 user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=affected_sites,
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
 
         self.save_folder_attributes()  # num_hosts has changed
@@ -3088,12 +3089,15 @@ class SearchFolder(FolderProtocol):
         target_folder: Folder,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         auth_errors = []
         for folder, host_names1 in self._group_hostnames_by_folder(host_names):
             try:
                 # FIXME: this is not transaction safe, might get partially finished...
-                folder.move_hosts(host_names1, target_folder, pprint_value=pprint_value)
+                folder.move_hosts(
+                    host_names1, target_folder, pprint_value=pprint_value, use_git=use_git
+                )
             except MKAuthException as e:
                 auth_errors.append(
                     _("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e)

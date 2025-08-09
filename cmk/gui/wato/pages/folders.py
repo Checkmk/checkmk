@@ -670,6 +670,7 @@ class ModeFolder(WatoMode):
                     [hostname],
                     folder_tree().folder(target_folder_str),
                     pprint_value=config.wato_pprint_config,
+                    use_git=config.wato_use_git,
                 )
                 return redirect(folder_url)
 
@@ -695,7 +696,10 @@ class ModeFolder(WatoMode):
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = folder_tree().folder(target_folder_path)
             self._folder.move_hosts(
-                selected_host_names, target_folder, pprint_value=config.wato_pprint_config
+                selected_host_names,
+                target_folder,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)

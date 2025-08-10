@@ -36,6 +36,7 @@ from cmk.plugins.lib.azure import (
 _MAP_STATES = {
     # Provisioning states
     "succeeded": 0,
+    "updating": 1,
     "failed": 2,
     # Power states listed here:
     # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/tutorial-manage-vm
@@ -48,7 +49,7 @@ _MAP_STATES = {
     "unknown": 3,
 }
 
-_PROVISIONING_STATES = {"succeeded", "failed"}
+_PROVISIONING_STATES = {"succeeded", "updating", "failed"}
 _POWER_STATES = set(_MAP_STATES) - _PROVISIONING_STATES
 
 

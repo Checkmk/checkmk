@@ -349,10 +349,8 @@ def _parameter_valuespec_azure_vms() -> Migrate:
             title=_("Map provisioning and power states"),
             elements=[
                 ("succeeded", MonitoringState(title="Provisioning state succeeded")),
-                (
-                    "failed",
-                    MonitoringState(title="Provisioning state failed", default_value=2),
-                ),
+                ("updating", MonitoringState(title="Provisioning state updating", default_value=1)),
+                ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
                 ("starting", MonitoringState(title="Power state starting")),
                 ("running", MonitoringState(title="Power state running")),
                 (

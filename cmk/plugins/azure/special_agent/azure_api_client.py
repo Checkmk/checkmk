@@ -4,8 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import asyncio
 import logging
+import os
 from collections.abc import Callable, Mapping
+from pathlib import Path
 from typing import Literal, NamedTuple
+
+# workaround - can be removed when CMK-25281 is resolved
+os.environ["SSL_CERT_FILE"] = str(Path(os.getenv("OMD_ROOT", "")) / "var/ssl/ca-certificates.crt")
 
 import aiohttp  # type: ignore[import-not-found]  # type: ignore[import-not-found]
 import msal

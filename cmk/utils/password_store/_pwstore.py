@@ -20,6 +20,7 @@ from cmk.utils.local_secrets import PasswordStoreSecret
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
 
+
 # CMK-16660
 # _PASSWORD_ID_PREFIX = ":uuid:"  # cannot collide with user defined id.
 _PASSWORD_ID_PREFIX = "uuid"
@@ -104,6 +105,26 @@ def _deserialise_passwords(raw: str) -> dict[str, str]:
 
 def ad_hoc_password_id() -> str:
     return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
+
+
+def extract_formspec_password(
+    password: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+    | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]],
+) -> str:
+    match password:
+        case ("cmk_postprocessed", "explicit_password", (password_id, password_value)):
+            # This is a password that was entered in the GUI, so we can return it directly.
+            return password_value
+        case ("cmk_postprocessed", "stored_password", (password_id, str())):
+            if (pw := load(pending_password_store_path()).get(password_id)) is None:
+                raise MKGeneralException(
+                    "Password not found in pending password store. Please check the password store."
+                )
+            return pw
+        case _:
+            raise MKGeneralException(
+                f"Unknown password type {password}. Expected 'cmk_postprocessed'."
+            )
 
 
 def extract(password_id: PasswordId) -> str:

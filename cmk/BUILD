@@ -7,6 +7,7 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 exports_files([
     "requirements.in",
     "utils/password_store/cli.py",
+    "gui/openapi/spec/spec_generator/generate_api_spec.py",
 ])
 
 REQUIRED_EXTERNAL_DEPS = [
@@ -228,7 +229,11 @@ py_library(
     name = "lib_cmk_cre",
     srcs = CRE_PY,
     imports = [".."],
-    visibility = ["//tests:__subpackages__"],
+    visibility = [
+        "//tests:__subpackages__",
+        # for api spec
+        "//omd:__subpackages__",
+    ],
     deps = [
         "lib_cmk",
     ],

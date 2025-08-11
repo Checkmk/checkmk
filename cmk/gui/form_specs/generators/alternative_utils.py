@@ -8,12 +8,6 @@ from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecompose
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, VisitorOptions
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
-CascadingElementSelectionTypes = str | int | None | bool
-CascadingElementUseFormSpec = bool
-CascadingElementValueMapping = dict[
-    str, tuple[CascadingElementSelectionTypes, CascadingElementUseFormSpec]
-]
-
 
 def _get_type_of_object_as_string(value: object) -> str:
     """

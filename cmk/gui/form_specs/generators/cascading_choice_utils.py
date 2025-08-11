@@ -2,45 +2,56 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 CascadingElementSelectionTypes = str | int | None | bool
-CascadingElementUseFormSpec = bool
-CascadingElementValueMapping = dict[
-    str, tuple[CascadingElementSelectionTypes, CascadingElementUseFormSpec]
-]
+
+
+@dataclass
+class CascadingDataConversion:
+    name_in_form_spec: str
+    value_on_disk: CascadingElementSelectionTypes
+    has_form_spec: bool
+
+
+CascadingElementValueMapping = dict[str, CascadingDataConversion]
 
 
 def enable_deprecated_cascading_elements(
-    wrapped_form_spec: CascadingSingleChoice, cascading_value_mapping: CascadingElementValueMapping
+    wrapped_form_spec: CascadingSingleChoice,
+    special_value_mapping: Sequence[CascadingDataConversion],
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
-    reverse_selection_mapping = {v[0]: k for k, v in cascading_value_mapping.items()}
+    mapping = {v.name_in_form_spec: v for v in special_value_mapping}
+    reversed_mapping = {v.value_on_disk: v for v in special_value_mapping}
 
     def to_disk(value: object) -> object:
         assert isinstance(value, tuple) and len(value) == 2
-        element_name, element_value = value
-        wrapped_value, use_form_spec_value = cascading_value_mapping[element_name]
-        if not use_form_spec_value:
-            return wrapped_value
-        return wrapped_value, element_value
+        element_name, form_spec_value = value
+        if (element_mapping := mapping.get(element_name)) is None:
+            return value  # No conversion required
+
+        if not element_mapping.has_form_spec:
+            return element_mapping.value_on_disk
+        return element_mapping.value_on_disk, form_spec_value
 
     def from_disk(value: object) -> tuple[str, Any]:
         assert isinstance(value, str | bool | int | tuple) or value is None
         if isinstance(value, tuple):
-            if isinstance(value[0], str):
-                # This value is already in the new official format
-                first_element = value[0]
-                assert isinstance(first_element, str)
+            first_element = value[0]
+            if isinstance(first_element, str):
+                # This value already uses the only valid format
                 return first_element, value[1]
 
-            form_spec_name = reverse_selection_mapping[value[0]]
-            return form_spec_name, value[1]
+            selected_element = reversed_mapping[first_element].name_in_form_spec
+            return selected_element, value[1]
 
         # A selection without a form spec
-        return reverse_selection_mapping[value], True
+        return reversed_mapping[value].name_in_form_spec, True
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=wrapped_form_spec,

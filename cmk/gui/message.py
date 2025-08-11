@@ -24,6 +24,15 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
+from cmk.gui.form_specs.generators.cascading_choice_utils import (
+    CascadingDataConversion,
+    enable_deprecated_cascading_elements,
+)
+from cmk.gui.form_specs.generators.dict_to_catalog import (
+    create_flat_catalog_from_dictionary,
+)
+from cmk.gui.form_specs.private import LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, parse_data_from_frontend, render_form_spec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -44,17 +53,22 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import (
-    AbsoluteDate,
-    CascadingDropdown,
-    CascadingDropdownChoice,
+from cmk.gui.valuespec import AbsoluteDate
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Message as FSMessage
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
     Dictionary,
-    DictionaryModel,
-    DualListChoice,
-    ListChoice,
-    Optional,
-    TextAreaUnicode,
+    FixedValue,
+    MultilineText,
+    MultipleChoice,
+    MultipleChoiceElement,
+    validators,
 )
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
@@ -252,15 +266,18 @@ def page_message(config: Config) -> None:
     menu = _page_menu(breadcrumb)
     make_header(html, title, breadcrumb, menu)
 
-    vs_message = _vs_message(
+    spec = _message_spec(
         userdb.UserData.from_userspec({"user_id": UserId(uid), **attrs})
         for uid, attrs in config.multisite_users.items()
     )
 
+    flat_catalog = create_flat_catalog_from_dictionary(spec)
+
+    catalog_field_id = "_message_id"
     if transactions.check_transaction():
         try:
-            msg = vs_message.from_html_vars("_message")
-            vs_message.validate_value(msg, "_message")
+            msg = parse_data_from_frontend(flat_catalog, catalog_field_id)
+            assert isinstance(msg, dict)
             _process_message(
                 create_message(
                     text=MessageText(content_type="text", content=msg["text"]),
@@ -274,8 +291,7 @@ def page_message(config: Config) -> None:
             html.user_error(e)
 
     with html.form_context("message", method="POST"):
-        vs_message.render_input_as_form("_message", {})
-
+        render_form_spec(flat_catalog, catalog_field_id, DEFAULT_VALUE, False)
         html.hidden_fields()
     html.footer()
 
@@ -312,68 +328,91 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _vs_message(users: Iterable[userdb.UserData]) -> Dictionary:
-    dest_choices: list[CascadingDropdownChoice] = [
-        ("all_users", _("All users")),
-        (
-            "list",
-            _("A list of specific users"),
-            DualListChoice(
-                choices=sorted(
-                    [(u.user_id, u.alias) for u in users],
-                    key=lambda x: x[1].lower(),
-                ),
-                allow_empty=False,
-            ),
-        ),
-        # TODO: Shall we add "admin" here, too?
-        # ('contactgroup', _('All members of a contact group')),
-        ("online", _("All online users")),
-    ]
-
+def _message_spec(users: Iterable[userdb.UserData]) -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "text",
-                TextAreaUnicode(
-                    title=_("Message"),
-                    help=_("Insert the text to be sent to all reciepents."),
-                    allow_empty=False,
-                    empty_text=_("You need to provide a text."),
-                    cols=50,
-                    rows=10,
+        custom_validate=[partial(_validate_msg, all_users=users)],
+        elements={
+            "text": DictElement(
+                required=True,
+                parameter_form=MultilineText(
+                    title=Title("Message"),
+                    help_text=Help("Insert the text to be sent to all reciepents."),
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=FSMessage("You need to provide a text.")
+                        )
+                    ],
                 ),
             ),
-            (
-                "dest",
-                CascadingDropdown(
-                    title=_("Send message to"),
-                    help=_(
-                        "You can send the message to a list of multiple users, which "
-                        "can be chosen out of these predefined filters."
+            "dest": DictElement(
+                required=True,
+                parameter_form=enable_deprecated_cascading_elements(
+                    CascadingSingleChoice(
+                        title=Title("Send message to"),
+                        help_text=Help(
+                            "You can send the message to a list of multiple users, which "
+                            "can be chosen out of these predefined filters."
+                        ),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="all_users",
+                                title=Title("All users"),
+                                parameter_form=FixedValue(value=True, label=Label("")),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="list",
+                                title=Title("A list of specific users"),
+                                parameter_form=MultipleChoice(
+                                    elements=[
+                                        MultipleChoiceElement(name=key, title=Title(value))  # pylint: disable=localization-of-non-literal-string
+                                        for key, value in sorted(
+                                            [(u.user_id, u.alias) for u in users],
+                                            key=lambda x: x[1].lower(),
+                                        )
+                                    ],
+                                    custom_validate=[validators.LengthInRange(min_value=1)],
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="online",
+                                title=Title("All online users"),
+                                parameter_form=FixedValue(value=True, label=Label("")),
+                            ),
+                        ],
                     ),
-                    choices=dest_choices,
+                    [
+                        CascadingDataConversion(
+                            name_in_form_spec="all_users",
+                            value_on_disk="all_users",
+                            has_form_spec=False,
+                        ),
+                        CascadingDataConversion(
+                            name_in_form_spec="online", value_on_disk="online", has_form_spec=False
+                        ),
+                    ],
                 ),
             ),
-            (
-                "methods",
-                ListChoice(
-                    title=_("Messaging methods"),
-                    allow_empty=False,
-                    choices=[(k, v["title"]) for k, v in _messaging_methods().items()],
-                    default_value=["popup"],
+            "methods": DictElement(
+                required=True,
+                parameter_form=MultipleChoice(
+                    title=Title("Messaging methods"),
+                    elements=[
+                        MultipleChoiceElement(name=k, title=Title(v["title"]))  # pylint: disable=localization-of-non-literal-string
+                        for k, v in _messaging_methods().items()
+                    ],
+                    prefill=DefaultValue(["gui_popup"]),
+                    custom_validate=[validators.LengthInRange(min_value=1)],
                 ),
             ),
-            (
-                "valid_till",
-                Optional(
-                    valuespec=AbsoluteDate(
-                        include_time=True,
-                        label=_("at"),
+            "valid_till": DictElement(
+                required=True,
+                parameter_form=OptionalChoice(
+                    parameter_form=LegacyValueSpec.wrap(
+                        AbsoluteDate(include_time=True, label=_("at"))
                     ),
-                    title=_("Message expiration"),
-                    label=_("Expire message"),
-                    help=_(
+                    title=Title("Message expiration"),
+                    label=Label("Expire message"),
+                    help_text=Help(
                         "It is possible to automatically delete messages when the "
                         "configured time is reached. This makes it possible to inform "
                         "users about a scheduled event but suppress the message "
@@ -381,22 +420,18 @@ def _vs_message(users: Iterable[userdb.UserData]) -> Dictionary:
                     ),
                 ),
             ),
-        ],
-        validate=partial(_validate_msg, all_users=users),
-        optional_keys=[],
+        },
     )
 
 
-def _validate_msg(
-    msg: DictionaryModel, _varprefix: str, all_users: Iterable[userdb.UserData]
-) -> None:
+def _validate_msg(msg: Mapping[str, Any], all_users: Iterable[userdb.UserData]) -> None:
     if not msg.get("methods"):
-        raise MKUserError("methods", _("Please select at least one messaging method."))
+        raise ValidationError(FSMessage("Please select at least one messaging method."))
 
     valid_methods = set(_messaging_methods().keys())
     for method in msg["methods"]:
         if method not in valid_methods:
-            raise MKUserError("methods", _("Invalid messaging method selected."))
+            raise ValidationError(FSMessage("Invalid messaging method selected."))
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
@@ -404,7 +439,9 @@ def _validate_msg(
         unknown_user_ids = set(msg["dest"][1]) - known_user_ids
         if unknown_user_ids:
             first_unknown = next(iter(unknown_user_ids))
-            raise MKUserError("dest", _('A user with the id "%s" does not exist.') % first_unknown)
+            raise ValidationError(
+                FSMessage('A user with the id "%s" does not exist.') % first_unknown
+            )
 
 
 def _process_message(msg: Message, multisite_user_ids: Set[str]) -> None:

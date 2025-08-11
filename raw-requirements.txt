@@ -1566,6 +1566,7 @@ jira==3.10.5 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r dev-requirements.in
 jmespath==1.0.1 \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
     --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe

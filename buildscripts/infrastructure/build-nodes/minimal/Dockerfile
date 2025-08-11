@@ -63,11 +63,12 @@ RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
 # required to run tests with bazel, requires +577MB
 # libkrb5-dev, libldap2-dev, libsasl2-dev is required to build python-ldap
 # libpq-dev is required to build psycopg2-binary
+# libpcap-dev is required to build non-free/packages/cmc
 # gawk is required to run test-agent-plugin, sw-documentation
 # python3-enchant is required to run sw-documentation
 # apache2 is required to run test-unit-omdlib
 RUN apt-get update && \
-    apt-get install -y apache2 gawk g++-13 libglib2.0-dev libkrb5-dev libldap2-dev libpango1.0-dev libpng-dev libpq-dev libsasl2-dev libxml2-dev python3-enchant && \
+    apt-get install -y apache2 gawk g++-13 libglib2.0-dev libkrb5-dev libldap2-dev libpango1.0-dev libpng-dev libpq-dev libsasl2-dev libpcap-dev libxml2-dev python3-enchant && \
     rm -rf /var/cache/apt/*
 
 # gcc is not found within bazel actions otherwise

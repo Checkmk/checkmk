@@ -49,6 +49,7 @@ RUN yum -y makecache \
     libjpeg-devel \
     libmpc-devel \
     libnsl \
+    libpcap-devel \
     libstdc++-devel \
     libstdc++-static \
     libtool \

@@ -307,6 +307,7 @@ install_for_cpp_dev() {
         "libkrb5-dev"
         "libldap2-dev"
         "libmariadb-dev-compat"
+        "libpcap-dev"
         "libpango1.0-dev"
         "libpq-dev"
         "libreadline-dev"

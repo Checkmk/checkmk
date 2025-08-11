@@ -39,6 +39,7 @@ OS_PACKAGES    += file # Needed by some third-party check plugins
 #
 # Checkmk build specific packages below
 #
+OS_PACKAGES    += libpcap0.8 # needed for cmc
 OS_PACKAGES    += rpm # needed by msitools/Agent Bakery
 OS_PACKAGES    += binutils # needed by msitools/Agent Bakery
 OS_PACKAGES    += libgsf-1-114 # needed by msitools/Agent Bakery

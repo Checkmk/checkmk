@@ -355,14 +355,14 @@ def _unit_choice_from_unit_spec(
         config,
     )
     return _UnitChoice(
-        id=_id_from_unit_spec(unit_spec),
+        id=id_from_unit_spec(unit_spec),
         title=_title_from_formatter(unit_for_current_user.formatter),
         symbol=unit_for_current_user.formatter.symbol,
         vs_type=_vs_type_from_formatter(unit_for_current_user.formatter),
     )
 
 
-def _id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
+def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
     # Explicitly don't use eg. `unit_spec.notation.__class__.__name__` to be resilient against
     # renamings
     match unit_spec.notation:

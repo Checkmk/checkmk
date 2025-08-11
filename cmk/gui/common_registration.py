@@ -211,6 +211,8 @@ def register(
         dashlet_registry,
         contact_group_usage_finder_registry,
         autocompleter_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
     )
     crash_reporting.register(
         page_registry,

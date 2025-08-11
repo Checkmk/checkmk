@@ -3326,6 +3326,48 @@ class VisualFilterClient(RestApiClient):
         )
 
 
+class DashboardClient(RestApiClient):
+    domain: DomainType = "dashboard"
+    default_version = APIVersion.UNSTABLE
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def get(self, dashboard_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{dashboard_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{dashboard_id}",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, dashboard_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{dashboard_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3379,6 +3421,7 @@ class ClientRegistry:
     Acknowledge: AcknowledgeClient
     OtelConfigClient: OtelConfigClient
     VisualFilterClient: VisualFilterClient
+    DashboardClient: DashboardClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3424,4 +3467,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
+        DashboardClient=DashboardClient(request_handler, url_prefix),
     )

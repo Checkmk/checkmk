@@ -7,15 +7,26 @@
 # mypy: disable-error-code="var-annotated,arg-type,list-item"
 
 import time
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree
-from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    render,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.apc import DETECT
-
-check_info = {}
+from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.temperature import check_temperature
 
 # .1.3.6.1.4.1.318.1.1.1.2.1.1.0 2
 # .1.3.6.1.4.1.318.1.1.1.4.1.1.0 2
@@ -51,21 +62,26 @@ check_info = {}
 # 50: Critical Hardware Fault, 51: Green Mode/ECO Mode, 52: Hot Standby
 # 53: Emergency Power Off (EPO) Activated, 54: Load Alarm Violation, 55: Bypass Phase Fault
 # 56: UPS Internal Communication Failure, 57-64: <Not Used>
+SensorInfo = tuple[tuple[str, str]]
+CartridgeInfo = list[list[str]]
+ExtendedStringTable = tuple[SensorInfo, StringTable] | tuple[SensorInfo, StringTable, CartridgeInfo]
 
 
-def parse_apc_symmetra(string_table):
+def parse_apc_symmetra(
+    string_table: ExtendedStringTable,
+) -> Mapping[str, Any]:
     if len(string_table) == 2:
-        sensor_info, string_table = string_table
+        sensor_info, battery_info = string_table
         cartridge_info = []
     else:
-        sensor_info, string_table, cartridge_info = string_table
+        sensor_info, battery_info, cartridge_info = string_table
 
     parsed: dict[str, Any] = {}  # TODO: Use a TypedDict after migration
 
     for name, temp in sensor_info:
         parsed.setdefault("temp", {})[name] = int(temp)
 
-    if not string_table:
+    if not battery_info:
         return parsed
 
     # some numeric fields may be empty
@@ -82,7 +98,7 @@ def parse_apc_symmetra(string_table):
         battery_temp,
         battery_current,
         state_output_state,
-    ) = string_table[0]
+    ) = battery_info[0]
 
     parsed["cartridge_states"] = [row[0] for row in cartridge_info]
 
@@ -133,18 +149,18 @@ def parse_apc_symmetra(string_table):
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 
 
-def inventory_apc_symmetra(parsed):
-    if "status" in parsed:
-        yield None, {}
+def inventory_apc_symmetra(section: Mapping[str, Any]) -> DiscoveryResult:
+    if "status" in section:
+        yield Service()
 
 
-def check_apc_symmetra(_no_item, params, parsed):
-    data = parsed.get("status")
+def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
+    data = section.get("status")
     if data is None:
         return
 
     if data.get("ups_comm_status") == "2":
-        yield 3, "UPS communication lost"
+        yield Result(state=State.UNKNOWN, summary="UPS communication lost")
 
     battery_status = data.get("status")
     output_status = data.get("output")
@@ -155,7 +171,7 @@ def check_apc_symmetra(_no_item, params, parsed):
     battery_time_remain = data.get("time_remain")
     calib_result = data.get("calib")
     last_diag_date = data.get("diag_date")
-    cartridge_states = parsed["cartridge_states"]
+    cartridge_states = section["cartridge_states"]
 
     alt_crit_capacity = None
     # the last_diag_date is reported as %m/%d/%Y or %y
@@ -171,22 +187,25 @@ def check_apc_symmetra(_no_item, params, parsed):
         alt_crit_capacity = params["post_calibration_levels"]["altcapacity"]
 
     state, state_readable = {
-        "1": (3, "unknown"),
-        "2": (0, "normal"),
-        "3": (2, "low"),
-        "4": (2, "in fault condition"),
-    }.get(battery_status, (3, "unexpected(%s)" % battery_status))
-    yield state, "Battery status: %s" % state_readable
+        "1": (State.UNKNOWN, "unknown"),
+        "2": (State.OK, "normal"),
+        "3": (State.CRIT, "low"),
+        "4": (State.CRIT, "in fault condition"),
+    }.get(battery_status, (State.UNKNOWN, "unexpected(%s)" % battery_status))
+    yield Result(state=state, summary="Battery status: %s" % state_readable)
 
     if battery_replace:
         state, state_readable = {
-            "1": (0, "No battery needs replacing"),
-            "2": (params["battery_replace_state"], "Battery needs replacing"),
-        }.get(battery_replace, (3, "Battery needs replacing: unknown"))
+            "1": (State.OK, "No battery needs replacing"),
+            "2": (State(params["battery_replace_state"]), "Battery needs replacing"),
+        }.get(battery_replace, (State.UNKNOWN, "Battery needs replacing: unknown"))
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
-            yield 2, "%i batteries need replacing" % int(battery_num_batt_packs)
+            yield Result(
+                state=State.CRIT,
+                summary="%i batteries need replacing" % int(battery_num_batt_packs),
+            )
         else:
-            yield state, state_readable
+            yield Result(state=state, summary=state_readable)
 
     if output_status:
         output_status_txts = {
@@ -214,19 +233,19 @@ def check_apc_symmetra(_no_item, params, parsed):
         state_readable = output_status_txts.get(output_status, "unexpected(%s)" % output_status)
 
         if output_status not in output_status_txts:
-            state = 3
+            state = State.UNKNOWN
         elif (
             output_status not in ["2", "4", "12"]
             and calib_result != "3"
             and not self_test_in_progress
         ):
-            state = 2
+            state = State.CRIT
         elif (
             output_status in ["2", "4", "12"] and calib_result == "2" and not self_test_in_progress
         ):
-            state = params.get("calibration_state")
+            state = State(params.get("calibration_state"))
         else:
-            state = 0
+            state = State.OK
 
         calib_text = {
             "1": "",
@@ -234,9 +253,9 @@ def check_apc_symmetra(_no_item, params, parsed):
             "3": " (calibration in progress)",
         }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
 
-        yield (
-            state,
-            "Output status: {}{}{}".format(
+        yield Result(
+            state=state,
+            summary="Output status: {}{}{}".format(
                 state_readable,
                 calib_text,
                 " (self-test running)" if self_test_in_progress else "",
@@ -245,53 +264,32 @@ def check_apc_symmetra(_no_item, params, parsed):
 
     if battery_capacity:
         battery_capacity = int(battery_capacity)
-        warn_cap, crit_cap = params["capacity"]
-        state = 0
-        levelstxt = ""
         if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:
-            if battery_capacity < alt_crit_capacity:
-                state = 2
-                levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity
-        elif battery_capacity < crit_cap:
-            state = 2
-            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
-        elif battery_capacity < warn_cap:
-            state = 1
-            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
-
-        yield (
-            state,
-            "Capacity: %d%%%s" % (battery_capacity, levelstxt),
-            [("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)],
+            yield from check_levels(
+                value=battery_capacity,
+                levels_lower=("fixed", (alt_crit_capacity, alt_crit_capacity)),
+                label="delay after calibration",
+            )
+        yield from check_levels(
+            value=battery_capacity,
+            levels_lower=("fixed", params["capacity"]),
+            metric_name="capacity",
+            render_func=render.percent,
+            boundaries=(0, 100),
+            label="Capacity",
         )
 
     if battery_time_remain:
         battery_time_remain = float(battery_time_remain) / 100.0
-        battery_time_remain_readable = render.timespan(battery_time_remain)
-        state = 0
-        levelstxt = ""
-        battery_time_warn, battery_time_crit = None, None
-        if params.get("battime"):
-            battery_time_warn, battery_time_crit = params["battime"]
-            if battery_time_remain < battery_time_crit:
-                state = 2
-            elif battery_time_remain < battery_time_warn:
-                state = 1
-            perfdata = [
-                (
-                    "runtime",
-                    battery_time_remain / 60.0,
-                    battery_time_warn / 60.0,
-                    battery_time_crit / 60.0,
-                )
-            ]
-        else:
-            perfdata = [("runtime", battery_time_remain / 60.0)]
-
-        if state:
-            levelstxt = f" (warn/crit below {render.timespan(battery_time_warn)}/{render.timespan(battery_time_crit)})"
-
-        yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
+        yield from check_levels(
+            value=battery_time_remain,
+            metric_name="runtime",
+            levels_upper=("fixed", params["battime"])
+            if "battime" in params
+            else ("no_levels", None),
+            render_func=render.timespan,
+            label="Time remaining",
+        )
 
     cartridge_bits = {
         0: "Disconnected",
@@ -313,12 +311,15 @@ def check_apc_symmetra(_no_item, params, parsed):
 
         translated_bits = [cartridge_bits[idx] for idx, bit in enumerate(bitmask) if bit == "1"]
         if translated_bits:
-            yield 1, f"Battery pack cartridge {cart_idx}: {', '.join(translated_bits)}"
+            yield Result(
+                state=State.WARN,
+                summary=f"Battery pack cartridge {cart_idx}: {', '.join(translated_bits)}",
+            )
         else:
-            yield 0, f"Battery pack cartridge {cart_idx}: OK"
+            yield Result(state=State.OK, summary=f"Battery pack cartridge {cart_idx}: OK")
 
 
-check_info["apc_symmetra"] = LegacyCheckDefinition(
+snmp_section_apc_symmetra = SNMPSection(
     name="apc_symmetra",
     detect=DETECT,
     fetch=[
@@ -349,6 +350,11 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_apc_symmetra,
+)
+
+
+check_plugin_apc_symmetra = CheckPlugin(
+    name="apc_symmetra",
     service_name="APC Symmetra status",
     discovery_function=inventory_apc_symmetra,
     check_function=check_apc_symmetra,
@@ -373,26 +379,30 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 
 
-def inventory_apc_symmetra_temp(parsed):
-    return [(k, {}) for k in parsed.get("temp", {})]
+def inventory_apc_symmetra_temp(section: Mapping[str, Any]) -> DiscoveryResult:
+    yield from [Service(item=k) for k in section.get("temp", {})]
 
 
-def check_apc_symmetra_temp(item, params, parsed):
-    reading = parsed.get("temp", {}).get(item)
+def check_apc_symmetra_temp(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    reading = section.get("temp", {}).get(item)
     if reading is None:
         return None
 
-    if "levels" not in params:
-        params_copy = params.copy()
+    if "levels" in params:
+        default_key = "levels"
+    else:
         default_key = "levels_battery" if item == "Battery" else "levels_sensors"
-        params_copy["levels"] = params[default_key]
-        params = params_copy
 
     name_temp = "check_apc_symmetra_temp.%s" if item == "Battery" else "apc_temp_%s"
-    return check_temperature(reading, params, name_temp % item)
+    yield from check_temperature(
+        reading=reading,
+        params={"levels": params[default_key]},
+        unique_name=name_temp % item,
+        value_store=get_value_store(),
+    )
 
 
-check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
+check_plugin_apc_symmetra_temp = CheckPlugin(
     name="apc_symmetra_temp",
     service_name="Temperature %s",
     sections=["apc_symmetra"],
@@ -418,16 +428,16 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_apc_symmetra_elphase(parsed):
-    for phase in parsed.get("elphase", {}):
-        yield phase, {}
+def inventory_apc_symmetra_elphase(section: Mapping[str, Any]) -> DiscoveryResult:
+    for phase in section.get("elphase", {}):
+        yield Service(item=phase)
 
 
-def check_apc_symmetra_elphase(item, params, parsed):
-    return check_elphase(item, params, parsed.get("elphase", {}))
+def check_apc_symmetra_elphase(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    yield from check_elphase(item, params, section.get("elphase", {}))
 
 
-check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
+check_plugin_apc_symmetra_elphase = CheckPlugin(
     name="apc_symmetra_elphase",
     service_name="Phase %s",
     sections=["apc_symmetra"],

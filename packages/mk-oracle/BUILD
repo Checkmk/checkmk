@@ -44,8 +44,8 @@ rust_library(
     ],
     aliases = aliases(),
     compile_data = [
-        "sqls/io_stats.sql",
-        "sqls/ts_quotas.sql",
+        "sqls/io_stats.0.all.sql",
+        "sqls/ts_quotas.0.all.sql",
     ],
     crate_name = "mk_oracle",
     edition = "2021",

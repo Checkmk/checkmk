@@ -47,12 +47,12 @@ pub mod query {
     }
 
     pub const IO_STATS_META: &[RawMetadata] = &[RawMetadata {
-        sql: include_str!("../../sqls/io_stats.sql"),
+        sql: include_str!("../../sqls/io_stats.0.all.sql"),
         min_version: 0,
         tenant: Tenant::All,
     }];
     pub const TS_QUOTAS_META: &[RawMetadata] = &[RawMetadata {
-        sql: include_str!("../../sqls/ts_quotas.sql"),
+        sql: include_str!("../../sqls/ts_quotas.0.all.sql"),
         min_version: 0,
         tenant: Tenant::All,
     }];

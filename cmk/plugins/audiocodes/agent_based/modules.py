@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     InventoryPlugin,
     InventoryResult,
+    OIDEnd,
     SNMPSection,
     SNMPTree,
     StringTable,
@@ -180,6 +181,7 @@ HaStatusMapping = {
 
 @dataclass(frozen=True, kw_only=True)
 class Module:
+    index: str  # Needed to key on when creating the inventory table
     type: str
     serial_number: str
     ha_status: str
@@ -218,11 +220,12 @@ def _parse_ac_sys_modules(
 ) -> Sequence[Module]:
     return [
         Module(
-            type=type_mapping.get(module[0], module[0]),
-            serial_number=module[1],
-            ha_status=ha_status_mapping.get(module[2], module[2]),
-            sw_version=module[3],
-            license_key_list=parse_license_key_list(module[4]),
+            index=module[0],
+            type=type_mapping.get(module[1], module[1]),
+            serial_number=module[2],
+            ha_status=ha_status_mapping.get(module[3], module[3]),
+            sw_version=module[4],
+            license_key_list=parse_license_key_list(module[5]),
         )
         for module in string_table
     ]
@@ -230,15 +233,16 @@ def _parse_ac_sys_modules(
 
 snmp_section_audiocodes_modules = SNMPSection(
     name="audiocodes_modules",
+    supersedes=["snmp_extended_info"],
     detect=DETECT_AUDIOCODES,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5003.9.10.10.4.21.1",
-            oids=["3", "6", "9", "7", "5"],
+            oids=[OIDEnd(), "3", "6", "9", "7", "5"],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.5003.9.10.10.4.27.21.1",
-            oids=["3", "6", "9", "7", "5"],
+            oids=[OIDEnd(), "3", "6", "9", "7", "5"],
         ),
     ],
     parse_function=parse_audiocodes_modules,
@@ -249,8 +253,9 @@ def inventory_audiocodes_modules(section: Section) -> InventoryResult:
     for module in [*section.modules, *section.redundant_modules]:
         yield TableRow(
             path=["hardware", "components", "modules"],
-            key_columns={"type": module.type},
+            key_columns={"index": module.index},
             inventory_columns={
+                "type": module.type,
                 "serial": module.serial_number,
                 "ha_status": module.ha_status,
                 "software_version": module.sw_version,

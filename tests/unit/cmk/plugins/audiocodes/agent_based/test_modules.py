@@ -17,8 +17,9 @@ from cmk.plugins.audiocodes.agent_based.modules import (
 STRING_TABLE = [
     [],
     [
-        ["295", "0", "6", "", ""],
+        ["67387393", "295", "0", "6", "", ""],
         [
+            "67907585",
             "280",
             "13045759",
             "3",
@@ -37,8 +38,9 @@ STRING_TABLE = [
             [
                 TableRow(
                     path=["hardware", "components", "modules"],
-                    key_columns={"type": "acMediant4000MPModule"},
+                    key_columns={"index": "67387393"},
                     inventory_columns={
+                        "type": "acMediant4000MPModule",
                         "serial": "0",
                         "ha_status": "Not applicable",
                         "software_version": "",
@@ -48,8 +50,9 @@ STRING_TABLE = [
                 ),
                 TableRow(
                     path=["hardware", "components", "modules"],
-                    key_columns={"type": "acMediant4000CPUmodule"},
+                    key_columns={"index": "67907585"},
                     inventory_columns={
+                        "type": "acMediant4000CPUmodule",
                         "serial": "13045759",
                         "ha_status": "Redundant",
                         "software_version": "7.20A.258.459",

@@ -26,6 +26,7 @@ from cmk.utils.tags import TagGroupID
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "entersekt_soaprrors": "entersekt_soaperrors",  # 2.4 -> 2.5
+    "checkgroup_parameters:apc_symentra": "checkgroup_parameters:apc_symmetra",  # 2.4 -> 2.5
 }
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}

@@ -356,7 +356,7 @@ check_plugin_apc_symmetra = CheckPlugin(
     service_name="APC Symmetra status",
     discovery_function=inventory_apc_symmetra,
     check_function=check_apc_symmetra,
-    check_ruleset_name="apc_symentra",
+    check_ruleset_name="apc_symmetra",
     check_default_parameters={
         "capacity": ("fixed", (95.0, 80.0)),
         "calibration_state": 0,

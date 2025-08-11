@@ -22,7 +22,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_apc_symentra() -> Dictionary:
+def _parameter_valuespec_apc_symmetra() -> Dictionary:
     return Dictionary(
         elements={
             "capacity": DictElement(
@@ -108,10 +108,10 @@ def _parameter_valuespec_apc_symentra() -> Dictionary:
     )
 
 
-rule_spec_apc_symentra = CheckParameters(
-    name="apc_symentra",
+rule_spec_apc_symmetra = CheckParameters(
+    name="apc_symmetra",
     title=Title("APC Symmetra Checks"),
     topic=Topic.ENVIRONMENTAL,
-    parameter_form=_parameter_valuespec_apc_symentra,
+    parameter_form=_parameter_valuespec_apc_symmetra,
     condition=HostCondition(),
 )

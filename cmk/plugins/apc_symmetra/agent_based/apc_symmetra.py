@@ -8,7 +8,8 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any
+from itertools import chain
+from typing import Any, NewType, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -62,24 +63,48 @@ from cmk.plugins.lib.temperature import check_temperature
 # 50: Critical Hardware Fault, 51: Green Mode/ECO Mode, 52: Hot Standby
 # 53: Emergency Power Off (EPO) Activated, 54: Load Alarm Violation, 55: Bypass Phase Fault
 # 56: UPS Internal Communication Failure, 57-64: <Not Used>
+Item = NewType("Item", str)
 SensorInfo = tuple[tuple[str, str]]
 CartridgeInfo = list[list[str]]
 ExtendedStringTable = tuple[SensorInfo, StringTable] | tuple[SensorInfo, StringTable, CartridgeInfo]
 
 
+class Status(TypedDict):
+    ups_comm: str
+    battery: str
+    output: str
+    self_test: bool
+    capacity: float | None
+    replace: str
+    num_packs: int
+    time_remain: float | None
+    calib: str
+    diag_date: str
+
+
+class ElPhase(TypedDict):
+    current: float
+
+
+class ParsedSection(TypedDict, total=False):
+    temp: Mapping[Item, float]
+    cartridge_states: list[str]
+    status: Status
+    elphase: Mapping[Item, ElPhase]
+
+
 def parse_apc_symmetra(
     string_table: ExtendedStringTable,
-) -> Mapping[str, Any]:
+) -> ParsedSection:
     if len(string_table) == 2:
         sensor_info, battery_info = string_table
         cartridge_info = []
     else:
         sensor_info, battery_info, cartridge_info = string_table
 
-    parsed: dict[str, Any] = {}  # TODO: Use a TypedDict after migration
-
-    for name, temp in sensor_info:
-        parsed.setdefault("temp", {})[name] = int(temp)
+    parsed = ParsedSection(
+        cartridge_states=[row[0] for row in cartridge_info],
+    )
 
     if not battery_info:
         return parsed
@@ -100,8 +125,6 @@ def parse_apc_symmetra(
         state_output_state,
     ) = battery_info[0]
 
-    parsed["cartridge_states"] = [row[0] for row in cartridge_info]
-
     if state_output_state != "":
         # string contains a bitmask, convert to int
         output_state_bitmask = int(state_output_state, 2)
@@ -109,27 +132,29 @@ def parse_apc_symmetra(
         output_state_bitmask = 0
     self_test_in_progress = output_state_bitmask & 1 << 35 != 0
 
-    for key, val in [
-        ("ups_comm_status", ups_comm_status),
-        ("status", battery_status),
-        ("output", output_status),
-        ("self_test", self_test_in_progress),
-        ("capacity", battery_capacity),
-        ("replace", battery_replace),
-        ("num_packs", battery_num_batt_packs),
-        ("time_remain", battery_time_remain),
-        ("calib", calib_result),
-        ("diag_date", last_diag_date),
-    ]:
-        if val:
-            parsed.setdefault("status", {})
-            parsed["status"][key] = val
+    parsed["status"] = Status(
+        ups_comm=ups_comm_status,
+        battery=battery_status,
+        output=output_status,
+        self_test=self_test_in_progress,
+        capacity=float(battery_capacity) if battery_capacity else None,
+        replace=battery_replace,
+        num_packs=int(battery_num_batt_packs) if battery_num_batt_packs else 0,
+        time_remain=float(battery_time_remain) if battery_time_remain else None,
+        calib=calib_result,
+        diag_date=last_diag_date,
+    )
 
-    if battery_temp:
-        parsed.setdefault("temp", {})["Battery"] = float(battery_temp)
+    parsed["temp"] = {
+        Item(name): float(temp)
+        for name, temp in chain(
+            sensor_info,
+            [["Battery", battery_temp]] if battery_temp else [],
+        )
+    }
 
     if battery_current:
-        parsed["elphase"] = {"Battery": {"current": float(battery_current)}}
+        parsed["elphase"] = {Item("Battery"): ElPhase(current=float(battery_current))}
 
     return parsed
 
@@ -149,35 +174,33 @@ def parse_apc_symmetra(
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 
 
-def inventory_apc_symmetra(section: Mapping[str, Any]) -> DiscoveryResult:
+def inventory_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
     if "status" in section:
         yield Service()
 
 
-def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
-    data = section.get("status")
-    if data is None:
-        return
+def check_apc_symmetra(params: Mapping[str, Any], section: ParsedSection) -> CheckResult:
+    data = section["status"]
 
-    if data.get("ups_comm_status") == "2":
+    if data["ups_comm"] == "2":
         yield Result(state=State.UNKNOWN, summary="UPS communication lost")
 
-    battery_status = data.get("status")
-    output_status = data.get("output")
-    self_test_in_progress = data.get("self_test")
-    battery_capacity = data.get("capacity")
-    battery_replace = data.get("replace")
-    battery_num_batt_packs = data.get("num_packs")
-    battery_time_remain = data.get("time_remain")
-    calib_result = data.get("calib")
-    last_diag_date = data.get("diag_date")
+    battery_status = data["battery"]
+    output_status = data["output"]
+    self_test_in_progress = data["self_test"]
+    battery_capacity = data["capacity"]
+    battery_replace = data["replace"]
+    battery_num_batt_packs = data["num_packs"]
+    battery_time_remain = data["time_remain"]
+    calib_result = data["calib"]
+    last_diag_date = data["diag_date"]
     cartridge_states = section["cartridge_states"]
 
     alt_crit_capacity = None
     # the last_diag_date is reported as %m/%d/%Y or %y
     if (
         params.get("post_calibration_levels")
-        and last_diag_date not in [None, "Unknown"]
+        and last_diag_date not in [None, "Unknown", ""]
         and len(last_diag_date) in [8, 10]
     ):
         year_format = "%y" if len(last_diag_date) == 8 else "%Y"
@@ -263,7 +286,6 @@ def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
         )
 
     if battery_capacity:
-        battery_capacity = int(battery_capacity)
         if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:
             yield from check_levels(
                 value=battery_capacity,
@@ -280,7 +302,7 @@ def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
         )
 
     if battery_time_remain:
-        battery_time_remain = float(battery_time_remain) / 100.0
+        battery_time_remain = battery_time_remain / 100.0
         yield from check_levels(
             value=battery_time_remain,
             metric_name="runtime",

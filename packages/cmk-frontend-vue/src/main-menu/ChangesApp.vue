@@ -461,6 +461,7 @@ onMounted(() => {
   align-self: stretch;
   background-color: var(--ux-theme-4);
   margin-top: 20px;
+  border-radius: var(--border-radius);
 }
 
 .cmk-div-activation-result {

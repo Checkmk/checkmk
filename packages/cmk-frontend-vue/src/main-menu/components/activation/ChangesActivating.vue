@@ -44,6 +44,7 @@ defineProps<{
   gap: var(--dimension-item-spacing-4);
   align-self: stretch;
   background: var(--ux-theme-4);
+  border-radius: var(--border-radius);
 }
 
 .cmk-changes-activating-text {

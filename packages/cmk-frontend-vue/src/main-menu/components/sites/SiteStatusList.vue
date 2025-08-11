@@ -134,6 +134,7 @@ immediateWatch(
 .cmk-changes-site-single {
   background: var(--ux-theme-3);
   padding: var(--dimension-padding-4);
+  border-radius: var(--border-radius);
 
   .cmk-changes-site-single-title {
     color: var(--font-color);

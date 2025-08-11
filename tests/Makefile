@@ -44,6 +44,7 @@ SYSTEM_TESTS := \
     test-update-cross-edition-cre-to-cce \
     test-update-cross-edition-cre-to-cee \
     test-schemathesis-openapi \
+    test-performance \
     test-plugins \
     test-plugins-piggyback \
     test-gui-crawl \
@@ -258,7 +259,13 @@ test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-performance:
-	echo "High performance" | tee -a ../test-performance.txt
+	RELEASE="$$(make --no-print-directory --file=../defines.make print-BRANCH_VERSION)-$$(date '+%Y.%m.%d').cee" ; \
+	BENCHMARK_DIR=$$(realpath ../results/performance/$$RELEASE) ; \
+	mkdir -p "$$BENCHMARK_DIR" ; \
+	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
+	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
+	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
+	--self-contained-html --ignore-running-procs
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)

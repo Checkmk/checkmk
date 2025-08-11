@@ -21,6 +21,9 @@ description:
  the service will default to simply reporting the configured capacity level of the persistent
  volume claim.
 
+ PVC monitoring relies on kubelet endpoints. In environments where node proxy permissions
+ are restricted (such as GKE), PVC monitoring won't be possible and services may not be created.
+
  The check only supports storage types which are actually mounted on the node level.
 
  Currently, this check does not have inodes support.

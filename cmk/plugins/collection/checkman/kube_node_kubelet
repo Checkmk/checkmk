@@ -9,6 +9,10 @@ description:
  other than 200, the service is {CRIT} and the verbose output of
  said endpoint is shown in details. Otherwise, the service is {OK}.
 
+ In environments where node proxy permissions are restricted (such as GKE),
+ the kubelet service is not created to avoid a permanent {CRIT} state.
+ Additionally, PVC monitoring won't be possible in such environments.
+
  This check works for the nodes of a Kubernetes cluster.
 
  The check requires that the special agent kube is configured.

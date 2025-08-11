@@ -14,7 +14,7 @@ from cmk.plugins.kube.agent_handlers.common import (
     Node,
 )
 from cmk.plugins.kube.common import SectionName, WriteableSection
-from cmk.plugins.kube.schemata import section
+from cmk.plugins.kube.schemata import api, section
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -30,15 +30,25 @@ def create_api_sections(
     host_settings: CheckmkHostSettings,
     piggyback_name: str,
 ) -> Iterator[WriteableSection]:
+    is_restricted_node_proxy_permissions = (
+        isinstance(api_node.kubelet_health, api.HealthZ)
+        and api_node.kubelet_health.status_code == 403
+    )
+    if not is_restricted_node_proxy_permissions:
+        # in some environments node proxy permissions are restricted (such as GKE)
+        # in this case we do not want to create the kubelet service as this would lead to a permanent
+        # CRIT state (not generating the service was deemed better than showing a service with a
+        # permanent service description saying that it is not available)
+        yield WriteableSection(
+            section_name=SectionName("kube_node_kubelet_v1"),
+            section=_kubelet(api_node),
+            piggyback_name=piggyback_name,
+        )
+
     yield from (
         WriteableSection(
             section_name=SectionName("kube_node_container_count_v1"),
             section=_container_count(api_node),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_node_kubelet_v1"),
-            section=_kubelet(api_node),
             piggyback_name=piggyback_name,
         ),
         WriteableSection(

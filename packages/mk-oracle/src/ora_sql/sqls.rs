@@ -14,6 +14,7 @@ pub const UTC_DATE_FIELD: &str = "utc_date";
 pub enum Id {
     IoStats,
     TsQuotas,
+    Jobs,
 }
 
 pub mod query {
@@ -56,6 +57,18 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
+    pub const JOBS_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/jobs.12010000.all.sql"),
+            min_version: 12010000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/jobs.10020000.all.sql"),
+            min_version: 10020000,
+            tenant: Tenant::All,
+        },
+    ];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT: &str = r"
@@ -75,6 +88,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
     HashMap::from([
         query::build_query_metadata(Id::TsQuotas, query::TS_QUOTAS_META),
         query::build_query_metadata(Id::IoStats, query::IO_STATS_META),
+        query::build_query_metadata(Id::Jobs, query::JOBS_META),
     ])
 });
 
@@ -213,5 +227,30 @@ mod tests {
             &Vec::new(),
         );
         assert!(!q.as_str().is_empty());
+    }
+    #[test]
+    fn test_find_jobs() {
+        fn find_helper(v: u32, t: Tenant) -> Result<String> {
+            get_factory_query(
+                Id::Jobs,
+                if v == 0 {
+                    None
+                } else {
+                    Some(InstanceNumVersion::from(v))
+                },
+                t,
+                None,
+            )
+        }
+
+        let query_new = find_helper(12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(10200000, Tenant::Cdb).unwrap();
+        let query_nothing = find_helper(10000000, Tenant::Cdb);
+        let query_last = find_helper(0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
     }
 }

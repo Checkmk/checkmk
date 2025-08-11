@@ -272,7 +272,7 @@ def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
             )
         yield from check_levels(
             value=battery_capacity,
-            levels_lower=("fixed", params["capacity"]),
+            levels_lower=params["capacity"],
             metric_name="capacity",
             render_func=render.percent,
             boundaries=(0, 100),
@@ -284,9 +284,7 @@ def check_apc_symmetra(params: Mapping[str, Any], section: Any) -> CheckResult:
         yield from check_levels(
             value=battery_time_remain,
             metric_name="runtime",
-            levels_upper=("fixed", params["battime"])
-            if "battime" in params
-            else ("no_levels", None),
+            levels_upper=params["battime"] if "battime" in params else ("no_levels", None),
             render_func=render.timespan,
             label="Time remaining",
         )
@@ -360,9 +358,11 @@ check_plugin_apc_symmetra = CheckPlugin(
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
-        "capacity": (95.0, 80.0),
+        "capacity": ("fixed", (95.0, 80.0)),
         "calibration_state": 0,
         "battery_replace_state": 1,
+        "post_calibration_levels": {"altcapacity": 50.0, "additional_time_span": 0},
+        "battime": ("fixed", (0.0, 0.0)),
     },
 )
 

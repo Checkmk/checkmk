@@ -3,46 +3,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersEnvironment,
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Float,
+    Integer,
+    LevelDirection,
+    LevelsType,
+    migrate_to_float_simple_levels,
+    Percentage,
+    ServiceState,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, Percentage, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
 def _parameter_valuespec_apc_symentra() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "capacity",
-                Tuple(
-                    title=_("Levels of battery capacity"),
-                    elements=[
-                        Percentage(
-                            title=_("Warning below"),
-                            default_value=95.0,
-                        ),
-                        Percentage(
-                            title=_("Critical below"),
-                            default_value=80.0,
-                        ),
-                    ],
+        elements={
+            "capacity": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Levels of battery capacity"),
+                    migrate=migrate_to_float_simple_levels,
+                    level_direction=LevelDirection.LOWER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=DefaultValue((95.0, 80.0)),
+                    form_spec_template=Float(),
                 ),
             ),
-            (
-                "calibration_state",
-                MonitoringState(
-                    title=_("State if calibration is invalid"),
-                    default_value=0,
+            "calibration_state": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State if calibration is invalid"),
+                    prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
-            (
-                "post_calibration_levels",
-                Dictionary(
-                    title=_("Levels of battery parameters after diagnostics"),
-                    help=_(
+            "post_calibration_levels": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("Levels of battery parameters after diagnostics"),
+                    help_text=Help(
                         "After a battery diagnostics the battery capacity is reduced until the "
                         "battery is fully charged again. Here you can specify an alternative "
                         "lower level in this post-diagnostics phase. "
@@ -52,66 +57,61 @@ def _parameter_valuespec_apc_symentra() -> Dictionary:
                         "with an additional time span to make sure diagnostics occuring just "
                         "before midnight do not trigger false alarms."
                     ),
-                    elements=[
-                        (
-                            "altcapacity",
-                            Percentage(
-                                title=_("Alternative critical battery capacity after diagnostics"),
-                                default_value=50,
+                    elements={
+                        "altcapacity": DictElement(
+                            required=True,
+                            parameter_form=Percentage(
+                                title=Title(
+                                    "Alternative critical battery capacity after diagnostics"
+                                ),
+                                prefill=DefaultValue(50),
                             ),
                         ),
-                        (
-                            "additional_time_span",
-                            Integer(
-                                title=("Extend post-diagnostics phase by additional time span"),
-                                unit=_("minutes"),
-                                default_value=0,
+                        "additional_time_span": DictElement(
+                            required=True,
+                            parameter_form=Integer(
+                                title=Title(
+                                    "Extend post-diagnostics phase by additional time span"
+                                ),
+                                unit_symbol="min",
+                                prefill=DefaultValue(0),
                             ),
                         ),
-                    ],
-                    optional_keys=False,
+                    },
                 ),
             ),
-            (
-                "battime",
-                Tuple(
-                    title=_("Time left on battery"),
-                    elements=[
-                        Age(
-                            title=_("Warning at"),
-                            help=_(
-                                "Time left on Battery at and below which a warning state is triggered"
-                            ),
-                            default_value=0,
-                            display=["hours", "minutes"],
-                        ),
-                        Age(
-                            title=_("Critical at"),
-                            help=_(
-                                "Time Left on Battery at and below which a critical state is triggered"
-                            ),
-                            default_value=0,
-                            display=["hours", "minutes"],
-                        ),
-                    ],
+            "battime": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Time left on battery"),
+                    help_text=Help(
+                        "Time left on Battery at and below which a warning/critical state is triggered"
+                    ),
+                    form_spec_template=TimeSpan(
+                        title=Title("Age"),
+                        displayed_magnitudes=[TimeMagnitude.HOUR, TimeMagnitude.MINUTE],
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=DefaultValue((0.0, 0.0)),
+                    migrate=migrate_to_float_simple_levels,
                 ),
             ),
-            (
-                "battery_replace_state",
-                MonitoringState(
-                    title=_("State if battery needs replacement"),
-                    default_value=1,
+            "battery_replace_state": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State if battery needs replacement"),
+                    prefill=DefaultValue(ServiceState.WARN),
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="apc_symentra",
-        group=RulespecGroupCheckParametersEnvironment,
-        parameter_valuespec=_parameter_valuespec_apc_symentra,
-        title=lambda: _("APC Symmetra Checks"),
-    )
+rule_spec_apc_symentra = CheckParameters(
+    name="apc_symentra",
+    title=Title("APC Symmetra Checks"),
+    topic=Topic.ENVIRONMENTAL,
+    parameter_form=_parameter_valuespec_apc_symentra,
+    condition=HostCondition(),
 )

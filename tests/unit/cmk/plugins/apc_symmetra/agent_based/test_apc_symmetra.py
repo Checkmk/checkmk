@@ -98,7 +98,7 @@ STRING_TABLE_3 = [
     [
         pytest.param(
             STRING_TABLE_1,
-            {"capacity": (95, 80), "calibration_state": 0, "battery_replace_state": 1},
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 1},
             [
                 Result(state=State.OK, summary="Battery status: normal"),
                 Result(state=State.WARN, summary="Battery needs replacing"),
@@ -111,7 +111,7 @@ STRING_TABLE_3 = [
         ),
         pytest.param(
             STRING_TABLE_1,
-            {"capacity": (95, 80), "calibration_state": 0, "battery_replace_state": 2},
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 2},
             [
                 Result(state=State.OK, summary="Battery status: normal"),
                 Result(state=State.CRIT, summary="Battery needs replacing"),
@@ -124,7 +124,7 @@ STRING_TABLE_3 = [
         ),
         pytest.param(
             STRING_TABLE_2,
-            {"capacity": (95, 80), "calibration_state": 0, "battery_replace_state": 0},
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 0},
             [
                 Result(state=State.OK, summary="Battery status: normal"),
                 Result(state=State.OK, summary="No battery needs replacing"),
@@ -137,7 +137,7 @@ STRING_TABLE_3 = [
         ),
         pytest.param(
             STRING_TABLE_3,
-            {"capacity": (95, 80), "calibration_state": 0, "battery_replace_state": 0},
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 0},
             [
                 Result(state=State.OK, summary="Battery status: normal"),
                 Result(state=State.OK, summary="No battery needs replacing"),

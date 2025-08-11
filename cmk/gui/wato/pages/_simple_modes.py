@@ -449,9 +449,15 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             (_("%s properties") % self._mode_type.name_singular().title(), list(individual_keys)),
         ]
         return Dict2CatalogConverter.build_from_dictionary(
-            FormSpecDictionary(elements={**general_elements, **individual_elements}),
+            FormSpecDictionary(
+                elements={**general_elements, **individual_elements},
+                custom_validate=(self._validate_fs,),
+            ),
             headers,
         )
+
+    def _validate_fs(self, elements: Mapping[str, object]) -> None:
+        pass
 
     def catalog(self) -> Catalog | None:
         # Note: We may skip the CatalogConverter and build the Catalog ourselves

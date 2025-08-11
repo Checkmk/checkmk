@@ -43,6 +43,7 @@ file, there is the `extract` function which can be used like this:
 from ._pwstore import ad_hoc_password_id as ad_hoc_password_id
 from ._pwstore import core_password_store_path as core_password_store_path
 from ._pwstore import extract as extract
+from ._pwstore import extract_formspec_password as extract_formspec_password
 from ._pwstore import load as load
 from ._pwstore import lookup as lookup
 from ._pwstore import lookup_for_bakery as lookup_for_bakery

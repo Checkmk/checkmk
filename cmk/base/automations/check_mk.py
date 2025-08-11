@@ -24,7 +24,7 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any, Literal, NoReturn
+from typing import Any, Literal
 
 import livestatus
 
@@ -676,7 +676,7 @@ def _get_discovery_preview(
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
-    ip_address_of: ip_lookup.IPLookup,
+    ip_address_of: ip_lookup.IPLookupOptional,
     ip_address: HostAddress | None,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
@@ -743,7 +743,7 @@ def _active_check_preview_rows(
     host_name: HostName,
     host_ip_stack_config: ip_lookup.IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    ip_address_of: ip_lookup.IPLookup,
+    ip_address_of: ip_lookup.IPLookupOptional,
 ) -> Sequence[CheckPreviewEntry]:
     ignored_services = config.IgnoredActiveServices(config_cache, host_name)
 
@@ -829,7 +829,7 @@ def _execute_discovery(
     ],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     on_error: OnError,
-    ip_address_of: ip_lookup.IPLookup,
+    ip_address_of: ip_lookup.IPLookupOptional,
     ip_address: HostAddress | None,
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
@@ -2903,10 +2903,17 @@ class AutomationScanParents(Automation):
 automations.register(AutomationScanParents())
 
 
-def _disabled_ip_lookup(host_name: object, family: object = None) -> NoReturn:
+def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
     # TODO: this adds the restriction of only being able to use NO_IP hosts for now. When having an
     #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
-    raise MKAutomationError("IP lookup is not available in this context. ")
+
+    # In some cases (e.g., during "Test Configuration" in the quick setup),
+    # tags cannot be correctly resolved within ConfigCache.ip_stack_config, resulting in a default
+    # ip_stack_config of IPStackConfig.IPv4.
+    # In these cases, therefore, this function is still called for hosts that do not actually have an IP:
+    # this happens for example in ConfigCache.get_host_attributes.
+    # That is why for now we do not raise an error here but return None, instead
+    return None
 
 
 def get_special_agent_commandline(

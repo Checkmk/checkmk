@@ -137,7 +137,7 @@ from cmk.utils.host_storage import (
     get_host_storage_loaders,
 )
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.ip_lookup import IPLookup, IPStackConfig
+from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -1355,7 +1355,7 @@ def get_ssc_host_config(
     host_additional_addresses_ipv4: Sequence[HostAddress],
     host_additional_addresses_ipv6: Sequence[HostAddress],
     macros: Mapping[str, object],
-    ip_address_of: IPLookup,
+    ip_address_of: IPLookupOptional,
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     return server_side_calls_api.HostConfig(
@@ -2281,7 +2281,7 @@ class ConfigCache:
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
-        ip_address_of: IPLookup,
+        ip_address_of: IPLookupOptional,
         passwords: Mapping[str, str],
         password_store_file: Path,
         single_plugin: str | None = None,
@@ -3155,7 +3155,7 @@ class ConfigCache:
         self,
         hostname: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-        ip_address_of: IPLookup,
+        ip_address_of: IPLookupOptional,
     ) -> ObjectAttributes:
         attrs = self.extra_host_attributes(hostname)
 

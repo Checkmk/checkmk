@@ -30,7 +30,7 @@ const props = defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Activate changes and explore your hosts')"
+    :title="t('title', 'Adjust services')"
     :info="t('time', '5-7 min')"
   >
     <StepParagraph>

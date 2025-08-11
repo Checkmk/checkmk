@@ -16,6 +16,7 @@ pub enum Id {
     TsQuotas,
     Jobs,
     Resumable,
+    UndoStat,
 }
 
 pub mod query {
@@ -75,6 +76,18 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
+    pub const UNDOSTAT_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/undostat.12010000.all.sql"),
+            min_version: 12010000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/undostat.10020000.all.sql"),
+            min_version: 10020000,
+            tenant: Tenant::All,
+        },
+    ];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT: &str = r"
@@ -96,6 +109,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::IoStats, query::IO_STATS_META),
         query::build_query_metadata(Id::Jobs, query::JOBS_META),
         query::build_query_metadata(Id::Resumable, query::RESUMABLE_META),
+        query::build_query_metadata(Id::UndoStat, query::UNDOSTAT_META),
     ])
 });
 
@@ -271,5 +285,19 @@ mod tests {
         assert!(!query_new.is_empty());
         assert!(!query_last.is_empty());
         assert_eq!(query_new, query_last);
+    }
+    #[test]
+    fn test_find_undostat() {
+        let id = Id::UndoStat;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
     }
 }

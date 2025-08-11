@@ -49,6 +49,8 @@ rust_library(
         "sqls/jobs.12010000.all.sql",
         "sqls/resumable.0.all.sql",
         "sqls/ts_quotas.0.all.sql",
+        "sqls/undostat.10020000.all.sql",
+        "sqls/undostat.12010000.all.sql",
     ],
     crate_name = "mk_oracle",
     edition = "2021",

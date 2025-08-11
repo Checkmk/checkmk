@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.base.legacy_checks.lvm_lvs import (
+from cmk.plugins.lvm.agent_based.lvs import (
     check_lvm_lvs,
     discover_lvm_lvs,
     LvmLvsEntry,

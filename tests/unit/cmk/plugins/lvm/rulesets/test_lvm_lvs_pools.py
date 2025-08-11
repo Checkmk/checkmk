@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.gui.plugins.wato.check_parameters.lvm_lvs_pools import rule_spec_lvm_lvs_pools
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.plugins.lvm.rulesets.lvs_pools import rule_spec_lvm_lvs_pools
 
 
 @pytest.mark.parametrize(

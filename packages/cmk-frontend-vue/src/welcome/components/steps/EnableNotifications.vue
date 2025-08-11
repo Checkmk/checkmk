@@ -11,7 +11,9 @@ import usei18n from '@/lib/i18n.ts'
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
-import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { t } = usei18n('welcome-step-4')
 
@@ -28,62 +30,67 @@ defineProps<{
     :disabled="false"
     :accomplished="accomplished"
     :title="t('title', 'Enable notifications')"
-    :info="t('time', '10-15 min')"
+    :info="t('time', '5-7 min')"
   >
     <StepParagraph>
       {{
         t(
           'paragraph',
-          'Notifications help you stay on top of problems ' +
-            'without constantly checking the interface. ' +
-            'Start by configuring contact groups, time periods, and host groups ' +
-            'to define who should be notified and when. ' +
-            'Then, add a notification rule and use the test feature ' +
-            'to make sure alerts reach you the way you expect.'
+          'Notifications help you to stay on top of problems without having to constantly check the interface. ' +
+            'In Checkmk, they are rule-based, enabling you to create a notification system that evolves alongside ' +
+            'your environment.'
         )
       }}
     </StepParagraph>
 
-    <StepHeading>
-      {{ t('prepare', 'Prepare') }}
-    </StepHeading>
-    <StepCardsRow>
-      <CmkLinkCard
-        icon-name="contactgroups"
-        :title="t('contact-groups', 'Contact groups')"
-        :url="urls.create_contactgroups"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="timeperiods"
-        :title="t('time-periods', 'Time periods')"
-        :url="urls.time_periods"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="hostgroups"
-        :title="t('hostgroups', 'Host groups')"
-        :url="urls.host_groups"
-        :open-in-new-tab="false"
-      />
-    </StepCardsRow>
+    <CmkWizard mode="overview">
+      <CmkWizardStep>
+        <template #header>
+          <CmkHeading type="h3">{{ t('stage-0-title', 'Create a notification rule') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              t(
+                'stage-0-instruction-1',
+                'Follow the step-by-step guide in Setup > Notifications to set up notification rules.'
+              )
+            }}
+          </StepParagraph>
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="notifications"
+              :title="t('add-notification-rule', 'Add notification rule')"
+              :url="urls.add_notification_rule"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
+        </template>
+      </CmkWizardStep>
 
-    <StepHeading>
-      {{ t('setup-up-notifications', 'Set up notifications') }}
-    </StepHeading>
-    <StepCardsRow>
-      <CmkLinkCard
-        icon-name="notifications"
-        :title="t('add-notification-rule', 'Add notification rule')"
-        :url="urls.add_notification_rule"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="analysis"
-        :title="t('test-notifications', 'Test notifications')"
-        :url="urls.test_notifications"
-        :open-in-new-tab="false"
-      />
-    </StepCardsRow>
+      <CmkWizardStep>
+        <template #header>
+          <CmkHeading type="h3">{{ t('stage-1-title', 'Send a test notification') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              t(
+                'stage-1-instruction-1',
+                'After creation, test your notification rule to make sure alerts reach you the way you expect.'
+              )
+            }}
+          </StepParagraph>
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="analysis"
+              :title="t('test-notifications', 'Test notifications')"
+              :url="urls.test_notifications"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
+        </template>
+      </CmkWizardStep>
+    </CmkWizard>
   </CmkAccordionStepPanelItem>
 </template>

@@ -47,4 +47,3 @@ def _create_400_bad_request(header_uuid: str, *, url_uuid: str) -> JSONResponse:
 
 AGENT_RECEIVER_APP: Final = FastAPI(title="Checkmk Agent Receiver")
 UUID_VALIDATION_ROUTER: Final = APIRouter(route_class=_UUIDValidationRoute)
-RELAY_ROUTER: Final = APIRouter(prefix="/relays")

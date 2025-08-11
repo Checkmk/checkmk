@@ -258,7 +258,7 @@ def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
         ruleset=ruleset,
         folder="/",
         properties={"description": "Test", "disabled": False},
-        value_raw="{'summary': True }",
+        value_raw="{'summary': True}",
         conditions={},
     )
     rules_path = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"

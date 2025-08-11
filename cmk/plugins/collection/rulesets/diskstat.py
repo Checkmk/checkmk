@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Final, Mapping, TypeVar
+from typing import cast, Final, Mapping
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -34,8 +34,6 @@ from cmk.rulesets.v1.rule_specs import (
 )
 
 _MB = 1000**2
-
-ModelT = TypeVar("ModelT")
 
 
 def _migrate_to_required_values(value: object) -> Mapping[str, object]:

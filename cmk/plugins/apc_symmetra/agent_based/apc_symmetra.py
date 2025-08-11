@@ -174,7 +174,7 @@ def parse_apc_symmetra(
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 
 
-def inventory_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
+def discovery_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
     if "status" in section:
         yield Service()
 
@@ -376,7 +376,7 @@ snmp_section_apc_symmetra = SNMPSection(
 check_plugin_apc_symmetra = CheckPlugin(
     name="apc_symmetra",
     service_name="APC Symmetra status",
-    discovery_function=inventory_apc_symmetra,
+    discovery_function=discovery_apc_symmetra,
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symmetra",
     check_default_parameters={
@@ -401,7 +401,7 @@ check_plugin_apc_symmetra = CheckPlugin(
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 
 
-def inventory_apc_symmetra_temp(section: Mapping[str, Any]) -> DiscoveryResult:
+def discovery_apc_symmetra_temp(section: Mapping[str, Any]) -> DiscoveryResult:
     yield from [Service(item=k) for k in section.get("temp", {})]
 
 
@@ -428,7 +428,7 @@ check_plugin_apc_symmetra_temp = CheckPlugin(
     name="apc_symmetra_temp",
     service_name="Temperature %s",
     sections=["apc_symmetra"],
-    discovery_function=inventory_apc_symmetra_temp,
+    discovery_function=discovery_apc_symmetra_temp,
     check_function=check_apc_symmetra_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -450,7 +450,7 @@ check_plugin_apc_symmetra_temp = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_apc_symmetra_elphase(section: Mapping[str, Any]) -> DiscoveryResult:
+def discovery_apc_symmetra_elphase(section: Mapping[str, Any]) -> DiscoveryResult:
     for phase in section.get("elphase", {}):
         yield Service(item=phase)
 
@@ -463,7 +463,7 @@ check_plugin_apc_symmetra_elphase = CheckPlugin(
     name="apc_symmetra_elphase",
     service_name="Phase %s",
     sections=["apc_symmetra"],
-    discovery_function=inventory_apc_symmetra_elphase,
+    discovery_function=discovery_apc_symmetra_elphase,
     check_function=check_apc_symmetra_elphase,
     check_ruleset_name="ups_outphase",
     check_default_parameters={},

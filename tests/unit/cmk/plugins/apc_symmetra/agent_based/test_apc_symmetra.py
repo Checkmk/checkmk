@@ -231,17 +231,17 @@ def test_check_temp(
 @pytest.mark.parametrize(
     ["string_table", "discovery_func", "expected"],
     [
-        pytest.param(STRING_TABLE_1, apc_symmetra.inventory_apc_symmetra, [Service()]),
+        pytest.param(STRING_TABLE_1, apc_symmetra.discovery_apc_symmetra, [Service()]),
         pytest.param(
-            STRING_TABLE_1, apc_symmetra.inventory_apc_symmetra_elphase, [Service(item="Battery")]
+            STRING_TABLE_1, apc_symmetra.discovery_apc_symmetra_elphase, [Service(item="Battery")]
         ),
         pytest.param(
-            STRING_TABLE_1, apc_symmetra.inventory_apc_symmetra_temp, [Service(item="Battery")]
+            STRING_TABLE_1, apc_symmetra.discovery_apc_symmetra_temp, [Service(item="Battery")]
         ),
-        pytest.param(STRING_TABLE_3, apc_symmetra.inventory_apc_symmetra, [Service()]),
-        pytest.param(STRING_TABLE_3, apc_symmetra.inventory_apc_symmetra_elphase, []),
+        pytest.param(STRING_TABLE_3, apc_symmetra.discovery_apc_symmetra, [Service()]),
+        pytest.param(STRING_TABLE_3, apc_symmetra.discovery_apc_symmetra_elphase, []),
         pytest.param(
-            STRING_TABLE_3, apc_symmetra.inventory_apc_symmetra_temp, [Service(item="Battery")]
+            STRING_TABLE_3, apc_symmetra.discovery_apc_symmetra_temp, [Service(item="Battery")]
         ),
     ],
 )

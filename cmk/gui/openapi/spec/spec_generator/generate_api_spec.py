@@ -40,7 +40,8 @@ def build_spec(
             pprint_value=False,
         )
 
-    raise ValueError(f"`{format}` format not supported")
+    else:
+        raise ValueError(f"`{format}` format not supported")
 
 
 def list_versions(args: argparse.Namespace) -> None:

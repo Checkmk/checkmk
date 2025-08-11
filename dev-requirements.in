@@ -20,6 +20,7 @@ hypothesis    # used by unit tests
 hypothesis-jsonschema  # used by unit tests
 jsonschema
 libcst # concrete syntax trees for plugin migration helpers
+matplotlib # used by performance test plotting
 msrest
 multipart  # redfish server mocker for integration tests
 mypy # used by test/Makefile's test-mypy target
@@ -31,6 +32,7 @@ playwright  # used for in-browser testing
 polyfactory # used for generating mock data for unit tests
 pre-commit  # used to fix / find issues before committing changes
 prometheus-client # used for testing otel integration
+psycopg # used by performance test plotting
 py-import-cycles  # used in tests/Makefile
 pylint  # used by test/Makefile's test-pylint target
 pylint-pydantic

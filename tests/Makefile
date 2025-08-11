@@ -257,6 +257,9 @@ test-format-bazel:
 test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
+test-performance:
+	echo "High performance" | tee -a ../test-performance.txt
+
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 

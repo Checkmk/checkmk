@@ -154,7 +154,7 @@ STRING_TABLE_3 = [
 )
 def test_check(
     string_table: apc_symmetra.ExtendedStringTable,
-    params: Mapping[str, object],
+    params: apc_symmetra.CheckParameters,
     expected: CheckResult,
 ) -> None:
     assert (

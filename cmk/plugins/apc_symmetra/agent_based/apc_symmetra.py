@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    LevelsT,
     render,
     Result,
     Service,
@@ -91,6 +92,19 @@ class ParsedSection(TypedDict, total=False):
     cartridge_states: list[str]
     status: Status
     elphase: Mapping[Item, ElPhase]
+
+
+class PostCalibrationParameters(TypedDict):
+    altcapacity: float
+    additional_time_span: int
+
+
+class CheckParameters(TypedDict):
+    capacity: LevelsT[float]
+    calibration_state: int
+    battery_replace_state: int
+    post_calibration_levels: PostCalibrationParameters
+    battime: LevelsT[float]
 
 
 def parse_apc_symmetra(
@@ -179,7 +193,7 @@ def discovery_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
         yield Service()
 
 
-def check_apc_symmetra(params: Mapping[str, Any], section: ParsedSection) -> CheckResult:
+def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> CheckResult:
     data = section["status"]
 
     if data["ups_comm"] == "2":
@@ -379,13 +393,13 @@ check_plugin_apc_symmetra = CheckPlugin(
     discovery_function=discovery_apc_symmetra,
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symmetra",
-    check_default_parameters={
-        "capacity": ("fixed", (95.0, 80.0)),
-        "calibration_state": 0,
-        "battery_replace_state": 1,
-        "post_calibration_levels": {"altcapacity": 50.0, "additional_time_span": 0},
-        "battime": ("fixed", (0.0, 0.0)),
-    },
+    check_default_parameters=CheckParameters(
+        capacity=("fixed", (95.0, 80.0)),
+        calibration_state=0,
+        battery_replace_state=1,
+        post_calibration_levels=PostCalibrationParameters(altcapacity=50.0, additional_time_span=0),
+        battime=("fixed", (0.0, 0.0)),
+    ),
 )
 
 # .

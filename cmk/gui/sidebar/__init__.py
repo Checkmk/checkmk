@@ -43,11 +43,10 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.werks import may_acknowledge
 
 from . import _snapin
-from ._snapin import all_snapins as all_snapins
+from ._snapin import all_snapins, CustomSnapins, PERMISSION_SECTION_SIDEBAR_SNAPINS
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
-from ._snapin import CustomSnapins, PERMISSION_SECTION_SIDEBAR_SNAPINS
 from ._snapin import default_view_menu_topics as default_view_menu_topics
 from ._snapin import end_footnote_links as end_footnote_links
 from ._snapin import footnotelinks as footnotelinks
@@ -67,7 +66,6 @@ from ._snapin import view_menu_items as view_menu_items
 from ._snapin import write_snapin_exception as write_snapin_exception
 from ._snapin._bookmarks import BookmarkList
 from ._snapin_dashlet import SnapinDashlet
-from ._snapin_dashlet import SnapinDashletConfig as SnapinDashletConfig
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,

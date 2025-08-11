@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.openapi.framework import VersionedEndpointRegistry
-from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
@@ -13,7 +11,6 @@ from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 
 from ._find_group_usage import find_usages_of_contact_group_in_dashboards
-from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
 from .cre_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
@@ -38,8 +35,6 @@ def register(
     dashlet_registry_: DashletRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     autocompleter_registry: AutocompleterRegistry,
-    endpoint_family_registry: EndpointFamilyRegistry,
-    versioned_endpoint_registry: VersionedEndpointRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
@@ -67,11 +62,6 @@ def register(
     register_dashlets(dashlet_registry_, autocompleter_registry)
     register_builtin_dashboards(builtin_dashboards)
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_dashboards)
-    register_endpoints(
-        endpoint_family_registry,
-        versioned_endpoint_registry,
-        ignore_duplicates=False,
-    )
 
 
 PERMISSION_SECTION_DASHBOARD = PermissionSection(

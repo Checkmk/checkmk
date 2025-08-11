@@ -45,7 +45,6 @@ ChoiceId = str | None
 Choice = tuple[ChoiceId, ChoiceText]
 Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 ChoiceMapping = Mapping[str, ChoiceText]
-GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 
 
 class TrustedCertificateAuthorities(TypedDict):

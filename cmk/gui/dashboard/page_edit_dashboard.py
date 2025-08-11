@@ -10,13 +10,12 @@ import time
 from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import SingleInfos
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 from .store import get_all_dashboards
 from .type_defs import DashboardConfig
 
-__all__ = ["page_edit_dashboard", "dashboard_info_handler"]
+__all__ = ["page_edit_dashboard"]
 
 
 def page_edit_dashboard(config: Config) -> None:
@@ -25,7 +24,7 @@ def page_edit_dashboard(config: Config) -> None:
         get_all_dashboards(),
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
-        info_handler=dashboard_info_handler,
+        info_handler=_dashboard_info_handler,
         help_text_context=_(
             "A dashboard can have an optional context. It can for example be restricted to display "
             "only information of a single host or for a set of services matching a regular "
@@ -34,7 +33,7 @@ def page_edit_dashboard(config: Config) -> None:
     )
 
 
-def dashboard_info_handler(visual: DashboardConfig) -> SingleInfos:
+def _dashboard_info_handler(visual):
     # We could use all available infos here, but there is a lot of normally unused stuff. For better
     # usability reduce the list to the (assumed) relevant used ones.
     return ["host", "service"]

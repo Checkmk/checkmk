@@ -25,7 +25,6 @@ DomainType = Literal[
     "comment",
     "configuration_entity",
     "contact_group_config",
-    "dashboard",
     "dcd",
     "discovery_run",
     "downtime",

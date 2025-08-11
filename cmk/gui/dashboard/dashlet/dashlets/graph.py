@@ -340,7 +340,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
-    source: str | int  # graph id or index (1-based) of the graph in the template
+    source: str
 
 
 class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]):

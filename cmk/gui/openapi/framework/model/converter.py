@@ -11,10 +11,9 @@ from typing import Literal
 from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -304,15 +303,6 @@ class PermissionsConverter:
             raise ValueError("Validation errors found:\n" + "\n".join(_validation_errors))
 
         return value
-
-
-class SiteIdConverter:
-    @staticmethod
-    def exists(value: str) -> SiteId:
-        site_id = SiteId(value)
-        if site_id not in active_config.sites:
-            raise ValueError(f"Site {site_id!r} does not exist.")
-        return site_id
 
 
 class PasswordConverter:

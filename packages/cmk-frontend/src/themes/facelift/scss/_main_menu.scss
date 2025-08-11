@@ -83,6 +83,7 @@
     height: 100%;
     border-left: 4px solid $navigation-bg-color;
     box-sizing: border-box;
+    margin: 0;
 
     &:not(.delayed):hover,
     &.active {

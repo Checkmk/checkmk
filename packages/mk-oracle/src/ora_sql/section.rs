@@ -191,6 +191,7 @@ static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> = LazyLock::new(||
         (names::JOBS, sqls::Id::Jobs),
         (names::RESUMABLE, sqls::Id::Resumable),
         (names::UNDO_STAT, sqls::Id::UndoStat),
+        (names::RECOVERY_AREA, sqls::Id::RecoveryArea),
     ])
 });
 

@@ -47,6 +47,7 @@ rust_library(
         "sqls/io_stats.0.all.sql",
         "sqls/jobs.10020000.all.sql",
         "sqls/jobs.12010000.all.sql",
+        "sqls/recovery_area.0.all.sql",
         "sqls/resumable.0.all.sql",
         "sqls/ts_quotas.0.all.sql",
         "sqls/undostat.10020000.all.sql",

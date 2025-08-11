@@ -17,6 +17,7 @@ pub enum Id {
     Jobs,
     Resumable,
     UndoStat,
+    RecoveryArea,
 }
 
 pub mod query {
@@ -88,6 +89,11 @@ pub mod query {
             tenant: Tenant::All,
         },
     ];
+    pub const RECOVERY_AREA_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/recovery_area.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT: &str = r"
@@ -110,6 +116,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::Jobs, query::JOBS_META),
         query::build_query_metadata(Id::Resumable, query::RESUMABLE_META),
         query::build_query_metadata(Id::UndoStat, query::UNDOSTAT_META),
+        query::build_query_metadata(Id::RecoveryArea, query::RECOVERY_AREA_META),
     ])
 });
 
@@ -299,5 +306,15 @@ mod tests {
         assert!(query_nothing.is_err());
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
+    }
+    #[test]
+    fn test_find_recovery_area() {
+        let id = Id::RecoveryArea;
+
+        let query_new = find_helper(id, 23010000, Tenant::Cdb).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_last.is_empty());
+        assert_eq!(query_new, query_last);
     }
 }

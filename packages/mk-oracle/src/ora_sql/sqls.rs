@@ -15,6 +15,7 @@ pub enum Id {
     IoStats,
     TsQuotas,
     Jobs,
+    Resumable,
 }
 
 pub mod query {
@@ -69,6 +70,11 @@ pub mod query {
             tenant: Tenant::All,
         },
     ];
+    pub const RESUMABLE_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/resumable.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT: &str = r"
@@ -89,6 +95,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::TsQuotas, query::TS_QUOTAS_META),
         query::build_query_metadata(Id::IoStats, query::IO_STATS_META),
         query::build_query_metadata(Id::Jobs, query::JOBS_META),
+        query::build_query_metadata(Id::Resumable, query::RESUMABLE_META),
     ])
 });
 
@@ -228,29 +235,41 @@ mod tests {
         );
         assert!(!q.as_str().is_empty());
     }
+
+    fn find_helper(id: Id, v: u32, t: Tenant) -> Result<String> {
+        get_factory_query(
+            id,
+            if v == 0 {
+                None
+            } else {
+                Some(InstanceNumVersion::from(v))
+            },
+            t,
+            None,
+        )
+    }
     #[test]
     fn test_find_jobs() {
-        fn find_helper(v: u32, t: Tenant) -> Result<String> {
-            get_factory_query(
-                Id::Jobs,
-                if v == 0 {
-                    None
-                } else {
-                    Some(InstanceNumVersion::from(v))
-                },
-                t,
-                None,
-            )
-        }
+        let id = Id::Jobs;
 
-        let query_new = find_helper(12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(10200000, Tenant::Cdb).unwrap();
-        let query_nothing = find_helper(10000000, Tenant::Cdb);
-        let query_last = find_helper(0, Tenant::Cdb).unwrap(); // simulates 0
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
         assert!(!query_new.is_empty());
         assert!(!query_old.is_empty());
         assert!(query_nothing.is_err());
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
+    }
+    #[test]
+    fn test_find_resumable() {
+        let id = Id::Resumable;
+
+        let query_new = find_helper(id, 23010000, Tenant::Cdb).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_last.is_empty());
+        assert_eq!(query_new, query_last);
     }
 }

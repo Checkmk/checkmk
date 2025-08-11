@@ -18,6 +18,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sample_config import get_default_notification_rule
 from cmk.gui.welcome.registry import welcome_url_registry
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
@@ -48,6 +49,10 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     # Activation of the host
     if Query([Hosts.name]).fetchall(sites=sites.live()):
         yield FinishedEnum.adjust_services
+
+    collection = SingleRulesetRecursively.load_single_ruleset_recursively(name="host_contactgroups")
+    if len(collection.get("host_contactgroups").get_rules()) > 0:
+        yield FinishedEnum.assign_responsibilities
 
     notification_rules = NotificationRuleConfigFile().load_for_reading()
     # Creation of a new notification rule
@@ -131,9 +136,19 @@ def get_welcome_data() -> WelcomePage:
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(),
-            create_contactgoups=makeuri(
+            create_contactgroups=makeuri(
                 request,
                 addvars=[("mode", "contact_groups")],
+                filename="wato.py",
+            ),
+            users=makeuri(
+                request,
+                addvars=[("mode", "users")],
+                filename="wato.py",
+            ),
+            assign_host_to_contactgroups=makeuri(
+                request,
+                addvars=[("mode", "edit_ruleset"), ("varname", "host_contactgroups")],
                 filename="wato.py",
             ),
             setup_backup=makeuri(

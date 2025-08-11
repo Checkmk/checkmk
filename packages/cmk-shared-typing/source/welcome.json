@@ -23,7 +23,9 @@
                 "checkmk_ai": { "type": "string" },
                 "checkmk_docs": { "type": "string" },
                 "checkmk_forum": { "type": "string" },
-                "create_contactgoups": { "type": "string" },
+                "create_contactgroups": { "type": "string" },
+                "users": { "type": "string" },
+                "assign_host_to_contactgroups": { "type": "string" },
                 "setup_backup": { "type": "string" },
                 "scale_monitoring": { "type": "string" },
                 "fine_tune_monitoring": { "type": "string" },
@@ -51,7 +53,9 @@
                 "checkmk_ai",
                 "checkmk_docs",
                 "checkmk_forum",
-                "create_contactgoups",
+                "create_contactgroups",
+                "users",
+                "assign_host_to_contactgroups",
                 "setup_backup",
                 "scale_monitoring",
                 "fine_tune_monitoring",
@@ -84,6 +88,7 @@
                         "enum": [
                             "add_host",
                             "adjust_services",
+                            "assign_responsibilities",
                             "enable_notifications",
                             "customize_dashboard"
                         ]

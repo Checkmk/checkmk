@@ -10,6 +10,7 @@ import AdjustServices from '@/welcome/components/steps/AdjustServices.vue'
 import EnableNotifications from '@/welcome/components/steps/EnableNotifications.vue'
 import CustomizeDashboard from '@/welcome/components/steps/CustomizeDashboard.vue'
 import type { StageInformation } from 'cmk-shared-typing/typescript/welcome'
+import AssignResponsibilities from '@/welcome/components/steps/AssignResponsibilities.vue'
 
 export type StepId = StageInformation['finished'][number]
 
@@ -20,8 +21,9 @@ export const stepComponents: { component: Component; stepNumber: number; stepId:
     stepNumber: 2,
     stepId: 'adjust_services'
   },
-  { component: EnableNotifications, stepNumber: 3, stepId: 'enable_notifications' },
-  { component: CustomizeDashboard, stepNumber: 4, stepId: 'customize_dashboard' }
+  { component: AssignResponsibilities, stepNumber: 3, stepId: 'assign_responsibilities' },
+  { component: EnableNotifications, stepNumber: 4, stepId: 'enable_notifications' },
+  { component: CustomizeDashboard, stepNumber: 5, stepId: 'customize_dashboard' }
 ]
 
 export const totalSteps = stepComponents.length

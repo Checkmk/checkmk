@@ -51,7 +51,7 @@ defineProps<{
       <CmkLinkCard
         icon-name="contactgroups"
         :title="t('contact-groups', 'Contact groups')"
-        :url="urls.create_contactgoups"
+        :url="urls.create_contactgroups"
         :open-in-new-tab="false"
       />
       <CmkLinkCard

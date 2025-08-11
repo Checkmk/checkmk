@@ -93,6 +93,8 @@
 
   --icon-checkmk-logo-min: url('~cmk-frontend/themes/facelift/images/icon_checkmk_logo_min.svg');
   --icon-rulesets: url('~cmk-frontend/themes/facelift/images/icon_rulesets.svg');
+  --icon-users: url('~cmk-frontend/themes/facelift/images/icon_users.svg');
+  --icon-assign: url('~cmk-frontend/themes/facelift/images/icon_assign.svg');
   --icon-backup: url('~cmk-frontend/themes/facelift/images/icon_backup.svg');
   --icon-contactgroups: url('~cmk-frontend/themes/facelift/images/icon_contactgroups.svg');
   --icon-licensing: url('~cmk-frontend/themes/facelift/images/icon_licensing.svg');
@@ -254,6 +256,7 @@
     --icon-frameurl: url('~cmk-frontend/themes/facelift/images/icon_frameurl.svg');
     --icon-reload: url('~cmk-frontend/themes/modern-dark/images/icon_reload_cmk.svg');
     --icon-main-changes: url('~cmk-frontend/themes/modern-dark/images/icon_main_changes.svg');
+    --icon-assign: url('~cmk-frontend/themes/modern-dark/images/icon_assign.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

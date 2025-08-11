@@ -8,16 +8,21 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyDiscoveryResult,
-    LegacyResult,
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.lvm_lvs import (
     check_lvm_lvs,
     discover_lvm_lvs,
     LvmLvsEntry,
     parse_lvm_lvs,
+    Section,
 )
 
 
@@ -147,7 +152,7 @@ from cmk.base.legacy_checks.lvm_lvs import (
         ),
     ],
 )
-def test_parse_lvm_lvs(string_table: StringTable, expected: Mapping[str, LvmLvsEntry]) -> None:
+def test_parse_lvm_lvs(string_table: StringTable, expected: Section) -> None:
     assert parse_lvm_lvs(string_table) == expected
 
 
@@ -186,12 +191,12 @@ def test_parse_lvm_lvs(string_table: StringTable, expected: Mapping[str, LvmLvsE
                     "",
                 ],
             ],
-            [("vg0/pool0", {})],
+            [Service(item="vg0/pool0")],
             id="populated_section",
         ),
     ],
 )
-def test_discover_lvm_lvs(string_table: StringTable, expected: LegacyDiscoveryResult) -> None:
+def test_discover_lvm_lvs(string_table: StringTable, expected: DiscoveryResult) -> None:
     section = parse_lvm_lvs(string_table)
     assert list(discover_lvm_lvs(section)) == expected
 
@@ -202,8 +207,8 @@ def test_discover_lvm_lvs(string_table: StringTable, expected: LegacyDiscoveryRe
         pytest.param(
             "vg0/pool0",
             {
-                "levels_data": (80.0, 90.0),
-                "levels_meta": (80.0, 90.0),
+                "levels_data": ("fixed", (80.0, 90.0)),
+                "levels_meta": ("fixed", (80.0, 90.0)),
             },
             [
                 [
@@ -236,16 +241,18 @@ def test_discover_lvm_lvs(string_table: StringTable, expected: LegacyDiscoveryRe
                 ],
             ],
             [
-                (0, "Data usage: 8.87%", [("data_usage", 8.87, 80.0, 90.0)]),
-                (0, "Meta usage: 13.55%", [("meta_usage", 13.55, 80.0, 90.0)]),
+                Result(state=State.OK, summary="Data usage: 8.87%"),
+                Metric("data_usage", 8.87, levels=(80.0, 90.0)),
+                Result(state=State.OK, summary="Meta usage: 13.55%"),
+                Metric("meta_usage", 13.55, levels=(80.0, 90.0)),
             ],
             id="ok",
         ),
         pytest.param(
             "vg0/pool0",
             {
-                "levels_data": (80.0, 90.0),
-                "levels_meta": (80.0, 90.0),
+                "levels_data": ("fixed", (80.0, 90.0)),
+                "levels_meta": ("fixed", (80.0, 90.0)),
             },
             [
                 [
@@ -278,20 +285,18 @@ def test_discover_lvm_lvs(string_table: StringTable, expected: LegacyDiscoveryRe
                 ],
             ],
             [
-                (
-                    1,
-                    "Data usage: 85.87% (warn/crit at 80.00%/90.00%)",
-                    [("data_usage", 85.87, 80.0, 90.0)],
-                ),
-                (0, "Meta usage: 13.55%", [("meta_usage", 13.55, 80.0, 90.0)]),
+                Result(state=State.WARN, summary="Data usage: 85.87% (warn/crit at 80.00%/90.00%)"),
+                Metric("data_usage", 85.87, levels=(80.0, 90.0)),
+                Result(state=State.OK, summary="Meta usage: 13.55%"),
+                Metric("meta_usage", 13.55, levels=(80.0, 90.0)),
             ],
             id="data_warn",
         ),
         pytest.param(
             "vg0/pool0",
             {
-                "levels_data": (80.0, 90.0),
-                "levels_meta": (80.0, 90.0),
+                "levels_data": ("fixed", (80.0, 90.0)),
+                "levels_meta": ("fixed", (80.0, 90.0)),
             },
             [
                 [
@@ -324,19 +329,17 @@ def test_discover_lvm_lvs(string_table: StringTable, expected: LegacyDiscoveryRe
                 ],
             ],
             [
-                (0, "Data usage: 8.87%", [("data_usage", 8.87, 80.0, 90.0)]),
-                (
-                    2,
-                    "Meta usage: 93.55% (warn/crit at 80.00%/90.00%)",
-                    [("meta_usage", 93.55, 80.0, 90.0)],
-                ),
+                Result(state=State.OK, summary="Data usage: 8.87%"),
+                Metric("data_usage", 8.87, levels=(80.0, 90.0)),
+                Result(state=State.CRIT, summary="Meta usage: 93.55% (warn/crit at 80.00%/90.00%)"),
+                Metric("meta_usage", 93.55, levels=(80.0, 90.0)),
             ],
             id="meta_crit",
         ),
     ],
 )
 def test_check_lvm_lvs(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected: list[LegacyResult]
+    item: str, params: Mapping[str, Any], string_table: StringTable, expected: CheckResult
 ) -> None:
     section = parse_lvm_lvs(string_table)
     assert list(check_lvm_lvs(item, params, section)) == expected

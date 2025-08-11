@@ -3,56 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    Percentage,
+    SimpleLevels,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_lvm_lvs_pools():
-    return TextInput(
-        title=_("Logical Volume Pool"),
-        allow_empty=True,
-    )
-
-
-def _parameter_valuespec_lvm_lvs_pools():
+def _parameter_form_lvm_lvs_pools() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "levels_meta",
-                Tuple(
-                    title=_("Levels for Meta"),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%"), default_value=80.0),
-                        Percentage(title=_("Critical at"), unit=_("%"), default_value=90.0),
-                    ],
-                ),
+        elements={
+            "levels_meta": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Levels for meta"),
+                    form_spec_template=Percentage(),
+                    prefill_fixed_levels=DefaultValue((80.0, 90.0)),
+                    level_direction=LevelDirection.UPPER,
+                    migrate=migrate_to_float_simple_levels,
+                )
             ),
-            (
-                "levels_data",
-                Tuple(
-                    title=_("Levels for Data"),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%"), default_value=80.0),
-                        Percentage(title=_("Critical at"), unit=_("%"), default_value=90.0),
-                    ],
-                ),
+            "levels_data": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Levels for Data"),
+                    form_spec_template=Percentage(),
+                    prefill_fixed_levels=DefaultValue((80.0, 90.0)),
+                    level_direction=LevelDirection.UPPER,
+                    migrate=migrate_to_float_simple_levels,
+                )
             ),
-        ]
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="lvm_lvs_pools",
-        group=RulespecGroupCheckParametersStorage,
-        item_spec=_item_spec_lvm_lvs_pools,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_lvm_lvs_pools,
-        title=lambda: _("Logical Volume Pools (LVM)"),
-    )
+rule_spec_lvm_lvs_pools = CheckParameters(
+    name="lvm_lvs_pools",
+    title=Title("Logical Volume Pools (LVM)"),
+    topic=Topic.STORAGE,
+    parameter_form=_parameter_form_lvm_lvs_pools,
+    condition=HostAndItemCondition(item_title=Title("Logical Volume Pool")),
 )

@@ -735,7 +735,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "libelle_business_shadow_process",
         "libelle_business_shadow_archive_dir",
         "logins",
-        "lvm_lvs",
         "lvm_vgs",
         "mailman_lists",
         "mbg_lantime_ng_fan",

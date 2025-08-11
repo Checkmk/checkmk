@@ -779,6 +779,8 @@ go.opentelemetry.io/collector/featuregate v1.37.0 h1:CjsHzjktiqq/dxid4Xkhuf3yD6o
 go.opentelemetry.io/collector/featuregate v1.37.0/go.mod h1:Y/KsHbvREENKvvN9RlpiWk/IGBK+CATBYzIIpU7nccc=
 go.opentelemetry.io/collector/internal/fanoutconsumer v0.131.0 h1:TXosuV43qXWjex6ILqXwO4Swnag0WuEI4/38A2QJZlY=
 go.opentelemetry.io/collector/internal/fanoutconsumer v0.131.0/go.mod h1:JiRvlHgOpc5VZ4D5PDlLtBjeeqLs/rUMggOrEXYdZRs=
+go.opentelemetry.io/collector/internal/memorylimiter v0.131.0 h1:aloEiI6T7l/NpmLMcGrk1pier5HnY9wFTlSDmPt8Hus=
+go.opentelemetry.io/collector/internal/memorylimiter v0.131.0/go.mod h1:7XrVwuqwBlYIirvpQjA4Ukf6qVZULbAOh914U3TeKH8=
 go.opentelemetry.io/collector/internal/sharedcomponent v0.131.0 h1:oJ0lsh8axpl1wg9DM88Gu2aiwNWHtf25dUW3tzGmIVs=
 go.opentelemetry.io/collector/internal/sharedcomponent v0.131.0/go.mod h1:lNHZs597wZx8U6mwQkFEIgL9BsKt7/rkyiEGgT2Gq2E=
 go.opentelemetry.io/collector/internal/telemetry v0.131.0 h1:dqKbiGpcO8V31aWq2GRQLO/eNCs2B1IGS+qbkPFkmyc=
@@ -801,6 +803,8 @@ go.opentelemetry.io/collector/processor v1.37.0 h1:yUQfHHZFs94BZNCamYx+WoN0VoN7M
 go.opentelemetry.io/collector/processor v1.37.0/go.mod h1:TdCjl4QiiQ/JIcvonAGbXB7/cU1Sb8O7KrkN0sBmW3s=
 go.opentelemetry.io/collector/processor/batchprocessor v0.131.0 h1:zEEez8eCRSn+PClJCzXdxTD96c+hI1K7Ng7A5Cp8KHs=
 go.opentelemetry.io/collector/processor/batchprocessor v0.131.0/go.mod h1:NpbsoWQuf22LHUePNPDRrT8Lujfgf+5agKUwf0NBMDk=
+go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.131.0 h1:Dm0AeNbUIl0P4TpV9R+Mgo2tbyxFu+7hfTaEgQepIYg=
+go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.131.0/go.mod h1:Q2pAGgXnxzf3D4DUJpRWERMMgeQfz8THaEZpiemeblI=
 go.opentelemetry.io/collector/processor/processorhelper v0.131.0 h1:4otHyECTsRsz9yd4d6diTKb11j4fYtjgz6+PbR0CF7A=
 go.opentelemetry.io/collector/processor/processorhelper v0.131.0/go.mod h1:KAkP+oNGkZxOmfafz8osEerOY/lHJm/R55TaVyncBUM=
 go.opentelemetry.io/collector/processor/processorhelper/xprocessorhelper v0.131.0 h1:zPrb+xdJVtiLQ8a05bqeVHs8V2kwxwcqOam1+zEfgFY=

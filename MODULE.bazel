@@ -251,6 +251,7 @@ use_repo(
     "io_opentelemetry_go_collector_otelcol",
     "io_opentelemetry_go_collector_processor",
     "io_opentelemetry_go_collector_processor_batchprocessor",
+    "io_opentelemetry_go_collector_processor_memorylimiterprocessor",
     "io_opentelemetry_go_collector_receiver",
     "io_opentelemetry_go_collector_receiver_otlpreceiver",
 )

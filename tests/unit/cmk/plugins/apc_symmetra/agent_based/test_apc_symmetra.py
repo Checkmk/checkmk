@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
-from cmk.base.legacy_checks import apc_symmetra
+from cmk.plugins.apc_symmetra.agent_based import apc_symmetra
 
 STRING_TABLE_1 = [
     [],

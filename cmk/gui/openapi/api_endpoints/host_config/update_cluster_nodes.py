@@ -24,10 +24,9 @@ from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainV
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_property_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from ._utils import host_etag
+from ._utils import host_etag, PERMISSIONS_UPDATE
 
 
 @api_model
@@ -100,26 +99,7 @@ ENDPOINT_UPDATE_CLUSTER_NODES = VersionedEndpoint(
         link_relation=".../property",
         method="put",
     ),
-    permissions=EndpointPermissions(
-        required=permissions.AllPerm(
-            [
-                permissions.Perm("wato.edit"),
-                permissions.Perm("wato.edit_hosts"),
-                permissions.Optional(permissions.Perm("wato.all_folders")),
-                permissions.Undocumented(
-                    permissions.AnyPerm(
-                        [
-                            permissions.OkayToIgnorePerm("bi.see_all"),
-                            permissions.Perm("general.see_all"),
-                            permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                            # only used to check if user can see a host
-                            permissions.Perm("wato.see_all_folders"),
-                        ]
-                    )
-                ),
-            ]
-        )
-    ),
+    permissions=EndpointPermissions(required=PERMISSIONS_UPDATE),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=update_cluster_nodes_v1)},
     behavior=EndpointBehavior(etag="both"),

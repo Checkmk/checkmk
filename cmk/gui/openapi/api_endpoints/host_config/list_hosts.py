@@ -21,10 +21,9 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
-from ._utils import serialize_host_collection
+from ._utils import PERMISSIONS, serialize_host_collection
 from .models.response_models import HostConfigCollectionModel
 
 tracer = trace.get_tracer()
@@ -141,9 +140,7 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         link_relation=".../collection",
         method="get",
     ),
-    permissions=EndpointPermissions(
-        required=permissions.Optional(permissions.Perm("wato.see_all_folders"))
-    ),
+    permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=list_hosts_v1)},
 )

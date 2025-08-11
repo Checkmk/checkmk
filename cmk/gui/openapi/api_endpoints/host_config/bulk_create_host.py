@@ -33,11 +33,10 @@ from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import EXT, ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
-from ._utils import serialize_host_collection
+from ._utils import PERMISSIONS_CREATE, serialize_host_collection
 from .create_host import CreateHostModel
 from .models.response_models import HostConfigCollectionModel
 
@@ -180,24 +179,7 @@ ENDPOINT_BULK_CREATE_HOST = VersionedEndpoint(
         link_relation="cmk/bulk_create",
         method="post",
     ),
-    permissions=EndpointPermissions(
-        required=permissions.AllPerm(
-            [
-                permissions.Perm("wato.edit"),
-                permissions.Optional(permissions.Perm("wato.manage_hosts")),
-                permissions.Optional(permissions.Perm("wato.all_folders")),
-                permissions.Undocumented(
-                    permissions.AnyPerm(
-                        [
-                            permissions.OkayToIgnorePerm("bi.see_all"),
-                            permissions.Perm("general.see_all"),
-                            permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                        ]
-                    )
-                ),
-            ]
-        )
-    ),
+    permissions=EndpointPermissions(required=PERMISSIONS_CREATE),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name),
     versions={
         APIVersion.UNSTABLE: EndpointHandler(

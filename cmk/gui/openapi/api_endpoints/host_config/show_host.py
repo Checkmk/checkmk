@@ -18,10 +18,9 @@ from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainV
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from ._utils import host_etag, serialize_host
+from ._utils import host_etag, PERMISSIONS, serialize_host
 from .models.response_models import HostConfigModel
 
 
@@ -47,9 +46,7 @@ ENDPOINT_SHOW_HOST = VersionedEndpoint(
         link_relation="cmk/show",
         method="get",
     ),
-    permissions=EndpointPermissions(
-        required=permissions.Optional(permissions.Perm("wato.see_all_folders"))
-    ),
+    permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=show_host_v1)},
     behavior=EndpointBehavior(etag="output"),

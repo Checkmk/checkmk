@@ -13,6 +13,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 
@@ -26,6 +27,35 @@ from .models.response_models import (
 class AgentLinkHook:
     create_links: Callable[[HostName], list[LinkModel]] = lambda h: []
 
+
+_PERMISSIONS_RW_UNDOCUMENTED = permissions.Undocumented(
+    permissions.AnyPerm(
+        [
+            permissions.OkayToIgnorePerm("bi.see_all"),
+            permissions.Perm("general.see_all"),
+            permissions.OkayToIgnorePerm("mkeventd.seeall"),
+            # only used to check if user can see a host
+            permissions.Perm("wato.see_all_folders"),
+        ]
+    )
+)
+PERMISSIONS = permissions.Optional(permissions.Perm("wato.see_all_folders"))
+PERMISSIONS_CREATE = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.manage_hosts"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+        _PERMISSIONS_RW_UNDOCUMENTED,
+    ]
+)
+PERMISSIONS_UPDATE = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.edit_hosts"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+        _PERMISSIONS_RW_UNDOCUMENTED,
+    ]
+)
 
 _static_attribute_names = set(get_type_hints(HostAttributes))
 

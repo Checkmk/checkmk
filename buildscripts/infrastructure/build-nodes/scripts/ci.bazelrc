@@ -1,5 +1,3 @@
-startup --host_jvm_args=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts \
-        --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit
 common --config=ci
 # In the CI we have bazel-remote and the disk cache will be thrown away after the build
 common:linux --disk_cache=

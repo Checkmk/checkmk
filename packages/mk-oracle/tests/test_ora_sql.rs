@@ -15,7 +15,7 @@ use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
-use mk_oracle::types::{Credentials, InstanceName, Tenant};
+use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, Tenant};
 use mk_oracle::types::{Separator, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -361,5 +361,55 @@ fn test_ts_quotas() {
         assert!(!rows.is_empty());
         let expected = format!("{}|||", &endpoint.instance);
         assert_eq!(rows[0], expected);
+    }
+}
+
+fn _connect_and_query(
+    endpoint: &SqlDbEndpoint,
+    id: sqls::Id,
+    version: Option<InstanceNumVersion>,
+) -> Vec<String> {
+    let config = make_mini_config(endpoint);
+
+    let spot = backend::make_spot(&config.endpoint()).unwrap();
+    let conn = spot.connect(None).unwrap();
+    let q = SqlQuery::new(
+        sqls::get_factory_query(id, version, Tenant::All, None).unwrap(),
+        Separator::default(),
+        config.params(),
+    );
+    conn.query(&q, "").unwrap()
+}
+
+#[test]
+fn test_locks_last() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Locks, None);
+        assert!(rows.len() >= 3);
+        assert_eq!(
+            rows[0],
+            format!("{}.CDB$ROOT|||||||||||||||||", &endpoint.instance)
+        );
+        assert_eq!(
+            rows[1],
+            format!("{0}.{0}PDB1|||||||||||||||||", &endpoint.instance)
+        );
+        assert_eq!(rows[2], format!("{}|||||||||||||||||", &endpoint.instance));
+    }
+}
+#[test]
+fn test_locks_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Locks,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert!(!rows.is_empty());
+        assert_eq!(rows[0], format!("{}|||||||||||||||||", &endpoint.instance));
     }
 }

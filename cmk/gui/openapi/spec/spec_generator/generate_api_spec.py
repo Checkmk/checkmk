@@ -14,6 +14,7 @@ from typing import Literal
 
 from cmk.ccc import store
 from cmk.ccc.version import Edition
+from cmk.gui import main_modules
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.openapi.spec.spec_generator._core import _make_spec, populate_spec
@@ -102,6 +103,9 @@ def process_version(args: argparse.Namespace) -> None:
     _import_cce_endpoints()
     _import_cme_endpoints()
     _import_cse_endpoints()
+
+    # this registers some permissions (dashboards, views)
+    main_modules.load_plugins()
 
     version = APIVersion.from_string(args.version)
     build_spec(args.target, args.out, version, args.format)

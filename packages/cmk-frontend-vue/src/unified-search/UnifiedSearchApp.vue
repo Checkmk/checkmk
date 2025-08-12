@@ -4,8 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref } from 'vue'
-import { UnifiedSearch, type UnifiedSearchResult } from '@/lib/unified-search/unified-search'
+import { inject, onMounted, ref } from 'vue'
+import {
+  UnifiedSearch,
+  type SearchProviderResult,
+  type UnifiedSearchResult
+} from '@/lib/unified-search/unified-search'
 import { type Providers } from 'cmk-shared-typing/typescript/unified_search'
 import {
   SearchHistorySearchProvider,
@@ -22,9 +26,11 @@ import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.v
 import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import {
   UnifiedSearchProvider,
-  type UnifiedSearchProviderIdentifier
+  type UnifiedSearchProviderIdentifier,
+  type UnifiedSearchResultResponse
 } from '@/lib/unified-search/providers/unified'
 import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
+import UnifiedSearchWaitForResults from './components/view/UnifiedSearchWaitForResults.vue'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
@@ -59,12 +65,35 @@ const search = new UnifiedSearch(searchId, api, [
   searchHistorySearchProvider
 ])
 search.onSearch((result?: UnifiedSearchResult) => {
-  searchResult.value = undefined
-  void nextTick(() => {
-    searchResult.value = result
-  })
+  async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchResultResponse>) {
+    if (uspr) {
+      waitForSearchResults.value = true
+      const usprRes = (await uspr.result) as UnifiedSearchResultResponse
+
+      searchResult.value = usprRes
+      waitForSearchResults.value = false
+    } else {
+      searchResult.value = undefined
+    }
+  }
+  async function setHistoryResults(hpr: SearchProviderResult<SearchHistorySearchResult>) {
+    if (hpr) {
+      const hprRes = (await hpr.result) as SearchHistorySearchResult
+      historyResult.value = hprRes
+    } else {
+      historyResult.value = undefined
+    }
+  }
+
+  void setHistoryResults(
+    result?.get('search-history') as SearchProviderResult<SearchHistorySearchResult>
+  )
+  void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchResultResponse>)
 })
-const searchResult = ref<UnifiedSearchResult>()
+
+const searchResult = ref<UnifiedSearchResultResponse>()
+const historyResult = ref<SearchHistorySearchResult>()
+const waitForSearchResults = ref<boolean>(true)
 const searchUtils = initSearchUtils()
 
 searchUtils.search = search
@@ -113,12 +142,17 @@ onMounted(() => {
 <template>
   <DefaultPopup class="unified-search-root">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
-    <UnifiedSearchStart
-      v-if="!showTabResults()"
-      :history-result="searchResult?.get('search-history') as SearchHistorySearchResult"
-    >
+    <UnifiedSearchStart v-if="!showTabResults()" :history-result="historyResult">
     </UnifiedSearchStart>
-    <UnifiedSearchTabResults v-if="!!showTabResults()" :unified-result="searchResult">
+    <UnifiedSearchWaitForResults
+      v-if="waitForSearchResults && showTabResults()"
+      :result="searchResult"
+    >
+    </UnifiedSearchWaitForResults>
+    <UnifiedSearchTabResults
+      v-if="!waitForSearchResults && showTabResults()"
+      :result="searchResult"
+    >
     </UnifiedSearchTabResults>
     <UnifiedSearchFooter></UnifiedSearchFooter>
   </DefaultPopup>

@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 import { onBeforeUnmount, ref } from 'vue'
-import type { SearchProviderResult, UnifiedSearchResult } from '@/lib/unified-search/unified-search'
 import ResultList from '../result/ResultList.vue'
 import ResultItem from '../result/ResultItem.vue'
 import { immediateWatch } from '@/lib/watch'
@@ -24,6 +23,7 @@ const { _t } = usei18n()
 
 const searchUtils = getSearchUtils()
 const currentlySelected = ref<number>(-1)
+const inited = ref<boolean>(false)
 const results = ref<UnifiedSearchResultElement[]>([])
 searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
@@ -77,18 +77,15 @@ function handleItemClick(item: UnifiedSearchResultElement) {
 const isFocused = (i: number): boolean => currentlySelected.value === i
 
 const props = defineProps<{
-  unifiedResult?: UnifiedSearchResult | undefined
+  result?: UnifiedSearchResultResponse | undefined
 }>()
 
 immediateWatch(
-  () => ({ newResult: props.unifiedResult }),
+  () => ({ newResult: props.result }),
   async ({ newResult }) => {
     if (newResult) {
-      const uspr = newResult.get('unified') as SearchProviderResult<UnifiedSearchResultResponse>
-      const res = (await uspr.result) as UnifiedSearchResultResponse
-      if (res) {
-        results.value = res.results
-      }
+      results.value = newResult.results
+      inited.value = true
     }
   }
 )
@@ -138,7 +135,7 @@ function searchResultNotEmpty(): boolean {
       </ResultList>
     </CmkScrollContainer>
   </div>
-  <UnifiedSearchEmptyResults v-if="!searchResultNotEmpty()"></UnifiedSearchEmptyResults>
+  <UnifiedSearchEmptyResults v-if="inited && !searchResultNotEmpty()"></UnifiedSearchEmptyResults>
 </template>
 
 <style scoped>

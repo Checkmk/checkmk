@@ -92,10 +92,10 @@ def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> _Section:
             ("packets_dropped", packets_dropped),
             ("packets_accepted", packets_accepted),
             ("packets_rejected", packets_rejected),
+            ("packets_logged", logged),
             ("bytes_accepted", bytes_accepted),
             ("bytes_dropped", bytes_dropped),
             ("bytes_rejected", bytes_rejected),
-            ("logged", logged),
         ]:
             try:
                 inst[key] = int(value)
@@ -239,7 +239,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         ("packets_accepted", "Total number of accepted packets"),
         ("packets_dropped", "Total number of dropped packets"),
         ("packets_rejected", "Total number of rejected packets"),
-        ("logged", "Total number of logs sent"),
+        ("packets_logged", "Total number of logs sent"),
     ]:
         value = data.get(key)
         if value is None:
@@ -253,7 +253,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         yield check_levels(
             value_per_sec,
             key,
-            params.get(key),
+            params[key],
             human_readable_func=int,
             infoname=infotext,
             unit="1/s",
@@ -267,6 +267,13 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
     discovery_function=discover_key("packets"),
     check_function=check_checkpoint_vsx_packets,
     check_ruleset_name="checkpoint_vsx_packets",
+    check_default_parameters={
+        "packets": None,
+        "packets_accepted": None,
+        "packets_dropped": None,
+        "packets_rejected": None,
+        "packets_logged": None,
+    },
 )
 # .
 #   .--traffic-------------------------------------------------------------.

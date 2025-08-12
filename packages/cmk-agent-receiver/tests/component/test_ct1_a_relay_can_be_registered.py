@@ -40,3 +40,18 @@ def test_ct01_a_relay_can_be_registered(
         },
     )
     assert response_B.status_code == 200, f"Failed to register relay B: {response_B.text}"
+
+    # Verify both relays have tasks queue
+    response_A_tasks = agent_receiver_test_client.get(
+        f"/{site_name}/agent-receiver/relays/{relay_id_A}/tasks"
+    )
+    assert response_A_tasks.status_code == 200, (
+        f"Failed to get tasks for relay A: {response_A_tasks.text}"
+    )
+
+    response_B_tasks = agent_receiver_test_client.get(
+        f"/{site_name}/agent-receiver/relays/{relay_id_B}/tasks"
+    )
+    assert response_B_tasks.status_code == 200, (
+        f"Failed to get tasks for relay B: {response_B_tasks.text}"
+    )

@@ -425,3 +425,31 @@ fn test_log_switches() {
         assert_eq!(rows[0], format!("{}|0", &endpoint.instance));
     }
 }
+
+#[test]
+fn test_long_active_sessions_last() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::LongActiveSessions, None);
+        assert!(rows.len() >= 3);
+        assert_eq!(rows[0], format!("{}.CDB$ROOT||||||||", &endpoint.instance));
+        assert_eq!(rows[1], format!("{0}.{0}PDB1||||||||", &endpoint.instance));
+        assert_eq!(rows[2], format!("{}||||||||", &endpoint.instance));
+    }
+}
+
+#[test]
+fn test_long_active_sessions_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::LongActiveSessions,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert!(!rows.is_empty());
+        assert_eq!(rows[0], format!("{}||||||||", &endpoint.instance));
+    }
+}

@@ -94,7 +94,7 @@ fn make_spot_works(
     spots
         .into_iter()
         .map(|spot| {
-            let instances = WorkInstances::new(&spot);
+            let instances = WorkInstances::new(&spot, None);
             let closed = spot.close();
             let instance_works = instances
                 .all()

@@ -225,7 +225,7 @@ pub mod query {
     ];
 
     pub mod internal {
-        pub const INSTANCE_INFO_SQL_TEXT: &str = r"
+        pub const INSTANCE_INFO_SQL_TEXT_NEW: &str = r"
 SELECT
     INSTANCE_NAME,
     i.CON_ID,
@@ -235,6 +235,18 @@ SELECT
     FROM v$instance i
     join v$database d
         on i.con_id = d.con_id";
+        pub const INSTANCE_INFO_SQL_TEXT_OLD: &str = r"
+SELECT
+    INSTANCE_NAME,
+    i.CON_ID,
+    VERSION,
+    d.name,
+    d.cdb
+    FROM v$instance i
+    join v$database d
+        on i.con_id = d.con_id";
+        pub const INSTANCE_APPROXIMATE_VERSION: &str =
+            r"SELECT BANNER_FULL FROM v$version WHERE banner LIKE 'Oracle%'";
     }
 }
 

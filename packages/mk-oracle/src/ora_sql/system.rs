@@ -15,8 +15,8 @@ type _InstanceEntries = HashMap<InstanceName, (InstanceVersion, Tenant)>;
 pub struct WorkInstances(_InstanceEntries);
 
 impl WorkInstances {
-    pub fn new(spot: &OpenedSpot) -> Self {
-        let hashmap = _get_instances(spot).unwrap_or_else(|e| {
+    pub fn new(spot: &OpenedSpot, custom_query: Option<&str>) -> Self {
+        let hashmap = _get_instances(spot, custom_query).unwrap_or_else(|e| {
             log::error!("Failed to get instances: {}", e);
             _InstanceEntries::new()
         });
@@ -42,12 +42,48 @@ impl WorkInstances {
     }
 }
 
-fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
-    let result = spot.query_table(&SqlQuery::new(
-        sqls::query::internal::INSTANCE_INFO_SQL_TEXT,
+fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
+    if let Ok(result) = spot.query_table(&SqlQuery::new(
+        custom_query.unwrap_or(sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW),
         Separator::default(),
         &Vec::new(),
-    ))?;
+    )) {
+        Ok(_to_instance_entries(result))
+    } else {
+        let mut result = spot.query_table(&SqlQuery::new(
+            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
+            Separator::default(),
+            &Vec::new(),
+        ))?;
+        let result_with_version = spot.query(
+            &SqlQuery::new(
+                sqls::query::internal::INSTANCE_APPROXIMATE_VERSION,
+                Separator::default(),
+                &Vec::new(),
+            ),
+            "",
+        )?;
+        if let Some(version) = _extract_version(result_with_version) {
+            log::info!("Extracted version: {version}");
+            for r in result.iter_mut() {
+                r[2] = version.clone(); // Update the version column
+            }
+        }
+        Ok(_to_instance_entries(result))
+    }
+}
+
+fn _extract_version(result: Vec<String>) -> Option<String> {
+    if result.is_empty() {
+        log::warn!("No version information found in v$instance");
+        return None;
+    }
+    result[0].split(' ').next_back().and_then(|s| {
+        convert_to_num_version(&InstanceVersion::from(s.to_owned())).map(|_| s.to_string())
+    })
+}
+
+fn _to_instance_entries(result: Vec<Vec<String>>) -> _InstanceEntries {
     let hashmap: _InstanceEntries = result
         .into_iter()
         .filter_map(|x| {
@@ -65,9 +101,8 @@ fn _get_instances(spot: &OpenedSpot) -> Result<_InstanceEntries> {
             }
         })
         .collect();
-    Ok(hashmap)
+    hashmap
 }
-
 fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVersion> {
     let tops = String::from(version.clone())
         .splitn(5, '.')
@@ -107,7 +142,7 @@ mod tests {
             Ok(vec![])
         }
         fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-            if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT {
+            if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT_NEW {
                 Ok(vec![vec![
                     "free".to_string(),       // instance name
                     "0".to_string(),          // CON_ID
@@ -133,12 +168,12 @@ mod tests {
             .unwrap();
         let conn = simulated_spot.connect(None).unwrap();
         assert_eq!(
-            &WorkInstances::new(&conn)
+            &WorkInstances::new(&conn, None)
                 .get_full_version(&InstanceName::from("fREe"))
                 .unwrap(),
             &InstanceVersion::from("22.1.1.6.0".to_string())
         );
-        assert!(&WorkInstances::new(&conn)
+        assert!(&WorkInstances::new(&conn, None)
             .get_full_version(&InstanceName::from("HURZ"))
             .is_none());
     }

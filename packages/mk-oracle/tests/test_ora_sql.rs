@@ -249,6 +249,16 @@ fn test_remote_mini_connection() {
     assert_eq!(rows.len(), 2);
 }
 
+pub const INSTANCE_INFO_SQL_TEXT_FAIL: &str = r"
+SELECT
+    INSTANCE_NAME,
+    i.CON_ID,
+    VERSION_FULL_2,
+    d.name,
+    d.cdb
+    FROM v$instance i
+    join v$database d
+        on i.con_id = d.con_id";
 #[test]
 fn test_remote_mini_connection_version() {
     add_runtime_to_path();
@@ -260,14 +270,18 @@ fn test_remote_mini_connection_version() {
         let conn = spot
             .connect(None)
             .expect("Connect failed, check environment variables");
-        let instances = system::WorkInstances::new(&conn);
-
-        dbg!(&instances);
-        let r = instances.get_full_version(&InstanceName::from(&endpoint.instance));
-        dbg!(&r);
-        let version = r.unwrap();
-        assert!(String::from(version).starts_with("2"));
-        assert!(instances
+        // get instances using two different scripts, one of them simulates call to the old instance
+        // which doesn't report VERSION_FULL
+        let instances_new = system::WorkInstances::new(&conn, None);
+        let instances_old = system::WorkInstances::new(&conn, Some(INSTANCE_INFO_SQL_TEXT_FAIL));
+        let r_new = instances_new.get_full_version(&InstanceName::from(&endpoint.instance));
+        let r_old = instances_old.get_full_version(&InstanceName::from(&endpoint.instance));
+        let version_ok = r_new.unwrap();
+        let version_old = r_old.unwrap();
+        //check that both methods return the same values
+        assert_eq!(version_ok, version_old);
+        assert!(String::from(version_ok).starts_with("2"));
+        assert!(instances_new
             .get_full_version(&InstanceName::from("no-such-db"))
             .is_none());
     }

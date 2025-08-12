@@ -453,3 +453,17 @@ fn test_long_active_sessions_old() {
         assert_eq!(rows[0], format!("{}||||||||", &endpoint.instance));
     }
 }
+
+#[test]
+fn test_processes() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Processes, None);
+        assert!(!rows.is_empty());
+        let array = rows[0].split('|').collect::<Vec<&str>>();
+        assert_eq!(array[0], endpoint.instance.as_str());
+        assert!(array[1].parse::<u32>().is_ok());
+        assert!(array[2].parse::<u32>().is_ok());
+    }
+}

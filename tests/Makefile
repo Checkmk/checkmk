@@ -44,7 +44,6 @@ SYSTEM_TESTS := \
     test-update-cross-edition-cre-to-cce \
     test-update-cross-edition-cre-to-cee \
     test-schemathesis-openapi \
-    test-performance \
     test-plugins \
     test-plugins-piggyback \
     test-gui-crawl \

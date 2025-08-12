@@ -964,7 +964,7 @@ class FolderTree:
 
     def folder_choices(self) -> Sequence[tuple[str, str]]:
         if "folder_choices" not in g:
-            g.folder_choices = self.root_folder().recursive_subfolder_choices()
+            g.folder_choices = self.root_folder().recursive_subfolder_choices(pretty=True)
         return g.folder_choices
 
     def folder_choices_fulltitle(self) -> Sequence[tuple[str, str]]:
@@ -1798,13 +1798,16 @@ class Folder(FolderProtocol):
         title_prefix = ("\u00a0" * 6 * current_depth) + "\u2514\u2500 " if current_depth else ""
         return title_prefix + self.title()
 
-    def _walk_tree(self, results: list[tuple[str, str]], current_depth: int, pretty: bool) -> bool:
+    def _walk_tree(
+        self, results: list[tuple[str, str]], *, current_depth: int, pretty: bool
+    ) -> bool:
         visible_subfolders = False
         for subfolder in sorted(
             self._subfolders.values(), key=operator.methodcaller("title"), reverse=True
         ):
             visible_subfolders = (
-                subfolder._walk_tree(results, current_depth + 1, pretty) or visible_subfolders
+                subfolder._walk_tree(results, current_depth=current_depth + 1, pretty=pretty)
+                or visible_subfolders
             )
 
         if (
@@ -1818,9 +1821,9 @@ class Folder(FolderProtocol):
 
         return False
 
-    def recursive_subfolder_choices(self, pretty: bool = True) -> Sequence[tuple[str, str]]:
+    def recursive_subfolder_choices(self, *, pretty: bool) -> Sequence[tuple[str, str]]:
         result: list[tuple[str, str]] = []
-        self._walk_tree(result, 0, pretty)
+        self._walk_tree(result, current_depth=0, pretty=pretty)
         result.reverse()
         return result
 

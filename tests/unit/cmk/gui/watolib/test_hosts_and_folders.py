@@ -568,7 +568,7 @@ def test_recursive_subfolder_choices(
 ) -> None:
     with monkeypatch.context() as m:
         m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
-        assert actual_builder().recursive_subfolder_choices() == expected
+        assert actual_builder().recursive_subfolder_choices(pretty=True) == expected
 
 
 @pytest.mark.usefixtures("patch_may")
@@ -580,7 +580,7 @@ def test_recursive_subfolder_choices_function_calls(
         m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
         spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
         tree = three_levels_leaf_permissions()
-        tree.recursive_subfolder_choices()
+        tree.recursive_subfolder_choices(pretty=True)
         assert spy.call_count == 7
 
 

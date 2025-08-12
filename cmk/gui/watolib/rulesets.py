@@ -1450,7 +1450,9 @@ class Rule:
         current_folder = folder_tree().folder(current_folder)
         search_in_folders = [current_folder.path()]
         if do_recursion:
-            search_in_folders = [x for x, _y in current_folder.recursive_subfolder_choices()]
+            search_in_folders = [
+                x for x, _y in current_folder.recursive_subfolder_choices(pretty=True)
+            ]
         return search_in_folders
 
     def index(self) -> int:

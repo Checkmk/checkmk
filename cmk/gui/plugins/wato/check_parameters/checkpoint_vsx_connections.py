@@ -3,59 +3,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    InputHint,
+    Integer,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
+    Percentage,
+    SimpleLevels,
+    validators,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_valuespec_checkpoint_vsx_connections():
     return Dictionary(
-        help=_(
+        help_text=Help(
             "This rule allows you to configure the number of maximum connections for a given VSID."
         ),
-        elements=[
-            (
-                "levels_perc",
-                Tuple(
-                    title=_("Percentage of maximum available connections"),
-                    elements=[
-                        Percentage(
-                            title=_("Warning at"),
-                            # xgettext: no-python-format
-                            unit=_("% of maximum connections"),
-                        ),
-                        Percentage(
-                            title=_("Critical at"),
-                            # xgettext: no-python-format
-                            unit=_("% of maximum connections"),
-                        ),
-                    ],
+        elements={
+            "levels_perc": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Percentage of maximum available connections"),
+                    form_spec_template=Percentage(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((80.0, 90.0)),
+                    migrate=migrate_to_float_simple_levels,
                 ),
             ),
-            (
-                "levels_abs",
-                Tuple(
-                    title=_("Absolute number of connections"),
-                    elements=[
-                        Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                        Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                    ],
+            "levels_abs": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Absolute number of connections"),
+                    form_spec_template=Integer(
+                        label=Label("connections"),
+                        custom_validate=(validators.NumberInRange(0, None),),
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-        ],
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="checkpoint_vsx_connections",
-        group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("VSID")),
-        parameter_valuespec=_parameter_valuespec_checkpoint_vsx_connections,
-        title=lambda: _("Check Point VSID connections"),
-    )
+rule_spec_checkpoint_vsx_connections = CheckParameters(
+    name="checkpoint_vsx_connections",
+    title=Title("Check Point VSID connections"),
+    topic=Topic.NETWORKING,
+    parameter_form=_parameter_valuespec_checkpoint_vsx_connections,
+    condition=HostAndItemCondition(item_title=Title("VSID")),
 )

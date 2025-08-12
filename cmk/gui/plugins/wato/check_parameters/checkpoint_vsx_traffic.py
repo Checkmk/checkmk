@@ -3,56 +3,73 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Integer,
+    LevelDirection,
     Levels,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
+    migrate_to_upper_integer_levels,
+    PredictiveLevels,
 )
-from cmk.gui.valuespec import Dictionary, TextInput
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_valuespec_checkpoint_vsx_traffic():
     return Dictionary(
-        elements=[
-            (
-                "bytes_accepted",
-                Levels(
-                    title=_("Maximum rate of bytes accepted"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="bytes/sec",
+        elements={
+            "bytes_accepted": DictElement(
+                required=False,
+                parameter_form=Levels(
+                    title=Title("Maximum rate of bytes accepted"),
+                    form_spec_template=Integer(label=Label("bytes/sec")),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((100000, 200000)),
+                    predictive=PredictiveLevels(
+                        reference_metric="packets",
+                        prefill_abs_diff=DefaultValue((5000, 10000)),
+                    ),
+                    migrate=migrate_to_upper_integer_levels,
                 ),
             ),
-            (
-                "bytes_dropped",
-                Levels(
-                    title=_("Maximum rate of bytes dropped"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="bytes/sec",
+            "bytes_dropped": DictElement(
+                required=False,
+                parameter_form=Levels(
+                    title=Title("Maximum rate of bytes dropped"),
+                    form_spec_template=Integer(label=Label("bytes/sec")),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((100000, 200000)),
+                    predictive=PredictiveLevels(
+                        reference_metric="packets",
+                        prefill_abs_diff=DefaultValue((5000, 10000)),
+                    ),
+                    migrate=migrate_to_upper_integer_levels,
                 ),
             ),
-            (
-                "bytes_rejected",
-                Levels(
-                    title=_("Maximum rate of bytes rejected"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="bytes/sec",
+            "bytes_rejected": DictElement(
+                required=False,
+                parameter_form=Levels(
+                    title=Title("Maximum rate of bytes rejected"),
+                    form_spec_template=Integer(label=Label("bytes/sec")),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((100000, 200000)),
+                    predictive=PredictiveLevels(
+                        reference_metric="packets",
+                        prefill_abs_diff=DefaultValue((5000, 10000)),
+                    ),
+                    migrate=migrate_to_upper_integer_levels,
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="checkpoint_vsx_traffic",
-        group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("VSID")),
-        parameter_valuespec=_parameter_valuespec_checkpoint_vsx_traffic,
-        title=lambda: _("Check Point VSID traffic rate"),
-    )
+rule_spec_checkpoint_vsx_traffic = CheckParameters(
+    name="checkpoint_vsx_traffic",
+    title=Title("Check Point VSID traffic rate"),
+    topic=Topic.NETWORKING,
+    parameter_form=_parameter_valuespec_checkpoint_vsx_traffic,
+    condition=HostAndItemCondition(item_title=Title("VSID")),
 )

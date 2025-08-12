@@ -5,23 +5,26 @@
 
 
 import time
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
     DiscoveryResult,
     get_rate,
     get_value_store,
     render,
+    Result,
     Service,
+    SNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 from cmk.plugins.lib.checkpoint import DETECT
-
-check_info = {}
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0
@@ -144,15 +147,15 @@ def discover_checkpoint_vsx(section: Section) -> DiscoveryResult:
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx(item: str, _no_params: object, section: Section) -> Generator:
+def check_checkpoint_vsx(item: str, section: Section) -> CheckResult:
     if not (data := section.get(item)):
         return
 
-    yield 0, f"Type: {data.vs_type}"
-    yield 0, f"Main IP: {data.vs_ip}"
+    yield Result(state=State.OK, summary=f"Type: {data.vs_type}")
+    yield Result(state=State.OK, summary=f"Main IP: {data.vs_ip}")
 
 
-check_info["checkpoint_vsx"] = LegacyCheckDefinition(
+snmp_section_checkpoint_vsx = SNMPSection(
     name="checkpoint_vsx",
     detect=DETECT,
     fetch=[
@@ -166,6 +169,11 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_checkpoint_vsx,
+)
+
+
+check_plugin_checkpoint_vsx = CheckPlugin(
+    name="checkpoint_vsx",
     service_name="VS %s Info",
     discovery_function=discover_checkpoint_vsx,
     check_function=check_checkpoint_vsx,
@@ -189,7 +197,7 @@ def discover_vsx_connections(section: Section) -> DiscoveryResult:
 
 def check_checkpoint_vsx_connections(
     item: str, params: Mapping[str, Any], section: Section
-) -> Generator:
+) -> CheckResult:
     if not (data := section.get(item)):
         return
 
@@ -197,12 +205,12 @@ def check_checkpoint_vsx_connections(
     if conn_total is None:
         return
 
-    yield check_levels(
+    yield from check_levels(
         conn_total,
-        "connections",
-        params.get("levels_abs"),
-        human_readable_func=int,
-        infoname="Used connections",
+        metric_name="connections",
+        levels_upper=params.get("levels_abs"),
+        render_func=str,
+        label="Used",
     )
 
     conn_limit = data.conn_table_size
@@ -210,16 +218,14 @@ def check_checkpoint_vsx_connections(
         return
 
     if conn_limit > 0:
-        yield check_levels(
+        yield from check_levels(
             100.0 * conn_total / conn_limit,
-            None,
-            params.get("levels_perc"),
-            human_readable_func=render.percent,
-            infoname="Used percentage",
+            levels_upper=params.get("levels_perc"),
+            render_func=render.percent,
         )
 
 
-check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
+check_plugin_checkpoint_vsx_connections = CheckPlugin(
     name="checkpoint_vsx_connections",
     service_name="VS %s Connections",
     sections=["checkpoint_vsx"],
@@ -227,7 +233,7 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
     check_function=check_checkpoint_vsx_connections,
     check_ruleset_name="checkpoint_vsx_connections",
     check_default_parameters={
-        "levels_perc": (90.0, 95.0),
+        "levels_perc": ("fixed", (90.0, 95.0)),
     },
 )
 # .
@@ -249,7 +255,7 @@ def discover_vsx_packets(section: Section) -> DiscoveryResult:
 
 def check_checkpoint_vsx_packets(
     item: str, params: Mapping[str, Any], section: Section
-) -> Generator:
+) -> CheckResult:
     if not (data := section.get(item)):
         return
 
@@ -270,17 +276,16 @@ def check_checkpoint_vsx_packets(
             value_store, "%s_rate" % key, this_time, value, raise_overflow=True
         )
 
-        yield check_levels(
+        yield from check_levels(
             value_per_sec,
-            key,
-            params[key],
-            human_readable_func=int,
-            infoname=label,
-            unit="1/s",
+            metric_name=key,
+            levels_upper=params[key],
+            render_func=lambda x: f"{x}/s",
+            label=label,
         )
 
 
-check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
+check_plugin_checkpoint_vsx_packets = CheckPlugin(
     name="checkpoint_vsx_packets",
     service_name="VS %s Packets",
     sections=["checkpoint_vsx"],
@@ -288,11 +293,11 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
     check_function=check_checkpoint_vsx_packets,
     check_ruleset_name="checkpoint_vsx_packets",
     check_default_parameters={
-        "packets": None,
-        "packets_accepted": None,
-        "packets_dropped": None,
-        "packets_rejected": None,
-        "packets_logged": None,
+        "packets": ("no_levels", None),
+        "packets_accepted": ("no_levels", None),
+        "packets_dropped": ("no_levels", None),
+        "packets_rejected": ("no_levels", None),
+        "packets_logged": ("no_levels", None),
     },
 )
 # .
@@ -316,7 +321,7 @@ def discover_vsx_traffic(section: Section) -> DiscoveryResult:
 
 def check_checkpoint_vsx_traffic(
     item: str, params: Mapping[str, Any], section: Section
-) -> Generator:
+) -> CheckResult:
     if not (data := section.get(item)):
         return
 
@@ -333,22 +338,27 @@ def check_checkpoint_vsx_traffic(
         this_time = int(time.time())
         value_per_sec = get_rate(value_store, f"{key}_rate", this_time, value, raise_overflow=True)
 
-        yield check_levels(
+        yield from check_levels(
             value_per_sec,
-            key,
-            params.get(key),
-            human_readable_func=render.iobandwidth,
-            infoname="Total number of %s" % key.replace("_", " "),
+            metric_name=key,
+            levels_upper=params[key],
+            render_func=render.iobandwidth,
+            label="Total number of %s" % key.replace("_", " "),
         )
 
 
-check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
+check_plugin_checkpoint_vsx_traffic = CheckPlugin(
     name="checkpoint_vsx_traffic",
     service_name="VS %s Traffic",
     sections=["checkpoint_vsx"],
     discovery_function=discover_vsx_traffic,
     check_function=check_checkpoint_vsx_traffic,
     check_ruleset_name="checkpoint_vsx_traffic",
+    check_default_parameters={
+        "bytes_accepted": ("no_levels", None),
+        "bytes_dropped": ("no_levels", None),
+        "bytes_rejected": ("no_levels", None),
+    },
 )
 # .
 #   .--status--------------------------------------------------------------.
@@ -363,28 +373,34 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_status(item: str, _no_params: object, parsed: Section) -> Generator:
-    if not (data := parsed.get(item)):
+def check_checkpoint_vsx_status(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
     ha_state = data.vs_ha_status
-    yield 2 if ha_state.lower() not in ["active", "standby"] else 0, "HA status: %s" % ha_state
+    yield Result(
+        state=State.CRIT if ha_state.lower() not in ["active", "standby"] else State.OK,
+        summary="HA Status: %s" % ha_state,
+    )
 
     sic_state = data.vs_sic_status
-    yield 2 if sic_state.lower() != "trust established" else 0, "SIC Status: %s" % sic_state
+    yield Result(
+        state=State.CRIT if sic_state.lower() != "trust established" else State.OK,
+        summary="SIC Status: %s" % sic_state,
+    )
 
-    yield 0, "Policy name: %s" % data.vs_policy
+    yield Result(state=State.OK, summary="Policy name: %s" % data.vs_policy)
 
     policy_type = data.vs_policy_type
-    state = 0
+    state = State.OK
     infotext = "Policy type: %s" % policy_type
     if policy_type.lower() not in ["active", "initial policy"]:
-        state = 2
+        state = State.CRIT
         infotext += " (no policy installed)"
-    yield state, infotext
+    yield Result(state=state, summary=infotext)
 
 
-check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
+check_plugin_checkpoint_vsx_status = CheckPlugin(
     name="checkpoint_vsx_status",
     service_name="VS %s Status",
     sections=["checkpoint_vsx"],

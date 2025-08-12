@@ -21,7 +21,6 @@ py_library(
         "cmk/agent_receiver/log.py",
         "cmk/agent_receiver/main.py",
         "cmk/agent_receiver/models.py",
-        "cmk/agent_receiver/relay_endpoints.py",
         "cmk/agent_receiver/site_context.py",
         "cmk/agent_receiver/utils.py",
         "cmk/agent_receiver/worker.py",
@@ -32,7 +31,6 @@ py_library(
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
-        "//packages/cmk-relay-protocols",
         requirement("cryptography"),
         requirement("fastapi"),
         requirement("gunicorn"),

@@ -5,13 +5,22 @@
 
 from datetime import datetime
 from enum import StrEnum
+from uuid import UUID
 
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, ConfigDict
 
 
 class TaskType(StrEnum):
     RELAY_CONFIG = "RELAY_CONFIG"
     FETCH_AD_HOC = "FETCH_AD_HOC"
+
+
+class TaskRequest(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    id: UUID
+    type: TaskType
+    payload: str
+    version: int = 1
 
 
 class TaskStatus(StrEnum):
@@ -25,32 +34,13 @@ class ResultType(StrEnum):
     ERROR = "ERROR"
 
 
-class TaskCreateRequest(BaseModel, frozen=True):
-    type: TaskType
-    payload: str
-    version: int = 1
-
-
-class TaskCreateResponse(BaseModel, frozen=True):
-    task_id: UUID4
-
-
-class TaskResponse(TaskCreateRequest):
+class TaskResponse(TaskRequest):
+    model_config = ConfigDict(frozen=True)
     status: TaskStatus
     result_type: ResultType
     result_payload: str
     creation_timestamp: datetime
     update_timestamp: datetime
-    id: UUID4
-
-
-class TaskListResponse(BaseModel, frozen=True):
-    tasks: list[TaskResponse]
-
-
-class TaskUpdateRequest(BaseModel, frozen=True):
-    result_type: ResultType
-    result_payload: str
 
 
 # TODO: In this package we should define a RELAY_CONFIG payload that would be used from the relay and the agent receiver to configure the relay

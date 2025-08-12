@@ -1,0 +1,17 @@
+title: NTI Enviromux SEMS E2D: External Sensor Temperature
+agents: snmp
+catalog: hw/environment/nti
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of external sensors attached to
+ NTI Enviromux SEMS E2D devices.
+
+item:
+ The item is composed from the description and the sensor index.
+
+perfdata:
+ One graph for the Temperature.
+
+discovery:
+ One service is created for each available external temperature sensor.

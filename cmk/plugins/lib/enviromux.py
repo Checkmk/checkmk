@@ -8,7 +8,7 @@ from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Service, startswith
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, startswith, State
 
 from .humidity import check_humidity
 from .temperature import check_temperature, TempParamType
@@ -234,6 +234,7 @@ DETECT_ENVIROMUX = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.11")
 DETECT_ENVIROMUX5 = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.10")
 
 DETECT_ENVIROMUX_SEMS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.2")
+DETECT_ENVIROMUX_SEMS_E2D = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.9")
 
 DETECT_ENVIROMUX_MICRO = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.12")
 
@@ -308,4 +309,36 @@ def check_enviromux_humidity(
     yield from check_humidity(
         humidity=sensor.value,
         params=params,
+    )
+
+
+def discover_enviromux_sems_digital(section: EnviromuxDigitalSection) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
+
+
+def check_enviromux_sems_digital(
+    item: str,
+    section: EnviromuxDigitalSection,
+) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    if sensor.value == "unknown":
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Sensor value is unknown",
+        )
+        return
+
+    if sensor.value == sensor.normal_value:
+        yield Result(
+            state=State.OK,
+            summary=f"Sensor Value is normal: {sensor.value}",
+        )
+        return
+
+    yield Result(
+        state=State.CRIT,
+        summary=f"Sensor Value is not normal: {sensor.value} . It should be: {sensor.normal_value}",
     )

@@ -109,9 +109,6 @@ class HostsDashboard(CmkPage):
             self.enter_layout_mode_icon.click()
         else:
             self.main_area.click_item_in_dropdown_list("Dashboard", "Clone built-in dashboard")
-            # TODO remove when CMK-19019 is fixed
-            self.navigate()
-            self.enter_layout_mode_icon.click()
         self.page.wait_for_load_state("load")
 
     def edit_properties_button(self, dashlet_title: str) -> Locator:

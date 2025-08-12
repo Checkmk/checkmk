@@ -7,10 +7,11 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
+from cmk.agent_based.v2 import get_rate, get_value_store, render, Service, SNMPTree, StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 check_info = {}
@@ -40,7 +41,10 @@ check_info = {}
 # .1.3.6.1.4.1.2620.1.16.23.1.1.13.1.0 1
 
 
-def parse_checkpoint_vsx(string_table):
+type _Section = Mapping[str, Any]  # TODO: refine this type
+
+
+def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> _Section:
     parsed = {}
     status_table, counter_table = string_table
 
@@ -101,6 +105,10 @@ def parse_checkpoint_vsx(string_table):
     return parsed
 
 
+def discover_checkpoint_vsx(parsed):
+    yield from (Service(item=item) for item in parsed)
+
+
 def discover_key(key: str) -> Callable:
     def discover_bound_keys(section):
         yield from ((item, {}) for item, data in section.items() if key in data)
@@ -150,7 +158,7 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
     ],
     parse_function=parse_checkpoint_vsx,
     service_name="VS %s Info",
-    discovery_function=discover_key("vs_name"),
+    discovery_function=discover_checkpoint_vsx,
     check_function=check_checkpoint_vsx,
 )
 # .
@@ -359,7 +367,7 @@ check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
     name="checkpoint_vsx_status",
     service_name="VS %s Status",
     sections=["checkpoint_vsx"],
-    discovery_function=discover_key("vs_ha_status"),
+    discovery_function=discover_checkpoint_vsx,
     check_function=check_checkpoint_vsx_status,
 )
 # .

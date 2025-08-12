@@ -14,6 +14,8 @@ import sys
 import time
 from collections.abc import Callable
 
+import grpc  # type: ignore[import-untyped]
+from grpc import ChannelCredentials
 from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
@@ -47,9 +49,18 @@ console_logger.addHandler(logging.StreamHandler(sys.stdout))
 console_logger.setLevel(LOG_LEVEL)
 
 
-def setup_metrics():
+def setup_metrics(
+    credentials: ChannelCredentials | None,
+    options: tuple[tuple[str, str]] | None,
+    insecure: bool,
+) -> tuple[metrics.Meter, MeterProvider]:
     console_logger.info("Setting up OpenTelemetry Metrics")
-    metric_exporter = OTLPMetricExporter(endpoint=f"{ENDPOINT}/v1/metrics", insecure=True)
+    metric_exporter = OTLPMetricExporter(
+        endpoint=f"{ENDPOINT}/v1/metrics",
+        credentials=credentials,
+        channel_options=options,
+        insecure=insecure,
+    )
     metrics_reader = PeriodicExportingMetricReader(
         exporter=metric_exporter,
     )
@@ -58,9 +69,18 @@ def setup_metrics():
     return metrics.get_meter("test.grpc.meter"), meter_provider
 
 
-def setup_logging():
+def setup_logging(
+    credentials: ChannelCredentials | None,
+    options: tuple[tuple[str, str]] | None,
+    insecure: bool,
+) -> tuple[logging.Logger, LoggerProvider]:
     console_logger.info("Setting up OpenTelemetry Logging")
-    log_exporter = OTLPLogExporter(endpoint=f"{ENDPOINT}/v1/logs", insecure=True)
+    log_exporter = OTLPLogExporter(
+        endpoint=f"{ENDPOINT}/v1/logs",
+        credentials=credentials,
+        channel_options=options,
+        insecure=insecure,
+    )
     log_processor = BatchLogRecordProcessor(log_exporter)
     logger_provider = LoggerProvider(resource=RESOURCE)
     logger_provider.add_log_record_processor(log_processor)
@@ -86,17 +106,45 @@ def shutdown_handler(
     return handler
 
 
-def main():
-    parser = argparse.ArgumentParser(description="OpenTelemetry GRPC Example")
+def main() -> None:
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--enable-logs",
         action="store_true",
         help="Enable OpenTelemetry logs",
     )
+    parser.add_argument(
+        "--cert-path",
+        type=str,
+        default=None,
+        help="Path to root certificate file for TLS (optional)",
+    )
+    parser.add_argument(
+        "--site-name",
+        type=str,
+        default=None,
+        help="Site name for SNI/server_name_override (mandatory if cert_path is set)",
+    )
     args = parser.parse_args()
 
-    meter, meter_provider = setup_metrics()
-    logger, logger_provider = setup_logging() if args.enable_logs else (None, None)
+    if (args.cert_path and not args.site_name) or (args.site_name and not args.cert_path):
+        parser.error("You must specify both --cert-path and --site-name, or neither.")
+
+    if args.cert_path and args.site_name:
+        with open(args.cert_path, "rb") as f:
+            root_certificates = f.read()
+        credentials = grpc.ssl_channel_credentials(root_certificates=root_certificates)
+        options = (("grpc.ssl_target_name_override", args.site_name),)
+        insecure = False
+    else:
+        credentials = None
+        options = None
+        insecure = True
+
+    meter, meter_provider = setup_metrics(credentials, options, insecure)
+    logger, logger_provider = (
+        setup_logging(credentials, options, insecure) if args.enable_logs else (None, None)
+    )
 
     success_shutdown_handler = shutdown_handler(meter_provider, logger_provider)
     signal.signal(signal.SIGINT, success_shutdown_handler)

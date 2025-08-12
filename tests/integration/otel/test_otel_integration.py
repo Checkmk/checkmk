@@ -48,7 +48,7 @@ GRPC_CONFIG = {
             ],
             [{"type": "key", "value": "cmk.test.attribute2"}],
         ],
-        "encryption": False,
+        "encryption": True,
         "port": GRPC_PORT,
     }
 }
@@ -134,6 +134,7 @@ def delete_created_objects(
 )
 def test_otel_collector_with_receiver_config(
     otel_site: Site,
+    ca_certificate_path: str,
     receiver_type: str,
     receiver_config: dict,
     script_file_name: ScriptFileName,
@@ -149,6 +150,7 @@ def test_otel_collector_with_receiver_config(
 
     Args:
         otel_site: The site where the OpenTelemetry collector is enabled.
+        ca_certificate_path: Path to the CA certificate file of the site.
         receiver_type: Type of the receiver, either 'grpc' or 'http'.
         receiver_config: OpenTelemetry receiver configuration.
         script_file_name: The name of the script which generates OpenTelemetry data.
@@ -192,7 +194,12 @@ def test_otel_collector_with_receiver_config(
         )
         otel_site.openapi.changes.activate_and_wait_for_completion()
 
-        with opentelemetry_app(script_file_name):
+        if receiver_config["endpoint"]["encryption"]:
+            additional_args = [f"--cert-path={ca_certificate_path}", f"--site-name={otel_site.id}"]
+        else:
+            additional_args = None
+
+        with opentelemetry_app(script_file_name, additional_args):
             wait_for_opentelemetry_data(otel_site, host_name)
 
             logger.info("Running service discovery and activating changes")

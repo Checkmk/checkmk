@@ -16,6 +16,8 @@ from .type_defs import DashboardConfig, DashboardName
 
 
 def page_edit_dashboards(config: Config) -> None:
+    # Required entrypoint to be able to render the slideout component from the sidebar
+    html.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
     visuals.page_list(
         what="dashboards",
         title=_("Edit dashboards"),

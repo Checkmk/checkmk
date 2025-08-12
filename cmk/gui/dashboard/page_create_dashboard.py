@@ -8,8 +8,11 @@ context type of the new dashboard selectable."""
 
 from cmk.gui import visuals
 from cmk.gui.config import Config
+from cmk.gui.htmllib.html import html
 from cmk.gui.visuals.info import visual_info_registry
 
 
 def page_create_dashboard(config: Config) -> None:
+    # Required entrypoint to be able to render the slideout component from the sidebar
+    html.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
     visuals.page_create_visual("dashboards", list(visual_info_registry.keys()))

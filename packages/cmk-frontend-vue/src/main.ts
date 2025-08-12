@@ -17,6 +17,7 @@ import ChangesApp from './main-menu/ChangesApp.vue'
 import '@/assets/variables.css'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
+import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
@@ -28,4 +29,5 @@ defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
+defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)

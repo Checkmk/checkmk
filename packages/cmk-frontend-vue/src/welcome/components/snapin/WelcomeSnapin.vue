@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
+import CmkButton from '@/components/CmkButton.vue'
 
 const { t } = usei18n('welcome-snapin')
 
@@ -20,11 +21,27 @@ const props = defineProps<{
   stage_information: StageInformation
 }>()
 
+interface CmkWindow extends Window {
+  main: Window
+}
+
 const completedSteps = props.stage_information.finished.length
+
+function openSlideIn() {
+  const event = new CustomEvent('open-welcome-slide-in', {
+    detail: {
+      urls: props.urls,
+      stage_information: props.stage_information
+    }
+  })
+  ;(top!.frames as CmkWindow).main.dispatchEvent(event)
+}
+
+const completed = completedSteps === totalSteps
 </script>
 
 <template>
-  <CmkParagraph v-if="completedSteps === totalSteps" class="welcome-snapin-completed">
+  <CmkParagraph v-if="completed" class="welcome-snapin-completed">
     <CmkBadge color="success" type="fill" shape="circle" size="small">
       <CmkIcon name="checkmark" size="large"></CmkIcon>
     </CmkBadge>
@@ -40,9 +57,17 @@ const completedSteps = props.stage_information.finished.length
     size="small"
     class="welcome-snapin-progress-wrapper"
   />
-  <a href="welcome.py" target="main" class="welcome-snapin-whats-next">{{
-    t('whats-new', "What's next?")
-  }}</a>
+  <CmkButton
+    v-if="!completed"
+    variant="secondary"
+    class="welcome-snapin-continue"
+    @click="openSlideIn"
+  >
+    {{ t('continue-setup', 'Continue setup') }}
+  </CmkButton>
+  <CmkButton v-else variant="secondary" class="welcome-snapin-continue" @click="openSlideIn">
+    {{ t('continue-setup', "What's next") }}
+  </CmkButton>
 </template>
 
 <style scoped>
@@ -56,7 +81,7 @@ const completedSteps = props.stage_information.finished.length
   display: flex;
   flex-direction: column;
 }
-.welcome-snapin-whats-next {
+.welcome-snapin-continue {
   display: flex;
   height: var(--dimension-height-10);
   background: var(--success);
@@ -67,7 +92,6 @@ const completedSteps = props.stage_information.finished.length
   border-radius: var(--border-radius);
   margin-top: var(--spacing);
   font-weight: var(--font-weight-bold);
-  font-size: var(--fonr-size-large);
 
   &:hover {
     background: var(--color-corporate-green-40);

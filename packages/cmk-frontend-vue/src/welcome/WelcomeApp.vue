@@ -37,7 +37,8 @@ const completedSteps = props.stage_information.finished.length
           <OnboardingStepper
             :urls="urls"
             :finished-steps="stage_information.finished"
-          ></OnboardingStepper>
+            :show-heading="true"
+          />
         </div>
         <div class="welcome-app__panel-right">
           <ResourceLinksPanel :urls="urls" />

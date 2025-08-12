@@ -18,6 +18,7 @@ const { t } = usei18n('onboarding-stepper')
 const props = defineProps<{
   urls: WelcomeUrls
   finishedSteps: string[]
+  showHeading: boolean
 }>()
 
 const buildStepId = (step: number): string => `step-${step}`
@@ -36,7 +37,7 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
 </script>
 
 <template>
-  <CmkHeading type="h4">
+  <CmkHeading v-if="showHeading" type="h4">
     {{ t('first-steps', 'First steps with Checkmk') }}
   </CmkHeading>
   <CmkSpace />

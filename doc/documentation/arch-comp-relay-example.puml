@@ -1,0 +1,41 @@
+@startuml
+package "Site" {
+    component "Agent Receiver"
+}
+
+package "Relay Engine" {
+    package Core {
+        queue "Main Queue" as main_queue
+        control core
+        core -l- main_queue
+    }
+
+
+    component Scheduler
+
+    package "Fetcher Pool" as fetcher_pool {
+        component "Fetcher"
+
+    }
+
+
+    Scheduler -d-> main_queue: Fetch tasks
+
+    package "Site" as esite {
+        component submit_result
+'        component poll_tasks
+
+        submit_result -u-> "Agent Receiver": Send task result
+'        poll_tasks -d-> "Agent Receiver": Query for tasks
+'        poll_tasks -d-> main_queue: Ad-hoc Fetch tasks
+    }
+
+
+    "Fetcher" -d-> main_queue: Results\n& Tasks
+}
+
+    core -d-> "Fetcher"
+    core -u-> submit_result
+
+
+@enduml

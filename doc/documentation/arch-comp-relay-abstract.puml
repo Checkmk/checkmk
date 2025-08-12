@@ -1,0 +1,16 @@
+@startuml
+package "Relay Engine" {
+    package Core {
+        queue "Main Queue" as main_queue
+        control core
+        core -l- main_queue
+    }
+
+    component Scheduler
+    component "Processor"
+
+    Scheduler -d-> main_queue: Tasks
+    "Processor" -d-> main_queue: Results\n& Tasks
+    core -d-> "Processor": Tasks
+}
+@enduml

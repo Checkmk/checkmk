@@ -4,9 +4,11 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::SectionName;
+use crate::types::{SectionAffinity, SectionName};
 use anyhow::Result;
 use log;
+use std::collections::HashMap;
+use std::sync::LazyLock;
 
 // "tablespaces", "rman", "jobs", "ts_quotas", "resumable", "locks"
 pub mod names {
@@ -30,6 +32,30 @@ pub mod names {
     pub const ASM_DISK_GROUP: &str = "asm_diskgroup";
     pub const TS_QUOTAS: &str = "ts_quotas";
 }
+
+static DEFAULT_AFFINITY_MAP: LazyLock<HashMap<&str, SectionAffinity>> = LazyLock::new(|| {
+    HashMap::from([
+        ("instance", SectionAffinity::All),
+        ("sessions", SectionAffinity::Db),
+        ("logswitches", SectionAffinity::Db),
+        ("undostat", SectionAffinity::Db),
+        ("recovery_area", SectionAffinity::Db),
+        ("processes", SectionAffinity::All),
+        ("recovery_status", SectionAffinity::Db),
+        ("longactivesessions", SectionAffinity::Db),
+        ("dataguard_stats", SectionAffinity::Db),
+        ("performance", SectionAffinity::Db),
+        ("systemparameter", SectionAffinity::Db),
+        ("locks", SectionAffinity::Db),
+        ("tablespaces", SectionAffinity::Db),
+        ("rman", SectionAffinity::Db),
+        ("jobs", SectionAffinity::Db),
+        ("resumable", SectionAffinity::Db),
+        ("iostats", SectionAffinity::Db),
+        ("asm_diskgroup", SectionAffinity::Asm),
+        ("ts_quotas", SectionAffinity::Db),
+    ])
+});
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum SectionKind {
@@ -72,13 +98,6 @@ const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
 #[allow(dead_code)]
 const ASM_SECTIONS: [&str; 3] = [names::INSTANCE, names::PROCESSES, names::ASM_DISK_GROUP];
 
-#[derive(PartialEq, Debug, Clone)]
-pub enum SectionAffinity {
-    All,
-    Db,
-    Asm,
-}
-
 impl SectionAffinity {
     pub fn from_text<T: AsRef<str>>(s: T) -> Self {
         match s.as_ref().to_lowercase().as_str() {
@@ -107,12 +126,15 @@ impl SectionBuilder {
         let name = name.into();
         let is_async = PREDEFINED_ASYNC_SECTIONS.contains(&name.as_str());
         Self {
-            name,
+            name: name.clone(),
             sep: defaults::DEFAULT_SEP,
             is_async,
             is_disabled: false,
             sql: None,
-            affinity: SectionAffinity::Db,
+            affinity: DEFAULT_AFFINITY_MAP
+                .get(name.as_str())
+                .cloned()
+                .unwrap_or(SectionAffinity::Db),
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
@@ -249,7 +271,12 @@ impl Section {
         let affinity = yaml
             .get_string(keys::AFFINITY)
             .map(SectionAffinity::from_text)
-            .unwrap_or(SectionAffinity::Db);
+            .unwrap_or_else(|| {
+                DEFAULT_AFFINITY_MAP
+                    .get(name)
+                    .unwrap_or(&SectionAffinity::Db)
+                    .clone()
+            });
 
         if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
             builder.set_disabled()
@@ -400,6 +427,13 @@ sections:
                 .len(),
             19
         );
+        assert_eq!(s.sections.len(), PREDEFINED_SECTIONS.len());
+        s.sections.iter().for_each(|s| {
+            assert_eq!(
+                s.affinity(),
+                DEFAULT_AFFINITY_MAP.get(s.name().as_str()).unwrap()
+            )
+        });
     }
 
     fn create_sections_yaml_default() -> Yaml {

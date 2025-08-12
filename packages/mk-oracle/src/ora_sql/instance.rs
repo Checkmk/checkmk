@@ -111,6 +111,14 @@ fn make_spot_works(
                     let queries = sections
                         .iter()
                         .filter_map(|section| {
+                            if !instance.is_suitable_affinity(section.affinity()) {
+                                log::info!(
+                                    "Skip section with not suitable affinity: {:?} instance {}",
+                                    section,
+                                    instance
+                                );
+                                return None;
+                            }
                             _find_section_query(
                                 section,
                                 info.0,

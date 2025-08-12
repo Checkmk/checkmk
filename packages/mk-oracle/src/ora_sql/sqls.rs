@@ -18,6 +18,7 @@ pub enum Id {
     Resumable,
     UndoStat,
     RecoveryArea,
+    AsmDiskGroup,
 }
 
 pub mod query {
@@ -245,6 +246,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::Resumable, query::RESUMABLE_META),
         query::build_query_metadata(Id::UndoStat, query::UNDOSTAT_META),
         query::build_query_metadata(Id::RecoveryArea, query::RECOVERY_AREA_META),
+        query::build_query_metadata(Id::AsmDiskGroup, query::ASM_DISKGROUP_META),
     ])
 });
 
@@ -444,5 +446,19 @@ mod tests {
         assert!(!query_new.is_empty());
         assert!(!query_last.is_empty());
         assert_eq!(query_new, query_last);
+    }
+    #[test]
+    fn test_find_asm_diskgroup() {
+        let id = Id::AsmDiskGroup;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
     }
 }

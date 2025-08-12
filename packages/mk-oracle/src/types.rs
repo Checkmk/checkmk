@@ -35,10 +35,30 @@ impl From<&str> for InstanceName {
     }
 }
 
+impl InstanceName {
+    fn is_asm(&self) -> bool {
+        self.0.starts_with("+")
+    }
+
+    pub fn is_suitable_affinity(&self, affinity: &SectionAffinity) -> bool {
+        match affinity {
+            SectionAffinity::All => true,
+            SectionAffinity::Db => !self.is_asm(),
+            SectionAffinity::Asm => self.is_asm(),
+        }
+    }
+}
 impl From<&String> for InstanceName {
     fn from(s: &String) -> Self {
         Self(s.clone().to_uppercase())
     }
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum SectionAffinity {
+    All,
+    Db,
+    Asm,
 }
 
 #[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
@@ -75,6 +95,12 @@ pub enum Tenant {
     All,
     Cdb,
     NoCdb,
+}
+
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+pub enum AsmInstance {
+    Yes,
+    No,
 }
 
 impl Tenant {
@@ -272,5 +298,21 @@ mod tests {
         // panic on unknown tenant
         let result = std::panic::catch_unwind(|| Tenant::new("unknown"));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_affinity() {
+        assert!(InstanceName::from("+X").is_asm());
+        assert!(!InstanceName::from("X").is_asm());
+    }
+
+    #[test]
+    fn test_instance_affinity() {
+        assert!(!InstanceName::from("+X").is_suitable_affinity(&SectionAffinity::Db));
+        assert!(InstanceName::from("+X").is_suitable_affinity(&SectionAffinity::All));
+        assert!(InstanceName::from("+X").is_suitable_affinity(&SectionAffinity::Asm));
+        assert!(InstanceName::from("X").is_suitable_affinity(&SectionAffinity::Db));
+        assert!(InstanceName::from("X").is_suitable_affinity(&SectionAffinity::All));
+        assert!(!InstanceName::from("X").is_suitable_affinity(&SectionAffinity::Asm));
     }
 }

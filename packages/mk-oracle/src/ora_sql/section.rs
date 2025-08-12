@@ -5,6 +5,7 @@
 use crate::config::{self, section, section::names};
 use crate::emit::header;
 use crate::ora_sql::sqls;
+use crate::types::SectionAffinity;
 use crate::types::{InstanceNumVersion, SectionName, Tenant};
 use crate::{constants, utils};
 use anyhow::Result;
@@ -25,6 +26,7 @@ pub struct Section {
     sep: char,
     cache_age: Option<u32>,
     header_name: String,
+    section_affinity: SectionAffinity,
 }
 
 impl Section {
@@ -44,6 +46,7 @@ impl Section {
             sep: section.sep(),
             cache_age,
             header_name: section.name().clone().into(),
+            section_affinity: section.affinity().clone(),
         }
     }
 
@@ -92,6 +95,10 @@ impl Section {
 
     pub fn cache_age(&self) -> u32 {
         self.cache_age.unwrap_or_default()
+    }
+
+    pub fn affinity(&self) -> &SectionAffinity {
+        &self.section_affinity
     }
 
     pub fn find_query(
@@ -192,6 +199,7 @@ static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> = LazyLock::new(||
         (names::RESUMABLE, sqls::Id::Resumable),
         (names::UNDO_STAT, sqls::Id::UndoStat),
         (names::RECOVERY_AREA, sqls::Id::RecoveryArea),
+        (names::ASM_DISK_GROUP, sqls::Id::RecoveryArea),
     ])
 });
 

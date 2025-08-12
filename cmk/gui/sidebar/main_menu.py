@@ -181,10 +181,8 @@ def ajax_message_read(config: Config) -> None:
 class PageAjaxSidebarChangesMenu(AjaxPage):
     def page(self, config: Config) -> PageResult:
         return {
-            "number_of_pending_changes": len(
-                ActivateChanges().get_all_data_required_for_activation_popout(config.sites)[
-                    "pendingChanges"
-                ]
+            "number_of_pending_changes": ActivateChanges().number_of_changes_requiring_activation(
+                config.sites
             )
         }
 

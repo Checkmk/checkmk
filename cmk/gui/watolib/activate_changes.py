@@ -1321,6 +1321,10 @@ class ActivateChanges:
     def get_changes_to_activate(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site_until[site_id]
 
+    def number_of_changes_requiring_activation(self, sites: SiteConfigurations) -> int:
+        self.load(list(sites))
+        return sum(not change["has_been_activated"] for _id, change in self._all_changes)
+
     def get_all_data_required_for_activation_popout(
         self, sites: SiteConfigurations
     ) -> ActivationChangesSummary:

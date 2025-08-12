@@ -6,7 +6,7 @@
 import fastapi
 from pydantic import UUID4
 
-from cmk.relay_protocols.relays import RelayRegistrationRequest
+from cmk.agent_receiver.relay_backend.api.routers.base_router import RELAY_ROUTER
 from cmk.relay_protocols.tasks import (
     TaskCreateRequest,
     TaskCreateResponse,
@@ -15,34 +15,6 @@ from cmk.relay_protocols.tasks import (
     TaskStatus,
     TaskUpdateRequest,
 )
-
-from .apps_and_routers import RELAY_ROUTER
-
-
-@RELAY_ROUTER.post("/", status_code=fastapi.status.HTTP_202_ACCEPTED)
-async def register_relay(request: RelayRegistrationRequest) -> None:
-    """Register a new relay entity.
-
-    This endpoint allows relay entities to register themselves with the Agent Receiver.
-    The relay provides its ID, name, certificate signing request, and auth token.
-
-    Args:
-        request: RelayRegistrationRequest containing relay registration data
-
-    Returns:
-        Success message confirming relay registration
-
-    Note:
-        - Relay ID uniqueness is controlled during registration
-        - Collision with existing relay IDs is not allowed
-    """
-    # Business logic for relay registration intentionally not implemented
-    # - Validate relay_id uniqueness
-    # - Process CSR
-    # - Store relay information
-    # - Generate and return appropriate certificates
-
-    raise NotImplementedError("Relay registration business logic not implemented")
 
 
 @RELAY_ROUTER.delete("/{relay_id}")

@@ -3,7 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO: Change this alias once relay_endpoints.py is removed
 from fastapi import FastAPI
+
+from cmk.agent_receiver.relay_backend.api.routers.base_router import RELAY_ROUTER
+from cmk.agent_receiver.relay_backend.api.routers.relays import (
+    endpoints as relay_endpoints_aux,  # noqa: F401, RUF100
+)
 
 # NOTE: The import below is a hack, we should register endpoints explicitly!
 # TODO: The "bazel lint ..." calls for run_check_format() and run_check_ruff() don't agree on their findings. Why??
@@ -11,7 +17,7 @@ from . import (
     endpoints,  # noqa: F401, RUF100
     relay_endpoints,  # noqa: F401, RUF100
 )
-from .apps_and_routers import AGENT_RECEIVER_APP, RELAY_ROUTER, UUID_VALIDATION_ROUTER
+from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from .log import configure_logger
 from .site_context import log_path, site_name
 

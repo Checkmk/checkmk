@@ -326,7 +326,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    registered_painters = all_painters(active_config)
+    registered_painters = all_painters(active_config.tags.tag_groups)
     painters: list[Painter] = [
         painter_class(
             config=active_config,
@@ -371,7 +371,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    registered_painters = all_painters(active_config)
+    registered_painters = all_painters(active_config.tags.tag_groups)
     painter = registered_painters["abc"](
         config=active_config,
         request=request,

@@ -79,7 +79,7 @@ class View:
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells: list[Cell] = []
         registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config)
+        registered_painters = all_painters(active_config.tags.tag_groups)
         for e in self.spec["painters"]:
             if e.name not in registered_painters:
                 continue
@@ -113,7 +113,7 @@ class View:
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config)
+        registered_painters = all_painters(active_config.tags.tag_groups)
         return [
             Cell(
                 e,

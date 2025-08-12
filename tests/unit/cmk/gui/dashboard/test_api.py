@@ -994,9 +994,7 @@ class TestEmbeddedViewContent:
         assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
         assert resp.json["fields"][
             "body.widgets.test_widget.content.embedded_view.columns.0.column.name"
-        ]["msg"].startswith(
-            "Value error, Value 'non_existent_painter' is not allowed, valid options are:"
-        )
+        ]["msg"].startswith("Painter 'non_existent_painter' does not exist.")
         assert len(resp.json["fields"]) == 1, "Expected only one field error"
 
     def test_invalid_link_spec(self, clients: ClientRegistry) -> None:

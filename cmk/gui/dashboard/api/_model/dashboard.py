@@ -11,12 +11,14 @@ from pydantic import AfterValidator, Discriminator
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
     RegistryConverter,
     SiteIdConverter,
 )
+from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.type_defs import AnnotatedUserId, FilterName, Icon, VisualContext
 from cmk.gui.views.icon.registry import all_icons
 from cmk.gui.watolib.main_menu import main_module_topic_registry
@@ -215,6 +217,16 @@ class BaseDashboardRequest(_BaseApiDashboard):
     widgets: dict[str, WidgetRequest] = api_field(
         description="All widgets that are part of this dashboard.",
     )
+
+    def validate(self, context: ApiContext) -> None:
+        """Run additional validation that depends on the API context (or rather the config)."""
+        errors = [
+            error
+            for widget_id, widget in self.widgets.items()
+            for error in widget.iter_validation_errors(("body", "widgets", widget_id), context)
+        ]
+        if errors:
+            raise RequestDataValidator.format_error_details(errors)
 
     def to_internal(self, owner: UserId, dashboard_id: str) -> DashboardConfig:
         return DashboardConfig(

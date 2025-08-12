@@ -428,7 +428,7 @@ def _get_inventory_column_infos_by_table(
 def _get_inventory_column_infos(
     column_display_hints: OrderedColumnDisplayHintsOfView,
 ) -> Sequence[InventoryColumnInfo]:
-    registered_painters = all_painters(active_config)
+    registered_painters = all_painters(active_config.tags.tag_groups)
     return [
         InventoryColumnInfo(
             column_name=column_name,
@@ -694,7 +694,7 @@ def view_editor_sorter_specs(
     ) -> Iterator[DropdownChoiceEntry | CascadingDropdownChoice]:
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
-        registered_painters = all_painters(active_config)
+        registered_painters = all_painters(active_config.tags.tag_groups)
 
         for name, p in sorters_of_datasource(ds_name).items():
             if any(column in p.columns for column in unsupported_columns):
@@ -899,7 +899,7 @@ def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
 
 
 def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[CascadingDropdownChoice]:
-    registered_painters = all_painters(active_config)
+    registered_painters = all_painters(active_config.tags.tag_groups)
     return sorted(
         (
             (
@@ -993,7 +993,7 @@ def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
 
 
 def painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
-    return _allowed_for_datasource(all_painters(active_config), ds_name)
+    return _allowed_for_datasource(all_painters(active_config.tags.tag_groups), ds_name)
 
 
 def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
@@ -1004,7 +1004,7 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
     # Get the painters allowed for the join "source" and "target"
     painters = painters_of_datasource(ds_name)
     join_painters_unfiltered = _allowed_for_datasource(
-        all_painters(active_config), datasource.join[0]
+        all_painters(active_config.tags.tag_groups), datasource.join[0]
     )
 
     # Filter out painters associated with the "join source" datasource

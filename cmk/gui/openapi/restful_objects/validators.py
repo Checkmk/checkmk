@@ -18,6 +18,7 @@ from urllib import parse
 import pydantic
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
+from pydantic_core import ErrorDetails
 from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
@@ -317,16 +318,26 @@ class RequestDataValidator:
         """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
         # the context may contain the actual exception, which is usually not serializable
         # the msg contains the exception details, which is hopefully enough to understand the issue
-        errors = {
-            RequestDataValidator._format_pydantic_location(error["loc"]): error
-            for error in validation_error.errors(include_context=False)
+        raise RequestDataValidator.format_error_details(
+            status_code=status_code,
+            errors=validation_error.errors(include_context=False),
+        ) from validation_error
+
+    @staticmethod
+    def format_error_details(
+        errors: Iterable[ErrorDetails],
+        status_code: Literal[400, 401, 403, 404, 406, 415] = 400,
+    ) -> RestAPIRequestGeneralException:
+        """Create a RestAPIRequestGeneralException from error details."""
+        error_dict = {
+            RequestDataValidator._format_pydantic_location(error["loc"]): error for error in errors
         }
-        raise RestAPIRequestGeneralException(
+        return RestAPIRequestGeneralException(
             status=status_code,
             title=http.client.responses[status_code],
-            detail=f"These fields have problems: {_format_fields(errors)}",
-            fields=FIELDS(errors),
-        ) from validation_error
+            detail=f"These fields have problems: {_format_fields(error_dict)}",
+            fields=FIELDS(error_dict),
+        )
 
 
 class HeaderValidator:

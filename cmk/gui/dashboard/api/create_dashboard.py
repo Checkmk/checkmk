@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import active_config
+from livestatus import SiteConfigurations
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -35,21 +37,24 @@ class CreateDashboardV1(BaseDashboardRequest):
     )
 
 
-def _save_dashboard_to_file(dashboard: DashboardConfig) -> None:
+def _save_dashboard_to_file(sites: SiteConfigurations, dashboard: DashboardConfig) -> None:
     dashboard_id = dashboard["name"]
     store = DashboardStore.get_instance()
     store.all[(user.id, dashboard_id)] = dashboard
 
     save_all_dashboards()
-    sync_user_to_remotes(active_config.sites)
+    sync_user_to_remotes(sites)
 
 
-def create_dashboard_v1(body: CreateDashboardV1) -> TypedResponse[DashboardDomainObject]:
+def create_dashboard_v1(
+    api_context: ApiContext, body: CreateDashboardV1
+) -> TypedResponse[DashboardDomainObject]:
     """Create a dashboard."""
+    body.validate(api_context)
     user.need_permission("general.edit_dashboards")
 
     internal = body.to_internal(user.ident, body.dashboard_id)
-    _save_dashboard_to_file(internal)
+    _save_dashboard_to_file(api_context.config.sites, internal)
 
     return ApiResponse(
         serialize_dashboard(body.dashboard_id, DashboardResponse.from_internal(internal)),

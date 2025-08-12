@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -38,6 +38,7 @@ class EditDashboardV1(BaseDashboardRequest):
 
 
 def edit_dashboard_v1(
+    api_context: ApiContext,
     body: EditDashboardV1,
     dashboard_id: Annotated[
         str,
@@ -52,6 +53,7 @@ def edit_dashboard_v1(
     ] = ApiOmitted(),
 ) -> DashboardDomainObject:
     """Edit a dashboard."""
+    body.validate(api_context)
     user_id = get_permitted_user_id(owner, action="edit")
 
     key = (user_id, dashboard_id)
@@ -64,7 +66,7 @@ def edit_dashboard_v1(
         )
     dashboards[key] = body.to_internal(user_id, dashboard_id)
     save_all_dashboards()
-    sync_user_to_remotes(active_config.sites)
+    sync_user_to_remotes(api_context.config.sites)
     return serialize_dashboard(dashboard_id, DashboardResponse.from_internal(dashboards[key]))
 
 

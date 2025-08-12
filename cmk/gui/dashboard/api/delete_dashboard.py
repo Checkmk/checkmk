@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -26,6 +26,7 @@ from ._utils import get_permitted_user_id, PERMISSIONS_DASHBOARD, sync_user_to_r
 
 
 def delete_dashboard_v1(
+    api_context: ApiContext,
     dashboard_id: Annotated[
         str,
         PathParam(description="Dashboard ID", example="main"),
@@ -51,7 +52,7 @@ def delete_dashboard_v1(
         )
     del dashboards[key]
     save_all_dashboards()
-    sync_user_to_remotes(active_config.sites)
+    sync_user_to_remotes(api_context.config.sites)
 
 
 ENDPOINT_DELETE_DASHBOARD = VersionedEndpoint(

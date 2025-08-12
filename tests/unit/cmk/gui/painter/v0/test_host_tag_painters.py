@@ -36,4 +36,4 @@ def test_host_tag_painter_registration(monkeypatch: pytest.MonkeyPatch) -> None:
                 }
             ),
         )
-        assert "host_tag_whoot" in all_painters(active_config)
+        assert "host_tag_whoot" in all_painters(active_config.tags.tag_groups)

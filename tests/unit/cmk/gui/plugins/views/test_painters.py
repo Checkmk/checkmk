@@ -69,7 +69,7 @@ def fixture_livestatus_test_config(
 
 @pytest.mark.usefixtures("load_config")
 def test_registered_painters() -> None:
-    painters = all_painters(active_config).keys()
+    painters = all_painters(active_config.tags.tag_groups).keys()
     expected_painters = [
         "aggr_acknowledged",
         "aggr_assumed_state",

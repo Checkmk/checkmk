@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Sequence
+from collections.abc import Container, Iterable, Sequence
 from typing import Annotated, assert_never, Literal, override, Self
 
 from annotated_types import Ge
 from pydantic import AfterValidator, Discriminator, model_validator
+from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.dashboard import LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
 from cmk.gui.painter.v0 import all_painters
@@ -116,9 +117,7 @@ class _BaseApiColumnSpec(ABC):
     def join_value(self) -> str | None:
         return None
 
-    name: Annotated[
-        str, AfterValidator(RegistryConverter(lambda: all_painters(active_config)).validate)
-    ] = api_field(description="The name of the painter to render this column.")
+    name: str = api_field(description="The name of the painter to render this column.")
     parameters: PainterParameters = api_field(description="The parameters for the painter.")
     link_spec: ApiVisualLink | ApiOmitted = api_field(
         description="Use this column as a link to another view or entity.",
@@ -424,3 +423,30 @@ class EmbeddedViewContent(BaseWidgetContent):
         if inventory_join_macros := ApiInventoryJoinMacro.to_internal(self.inventory_join_macros):
             spec["inventory_join_macros"] = inventory_join_macros
         return spec
+
+    @staticmethod
+    def _iter_column_validation_errors(
+        location: tuple[str | int, ...],
+        columns: Sequence[ApiAnyColumnSpec],
+        valid_painters: Container[str],
+    ) -> Iterable[ErrorDetails]:
+        for idx, column in enumerate(columns):
+            if column.name not in valid_painters:
+                yield ErrorDetails(
+                    type="value_error",
+                    msg=f"Painter '{column.name}' does not exist.",
+                    loc=location + (idx, column.type, "name"),
+                    input=column.name,
+                )
+
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        valid_painters = all_painters(context.config.tag_groups)
+        yield from self._iter_column_validation_errors(
+            location + ("columns",), self.columns, valid_painters
+        )
+        if self.grouping_columns:
+            yield from self._iter_column_validation_errors(
+                location + ("grouping_columns",), self.grouping_columns, valid_painters
+            )

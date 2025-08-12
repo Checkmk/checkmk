@@ -14,6 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AgentControllerCertificates, GraphTimerange, PasswordPolicy
+from cmk.utils.tags import TagGroup
 
 from .api_config import APIVersion
 
@@ -70,6 +71,7 @@ class ApiConfig:
     graph_timeranges: list[GraphTimerange]
     password_policy: PasswordPolicy
     sites: SiteConfigurations
+    tag_groups: list[TagGroup]
     wato_max_snapshots: int
     wato_pprint_config: bool
     wato_use_git: bool
@@ -82,6 +84,7 @@ class ApiConfig:
             graph_timeranges=config.graph_timeranges,
             password_policy=config.password_policy,
             sites=config.sites,
+            tag_groups=config.tags.tag_groups,
             wato_max_snapshots=config.wato_max_snapshots,
             wato_pprint_config=config.wato_pprint_config,
             wato_use_git=config.wato_use_git,

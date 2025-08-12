@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
+from cmk.utils.tags import TagGroup
 
 from .base import Painter
 from .helpers import RenderLink
@@ -31,9 +33,9 @@ class PainterRegistry(Registry[type[Painter]]):
 painter_registry = PainterRegistry()
 
 
-def all_painters(config: Config) -> dict[str, type[Painter]]:
+def all_painters(tag_groups: Sequence[TagGroup]) -> dict[str, type[Painter]]:
     return dict(painter_registry.items()) | host_tag_config_based_painters(
-        HashableTagGroups(config.tags.tag_groups)
+        HashableTagGroups(tag_groups)
     )
 
 

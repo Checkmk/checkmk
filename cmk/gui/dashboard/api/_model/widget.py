@@ -2,13 +2,16 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterable
 from typing import Annotated, assert_never, Literal, Self
 
 from annotated_types import Ge
+from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, GROW, MAX
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletSize
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import VisualContext
 
@@ -179,6 +182,14 @@ class WidgetRequest(_BaseWidget):
     filters: VisualContext = api_field(
         description="Active filters in the format filter_id -> (variable -> value)",
     )
+
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        """Run additional validations that depends on the API context (or rather the config)."""
+        yield from self.content.iter_validation_errors(
+            location + ("content", self.content.type), context
+        )
 
     def to_internal(self) -> DashletConfig:
         config = self.content.to_internal()

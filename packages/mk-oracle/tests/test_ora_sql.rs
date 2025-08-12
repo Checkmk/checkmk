@@ -399,6 +399,7 @@ fn test_locks_last() {
         assert_eq!(rows[2], format!("{}|||||||||||||||||", &endpoint.instance));
     }
 }
+
 #[test]
 fn test_locks_old() {
     add_runtime_to_path();
@@ -411,5 +412,16 @@ fn test_locks_old() {
         );
         assert!(!rows.is_empty());
         assert_eq!(rows[0], format!("{}|||||||||||||||||", &endpoint.instance));
+    }
+}
+
+#[test]
+fn test_log_switches() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::LogSwitches, None);
+        assert!(!rows.is_empty());
+        assert_eq!(rows[0], format!("{}|0", &endpoint.instance));
     }
 }

@@ -20,6 +20,7 @@ pub enum Id {
     RecoveryArea,
     AsmDiskGroup,
     Locks,
+    LogSwitches,
 }
 
 pub mod query {
@@ -261,6 +262,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::RecoveryArea, query::RECOVERY_AREA_META),
         query::build_query_metadata(Id::AsmDiskGroup, query::ASM_DISKGROUP_META),
         query::build_query_metadata(Id::Locks, query::LOCKS_META),
+        query::build_query_metadata(Id::LogSwitches, query::LOGSWITCHES_META),
     ])
 });
 

@@ -1161,6 +1161,25 @@ class AuxTagClient(RestApiClient):
         )
 
 
+class GraphTimerangeClient(RestApiClient):
+    domain: DomainType = "graph_timerange"
+    default_version = APIVersion.UNSTABLE
+
+    def get(self, graph_timerange_index: int, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{graph_timerange_index}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 class TimePeriodClient(RestApiClient):
     domain: DomainType = "time_period"
 
@@ -3389,6 +3408,7 @@ class ClientRegistry:
     Folder: FolderClient
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient
+    GraphTimerange: GraphTimerangeClient
     Rule: RuleClient
     Ruleset: RulesetClient
     HostTagGroup: HostTagGroupClient
@@ -3433,6 +3453,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostConfig=HostConfigClient(request_handler, url_prefix),
         Host=HostClient(request_handler, url_prefix),
         Folder=FolderClient(request_handler, url_prefix),
+        GraphTimerange=GraphTimerangeClient(request_handler, url_prefix),
         AuxTag=AuxTagClient(request_handler, url_prefix),
         TimePeriod=TimePeriodClient(request_handler, url_prefix),
         Rule=RuleClient(request_handler, url_prefix),

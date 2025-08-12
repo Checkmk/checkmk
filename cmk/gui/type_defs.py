@@ -831,3 +831,8 @@ class PasswordPolicy(TypedDict):
     min_length: NotRequired[int]
     num_groups: NotRequired[int]
     max_age: NotRequired[int]
+
+
+class GraphTimerange(TypedDict):
+    title: str
+    duration: int

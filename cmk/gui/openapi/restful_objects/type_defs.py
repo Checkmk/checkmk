@@ -33,6 +33,7 @@ DomainType = Literal[
     "form_spec",
     "folder",
     "folder_config",
+    "graph_timerange",
     "host",
     "host_config",
     "host_config_internal",

@@ -17,6 +17,7 @@ from cmk.gui.type_defs import (
     BuiltinIconVisibility,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    GraphTimerange,
     GroupSpec,
     IconSpec,
     PasswordPolicy,
@@ -364,13 +365,13 @@ class CREConfig:
 
     use_siteicons: bool = False
 
-    graph_timeranges: list[dict[str, Any]] = field(
+    graph_timeranges: list[GraphTimerange] = field(
         default_factory=lambda: [
-            {"title": "The last 4 hours", "duration": 4 * 60 * 60},
-            {"title": "The last 25 hours", "duration": 25 * 60 * 60},
-            {"title": "The last 8 days", "duration": 8 * 24 * 60 * 60},
-            {"title": "The last 35 days", "duration": 35 * 24 * 60 * 60},
-            {"title": "The last 400 days", "duration": 400 * 24 * 60 * 60},
+            GraphTimerange(title="The last 4 hours", duration=4 * 60 * 60),
+            GraphTimerange(title="The last 25 hours", duration=25 * 60 * 60),
+            GraphTimerange(title="The last 8 days", duration=8 * 24 * 60 * 60),
+            GraphTimerange(title="The last 35 days", duration=35 * 24 * 60 * 60),
+            GraphTimerange(title="The last 400 days", duration=400 * 24 * 60 * 60),
         ]
     )
 

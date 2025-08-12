@@ -59,7 +59,12 @@ class ModeRandomHosts(WatoMode):
         folders = request.get_integer_input_mandatory("folders")
         levels = request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(
-            folder, count, folders, levels, pprint_value=config.wato_pprint_config
+            folder,
+            count,
+            folders,
+            levels,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=folder.path()))
@@ -82,7 +87,14 @@ class ModeRandomHosts(WatoMode):
             html.hidden_fields()
 
     def _create_random_hosts(
-        self, folder: Folder, count: int, folders: int, levels: int, *, pprint_value: bool
+        self,
+        folder: Folder,
+        count: int,
+        folders: int,
+        levels: int,
+        *,
+        pprint_value: bool,
+        use_git: bool,
     ) -> int:
         if levels == 0:
             hosts_to_create: list[tuple[HostName, HostAttributes, None]] = []
@@ -91,7 +103,7 @@ class ModeRandomHosts(WatoMode):
                 hosts_to_create.append(
                     (HostName(host_name), {"ipaddress": HostAddress("127.0.0.1")}, None)
                 )
-            folder.create_hosts(hosts_to_create, pprint_value=pprint_value)
+            folder.create_hosts(hosts_to_create, pprint_value=pprint_value, use_git=use_git)
             return count
 
         total_created = 0
@@ -109,6 +121,6 @@ class ModeRandomHosts(WatoMode):
                 folder_name, "Subfolder %02d" % i, {}, pprint_value=pprint_value
             )
             total_created += self._create_random_hosts(
-                subfolder, count, folders, levels - 1, pprint_value=pprint_value
+                subfolder, count, folders, levels - 1, pprint_value=pprint_value, use_git=use_git
             )
         return total_created

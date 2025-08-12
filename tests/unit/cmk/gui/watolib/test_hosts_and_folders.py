@@ -198,7 +198,9 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
     )
 
     # Write data
-    write_data_folder.create_hosts([(HostName("testhost"), attributes, [])], pprint_value=False)
+    write_data_folder.create_hosts(
+        [(HostName("testhost"), attributes, [])], pprint_value=False, use_git=False
+    )
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
 
@@ -216,8 +218,8 @@ def test_create_multiple_hosts() -> None:
     root = folder_tree().root_folder()
     subfolder = root.create_subfolder("subfolder", "subfolder", {}, pprint_value=False)
 
-    root.create_hosts([(HostName("host-1"), {}, [])], pprint_value=False)
-    subfolder.create_hosts([(HostName("host-2"), {}, [])], pprint_value=False)
+    root.create_hosts([(HostName("host-1"), {}, [])], pprint_value=False, use_git=False)
+    subfolder.create_hosts([(HostName("host-2"), {}, [])], pprint_value=False, use_git=False)
 
     all_hosts = root.all_hosts_recursively()
     # to ensure that new folder instances contain the new hosts
@@ -296,6 +298,7 @@ def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()
@@ -331,6 +334,7 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()
@@ -360,6 +364,7 @@ def test_mgmt_inherit_credentials_snmp() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()
@@ -389,6 +394,7 @@ def test_mgmt_inherit_credentials_ipmi() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()
@@ -420,6 +426,7 @@ def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()
@@ -454,6 +461,7 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
             )
         ],
         pprint_value=False,
+        use_git=False,
     )
 
     data = folder._load_hosts_file()

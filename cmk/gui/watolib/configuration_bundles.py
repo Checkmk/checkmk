@@ -244,7 +244,9 @@ def _validate_and_prepare_create_calls(
         )
     if entities.hosts:
         create_functions.append(
-            _prepare_create_hosts(bundle_ident, entities.hosts, pprint_value=pprint_value)
+            _prepare_create_hosts(
+                bundle_ident, entities.hosts, pprint_value=pprint_value, use_git=use_git
+            )
         )
     if entities.rules:
         create_functions.append(
@@ -435,7 +437,7 @@ def _get_host_attributes(bundle_ident: GlobalIdent, params: CreateHost) -> HostA
 
 
 def _prepare_create_hosts(
-    bundle_ident: GlobalIdent, hosts: Iterable[CreateHost], *, pprint_value: bool
+    bundle_ident: GlobalIdent, hosts: Iterable[CreateHost], *, pprint_value: bool, use_git: bool
 ) -> CreateFunction:
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
@@ -460,7 +462,7 @@ def _prepare_create_hosts(
 
     def create() -> None:
         for f, validated_hosts in folder_and_valid_hosts:
-            f.create_validated_hosts(validated_hosts, pprint_value=pprint_value)
+            f.create_validated_hosts(validated_hosts, pprint_value=pprint_value, use_git=use_git)
 
     return create
 

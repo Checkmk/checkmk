@@ -300,6 +300,7 @@ class TestHostConverter:
             root_folder.create_hosts(
                 [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
                 pprint_value=False,
+                use_git=False,
             )
         try:
             yield host_name

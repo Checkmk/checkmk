@@ -72,6 +72,7 @@ def create_host_v1(
     body.folder.create_hosts(
         [(host_name, body.attributes.to_internal(), None)],
         pprint_value=api_context.config.wato_pprint_config,
+        use_git=api_context.config.wato_use_git,
     )
     if bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)

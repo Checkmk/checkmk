@@ -411,7 +411,9 @@ def with_host(
 ):
     hostnames = [HostName("heute"), HostName("example.com")]
     root_folder = folder_tree().root_folder()
-    root_folder.create_hosts([(hostname, {}, None) for hostname in hostnames], pprint_value=False)
+    root_folder.create_hosts(
+        [(hostname, {}, None) for hostname in hostnames], pprint_value=False, use_git=False
+    )
     yield hostnames
     root_folder.delete_hosts(
         hostnames,

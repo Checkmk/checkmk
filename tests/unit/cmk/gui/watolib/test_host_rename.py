@@ -117,7 +117,7 @@ def test_rename_host(
         )
     else:
         folder = folder_tree().root_folder()
-    folder.create_hosts(hosts_to_create, pprint_value=False)
+    folder.create_hosts(hosts_to_create, pprint_value=False, use_git=False)
 
     # WHEN
     perform_rename_hosts(

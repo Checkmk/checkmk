@@ -861,6 +861,7 @@ class CreateHostMode(ABCHostMode):
             folder.create_hosts(
                 [(hostname, attributes, cluster_nodes)],
                 pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
 
         self._host = folder.load_host(hostname)

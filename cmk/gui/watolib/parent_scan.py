@@ -244,6 +244,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             gateway_folder,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
         if (host := host_folder.host(task.host_name)) is None:
@@ -283,6 +284,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -304,7 +306,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
         gw_folder.create_hosts(
-            [(gw_host_name, gw_host_attributes, None)], pprint_value=pprint_value
+            [(gw_host_name, gw_host_attributes, None)], pprint_value=pprint_value, use_git=use_git
         )
         bakery.try_bake_agents_for_hosts([gw_host_name], debug=debug)
         self._num_gateway_hosts_created += 1

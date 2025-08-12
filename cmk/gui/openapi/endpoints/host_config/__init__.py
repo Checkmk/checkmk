@@ -213,7 +213,9 @@ def create_host(params: Mapping[str, Any]) -> Response:
 
     # is_cluster is defined as "cluster_hosts is not None"
     folder.create_hosts(
-        [(host_name, body["attributes"], None)], pprint_value=active_config.wato_pprint_config
+        [(host_name, body["attributes"], None)],
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
@@ -249,6 +251,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
     folder.create_hosts(
         [(host_name, body["attributes"], body["nodes"])],
         pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
@@ -330,7 +333,9 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
                 failed_hosts[host_name] = f"Validation failed: {e}"
 
         folder.create_validated_hosts(
-            validated_entries, pprint_value=active_config.wato_pprint_config
+            validated_entries,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 

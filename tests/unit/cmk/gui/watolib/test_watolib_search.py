@@ -316,7 +316,7 @@ class TestIndexBuilderAndSearcher:
 @pytest.fixture(name="created_host_url")
 def fixture_created_host_url() -> str:
     folder = folder_tree().root_folder()
-    folder.create_hosts([(HostName("host"), {}, [])], pprint_value=False)
+    folder.create_hosts([(HostName("host"), {}, [])], pprint_value=False, use_git=False)
     return "wato.py?folder=&host=host&mode=edit_host"
 
 

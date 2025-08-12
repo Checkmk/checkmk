@@ -101,6 +101,7 @@ def execute_network_scan_job(config: Config) -> None:
                 run_as,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
+                use_git=config.wato_use_git,
             )
 
             result.update(
@@ -143,6 +144,7 @@ def _add_scanned_hosts_to_folder(
     *,
     pprint_value: bool,
     debug: bool,
+    use_git: bool,
 ) -> None:
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
@@ -176,7 +178,7 @@ def _add_scanned_hosts_to_folder(
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration(configuration_lockfile):
-        folder.create_hosts(entries, pprint_value=pprint_value)
+        folder.create_hosts(entries, pprint_value=pprint_value, use_git=use_git)
         folder.save_folder_attributes()
         folder_tree().invalidate_caches()
 

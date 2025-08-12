@@ -157,6 +157,7 @@ class ModeBulkImport(WatoMode):
                     ),
                     debug=config.debug,
                     pprint_value=config.wato_pprint_config,
+                    use_git=config.wato_use_git,
                 )
         return None
 
@@ -245,6 +246,7 @@ class ModeBulkImport(WatoMode):
         *,
         debug: bool,
         pprint_value: bool,
+        use_git: bool,
     ) -> ActionResult:
         def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
@@ -355,6 +357,7 @@ class ModeBulkImport(WatoMode):
             folder=folder,
             batch_size=100,
             pprint_value=pprint_value,
+            use_git=use_git,
         )
 
         bakery.try_bake_agents_for_hosts(imported_hosts, debug=debug)
@@ -404,6 +407,7 @@ class ModeBulkImport(WatoMode):
         folder: Folder,
         batch_size: int = 100,
         pprint_value: bool,
+        use_git: bool,
     ) -> tuple[list[HostName], list[HostName], list[str]]:
         imported_hosts: list[HostName] = []
         failed_hosts: list[HostName] = []
@@ -416,7 +420,7 @@ class ModeBulkImport(WatoMode):
                 # NOTE
                 # Folder.create_hosts will either import all of them, or no host at all. The
                 # caught exceptions below will only trigger during the verification phase.
-                folder.create_hosts(batch, pprint_value=pprint_value)
+                folder.create_hosts(batch, pprint_value=pprint_value, use_git=use_git)
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
@@ -424,7 +428,7 @@ class ModeBulkImport(WatoMode):
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:
-                        folder.create_hosts([entry], pprint_value=pprint_value)
+                        folder.create_hosts([entry], pprint_value=pprint_value, use_git=use_git)
                         index += 1
                         imported_hosts.append(entry[0])
                     except (MKAuthException, MKUserError, MKGeneralException) as exc:

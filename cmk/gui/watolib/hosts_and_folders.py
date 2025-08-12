@@ -2407,6 +2407,7 @@ class Folder(FolderProtocol):
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         """Create many hosts at once.
 
@@ -2437,6 +2438,7 @@ class Folder(FolderProtocol):
                 for host_name, attributes, _cluster_nodes in entries
             ],
             pprint_value=pprint_value,
+            use_git=use_git,
         )
 
     def create_validated_hosts(
@@ -2444,11 +2446,12 @@ class Folder(FolderProtocol):
         entries: Collection[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
-            self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
+            self._propagate_hosts_changes(host_name, attributes, cluster_nodes, use_git=use_git)
 
         self.save(pprint_value=pprint_value)  # num_hosts has changed
 
@@ -2464,11 +2467,12 @@ class Folder(FolderProtocol):
         validate_host_uniqueness("host", name)
         return update_metadata(attributes, created_by=user.id)
 
-    def propagate_hosts_changes(
+    def _propagate_hosts_changes(
         self,
         host_name: HostName,
         attributes: HostAttributes,
         cluster_nodes: Sequence[HostName] | None,
+        use_git: bool,
     ) -> None:
         host = Host(self, host_name, attributes, cluster_nodes)
         assert self._hosts is not None
@@ -2484,7 +2488,7 @@ class Folder(FolderProtocol):
             diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([host_name]),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def user_may_delete_hosts(

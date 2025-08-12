@@ -90,6 +90,7 @@ def _test_hosts(folder: Folder) -> None:
             (HostName("dong"), {}, None),
         ],
         pprint_value=False,
+        use_git=False,
     )
 
 

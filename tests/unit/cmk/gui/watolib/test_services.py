@@ -137,7 +137,7 @@ def fixture_sample_host(
 ) -> Generator[Host, None, None]:
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
-    root_folder.create_hosts([(hostname, {}, None)], pprint_value=False)
+    root_folder.create_hosts([(hostname, {}, None)], pprint_value=False, use_git=False)
     host = root_folder.host(hostname)
     assert host is not None
     yield host

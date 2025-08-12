@@ -34,11 +34,11 @@ class TestFolderSiteStats:
         assert values == expected
 
     def _setup_fs(self, folder: Folder) -> None:
-        folder.create_hosts([(HostName("main_host"), {}, None)], pprint_value=False)
+        folder.create_hosts([(HostName("main_host"), {}, None)], pprint_value=False, use_git=False)
         sub = folder.create_subfolder(name="sub", title="", attributes={}, pprint_value=False)
-        sub.create_hosts([(HostName("sub_host"), {}, None)], pprint_value=False)
+        sub.create_hosts([(HostName("sub_host"), {}, None)], pprint_value=False, use_git=False)
         nest = sub.create_subfolder(name="sub/nested", title="", attributes={}, pprint_value=False)
-        nest.create_hosts([(HostName("nested_host"), {}, None)], pprint_value=False)
+        nest.create_hosts([(HostName("nested_host"), {}, None)], pprint_value=False, use_git=False)
 
     def _cleanup_fs(self, root_folder: Folder) -> None:
         shutil.rmtree(root_folder.filesystem_path(), ignore_errors=True)

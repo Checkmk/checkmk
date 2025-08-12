@@ -8,7 +8,6 @@ from typing import Final
 
 import cmk.ccc.store
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.paths
 from cmk.ccc.version import __version__, parse_check_mk_version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
@@ -18,47 +17,46 @@ from cmk.mkp_tool import (
     PathConfig,
     reload_services_affected_by_mkp_changes,
 )
+from cmk.utils import paths
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.visuals import invalidate_visuals_cache
 
 
-def _make_path_config() -> PathConfig:
-    if (pl_path := plugins_local_path()) is None:
-        raise SystemExit("No writable local path available")
-
-    if (apl_path := addons_plugins_local_path()) is None:
-        raise SystemExit("No writable local path available")
-
+def make_path_config() -> PathConfig | None:
+    if (local_path := plugins_local_path()) is None:
+        return None
+    if (addons_path := addons_plugins_local_path()) is None:
+        return None
     return PathConfig(
-        cmk_plugins_dir=pl_path,
-        cmk_addons_plugins_dir=apl_path,
-        agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
-        agents_dir=cmk.utils.paths.local_agents_dir,
-        alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
-        bin_dir=cmk.utils.paths.local_bin_dir,
-        check_manpages_dir=cmk.utils.paths.local_legacy_check_manpages_dir,
-        checks_dir=cmk.utils.paths.local_checks_dir,
-        doc_dir=cmk.utils.paths.local_doc_dir,
-        gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
-        inventory_dir=cmk.utils.paths.local_inventory_dir,
-        lib_dir=cmk.utils.paths.local_lib_dir,
-        locale_dir=cmk.utils.paths.local_locale_dir,
-        local_root=cmk.utils.paths.local_root,
-        mib_dir=ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value,
+        cmk_plugins_dir=local_path,
+        cmk_addons_plugins_dir=addons_path,
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        agents_dir=paths.local_agents_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+        bin_dir=paths.local_bin_dir,
+        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+        checks_dir=paths.local_checks_dir,
+        doc_dir=paths.local_doc_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        inventory_dir=paths.local_inventory_dir,
+        lib_dir=paths.local_lib_dir,
+        locale_dir=paths.local_locale_dir,
+        local_root=paths.local_root,
+        mib_dir=ec.create_paths(paths.omd_root).local_mibs_dir.value,
         mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-        notifications_dir=cmk.utils.paths.local_notifications_dir,
-        pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-        web_dir=cmk.utils.paths.local_web_dir,
+        notifications_dir=paths.local_notifications_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        web_dir=paths.local_web_dir,
     )
 
 
 _SITE_CONTEXT: Final = cli.SiteContext(
     PackageStore(
-        enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
-        local_dir=cmk.utils.paths.local_optional_packages_dir,
-        shipped_dir=cmk.utils.paths.optional_packages_dir,
+        enabled_dir=paths.local_enabled_packages_dir,
+        local_dir=paths.local_optional_packages_dir,
+        shipped_dir=paths.optional_packages_dir,
     ),
-    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
+    installed_packages_dir=paths.installed_packages_dir,
     callbacks=ec.mkp_callbacks(),
     post_package_change_actions=make_post_package_change_actions(
         on_any_change=(
@@ -73,10 +71,6 @@ _SITE_CONTEXT: Final = cli.SiteContext(
 
 
 if __name__ == "__main__":
-    sys.exit(
-        cli.main(
-            _make_path_config(),
-            _SITE_CONTEXT,
-            cmk.ccc.store.save_bytes_to_file,
-        )
-    )
+    if (path_config := make_path_config()) is None:
+        raise SystemExit("No writable local path available")
+    sys.exit(cli.main(path_config, _SITE_CONTEXT, cmk.ccc.store.save_bytes_to_file))

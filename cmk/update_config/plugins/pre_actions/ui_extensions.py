@@ -20,9 +20,9 @@ from cmk.update_config.plugins.pre_actions.utils import (
     error_message_incomp_local_file,
     error_message_incomp_package,
     get_installer_and_package_map,
-    get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
     is_applicable_mkp,
+    make_path_config,
     PACKAGE_STORE,
     Resume,
 )
@@ -43,9 +43,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
     @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
-        path_config = get_path_config()
         # no ui stuff to update
-        if path_config is None:
+        if (path_config := make_path_config()) is None:
             return
         installer, package_map = get_installer_and_package_map(path_config)
         dealt_with_packages: set[PackageID] = set()

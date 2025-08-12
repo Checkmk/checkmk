@@ -82,12 +82,10 @@ def _filter_non_ok_ac_test_results(
     }
 
 
-def _make_path_config() -> PathConfig | None:
-    local_path = plugins_local_path()
-    addons_path = addons_plugins_local_path()
-    if local_path is None:
+def make_path_config() -> PathConfig | None:
+    if (local_path := plugins_local_path()) is None:
         return None
-    if addons_path is None:
+    if (addons_path := addons_plugins_local_path()) is None:
         return None
     return PathConfig(
         cmk_plugins_dir=local_path,
@@ -487,7 +485,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
                 )
             ).local,
         )
-        if (path_config := _make_path_config())
+        if (path_config := make_path_config())
         else {}
     )
 

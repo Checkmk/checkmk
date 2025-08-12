@@ -2855,33 +2855,13 @@ def _need_to_update_config_after_sync() -> bool:
 
 
 def _execute_update_mkps(
-    local_path: Path, addons_path: Path
+    path_config: mkp_tool.PathConfig,
 ) -> tuple[Sequence[mkp_tool.Manifest], Sequence[mkp_tool.Manifest]]:
     logger.debug("Updating active packages")
 
     uninstalled, installed = mkp_tool.update_active_packages(
         mkp_tool.Installer(paths.installed_packages_dir),
-        mkp_tool.PathConfig(
-            cmk_plugins_dir=local_path,
-            cmk_addons_plugins_dir=addons_path,
-            agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-            agents_dir=paths.local_agents_dir,
-            alert_handlers_dir=paths.local_alert_handlers_dir,
-            bin_dir=paths.local_bin_dir,
-            check_manpages_dir=paths.local_legacy_check_manpages_dir,
-            checks_dir=paths.local_checks_dir,
-            doc_dir=paths.local_doc_dir,
-            gui_plugins_dir=paths.local_gui_plugins_dir,
-            inventory_dir=paths.local_inventory_dir,
-            lib_dir=paths.local_lib_dir,
-            locale_dir=paths.local_locale_dir,
-            local_root=paths.local_root,
-            mib_dir=ec.create_paths(paths.omd_root).local_mibs_dir.value,
-            mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-            notifications_dir=paths.local_notifications_dir,
-            pnp_templates_dir=paths.local_pnp_templates_dir,
-            web_dir=paths.local_web_dir,
-        ),
+        path_config,
         mkp_tool.PackageStore(
             enabled_dir=paths.local_enabled_packages_dir,
             local_dir=paths.local_optional_packages_dir,
@@ -2892,6 +2872,34 @@ def _execute_update_mkps(
         parse_version=version.parse_check_mk_version,
     )
     return uninstalled, installed
+
+
+def make_path_config() -> mkp_tool.PathConfig | None:
+    if (local_path := plugins_local_path()) is None:
+        return None
+    if (addons_path := addons_plugins_local_path()) is None:
+        return None
+    return mkp_tool.PathConfig(
+        cmk_plugins_dir=local_path,
+        cmk_addons_plugins_dir=addons_path,
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        agents_dir=paths.local_agents_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+        bin_dir=paths.local_bin_dir,
+        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+        checks_dir=paths.local_checks_dir,
+        doc_dir=paths.local_doc_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        inventory_dir=paths.local_inventory_dir,
+        lib_dir=paths.local_lib_dir,
+        locale_dir=paths.local_locale_dir,
+        local_root=paths.local_root,
+        mib_dir=ec.create_paths(paths.omd_root).local_mibs_dir.value,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        notifications_dir=paths.local_notifications_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        web_dir=paths.local_web_dir,
+    )
 
 
 def _execute_changed_local_files_actions() -> None:
@@ -2950,12 +2958,8 @@ def _execute_post_config_sync_actions(
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
-        if (
-            _need_to_update_mkps_after_sync()
-            and (local_path := plugins_local_path())
-            and (addons_path := addons_plugins_local_path())
-        ):
-            uninstalled, installed = _execute_update_mkps(local_path, addons_path)
+        if _need_to_update_mkps_after_sync() and (path_config := make_path_config()):
+            uninstalled, installed = _execute_update_mkps(path_config)
             mkps_changed = bool(uninstalled or installed)
         else:
             installed = ()

@@ -18,8 +18,8 @@ from cmk.update_config.plugins.pre_actions.utils import (
     continue_per_users_choice,
     disable_incomp_mkp,
     get_installer_and_package_map,
-    get_path_config,
     is_applicable_mkp,
+    make_path_config,
     PACKAGE_STORE,
     Resume,
 )
@@ -38,9 +38,8 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
     @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        path_config = get_path_config()
         # In this case we have no mkp plugins available so bail out early
-        if path_config is None:
+        if (path_config := make_path_config()) is None:
             return
         installer, package_map = get_installer_and_package_map(path_config)
         # group the local_agent_based_plugins_dir files by package

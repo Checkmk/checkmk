@@ -41,12 +41,10 @@ def _prompt(message: str) -> str:
     return input(message)
 
 
-def get_path_config() -> PathConfig | None:
-    local_path = plugins_local_path()
-    addons_path = addons_plugins_local_path()
-    if local_path is None:
+def make_path_config() -> PathConfig | None:
+    if (local_path := plugins_local_path()) is None:
         return None
-    if addons_path is None:
+    if (addons_path := addons_plugins_local_path()) is None:
         return None
     return PathConfig(
         cmk_plugins_dir=local_path,

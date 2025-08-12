@@ -2245,7 +2245,7 @@ class Folder(FolderProtocol):
         need_sidebar_reload()
         return new_subfolder
 
-    def delete_subfolder(self, name: str) -> None:
+    def delete_subfolder(self, name: str, *, use_git: bool) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
@@ -2266,7 +2266,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
@@ -2275,7 +2275,7 @@ class Folder(FolderProtocol):
         folder_lookup_cache().delete()
 
     def move_subfolder_to(
-        self, subfolder: Folder, target_folder: Folder, *, pprint_value: bool
+        self, subfolder: Folder, target_folder: Folder, *, pprint_value: bool, use_git: bool
     ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
@@ -2344,12 +2344,19 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
-    def edit(self, new_title: str, new_attributes: HostAttributes, *, pprint_value: bool) -> None:
+    def edit(
+        self,
+        new_title: str,
+        new_attributes: HostAttributes,
+        *,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
@@ -2402,7 +2409,7 @@ class Folder(FolderProtocol):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
     def prepare_create_hosts(self) -> None:
@@ -2523,6 +2530,7 @@ class Folder(FolderProtocol):
         ],
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
         allow_locked_deletion: bool = False,
     ) -> None:
         # 1. Check preconditions and whether hosts can be deleted
@@ -2549,7 +2557,7 @@ class Folder(FolderProtocol):
                 sites=[host.site_id()],
                 domains=[config_domain_registry[CORE_DOMAIN]],
                 domain_settings=_core_settings_hosts_to_update([host.name()]),
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
 
         self.save_folder_attributes()  # num_hosts has changed
@@ -3079,6 +3087,7 @@ class SearchFolder(FolderProtocol):
         ],
         pprint_value: bool,
         debug: bool,
+        use_git: bool,
     ) -> None:
         auth_errors = []
         for folder, these_host_names in self._group_hostnames_by_folder(host_names):
@@ -3088,6 +3097,7 @@ class SearchFolder(FolderProtocol):
                     automation=automation,
                     pprint_value=pprint_value,
                     debug=debug,
+                    use_git=use_git,
                 )
             except MKAuthException as e:
                 auth_errors.append(

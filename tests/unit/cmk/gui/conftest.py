@@ -420,6 +420,7 @@ def with_host(
         automation=lambda *args, **kwargs: DeleteHostsResult(),
         pprint_value=False,
         debug=False,
+        use_git=False,
     )
 
 

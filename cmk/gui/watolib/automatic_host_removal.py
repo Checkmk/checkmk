@@ -94,6 +94,7 @@ def execute_host_removal_job(config: Config) -> None:
                     automation=delete_hosts,
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
+                    use_git=config.wato_use_git,
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")

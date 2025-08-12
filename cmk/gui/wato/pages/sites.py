@@ -899,7 +899,9 @@ class ModeDistributedMonitoring(WatoMode):
 
         delete_folders_id = request.get_ascii_input("_delete_folders")
         if delete_folders_id and transactions.check_transaction():
-            return self._action_delete_folders(SiteId(delete_folders_id))
+            return self._action_delete_folders(
+                SiteId(delete_folders_id), use_git=config.wato_use_git
+            )
 
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
@@ -1018,7 +1020,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
         return redirect(mode_url("sites"))
 
-    def _action_delete_folders(self, delete_id: SiteId) -> ActionResult:
+    def _action_delete_folders(self, delete_id: SiteId, *, use_git: bool) -> ActionResult:
         folder_site_stats = FolderSiteStats.build(folder_tree().root_folder())
         folders_related_to_site = folder_site_stats.folders.get(delete_id, set())
         empty_folders = {folder for folder in folders_related_to_site if folder.is_empty()}
@@ -1028,7 +1030,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         for empty_folder in empty_folders:
             if (parent := empty_folder.parent()) is not None:
-                parent.delete_subfolder(empty_folder.name())
+                parent.delete_subfolder(empty_folder.name(), use_git=use_git)
 
         return redirect(mode_url("sites"))
 

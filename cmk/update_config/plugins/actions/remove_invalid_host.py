@@ -25,6 +25,7 @@ class RemoveInvalidHost(UpdateAction):
                     automation=delete_hosts,
                     pprint_value=active_config.wato_pprint_config,
                     debug=active_config.debug,
+                    use_git=active_config.wato_use_git,
                 )
                 logger.log(
                     VERBOSE,

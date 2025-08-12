@@ -311,6 +311,7 @@ class TestHostConverter:
                     automation=lambda _automation_config, _hosts, _debug: DeleteHostsResult(),
                     pprint_value=False,
                     debug=False,
+                    use_git=False,
                 )
 
     @pytest.mark.parametrize("permission_type", _permission_types())

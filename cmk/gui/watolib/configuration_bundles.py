@@ -396,7 +396,7 @@ def delete_config_bundle_objects(
     if references.rules:
         _delete_rules(references.rules, pprint_value=pprint_value, debug=debug, use_git=use_git)
     if references.hosts:
-        _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug)
+        _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug, use_git=use_git)
     if references.passwords:
         _delete_passwords(
             references.passwords,
@@ -405,7 +405,9 @@ def delete_config_bundle_objects(
             use_git=use_git,
         )
     if references.dcd_connections:
-        _delete_dcd_connections(references.dcd_connections, pprint_value=pprint_value, debug=debug)
+        _delete_dcd_connections(
+            references.dcd_connections, pprint_value=pprint_value, debug=debug, use_git=use_git
+        )
 
 
 def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:
@@ -481,7 +483,7 @@ def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
         )
 
 
-def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool) -> None:
+def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool, use_git: bool) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
         ((host.folder(), host) for host in hosts),
@@ -495,6 +497,7 @@ def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool) -> 
             allow_locked_deletion=True,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
 
 
@@ -670,7 +673,11 @@ def _prepare_create_dcd_connections(
 
 
 def _delete_dcd_connections(
-    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]], *, pprint_value: bool, debug: bool
+    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]],
+    *,
+    pprint_value: bool,
+    debug: bool,
+    use_git: bool,
 ) -> None:
     for dcd_connection_id, _spec in dcd_connections:
         DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
@@ -685,6 +692,7 @@ def _delete_dcd_connections(
         ),
         pprint_value=pprint_value,
         debug=debug,
+        use_git=use_git,
     )
 
 

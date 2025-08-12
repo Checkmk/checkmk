@@ -557,6 +557,7 @@ class ModeEditHost(ABCHostMode):
                 automation=delete_hosts,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
+                use_git=config.wato_use_git,
             )
             return redirect(mode_url("folder", folder=folder.path()))
 

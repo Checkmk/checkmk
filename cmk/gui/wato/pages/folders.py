@@ -612,7 +612,9 @@ class ModeFolder(WatoMode):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
-                self._folder.delete_subfolder(request.get_ascii_input_mandatory("_delete_folder"))
+                self._folder.delete_subfolder(
+                    request.get_ascii_input_mandatory("_delete_folder"), use_git=config.wato_use_git
+                )
             return redirect(folder_url)
 
         if request.has_var("_move_folder_to"):
@@ -626,7 +628,10 @@ class ModeFolder(WatoMode):
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
                 self._folder.move_subfolder_to(
-                    what_folder, target_folder, pprint_value=config.wato_pprint_config
+                    what_folder,
+                    target_folder,
+                    pprint_value=config.wato_pprint_config,
+                    use_git=config.wato_use_git,
                 )
             return redirect(folder_url)
 
@@ -659,6 +664,7 @@ class ModeFolder(WatoMode):
                 automation=delete_hosts,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
+                use_git=config.wato_use_git,
             )
             return redirect(folder_url)
 
@@ -707,7 +713,10 @@ class ModeFolder(WatoMode):
         # Deletion
         if request.var("_bulk_delete"):
             return self._delete_hosts(
-                selected_host_names, pprint_value=config.wato_pprint_config, debug=config.debug
+                selected_host_names,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
+                use_git=config.wato_use_git,
             )
 
         search_text = request.get_str_input_mandatory("search", "")
@@ -1290,13 +1299,18 @@ class ModeFolder(WatoMode):
             )
 
     def _delete_hosts(
-        self, host_names: Sequence[HostName], pprint_value: bool, debug: bool
+        self,
+        host_names: Sequence[HostName],
+        pprint_value: bool,
+        debug: bool,
+        use_git: bool,
     ) -> ActionResult:
         self._folder.delete_hosts(
             host_names,
             automation=delete_hosts,
             pprint_value=pprint_value,
             debug=debug,
+            use_git=use_git,
         )
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
@@ -1555,7 +1569,7 @@ class ModeEditFolder(ABCFolderMode):
         show_file_names: bool,
         use_git: bool,
     ) -> None:
-        self._folder.edit(title, attributes, pprint_value=pprint_value)
+        self._folder.edit(title, attributes, pprint_value=pprint_value, use_git=use_git)
 
 
 class ModeCreateFolder(ABCFolderMode):

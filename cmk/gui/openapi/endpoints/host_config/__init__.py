@@ -906,6 +906,7 @@ def delete(params: Mapping[str, Any]) -> Response:
         automation=delete_hosts,
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
+        use_git=active_config.wato_use_git,
     )
     return Response(status=204)
 
@@ -944,6 +945,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             automation=delete_hosts,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
+            use_git=active_config.wato_use_git,
         )
 
     return Response(status=204)

@@ -7397,7 +7397,8 @@ msgstr "Von Hosts zu entfernende Attribute"
 msgid "AudioCodes SBC Calls"
 msgstr "AudioCodes SBC Anrufe"
 
-msgid "AudioCodes System Events"
+#, fuzzy
+msgid "AudioCodes system events"
 msgstr "AudioCodes-Systemereignisse"
 
 msgid "Audit log"
@@ -23822,6 +23823,9 @@ msgstr "Express-Servicecode"
 
 msgid "Extend downtimes by..."
 msgstr "Wartungszeit verlängern um..."
+
+msgid "Extend post-diagnostics phase by additional time span"
+msgstr ""
 
 msgid "Extend the Checkmk GUI with your custom icons"
 msgstr "Erweitern Sie die Checkmk-GUI mit eigenen benutzerdefinierten Icons"
@@ -72604,6 +72608,11 @@ msgid "Time interval"
 msgstr "Zeitintervall"
 
 msgid "Time left on Battery at and below which a warning state is triggered"
+msgstr "Restzeit der Batterie, aber der eine Warnung augelöst wird"
+
+#, fuzzy
+msgid ""
+"Time left on Battery at and below which a warning/critical state is triggered"
 msgstr "Restzeit der Batterie, aber der eine Warnung augelöst wird"
 
 msgid "Time left on battery"

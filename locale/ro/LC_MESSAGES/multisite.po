@@ -7591,7 +7591,7 @@ msgid "AudioCodes SBC Calls"
 msgstr ""
 
 #, fuzzy
-msgid "AudioCodes System Events"
+msgid "AudioCodes system events"
 msgstr "Evenimentele sistemului APC Inrow"
 
 msgid "Audit log"
@@ -24671,6 +24671,9 @@ msgstr "Express Servicecode"
 
 msgid "Extend downtimes by..."
 msgstr "Extindeți timpii de nefuncționare prin..."
+
+msgid "Extend post-diagnostics phase by additional time span"
+msgstr ""
 
 msgid "Extend the Checkmk GUI with your custom icons"
 msgstr "Extindeți Checkmk GUI cu pictogramele dvs. personalizate"
@@ -75223,6 +75226,12 @@ msgid "Time interval"
 msgstr "Interval de timp"
 
 msgid "Time left on Battery at and below which a warning state is triggered"
+msgstr ""
+"Timpul rămas pe baterie la și sub care se declanșează o stare de avertizare"
+
+#, fuzzy
+msgid ""
+"Time left on Battery at and below which a warning/critical state is triggered"
 msgstr ""
 "Timpul rămas pe baterie la și sub care se declanșează o stare de avertizare"
 

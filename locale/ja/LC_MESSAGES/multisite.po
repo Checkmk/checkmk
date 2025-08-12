@@ -7156,7 +7156,8 @@ msgstr "ホストから削除する属性"
 msgid "AudioCodes SBC Calls"
 msgstr "オーディオコードSBCコール"
 
-msgid "AudioCodes System Events"
+#, fuzzy
+msgid "AudioCodes system events"
 msgstr "AudioCodesシステムイベント"
 
 msgid "Audit log"
@@ -23146,6 +23147,9 @@ msgstr "エクスプレス サービス コード"
 
 msgid "Extend downtimes by..."
 msgstr "ダウンタイムを次のように延長します..."
+
+msgid "Extend post-diagnostics phase by additional time span"
+msgstr ""
 
 msgid "Extend the Checkmk GUI with your custom icons"
 msgstr "カスタムアイコンでCheckmk GUIを拡張する"
@@ -70408,6 +70412,11 @@ msgid "Time interval"
 msgstr "時間間隔"
 
 msgid "Time left on Battery at and below which a warning state is triggered"
+msgstr "警告状態がトリガーされるバッテリーの残り時間"
+
+#, fuzzy
+msgid ""
+"Time left on Battery at and below which a warning/critical state is triggered"
 msgstr "警告状態がトリガーされるバッテリーの残り時間"
 
 msgid "Time left on battery"

@@ -41,6 +41,8 @@ from .rule_packs import remove_exported_rule_pack as remove_exported_rule_pack
 from .rule_packs import RulePackType as RulePackType
 from .rule_packs import save_active_config as save_active_config
 from .rule_packs import save_rule_packs as save_rule_packs
+from .settings import create_paths as create_paths
+from .settings import Paths as Paths
 from .settings import Settings as Settings
 from .syslog import forward_to_unix_socket as forward_to_unix_socket
 from .syslog import SyslogFacility as SyslogFacility

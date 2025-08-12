@@ -38,6 +38,9 @@ class Paths(NamedTuple):
     status_file: AnnotatedPath
     status_server_profile: AnnotatedPath
     event_server_profile: AnnotatedPath
+    local_mibs_dir: AnnotatedPath
+    checkmk_mibs_dir: AnnotatedPath
+    system_mibs_dir: AnnotatedPath
     compiled_mibs_dir: AnnotatedPath
     mongodb_config_file: AnnotatedPath
 
@@ -67,6 +70,9 @@ def create_paths(omd_root: Path) -> Paths:
         event_server_profile=AnnotatedPath(
             "event server profile", state_dir / "EventServer.profile"
         ),
+        local_mibs_dir=AnnotatedPath("custom MIB directory", omd_root / "local/share/snmp/mibs"),
+        checkmk_mibs_dir=AnnotatedPath("Checkmk MIB directory", omd_root / "share/snmp/mibs"),
+        system_mibs_dir=AnnotatedPath("system MIB directory", Path("/usr/share/snmp/mibs")),
         compiled_mibs_dir=AnnotatedPath(
             "compiled MIBs directory", omd_root / "local/share/check_mk/compiled_mibs"
         ),

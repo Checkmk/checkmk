@@ -11,7 +11,7 @@ import socket
 import sys
 import time
 import zipfile
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
@@ -311,23 +311,6 @@ def register(
             site_path=str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
         )
     )
-
-
-def _compiled_mibs_dir() -> Path:
-    return cmk.utils.paths.omd_root / "local/share/check_mk/compiled_mibs"
-
-
-def mib_upload_dir() -> Path:
-    return cmk.utils.paths.local_mib_dir
-
-
-def mib_dirs() -> list[tuple[Path, str]]:
-    # ASN1 MIB source directory candidates. Non existing dirs are ok.
-    return [
-        (mib_upload_dir(), _("Custom MIBs")),
-        (cmk.utils.paths.mib_dir, _("MIBs shipped with Checkmk")),
-        (Path("/usr/share/snmp/mibs"), _("System MIBs")),
-    ]
 
 
 def match_event_rule(
@@ -1556,7 +1539,16 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         assert isinstance(config_domain, ConfigDomainEventConsole)
         self._config_domain = config_domain
         self._rule_packs = list(ec.load_rule_packs())
+        self._paths = ec.create_paths(cmk.utils.paths.omd_root)
         super().__init__()
+
+    def _mib_dirs(self) -> Sequence[tuple[Path, str]]:
+        # ASN1 MIB source directory candidates. Non existing dirs are ok.
+        return [
+            (self._paths.local_mibs_dir.value, _("Custom MIBs")),
+            (self._paths.checkmk_mibs_dir.value, _("MIBs shipped with Checkmk")),
+            (self._paths.system_mibs_dir.value, _("System MIBs")),
+        ]
 
     def _verify_ec_enabled(self, *, enabled: bool) -> None:
         if not enabled:
@@ -3385,7 +3377,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             return redirect(self.mode_url())
 
         if filename := request.var("_delete"):
-            if info := self._load_snmp_mibs(mib_upload_dir()).get(filename):
+            if info := self._load_snmp_mibs(self._paths.local_mibs_dir.value).get(filename):
                 self._delete_mib(filename, info.name, use_git=config.wato_use_git)
         elif request.var("_bulk_delete_custom_mibs"):
             self._bulk_delete_custom_mibs_after_confirm(use_git=config.wato_use_git)
@@ -3393,7 +3385,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return redirect(self.mode_url())
 
     def _bulk_delete_custom_mibs_after_confirm(self, *, use_git: bool) -> None:
-        custom_mibs = self._load_snmp_mibs(mib_upload_dir())
+        custom_mibs = self._load_snmp_mibs(self._paths.local_mibs_dir.value)
         selected_custom_mibs: list[str] = []
         for varname, _value in request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
@@ -3411,20 +3403,21 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             use_git=use_git,
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
+        compiled_mibs_dir = self._paths.compiled_mibs_dir.value
         for path in {
-            _compiled_mibs_dir() / p
+            compiled_mibs_dir / p
             for f in (Path(filename), Path(mib_name))
             for p in (
                 f.with_suffix(".py"),
                 ("__pycache__" / f).with_suffix(pyc_suffix),
             )
-        } | {mib_upload_dir() / filename}:
+        } | {self._paths.local_mibs_dir.value / filename}:
             path.unlink(missing_ok=True)
 
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
-        for mib_path, title in mib_dirs():
-            is_custom_dir = mib_path == mib_upload_dir()
+        for mib_path, title in self._mib_dirs():
+            is_custom_dir = mib_path == self._paths.local_mibs_dir.value
             if is_custom_dir:
                 with html.form_context("bulk_delete_form", method="POST"):
                     self._show_mib_table(mib_path, title)
@@ -3434,7 +3427,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 self._show_mib_table(mib_path, title)
 
     def _show_mib_table(self, path: Path, title: str) -> None:
-        is_custom_dir = path == mib_upload_dir()
+        is_custom_dir = path == self._paths.local_mibs_dir.value
 
         with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
@@ -3625,8 +3618,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content, debug=debug)
-        mib_upload_dir().mkdir(parents=True, exist_ok=True)
-        with (mib_upload_dir() / filename).open("wb") as f:
+        self._paths.local_mibs_dir.value.mkdir(parents=True, exist_ok=True)
+        with (self._paths.local_mibs_dir.value / filename).open("wb") as f:
             f.write(content)
         self._add_change(
             action_name="uploaded-mib",
@@ -3640,7 +3633,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             raise Exception(_("Invalid filename"))
 
     def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes, *, debug: bool) -> str:
-        compiled_mibs_dir = _compiled_mibs_dir()
+        compiled_mibs_dir = self._paths.compiled_mibs_dir.value
         compiled_mibs_dir.mkdir(mode=0o770, exist_ok=True)
 
         # This object manages the compilation of the uploaded SNMP mib
@@ -3661,7 +3654,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(str(path)) for path, _title in mib_dirs()])
+        compiler.addSources(*[FileReader(str(path)) for path, _title in self._mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))

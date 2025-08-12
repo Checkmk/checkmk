@@ -63,7 +63,7 @@ def get_path_config() -> PathConfig | None:
         lib_dir=paths.local_lib_dir,
         locale_dir=paths.local_locale_dir,
         local_root=paths.local_root,
-        mib_dir=paths.local_mib_dir,
+        mib_dir=ec.create_paths(paths.omd_root).local_mibs_dir.value,
         mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
         notifications_dir=paths.local_notifications_dir,
         pnp_templates_dir=paths.local_pnp_templates_dir,

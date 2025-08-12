@@ -6,7 +6,6 @@
 import traceback
 from collections.abc import Iterable, Mapping
 from logging import Logger
-from pathlib import Path
 from typing import Any
 
 import pyasn1.error
@@ -24,12 +23,11 @@ import pysnmp.smi.rfc1902
 import pysnmp.smi.view
 from pyasn1.type.base import SimpleAsn1Type
 
-import cmk.utils.paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import Age
 
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
-from .settings import Settings
+from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
@@ -251,12 +249,12 @@ class SNMPTrapTranslator:
                 self.translate = self._translate_simple
             case (True, {**extra}) if not extra:  # matches empty dict
                 self._mib_resolver = self._construct_resolver(
-                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=False
+                    self._logger, settings.paths, load_texts=False
                 )
                 self.translate = self._translate_via_mibs
             case (True, {"add_description": True}):
                 self._mib_resolver = self._construct_resolver(
-                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=True
+                    self._logger, settings.paths, load_texts=True
                 )
                 self.translate = self._translate_via_mibs
             case _:
@@ -264,7 +262,7 @@ class SNMPTrapTranslator:
 
     @staticmethod
     def _construct_resolver(
-        logger: Logger, mibs_dir: Path, *, load_texts: bool
+        logger: Logger, paths: Paths, *, load_texts: bool
     ) -> pysnmp.smi.view.MibViewController | None:
         try:
             # manages python MIB modules
@@ -272,14 +270,12 @@ class SNMPTrapTranslator:
 
             # we need compiled Mib Dir and explicit system Mib Dir
             for source in [
-                cmk.utils.paths.local_mib_dir,
-                cmk.utils.paths.mib_dir,
-                "/usr/share/snmp/mibs",
-                str(mibs_dir),
+                paths.local_mibs_dir,
+                paths.checkmk_mibs_dir,
+                paths.system_mibs_dir,
+                paths.compiled_mibs_dir,
             ]:
-                builder.addMibSources(  # type: ignore[no-untyped-call]
-                    *[pysnmp.smi.builder.DirMibSource(source)]  # type: ignore[no-untyped-call]
-                )
+                builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))  # type: ignore[no-untyped-call]
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts

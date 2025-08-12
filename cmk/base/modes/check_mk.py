@@ -24,6 +24,7 @@ import cmk.base.parent_scan
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -1073,11 +1074,11 @@ def mode_snmptranslate(walk_filename: str) -> None:
     if not walk_path.exists():
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
-    command: list[str] = [
+    command = [
         "snmptranslate",
         "-m",
         "ALL",
-        "-M+%s" % cmk.utils.paths.local_mib_dir,
+        f"-M+{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}",
         "-",
     ]
     with walk_path.open("rb") as walk_file:
@@ -1123,9 +1124,9 @@ modes.register(
         argument_descr="HOST",
         short_help="Do snmptranslate on walk",
         long_help=[
-            "Does not contact the host again, but reuses the hosts walk from the "
-            "directory %s. You can add further MIBs to the directory %s."
-            % (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
+            "Does not contact the host again, but reuses the hosts walk from the directory "
+            f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
+            f"{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}."
         ],
     )
 )

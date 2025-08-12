@@ -42,6 +42,7 @@
 /announce*
 artefacts/
 build/
+CLAUDE.md
 ChangeLog
 check_mk-*.tar.gz
 check-mk-*.build

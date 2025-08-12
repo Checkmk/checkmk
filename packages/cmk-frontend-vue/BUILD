@@ -171,6 +171,18 @@ vite_bin.vite(
     out_dirs = ["dist"],
 )
 
+vite_bin.vite(
+    name = "demo-dist",
+    srcs = SRCS,
+    args = [
+        "build",
+        "--config",
+        "vite.config.demo.ts",
+    ],
+    chdir = package_name(),
+    out_dirs = ["demo/dist"],
+)
+
 vitest_bin.vitest_test(
     name = "unit-test",
     args = ["run"],

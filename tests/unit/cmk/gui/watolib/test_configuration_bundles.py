@@ -127,7 +127,7 @@ def test_delete_config_bundle_unknown_id() -> None:
 )
 def fixture_other_folder(request_context: None, with_admin_login: UserId) -> str:
     path = "subfolder"
-    folder_tree().create_missing_folders(path, pprint_value=False)
+    folder_tree().create_missing_folders(path, pprint_value=False, use_git=False)
     return path
 
 
@@ -153,7 +153,11 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         ),
         CreateHost(
             folder=tree.root_folder().create_subfolder(
-                name=other_folder, title=other_folder, attributes={}, pprint_value=False
+                name=other_folder,
+                title=other_folder,
+                attributes={},
+                pprint_value=False,
+                use_git=False,
             ),
             name=HostName("test-host-2"),
             attributes={},

@@ -90,7 +90,7 @@ def _append_full_parent_title(title: str, parent_folder: Folder | None) -> str:
 
 
 def save_folder_from_slidein_schema(
-    data: RawFrontendData, *, pprint_value: bool
+    data: RawFrontendData, *, pprint_value: bool, use_git: bool
 ) -> FolderDescription:
     """Save a folder from data returned from folder slide in.
 
@@ -109,7 +109,11 @@ def save_folder_from_slidein_schema(
     parent_folder = folder_tree().all_folders()[parsed_data.parent_folder]
     name = find_available_folder_name(parsed_data.title, parent_folder)
     folder = parent_folder.create_subfolder(
-        name=name, title=parsed_data.title, attributes={}, pprint_value=pprint_value
+        name=name,
+        title=parsed_data.title,
+        attributes={},
+        pprint_value=pprint_value,
+        use_git=use_git,
     )
     full_title = _append_full_parent_title(folder.title(), parent_folder)
 

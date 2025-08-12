@@ -1394,7 +1394,13 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     @abc.abstractmethod
     def _save(
-        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+        self,
+        title: str,
+        attributes: HostAttributes,
+        *,
+        pprint_value: bool,
+        show_file_names: bool,
+        use_git: bool,
     ) -> None:
         raise NotImplementedError()
 
@@ -1449,6 +1455,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             attributes,
             pprint_value=config.wato_pprint_config,
             show_file_names=not config.wato_hide_filenames,
+            use_git=config.wato_use_git,
         )
 
         return redirect(mode_url("folder", folder=folder.path()))
@@ -1540,7 +1547,13 @@ class ModeEditFolder(ABCFolderMode):
 
     @override
     def _save(
-        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+        self,
+        title: str,
+        attributes: HostAttributes,
+        *,
+        pprint_value: bool,
+        show_file_names: bool,
+        use_git: bool,
     ) -> None:
         self._folder.edit(title, attributes, pprint_value=pprint_value)
 
@@ -1569,7 +1582,13 @@ class ModeCreateFolder(ABCFolderMode):
 
     @override
     def _save(
-        self, title: str, attributes: HostAttributes, *, pprint_value: bool, show_file_names: bool
+        self,
+        title: str,
+        attributes: HostAttributes,
+        *,
+        pprint_value: bool,
+        show_file_names: bool,
+        use_git: bool,
     ) -> None:
         parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if show_file_names:
@@ -1578,7 +1597,9 @@ class ModeCreateFolder(ABCFolderMode):
         else:
             name = find_available_folder_name(title, parent_folder)
 
-        parent_folder.create_subfolder(name, title, attributes, pprint_value=pprint_value)
+        parent_folder.create_subfolder(
+            name, title, attributes, pprint_value=pprint_value, use_git=use_git
+        )
 
 
 class PageAjaxSetFoldertree(AjaxPage):

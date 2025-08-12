@@ -113,7 +113,9 @@ def test_rename_host(
         folder = (
             folder_tree()
             .root_folder()
-            .create_subfolder("some_subfolder", "Some Subfolder", {}, pprint_value=False)
+            .create_subfolder(
+                "some_subfolder", "Some Subfolder", {}, pprint_value=False, use_git=False
+            )
         )
     else:
         folder = folder_tree().root_folder()

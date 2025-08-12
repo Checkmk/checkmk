@@ -26,6 +26,7 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
         title=SUB_FOLDER_TITLE,
         attributes={},
         pprint_value=False,
+        use_git=False,
     )
 
     yield

@@ -979,12 +979,14 @@ class FolderTree:
             return folders[folder_path]
         raise MKGeneralException("No Setup folder %s." % folder_path)
 
-    def create_missing_folders(self, folder_path: PathWithoutSlash, *, pprint_value: bool) -> None:
+    def create_missing_folders(
+        self, folder_path: PathWithoutSlash, *, pprint_value: bool, use_git: bool
+    ) -> None:
         folder = self.root_folder()
         for subfolder_name in FolderTree._split_folder_path(folder_path):
             if (existing_folder := folder.subfolder(subfolder_name)) is None:
                 folder = folder.create_subfolder(
-                    subfolder_name, subfolder_name, {}, pprint_value=pprint_value
+                    subfolder_name, subfolder_name, {}, pprint_value=pprint_value, use_git=use_git
                 )
             else:
                 folder = existing_folder
@@ -2202,7 +2204,13 @@ class Folder(FolderProtocol):
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(
-        self, name: str, title: str, attributes: HostAttributes, *, pprint_value: bool
+        self,
+        name: str,
+        title: str,
+        attributes: HostAttributes,
+        *,
+        pprint_value: bool,
+        use_git: bool,
     ) -> Folder:
         """Create a subfolder of the current folder"""
         # 1. Check preconditions
@@ -2231,7 +2239,7 @@ class Folder(FolderProtocol):
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()

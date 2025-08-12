@@ -118,7 +118,7 @@ class ModeRandomHosts(WatoMode):
                 i += 1
 
             subfolder = folder.create_subfolder(
-                folder_name, "Subfolder %02d" % i, {}, pprint_value=pprint_value
+                folder_name, "Subfolder %02d" % i, {}, pprint_value=pprint_value, use_git=use_git
             )
             total_created += self._create_random_hosts(
                 subfolder, count, folders, levels - 1, pprint_value=pprint_value, use_git=use_git

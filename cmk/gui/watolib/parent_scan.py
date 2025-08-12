@@ -301,7 +301,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
 
         gw_folder = self._determine_gateway_folder(
-            settings.where, host_folder, gateway_folder, pprint_value=pprint_value
+            settings.where, host_folder, gateway_folder, pprint_value=pprint_value, use_git=use_git
         )
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
@@ -320,6 +320,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway_folder: Folder | None,
         *,
         pprint_value: bool,
+        use_git: bool,
     ) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request(
@@ -338,7 +339,9 @@ class ParentScanBackgroundJob(BackgroundJob):
                 assert parents_folder is not None
                 return parents_folder
             # Create new gateway folder
-            return current.create_subfolder("parents", _("Parents"), {}, pprint_value=pprint_value)
+            return current.create_subfolder(
+                "parents", _("Parents"), {}, pprint_value=pprint_value, use_git=use_git
+            )
 
         if where == "there":  # In same folder as host
             return host_folder

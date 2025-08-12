@@ -26,7 +26,7 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
     tree.invalidate_caches()
 
     tree.root_folder().create_subfolder(
-        name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={}, pprint_value=False
+        name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={}, pprint_value=False, use_git=False
     )
 
     yield
@@ -45,7 +45,9 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
     )
 
     # WHEN
-    description = save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False)
+    description = save_folder_from_slidein_schema(
+        RawFrontendData(data), pprint_value=False, use_git=False
+    )
 
     # THEN
     assert description.title == f"{SUB_FOLDER_TITLE}/foo"
@@ -65,7 +67,7 @@ def test_folder_save_roundtrip(create_folder_test_environment: None, parent_fold
     )
 
     # WHEN
-    save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False)
+    save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False, use_git=False)
 
     # THEN
     parent = folder_tree().all_folders()[parent_folder]

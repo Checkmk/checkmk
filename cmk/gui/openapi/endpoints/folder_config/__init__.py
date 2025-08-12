@@ -131,7 +131,11 @@ def create(params: Mapping[str, Any]) -> Response:
         name = find_available_folder_name(title, parent_folder)
 
     folder = parent_folder.create_subfolder(
-        name, title, attributes, pprint_value=active_config.wato_pprint_config
+        name,
+        title,
+        attributes,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
 
     return _serve_folder(folder)

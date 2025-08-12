@@ -40,6 +40,7 @@ def save_configuration_entity(
     data: object,
     object_id: EntityId | None,
     pprint_value: bool,
+    use_git: bool,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
 
@@ -60,7 +61,7 @@ def save_configuration_entity(
             )
         case ConfigEntityType.folder:
             folder = save_folder_from_slidein_schema(
-                RawFrontendData(data), pprint_value=pprint_value
+                RawFrontendData(data), pprint_value=pprint_value, use_git=use_git
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title

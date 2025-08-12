@@ -477,7 +477,7 @@ def test_ruleset_to_config_sub_folder(
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 
-    folder_tree().create_missing_folders("abc", pprint_value=False)
+    folder_tree().create_missing_folders("abc", pprint_value=False, use_git=False)
     folder = folder_tree().folder("abc")
 
     ruleset.replace_folder_config(
@@ -775,7 +775,7 @@ def test_matches_search_with_rules(
     folder_name: str,
     expected_result: bool,
 ) -> None:
-    folder_tree().create_missing_folders(folder_name, pprint_value=False)
+    folder_tree().create_missing_folders(folder_name, pprint_value=False, use_git=False)
     folder = folder_tree().folder(folder_name)
     ruleset = _ruleset("host_contactgroups")
     rule = rulesets.Rule.from_config(folder, ruleset, rule_config)

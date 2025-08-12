@@ -14,7 +14,7 @@ mock_item_state = {
        "packets_accepted_rate": (0, 150143),
        "packets_dropped_rate": (0, 369),
        "packets_rejected_rate": (0, 0),
-       "logged_rate": (0, 2386),
+       "packets_logged_rate": (0, 2386),
     },
     "traffic": {
        "bytes_accepted_rate": (0, 46451524),
@@ -90,7 +90,13 @@ checks = {
     "packets": [
         (
             "my_vsid1 0",
-            {},
+            {
+                "packets": None,
+                "packets_accepted": None,
+                "packets_dropped": None,
+                "packets_rejected": None,
+                "packets_logged": None,
+            },
             [
                 (
                     0,
@@ -112,12 +118,18 @@ checks = {
                     "Total number of rejected packets: 0 1/s",
                     [("packets_rejected", 0.0, None, None, None, None)],
                 ),
-                (0, "Total number of logs sent: 0 1/s", [("logged", 0.0, None, None, None, None)]),
+                (0, "Total number of logs sent: 0 1/s", [("packets_logged", 0.0, None, None, None, None)]),
             ],
         ),
         (
             "my_vsid2 1",
-            {},
+            {
+                "packets": None,
+                "packets_accepted": None,
+                "packets_dropped": None,
+                "packets_rejected": None,
+                "packets_logged": None,
+            },
             [
                 (
                     0,
@@ -139,7 +151,7 @@ checks = {
                     "Total number of rejected packets: 0 1/s",
                     [("packets_rejected", 0.0, None, None, None, None)],
                 ),
-                (0, "Total number of logs sent: 0 1/s", [("logged", 0.0, None, None, None, None)]),
+                (0, "Total number of logs sent: 0 1/s", [("packets_logged", 0.0, None, None, None, None)]),
             ],
         ),
     ],

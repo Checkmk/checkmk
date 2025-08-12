@@ -67,7 +67,7 @@ from cmk.checkengine.discovery import (
     merge_cluster_autochecks,
 )
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import FetcherType, SourceType
+from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import (
@@ -2907,7 +2907,6 @@ class ConfigCache:
         return (
             self._host_has_piggyback_data_right_now(host_name)
             or make_persisted_section_dir(
-                fetcher_type=FetcherType.PIGGYBACK,
                 host_name=host_name,
                 ident="piggyback",
                 section_cache_path=cmk.utils.paths.var_dir,
@@ -3805,7 +3804,6 @@ class FetcherFactory:
             ).status_data_inventory,
             section_store_path=make_persisted_section_dir(
                 host_name,
-                fetcher_type=FetcherType.SNMP,
                 ident="snmp",
                 section_cache_path=cmk.utils.paths.var_dir,
             ),

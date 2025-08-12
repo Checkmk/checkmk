@@ -309,7 +309,7 @@ class ProgramSource(Source[AgentRawData]):
         return SourceInfo(
             self.host_name,
             self.ipaddress,
-            "agent",
+            "agent",  # collides with TCPSource, not sure if intentional.
             self.fetcher_type,
             self.source_type,
         )

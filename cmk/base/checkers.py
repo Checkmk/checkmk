@@ -220,7 +220,6 @@ class CMKParser:
                     source.fetcher_type,
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
-                        fetcher_type=source.fetcher_type,
                         ident=source.ident,
                         section_cache_path=section_cache_path,
                     ),

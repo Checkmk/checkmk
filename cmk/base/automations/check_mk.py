@@ -3978,7 +3978,6 @@ class AutomationGetAgentOutput(Automation):
                             source_info.fetcher_type,
                             persisted_section_dir=make_persisted_section_dir(
                                 source_info.hostname,
-                                fetcher_type=source_info.fetcher_type,
                                 ident=source_info.ident,
                                 section_cache_path=section_cache_path,
                             ),

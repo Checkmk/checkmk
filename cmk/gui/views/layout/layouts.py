@@ -193,7 +193,7 @@ class GroupedBoxesLayout(Layout):
         if group_cells:
             self._show_group_header_table(group_cells, rows_with_ids[0][1])
 
-        html.open_table(class_="data")
+        html.open_table(class_="data table")
         odd = "odd"
 
         column_headers = view.get("column_headers")

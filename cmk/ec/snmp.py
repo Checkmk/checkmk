@@ -44,6 +44,12 @@ class SNMPTrapParser:
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
+
+        # Hand over our logger to PySNMP
+        pysnmp.debug.setLogger(  # type: ignore[no-untyped-call]
+            pysnmp.debug.Debug("all", printer=logger.debug)  # type: ignore[no-untyped-call]
+        )
+
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
@@ -57,11 +63,6 @@ class SNMPTrapParser:
         )
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
-
-        # Hand over our logger to PySNMP
-        pysnmp.debug.setLogger(  # type: ignore[no-untyped-call]
-            pysnmp.debug.Debug("all", printer=logger.debug)  # type: ignore[no-untyped-call]
-        )
 
         self.snmp_engine.observer.registerObserver(  # type: ignore[no-untyped-call]
             self._handle_unauthenticated_snmptrap,

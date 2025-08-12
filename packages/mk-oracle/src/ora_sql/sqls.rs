@@ -94,6 +94,134 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
+    pub const ASM_DISKGROUP_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/asm_diskgroup.12010000.all.sql"),
+            min_version: 12010000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/asm_diskgroup.10020000.all.sql"),
+            min_version: 10020000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const ASM_INSTANCE_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/asm_instance.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const DATAGUARD_STATS_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/dataguard_stats.10020000.all.sql"),
+        min_version: 10020000,
+        tenant: Tenant::All,
+    }];
+    pub const INSTANCE_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/instance.12010002.all.sql"),
+            min_version: 1201_0002,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/instance.0.all.sql"),
+            min_version: 0,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const LOCKS_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/locks.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/locks.10020000.all.sql"),
+            min_version: 1002_0000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const LOGSWITCHES_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/logswitches.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const LONGACTIVESESSIONS_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/longactivesessions.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/longactivesessions.10010000.all.sql"),
+            min_version: 1001_0000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const PERFORMANCE_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/performance.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/performance.10010000.all.sql"),
+            min_version: 1001_0000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const PROCESSES_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/processes.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const RECOVERY_STATUS_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/recovery_status.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/recovery_status.10010000.all.sql"),
+            min_version: 1001_0000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const RMAN_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/rman.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/rman.10020000.all.sql"),
+            min_version: 1002_0000,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const SESSIONS_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/sessions.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/sessions.0.all.sql"),
+            min_version: 0,
+            tenant: Tenant::All,
+        },
+    ];
+    pub const TABLESPACES_META: &[RawMetadata] = &[
+        RawMetadata {
+            sql: include_str!("../../sqls/tablespaces.12010000.all.sql"),
+            min_version: 1201_0000,
+            tenant: Tenant::All,
+        },
+        RawMetadata {
+            sql: include_str!("../../sqls/tablespaces.10020000.all.sql"),
+            min_version: 1002_0000,
+            tenant: Tenant::All,
+        },
+    ];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT: &str = r"

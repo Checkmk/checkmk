@@ -214,12 +214,12 @@ new_local_repository(
 
 # Build custom OpenTelementry collector
 
-OCB_VERSION = "0.129.0"
+OCB_VERSION = "0.131.0"
 
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
-    sha256 = "bbf3da6e8e1353d5a6ea2bcc7cc118e8b67e3e8fac74013b0b06fb5704734c9a",
+    sha256 = "97094e36179e2b792e8760db67a399f649d3dff041ee4ea2144db612abcd840a",
     url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
 )
 
@@ -272,6 +272,12 @@ go_deps.gazelle_override(
         "gazelle:proto disable",
     ],
     path = "go.opentelemetry.io/collector/pdata/xpdata",
+)
+go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "go.opentelemetry.io/collector/exporter",
 )
 go_deps.gazelle_override(
     build_file_generation = "on",

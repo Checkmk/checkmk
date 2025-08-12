@@ -169,6 +169,11 @@
     --ux-theme-9: var(--color-daylight-grey-90);
     --ux-theme-10: var(--color-daylight-grey-100);
 
+    --color-skeleton: var(--color-conference-grey-10);
+    --color-skeleton-shimmer-0: rgba(30, 38, 46, 0);
+    --color-skeleton-shimmer-1: rgba(30, 38, 46, 0.02);
+    --color-skeleton-shimmer-2: rgba(30, 38, 46, 0.06);
+
     --color-warning: rgb(255, 208, 0);
     --color-danger: rgb(229, 63, 63);
 
@@ -232,6 +237,11 @@
     --ux-theme-8: var(--color-midnight-grey-20);
     --ux-theme-9: var(--color-midnight-grey-10);
     --ux-theme-10: var(--color-midnight-grey-0);
+
+    --color-skeleton: var(--color-white-0);
+    --color-skeleton-shimmer-0: rgba(255, 255, 255, 0);
+    --color-skeleton-shimmer-1: rgba(255, 255, 255, 0.02);
+    --color-skeleton-shimmer-2: rgba(255, 255, 255, 0.06);
 
     --color-warning: rgb(255, 215, 3);
     --color-danger: rgb(180, 45, 45);

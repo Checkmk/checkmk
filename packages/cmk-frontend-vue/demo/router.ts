@@ -51,6 +51,7 @@ import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkStepPanel from './DemoCmkStepPanel.vue'
 import DemoCmkInput from './DemoCmkInput.vue'
 import DemoCmkWizard from './DemoCmkWizard.vue'
+import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 
 interface Route {
   path: string
@@ -64,6 +65,11 @@ const routes: Route[] = [
     path: '/',
     name: 'home',
     component: DemoEmpty
+  },
+  {
+    path: '/skeleton',
+    name: 'CmkSkeleton',
+    component: DemoCmkSkeleton
   },
   {
     path: '/accordion',

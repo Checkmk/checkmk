@@ -244,7 +244,7 @@
   --color-white-100: rgba(255, 255, 255, 1);
 
   /* confoerence grey */
-  --color-conference-grey-0: rgba(30, 38, 46, 0.5);
+  --color-conference-grey-0: rgba(30, 38, 46, 0.05);
   --color-conference-grey-10: rgba(30, 38, 46, 0.1);
   --color-conference-grey-20: rgba(30, 38, 46, 0.2);
   --color-conference-grey-30: rgba(30, 38, 46, 0.3);

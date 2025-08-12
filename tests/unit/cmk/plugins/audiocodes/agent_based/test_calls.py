@@ -3,111 +3,182 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, FixedLevelsT, Metric, NoLevelsT, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    FixedLevelsT,
+    Metric,
+    NoLevelsT,
+    Result,
+    State,
+    StringTable,
+)
 from cmk.plugins.audiocodes.agent_based.calls import (
-    Calls,
     check_audiocodes_calls_testable,
     discover_audiocodes_calls,
     parse_audiocodes_calls,
 )
 
 
-def _parsed_section() -> Calls:
-    calls = parse_audiocodes_calls([[["1332", "1130325", "85", "231"]], [["22", "12"]]])
-    assert calls
-    return calls
-
-
 def test_parse_function() -> None:
     assert parse_audiocodes_calls([[], [["22", "12"]]]) is None
 
 
-def test_discovery_function() -> None:
-    assert list(discover_audiocodes_calls(_parsed_section())) == [Service()]
+@pytest.mark.parametrize(
+    "string_table, num_services",
+    [
+        pytest.param(
+            [[["247", "", "", "0", "0", "88", "94", "12", "12"]]],
+            1,
+            id="Missing active_calls_in and active_calls_out",
+        ),
+        pytest.param(
+            [[["247", "151", "153", "0", "0", "88", "94", "12", "12"]]],
+            1,
+            id="Has all expected OIDs",
+        ),
+        pytest.param([[["", "", "", "", "", "", "94", "", ""]]], 1, id="Has only one expected OID"),
+        # Service still gets yielded in this case, but not rendered because
+        # there are no checks.
+        pytest.param([[["", "", "", "", "", "", "", "", ""]]], 1, id="Missing all expected OIDs"),
+    ],
+)
+def test_audiocodes_discovery_function(
+    string_table: Sequence[StringTable], num_services: int
+) -> None:
+    calls = parse_audiocodes_calls(string_table)
+    assert calls is not None
+    assert len(list(discover_audiocodes_calls(calls))) == num_services
 
 
 @pytest.mark.parametrize(
-    "params, expected",
+    "string_table, params, expected",
     [
         pytest.param(
+            [[["247", "151", "153", "0", "0", "88", "94", "12", "11"]]],
             {},
             [
-                Result(state=State.OK, summary="Active calls: 1332"),
-                Metric("audiocodes_active_calls", 1332.0),
-                Result(state=State.OK, summary="Calls per second: 18816.50/s"),
-                Metric("audiocodes_calls_per_sec", 18816.5),
-                Result(state=State.OK, summary="Average succes ratio: 85.00%"),
-                Metric("audiocodes_average_success_ratio", 85.0),
-                Result(state=State.OK, summary="Average call duration: 3 minutes 51 seconds"),
-                Metric("audiocodes_average_call_duration", 231.0),
-                Result(state=State.OK, notice="Active calls in: 22"),
-                Metric("audiocodes_active_calls_in", 22.0),
-                Result(state=State.OK, notice="Active calls out: 12"),
-                Metric("audiocodes_active_calls_out", 12.0),
+                Result(state=State.OK, notice="Average call duration: 4 minutes 7 seconds"),
+                Metric("audiocodes_average_call_duration", 247.0),
+                Result(state=State.OK, summary="Active calls in: 151"),
+                Metric("audiocodes_active_calls_in", 151.0),
+                Result(state=State.OK, summary="Active calls out: 153"),
+                Metric("audiocodes_active_calls_out", 153.0),
+                Result(state=State.OK, notice="Established calls in rate: 0.00/s"),
+                Metric("audiocodes_established_calls_in", 0.0),
+                Result(state=State.OK, notice="Established calls out rate: 0.00/s"),
+                Metric("audiocodes_established_calls_out", 0.0),
+                Result(state=State.OK, notice="Answer seizure ratio: 88.00%"),
+                Metric("audiocodes_answer_seizure_ratio", 88.0),
+                Result(state=State.OK, notice="Network effectiveness ratio: 94.00%"),
+                Metric("audiocodes_network_effectiveness_ratio", 94.0),
+                Result(state=State.OK, notice="Abnormal terminated calls in: 12"),
+                Metric("audiocodes_abnormal_terminated_calls_in_total", 12.0),
+                Result(state=State.OK, notice="Abnormal terminated calls out: 11"),
+                Metric("audiocodes_abnormal_terminated_calls_out_total", 11.0),
             ],
             id="No params. Everything OK",
         ),
         pytest.param(
-            {"asr_lower_levels": ("fixed", (90.0, 80.0))},
+            [[["247", "151", "", "0", "0", "88", "94", "12", "11"]]],
+            {},
             [
-                Result(state=State.OK, summary="Active calls: 1332"),
-                Metric("audiocodes_active_calls", 1332.0),
-                Result(state=State.OK, summary="Calls per second: 18816.50/s"),
-                Metric("audiocodes_calls_per_sec", 18816.5),
-                Result(
-                    state=State.WARN,
-                    summary="Average succes ratio: 85.00% (warn/crit below 90.00%/80.00%)",
-                ),
-                Metric("audiocodes_average_success_ratio", 85.0),
-                Result(state=State.OK, summary="Average call duration: 3 minutes 51 seconds"),
-                Metric("audiocodes_average_call_duration", 231.0),
-                Result(state=State.OK, notice="Active calls in: 22"),
-                Metric("audiocodes_active_calls_in", 22.0),
-                Result(state=State.OK, notice="Active calls out: 12"),
-                Metric("audiocodes_active_calls_out", 12.0),
+                Result(state=State.OK, notice="Average call duration: 4 minutes 7 seconds"),
+                Metric("audiocodes_average_call_duration", 247.0),
+                Result(state=State.OK, summary="Active calls in: 151"),
+                Metric("audiocodes_active_calls_in", 151.0),
+                Result(state=State.OK, notice="Established calls in rate: 0.00/s"),
+                Metric("audiocodes_established_calls_in", 0.0),
+                Result(state=State.OK, notice="Established calls out rate: 0.00/s"),
+                Metric("audiocodes_established_calls_out", 0.0),
+                Result(state=State.OK, notice="Answer seizure ratio: 88.00%"),
+                Metric("audiocodes_answer_seizure_ratio", 88.0),
+                Result(state=State.OK, notice="Network effectiveness ratio: 94.00%"),
+                Metric("audiocodes_network_effectiveness_ratio", 94.0),
+                Result(state=State.OK, notice="Abnormal terminated calls in: 12"),
+                Metric("audiocodes_abnormal_terminated_calls_in_total", 12.0),
+                Result(state=State.OK, notice="Abnormal terminated calls out: 11"),
+                Metric("audiocodes_abnormal_terminated_calls_out_total", 11.0),
             ],
-            id="Average Success Ratio WARN",
+            id="Missing active_calls_out",
         ),
         pytest.param(
-            {"asr_lower_levels": ("fixed", (90.0, 86.0))},
+            [[["247", "151", "153", "0", "0", "88", "94", "12", "11"]]],
+            {
+                "network_effectiveness_ratio_lower_levels": ("fixed", (95.0, 90.0)),
+            },
             [
-                Result(state=State.OK, summary="Active calls: 1332"),
-                Metric("audiocodes_active_calls", 1332.0),
-                Result(state=State.OK, summary="Calls per second: 18816.50/s"),
-                Metric("audiocodes_calls_per_sec", 18816.5),
+                Result(state=State.OK, notice="Average call duration: 4 minutes 7 seconds"),
+                Metric("audiocodes_average_call_duration", 247.0),
+                Result(state=State.OK, summary="Active calls in: 151"),
+                Metric("audiocodes_active_calls_in", 151.0),
+                Result(state=State.OK, summary="Active calls out: 153"),
+                Metric("audiocodes_active_calls_out", 153.0),
+                Result(state=State.OK, notice="Established calls in rate: 0.00/s"),
+                Metric("audiocodes_established_calls_in", 0.0),
+                Result(state=State.OK, notice="Established calls out rate: 0.00/s"),
+                Metric("audiocodes_established_calls_out", 0.0),
+                Result(state=State.OK, notice="Answer seizure ratio: 88.00%"),
+                Metric("audiocodes_answer_seizure_ratio", 88.0),
+                Result(
+                    state=State.WARN,
+                    notice="Network effectiveness ratio: 94.00% (warn/crit below 95.00%/90.00%)",
+                ),
+                Metric("audiocodes_network_effectiveness_ratio", 94.0),
+                Result(state=State.OK, notice="Abnormal terminated calls in: 12"),
+                Metric("audiocodes_abnormal_terminated_calls_in_total", 12.0),
+                Result(state=State.OK, notice="Abnormal terminated calls out: 11"),
+                Metric("audiocodes_abnormal_terminated_calls_out_total", 11.0),
+            ],
+            id="Warn on low network effectiveness ratio",
+        ),
+        pytest.param(
+            [[["247", "151", "153", "0", "0", "88", "94", "12", "11"]]],
+            {
+                "answer_seizure_ratio_lower_levels": ("fixed", (95.0, 90.0)),
+            },
+            [
+                Result(state=State.OK, notice="Average call duration: 4 minutes 7 seconds"),
+                Metric("audiocodes_average_call_duration", 247.0),
+                Result(state=State.OK, summary="Active calls in: 151"),
+                Metric("audiocodes_active_calls_in", 151.0),
+                Result(state=State.OK, summary="Active calls out: 153"),
+                Metric("audiocodes_active_calls_out", 153.0),
+                Result(state=State.OK, notice="Established calls in rate: 0.00/s"),
+                Metric("audiocodes_established_calls_in", 0.0),
+                Result(state=State.OK, notice="Established calls out rate: 0.00/s"),
+                Metric("audiocodes_established_calls_out", 0.0),
                 Result(
                     state=State.CRIT,
-                    summary="Average succes ratio: 85.00% (warn/crit below 90.00%/86.00%)",
+                    notice="Answer seizure ratio: 88.00% (warn/crit below 95.00%/90.00%)",
                 ),
-                Metric("audiocodes_average_success_ratio", 85.0),
-                Result(state=State.OK, summary="Average call duration: 3 minutes 51 seconds"),
-                Metric("audiocodes_average_call_duration", 231.0),
-                Result(state=State.OK, notice="Active calls in: 22"),
-                Metric("audiocodes_active_calls_in", 22.0),
-                Result(state=State.OK, notice="Active calls out: 12"),
-                Metric("audiocodes_active_calls_out", 12.0),
+                Metric("audiocodes_answer_seizure_ratio", 88.0),
+                Result(state=State.OK, notice="Network effectiveness ratio: 94.00%"),
+                Metric("audiocodes_network_effectiveness_ratio", 94.0),
+                Result(state=State.OK, notice="Abnormal terminated calls in: 12"),
+                Metric("audiocodes_abnormal_terminated_calls_in_total", 12.0),
+                Result(state=State.OK, notice="Abnormal terminated calls out: 11"),
+                Metric("audiocodes_abnormal_terminated_calls_out_total", 11.0),
             ],
-            id="Average Success Ratio CRIT",
+            id="Crit on low answer seizure ratio",
         ),
     ],
 )
 def test_check_function(
+    string_table: Sequence[StringTable],
     params: Mapping[str, NoLevelsT | FixedLevelsT],
     expected: CheckResult,
 ) -> None:
-    now = 1731363504
-    value_store = {"total_calls": (now - 60, 1335)}
+    calls = parse_audiocodes_calls(string_table)
+    assert calls is not None  # Make mypy happy
     assert (
         list(
             check_audiocodes_calls_testable(
                 params=params,
-                section=_parsed_section(),
-                now=now,
-                value_store=value_store,
+                section=calls,
             ),
         )
         == expected

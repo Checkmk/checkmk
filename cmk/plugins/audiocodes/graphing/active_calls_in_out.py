@@ -19,22 +19,22 @@ metric_audiocodes_active_calls_out = metrics.Metric(
     name="audiocodes_active_calls_out",
     title=Title("Active calls out"),
     unit=UNIT_COUNT,
-    color=metrics.Color.LIGHT_GREEN,
+    color=metrics.Color.BLUE,
 )
 
 graph_audiocodes_calls_in_out = graphs.Bidirectional(
-    name="audiocodes_calls_in_out",
-    title=Title("Calls in/out"),
+    name="audiocodes_active_calls_in_out",
+    title=Title("Active calls in/out"),
     lower=graphs.Graph(
-        name="audiocodes_calls_out",
-        title=Title("Calls out"),
+        name="audiocodes_active_calls_out",
+        title=Title("Active calls out"),
         compound_lines=[
             "audiocodes_active_calls_out",
         ],
     ),
     upper=graphs.Graph(
-        name="audiocodes_calls_in",
-        title=Title("Calls in"),
+        name="audiocodes_active_calls_in",
+        title=Title("Active calls in"),
         compound_lines=[
             "audiocodes_active_calls_in",
         ],
@@ -42,7 +42,7 @@ graph_audiocodes_calls_in_out = graphs.Bidirectional(
 )
 
 perfometer_audiocodes_calls_in_out = perfometers.Bidirectional(
-    name="audiocodes_calls_in_out",
+    name="audiocodes_active_calls_in_out",
     right=perfometers.Perfometer(
         name="audiocodes_active_calls_out",
         focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(1000)),

@@ -17,15 +17,24 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _parameter_form_audiocores_calls() -> Dictionary:
     return Dictionary(
         elements={
-            "asr_lower_levels": DictElement(
-                required=True,
+            "answer_seizure_ratio_lower_levels": DictElement(
+                required=False,
                 parameter_form=SimpleLevels(
-                    title=Title("Lower levels for average success ratio"),
+                    title=Title("Lower levels for answer seizure ratio"),
                     form_spec_template=Percentage(),
                     level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint((80.0, 70.0)),
+                    prefill_fixed_levels=InputHint((60.0, 50.0)),
                 ),
-            )
+            ),
+            "network_effectiveness_ratio_lower_levels": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Lower levels for network effectiveness"),
+                    form_spec_template=Percentage(),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((95.0, 90.0)),
+                ),
+            ),
         }
     )
 

@@ -413,4 +413,7 @@ GRAPHS_ORDER = [
     "varnish_fetch",
     "varnish_objects",
     "varnish_worker",
+    "audiocodes_active_calls_in_out",
+    "audiocodes_established_calls_in_out",
+    "audiocodes_abnormal_terminated_calls_in_out",
 ]

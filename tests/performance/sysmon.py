@@ -18,6 +18,8 @@ from typing import IO
 
 import psutil
 
+from tests.testlib.version import version_from_env
+
 perf_dict = dict[str, int | float | str | None]
 nested_perf_dict = dict[str, perf_dict]
 
@@ -183,17 +185,15 @@ def write_statistics(file: IO, all: bool = False, close: bool = False) -> None:
     file.write(data)
 
 
-def _init_resources_file(suffix: str) -> Path:
-    report_folder_path = Path(__file__).parent.parent.parent / "results" / "performance"
-
-    benchmark_report_json = report_folder_path / next(
+def _init_resources_file(task_name: str) -> Path:
+    result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
+    report_dir = result_dir / "performance" / version_from_env().version
+    benchmark_json_name = next(
         (_.split("=", 1)[-1] for _ in argv if _.startswith("--benchmark-json=")),
-        report_folder_path / "cmk.benchmark.json",
+        "cmk.benchmark.json",
     )
-    resource_statistics_json = (
-        benchmark_report_json.parent
-        / f"{benchmark_report_json.stem.split('.', 1)[0]}.{suffix}.resources.json"
-    )
+    benchmark_json_path = report_dir / benchmark_json_name
+    resource_statistics_json = benchmark_json_path.parent / f"{task_name}.resources.json"
     resource_statistics_json.unlink(missing_ok=True)
 
     return resource_statistics_json

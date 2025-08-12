@@ -29,23 +29,28 @@ VSPSwitchesSection = Mapping[str, VSPSwitchTempInfo]
 
 
 def parse_vsp_switches_temperature(string_table: StringTable) -> VSPSwitchesSection:
-    return {
-        line[0]: VSPSwitchTempInfo(
-            name=line[0],
-            temperature=float(line[1]),
-        )
-        for line in string_table
-    }
+    section: dict[str, VSPSwitchTempInfo] = {}
+    for line in string_table:
+        item = line[0] or line[2]
+        if item:
+            section[item] = VSPSwitchTempInfo(
+                name=item,
+                temperature=float(line[1]),
+            )
+    return section
 
 
 snmp_section_extreme_vsp_switches_temperature = SimpleSNMPSection(
     name="extreme_vsp_switches_temperature",
     parse_function=parse_vsp_switches_temperature,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.2272.1.101.1.1.2.1",
+        base=".1.3.6.1.4.1.2272.1.101.1.1",
         oids=[
-            "2",  # rcVossSystemTemperatureSensorDescription
-            "3",  # rcVossSystemTemperatureTemperature -> expressed in Celsius
+            # RAPID-CITY.mib
+            "2.1.2",  # rcVossSystemTemperatureSensorDescription
+            "2.1.3",  # rcVossSystemTemperatureTemperature -> expressed in Celsius
+            # Unknown mib
+            "6.1.4.1",  # Another source for the description which 2.1.2 sometimes misses
         ],
     ),
     detect=DETECT_NETEXTREME,

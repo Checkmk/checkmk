@@ -22,6 +22,19 @@ _STRING_TABLE = [
     ["PHY3", "65"],
 ]
 
+_STRING_TABLE2 = [
+    ["CPU", "61", "CPU"],
+    ["MAC", "36", "MAC"],
+    ["PHY/POLL", "51", "PHY/POLL"],
+    ["MAC2", "45", "MAC2"],
+    ["", "67", "CPU2"],
+]
+
+_STRING_TABLE3 = [
+    ["CPU", "61", "CPU"],
+    ["", "67", ""],
+]
+
 
 @pytest.mark.parametrize(
     "string_table, expected_discovery_result",
@@ -35,6 +48,24 @@ _STRING_TABLE = [
                 Service(item="PHY3"),
             ],
             id="For every switch available, a Service is created.",
+        ),
+        pytest.param(
+            _STRING_TABLE2,
+            [
+                Service(item="CPU"),
+                Service(item="MAC"),
+                Service(item="PHY/POLL"),
+                Service(item="MAC2"),
+                Service(item="CPU2"),
+            ],
+            id="Description falls back on third column if the first is empty.",
+        ),
+        pytest.param(
+            _STRING_TABLE3,
+            [
+                Service(item="CPU"),
+            ],
+            id="Discovery drops entries with empty description or name.",
         ),
         pytest.param(
             [],

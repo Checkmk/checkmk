@@ -485,7 +485,7 @@ def test_write_group_info(
             ),
             [
                 {
-                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
                     "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6",
                     "type": "Microsoft.CostManagement/query",
                     "location": None,
@@ -501,7 +501,7 @@ def test_write_group_info(
                     },
                 },
                 {
-                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
                     "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8",
                     "type": "Microsoft.CostManagement/query",
                     "location": None,
@@ -517,7 +517,7 @@ def test_write_group_info(
                     },
                 },
                 {
-                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
                     "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13",
                     "type": "Microsoft.CostManagement/query",
                     "location": None,
@@ -537,48 +537,48 @@ def test_write_group_info(
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
-            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '{"id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": '
-            '"subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
-            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '{"id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
-            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '{"id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
-            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '{"id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
-            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '{"id": "subscriptions/subscription_id/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "subscription_id", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n",
             id="no errors, usage data exists",
         ),
@@ -599,7 +599,7 @@ async def test_usage_details(
     )
     monitored_groups = ["test1", "test2"]
 
-    await process_usage_details(mgmt_client, monitored_groups, args)
+    await process_usage_details(mgmt_client, "subscription_id", monitored_groups, args)
 
     captured = capsys.readouterr()
     assert captured.out == expected_result

@@ -40,6 +40,12 @@ class ApiErrorAuthorizationRequestDenied(ApiError):
     pass
 
 
+class RateLimitException(ApiError):
+    def __init__(self, message: str, context: Mapping[str, str | int]):
+        super().__init__(message)
+        self.context = context
+
+
 def _make_exception(error_data: object) -> ApiError:
     match error_data:
         case {"code": "Authorization_RequestDenied", **rest}:
@@ -216,12 +222,18 @@ class BaseAsyncApiClient:
                 await response.json()
                 return response
 
+        raise_for_rate_limit = kwargs.pop("raise_for_rate_limit", False)
         response = await get_response()
         for cool_off_interval in (5, 10):
             if response.status != 429:
                 break
+            if raise_for_rate_limit:
+                raise RateLimitException(
+                    f"Rate limit exceeded for {method} {url}: {response.status} {response.reason}",
+                    context=response.headers,
+                )
 
-            LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
+            LOGGER.error("Rate limit exceeded, waiting %s seconds", cool_off_interval)
             await asyncio.sleep(cool_off_interval)
             response = await get_response()
         self._update_ratelimit(response)
@@ -238,6 +250,7 @@ class BaseAsyncApiClient:
         params=None,
         next_page_key="nextLink",
         custom_headers={},
+        raise_for_rate_limit=False,
     ):
         uri = full_uri or self._base_url + uri_end
         if not uri:
@@ -250,6 +263,7 @@ class BaseAsyncApiClient:
             custom_headers=custom_headers,
             json=body,
             params=params,
+            raise_for_rate_limit=raise_for_rate_limit,
         )
         json_data = await response.json()
         LOGGER.debug("API response: %r", json_data)

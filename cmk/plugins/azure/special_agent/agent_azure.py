@@ -37,6 +37,7 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
     get_graph_authority_urls,
     get_mgmt_authority_urls,
     NoConsumptionAPIError,
+    RateLimitException,
     SharedSessionApiClient,
 )
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
@@ -1142,13 +1143,171 @@ async def process_virtual_net_gw(
     return section
 
 
-class MetricCache(DataCache):
+class AzureAsyncCache(DataCache):
     # Semaphore introduced to not reach the maximum number of open files error.
     # A sempahore should be enough, no need for locks here
     # since the files are saved per subscription/region/resource type
     # and the queries are also done per region and resource type
     _open_cache_semaphore = asyncio.Semaphore(10)
 
+    async def get_cached_data(self):
+        async with AzureAsyncCache._open_cache_semaphore:
+            cached_data = super().get_cached_data()
+        return cached_data
+
+    async def _write_to_cache(self, data):
+        async with AzureAsyncCache._open_cache_semaphore:
+            super()._write_to_cache(data)
+
+    def get_validity_from_args(self, *args: Any) -> bool:
+        return True
+
+    async def get_data(self, *args, **kwargs):
+        use_cache = kwargs.pop("use_cache", True)
+        if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
+            try:
+                LOGGER.debug("Reading data from cache: %s", self._cache_file)
+                return await self.get_cached_data()
+            except (OSError, ValueError) as exc:
+                LOGGER.error("Getting live data (failed to read from cache: %s).", exc)
+                if self.debug:
+                    raise
+
+        live_data = await self.get_live_data(*args)
+        try:
+            await self._write_to_cache(live_data)
+        except (OSError, TypeError) as exc:
+            LOGGER.error("Failed to write data to cache file: %s", exc)
+            if self.debug:
+                raise
+        return live_data
+
+
+class UsageDetailsCache(AzureAsyncCache):
+    # Microsoft.CostManagement API has a very strict (not well documented) rate limit
+    # this is an attempt to handle it
+    # with this lock we actually sequentialize the requests to the API "between subscriptions"
+    # the lock gives the time to recover from a reached-rate-limit, retry the query,
+    # and move to the next subscription
+    _cost_query_lock = asyncio.Lock()
+
+    def __init__(
+        self,
+        *,
+        subscription: str,
+        cache_id: str,
+        debug: bool = False,
+    ) -> None:
+        self._subscription = subscription
+        metric_names = "usage_details"
+        self._cache_path = AZURE_CACHE_FILE_PATH / cache_id / subscription / metric_names
+        super().__init__(
+            self._cache_path,
+            metric_names,
+            debug=debug,
+        )
+
+    @property
+    def cache_interval(self) -> int:
+        return 60 * 60 * 4
+
+    async def _get_live_data(self, *args: Any) -> Any:
+        mgmt_client: BaseAsyncApiClient = args[0]
+
+        yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        body = {
+            "type": "ActualCost",
+            "dataSet": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"},
+                    "totalCostUSD": {"name": "CostUSD", "function": "Sum"},
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ResourceType"},
+                    {"type": "Dimension", "name": "ResourceGroupName"},
+                ],
+                "include": ["Tags"],
+            },
+            "timeframe": "Custom",
+            "timePeriod": {
+                "from": f"{yesterday}T00:00:00+00:00",
+                "to": f"{yesterday}T23:59:59+00:00",
+            },
+        }
+
+        LOGGER.debug("Getting live data for usage details. - sub: %s", self._subscription)
+        json_data = await mgmt_client.request_async(
+            "POST",
+            "/providers/Microsoft.CostManagement/query",
+            body=body,
+            params={"api-version": "2025-03-01"},
+            custom_headers={"ClientType": "monitoring-client-type"},
+            raise_for_rate_limit=True,
+        )
+
+        # since data is nested in "properties" and "columns" we need to
+        # paginate here in a specific way
+
+        data = mgmt_client.lookup_json_data(json_data, "properties")
+        columns = mgmt_client.lookup_json_data(data, "columns")
+        rows = mgmt_client.lookup_json_data(data, "rows")
+
+        while next_link := data.get("nextLink"):
+            new_json_data = await mgmt_client.request_async(
+                "POST", full_uri=next_link, body=body, raise_for_rate_limit=True
+            )
+            data = mgmt_client.lookup_json_data(new_json_data, "properties")
+            rows += mgmt_client.lookup_json_data(data, "rows")
+
+        common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
+        processed_query = _process_query_id(columns, rows, common_metadata)
+        return processed_query
+
+    async def get_live_data(self, *args: Any) -> Any:
+        async with UsageDetailsCache._cost_query_lock:
+            while True:
+                try:
+                    return await self._get_live_data(*args)
+                except RateLimitException as exc:
+                    retry_after_str = exc.context.get(
+                        "x-ms-ratelimit-microsoft.costmanagement-entity-retry-after", None
+                    )
+                    remaining_tenant_requests_str = exc.context.get(
+                        "x-ms-ratelimit-remaining-microsoft.costmanagement-tenant-requests", None
+                    )
+                    if retry_after_str is None or remaining_tenant_requests_str is None:
+                        raise ApiError(
+                            "Rate limit information not available in the response headers."
+                        ) from exc
+
+                    retry_after = int(retry_after_str)
+                    if isinstance(remaining_tenant_requests_str, str):  # make mypy happy
+                        remaining_tenant_requests = int(
+                            remaining_tenant_requests_str.strip("DefaultQuota:")
+                        )
+
+                    if remaining_tenant_requests <= 0 or retry_after > 10:
+                        LOGGER.warning(
+                            "Rate limit exceeded for Microsoft.CostManagement API. "
+                            "Received a 'retry after' of %d seconds. Remaining requests: %s - Sub: %s",
+                            retry_after,
+                            remaining_tenant_requests,
+                            self._subscription,
+                        )
+                        raise ApiError("Rate limit exceeded for Microsoft.CostManagement API.")
+                    else:
+                        LOGGER.warning(
+                            "Rate limit exceeded for Microsoft.CostManagement API. "
+                            "Received a 'retry after' of %d seconds. Remaining requests: %s - Sub: %s",
+                            retry_after,
+                            remaining_tenant_requests,
+                            self._subscription,
+                        )
+                        await asyncio.sleep(retry_after + 1)
+
+
+class MetricCache(AzureAsyncCache):
     def __init__(
         self,
         *,
@@ -1191,9 +1350,6 @@ class MetricCache(DataCache):
     @property
     def cache_interval(self) -> int:
         return self.timedelta.seconds
-
-    def get_validity_from_args(self, *args: Any) -> bool:
-        return True
 
     @staticmethod
     def _get_available_metrics_from_exception(
@@ -1278,35 +1434,6 @@ class MetricCache(DataCache):
                     LOGGER.info(msg)
 
         return metrics
-
-    async def get_cached_data(self):
-        async with MetricCache._open_cache_semaphore:
-            cached_data = super().get_cached_data()
-        return cached_data
-
-    async def _write_to_cache(self, data):
-        async with MetricCache._open_cache_semaphore:
-            super()._write_to_cache(data)
-
-    async def get_metrics(self, *args, **kwargs):
-        use_cache = kwargs.pop("use_cache", True)
-        if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
-            try:
-                LOGGER.debug("Reading metrics from cache: %s", self._cache_path)
-                return await self.get_cached_data()
-            except (OSError, ValueError) as exc:
-                logging.info("Getting live data (failed to read from cache: %s).", exc)
-                if self.debug:
-                    raise
-
-        live_data = await self.get_live_data(*args)
-        try:
-            await self._write_to_cache(live_data)
-        except (OSError, TypeError) as exc:
-            logging.info("Failed to write data to cache file: %s", exc)
-            if self.debug:
-                raise
-        return live_data
 
 
 async def process_users(graph_api_client: BaseAsyncApiClient) -> AzureSection:
@@ -1401,7 +1528,7 @@ async def _gather_metrics(
             )
 
             tasks.add(
-                cache.get_metrics(
+                cache.get_data(
                     mgmt_client,
                     resource_region,
                     resource_ids,
@@ -1584,53 +1711,9 @@ def _process_query_id(columns, rows, common_metadata):
     return processed_query
 
 
-async def _collect_usage_data(mgmt_client: BaseAsyncApiClient) -> Sequence[dict[str, Any]]:
-    yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-    body = {
-        "type": "ActualCost",
-        "dataSet": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"},
-                "totalCostUSD": {"name": "CostUSD", "function": "Sum"},
-            },
-            "grouping": [
-                {"type": "Dimension", "name": "ResourceType"},
-                {"type": "Dimension", "name": "ResourceGroupName"},
-            ],
-            "include": ["Tags"],
-        },
-        "timeframe": "Custom",
-        "timePeriod": {
-            "from": f"{yesterday}T00:00:00+00:00",
-            "to": f"{yesterday}T23:59:59+00:00",
-        },
-    }
-    json_data = await mgmt_client.request_async(
-        "POST",
-        "/providers/Microsoft.CostManagement/query",
-        body=body,
-        params={"api-version": "2025-03-01"},
-    )
-
-    # since data is nested in "properties" and "columns" we need to
-    # paginate here in a specific way
-
-    data = mgmt_client.lookup_json_data(json_data, "properties")
-    columns = mgmt_client.lookup_json_data(data, "columns")
-    rows = mgmt_client.lookup_json_data(data, "rows")
-
-    while next_link := data.get("nextLink"):
-        new_json_data = await mgmt_client.request_async("POST", full_uri=next_link, body=body)
-        data = mgmt_client.lookup_json_data(new_json_data, "properties")
-        rows += mgmt_client.lookup_json_data(data, "rows")
-
-    common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
-    processed_query = _process_query_id(columns, rows, common_metadata)
-    return processed_query
-
-
-async def get_usage_data(client: BaseAsyncApiClient) -> Sequence[dict[str, Any]]:
+async def get_usage_data(
+    client: BaseAsyncApiClient, subscription: str, args: Args
+) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",
@@ -1645,13 +1728,16 @@ async def get_usage_data(client: BaseAsyncApiClient) -> Sequence[dict[str, Any]]
     LOGGER.debug("get usage details")
 
     try:
-        usage_data = await _collect_usage_data(client)
+        usage_data = await UsageDetailsCache(
+            subscription=subscription,
+            cache_id=args.cache_id,
+            debug=args.debug,
+        ).get_data(client, use_cache=True)
     except ApiError as exc:
         if any(s in exc.args[0] for s in NO_CONSUMPTION_API):
             raise NoConsumptionAPIError
         raise
 
-    # TODO: usage details are related to yesterday! Can we cache them?
     LOGGER.debug("yesterdays usage details: %d", len(usage_data))
     return usage_data
 
@@ -1678,10 +1764,10 @@ def write_usage_section(
 
 
 async def process_usage_details(
-    mgmt_client: BaseAsyncApiClient, monitored_groups: list[str], args: Args
+    mgmt_client: BaseAsyncApiClient, subscription: str, monitored_groups: list[str], args: Args
 ) -> None:
     try:
-        usage_section = await get_usage_data(mgmt_client)
+        usage_section = await get_usage_data(mgmt_client, subscription, args)
         if not usage_section:
             write_to_agent_info_section(
                 "Azure API did not return any usage details", "Usage client", 0
@@ -2035,7 +2121,7 @@ async def main_subscription(
             await process_metrics(mgmt_client, subscription, selected_resources, args)
 
             tasks = {
-                process_usage_details(mgmt_client, monitored_groups, args)
+                process_usage_details(mgmt_client, subscription, monitored_groups, args)
                 if "usage_details" in monitored_services
                 else None,
                 process_resources(

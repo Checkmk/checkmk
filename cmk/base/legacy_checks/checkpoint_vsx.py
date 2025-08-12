@@ -4,14 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, render, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    render,
+    Service,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.checkpoint import DETECT
 
 check_info = {}
@@ -41,79 +48,88 @@ check_info = {}
 # .1.3.6.1.4.1.2620.1.16.23.1.1.13.1.0 1
 
 
-type _Section = Mapping[str, Any]  # TODO: refine this type
+@dataclass(frozen=True)
+class _Instance:
+    vs_name: str
+    vs_type: str
+    vs_sic_status: str
+    vs_ha_status: str
+    vs_ip: str
+    vs_policy: str
+    vs_policy_type: str
+    conn_num: int | None
+    conn_table_size: int | None
+    packets: int | None
+    packets_dropped: int | None
+    packets_accepted: int | None
+    packets_rejected: int | None
+    packets_logged: int | None
+    bytes_accepted: int | None
+    bytes_dropped: int | None
+    bytes_rejected: int | None
+
+
+type _Section = Mapping[str, _Instance]
+
+
+def _opt_int(raw: str) -> int | None:
+    try:
+        return int(raw)
+    except ValueError:
+        return None
 
 
 def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> _Section:
-    parsed = {}
     status_table, counter_table = string_table
 
-    vsid_info = [s + c for (s, c) in zip(status_table, counter_table)]
+    # refactoring: first item occurence used to win. not sure if it matters
+    vsid_info = reversed([s + c for (s, c) in zip(status_table, counter_table)])
 
-    for (
-        vs_id,
-        vs_name,
-        vs_type,
-        vs_ip,
-        vs_policy,
-        vs_policy_type,
-        vs_sic_status,
-        vs_ha_status,
-        conn_num,
-        conn_table_size,
-        packets,
-        packets_dropped,
-        packets_accepted,
-        packets_rejected,
-        bytes_accepted,
-        bytes_dropped,
-        bytes_rejected,
-        logged,
-    ) in vsid_info:
-        item = f"{vs_name} {vs_id}"
-        parsed.setdefault(
-            item,
-            {
-                "vs_name": vs_name,
-                "vs_type": vs_type,
-                "vs_sic_status": vs_sic_status,
-                "vs_ha_status": vs_ha_status,
-                "vs_ip": vs_ip,
-                "vs_policy": vs_policy,
-                "vs_policy_type": vs_policy_type,
-            },
+    return {
+        f"{vs_name} {vs_id}": _Instance(
+            vs_name=vs_name,
+            vs_type=vs_type,
+            vs_sic_status=vs_sic_status,
+            vs_ha_status=vs_ha_status,
+            vs_ip=vs_ip,
+            vs_policy=vs_policy,
+            vs_policy_type=vs_policy_type,
+            conn_num=_opt_int(conn_num),
+            conn_table_size=_opt_int(conn_table_size),
+            packets=_opt_int(packets),
+            packets_dropped=_opt_int(packets_dropped),
+            packets_accepted=_opt_int(packets_accepted),
+            packets_rejected=_opt_int(packets_rejected),
+            packets_logged=_opt_int(logged),
+            bytes_accepted=_opt_int(bytes_accepted),
+            bytes_dropped=_opt_int(bytes_dropped),
+            bytes_rejected=_opt_int(bytes_rejected),
         )
-
-        inst = parsed.setdefault(item, {})
-        for key, value in [
-            ("conn_num", conn_num),
-            ("conn_table_size", conn_table_size),
-            ("packets", packets),
-            ("packets_dropped", packets_dropped),
-            ("packets_accepted", packets_accepted),
-            ("packets_rejected", packets_rejected),
-            ("packets_logged", logged),
-            ("bytes_accepted", bytes_accepted),
-            ("bytes_dropped", bytes_dropped),
-            ("bytes_rejected", bytes_rejected),
-        ]:
-            try:
-                inst[key] = int(value)
-            except ValueError:
-                pass
-
-    return parsed
-
-
-def discover_checkpoint_vsx(parsed):
-    yield from (Service(item=item) for item in parsed)
+        for (
+            vs_id,
+            vs_name,
+            vs_type,
+            vs_ip,
+            vs_policy,
+            vs_policy_type,
+            vs_sic_status,
+            vs_ha_status,
+            conn_num,
+            conn_table_size,
+            packets,
+            packets_dropped,
+            packets_accepted,
+            packets_rejected,
+            bytes_accepted,
+            bytes_dropped,
+            bytes_rejected,
+            logged,
+        ) in vsid_info
+    }
 
 
-def discover_key(key: str) -> Callable:
-    def discover_bound_keys(section):
-        yield from ((item, {}) for item, data in section.items() if key in data)
-
-    return discover_bound_keys
+def discover_checkpoint_vsx(section: _Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
 #   .--info----------------------------------------------------------------.
@@ -128,19 +144,12 @@ def discover_key(key: str) -> Callable:
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx(item, _no_params, parsed):
+def check_checkpoint_vsx(item: str, _no_params: object, parsed: _Section) -> Generator:
     if not (data := parsed.get(item)):
         return
 
-    for key, infotext in [
-        ("vs_type", "Type"),
-        ("vs_ip", "Main IP"),
-    ]:
-        value = data.get(key)
-        if value is None:
-            continue
-
-        yield 0, f"{infotext}: {value}"
+    yield 0, f"Type: {data.vs_type}"
+    yield 0, f"Main IP: {data.vs_ip}"
 
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
@@ -174,11 +183,17 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_connections(item, params, parsed):
+def discover_vsx_connections(section: _Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item, data in section.items() if data.conn_num is not None)
+
+
+def check_checkpoint_vsx_connections(
+    item: str, params: Mapping[str, Any], parsed: _Section
+) -> Generator:
     if not (data := parsed.get(item)):
         return
 
-    conn_total = data.get("conn_num")
+    conn_total = data.conn_num
     if conn_total is None:
         return
 
@@ -190,7 +205,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
         infoname="Used connections",
     )
 
-    conn_limit = data.get("conn_table_size")
+    conn_limit = data.conn_table_size
     if conn_limit is None:
         return
 
@@ -208,7 +223,7 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
     name="checkpoint_vsx_connections",
     service_name="VS %s Connections",
     sections=["checkpoint_vsx"],
-    discovery_function=discover_key("conn_num"),
+    discovery_function=discover_vsx_connections,
     check_function=check_checkpoint_vsx_connections,
     check_ruleset_name="checkpoint_vsx_connections",
     check_default_parameters={
@@ -228,20 +243,25 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_packets(item, params, parsed):
+def discover_vsx_packets(section: _Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item, data in section.items() if data.packets is not None)
+
+
+def check_checkpoint_vsx_packets(
+    item: str, params: Mapping[str, Any], parsed: _Section
+) -> Generator:
     if not (data := parsed.get(item)):
         return
 
     value_store = get_value_store()
 
-    for key, infotext in [
-        ("packets", "Total number of packets processed"),
-        ("packets_accepted", "Total number of accepted packets"),
-        ("packets_dropped", "Total number of dropped packets"),
-        ("packets_rejected", "Total number of rejected packets"),
-        ("packets_logged", "Total number of logs sent"),
+    for key, infotext, value in [
+        ("packets", "Total number of packets processed", data.packets),
+        ("packets_accepted", "Total number of accepted packets", data.packets_accepted),
+        ("packets_dropped", "Total number of dropped packets", data.packets_dropped),
+        ("packets_rejected", "Total number of rejected packets", data.packets_rejected),
+        ("packets_logged", "Total number of logs sent", data.packets_logged),
     ]:
-        value = data.get(key)
         if value is None:
             continue
 
@@ -264,7 +284,7 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
     name="checkpoint_vsx_packets",
     service_name="VS %s Packets",
     sections=["checkpoint_vsx"],
-    discovery_function=discover_key("packets"),
+    discovery_function=discover_vsx_packets,
     check_function=check_checkpoint_vsx_packets,
     check_ruleset_name="checkpoint_vsx_packets",
     check_default_parameters={
@@ -288,18 +308,25 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_traffic(item, params, parsed):
+def discover_vsx_traffic(section: _Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item) for item, data in section.items() if data.bytes_accepted is not None
+    )
+
+
+def check_checkpoint_vsx_traffic(
+    item: str, params: Mapping[str, Any], parsed: _Section
+) -> Generator:
     if not (data := parsed.get(item)):
         return
 
     value_store = get_value_store()
 
-    for key in [
-        ("bytes_accepted"),
-        ("bytes_dropped"),
-        ("bytes_rejected"),
+    for key, value in [
+        ("bytes_accepted", data.bytes_accepted),
+        ("bytes_dropped", data.bytes_dropped),
+        ("bytes_rejected", data.bytes_rejected),
     ]:
-        value = data.get(key)
         if value is None:
             continue
 
@@ -319,7 +346,7 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
     name="checkpoint_vsx_traffic",
     service_name="VS %s Traffic",
     sections=["checkpoint_vsx"],
-    discovery_function=discover_key("bytes_accepted"),
+    discovery_function=discover_vsx_traffic,
     check_function=check_checkpoint_vsx_traffic,
     check_ruleset_name="checkpoint_vsx_traffic",
 )
@@ -336,38 +363,25 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_status(item, _no_params, parsed):
+def check_checkpoint_vsx_status(item: str, _no_params: object, parsed: _Section) -> Generator:
     if not (data := parsed.get(item)):
         return
 
-    ha_state = data.get("vs_ha_status")
-    if ha_state is not None:
-        state = 0
-        if ha_state.lower() not in ["active", "standby"]:
-            state = 2
+    ha_state = data.vs_ha_status
+    yield 2 if ha_state.lower() not in ["active", "standby"] else 0, "HA status: %s" % ha_state
 
-        yield state, "HA Status: %s" % ha_state
+    sic_state = data.vs_sic_status
+    yield 2 if sic_state.lower() != "trust established" else 0, "SIC Status: %s" % sic_state
 
-    sic_state = data.get("vs_sic_status")
-    if sic_state is not None:
-        state = 0
-        if sic_state.lower() != "trust established":
-            state = 2
+    yield 0, "Policy name: %s" % data.vs_policy
 
-        yield state, "SIC Status: %s" % sic_state
-
-    policy_name = data.get("vs_policy")
-    if policy_name is not None:
-        yield 0, "Policy name: %s" % policy_name
-
-    policy_type = data.get("vs_policy_type")
-    if policy_type is not None:
-        state = 0
-        infotext = "Policy type: %s" % policy_type
-        if policy_type.lower() not in ["active", "initial policy"]:
-            state = 2
-            infotext += " (no policy installed)"
-        yield state, infotext
+    policy_type = data.vs_policy_type
+    state = 0
+    infotext = "Policy type: %s" % policy_type
+    if policy_type.lower() not in ["active", "initial policy"]:
+        state = 2
+        infotext += " (no policy installed)"
+    yield state, infotext
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(

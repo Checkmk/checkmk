@@ -247,11 +247,6 @@ class UserSpec(TypedDict, total=False):
     ldap_pw_last_changed: NotRequired[str]  # On attribute sync, this is added, then removed.
 
 
-class UserObjectValue(TypedDict):
-    attributes: UserSpec
-    is_new_user: bool
-
-
 AnnotatedUserId = Annotated[
     UserId,
     PlainValidator(UserId.parse),

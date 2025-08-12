@@ -37,6 +37,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
+from cmk.gui.watolib.users import create_user as wato_create_user
 from cmk.gui.watolib.users import (
     delete_users,
     edit_users,
@@ -149,13 +150,9 @@ def create_user(params: Mapping[str, Any]) -> Response:
         ),
         new_user=True,
     )
-    edit_users(
-        {
-            username: {
-                "attributes": internal_attrs,
-                "is_new_user": True,
-            }
-        },
+    wato_create_user(
+        username,
+        internal_attrs,
         user_features_registry.features().sites,
         use_git=active_config.wato_use_git,
     )
@@ -225,12 +222,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
                 )
 
     edit_users(
-        {
-            username: {
-                "attributes": internal_attrs,
-                "is_new_user": False,
-            }
-        },
+        {username: internal_attrs},
         user_features_registry.features().sites,
         use_git=active_config.wato_use_git,
     )

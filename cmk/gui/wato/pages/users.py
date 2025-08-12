@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObjectValue, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
@@ -84,6 +84,7 @@ from cmk.gui.watolib.sites import ldap_connections_are_configurable
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
+    create_user,
     delete_users,
     edit_users,
     get_vs_user_idle_timeout,
@@ -834,17 +835,21 @@ class ModeEditUser(WatoMode):
             # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
             user_attrs[name] = value  # type: ignore[literal-required]
 
-        # Generate user "object" to update
-        user_object: dict[UserId, UserObjectValue] = {
-            self._user_id: {
-                "attributes": user_attrs,
-                "is_new_user": self._is_new_user,
-            }
-        }
-        # The following call validates and updated the users
-        edit_users(
-            user_object, user_features_registry.features().sites, use_git=config.wato_use_git
-        )
+        # Update or create the user
+        if self._is_new_user:
+            create_user(
+                self._user_id,
+                user_attrs,
+                user_features_registry.features().sites,
+                use_git=config.wato_use_git,
+            )
+        else:
+            edit_users(
+                {self._user_id: user_attrs},
+                user_features_registry.features().sites,
+                use_git=config.wato_use_git,
+            )
+
         return redirect(mode_url("users"))
 
     def _get_identity_userattrs(self, user_attrs: UserSpec) -> None:

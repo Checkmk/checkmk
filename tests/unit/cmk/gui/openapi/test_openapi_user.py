@@ -29,11 +29,11 @@ from cmk.gui.openapi.endpoints.user_config import (
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import CustomUserAttrSpec, UserObjectValue
+from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import ConnectorType, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
-from cmk.gui.watolib.users import default_sites, edit_users
+from cmk.gui.watolib.users import create_user, default_sites, edit_users
 from cmk.utils import paths
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
@@ -137,30 +137,25 @@ def test_openapi_user_minimal_settings(
         time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
         SuperUserContext(),
     ):
-        user_object: dict[UserId, UserObjectValue] = {
-            UserId("user"): {
-                "attributes": {
-                    "ui_theme": None,
-                    "ui_sidebar_position": None,
-                    "nav_hide_icons_title": None,
-                    "icons_per_item": None,
-                    "show_mode": None,
-                    "start_url": None,
-                    "force_authuser": False,
-                    "enforce_pw_change": False,
-                    "alias": "User Name",
-                    "locked": False,
-                    "pager": "",
-                    "roles": [],
-                    "contactgroups": [],
-                    "email": "",
-                    "fallback_contact": False,
-                    "disable_notifications": {},
-                },
-                "is_new_user": True,
-            }
+        user_object: UserSpec = {
+            "ui_theme": None,
+            "ui_sidebar_position": None,
+            "nav_hide_icons_title": None,
+            "icons_per_item": None,
+            "show_mode": None,
+            "start_url": None,
+            "force_authuser": False,
+            "enforce_pw_change": False,
+            "alias": "User Name",
+            "locked": False,
+            "pager": "",
+            "roles": [],
+            "contactgroups": [],
+            "email": "",
+            "fallback_contact": False,
+            "disable_notifications": {},
         }
-        edit_users(user_object, default_sites, use_git=False)
+        create_user(UserId("user"), user_object, default_sites, use_git=False)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -295,36 +290,31 @@ def test_openapi_user_internal_with_notifications(
 ) -> None:
     name = UserId(_random_string(10))
 
-    user_object: dict[UserId, UserObjectValue] = {
-        name: {
-            "attributes": {
-                "ui_theme": None,
-                "ui_sidebar_position": None,
-                "nav_hide_icons_title": None,
-                "icons_per_item": None,
-                "show_mode": None,
-                "start_url": None,
-                "force_authuser": False,
-                "enforce_pw_change": True,
-                "alias": "KPECYCq79E",
-                "locked": False,
-                "pager": "",
-                "roles": [],
-                "contactgroups": [],
-                "email": "",
-                "fallback_contact": False,
-                "password": PasswordHash(
-                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
-                ),
-                "last_pw_change": 1265013000,
-                "serial": 1,
-                "disable_notifications": {"timerange": (1577836800.0, 1577923200.0)},
-            },
-            "is_new_user": True,
-        }
+    user_object: UserSpec = {
+        "ui_theme": None,
+        "ui_sidebar_position": None,
+        "nav_hide_icons_title": None,
+        "icons_per_item": None,
+        "show_mode": None,
+        "start_url": None,
+        "force_authuser": False,
+        "enforce_pw_change": True,
+        "alias": "KPECYCq79E",
+        "locked": False,
+        "pager": "",
+        "roles": [],
+        "contactgroups": [],
+        "email": "",
+        "fallback_contact": False,
+        "password": PasswordHash(
+            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+        ),
+        "last_pw_change": 1265013000,
+        "serial": 1,
+        "disable_notifications": {"timerange": (1577836800.0, 1577923200.0)},
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites, use_git=False)
+        create_user(name, user_object, default_sites, use_git=False)
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -500,39 +490,33 @@ def test_openapi_user_internal_auth_handling(
     )
 
     name = UserId("foo")
-
-    user_object: dict[UserId, UserObjectValue] = {
-        name: {
-            "attributes": {
-                "ui_theme": None,
-                "ui_sidebar_position": None,
-                "nav_hide_icons_title": None,
-                "icons_per_item": None,
-                "show_mode": None,
-                "start_url": None,
-                "force_authuser": False,
-                "enforce_pw_change": True,
-                "alias": "Foo Bar",
-                "locked": False,
-                "pager": "",
-                "roles": ["user"],
-                "contactgroups": [],
-                "email": "",
-                "fallback_contact": False,
-                "password": PasswordHash(
-                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
-                ),
-                "last_pw_change": 1265011200,  # 2010-02-01 08:00:00
-                "serial": 1,
-                "disable_notifications": {},
-            },
-            "is_new_user": True,
-        }
+    user_object: UserSpec = {
+        "ui_theme": None,
+        "ui_sidebar_position": None,
+        "nav_hide_icons_title": None,
+        "icons_per_item": None,
+        "show_mode": None,
+        "start_url": None,
+        "force_authuser": False,
+        "enforce_pw_change": True,
+        "alias": "Foo Bar",
+        "locked": False,
+        "pager": "",
+        "roles": ["user"],
+        "contactgroups": [],
+        "email": "",
+        "fallback_contact": False,
+        "password": PasswordHash(
+            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+        ),
+        "last_pw_change": 1265011200,  # 2010-02-01 08:00:00
+        "serial": 1,
+        "disable_notifications": {},
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with SuperUserContext():
-            edit_users(user_object, default_sites, use_git=False)
+            create_user(name, user_object, default_sites, use_git=False)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -562,12 +546,7 @@ def test_openapi_user_internal_auth_handling(
         )
         with SuperUserContext():
             edit_users(
-                {
-                    name: {
-                        "attributes": updated_internal_attributes,
-                        "is_new_user": False,
-                    }
-                },
+                {name: updated_internal_attributes},
                 default_sites,
                 use_git=False,
             )
@@ -601,12 +580,7 @@ def test_openapi_user_internal_auth_handling(
         )
         with SuperUserContext():
             edit_users(
-                {
-                    name: {
-                        "attributes": updated_internal_attributes,
-                        "is_new_user": False,
-                    }
-                },
+                {name: updated_internal_attributes},
                 default_sites,
                 use_git=False,
             )
@@ -650,32 +624,27 @@ def test_managed_global_internal(
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
 
-    user_object: dict[UserId, UserObjectValue] = {
-        UserId("user"): {
-            "attributes": {
-                "ui_theme": None,
-                "ui_sidebar_position": None,
-                "nav_hide_icons_title": None,
-                "icons_per_item": None,
-                "show_mode": None,
-                "start_url": None,
-                "force_authuser": False,
-                "enforce_pw_change": False,
-                "alias": "User Name",
-                "locked": False,
-                "pager": "",
-                "roles": [],
-                "contactgroups": [],
-                "customer": None,  # None represents global internally
-                "email": "",
-                "fallback_contact": False,
-                "disable_notifications": {},
-            },
-            "is_new_user": True,
-        }
+    user_object: UserSpec = {
+        "ui_theme": None,
+        "ui_sidebar_position": None,
+        "nav_hide_icons_title": None,
+        "icons_per_item": None,
+        "show_mode": None,
+        "start_url": None,
+        "force_authuser": False,
+        "enforce_pw_change": False,
+        "alias": "User Name",
+        "locked": False,
+        "pager": "",
+        "roles": [],
+        "contactgroups": [],
+        "customer": None,  # None represents global internally
+        "email": "",
+        "fallback_contact": False,
+        "disable_notifications": {},
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites, use_git=False)
+        create_user(UserId("user"), user_object, default_sites, use_git=False)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -736,32 +705,27 @@ def test_managed_idle_internal(
     # this test uses the internal mechanics of the user endpoint
     username, _secret = with_automation_user
 
-    user_object: dict[UserId, UserObjectValue] = {
-        UserId("user"): {
-            "attributes": {
-                "ui_theme": None,
-                "ui_sidebar_position": None,
-                "nav_hide_icons_title": None,
-                "icons_per_item": None,
-                "show_mode": None,
-                "start_url": None,
-                "force_authuser": False,
-                "enforce_pw_change": False,
-                "alias": "User Name",
-                "locked": False,
-                "pager": "",
-                "roles": [],
-                "contactgroups": [],
-                "customer": None,  # None represents global internally
-                "email": "",
-                "fallback_contact": False,
-                "disable_notifications": {},
-            },
-            "is_new_user": True,
-        }
+    user_object: UserSpec = {
+        "ui_theme": None,
+        "ui_sidebar_position": None,
+        "nav_hide_icons_title": None,
+        "icons_per_item": None,
+        "show_mode": None,
+        "start_url": None,
+        "force_authuser": False,
+        "enforce_pw_change": False,
+        "alias": "User Name",
+        "locked": False,
+        "pager": "",
+        "roles": [],
+        "contactgroups": [],
+        "customer": None,  # None represents global internally
+        "email": "",
+        "fallback_contact": False,
+        "disable_notifications": {},
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites, use_git=False)
+        create_user(UserId("user"), user_object, default_sites, use_git=False)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))

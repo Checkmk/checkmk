@@ -12,9 +12,9 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import UserObjectValue
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
-from cmk.gui.watolib.users import default_sites, edit_users
+from cmk.gui.watolib.users import create_user, default_sites
 from cmk.utils import paths
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -93,36 +93,31 @@ def test_edit_ldap_user_with_locked_attributes(
     clients: ClientRegistry,
 ) -> None:
     name = UserId("foo")
-    user_object: dict[UserId, UserObjectValue] = {
-        name: {
-            "attributes": {
-                "ui_theme": None,
-                "ui_sidebar_position": None,
-                "nav_hide_icons_title": None,
-                "icons_per_item": None,
-                "show_mode": None,
-                "start_url": None,
-                "force_authuser": False,
-                "enforce_pw_change": True,
-                "alias": "cmkADAdmin",
-                "locked": False,
-                "pager": "",
-                "roles": ["guest"],
-                "contactgroups": [],
-                "email": "",
-                "fallback_contact": False,
-                "password": PasswordHash(
-                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
-                ),
-                "serial": 1,
-                "connector": "CMKTest",
-                "disable_notifications": {},
-            },
-            "is_new_user": True,
-        },
+    user_object: UserSpec = {
+        "ui_theme": None,
+        "ui_sidebar_position": None,
+        "nav_hide_icons_title": None,
+        "icons_per_item": None,
+        "show_mode": None,
+        "start_url": None,
+        "force_authuser": False,
+        "enforce_pw_change": True,
+        "alias": "cmkADAdmin",
+        "locked": False,
+        "pager": "",
+        "roles": ["guest"],
+        "contactgroups": [],
+        "email": "",
+        "fallback_contact": False,
+        "password": PasswordHash(
+            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+        ),
+        "serial": 1,
+        "connector": "CMKTest",
+        "disable_notifications": {},
     }
     with SuperUserContext():
-        edit_users(user_object, default_sites, use_git=False)
+        create_user(name, user_object, default_sites, use_git=False)
 
     clients.User.edit(
         username=name,

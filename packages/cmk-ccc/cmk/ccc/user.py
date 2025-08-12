@@ -93,6 +93,23 @@ class UserId(str):
                 >>> UserId("cmkadmin+test@hi.com")
                 'cmkadmin+test@hi.com'
 
+            Whitespace characters are not allowed
+
+                >>> UserId("cmk admin")
+                Traceback (most recent call last):
+                ...
+                ValueError: invalid username: 'cmk admin'
+
+                >>> UserId("cmkadmin    ")
+                Traceback (most recent call last):
+                ...
+                ValueError: invalid username: 'cmkadmin    '
+
+                >>> UserId("\\tcmkadmin")
+                Traceback (most recent call last):
+                ...
+                ValueError: invalid username: '\\tcmkadmin'
+
             Special characters other than '$_-@.' are not allowed (see `USER_ID_REGEX`).
 
                 >>> UserId("foo/../")

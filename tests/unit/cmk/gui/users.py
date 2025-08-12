@@ -15,9 +15,9 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui import config
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import UserObjectValue, UserSpec
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb.store import load_users, save_users
-from cmk.gui.watolib.users import edit_users, user_features_registry
+from cmk.gui.watolib.users import create_user, user_features_registry
 
 
 def _mk_user_obj(
@@ -26,7 +26,7 @@ def _mk_user_obj(
     automation: bool,
     role: str,
     custom_attrs: UserSpec | None = None,
-) -> dict[UserId, UserObjectValue]:
+) -> UserSpec:
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
         "Ischbinwischtisch": PasswordHash(
@@ -37,27 +37,22 @@ def _mk_user_obj(
     if password not in precomputed_hashes:
         raise ValueError("Add your hash to precomputed_hashes")
 
-    user: dict[UserId, UserObjectValue] = {
-        username: {
-            "attributes": {
-                "alias": "Test user",
-                "email": "test_user_%s@checkmk.com" % username,
-                "password": precomputed_hashes[password],
-                "notification_method": "email",
-                "roles": [role],
-                "serial": 0,
-                "locked": False,
-            },
-            "is_new_user": True,
-        }
+    user: UserSpec = {
+        "alias": "Test user",
+        "email": "test_user_%s@checkmk.com" % username,
+        "password": precomputed_hashes[password],
+        "notification_method": "email",
+        "roles": [role],
+        "serial": 0,
+        "locked": False,
     }
 
     if automation:
-        user[username]["attributes"]["store_automation_secret"] = True
-        user[username]["attributes"]["automation_secret"] = password
+        user["store_automation_secret"] = True
+        user["automation_secret"] = password
 
     if custom_attrs is not None:
-        user[username]["attributes"].update(custom_attrs)
+        user.update(custom_attrs)
 
     return user
 
@@ -79,7 +74,8 @@ def create_and_destroy_user(
     # Load the config so that superuser's roles are available
     config.load_config()
     with SuperUserContext():
-        edit_users(
+        create_user(
+            user_id,
             _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs),
             user_features_registry.features().sites,
             use_git=False,

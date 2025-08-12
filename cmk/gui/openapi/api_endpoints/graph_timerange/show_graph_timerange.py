@@ -8,8 +8,8 @@ from typing import Annotated
 
 from annotated_types import Ge
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -30,6 +30,7 @@ from .utils import (
 
 
 def show_graph_timerange_v1(
+    api_context: ApiContext,
     index: Annotated[
         int,
         PathParam(
@@ -40,14 +41,14 @@ def show_graph_timerange_v1(
     ],
 ) -> GraphTimerangeObject:
     """Show graph timetrange entry"""
-    if index < 0 or index >= len(active_config.graph_timeranges):
+    if index < 0 or index >= len(api_context.config.graph_timeranges):
         raise ProblemException(
             title="Object does not exist",
             detail=f"The graph timerange with the index {index} does not exists.",
             status=HTTPStatus.NOT_FOUND,
         )
 
-    return serialize_graph_timerange(index, active_config.graph_timeranges[index])
+    return serialize_graph_timerange(index, api_context.config.graph_timeranges[index])
 
 
 ENDPOINT_SHOW_GRAPH_TIMERANGE = VersionedEndpoint(

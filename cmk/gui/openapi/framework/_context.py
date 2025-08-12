@@ -13,7 +13,7 @@ from livestatus import SiteConfigurations
 from cmk.gui.config import Config
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.type_defs import AgentControllerCertificates, PasswordPolicy
+from cmk.gui.type_defs import AgentControllerCertificates, GraphTimerange, PasswordPolicy
 
 from .api_config import APIVersion
 
@@ -67,6 +67,7 @@ class ApiConfig:
     # But we also want to limit this to values that are actually used throughout the API.
     agent_controller_certificates: AgentControllerCertificates
     debug: bool
+    graph_timeranges: list[GraphTimerange]
     password_policy: PasswordPolicy
     sites: SiteConfigurations
     wato_max_snapshots: int
@@ -78,6 +79,7 @@ class ApiConfig:
         return cls(
             agent_controller_certificates=config.agent_controller_certificates,
             debug=config.debug,
+            graph_timeranges=config.graph_timeranges,
             password_policy=config.password_policy,
             sites=config.sites,
             wato_max_snapshots=config.wato_max_snapshots,

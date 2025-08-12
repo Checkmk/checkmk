@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -20,7 +20,7 @@ from .models.response_models import GraphTimerangeCollection
 from .utils import PERMISSIONS, serialize_graph_timerange
 
 
-def list_graph_timerange_v1() -> GraphTimerangeCollection:
+def list_graph_timerange_v1(api_context: ApiContext) -> GraphTimerangeCollection:
     """List all graph timeranges"""
 
     return GraphTimerangeCollection(
@@ -28,7 +28,7 @@ def list_graph_timerange_v1() -> GraphTimerangeCollection:
         domainType="graph_timerange",
         value=[
             serialize_graph_timerange(index, graph_timerange)
-            for index, graph_timerange in enumerate(active_config.graph_timeranges)
+            for index, graph_timerange in enumerate(api_context.config.graph_timeranges)
         ],
         links=[LinkModel.create("self", collection_href("graph_timerange"))],
     )

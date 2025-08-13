@@ -8,7 +8,6 @@
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog
 # at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
 
-import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from collections.abc import Sequence
 from pathlib import Path
@@ -267,19 +266,3 @@ def create_settings(version: str, omd_root: Path, argv: Sequence[str]) -> Settin
         profile_event=args.profile_event,
     )
     return Settings(paths=paths, options=options)
-
-
-if __name__ == "__main__":
-    from cmk.ccc.version import get_general_version_infos
-    from cmk.utils.paths import omd_root
-
-    sys.stdout.write(
-        repr(
-            create_settings(
-                get_general_version_infos(omd_root)["version"],
-                omd_root,
-                sys.argv,
-            )
-        )
-        + "\n"
-    )

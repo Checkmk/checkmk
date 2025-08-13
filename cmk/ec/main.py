@@ -3593,9 +3593,3 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
         if pid_path and store.have_lock(str(pid_path)):
             with contextlib.suppress(OSError):
                 pid_path.unlink()
-
-
-if __name__ == "__main__":
-    from cmk.utils.paths import omd_root
-
-    main(omd_root, sys.argv)

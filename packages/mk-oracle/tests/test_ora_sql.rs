@@ -518,3 +518,27 @@ fn test_recovery_status_old() {
         }
     }
 }
+
+#[test]
+fn test_rman() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Rman, None);
+        assert!(rows.is_empty());
+    }
+}
+
+#[test]
+fn test_rman_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Rman,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert!(rows.is_empty());
+    }
+}

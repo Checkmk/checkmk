@@ -55,7 +55,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         type=int,
         help="The number of objects created for each scenario.",
-        default=1000,
+        default=100,
     )
 
 

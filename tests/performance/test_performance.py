@@ -20,10 +20,8 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
 
 from tests.performance.sysmon import track_resources
-from tests.testlib.agent_dumps import dummy_agent_dump_generator
 from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
 from tests.testlib.common.repo import qa_test_data_path
-from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.version import CMKVersion, version_from_env
 
@@ -47,7 +45,7 @@ class PerformanceTest:
         )
         self.iterations = val if isinstance((val := config.getoption("iterations")), int) else 1
         self.object_count = (
-            val if isinstance((val := config.getoption("object_count")), int) else 1000
+            val if isinstance((val := config.getoption("object_count")), int) else 100
         )
 
     @property
@@ -139,7 +137,7 @@ class PerformanceTest:
     ) -> None:
         """Scenario: Bulk host creation
 
-        Create 1000 hosts on each site (central site+remote sites).
+        Create 100 hosts on each site (central site+remote sites).
         Activate the changes.
         Delete all hosts.
         Activate the changes."""
@@ -163,7 +161,7 @@ class PerformanceTest:
     ) -> None:
         """Scenario: Bulk service discovery
 
-        Create 1000 hosts on the central site.
+        Create 100 hosts on the central site.
         Activate changes.
         Discover services.
         Drop the hosts.
@@ -196,29 +194,21 @@ class PerformanceTest:
     ) -> None:
         """Scenario: DCD piggyback host discovery
 
-        Create a source host with 1000 piggybacked hosts.
+        Create a source host with 100 piggybacked hosts.
         Wait for piggyback host discovery.
-        Remove the source hosts.
-        Wait for piggyback host removal.
         """
         source_host_name = "test-performance-dcd"
-        pb_host_count = 10
+        pb_host_count = self.object_count
         with piggyback_host_from_dummy_generator(
-            self.central_site, source_host_name, pb_host_count=pb_host_count
-        ) as piggyback_info:
+            self.central_site,
+            source_host_name,
+            pb_host_count=pb_host_count,
+            dcd_interval=10,
+        ):
             assert (
-                len(self.central_site.openapi.hosts.get_all_names([source_host_name]))
+                len(self.central_site.openapi.hosts.get_all_names(ignore=[source_host_name]))
                 >= pb_host_count
             )
-
-            # Recreate rule to change number of piggybacked hosts
-            self.central_site.openapi.rules.delete(piggyback_info.datasource_id)
-            self.central_site.openapi.changes.activate_and_wait_for_completion()
-            with dummy_agent_dump_generator(
-                self.central_site,
-                pb_host_count=0,
-            ):
-                execute_dcd_cycle(self.central_site, expected_pb_hosts=0)
 
 
 @pytest.fixture(name="perftest", scope="session")

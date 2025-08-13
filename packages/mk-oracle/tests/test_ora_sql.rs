@@ -590,3 +590,24 @@ fn test_sessions_old() {
         });
     }
 }
+
+#[test]
+fn test_system_parameter() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::SystemParameter, None);
+        assert!(rows.len() > 100);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 4);
+            assert_eq!(line[0], endpoint.instance.as_str());
+            assert!(!line[1].is_empty());
+            assert!(
+                line[3] == "TRUE" || line[3] == "FALSE",
+                "Value is not TRUE or FALSE:  {:?}",
+                line
+            );
+        });
+    }
+}

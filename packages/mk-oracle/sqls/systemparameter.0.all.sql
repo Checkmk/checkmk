@@ -2,3 +2,9 @@
 -- This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 -- conditions defined in the file COPYING, which is part of this source code package.
 -- Section systemparameter
+SELECT UPPER(i.instance_name)
+           || '|' || NAME
+           || '|' || DISPLAY_VALUE
+           || '|' || ISDEFAULT
+    FROM v$system_parameter, v$instance i
+    WHERE NAME NOT LIKE '!_%' ESCAPE '!'

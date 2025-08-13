@@ -26,6 +26,7 @@ pub enum Id {
     RecoveryStatus,
     Rman, // Backup and Recovery Manager
     Sessions,
+    SystemParameter, // System Parameters
 }
 
 pub mod query {
@@ -182,6 +183,11 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
+    pub const SYSTEM_PARAMETER_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/systemparameter.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
     pub const RECOVERY_STATUS_META: &[RawMetadata] = &[
         RawMetadata {
             sql: include_str!("../../sqls/recovery_status.12010000.all.sql"),
@@ -273,6 +279,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::RecoveryStatus, query::RECOVERY_STATUS_META),
         query::build_query_metadata(Id::Rman, query::RMAN_META),
         query::build_query_metadata(Id::Sessions, query::SESSIONS_META),
+        query::build_query_metadata(Id::SystemParameter, query::SYSTEM_PARAMETER_META),
     ])
 });
 
@@ -587,5 +594,19 @@ mod tests {
         assert!(!query_old.is_empty());
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
+    }
+
+    #[test]
+    fn test_find_system_parameter() {
+        let id = Id::SystemParameter;
+
+        let query_new = find_helper(id, 12010000, Tenant::NoCdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_obsolete = find_helper(id, 10000000, Tenant::Cdb).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert_eq!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+        assert_eq!(query_obsolete, query_new);
     }
 }

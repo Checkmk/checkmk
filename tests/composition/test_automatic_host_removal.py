@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
     condition=os.getenv("DISTRO") == "almalinux-9",
     reason="May fail on EL* systems, investigating.",
 )
+@pytest.mark.xfail(
+    condition=os.getenv("EDITION") == "managed",
+    reason="Flaky behavior on CME. Investigate: CMK-25326.",
+)
 def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,

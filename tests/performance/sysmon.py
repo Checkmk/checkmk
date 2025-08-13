@@ -18,7 +18,7 @@ from typing import IO
 
 import psutil
 
-from tests.testlib.version import version_from_env
+from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 perf_dict = dict[str, int | float | str | None]
 nested_perf_dict = dict[str, perf_dict]
@@ -186,8 +186,9 @@ def write_statistics(file: IO, all: bool = False, close: bool = False) -> None:
 
 
 def _init_resources_file(task_name: str) -> Path:
+    version_directory = CMKPackageInfo(version_from_env(), edition_from_env()).version_directory()
     result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
-    report_dir = result_dir / "performance" / version_from_env().version
+    report_dir = result_dir / "performance" / version_directory
     benchmark_json_name = next(
         (_.split("=", 1)[-1] for _ in argv if _.startswith("--benchmark-json=")),
         "cmk.benchmark.json",

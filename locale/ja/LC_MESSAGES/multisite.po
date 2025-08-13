@@ -58099,6 +58099,10 @@ msgstr "リカバリが設定されている場合の%s状態"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "リカバリが設定されている場合の%sの状態(整数)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "来年の始まり"
+
 msgid "State of NTP peer"
 msgstr "NTPピアの状態"
 

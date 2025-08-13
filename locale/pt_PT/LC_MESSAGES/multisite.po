@@ -61916,6 +61916,10 @@ msgid "State of %s if recovery is set (as integer)"
 msgstr ""
 "Estado de %s se a recuperação estiver definida (como um número inteiro)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Início do próximo ano"
+
 msgid "State of NTP peer"
 msgstr "Estado do NTP par"
 

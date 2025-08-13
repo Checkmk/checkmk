@@ -62076,6 +62076,10 @@ msgstr "Starea %s în cazul în care este activată recuperarea"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Starea %s în cazul în care este activată recuperarea (ca număr întreg)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Începutul anului viitor"
+
 msgid "State of NTP peer"
 msgstr "Starea omologului NTP"
 

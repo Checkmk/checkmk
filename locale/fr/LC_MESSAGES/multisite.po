@@ -62487,6 +62487,10 @@ msgstr "État de %s si le recouvrement est activé"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "État de %s si la récupération est mise en place (en tant qu'entier)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Début de l'année prochaine"
+
 msgid "State of NTP peer"
 msgstr "État de l'homologue NTP"
 

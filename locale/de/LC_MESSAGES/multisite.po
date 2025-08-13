@@ -59604,6 +59604,10 @@ msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist (als Ganzzahl)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Anfang des nächsten Jahres"
+
 msgid "State of NTP peer"
 msgstr "Zustand von NTP-Peer"
 

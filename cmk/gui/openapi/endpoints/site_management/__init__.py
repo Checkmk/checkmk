@@ -22,7 +22,7 @@ The site management endpoints allow for:
 from collections.abc import Mapping
 from typing import Any
 
-from livestatus import SiteConfiguration, SiteConfigurations
+from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
@@ -38,7 +38,6 @@ from cmk.gui.openapi.endpoints.site_management.request_schemas import (
 )
 from cmk.gui.openapi.endpoints.site_management.response_schemas import (
     SiteConnectionResponse,
-    SiteConnectionResponseCollection,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import domain_object
@@ -88,29 +87,6 @@ def show_site(params: Mapping[str, Any]) -> Response:
     site_id = SiteId(params["site_id"])
     site: SiteConfiguration = SitesApiMgr().get_a_site(site_id)
     return serve_json(_serialize_site(SiteConfig.from_internal(site_id, site)))
-
-
-@Endpoint(
-    constructors.collection_href("site_connection"),
-    ".../collection",
-    method="get",
-    tag_group="Setup",
-    response_schema=SiteConnectionResponseCollection,
-    permissions_required=PERMISSIONS,
-)
-def show_sites(params: Mapping[str, Any]) -> Response:
-    """Show all site connections"""
-    user.need_permission("wato.sites")
-    all_sites: SiteConfigurations = SitesApiMgr().get_all_sites()
-    all_site_objs: list[SiteConfig] = [
-        SiteConfig.from_internal(site_id, site) for site_id, site in all_sites.items()
-    ]
-    return serve_json(
-        constructors.collection_object(
-            domain_type="site_connection",
-            value=[_serialize_site(site) for site in all_site_objs],
-        )
-    )
 
 
 @Endpoint(
@@ -289,7 +265,6 @@ def _convert_validate_and_save_site_data(
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
     endpoint_registry.register(show_site, ignore_duplicates=ignore_duplicates)
-    endpoint_registry.register(show_sites, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(delete_site, ignore_duplicates=ignore_duplicates)

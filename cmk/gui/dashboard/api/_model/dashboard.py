@@ -112,7 +112,7 @@ class DashboardShareWithSites:
         serialization_alias="type",
         description="Share the dashboard with users of these sites. The sites need to activate changes for this to take effect.",
     )
-    sites: list[Annotated[str, AfterValidator(SiteIdConverter.exists)]]
+    sites: list[Annotated[str, AfterValidator(SiteIdConverter.should_exist)]]
 
 
 # NOTE: mypy can't handle a union of Literal and Annotated, unless they are split up like this

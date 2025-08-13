@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from typing import Any
 from unittest import mock
 
@@ -11,10 +10,10 @@ from pytest import MonkeyPatch
 
 from cmk.ccc import version
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.openapi.endpoints.site_management.common import (
+from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example as _default_config,
 )
-from cmk.gui.openapi.endpoints.site_management.common import (
+from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     no_replication_config_example as _no_replication_config,
 )
 from cmk.gui.rest_api_types.site_connection import (

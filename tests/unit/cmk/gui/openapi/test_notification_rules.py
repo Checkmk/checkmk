@@ -10,11 +10,11 @@ from typing import Any, get_args, Literal
 import pytest
 
 from cmk.ccc import version
+from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
+    default_config_example as _default_config,
+)
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
-)
-from cmk.gui.openapi.endpoints.site_management.common import (
-    default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
     AckStateAPI,

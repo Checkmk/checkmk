@@ -19,6 +19,7 @@ from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.userdb import connection_choices
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.passwords import load_passwords
@@ -308,10 +309,17 @@ class PermissionsConverter:
 
 class SiteIdConverter:
     @staticmethod
-    def exists(value: str) -> SiteId:
+    def should_exist(value: str) -> SiteId:
         site_id = SiteId(value)
         if site_id not in active_config.sites:
             raise ValueError(f"Site {site_id!r} does not exist.")
+        return site_id
+
+    @staticmethod
+    def should_not_exist(value: str) -> SiteId:
+        site_id = SiteId(value)
+        if site_id in active_config.sites:
+            raise ValueError(f"Site {site_id!r} already exists.")
         return site_id
 
 
@@ -336,3 +344,39 @@ class PasswordConverter:
         if ident not in load_passwords():
             raise ValueError(f'Password "{ident}" is not known.')
         return ident
+
+
+@dataclass(slots=True)
+class RelativeUrlConverter:
+    must_endwith_one: list[str] | None = None
+    must_startwith_one: list[str] | None = None
+
+    def validate(self, value: str) -> str:
+        if self.must_endwith_one is not None:
+            if not any({value.endswith(postfix) for postfix in self.must_endwith_one}):
+                raise ValueError(
+                    "The URL {value!r} does not end with one of {self.must_endwith_one!r}"
+                )
+
+        if self.must_startwith_one is not None:
+            if not any({value.startswith(prefix) for prefix in self.must_startwith_one}):
+                raise ValueError(
+                    "The URL {value!r} does not start with one of {self.must_startwith_one!r}"
+                )
+        return value
+
+
+class LDAPConnectionIDConverter:
+    @staticmethod
+    def should_exist(value: str) -> str:
+        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
+        if value not in ldap_connection_ids:
+            raise ValueError(f"The LDAP connection {value!r} should exist but it doesn't.")
+        return value
+
+    @staticmethod
+    def should_not_exist(value: str) -> str:
+        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
+        if value in ldap_connection_ids:
+            raise ValueError(f"The LDAP connection {value!r} should not exist but it does.")
+        return value

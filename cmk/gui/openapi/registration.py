@@ -40,6 +40,7 @@ from cmk.gui.openapi.endpoints import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
 from .api_endpoints import host_config as api_host_config
+from .api_endpoints import site_management as api_site_management
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
 from .api_endpoints.user_role import registration as api_user_role
@@ -109,6 +110,11 @@ def register(
         ignore_duplicates=ignore_duplicate_endpoints,
     )
     api_graph_timerange.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
+    api_site_management.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
         ignore_duplicates=ignore_duplicate_endpoints,

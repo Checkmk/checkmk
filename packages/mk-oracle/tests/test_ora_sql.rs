@@ -697,3 +697,13 @@ fn test_table_spaces_old() {
         });
     }
 }
+
+#[test]
+fn test_data_guard_stats() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::DataGuardStats, None);
+        assert!(rows.is_empty());
+    }
+}

@@ -46,6 +46,7 @@ from ._pwstore import extract as extract
 from ._pwstore import load as load
 from ._pwstore import lookup as lookup
 from ._pwstore import lookup_for_bakery as lookup_for_bakery
+from ._pwstore import make_staged_passwords_lookup as make_staged_passwords_lookup
 from ._pwstore import Password as Password
 from ._pwstore import password_store_path as password_store_path
 from ._pwstore import PasswordId as PasswordId

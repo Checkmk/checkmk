@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal, NotRequired, TypedDict
@@ -128,6 +128,24 @@ def extract(password_id: PasswordId) -> str:
             return pw
         case _:
             raise MKGeneralException("Unknown password type.")
+
+
+def make_staged_passwords_lookup() -> Callable[[str], str]:
+    """Returns something similar as `extract`. Intended for internal use only."""
+    staging_path = (
+        pending_password_store_path()
+    )  # maybe we should pass this, but lets be consistent for now.
+    store = load(staging_path)
+
+    def lookup(password_id: str) -> str:
+        try:
+            return store[password_id]
+        except KeyError:
+            # the fact that this is a dict is an implementation detail.
+            # Let's make it a ValueError.
+            raise ValueError(f"Password '{password_id}' not found in {staging_path}")
+
+    return lookup
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

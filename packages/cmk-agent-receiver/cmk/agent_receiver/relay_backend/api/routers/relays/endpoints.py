@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Annotated
+
 import fastapi
 from pydantic import UUID4
 
+from cmk.agent_receiver.relay_backend.api.dependencies.get_relay_tasks_handler import (
+    get_relay_tasks_handler,
+)
+from cmk.agent_receiver.relay_backend.api.dependencies.register_relay_handler import (
+    get_register_relay_handler,
+)
 from cmk.agent_receiver.relay_backend.api.routers.base_router import RELAY_ROUTER
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_tasks import (
+from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_relay_tasks import (
     GetRelayTasksHandler,
 )
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.register import (
+from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
 from cmk.relay_protocols.relays import RelayRegistrationRequest
@@ -27,6 +35,7 @@ from cmk.relay_protocols.tasks import (
 @RELAY_ROUTER.post("/", status_code=fastapi.status.HTTP_200_OK)
 async def register_relay(
     request: RelayRegistrationRequest,
+    handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
 ) -> fastapi.Response:
     """Register a new relay entity.
 
@@ -49,9 +58,6 @@ async def register_relay(
     # - Store relay information
     # - Generate and return appropriate certificates
 
-    # TODO: For the handler we usually use the fastapi dependency injection system. Since the handler for now does not
-    #       require any dependencies, we can just instantiate it directly.
-    handler = RegisterRelayHandler()
     handler.process(request.relay_id)
     return fastapi.Response(
         status_code=fastapi.status.HTTP_200_OK, content="Relay registered successfully"
@@ -173,6 +179,7 @@ async def update_task(relay_id: UUID4, task_id: UUID4, request: TaskUpdateReques
 @RELAY_ROUTER.get("/{relay_id}/tasks")
 async def get_tasks(
     relay_id: UUID4,
+    handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
     status: TaskStatus | None = fastapi.Query(None, description="Filter tasks by status"),
 ) -> TaskListResponse:
     """Get tasks for a relay, optionally filtered by status.
@@ -201,7 +208,4 @@ async def get_tasks(
     #         instead of having a separate cleanup task
     # - Return filtered task list
 
-    # TODO: For the handler we usually use the fastapi dependency injection system. Since the handler for now does not
-    #       require any dependencies, we can just instantiate it directly.
-    handler = GetRelayTasksHandler()
     return handler.process(relay_id, status)

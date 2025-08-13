@@ -15,6 +15,8 @@
 
 #include <pthread.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include <compare>
@@ -41,6 +43,74 @@ void closeFD(int &fd) {
     fd = -1;
 }
 }  // namespace
+
+int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger) {
+    int result = -1;
+    struct stat st{};
+
+    if (0 == stat(path.c_str(), &st)) {
+        if (0 == ::unlink(path.c_str())) {
+            Notice(logger) << "removed stale socket file " << path;
+        } else {
+            const generic_error ge("cannot remove stale socket file " +
+                                   path.string());
+            Alert(logger) << ge;
+            return -1;
+        }
+    }
+
+    result = ::socket(PF_UNIX, SOCK_STREAM, 0);
+    if (result < 0) {
+        const generic_error ge("cannot create UNIX socket");
+        Alert(logger) << ge;
+        return -1;
+    }
+
+    // Imortant: close on exec -> forked processes must not inherit it!
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+    if (::fcntl(result, F_SETFD, FD_CLOEXEC) == -1) {
+        const generic_error ge("cannot set close-exec bit on socket");
+        Alert(logger) << ge;
+        ::close(result);
+        result = -1;
+        return -1;
+    }
+
+    // Bind it to its address. This creates the socket file.
+    sockaddr_un sockaddr{.sun_family = AF_UNIX, .sun_path = ""};
+    std::string_view{path.c_str()}.copy(&sockaddr.sun_path[0],
+                                        sizeof(sockaddr.sun_path) - 1);
+    sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (::bind(result, reinterpret_cast<struct sockaddr *>(&sockaddr),
+               sizeof(sockaddr)) < 0) {
+        const generic_error ge("cannot bind UNIX socket to address " +
+                               path.string());
+        Alert(logger) << ge;
+        ::close(result);
+        return -1;
+    }
+
+    if (0 != ::chmod(path.c_str(), 0660)) {
+        const generic_error ge("cannot chown UNIX socket at " + path.string() +
+                               " to 0660");
+        Error(logger) << ge;
+        ::close(result);
+        return -1;
+    }
+
+    constexpr int socket_backlog = 10;
+    if (0 != ::listen(result, socket_backlog)) {
+        const generic_error ge("cannot listen to unix socket at " +
+                               path.string());
+        Alert(logger) << ge;
+        ::close(result);
+        return -1;
+    }
+
+    Notice(logger) << "listening on " << path.string();
+    return result;
+}
 
 // static
 std::optional<SocketPair> SocketPair::make(Mode mode, Direction direction,

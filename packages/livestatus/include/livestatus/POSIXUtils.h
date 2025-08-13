@@ -21,6 +21,8 @@
 #include <utility>
 class Logger;
 
+int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger);
+
 class SocketPair {
 public:
     enum class Mode { blocking, local_non_blocking };

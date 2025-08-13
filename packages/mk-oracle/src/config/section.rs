@@ -13,6 +13,7 @@ use std::sync::LazyLock;
 // "tablespaces", "rman", "jobs", "ts_quotas", "resumable", "locks"
 pub mod names {
     pub const INSTANCE: &str = "instance";
+    pub const ASM_INSTANCE: &str = "asm_instance"; // virtual section
     pub const SESSIONS: &str = "sessions";
     pub const LOG_SWITCHES: &str = "logswitches";
     pub const UNDO_STAT: &str = "undostat";
@@ -94,9 +95,6 @@ const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
     names::IO_STATS,
     names::ASM_DISK_GROUP,
 ];
-
-#[allow(dead_code)]
-const ASM_SECTIONS: [&str; 3] = [names::INSTANCE, names::PROCESSES, names::ASM_DISK_GROUP];
 
 impl SectionAffinity {
     pub fn from_text<T: AsRef<str>>(s: T) -> Self {

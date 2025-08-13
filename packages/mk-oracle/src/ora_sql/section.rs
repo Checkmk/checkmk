@@ -50,15 +50,20 @@ impl Section {
         }
     }
 
-    pub fn to_plain_header(&self) -> String {
-        header(&self.header_name, self.sep)
+    pub fn to_signaling_header(&self) -> Option<String> {
+        if self.header_name.as_str() == section::names::ASM_INSTANCE {
+            return None;
+        }
+        Some(header(&self.header_name, self.sep))
     }
 
     pub fn to_work_header(&self) -> String {
-        header(
-            &(self.header_name.clone() + &self.cached_header()),
-            self.sep,
-        )
+        let real_name = match self.header_name.as_str() {
+            names::IO_STATS => names::PERFORMANCE, // IO_STATS is a performance section
+            names::ASM_INSTANCE => names::INSTANCE, // ASM_INSTANCE is an instance section
+            _ => &self.header_name,
+        };
+        header(&(real_name.to_string() + &self.cached_header()), self.sep)
     }
 
     fn cached_header(&self) -> String {
@@ -226,7 +231,10 @@ mod tests {
     #[test]
     fn test_section_header() {
         let section = Section::make_instance_section();
-        assert_eq!(section.to_plain_header(), "<<<oracle_instance:sep(124)>>>");
+        assert_eq!(
+            section.to_signaling_header().unwrap(),
+            "<<<oracle_instance:sep(124)>>>"
+        );
         assert_eq!(section.to_work_header(), "<<<oracle_instance:sep(124)>>>");
 
         let section = Section::new(
@@ -235,7 +243,10 @@ mod tests {
                 .build(),
             100,
         );
-        assert_eq!(section.to_plain_header(), "<<<oracle_backup:sep(124)>>>");
+        assert_eq!(
+            section.to_signaling_header().unwrap(),
+            "<<<oracle_backup:sep(124)>>>"
+        );
         assert!(section
             .to_work_header()
             .starts_with("<<<oracle_backup:cached("));

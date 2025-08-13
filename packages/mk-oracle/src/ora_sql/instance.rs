@@ -80,7 +80,10 @@ async fn generate_data(
             s
         })
         .collect::<Vec<_>>();
-    let mut output: Vec<String> = sections.iter().map(|s| s.to_plain_header()).collect();
+    let mut output: Vec<String> = sections
+        .iter()
+        .filter_map(|s| s.to_signaling_header())
+        .collect();
     let works = make_spot_works(connected, sections, ora_sql.params());
     output.extend(process_spot_works(works));
     Ok(output)

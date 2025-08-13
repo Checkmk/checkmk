@@ -36,7 +36,7 @@ impl From<&str> for InstanceName {
 }
 
 impl InstanceName {
-    fn is_asm(&self) -> bool {
+    pub fn is_asm(&self) -> bool {
         self.0.starts_with("+")
     }
 

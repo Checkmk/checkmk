@@ -259,7 +259,7 @@ test-lint-groovy:
 
 test-performance:
 	RELEASE="$$(make --no-print-directory --file=../defines.make print-BRANCH_VERSION)-$$(date '+%Y.%m.%d').cee" ; \
-	BENCHMARK_DIR=$$(realpath ../results/performance/$$RELEASE) ; \
+	BENCHMARK_DIR=../results/performance/$$RELEASE ; \
 	mkdir -p "$$BENCHMARK_DIR" ; \
 	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \

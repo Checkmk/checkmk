@@ -18,8 +18,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-import cmk.utils.log
 from cmk.ccc import store
+from cmk.utils.log import VERBOSE
 
 from .config import (
     ConfigFromWATO,
@@ -146,7 +146,7 @@ def _load_config(
     # Convert old logging configurations
     levels: LogConfig = config["log_level"]
     if isinstance(levels, int):  # TODO: Move this to upgrade time
-        level = logging.INFO if levels == 0 else cmk.utils.log.VERBOSE  # type: ignore[unreachable]
+        level = logging.INFO if levels == 0 else VERBOSE  # type: ignore[unreachable]
         levels = {
             "cmk.mkeventd": level,
             "cmk.mkeventd.EventServer": level,

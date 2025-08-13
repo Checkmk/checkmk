@@ -76,6 +76,7 @@ from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
+    ABCHostAttribute,
     all_host_attributes,
     collect_attributes,
     HostAttributes,
@@ -1018,14 +1019,15 @@ class ModeFolder(WatoMode):
 
         html.div("", id_="row_info")
 
+        host_attributes = all_host_attributes(
+            config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
+        )
         # Show table of hosts in this folder
         with html.form_context("hosts", method="POST"):
             with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
-                for attr in all_host_attributes(
-                    config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
-                ).values():
+                for attr in host_attributes.values():
                     if attr.show_in_table():
                         colspan += 1
                 if (
@@ -1055,6 +1057,7 @@ class ModeFolder(WatoMode):
                         colspan,
                         host_errors,
                         contact_group_names,
+                        host_attributes,
                         hide_hosttags=config.wato_hide_hosttags,
                     )
 
@@ -1075,6 +1078,7 @@ class ModeFolder(WatoMode):
         colspan: int,
         host_errors: dict[HostName, list[str]],
         contact_group_names: GroupSpecs,
+        host_attributes: Mapping[str, ABCHostAttribute],
         *,
         hide_hosttags: bool,
     ) -> None:
@@ -1131,7 +1135,7 @@ class ModeFolder(WatoMode):
         html.a(hostname, href=host.edit_url())
 
         # Show attributes
-        for attr in folder_tree().all_host_attributes().values():
+        for attr in host_attributes.values():
             if attr.show_in_table():
                 attrname = attr.name()
                 if attrname in host.attributes:

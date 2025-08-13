@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final, override
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -42,7 +43,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     @override
     def config_dir(self) -> Path:
-        return ec.rule_pack_dir()
+        return ec.create_paths(cmk.utils.paths.omd_root).rule_pack_dir.value
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

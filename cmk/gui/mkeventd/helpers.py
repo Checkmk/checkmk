@@ -30,7 +30,7 @@ def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
 
 @request_memoize()
 def eventd_configuration() -> ec.ConfigFromWATO:
-    return ec.load_config()
+    return ec.load_config(ec.create_paths(cmk.utils.paths.omd_root))
 
 
 def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECRulePackSpec]:
@@ -42,7 +42,7 @@ def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECR
 
 def save_active_config() -> None:
     ec.save_active_config(
-        dissolve_mkp_proxies(ec.load_rule_packs()),
+        dissolve_mkp_proxies(ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))),
         cmk.utils.paths.omd_root,
         active_config.mkeventd_pprint_rules,
     )

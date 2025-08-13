@@ -26,7 +26,6 @@ from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .event import EventPhase as EventPhase
 from .mkp import mkp_callbacks as mkp_callbacks
-from .mkp import rule_pack_dir as rule_pack_dir
 from .rule_matcher import compile_rule as compile_rule
 from .rule_matcher import MatchFailure as MatchFailure
 from .rule_matcher import MatchResult as MatchResult

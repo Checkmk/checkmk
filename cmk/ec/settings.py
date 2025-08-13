@@ -44,6 +44,8 @@ class Paths(NamedTuple):
     system_mibs_dir: AnnotatedPath
     compiled_mibs_dir: AnnotatedPath
     mongodb_config_file: AnnotatedPath
+    config_dir: AnnotatedPath
+    rule_pack_dir: AnnotatedPath
     mkp_rule_pack_dir: AnnotatedPath
 
 
@@ -51,6 +53,7 @@ def create_paths(omd_root: Path) -> Paths:
     """Returns all default filesystem paths related to the event console."""
     run_dir = omd_root / "tmp/run/mkeventd"
     state_dir = omd_root / "var/mkeventd"
+    config_dir = omd_root / "etc/check_mk/mkeventd.d"
     return Paths(
         active_config_dir=AnnotatedPath(
             "active configuration directory", state_dir / "active_config"
@@ -79,8 +82,10 @@ def create_paths(omd_root: Path) -> Paths:
             "compiled MIBs directory", omd_root / "local/share/check_mk/compiled_mibs"
         ),
         mongodb_config_file=AnnotatedPath("MongoDB configuration", omd_root / "etc/mongodb.conf"),
+        config_dir=AnnotatedPath("configuration directory", config_dir),
+        rule_pack_dir=AnnotatedPath("rule pack directory", config_dir / "wato"),
         mkp_rule_pack_dir=AnnotatedPath(
-            "exported rule pack directory", omd_root / "etc/check_mk/mkeventd.d/mkp/rule_packs"
+            "exported rule pack directory", config_dir / "mkp/rule_packs"
         ),
     )
 

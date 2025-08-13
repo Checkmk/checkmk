@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.paths
 from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
@@ -44,7 +45,7 @@ def find_usages_of_contact_group_in_ec_rules(
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: list[tuple[str, str]] = []
     if rule_packs is None:
-        rule_packs = ec.load_rule_packs()
+        rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):
@@ -65,7 +66,7 @@ def find_usages_of_contact_group_in_ec_rules(
 
 def find_timeperiod_usage_in_ec_rules(time_period_name: str) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
-    rule_packs = ec.load_rule_packs()
+    rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
     for rule_pack in rule_packs:
         for rule_index, rule in enumerate(rule_pack["rules"]):
             if rule.get("match_timeperiod") == time_period_name:

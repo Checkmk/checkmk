@@ -14,6 +14,7 @@ export const topicIconMapping: ProviderTopicIconMapping = {
     event_console: 'events',
     history: 'history',
     host_name: 'host',
+    host_group: null,
     hostalias: 'host',
     hwsw_inventory: 'inventory',
     it_infrastructure_efficiency: 'analyze',

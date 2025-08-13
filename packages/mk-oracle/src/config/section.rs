@@ -36,7 +36,8 @@ pub mod names {
 
 static DEFAULT_AFFINITY_MAP: LazyLock<HashMap<&str, SectionAffinity>> = LazyLock::new(|| {
     HashMap::from([
-        ("instance", SectionAffinity::All),
+        ("instance", SectionAffinity::Db),
+        ("asm_instance", SectionAffinity::Asm),
         ("sessions", SectionAffinity::Db),
         ("logswitches", SectionAffinity::Db),
         ("undostat", SectionAffinity::Db),
@@ -65,8 +66,9 @@ pub enum SectionKind {
     Disabled,
 }
 
-const PREDEFINED_SECTIONS: [&str; 19] = [
+const PREDEFINED_SECTIONS: [&str; 20] = [
     names::INSTANCE,
+    names::ASM_INSTANCE,
     names::SESSIONS,
     names::LOG_SWITCHES,
     names::UNDO_STAT,
@@ -423,7 +425,7 @@ sections:
                 .unwrap()
                 .sections()
                 .len(),
-            19
+            20
         );
         assert_eq!(s.sections.len(), PREDEFINED_SECTIONS.len());
         s.sections.iter().for_each(|s| {

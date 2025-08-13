@@ -790,28 +790,76 @@ fn test_instance_old() {
             Some(InstanceNumVersion::from(12_00_00_00)),
         );
         assert_eq!(rows.len(), 1);
-        rows.iter().for_each(|r| {
-            let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 13);
-            assert_eq!(line[0], endpoint.instance.as_str());
+        let r = rows[0].clone();
+        let line: Vec<&str> = r.split("|").collect();
+        assert_eq!(line.len(), 13);
+        assert_eq!(line[0], endpoint.instance.as_str());
+        assert!(
+            line[1].ends_with(".0.0.0"),
+            "1 is not a valid instance version: {}",
+            line[1]
+        );
+        assert_eq!(line[2], "OPEN");
+        assert_eq!(line[3], "ALLOWED");
+        for i in [5, 6, 11] {
             assert!(
-                line[1].ends_with(".0.0.0"),
-                "1 is not a valid instance version: {}",
-                line[1]
+                line[i].parse::<i64>().is_ok(),
+                "Value is not a number: {} line = {}",
+                line[i],
+                r
             );
-            assert_eq!(line[2], "OPEN");
-            assert_eq!(line[3], "ALLOWED");
-            for i in [5, 6, 11] {
-                assert!(
-                    line[i].parse::<i64>().is_ok(),
-                    "Value is not a number: {} line = {}",
-                    line[i],
-                    r
-                );
-            }
-            for i in [7, 8, 9, 10, 12] {
-                assert!(!line[i].is_empty(), "Value is empty: {} line = {}", i, r);
-            }
-        });
+        }
+        for i in [7, 8, 9, 10, 12] {
+            assert!(!line[i].is_empty(), "Value is empty: {} line = {}", i, r);
+        }
+    }
+}
+
+#[test]
+fn test_asm_instance_new() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::AsmInstance, None);
+        assert_eq!(rows.len(), 1);
+        let r = rows[0].clone();
+        let line: Vec<&str> = r.split("|").collect();
+        assert_eq!(line.len(), 12);
+        assert_eq!(line[0], endpoint.instance.as_str());
+        assert!(
+            !line[1].ends_with(".0.0.0.0"),
+            "1 is not a valid instance version: {}",
+            line[1]
+        );
+        assert_eq!(line[2], "OPEN");
+        assert_eq!(line[3], "ALLOWED");
+        for i in [5, 6] {
+            assert!(
+                line[i].parse::<i64>().is_ok(),
+                "Value is not a number: {} line = {}",
+                line[i],
+                r
+            );
+        }
+        assert_eq!(line[8], "ASM");
+        for i in [7, 9, 10, 11] {
+            assert!(!line[i].is_empty(), "Value is empty: {} line = {}", i, r);
+        }
+
+        let old_rows = _connect_and_query(
+            endpoint,
+            sqls::Id::AsmInstance,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        let old_line: Vec<&str> = old_rows[0].split("|").collect();
+        assert!(
+            old_line[1].ends_with(".0.0.0.0"),
+            "1 is not a valid instance version: {}",
+            old_line[1]
+        );
+        assert_eq!(line[0], old_line[0]);
+        for i in 8..11 {
+            assert_eq!(line[i], old_line[i]);
+        }
     }
 }

@@ -22,7 +22,9 @@ oracle:
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     sections: # optional, if absent will use default as defined below
     - instance: # special section
-      affinity: "all" # optional, default: "db", values: "all", "db", "asm"
+      affinity: "db"
+    - asm_instance: # special section
+      affinity: "asm"
     - dataguard_stats:
     - locks:
     - logswitches:

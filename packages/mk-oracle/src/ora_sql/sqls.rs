@@ -30,6 +30,7 @@ pub enum Id {
     TableSpaces,
     DataGuardStats,
     Instance,
+    AsmInstance,
 }
 
 pub mod query {
@@ -286,6 +287,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::TableSpaces, query::TABLESPACES_META),
         query::build_query_metadata(Id::DataGuardStats, query::DATAGUARD_STATS_META),
         query::build_query_metadata(Id::Instance, query::INSTANCE_META),
+        query::build_query_metadata(Id::AsmInstance, query::ASM_INSTANCE_META),
     ])
 });
 
@@ -660,6 +662,18 @@ mod tests {
     #[test]
     fn test_find_instance() {
         let id = Id::Instance;
+
+        let query_full_version = find_helper(id, 18000001, Tenant::Cdb).unwrap();
+        let query_version = find_helper(id, 12010000, Tenant::All).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_full_version.is_empty());
+        assert!(query_full_version.contains("i.version_full"));
+        assert!(!query_version.contains("i.version_full"));
+        assert_eq!(query_last, query_full_version);
+    }
+    #[test]
+    fn test_find_asm_instance() {
+        let id = Id::AsmInstance;
 
         let query_full_version = find_helper(id, 18000001, Tenant::Cdb).unwrap();
         let query_version = find_helper(id, 12010000, Tenant::All).unwrap();

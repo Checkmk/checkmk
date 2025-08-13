@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.log
-import cmk.utils.paths
 from cmk.ccc import store
 
 from .config import (
@@ -177,7 +176,7 @@ def load_config(paths: Paths) -> ConfigFromWATO:
     distributed setups.
     """
     return _load_config(
-        [cmk.utils.paths.ec_main_config_file] + sorted(paths.config_dir.value.glob("**/*.mk"))
+        [paths.main_config_file.value] + sorted(paths.config_dir.value.glob("**/*.mk"))
     )
 
 
@@ -216,7 +215,7 @@ def save_active_config(
     active_config_dir.mkdir(parents=True, exist_ok=True)
     with contextlib.suppress(FileNotFoundError):
         shutil.copy(
-            cmk.utils.paths.ec_main_config_file,
+            paths.main_config_file.value,
             active_config_dir / "mkeventd.mk",
         )
 

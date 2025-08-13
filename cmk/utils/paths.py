@@ -78,7 +78,6 @@ site_config_dir = var_dir / "site_configs"
 visuals_cache_dir = tmp_dir / "visuals_cache"
 predictions_dir = var_dir / "prediction"
 user_messages_spool_dir = var_dir / "user_messages/spool"
-ec_main_config_file = default_config_dir / "mkeventd.mk"
 diskspace_config_dir = default_config_dir / "diskspace.d/wato/"
 
 configuration_lockfile = default_config_dir / "multisite.mk"

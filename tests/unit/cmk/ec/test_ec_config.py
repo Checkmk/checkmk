@@ -9,8 +9,9 @@ from cmk.ec.settings import create_paths
 
 
 def test_save_active_config(patch_omd_site: None) -> None:
-    ec_config_dir = ec.create_paths(cmk.utils.paths.omd_root).config_dir.value
-    cmk.utils.paths.ec_main_config_file.touch()
+    paths = ec.create_paths(cmk.utils.paths.omd_root)
+    ec_config_dir = paths.config_dir.value
+    paths.main_config_file.value.touch()
     (ec_config_dir / "my-config.mk").touch()
     (ec_config_dir / "wato").mkdir(parents=True, exist_ok=True)
     (ec_config_dir / "wato/global.mk").touch()
@@ -40,8 +41,9 @@ def test_save_active_config(patch_omd_site: None) -> None:
 
 
 def test_save_active_config_no_active_config_dir(patch_omd_site: None) -> None:
-    ec_config_dir = ec.create_paths(cmk.utils.paths.omd_root).config_dir.value
-    cmk.utils.paths.ec_main_config_file.touch()
+    paths = ec.create_paths(cmk.utils.paths.omd_root)
+    ec_config_dir = paths.config_dir.value
+    paths.main_config_file.value.touch()
     (ec_config_dir / "my-config.mk").touch()
     (ec_config_dir / "wato").mkdir(parents=True, exist_ok=True)
     (ec_config_dir / "wato/global.mk").touch()

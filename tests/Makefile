@@ -289,7 +289,7 @@ test-gui-e2e-cme:
 test-gui-e2e-cse:
 	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
-test-integration:
+test-integration: test-integration-otel
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
 	--session-timeout 5400
 

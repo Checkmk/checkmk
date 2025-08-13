@@ -611,3 +611,89 @@ fn test_system_parameter() {
         });
     }
 }
+
+#[test]
+fn test_table_spaces() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::TableSpaces, None);
+        assert!(rows.len() > 2);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 15);
+            assert_eq!(line[0], endpoint.instance.as_str());
+            assert!(
+                line[1].ends_with(".DBF"),
+                "File name does not end with .DBF: {}",
+                line[1]
+            );
+            assert!(
+                line[3] == "ONLINE" || line[3] == "AVAILABLE",
+                "3 is not ONLINE or AVAILABLE: {} {}",
+                line[3],
+                r
+            );
+            for i in [5, 6, 7, 8, 10, 12] {
+                assert!(
+                    line[i].parse::<u64>().is_ok(),
+                    "Value is not a number: {} line = {}",
+                    line[i],
+                    r
+                );
+            }
+            assert!(line[11] == "ONLINE", "11 is not ONLINE: {} {}", line[11], r);
+            assert!(
+                line[14].ends_with(".0.0.0.0"),
+                "14 is not version: {} {}",
+                line[14],
+                r
+            );
+        });
+    }
+}
+
+#[test]
+fn test_table_spaces_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::TableSpaces,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert!(rows.len() > 2);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 15);
+            assert_eq!(line[0], endpoint.instance.as_str());
+            assert!(
+                line[1].ends_with(".DBF"),
+                "File name does not end with .DBF: {}",
+                line[1]
+            );
+            assert!(
+                line[3] == "ONLINE" || line[3] == "AVAILABLE",
+                "3 is not ONLINE or AVAILABLE: {} {}",
+                line[3],
+                r
+            );
+            for i in [5, 6, 7, 8, 10, 12] {
+                assert!(
+                    line[i].parse::<u64>().is_ok(),
+                    "Value is not a number: {} line = {}",
+                    line[i],
+                    r
+                );
+            }
+            assert!(line[11] == "ONLINE", "11 is not ONLINE: {} {}", line[11], r);
+            assert!(
+                line[14].ends_with(".0.0.0.0"),
+                "14 is not version: {} {}",
+                line[14],
+                r
+            );
+        });
+    }
+}

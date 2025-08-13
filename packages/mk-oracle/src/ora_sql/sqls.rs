@@ -26,7 +26,8 @@ pub enum Id {
     RecoveryStatus,
     Rman, // Backup and Recovery Manager
     Sessions,
-    SystemParameter, // System Parameters
+    SystemParameter,
+    TableSpaces,
 }
 
 pub mod query {
@@ -280,6 +281,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::Rman, query::RMAN_META),
         query::build_query_metadata(Id::Sessions, query::SESSIONS_META),
         query::build_query_metadata(Id::SystemParameter, query::SYSTEM_PARAMETER_META),
+        query::build_query_metadata(Id::TableSpaces, query::TABLESPACES_META),
     ])
 });
 
@@ -608,5 +610,20 @@ mod tests {
         assert_eq!(query_old, query_new);
         assert_eq!(query_last, query_new);
         assert_eq!(query_obsolete, query_new);
+    }
+
+    #[test]
+    fn test_find_table_spaces() {
+        let id = Id::TableSpaces;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
     }
 }

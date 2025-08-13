@@ -542,3 +542,51 @@ fn test_rman_old() {
         assert!(rows.is_empty());
     }
 }
+
+#[test]
+fn test_sessions_last() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Sessions, None);
+        assert_eq!(rows.len(), 3);
+        let start = endpoint.instance.as_str().to_string() + ".";
+        for n in [0, 1] {
+            let r = rows[n].clone();
+            assert!(r.starts_with(start.as_str()));
+
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 2);
+            assert!(
+                line[1].parse::<i32>().is_ok(),
+                "Value is not a number: {}",
+                line[1]
+            );
+        }
+
+        let line_2: Vec<&str> = rows[2].split("|").collect();
+        assert_eq!(line_2.len(), 4);
+        line_2[1..].iter().for_each(|s| {
+            assert!(s.parse::<i32>().is_ok(), "Value is not a number: {}", s);
+        });
+    }
+}
+
+#[test]
+fn test_sessions_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Sessions,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert_eq!(rows.len(), 1);
+        let line: Vec<&str> = rows[0].split("|").collect();
+        assert_eq!(line.len(), 4);
+        line[1..].iter().for_each(|s| {
+            assert!(s.parse::<i32>().is_ok(), "Value is not a number: {}", s);
+        });
+    }
+}

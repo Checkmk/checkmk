@@ -25,6 +25,7 @@ pub enum Id {
     Processes,
     RecoveryStatus,
     Rman, // Backup and Recovery Manager
+    Sessions,
 }
 
 pub mod query {
@@ -271,6 +272,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::Processes, query::PROCESSES_META),
         query::build_query_metadata(Id::RecoveryStatus, query::RECOVERY_STATUS_META),
         query::build_query_metadata(Id::Rman, query::RMAN_META),
+        query::build_query_metadata(Id::Sessions, query::SESSIONS_META),
     ])
 });
 
@@ -570,6 +572,19 @@ mod tests {
         assert!(!query_new.is_empty());
         assert!(!query_old.is_empty());
         assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+    }
+
+    #[test]
+    fn test_find_sessions() {
+        let id = Id::Sessions;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
     }

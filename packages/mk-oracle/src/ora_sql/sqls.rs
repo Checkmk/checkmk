@@ -29,6 +29,7 @@ pub enum Id {
     SystemParameter,
     TableSpaces,
     DataGuardStats,
+    Instance,
 }
 
 pub mod query {
@@ -284,6 +285,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::SystemParameter, query::SYSTEM_PARAMETER_META),
         query::build_query_metadata(Id::TableSpaces, query::TABLESPACES_META),
         query::build_query_metadata(Id::DataGuardStats, query::DATAGUARD_STATS_META),
+        query::build_query_metadata(Id::Instance, query::INSTANCE_META),
     ])
 });
 
@@ -304,11 +306,24 @@ pub fn get_factory_query<T: Borrow<Id>>(
                         || InstanceNumVersion::from(q.min_version) <= version.unwrap_or_default()
                 })
         })
-        .map(|q| q.sql.clone())
+        .map(|q| {
+            q.sql.clone().replace(
+                "${version_column}",
+                get_version_column_patch(version).as_str(),
+            )
+        })
         .ok_or(anyhow::anyhow!(
             "Query for {:?} not found",
             query_id.borrow()
         ))
+}
+
+fn get_version_column_patch(version: Option<InstanceNumVersion>) -> String {
+    match version {
+        Some(v) if v >= InstanceNumVersion::from(18_00_00_00) => String::from("version_full"),
+        None => String::from("version_full"),
+        _ => String::from("version"),
+    }
 }
 
 /// Returns the SQL query for the given query ID, latest Version using the default tenant (CDB).
@@ -640,5 +655,18 @@ mod tests {
         assert!(!query_old.is_empty());
         assert_eq!(query_old, query_new);
         assert_eq!(query_last, query_new);
+    }
+
+    #[test]
+    fn test_find_instance() {
+        let id = Id::Instance;
+
+        let query_full_version = find_helper(id, 18000001, Tenant::Cdb).unwrap();
+        let query_version = find_helper(id, 12010000, Tenant::All).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_full_version.is_empty());
+        assert!(query_full_version.contains("i.version_full"));
+        assert!(!query_version.contains("i.version_full"));
+        assert_eq!(query_last, query_full_version);
     }
 }

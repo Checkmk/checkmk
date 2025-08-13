@@ -15,7 +15,7 @@ use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
-use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, Tenant};
+use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
 use mk_oracle::types::{Separator, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -705,5 +705,113 @@ fn test_data_guard_stats() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = _connect_and_query(endpoint, sqls::Id::DataGuardStats, None);
         assert!(rows.is_empty());
+    }
+}
+
+#[test]
+fn test_instance() {
+    use crate::system::convert_to_num_version;
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Instance, None);
+        assert!(rows.len() > 2);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 23);
+            assert_eq!(line[0], endpoint.instance.as_str());
+            assert!(
+                convert_to_num_version(&InstanceVersion::from(line[1].to_string())).is_some(),
+                "1 is not a valid instance name: {}",
+                line[1]
+            );
+            assert_eq!(line[2], "OPEN");
+            assert_eq!(line[3], "ALLOWED");
+            for i in [5, 6, 11, 13, 15, 20, 21] {
+                assert!(
+                    line[i].parse::<i64>().is_ok(),
+                    "Value is not a number: {} line = {}",
+                    line[i],
+                    r
+                );
+            }
+            for i in [7, 8, 9, 10, 13] {
+                assert!(!line[i].is_empty(), "Value is empty: {} line = {}", i, r);
+            }
+        });
+    }
+}
+
+#[test]
+fn test_instance_full_version() {
+    use crate::system::convert_to_num_version;
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Instance,
+            Some(InstanceNumVersion::from(18_00_00_00)),
+        );
+        assert!(!rows.is_empty());
+        let line_last: Vec<&str> = rows[0].split("|").collect();
+        assert!(
+            convert_to_num_version(&InstanceVersion::from(line_last[1].to_string())).is_some(),
+            "1 is not a valid instance name: {}",
+            line_last[1]
+        );
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Instance,
+            Some(InstanceNumVersion::from(17_00_00_00)),
+        );
+        assert!(!rows.is_empty());
+        let line_old: Vec<&str> = rows[0].split("|").collect();
+        assert!(
+            convert_to_num_version(&InstanceVersion::from(line_old[1].to_string())).is_some(),
+            "1 is not a valid instance name: {}",
+            line_old[1]
+        );
+        assert_ne!(
+            line_last[1], line_old[1],
+            "Last and old versions should not be equal"
+        );
+    }
+}
+
+#[test]
+fn test_instance_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Instance,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert_eq!(rows.len(), 1);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(line.len(), 13);
+            assert_eq!(line[0], endpoint.instance.as_str());
+            assert!(
+                line[1].ends_with(".0.0.0"),
+                "1 is not a valid instance version: {}",
+                line[1]
+            );
+            assert_eq!(line[2], "OPEN");
+            assert_eq!(line[3], "ALLOWED");
+            for i in [5, 6, 11] {
+                assert!(
+                    line[i].parse::<i64>().is_ok(),
+                    "Value is not a number: {} line = {}",
+                    line[i],
+                    r
+                );
+            }
+            for i in [7, 8, 9, 10, 12] {
+                assert!(!line[i].is_empty(), "Value is empty: {} line = {}", i, r);
+            }
+        });
     }
 }

@@ -103,7 +103,7 @@ fn _to_instance_entries(result: Vec<Vec<String>>) -> _InstanceEntries {
         .collect();
     hashmap
 }
-fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVersion> {
+pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVersion> {
     let tops = String::from(version.clone())
         .splitn(5, '.')
         .take(4)

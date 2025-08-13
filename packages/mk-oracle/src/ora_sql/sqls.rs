@@ -486,6 +486,78 @@ mod tests {
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
     }
+    #[test]
+    fn test_find_locks() {
+        let id = Id::Locks;
+
+        let query_new = find_helper(id, 12010000, Tenant::NoCdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+    }
+
+    #[test]
+    fn test_find_logswitches() {
+        let id = Id::LogSwitches;
+
+        let query_new = find_helper(id, 12010000, Tenant::NoCdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_obsolete = find_helper(id, 10000000, Tenant::Cdb).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert_eq!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+        assert_eq!(query_obsolete, query_new);
+    }
+
+    #[test]
+    fn test_find_processes() {
+        let id = Id::Processes;
+
+        let query_new = find_helper(id, 12010000, Tenant::NoCdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
+        let query_obsolete = find_helper(id, 10000000, Tenant::Cdb).unwrap();
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert_eq!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+        assert_eq!(query_obsolete, query_new);
+    }
+
+    #[test]
+    fn test_long_active_sessions() {
+        let id = Id::LongActiveSessions;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+    }
+
+    #[test]
+    fn test_recovery_status() {
+        let id = Id::RecoveryStatus;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
+    }
 
     #[test]
     fn test_find_rman() {

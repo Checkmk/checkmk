@@ -34,7 +34,6 @@ use_repo(
 # See conversation here: https://github.com/bazel-contrib/bazel-gazelle/issues/1035
 # The mentioned solution 'build_file_proto_mode = "disable_global"' is deprecated and was moved to 'gazelle_override':
 # https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
-
 go_deps.gazelle_override(
     directives = [
         "gazelle:proto disable",

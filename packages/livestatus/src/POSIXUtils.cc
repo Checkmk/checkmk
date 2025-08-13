@@ -91,7 +91,7 @@ int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger) {
         return -1;
     }
 
-    if (0 != ::chmod(path.c_str(), 0660)) {
+    if (0 != ::chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) {
         const generic_error ge("cannot chown UNIX socket at " + path.string() +
                                " to 0660");
         Error(logger) << ge;

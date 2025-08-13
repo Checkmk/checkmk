@@ -2867,7 +2867,7 @@ def _execute_update_mkps(
             local_dir=paths.local_optional_packages_dir,
             shipped_dir=paths.optional_packages_dir,
         ),
-        ec.mkp_callbacks(),
+        ec.mkp_callbacks(paths.omd_root),
         version.__version__,
         parse_version=version.parse_check_mk_version,
     )

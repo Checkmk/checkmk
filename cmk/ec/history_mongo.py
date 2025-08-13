@@ -89,7 +89,7 @@ class MongoDBHistory(History):
         result = self._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
 
         # Might be used for debugging / profiling
-        # open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
+        # open('/tmp/ec_history_debug.log', 'a').write(
         #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
         if query.limit:

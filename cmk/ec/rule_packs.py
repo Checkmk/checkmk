@@ -193,6 +193,7 @@ def load_active_config(settings: Settings) -> ConfigFromWATO:
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.save_active_config()
 def save_active_config(
     rule_packs: Iterable[ECRulePackSpec],
+    omd_root: Path,
     pretty_print: bool = False,
 ) -> None:
     """
@@ -208,7 +209,7 @@ def save_active_config(
 
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
-    active_config_dir = create_paths(cmk.utils.paths.omd_root).active_config_dir.value
+    active_config_dir = create_paths(omd_root).active_config_dir.value
     with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(str(active_config_dir))
 

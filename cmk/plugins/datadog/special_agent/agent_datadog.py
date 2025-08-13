@@ -483,15 +483,18 @@ def _forward_events_to_ec(
     add_text: bool,
 ) -> None:
     ec.forward_to_unix_socket(
-        _event_to_syslog_message(
-            event,
-            tag_regexes,
-            facility,
-            severity,
-            service_level,
-            add_text,
-        )
-        for event in events
+        (
+            _event_to_syslog_message(
+                event,
+                tag_regexes,
+                facility,
+                severity,
+                service_level,
+                add_text,
+            )
+            for event in events
+        ),
+        omd_root=paths.omd_root,
     )
 
 
@@ -669,13 +672,16 @@ def _forward_logs_to_ec(
     translator: Sequence[LogMessageElement],
 ) -> None:
     ec.forward_to_unix_socket(
-        _log_to_syslog_message(
-            log,
-            facility,
-            service_level,
-            translator,
-        )
-        for log in logs
+        (
+            _log_to_syslog_message(
+                log,
+                facility,
+                service_level,
+                translator,
+            )
+            for log in logs
+        ),
+        omd_root=paths.omd_root,
     )
 
 

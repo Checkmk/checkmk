@@ -58,7 +58,7 @@ _SITE_CONTEXT: Final = cli.SiteContext(
         shipped_dir=paths.optional_packages_dir,
     ),
     installed_packages_dir=paths.installed_packages_dir,
-    callbacks=ec.mkp_callbacks(),
+    callbacks=ec.mkp_callbacks(paths.omd_root),
     post_package_change_actions=make_post_package_change_actions(
         on_any_change=(
             reload_services_affected_by_mkp_changes,

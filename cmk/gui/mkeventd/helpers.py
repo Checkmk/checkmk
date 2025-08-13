@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.paths
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -42,5 +43,6 @@ def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECR
 def save_active_config() -> None:
     ec.save_active_config(
         dissolve_mkp_proxies(ec.load_rule_packs()),
+        cmk.utils.paths.omd_root,
         active_config.mkeventd_pprint_rules,
     )

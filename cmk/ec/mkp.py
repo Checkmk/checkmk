@@ -51,7 +51,7 @@ def _uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     )
 
 
-def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
+def _release_packaged_rule_packs(omd_root: Path, file_names: Iterable[Path]) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the rule packs
     packaged in a MKP upon release of that MKP. The following cases have
@@ -73,9 +73,7 @@ def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         if not isinstance(rp, MkpRulePackProxy):
             save = True
             export_rule_pack(
-                rp,
-                pretty_print=False,
-                path=create_paths(cmk.utils.paths.omd_root).mkp_rule_pack_dir.value,
+                rp, pretty_print=False, path=create_paths(omd_root).mkp_rule_pack_dir.value
             )
             rule_packs[index] = MkpRulePackProxy(id_)
 
@@ -83,11 +81,11 @@ def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         save_rule_packs(rule_packs, pretty_print=False, path=rule_pack_dir())
 
 
-def mkp_callbacks() -> Mapping[PackagePart, PackageOperationCallbacks]:
+def mkp_callbacks(omd_root: Path) -> Mapping[PackagePart, PackageOperationCallbacks]:
     return {
         PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
             install=_install_packaged_rule_packs,
             uninstall=_uninstall_packaged_rule_packs,
-            release=_release_packaged_rule_packs,
+            release=lambda file_names: _release_packaged_rule_packs(omd_root, file_names),
         ),
     }

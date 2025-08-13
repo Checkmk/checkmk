@@ -70,7 +70,7 @@ def make_path_config() -> PathConfig | None:
     )
 
 
-_CALLBACKS: Final = ec.mkp_callbacks()
+_CALLBACKS: Final = ec.mkp_callbacks(paths.omd_root)
 
 PACKAGE_STORE = PackageStore(
     enabled_dir=paths.local_enabled_packages_dir,

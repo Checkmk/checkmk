@@ -38,12 +38,12 @@ from setproctitle import setthreadtitle
 
 import cmk.ccc.daemon
 import cmk.ccc.profile
-import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import get_general_version_infos
 from cmk.utils import log
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
@@ -3425,11 +3425,12 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main() -> None:
+def main(omd_root: Path, argv: Sequence[str]) -> None:
     """Main entry and option parsing."""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = create_settings(cmk_version.__version__, cmk.utils.paths.omd_root, sys.argv)
+    version_info = get_general_version_infos(omd_root)
+    settings = create_settings(version_info["version"], omd_root, sys.argv)
 
     pid_path = None
     try:
@@ -3441,7 +3442,7 @@ def main() -> None:
             open_log(settings.paths.log_file.value)
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting", cmk_version.__version__)
+        logger.info("mkeventd version %s starting", version_info["version"])
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
@@ -3583,9 +3584,7 @@ def main() -> None:
         CrashReportStore().save(
             ECCrashReport(
                 cmk.utils.paths.crash_dir,
-                ECCrashReport.make_crash_info(
-                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
-                ),
+                ECCrashReport.make_crash_info(version_info),
             )
         )
         bail_out(logger, traceback.format_exc())
@@ -3597,4 +3596,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from cmk.utils.paths import omd_root
+
+    main(omd_root, sys.argv)

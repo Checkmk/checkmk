@@ -505,7 +505,12 @@ class MessageForwarder:
         events: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
         try:
-            ec.forward_to_unix_socket(events, path, _EC_CONNECTION_TIMEOUT)
+            ec.forward_to_unix_socket(
+                events,
+                omd_root=cmk.utils.paths.omd_root,
+                path=path,
+                timeout=_EC_CONNECTION_TIMEOUT,
+            )
         except Exception as exc:
             return LogwatchForwardedResult(exception=exc)
         return LogwatchForwardedResult(num_forwarded=len(events))

@@ -19,7 +19,7 @@ def test_save_active_config(patch_omd_site: None) -> None:
     active_config_dir.mkdir(parents=True, exist_ok=True)
     (active_config_dir / "old-rules.mk").touch()
 
-    ec.save_active_config([])
+    ec.save_active_config([], cmk.utils.paths.omd_root)
 
     assert sorted(cmk.utils.paths.ec_config_dir.glob("**/*.mk")) == sorted(
         [
@@ -45,7 +45,7 @@ def test_save_active_config_no_active_config_dir(patch_omd_site: None) -> None:
     (cmk.utils.paths.ec_config_dir / "wato/global.mk").touch()
     (cmk.utils.paths.ec_config_dir / "wato/rules.mk").touch()
 
-    ec.save_active_config([])
+    ec.save_active_config([], cmk.utils.paths.omd_root)
 
     assert sorted(cmk.utils.paths.ec_config_dir.glob("**/*.mk")) == sorted(
         [

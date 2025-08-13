@@ -10,6 +10,7 @@
 
 import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
+from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -239,7 +240,7 @@ class Settings(NamedTuple):
     options: Options
 
 
-def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
+def create_settings(version: str, omd_root: Path, argv: Sequence[str]) -> Settings:
     """Returns all event console settings."""
     paths = create_paths(omd_root)
     port_numbers = _default_port_numbers()
@@ -259,14 +260,14 @@ def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
 
 
 if __name__ == "__main__":
-    import cmk.ccc.version as cmk_version
-    import cmk.utils.paths
+    from cmk.ccc.version import get_general_version_infos
+    from cmk.utils.paths import omd_root
 
     sys.stdout.write(
         repr(
             create_settings(
-                str(cmk_version.__version__),
-                cmk.utils.paths.omd_root,
+                get_general_version_infos(omd_root)["version"],
+                omd_root,
                 sys.argv,
             )
         )

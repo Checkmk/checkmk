@@ -249,6 +249,10 @@ class MainMenu(LocatorHelper):
         self._unique_web_element(_loc)
         return _loc
 
+    def customize_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
+        """main menu -> Open customize -> show more(optional) -> sub menu"""
+        return self._sub_menu("Customize", sub_menu, False, exact)
+
     def user_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
         """main menu -> Open user -> show more(optional) -> sub menu"""
         return self._sub_menu("User", sub_menu, show_more=False, exact=exact)
@@ -420,9 +424,14 @@ class MainArea(LocatorHelper):
         _loc = _loc.filter(**kwargs) if kwargs else _loc
         return _loc
 
+    @property
+    def page_title_locator(self) -> Locator:
+        """Return the page title locator."""
+        return self.locator(".titlebar a>>nth=0")
+
     def check_page_title(self, title: str | Pattern[str]) -> None:
         """check the page title"""
-        expect(self.locator(".titlebar a>>nth=0")).to_have_text(title)
+        expect(self.page_title_locator).to_have_text(title)
 
     def expect_no_entries(self) -> None:
         """Expect no previous entries are found in the page.
@@ -616,6 +625,9 @@ class FilterSidebar(LocatorHelper):
     def dropdown_option(self, option_name: str, exact: bool = False) -> Locator:
         return self._iframe_locator.get_by_role("option", name=option_name, exact=exact)
 
+    def filter_combobox(self, filter_name: str) -> Locator:
+        return self.locator("div.floatfilter", has_text=filter_name).get_by_role("combobox")
+
     def apply_last_service_state_change_filter(
         self, from_units: str, from_value: str, until_units: str, until_value: str
     ) -> None:
@@ -643,8 +655,14 @@ class FilterSidebar(LocatorHelper):
         self.select_host_field.click()
         logger.info("Set host name=%s", host_filter)
         self.search_text_field.fill(host_filter)
-        # TODO: remove 'nth(0)' after fixing CMK-19975
-        self.dropdown_option(host_filter, exact=True).nth(0).click()
+        # TODO: remove 'first' after fixing CMK-19975
+        self.dropdown_option(host_filter, exact=True).first.click()
+
+    def apply_filter_by_name(self, filter_name: str, filter_value: str) -> None:
+        self.filter_combobox(filter_name).click()
+        self.search_text_field.fill(filter_value)
+        # TODO: remove 'first' after fixing CMK-19975
+        self.dropdown_option(filter_value, exact=True).first.click()
 
     def apply_filters(self, expected_locator: Locator) -> None:
         logger.info("Apply filters")

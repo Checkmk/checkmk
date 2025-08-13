@@ -8,7 +8,7 @@ from re import Pattern
 from typing import override
 from urllib.parse import quote_plus
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
@@ -23,7 +23,23 @@ class BaseDashboard(CmkPage):
     It provides common functionality and properties that are shared across different dashboard pages.
     """
 
+    page_title: str
     dropdown_buttons: list[str] = ["Dashboard", "Add", "Dashboards", "Display", "Help"]
+
+    def __init__(
+        self,
+        page: Page,
+        navigate_to_page: bool = True,
+        timeout_assertions: int | None = None,
+        timeout_navigation: int | None = None,
+    ) -> None:
+        super().__init__(
+            page,
+            navigate_to_page=navigate_to_page,
+            contain_filter_sidebar=True,
+            timeout_assertions=timeout_assertions,
+            timeout_navigation=timeout_navigation,
+        )
 
     @override
     def navigate(self) -> None:
@@ -41,26 +57,19 @@ class BaseDashboard(CmkPage):
         setattr(mapping, "Dashboards", "menu_dashboards")
         return mapping
 
-    @property
-    def enter_layout_mode_icon(self) -> Locator:
-        return self.main_area.locator().get_by_role("link", name="Enter layout mode")
-
-    @property
-    def delete_confirmation_window(self) -> Locator:
-        return self.main_area.locator("div[class*='confirm_popup']")
-
-    @property
-    def delete_confirmation_button(self) -> Locator:
-        return self.delete_confirmation_window.get_by_role("button", name="Yes")
-
     def menu_icon(self, icon_title: str) -> Locator:
         return self.main_area.locator("table#page_menu_bar").get_by_title(icon_title)
 
+    @property
+    def dashlets(self) -> Locator:
+        """Locator for all dashlets on the page."""
+        return self.main_area.locator("div.dashlet")
+
     def dashlet(self, dashlet_name: str) -> Locator:
-        return self.main_area.locator(f"div[class*='dashlet ']:has(:text-is('{dashlet_name}'))")
+        return self.main_area.locator(f"div.dashlet:has(:text-is('{dashlet_name}'))")
 
     def total_count(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).locator("a[class='count ']")
+        return self.dashlet(dashlet_title).get_by_role("row", name="Total").locator("a.count")
 
     def dashlet_svg(self, dashlet_name: str) -> Locator:
         return self.dashlet(dashlet_name).locator("svg")
@@ -70,16 +79,17 @@ class BaseDashboard(CmkPage):
 
     def dashlet_table(self, dashlet_title: str) -> Locator:
         if self.dashlet(dashlet_title).locator("iframe").count() > 0:
-            return (
-                self.dashlet(dashlet_title).frame_locator("iframe").locator("table[class*='data']")
-            )
-        return self.dashlet(dashlet_title).locator("table[class*='data']")
+            return self.dashlet(dashlet_title).frame_locator("iframe").locator("table.data")
+        return self.dashlet(dashlet_title).locator("table.data")
 
     def dashlet_table_rows(self, dashlet_title: str) -> Locator:
-        return self.dashlet_table(dashlet_title).locator("tr[class*='data']")
+        return self.dashlet_table(dashlet_title).locator("tr.data")
+
+    def dashlet_table_column_cells(self, dashlet_title: str, *, column_index: int) -> Locator:
+        return self.dashlet_table_rows(dashlet_title).locator(f"> td:nth-child({column_index})")
 
     def _hexagon_chart(self, dashlet_title: str, status: str) -> Locator:
-        return self.dashlet(dashlet_title).locator(f"path[class='hexagon {status}']")
+        return self.dashlet(dashlet_title).locator(f"path.hexagon.{status}")
 
     def check_hexagon_chart_is_not_empty(self, dashlet_title: str) -> None:
         statuses = ["ok", "downtime", "unknown", "critical"]
@@ -116,12 +126,43 @@ class BaseDashboard(CmkPage):
     def delete_dashlet_button(self, dashlet_title: str) -> Locator:
         return self.dashlet(dashlet_title).get_by_title("Delete this element")
 
-    def enter_layout_mode(self) -> None:
-        if self.enter_layout_mode_icon.is_visible():
-            self.enter_layout_mode_icon.click()
-        else:
-            self.main_area.click_item_in_dropdown_list("Dashboard", "Clone built-in dashboard")
-        self.page.wait_for_load_state("load")
+    def clone_built_in_dashboard(self) -> None:
+        """Clone the built-in dashboard."""
+        self.main_area.click_item_in_dropdown_list("Dashboard", "Clone built-in dashboard")
+
+    def check_number_of_dashlets(self, expected_count: int) -> None:
+        """Check that the number of dashlets on the page matches the expected count.
+
+        Args:
+            expected_count: The expected number of dashlets on the page.
+        """
+        expect(
+            self.dashlets,
+            message=f"Expected {expected_count} dashlets, but found {self.dashlets.count()}.",
+        ).to_have_count(expected_count)
+
+    def apply_filter_to_the_dashboard(
+        self,
+        filter_name: str,
+        filter_value: str,
+        open_filters_popup: bool = True,
+    ) -> None:
+        """Apply a filter to the dashboard on the filters popup.
+
+        Args:
+            filter_name: The name of the filter to apply (e.g., "Host name (regex)").
+            filter_value: The value to filter by (host name).
+            open_filters_popup: Whether to open the filters popup before applying the filter.
+        """
+        if open_filters_popup:
+            self.main_area.click_item_in_dropdown_list("Display", "Filter")
+
+        self.filter_sidebar.expect_to_be_visible()
+        self.filter_sidebar.apply_filter_by_name(filter_name, filter_value)
+        self.filter_sidebar.apply_filters_button.click()
+        self.filter_sidebar.expect_to_be_hidden()
+
+        self.validate_page()
 
 
 class Dashboard(BaseDashboard):

@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 class HostsDashboard(BaseDashboard):
     """Represent a base class for 'Linux hosts' and 'Windows hosts' pages."""
 
-    page_title: str = ""
-
     chart_dashlets: list[str] = []
     table_dashlets: list[str] = []
     plot_dashlets: list[str] = []
@@ -39,8 +37,10 @@ class HostsDashboard(BaseDashboard):
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self.dashlet(self.chart_dashlets[0])).to_be_visible()
-        expect(self.dashlet(self.table_dashlets[0])).to_be_visible()
+        expect(
+            self.main_area.locator("div#dashboard"),
+            message=f"Dashboard '{self.page_title}' is not loaded",
+        ).to_be_visible()
 
 
 class LinuxHostsDashboard(HostsDashboard):

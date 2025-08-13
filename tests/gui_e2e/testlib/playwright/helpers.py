@@ -81,6 +81,16 @@ class LocatorHelper(ABC):
         method.
         """
 
+    def expect_to_be_visible(self) -> None:
+        expect(
+            self.locator(), message=f"{self.__class__.__name__} main element is not visible"
+        ).to_be_visible()
+
+    def expect_to_be_hidden(self) -> None:
+        expect(
+            self.locator(), message=f"{self.__class__.__name__} main element is not hidden"
+        ).to_be_hidden()
+
     def check_success(self, message: str | Pattern) -> None:
         """Check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message)

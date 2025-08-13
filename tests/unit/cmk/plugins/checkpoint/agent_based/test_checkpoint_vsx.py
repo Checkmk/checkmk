@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.base.legacy_checks.checkpoint_vsx import (
+from cmk.plugins.checkpoint.agent_based.checkpoint_vsx import (
     check_checkpoint_vsx,
     check_checkpoint_vsx_connections,
     check_checkpoint_vsx_packets,
@@ -97,7 +97,7 @@ def test_check_checkpoint_connections() -> None:
 
 def test_check_checkpoint_packets(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.base.legacy_checks.checkpoint_vsx.get_value_store",
+        "cmk.plugins.checkpoint.agent_based.checkpoint_vsx.get_value_store",
         lambda: {
             "packets_rate": (0, 150512),
             "packets_accepted_rate": (0, 150143),
@@ -138,7 +138,7 @@ def test_check_checkpoint_packets(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_check_checkpoint_vsx_traffic(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.base.legacy_checks.checkpoint_vsx.get_value_store",
+        "cmk.plugins.checkpoint.agent_based.checkpoint_vsx.get_value_store",
         lambda: {
             "bytes_accepted_rate": (0, 46451524),
             "bytes_dropped_rate": (0, 44344),

@@ -91,7 +91,7 @@ class SiteConfiguration(TypedDict):
     proxy: ProxyConfig | None
     replicate_ec: bool
     replicate_mkps: bool
-    replication: str | None
+    replication: Literal["slave"] | None
     message_broker_port: int
     secret: NotRequired[str]  # Set when doing the site login
     status_host: tuple[SiteId, str] | None

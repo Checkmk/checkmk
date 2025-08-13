@@ -11,16 +11,12 @@ from cmk.mkp_tool import PackageOperationCallbacks, PackagePart
 
 from .config import MkpRulePackProxy
 from .rule_packs import export_rule_pack, load_rule_packs, save_rule_packs
+from .settings import create_paths
 
 
 def rule_pack_dir() -> Path:
     """Returns the default WATO directory of the Event Console."""
     return cmk.utils.paths.default_config_dir / "mkeventd.d/wato"
-
-
-def mkp_rule_pack_dir() -> Path:
-    """Returns the default directory for rule pack exports of the Event Console."""
-    return cmk.utils.paths.default_config_dir / "mkeventd.d/mkp/rule_packs"
 
 
 def _install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
@@ -76,7 +72,11 @@ def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         rp = rule_packs[index]
         if not isinstance(rp, MkpRulePackProxy):
             save = True
-            export_rule_pack(rp, pretty_print=False, path=mkp_rule_pack_dir())
+            export_rule_pack(
+                rp,
+                pretty_print=False,
+                path=create_paths(cmk.utils.paths.omd_root).mkp_rule_pack_dir.value,
+            )
             rule_packs[index] = MkpRulePackProxy(id_)
 
     if save:

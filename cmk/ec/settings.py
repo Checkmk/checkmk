@@ -43,6 +43,7 @@ class Paths(NamedTuple):
     system_mibs_dir: AnnotatedPath
     compiled_mibs_dir: AnnotatedPath
     mongodb_config_file: AnnotatedPath
+    mkp_rule_pack_dir: AnnotatedPath
 
 
 def create_paths(omd_root: Path) -> Paths:
@@ -77,6 +78,9 @@ def create_paths(omd_root: Path) -> Paths:
             "compiled MIBs directory", omd_root / "local/share/check_mk/compiled_mibs"
         ),
         mongodb_config_file=AnnotatedPath("MongoDB configuration", omd_root / "etc/mongodb.conf"),
+        mkp_rule_pack_dir=AnnotatedPath(
+            "exported rule pack directory", omd_root / "etc/check_mk/mkeventd.d/mkp/rule_packs"
+        ),
     )
 
 

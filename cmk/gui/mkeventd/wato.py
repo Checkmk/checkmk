@@ -308,7 +308,11 @@ def register(
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="mkeventd_mkp",
-            site_path=str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
+            site_path=str(
+                ec.create_paths(cmk.utils.paths.omd_root).mkp_rule_pack_dir.value.relative_to(
+                    cmk.utils.paths.omd_root
+                )
+            ),
         )
     )
 
@@ -1503,10 +1507,6 @@ def _save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack], *, pretty_print: b
     ec.save_rule_packs(rule_packs, pretty_print=pretty_print, path=ec.rule_pack_dir())
 
 
-def _export_mkp_rule_pack(rule_pack: ec.ECRulePack, *, pretty_print: bool) -> None:
-    ec.export_rule_pack(rule_pack, pretty_print=pretty_print, path=ec.mkp_rule_pack_dir())
-
-
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -1549,6 +1549,13 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             (self._paths.checkmk_mibs_dir.value, _("MIBs shipped with Checkmk")),
             (self._paths.system_mibs_dir.value, _("System MIBs")),
         ]
+
+    def _export_mkp_rule_pack(self, rule_pack: ec.ECRulePack, config: Config) -> None:
+        ec.export_rule_pack(
+            rule_pack,
+            pretty_print=config.mkeventd_pprint_rules,
+            path=self._paths.mkp_rule_pack_dir.value,
+        )
 
     def _verify_ec_enabled(self, *, enabled: bool) -> None:
         if not enabled:
@@ -1624,7 +1631,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             if edition(cmk.utils.paths.omd_root) is Edition.CRE
             else cmk.mkp_tool.id_to_mkp(
                 cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.mkp_tool.all_rule_pack_files(ec.mkp_rule_pack_dir()),
+                cmk.mkp_tool.all_rule_pack_files(self._paths.mkp_rule_pack_dir.value),
                 cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
             )
         )
@@ -1881,7 +1888,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             except KeyError:
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
-            _export_mkp_rule_pack(rule_pack, pretty_print=config.mkeventd_pprint_rules)
+            self._export_mkp_rule_pack(rule_pack, config)
             self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
             _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             self._add_change(
@@ -1901,7 +1908,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 raise MKUserError("_dissolve", _("rule pack was not exported"))
             self._rule_packs[nr] = rp.get_rule_pack_spec()
             _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
-            ec.remove_exported_rule_pack(self._rule_packs[nr], ec.mkp_rule_pack_dir())
+            ec.remove_exported_rule_pack(self._rule_packs[nr], self._paths.mkp_rule_pack_dir.value)
             self._add_change(
                 action_name="dissolve-rule-pack",
                 text=_("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"],
@@ -1926,7 +1933,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Synchronize modified rule pack with MKP
         elif request.has_var("_synchronize"):
             nr = request.get_integer_input_mandatory("_synchronize")
-            _export_mkp_rule_pack(self._rule_packs[nr], pretty_print=config.mkeventd_pprint_rules)
+            self._export_mkp_rule_pack(self._rule_packs[nr], config)
             try:
                 rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
                 self._rule_packs[nr] = rp
@@ -2359,11 +2366,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     self._rule_packs[self._rule_pack_nr]["rules"] = rules
 
                     if other_type_ == ec.RulePackType.exported:
-                        _export_mkp_rule_pack(other_pack, pretty_print=config.mkeventd_pprint_rules)
+                        self._export_mkp_rule_pack(other_pack, config)
                     if type_ == ec.RulePackType.exported:
-                        _export_mkp_rule_pack(
-                            self._rule_pack, pretty_print=config.mkeventd_pprint_rules
-                        )
+                        self._export_mkp_rule_pack(self._rule_pack, config)
                     _save_mkeventd_rules(
                         self._rule_packs, pretty_print=config.mkeventd_pprint_rules
                     )
@@ -2397,7 +2402,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
-                _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+                self._export_mkp_rule_pack(self._rule_pack, config)
             _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -2418,7 +2423,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
-                _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+                self._export_mkp_rule_pack(self._rule_pack, config)
             _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
             self._add_change(
@@ -2779,7 +2784,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._rule_packs.insert(0, self._rule_pack)
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
-            _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+            self._export_mkp_rule_pack(self._rule_pack, config)
         elif self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
             self._rule_packs[self._edit_nr] = self._rule_pack
         else:
@@ -2986,7 +2991,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         self._rule_pack["rules"] = rules
 
         if type_ == ec.RulePackType.exported:
-            _export_mkp_rule_pack(self._rule_pack, pretty_print=config.mkeventd_pprint_rules)
+            self._export_mkp_rule_pack(self._rule_pack, config)
         _save_mkeventd_rules(self._rule_packs, pretty_print=config.mkeventd_pprint_rules)
 
         if self._new:

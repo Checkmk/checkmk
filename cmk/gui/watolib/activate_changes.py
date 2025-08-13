@@ -2879,6 +2879,7 @@ def make_path_config() -> mkp_tool.PathConfig | None:
         return None
     if (addons_path := addons_plugins_local_path()) is None:
         return None
+    ec_paths = ec.create_paths(paths.omd_root)
     return mkp_tool.PathConfig(
         cmk_plugins_dir=local_path,
         cmk_addons_plugins_dir=addons_path,
@@ -2894,8 +2895,8 @@ def make_path_config() -> mkp_tool.PathConfig | None:
         lib_dir=paths.local_lib_dir,
         locale_dir=paths.local_locale_dir,
         local_root=paths.local_root,
-        mib_dir=ec.create_paths(paths.omd_root).local_mibs_dir.value,
-        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        mib_dir=ec_paths.local_mibs_dir.value,
+        mkp_rule_pack_dir=ec_paths.mkp_rule_pack_dir.value,
         notifications_dir=paths.local_notifications_dir,
         pnp_templates_dir=paths.local_pnp_templates_dir,
         web_dir=paths.local_web_dir,

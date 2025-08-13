@@ -23,6 +23,7 @@ pub enum Id {
     LogSwitches,
     LongActiveSessions,
     Processes,
+    RecoveryStatus,
 }
 
 pub mod query {
@@ -267,6 +268,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::LogSwitches, query::LOGSWITCHES_META),
         query::build_query_metadata(Id::LongActiveSessions, query::LONGACTIVESESSIONS_META),
         query::build_query_metadata(Id::Processes, query::PROCESSES_META),
+        query::build_query_metadata(Id::RecoveryStatus, query::RECOVERY_STATUS_META),
     ])
 });
 

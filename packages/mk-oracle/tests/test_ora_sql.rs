@@ -467,3 +467,54 @@ fn test_processes() {
         assert!(array[2].parse::<u32>().is_ok());
     }
 }
+
+#[test]
+fn test_recovery_status_last() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::RecoveryStatus, None);
+        for r in rows {
+            let array = r.split('|').collect::<Vec<&str>>();
+            assert_eq!(array.len(), 13);
+            assert!(array[0].starts_with(endpoint.instance.as_str()));
+            assert_eq!(array[1], endpoint.instance.as_str());
+            assert!(!array[2].is_empty());
+            assert!(!array[3].is_empty());
+            assert!(array[4].parse::<u32>().is_ok());
+            assert!(array[5].parse::<u32>().is_ok());
+            assert!(array[6].parse::<u64>().is_ok());
+            assert!(!array[7].is_empty());
+            assert!(!array[9].is_empty());
+            assert!(array[10].parse::<u32>().is_ok());
+        }
+    }
+}
+
+#[test]
+fn test_recovery_status_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::RecoveryStatus,
+            Some(InstanceNumVersion::from(12_00_00_00)),
+        );
+        assert!(rows.len() > 10);
+        for r in rows {
+            let array = r.split('|').collect::<Vec<&str>>();
+            assert_eq!(array.len(), 11);
+            assert_eq!(array[0], endpoint.instance.as_str());
+            assert_eq!(array[1], endpoint.instance.as_str());
+            assert!(!array[2].is_empty());
+            assert!(!array[3].is_empty());
+            assert!(array[4].parse::<u32>().is_ok());
+            assert!(array[5].parse::<u32>().is_ok());
+            assert!(array[6].parse::<u64>().is_ok());
+            assert!(!array[7].is_empty());
+            assert!(!array[9].is_empty());
+            assert!(array[10].parse::<u32>().is_ok());
+        }
+    }
+}

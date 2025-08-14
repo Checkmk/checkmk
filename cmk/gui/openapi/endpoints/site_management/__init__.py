@@ -107,25 +107,6 @@ def put_site(params: Mapping[str, Any]) -> Response:
     )
 
 
-@Endpoint(
-    constructors.object_action_href("site_connection", "{site_id}", "logout"),
-    "cmk/site_logout",
-    method="post",
-    tag_group="Setup",
-    path_params=[SITE_ID_EXISTS],
-    output_empty=True,
-    permissions_required=PERMISSIONS,
-)
-def site_logout(params: Mapping[str, Any]) -> Response:
-    """Logout from a remote site"""
-    user.need_permission("wato.sites")
-    SitesApiMgr().logout_of_site(
-        params["site_id"],
-        pprint_value=active_config.wato_pprint_config,
-    )
-    return Response(status=204)
-
-
 def _serialize_site(site: SiteConfig) -> DomainObject:
     site_config = dict(site.to_external())
 
@@ -188,4 +169,3 @@ def _convert_validate_and_save_site_data(
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
     endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
-    endpoint_registry.register(site_logout, ignore_duplicates=ignore_duplicates)

@@ -11,6 +11,10 @@ pub fn header(name: &str, separator: char) -> String {
     format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>")
 }
 
+pub fn signaling_header(name: &str) -> String {
+    format!("<<<{PREFIX}_{name}>>>")
+}
+
 pub fn piggyback_header(piggyback_host_name: &PiggybackHostName) -> String {
     format!("<<<<{piggyback_host_name}>>>>")
 }

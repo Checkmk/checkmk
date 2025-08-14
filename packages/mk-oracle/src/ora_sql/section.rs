@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, section, section::names};
-use crate::emit::header;
+use crate::emit::{header, signaling_header};
 use crate::ora_sql::sqls;
 use crate::types::SectionAffinity;
 use crate::types::{InstanceNumVersion, SectionName, Tenant};
@@ -54,7 +54,7 @@ impl Section {
         if self.header_name.as_str() == section::names::ASM_INSTANCE {
             return None;
         }
-        Some(header(&self.header_name, self.sep))
+        Some(signaling_header(&self.header_name))
     }
 
     pub fn to_work_header(&self) -> String {
@@ -125,22 +125,18 @@ impl Section {
         sql_dir: Option<PathBuf>,
         instance_version: InstanceNumVersion,
     ) -> Option<String> {
-        if let Some(dir) = sql_dir {
-            if let Ok(versioned_files) = find_sql_files(&dir, &self.header_name) {
-                for (min_version, sql_file) in versioned_files {
-                    if instance_version >= InstanceNumVersion::from(min_version) {
-                        #[allow(clippy::all)]
-                        return read_to_string(&sql_file)
-                            .map_err(|e| {
-                                log::error!("Can't read file {:?} {}", &sql_file, &e);
-                                e
-                            })
-                            .ok();
-                    }
-                }
-            };
-        }
-        None
+        let dir = sql_dir?;
+        let versioned_files = find_sql_files(&dir, &self.header_name).ok()?;
+        versioned_files
+            .into_iter()
+            .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
+            .and_then(|(_, sql_file)| {
+                read_to_string(&sql_file)
+                    .inspect_err(|e| {
+                        log::error!("Can't read file {:?} {}", &sql_file, &e);
+                    })
+                    .ok()
+            })
     }
     fn find_known_query(
         id: sqls::Id,
@@ -235,7 +231,7 @@ mod tests {
         let section = Section::make_instance_section();
         assert_eq!(
             section.to_signaling_header().unwrap(),
-            "<<<oracle_instance:sep(124)>>>"
+            "<<<oracle_instance>>>"
         );
         assert_eq!(section.to_work_header(), "<<<oracle_instance:sep(124)>>>");
 
@@ -247,7 +243,7 @@ mod tests {
         );
         assert_eq!(
             section.to_signaling_header().unwrap(),
-            "<<<oracle_backup:sep(124)>>>"
+            "<<<oracle_backup>>>"
         );
         assert!(section
             .to_work_header()

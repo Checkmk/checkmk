@@ -54,6 +54,7 @@ class AzureParams(BaseModel):
         tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
     ) = None
     connection_test: bool = False  # only used by quick setup
+    safe_hostnames: bool = False
 
 
 def _tag_based_args(tag_based: list[TagBased]) -> list[str]:
@@ -130,6 +131,9 @@ def agent_azure_arguments(
                 for p in params.services
             ],
         ]
+
+    if params.safe_hostnames:
+        args += ["--safe-hostnames"]
 
     config = params.config
 

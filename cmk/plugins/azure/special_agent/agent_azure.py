@@ -369,6 +369,13 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="List of services to monitor",
     )
     parser.add_argument(
+        "--safe-hostnames",
+        default=False,
+        action="store_true",
+        help="Create safe host names for piggyback hosts to avoid conflicts in entity names in Azure. "
+        "This option will append the last part of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'",
+    )
+    parser.add_argument(
         "--authority",
         default="global",
         choices=["global", "china"],

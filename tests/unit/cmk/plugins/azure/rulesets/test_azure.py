@@ -32,6 +32,7 @@ AZURE_VS_RULESET_VALUE: Final = {
     },
     "piggyback_vms": "grouphost",
     "import_tags": ("filter_tags", "my_tag"),
+    "safe_hostnames": False,
 }
 
 AZURE_FS_RULESET_VALUE: Final = {

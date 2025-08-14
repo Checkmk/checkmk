@@ -47,6 +47,7 @@ ARGV = [
     "value2",
     "--cache-id",
     "testhost",
+    "--safe-hostnames",
 ]
 
 ARGS = Args(
@@ -70,6 +71,7 @@ ARGS = Args(
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
+    safe_hostnames=True,
 )
 
 
@@ -100,6 +102,7 @@ ARGS = Args(
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
+                "argparse: safe_hostnames = True",
             ],
         ),
     ],

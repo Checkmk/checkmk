@@ -8,6 +8,7 @@ from typing import Final
 from cmk.ccc.version import Edition, edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -324,6 +325,19 @@ def configuration_services() -> Mapping[str, DictElement]:
 
 def configuration_advanced() -> Mapping[str, DictElement]:
     return {
+        "safe_hostnames": DictElement(
+            parameter_form=BooleanChoice(
+                label=Label("Enable safe host names"),
+                help_text=Help(
+                    "Using this option will let Checkmk create safe host names for piggyback hosts "
+                    "to avoid conflicts in entity names in Azure. This option will append the last part "
+                    "of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'. "
+                    "Enable this option if you have resources or resource groups with the same name."
+                ),
+                prefill=DefaultValue(False),
+            ),
+            required=True,
+        ),
         "config": DictElement(
             parameter_form=Dictionary(
                 title=Title("Retrieve information"),

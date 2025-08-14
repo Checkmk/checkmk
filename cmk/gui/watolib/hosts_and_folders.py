@@ -3405,9 +3405,26 @@ class Host:
         The labels of all parent folders and the host are added together. When multiple
         objects define the same tag group, the nearest to the host wins."""
         labels: dict[str, str] = {}
+
+        all_attributes = self._folder.tree.all_host_attributes()
+
+        def set_attribute_labels(
+            labels: dict[str, str],
+            object_attributes: HostAttributes,
+            all_attributes: Mapping[str, ABCHostAttribute],
+        ) -> None:
+            for name, value in object_attributes.items():
+                attr = all_attributes.get(name)
+                if attr and (attr_labels := attr.labels(value)):
+                    labels.update(attr_labels)
+
         for obj in parent_folder_chain(self.folder()) + [self.folder()]:
             labels.update(obj.attributes.get("labels", {}).items())
+            set_attribute_labels(labels, obj.attributes, all_attributes)
+
         labels.update(self.attributes.get("labels", {}).items())
+        set_attribute_labels(labels, self.attributes, all_attributes)
+
         return labels
 
     def groups(self) -> tuple[set[_ContactgroupName], set[_ContactgroupName], bool]:

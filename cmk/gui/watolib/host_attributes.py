@@ -146,7 +146,7 @@ class BuiltInHostAttributes(TypedDict, total=False):
     # Enterprise editions only
     cmk_agent_connection: Literal["push-agent", "pull-agent"]
     # Cloud editions only
-    relay: bool
+    relay: str
 
 
 class BuiltInHostTagGroups(TypedDict, total=False):
@@ -450,6 +450,13 @@ class ABCHostAttribute(abc.ABC):
         Only use this for tag group and tag combinations which are defined in the configuration of
         existing tags. The 'site' attribute violates this principle, but is kept for compatibility
         reasons. You may want to use labels instead, which give you more freedom.
+        """
+        return {}
+
+    def labels(self, value: Any) -> Labels:
+        """Set host labels based on the attributes value
+
+        Returns a set of host labels which are added to the effective explicit hosts labels.
         """
         return {}
 

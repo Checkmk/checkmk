@@ -749,9 +749,9 @@ fakeredis[lua]==2.26.1 \
     --hash=sha256:68a5615d7ef2529094d6958677e30a6d30d544e203a5ab852985c19d7ad57e32 \
     --hash=sha256:69f4daafe763c8014a6dbf44a17559c46643c95447b3594b3975251a171b806d
     # via -r requirements_dev.txt
-fastapi==0.115.6 \
-    --hash=sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654 \
-    --hash=sha256:e9240b29e36fa8f4bb7290316988e90c381e5092e0cbe84e7818cc3713bcf305
+fastapi==0.116.1 \
+    --hash=sha256:c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565 \
+    --hash=sha256:ed52cbf946abfd70c5a0dccb24673f0670deeb517a88b3544d03c2a6bf283143
     # via -r requirements_all.txt
 feedparser==6.0.11 \
     --hash=sha256:0be7ee7b395572b19ebeb1d6aafb0028dee11169f1c934e0ed67d54992f4ad45 \
@@ -3844,9 +3844,9 @@ sphinxcontrib-spelling==8.0.0 \
     --hash=sha256:199d0a16902ad80c387c2966dc9eb10f565b1fb15ccce17210402db7c2443e5c \
     --hash=sha256:b27e0a16aef00bcfc888a6490dc3f16651f901dc475446c6882834278c8dc7b3
     # via -r requirements_dev.txt
-starlette==0.41.3 \
-    --hash=sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835 \
-    --hash=sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7
+starlette==0.47.3 \
+    --hash=sha256:6bc94f839cc176c4858894f1f8908f0ab79dfec1a6b8402f6da9be26ebea52e9 \
+    --hash=sha256:89c0778ca62a76b826101e7c709e70680a1699ca7da6b44d38eb0a7e61fe4b51
     # via
     #   -r requirements_all.txt
     #   fastapi
@@ -4145,6 +4145,7 @@ typing-extensions==4.15.0 \
     #   pydantic-core
     #   pyee
     #   referencing
+    #   starlette
     #   types-lxml
 tzdata==2025.2 \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \

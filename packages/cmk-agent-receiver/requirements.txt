@@ -1,5 +1,5 @@
 cryptography==43.0.3
-fastapi==0.115.6
+fastapi==0.116.1
 gunicorn==23.0.0
 h11==0.16.0
 httpx==0.28.1
@@ -7,5 +7,5 @@ pytest-mock==3.14.0
 python-dateutil==2.9.0.post0
 python-multipart==0.0.19
 requests==2.32.4
-starlette==0.41.3
+starlette==0.47.3
 uvicorn==0.32.1

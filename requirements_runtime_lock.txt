@@ -517,9 +517,9 @@ exchangelib==5.4.0 \
     --hash=sha256:8fc6a98e7cc7b203f1eafc332ddf19c46979809f7138d2411e19491fcb7aa69a \
     --hash=sha256:edd4f5bca3b6dc67a3ad02f4b6d02ea141bff0788e5eb692d3bd09dc16a9a897
     # via -r _requirements_runtime.txt
-fastapi==0.115.6 \
-    --hash=sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654 \
-    --hash=sha256:e9240b29e36fa8f4bb7290316988e90c381e5092e0cbe84e7818cc3713bcf305
+fastapi==0.116.1 \
+    --hash=sha256:c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565 \
+    --hash=sha256:ed52cbf946abfd70c5a0dccb24673f0670deeb517a88b3544d03c2a6bf283143
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
@@ -2599,9 +2599,9 @@ snmpsim-lextudio==1.1.0 \
     --hash=sha256:0d6fe597652b8c0fd517433f0c92b67ad9febbc8733f6658d2aea3b1e3d35e59 \
     --hash=sha256:24eaeacac89fea434126ec3f9c8cf96ebfb27fa7a81b4d4736137c977391b281
     # via -r _requirements_runtime.txt
-starlette==0.41.3 \
-    --hash=sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835 \
-    --hash=sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7
+starlette==0.47.3 \
+    --hash=sha256:6bc94f839cc176c4858894f1f8908f0ab79dfec1a6b8402f6da9be26ebea52e9 \
+    --hash=sha256:89c0778ca62a76b826101e7c709e70680a1699ca7da6b44d38eb0a7e61fe4b51
     # via
     #   -r packages/cmk-agent-receiver/requirements.txt
     #   fastapi
@@ -2700,6 +2700,7 @@ typing-extensions==4.15.0 \
     #   pydantic
     #   pydantic-core
     #   referencing
+    #   starlette
 tzdata==2025.2 \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
     --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9

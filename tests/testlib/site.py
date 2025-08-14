@@ -861,7 +861,7 @@ class Site:
         return output.strip().split("\n") if output else []
 
     def system_temp_dir(self) -> Iterator[str]:
-        stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])  # nosec
+        stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])
         assert stdout is not None
         path = stdout.strip()
 
@@ -1431,17 +1431,7 @@ class Site:
         # We set this config option here trying to catch this kind of issue.
         self.openapi.rules.create(
             ruleset_name="fileinfo_groups",
-            value={
-                "group_patterns": [
-                    {
-                        "group_name": "TESTGROUP",
-                        "pattern_configs": {
-                            "include_pattern": "*gwia*",
-                            "exclude_pattern": "",
-                        },
-                    }
-                ],
-            },
+            value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
             folder="/",
         )
 
@@ -1751,7 +1741,7 @@ class Site:
 
     def read_global_settings(self, relative_path: Path) -> dict[str, object]:
         global_settings: dict[str, object] = {}
-        exec(self.read_file(relative_path), {}, global_settings)  # nosec
+        exec(self.read_file(relative_path), {}, global_settings)
         return global_settings
 
     def write_global_settings(
@@ -1774,7 +1764,7 @@ class Site:
         self, relative_path: Path
     ) -> dict[str, dict[str, dict[str, object]]]:
         site_specific_settings: dict[str, dict[str, dict[str, object]]] = {"sites": {}}
-        exec(self.read_file(relative_path), {}, site_specific_settings)  # nosec
+        exec(self.read_file(relative_path), {}, site_specific_settings)
         return site_specific_settings
 
     def write_site_specific_settings(
@@ -2007,7 +1997,7 @@ class SiteFactory:
         target_package: CMKPackageInfo,
         min_version: CMKVersion,
         conflict_mode: str = "keepold",
-        logfile_path: str = "/tmp/sep.out",  # nosec
+        logfile_path: str = "/tmp/sep.out",
         timeout: int = 60,
         abort: bool = False,
         disable_extensions: bool = False,

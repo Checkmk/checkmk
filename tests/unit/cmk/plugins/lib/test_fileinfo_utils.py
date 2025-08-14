@@ -294,11 +294,7 @@ def test__filename_matches(
     [
         pytest.param(
             "my_folder/filename123",
-            {
-                "group_patterns": [
-                    {"group_pattern_include": "~my_folder/file.*", "group_pattern_exclude": ""}
-                ],
-            },
+            {"group_patterns": [("~my_folder/file.*", "")]},
             Fileinfo(
                 reftime=1563288717,
                 files={
@@ -341,11 +337,7 @@ def test__filename_matches(
         ),
         pytest.param(
             "my_folder/filename123",
-            {
-                "group_patterns": [
-                    {"group_pattern_include": "~my_folder/file.*", "group_pattern_exclude": ""}
-                ],
-            },
+            {"group_patterns": [("~my_folder/file.*", "")]},
             Fileinfo(
                 reftime=1563288717,
                 files={
@@ -390,13 +382,9 @@ def test__filename_matches(
         pytest.param(
             "my_folder/*.dat",
             {
-                "group_patterns": [
-                    {"group_pattern_include": "~my_folder/*.dat", "group_pattern_exclude": ""}
-                ],
-                "conjunctions": [
-                    {"monitoring_state": 2, "configs": [("age_oldest_lower", 129600)]}
-                ],
-                "maxcount": ("fixed", (10.0, 20.0)),
+                "group_patterns": [("~my_folder/*.dat", "")],
+                "conjunctions": [(2, [("age_oldest_lower", 129600)])],
+                "maxcount": (10, 20),
             },
             Fileinfo(
                 reftime=1563288717,
@@ -421,11 +409,7 @@ def test__filename_matches(
         ),
         pytest.param(
             "my_folder/filename123",
-            {
-                "group_patterns": [
-                    {"group_pattern_include": "~my_folder/file.*", "group_pattern_exclude": ""}
-                ],
-            },
+            {"group_patterns": [("~my_folder/file.*", "")]},
             Fileinfo(
                 reftime=1563288717,
                 files={
@@ -467,12 +451,7 @@ def test__filename_matches(
         ),
         pytest.param(
             "my_folder/filename123",
-            {
-                "group_patterns": [
-                    {"group_pattern_include": "~my_folder/file.*", "group_pattern_exclude": ""}
-                ],
-                "negative_age_tolerance": 150,
-            },
+            {"group_patterns": [("~my_folder/file.*", "")], "negative_age_tolerance": 150},
             Fileinfo(
                 reftime=1563288717,
                 files={
@@ -589,11 +568,7 @@ def test__fileinfo_check_function(
                 ("Size", "size", 17, render.filesize),
                 ("Newest age", "newest_age", 3, render.timespan),
             ],
-            {
-                "conjunctions": [
-                    {"monitoring_state": 2, "configs": [("size", 12), ("newest_age_lower", 86400)]}
-                ],
-            },
+            {"conjunctions": [(2, [("size", 12), ("newest_age_lower", 86400)])]},
             [
                 Result(
                     state=State.CRIT,

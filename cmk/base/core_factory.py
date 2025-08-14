@@ -66,7 +66,7 @@ def create_core(
 
                 helper_config_writers.append(
                     make_relay_config_writer(
-                        loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
+                        loaded_config, config_cache, label_manager, plugins, snmp_plugin_store
                     )
                 )
 

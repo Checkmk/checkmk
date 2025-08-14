@@ -354,9 +354,9 @@ boto3==1.37.24 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.40.8 \
-    --hash=sha256:326d7dc707b0b8438b6752f5765d33ef976b38de4503a0797f37ae6605f7c87b \
-    --hash=sha256:99358351f7386d22540af7250836556a483de62d6647ead2d0e367e6c34e53fd
+boto3-stubs[logs]==1.40.9 \
+    --hash=sha256:5f5917f4023d593cd1c85bda242d649a805919a5750330e04c57b7eadb188d32 \
+    --hash=sha256:9d1682fc4a53520b41df373988fde7ef1611f2b3e84f33eec542a3cc239a7a6c
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
@@ -1020,9 +1020,9 @@ google-api-core[grpc]==2.25.1 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-google-api-python-client==2.178.0 \
-    --hash=sha256:99cba921eb471bb5973b780c653ac54d96eef8a42f1b7375b7ab98f257a4414c \
-    --hash=sha256:f420adcd050150ff1baefa817e96e1ffa16872744f53471cd34096612e580c34
+google-api-python-client==2.179.0 \
+    --hash=sha256:76a774a49dd58af52e74ce7114db387e58f0aaf6760c9cf9201ab6d731d8bd8d \
+    --hash=sha256:79ab5039d70c59dab874fd18333fca90fb469be51c96113cb133e5fc1f0b2a79
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4637,9 +4637,9 @@ types-cffi==1.17.0.20250809 \
     # via
     #   -c requirements.txt
     #   types-pyopenssl
-types-docutils==0.21.0.20250809 \
-    --hash=sha256:af02c82327e8ded85f57dd85c8ebf93b6a0b643d85a44c32d471e3395604ea50 \
-    --hash=sha256:cc2453c87dc729b5aae499597496e4f69b44aa5fccb27051ed8bb55b0bd5e31b
+types-docutils==0.22.0.20250814 \
+    --hash=sha256:22ff141b85be203cb57999ca5fc94d7cf574a7065e19446920e3f11c7181700a \
+    --hash=sha256:84c645863419b38f949a93e77d31420fe4b5cacf95757b3104278318a95fc158
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
@@ -4674,9 +4674,9 @@ types-mypy-extensions==1.1.0.20250425 \
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
-types-oauthlib==3.3.0.20250809 \
-    --hash=sha256:141bc621f6887806fc0ea011bb2faa99d8e22b6be4c10b6305318a550c8c4f6f \
-    --hash=sha256:a62843d2edaef40e5dbd0e0327db93861c690f313c700ded23a0b79c2d5f9b09
+types-oauthlib==3.3.0.20250814 \
+    --hash=sha256:4140754e5db5344de36af4b79388c7af97e5fd861084bd959a3f6b513c86ca96 \
+    --hash=sha256:540b94dd351200e3efdb1f8df8b6d8816f5f94e027acb5251f11cc97302fe1f2
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
@@ -4977,9 +4977,9 @@ vcrpy==7.0.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-virtualenv==20.33.1 \
-    --hash=sha256:07c19bc66c11acab6a5958b815cbcee30891cd1c2ccf53785a28651a0d8d8a67 \
-    --hash=sha256:1b44478d9e261b3fb8baa5e74a0ca3bc0e05f21aa36167bf9cbf850e542765b8
+virtualenv==20.34.0 \
+    --hash=sha256:341f5afa7eee943e4984a9207c025feedd768baff6753cd660c857ceb3e36026 \
+    --hash=sha256:44815b2c9dee7ed86e387b842a84f20b93f7f417f95886ca1996a72a4138eb1a
     # via
     #   -c requirements.txt
     #   pre-commit

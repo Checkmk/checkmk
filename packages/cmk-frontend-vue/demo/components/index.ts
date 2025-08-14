@@ -32,6 +32,7 @@ import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
+import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
 
 export const pages = [
@@ -60,5 +61,6 @@ export const pages = [
   new Page('CmkList', DemoCmkList),
   new Page('CmkLinkCard', DemoCmkLinkCard),
   new Page('CmkCode', DemoCmkCode),
-  new Page('CmkCollapsible', DemoCmkCollapsible)
+  new Page('CmkCollapsible', DemoCmkCollapsible),
+  new Page('CmkKeyboardKey', DemoCmkKeyboardKey)
 ]

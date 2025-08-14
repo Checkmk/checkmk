@@ -20,7 +20,7 @@ devpi-client = "==7.0.2" # Managing the devpi server
 dill = "==0.3.8"
 docker = "==7.1.0"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
-fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
+fakeredis = {version = "==2.29.0", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 fastapi = "==0.103.2"  # needed to run fake idp for cse tests
 flake8 = "==7.0.0"
 freezegun = "==1.2.2"  # used by various unit tests, pinned because of 36 unit test failures (to be analyzed, probably https://github.com/spulec/freezegun/issues/521, hopefully fixed when https://github.com/spulec/freezegun/pull/525 is landed)

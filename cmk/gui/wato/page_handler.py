@@ -56,8 +56,6 @@ from .pages.not_implemented import ModeNotImplemented
 def page_handler(config: Config) -> None:
     initialize_wato_html_head()
 
-    # Required entrypoint to be able to render the slideout component from the sidebar
-    html.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
     if not config.wato_enabled:
         raise MKGeneralException(
             _(

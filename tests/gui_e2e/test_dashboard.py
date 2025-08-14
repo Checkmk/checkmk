@@ -173,7 +173,7 @@ def test_top_list_dashlets_settings(
     """
     hosts_dashboard_page = LinuxHostsDashboard(dashboard_page.page)
     hosts_dashboard_page.enter_layout_mode()
-    hosts_dashboard_page.edit_properties_button(dashlet_title).click()
+    hosts_dashboard_page.edit_dashlet_properties_button(dashlet_title).click()
     edit_element_top_list_page = EditElementTopList(dashboard_page.page, navigate_to_page=False)
     expect(
         edit_element_top_list_page.service_exact_match_search_field,
@@ -208,7 +208,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
 
     logger.info("Apply 'Site' filter for '%s' dashlet", dashlet_title)
     linux_hosts_dashboard_page.enter_layout_mode()
-    linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
+    linux_hosts_dashboard_page.edit_dashlet_properties_button(dashlet_title).click()
     edit_element_top_list_page = EditElementTopList(dashboard_page.page, navigate_to_page=False)
     edit_element_top_list_page.add_host_filter_site("Local site gui_e2e_central")
     edit_element_top_list_page.save_button.click()
@@ -218,7 +218,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
 
     logger.info("Apply 'Label' filter")
-    linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
+    linux_hosts_dashboard_page.edit_dashlet_properties_button(dashlet_title).click()
     edit_element_top_list_page.add_host_filter_host_labels("cmk/os_family:linux")
     edit_element_top_list_page.save_button.click()
     linux_hosts_dashboard_page.validate_page()
@@ -227,7 +227,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
 
     logger.info("Delete 'Site' filter")
-    linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
+    linux_hosts_dashboard_page.edit_dashlet_properties_button(dashlet_title).click()
     edit_element_top_list_page.remove_host_filter_button("Site").click()
     edit_element_top_list_page.save_button.click()
     linux_hosts_dashboard_page.validate_page()
@@ -236,7 +236,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
 
     logger.info("Delete 'Label' filter")
-    linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
+    linux_hosts_dashboard_page.edit_dashlet_properties_button(dashlet_title).click()
     edit_element_top_list_page.remove_host_filter_button("Host labels").click()
     edit_element_top_list_page.save_button.click()
 

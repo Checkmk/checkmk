@@ -7,15 +7,14 @@ import re
 from typing import override
 from urllib.parse import quote_plus
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
-from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.dashboard import BaseDashboard
 
 logger = logging.getLogger(__name__)
 
 
-class HostsDashboard(CmkPage):
+class HostsDashboard(BaseDashboard):
     """Represent a base class for 'Linux hosts' and 'Windows hosts' pages."""
 
     page_title: str = ""
@@ -42,92 +41,6 @@ class HostsDashboard(CmkPage):
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet(self.chart_dashlets[0])).to_be_visible()
         expect(self.dashlet(self.table_dashlets[0])).to_be_visible()
-
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        mapping = DropdownListNameToID()
-        setattr(mapping, "Dashboard", "menu_dashboard")
-        setattr(mapping, "Add", "menu_add_dashlets")
-        return mapping
-
-    @property
-    def enter_layout_mode_icon(self) -> Locator:
-        return self.main_area.locator().get_by_role("link", name="Enter layout mode")
-
-    def dashlet(self, dashlet_title: str) -> Locator:
-        return self.main_area.locator(f"div[class*='dashlet ']:has-text('{dashlet_title}')")
-
-    def dashlet_table(self, dashlet_title: str) -> Locator:
-        if self.dashlet(dashlet_title).locator("iframe").count() > 0:
-            return (
-                self.dashlet(dashlet_title).frame_locator("iframe").locator("table[class*='data']")
-            )
-        return self.dashlet(dashlet_title).locator("table[class*='data']")
-
-    def dashlet_table_rows(self, dashlet_title: str) -> Locator:
-        return self.dashlet_table(dashlet_title).locator("tr[class*='data']")
-
-    def dashlet_svg(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).locator("svg[class='renderer']")
-
-    def _hexagon_chart(self, dashlet_title: str, status: str) -> Locator:
-        return self.dashlet(dashlet_title).locator(f"path[class='hexagon {status}']")
-
-    def check_hexagon_chart_is_not_empty(self, dashlet_title: str) -> None:
-        statuses = ["ok", "downtime", "unknown", "critical"]
-        for status in statuses:
-            try:
-                expect(self._hexagon_chart(dashlet_title, status)).to_be_visible(timeout=3000)
-                return
-            except AssertionError:
-                continue
-        raise AssertionError(f"None of the hexagon charts in dashlet '{dashlet_title}' are visible")
-
-    def total_count(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).locator("a[class='count ']")
-
-    def scatterplot(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).locator("svg[class='renderer']")
-
-    def wait_for_scatterplot_to_load(self, dashlet_title: str, max_attempts: int = 30) -> None:
-        """Wait for scatter plot to be visible on the page.
-
-        When using agent dumps, the scatter plot takes some time to load.
-        """
-        logger.info("Wait for scatterplot '%s' to load", dashlet_title)
-        wait_time = 5
-        for _ in range(max_attempts):
-            try:
-                expect(self.scatterplot(dashlet_title)).to_be_visible(timeout=wait_time * 1000)
-            except AssertionError:
-                self.page.reload()
-            else:
-                return
-        raise AssertionError(
-            f"Scatterplot '{dashlet_title}' is not visible on the page after "
-            f"{max_attempts * wait_time} seconds"
-        )
-
-    def enter_layout_mode(self) -> None:
-        if self.enter_layout_mode_icon.is_visible():
-            self.enter_layout_mode_icon.click()
-        else:
-            self.main_area.click_item_in_dropdown_list("Dashboard", "Clone built-in dashboard")
-        self.page.wait_for_load_state("load")
-
-    def edit_properties_button(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).get_by_title("Edit properties of this element")
-
-    def delete_dashlet_button(self, dashlet_title: str) -> Locator:
-        return self.dashlet(dashlet_title).get_by_title("Delete this element")
-
-    @property
-    def delete_confirmation_window(self) -> Locator:
-        return self.main_area.locator("div[class*='confirm_popup']")
-
-    @property
-    def delete_confirmation_button(self) -> Locator:
-        return self.delete_confirmation_window.get_by_role("button", name="Yes")
 
 
 class LinuxHostsDashboard(HostsDashboard):
@@ -165,7 +78,7 @@ class WindowsHostsDashboard(HostsDashboard):
     page_title = "Windows hosts"
 
     table_dashlets = [
-        "Top 10: CPU utilization",
+        "Top 10: CPU utilization (Windows)",
         "Top 10: Memory utilization",
         "Top 10: Input bandwidth",
         "Top 10: Output bandwidth",

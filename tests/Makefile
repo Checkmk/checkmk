@@ -290,7 +290,7 @@ test-gui-e2e-cme:
 test-gui-e2e-cse:
 	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
-test-integration: test-integration-otel
+test-integration:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
 	--session-timeout 5400
 
@@ -300,7 +300,7 @@ test-integration-redfish:
 
 test-integration-otel:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration_otel) --session-timeout 1800
+	$(realpath integration/otel) --session-timeout 1800
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \

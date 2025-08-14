@@ -61,7 +61,7 @@ type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(
     ora_sql: &config::ora_sql::Config,
-    _environment: &Env,
+    environment: &Env,
 ) -> Result<Vec<String>> {
     // TODO: detect instances
     // TODO: apply to config detected instances
@@ -75,9 +75,17 @@ async fn generate_data(
         .product()
         .sections()
         .iter()
-        .map(|s| {
+        .filter_map(|s| {
+            if !s.is_allowed(environment.execution()) {
+                log::info!(
+                    "Skip section: {:?} not allowed in {:?}",
+                    s,
+                    environment.execution()
+                );
+                return None;
+            }
             let s = Section::new(s, ora_sql.product().cache_age());
-            s
+            Some(s)
         })
         .collect::<Vec<_>>();
     let mut output: Vec<String> = sections

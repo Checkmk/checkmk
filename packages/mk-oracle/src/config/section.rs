@@ -4,7 +4,7 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{SectionAffinity, SectionName};
+use crate::types::{SectionAffinity, SectionFilter, SectionName};
 use anyhow::Result;
 use log;
 use std::collections::HashMap;
@@ -213,6 +213,18 @@ impl Section {
     pub fn affinity(&self) -> &SectionAffinity {
         &self.affinity
     }
+
+    pub fn is_allowed(&self, execution: SectionFilter) -> bool {
+        match self.kind {
+            SectionKind::Sync => {
+                execution == SectionFilter::All || execution == SectionFilter::Sync
+            }
+            SectionKind::Async => {
+                execution == SectionFilter::All || execution == SectionFilter::Async
+            }
+            SectionKind::Disabled => false,
+        }
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -335,6 +347,24 @@ mod tests {
     use super::*;
     use crate::config::yaml::test_tools::create_yaml;
     use std::collections::HashSet;
+
+    #[test]
+    fn test_section_allowed() {
+        let async_section = SectionBuilder::new("async").set_async(true).build();
+        assert!(async_section.is_allowed(SectionFilter::All));
+        assert!(!async_section.is_allowed(SectionFilter::Sync));
+        assert!(async_section.is_allowed(SectionFilter::Async));
+
+        let sync_section = SectionBuilder::new("sync").set_async(false).build();
+        assert!(sync_section.is_allowed(SectionFilter::All));
+        assert!(sync_section.is_allowed(SectionFilter::Sync));
+        assert!(!sync_section.is_allowed(SectionFilter::Async));
+
+        let disabled = SectionBuilder::new("disabled").set_disabled().build();
+        assert!(!disabled.is_allowed(SectionFilter::All));
+        assert!(!disabled.is_allowed(SectionFilter::Sync));
+        assert!(!disabled.is_allowed(SectionFilter::Async));
+    }
 
     #[test]
     fn test_section_affinity() {

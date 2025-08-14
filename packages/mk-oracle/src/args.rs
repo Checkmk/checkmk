@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::types::SectionFilter;
 use crate::version;
 use clap::Parser;
 use std::path::PathBuf;
@@ -37,16 +38,20 @@ pub struct Args {
     #[arg(long)]
     pub no_spool: bool,
 
-    /// Clean caches
-    #[arg(long)]
-    pub clean_caches: bool,
-
     /// Use custom config file
     #[arg(short, long)]
     pub config_file: Option<PathBuf>,
 
     #[arg(long)]
     pub detect_only: bool,
+
+    /// Select which sections to execute.
+    /// If not specified, all sections are executed.
+    /// Use `all` to run all sections.
+    /// Use `sync` to run only synchronous sections.
+    /// Use `async` to run only asynchronous sections
+    #[arg(short, long)]
+    pub filter: Option<SectionFilter>,
 }
 
 impl Args {

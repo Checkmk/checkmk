@@ -233,6 +233,25 @@ fn use_sep<T: AsRef<str>>(s: T, sep: &str) -> String {
     s.as_ref().replace("{sep}", sep)
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+pub enum SectionFilter {
+    #[default]
+    All,
+    Sync,
+    Async,
+}
+
+impl From<&str> for SectionFilter {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "all" => SectionFilter::All,
+            "sync" => SectionFilter::Sync,
+            "async" => SectionFilter::Async,
+            _ => panic!("Invalid execution type: {}", s),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -314,5 +333,12 @@ mod tests {
         assert!(InstanceName::from("X").is_suitable_affinity(&SectionAffinity::Db));
         assert!(InstanceName::from("X").is_suitable_affinity(&SectionAffinity::All));
         assert!(!InstanceName::from("X").is_suitable_affinity(&SectionAffinity::Asm));
+    }
+
+    #[test]
+    fn test_execution() {
+        assert_eq!(SectionFilter::from("all"), SectionFilter::All);
+        assert_eq!(SectionFilter::from("SYNC"), SectionFilter::Sync);
+        assert_eq!(SectionFilter::from("aSync"), SectionFilter::Async);
     }
 }

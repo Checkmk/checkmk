@@ -6,6 +6,7 @@ use crate::args::Args;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants;
+use crate::types::SectionFilter;
 use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
@@ -28,6 +29,9 @@ pub struct Env {
 
     /// detect instances and stop
     detect_only: bool,
+
+    /// detect instances and stop
+    execution: SectionFilter,
 }
 
 impl Env {
@@ -44,6 +48,7 @@ impl Env {
             state_dir,
             disable_caching: args.no_spool,
             detect_only: args.detect_only,
+            execution: args.filter.clone().unwrap_or_default(),
         }
     }
 
@@ -68,6 +73,10 @@ impl Env {
 
     pub fn detect_only(&self) -> bool {
         self.detect_only
+    }
+
+    pub fn execution(&self) -> SectionFilter {
+        self.execution.clone()
     }
 
     /// guaranteed to return cache dir or None

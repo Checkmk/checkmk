@@ -9,10 +9,13 @@ import fastapi
 
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_register_relay_handler,
+    get_unregister_relay_handler,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RegisterRelayHandler,
     RelayAlreadyRegisteredError,
+    RelayNotFoundError,
+    UnregisterRelayHandler,
 )
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 
@@ -57,7 +60,10 @@ async def register_relay(
 
 
 @router.delete("/{relay_id}")
-async def unregister_relay(relay_id: str) -> None:
+async def unregister_relay(
+    relay_id: str,
+    handler: Annotated[UnregisterRelayHandler, fastapi.Depends(get_unregister_relay_handler)],
+) -> fastapi.Response:
     """Unregister a relay entity.
 
     This endpoint allows relay entities to be unregistered from the Agent Receiver.
@@ -72,10 +78,16 @@ async def unregister_relay(relay_id: str) -> None:
     Note:
         - Relay can be deleted regardless of existing tasks
         - Tasks belonging to deleted relay may need cleanup
+        - This endpoint is idempotent
     """
-    # Business logic for relay unregistration intentionally not implemented
-    # - Validate relay exists
-    # - Remove relay information
-    # - Handle cleanup of associated tasks (if needed)
+    try:
+        handler.process(relay_id)
+    except RelayNotFoundError:
+        # When the relay is not found we chose to return a 200 to make this endpoint idempotent
+        return fastapi.Response(
+            status_code=fastapi.status.HTTP_200_OK, content="Relay unregistered successfully"
+        )
 
-    raise NotImplementedError("Relay unregistration business logic not implemented")
+    return fastapi.Response(
+        status_code=fastapi.status.HTTP_200_OK, content="Relay unregistered successfully"
+    )

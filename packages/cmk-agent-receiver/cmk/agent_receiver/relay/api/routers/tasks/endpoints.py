@@ -12,6 +12,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTasksHandler,
+    RelayNotFoundError,
 )
 from cmk.relay_protocols.tasks import (
     TaskCreateRequest,
@@ -143,5 +144,10 @@ async def get_tasks(
     # - Note: we can remove expired tasks based on expiration time configuration here
     #         instead of having a separate cleanup task
     # - Return filtered task list
-
-    return handler.process(relay_id, status)
+    try:
+        tasks = handler.process(relay_id, status)
+    except RelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND, detail="Relay not found"
+        ) from None
+    return tasks

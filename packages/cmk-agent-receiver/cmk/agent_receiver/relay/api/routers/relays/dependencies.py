@@ -7,6 +7,7 @@ from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RegisterRelayHandler,
+    UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
@@ -15,3 +16,9 @@ def get_register_relay_handler(
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
 ) -> RegisterRelayHandler:
     return RegisterRelayHandler(relays_repository=relays_repository)
+
+
+def get_unregister_relay_handler(
+    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+) -> UnregisterRelayHandler:
+    return UnregisterRelayHandler(relays_repository=relays_repository)

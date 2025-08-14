@@ -4,7 +4,7 @@ from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
 class RelayAlreadyRegisteredError(Exception):
-    pass
+    """Exception raised when a relay is already registered."""
 
 
 @dataclasses.dataclass

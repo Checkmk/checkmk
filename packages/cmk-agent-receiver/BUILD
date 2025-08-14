@@ -31,6 +31,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/relays/endpoints.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/__init__.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/register_relay.py",
+        "cmk/agent_receiver/relay/api/routers/relays/handlers/unregister_relay.py",
         "cmk/agent_receiver/relay/api/routers/tasks/__init__.py",
         "cmk/agent_receiver/relay/api/routers/tasks/dependencies.py",
         "cmk/agent_receiver/relay/api/routers/tasks/endpoints.py",

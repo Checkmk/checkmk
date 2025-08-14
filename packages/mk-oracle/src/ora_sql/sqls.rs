@@ -31,6 +31,7 @@ pub enum Id {
     DataGuardStats,
     Instance,
     AsmInstance,
+    Performance,
 }
 
 pub mod query {
@@ -288,6 +289,7 @@ static QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(||
         query::build_query_metadata(Id::DataGuardStats, query::DATAGUARD_STATS_META),
         query::build_query_metadata(Id::Instance, query::INSTANCE_META),
         query::build_query_metadata(Id::AsmInstance, query::ASM_INSTANCE_META),
+        query::build_query_metadata(Id::Performance, query::PERFORMANCE_META),
     ])
 });
 
@@ -682,5 +684,20 @@ mod tests {
         assert!(query_full_version.contains("i.version_full"));
         assert!(!query_version.contains("i.version_full"));
         assert_eq!(query_last, query_full_version);
+    }
+
+    #[test]
+    fn test_find_performance() {
+        let id = Id::Performance;
+
+        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
+        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
+        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
+        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
+        assert!(!query_new.is_empty());
+        assert!(!query_old.is_empty());
+        assert!(query_nothing.is_err());
+        assert_ne!(query_old, query_new);
+        assert_eq!(query_last, query_new);
     }
 }

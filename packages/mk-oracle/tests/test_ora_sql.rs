@@ -863,3 +863,75 @@ fn test_asm_instance_new() {
         }
     }
 }
+
+#[test]
+fn test_performance_new() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(endpoint, sqls::Id::Performance, None);
+        assert!(rows.len() > 30);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert!(line[0].starts_with(format!("{}.", endpoint.instance.as_str()).as_str()));
+            assert!(
+                [4, 5, 7, 9, 10].contains(&line.len()),
+                "Row has wrong quantities of columns: {} {}",
+                r,
+                line.len()
+            );
+            assert!(
+                [
+                    "PGA_info",
+                    "SGA_info",
+                    "librarycache",
+                    "sys_time_model",
+                    "sys_wait_class",
+                    "buffer_pool_statistics"
+                ]
+                .contains(&line[1]),
+                "Column 2 is wrong: {} {}",
+                r,
+                line[2]
+            );
+            assert!(line[0].starts_with(endpoint.instance.as_str()));
+        });
+    }
+}
+
+#[test]
+fn test_performance_old() {
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let rows = _connect_and_query(
+            endpoint,
+            sqls::Id::Performance,
+            Some(InstanceNumVersion::from(11_00_00_00)),
+        );
+        assert!(rows.len() > 30);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert!(line[0].starts_with(endpoint.instance.as_str()));
+            assert!(
+                [4, 5, 7, 9, 10].contains(&line.len()),
+                "Row has wrong quantities of columns: {} {}",
+                r,
+                line.len()
+            );
+            assert!(
+                [
+                    "SGA_info",
+                    "librarycache",
+                    "sys_time_model",
+                    "sys_wait_class",
+                    "buffer_pool_statistics"
+                ]
+                .contains(&line[1]),
+                "Column 2 is wrong: {} {}",
+                r,
+                line[2]
+            );
+        });
+    }
+}

@@ -1744,7 +1744,8 @@ sql_instance() {
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM
         echo "select upper(i.instance_name)
-                     || '|' || i.${version_column}
+                     || '|' || i.version      -- older than 18
+                     || '|' || i.version_full -- 18+  we need if possible
                      || '|' || i.STATUS
                      || '|' || i.LOGINS
                      || '|' || i.ARCHIVER

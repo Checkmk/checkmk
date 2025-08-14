@@ -23,6 +23,7 @@ def dcd_connector(
     no_deletion_time_after_init: int = 60,
     max_cache_age: int = 60,
     validity_period: int = 60,
+    change_activation_timeout: int = 300,
     cleanup: bool = True,
 ) -> Iterator[str]:
     """Create and use a DCD connector for site.
@@ -60,14 +61,17 @@ def dcd_connector(
         max_cache_age=max_cache_age,
         no_deletion_time_after_init=no_deletion_time_after_init,
     )
-    with site.openapi.wait_for_completion(300, "get", "activate_changes"):
-        site.openapi.changes.activate(force_foreign_changes=True)
+    site.openapi.changes.activate_and_wait_for_completion(
+        timeout=change_activation_timeout, force_foreign_changes=True
+    )
     try:
         yield dcd_id
     finally:
         if cleanup and site.openapi.dcd.get(dcd_id):
             site.openapi.dcd.delete(dcd_id)
-            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+            site.openapi.changes.activate_and_wait_for_completion(
+                timeout=change_activation_timeout, force_foreign_changes=True
+            )
 
 
 def execute_dcd_cycle(

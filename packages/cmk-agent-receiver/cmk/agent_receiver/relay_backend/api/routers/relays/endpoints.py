@@ -20,6 +20,7 @@ from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_relay_task
 )
 from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
+    RelayAlreadyRegisteredError,
 )
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.relay_protocols.tasks import (
@@ -58,7 +59,12 @@ async def register_relay(
     # - Store relay information
     # - Generate and return appropriate certificates
 
-    handler.process(request.relay_id)
+    try:
+        handler.process(request.relay_id)
+    except RelayAlreadyRegisteredError:
+        return fastapi.Response(
+            status_code=fastapi.status.HTTP_409_CONFLICT, content="Relay ID already registered"
+        )
     return fastapi.Response(
         status_code=fastapi.status.HTTP_200_OK, content="Relay registered successfully"
     )

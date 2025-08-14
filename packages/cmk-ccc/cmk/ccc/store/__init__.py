@@ -71,7 +71,11 @@ class LazyTracer:
         self._lock = Lock()
         self._tracer = None
 
-    def span(self, name: str, *, attributes: Mapping[str, str]) -> AbstractContextManager:
+    # NOTE: Actually AbstractContextManager's first type argument is Span, but to use this we
+    # would need to pull in OpenTelemetry stuff unconditionally or do some other hacks.
+    def span(
+        self, name: str, *, attributes: Mapping[str, str]
+    ) -> AbstractContextManager[object, bool | None]:
         with self._lock:
             if self._tracer is None:
                 from cmk.trace import get_tracer
@@ -79,7 +83,7 @@ class LazyTracer:
                 self._tracer = get_tracer()
         return self._tracer.span(name, attributes=attributes)
 
-    def simple_span(self, name: str, path: Path) -> AbstractContextManager:
+    def simple_span(self, name: str, path: Path) -> AbstractContextManager[object, bool | None]:
         return self.span(f"{name}[{path}]", attributes={"cmk.file.path": str(path)})
 
 

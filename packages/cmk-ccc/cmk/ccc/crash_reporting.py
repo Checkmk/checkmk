@@ -33,8 +33,8 @@ REDACTED_STRING: Final = "redacted"
 
 
 class BaseDetails(TypedDict):
-    argv: list
-    env: dict
+    argv: Sequence[str]
+    env: Mapping[str, str]
 
 
 class VersionInfo(TypedDict):
@@ -47,7 +47,7 @@ class VersionInfo(TypedDict):
     os: str
 
 
-T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
 
 class ContactDetails(TypedDict):
@@ -55,12 +55,12 @@ class ContactDetails(TypedDict):
     email: NotRequired[str]
 
 
-class CrashInfo(Generic[T], VersionInfo):
+class CrashInfo(Generic[T_co], VersionInfo):
     exc_type: str | None
     crash_type: str
     exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]
     local_vars: str
-    details: T
+    details: T_co
     exc_value: str
     contact: NotRequired[ContactDetails]
     id: str
@@ -78,7 +78,7 @@ class CrashReportStore:
     _keep_num_crashes = 200
     """Caring about the persistance of crash reports in the local site"""
 
-    def save(self, crash: ABCCrashReport) -> None:
+    def save(self, crash: ABCCrashReport[object]) -> None:
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
@@ -100,7 +100,7 @@ class CrashReportStore:
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
     @staticmethod
-    def dump_crash_info(crash_info: CrashInfo | bytes) -> str:
+    def dump_crash_info(crash_info: CrashInfo[object] | bytes) -> str:
         return json.dumps(
             CrashReportStore._dump_crash_info(crash_info),
             cls=RobustJSONEncoder,
@@ -119,7 +119,7 @@ class CrashReportStore:
             for k, v in d.items()
         }
 
-    def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
+    def _prepare_crash_dump_directory(self, crash: ABCCrashReport[object]) -> None:
         crash_dir = crash.crash_dir()
         crash_dir.mkdir(parents=True, exist_ok=True)
 
@@ -155,13 +155,13 @@ class CrashReportStore:
 
 
 class SerializedCrashReport(TypedDict):
-    crash_info: CrashInfo
+    crash_info: CrashInfo[object]
 
 
-class ABCCrashReport(Generic[T], abc.ABC):
+class ABCCrashReport(Generic[T_co], abc.ABC):
     """Base class for the component specific crash report types"""
 
-    def __init__(self, crashdir: Path, crash_info: CrashInfo) -> None:
+    def __init__(self, crashdir: Path, crash_info: CrashInfo[T_co]) -> None:
         super().__init__()
         self.crashdir: Final = crashdir
         self.crash_info = crash_info
@@ -175,8 +175,8 @@ class ABCCrashReport(Generic[T], abc.ABC):
     def make_crash_info(
         cls,
         version_info: VersionInfo,
-        details: T | None = None,
-    ) -> CrashInfo:
+        details: T_co | None = None,
+    ) -> CrashInfo[T_co]:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -185,16 +185,18 @@ class ABCCrashReport(Generic[T], abc.ABC):
         return _get_generic_crash_info(cls.type(), version_info, details)
 
     @classmethod
-    def deserialize(cls, crashdir: Path, serialized: SerializedCrashReport) -> ABCCrashReport:
+    def deserialize(
+        cls, crashdir: Path, serialized: SerializedCrashReport
+    ) -> ABCCrashReport[object]:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(crashdir, **serialized)
 
-    def _serialize_attributes(self) -> dict[str, CrashInfo | bytes]:
+    def _serialize_attributes(self) -> dict[str, CrashInfo[T_co] | bytes]:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
 
-    def serialize(self) -> dict[str, CrashInfo | bytes]:
+    def serialize(self) -> dict[str, CrashInfo[T_co] | bytes]:
         """Serialize the object
 
         Nested structures are allowed. Only objects that can be handled by
@@ -242,8 +244,8 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
 def _get_generic_crash_info(
     type_name: str,
     version_info: VersionInfo,
-    details: T | None,
-) -> CrashInfo:
+    details: T_co | None,
+) -> CrashInfo[T_co]:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -256,7 +258,8 @@ def _get_generic_crash_info(
         )
     )
 
-    modified_details: dict | T | None = details
+    # TODO: The typing gets *really* chaotic here, hence the Any a.k.a implicit cast. :-P
+    modified_details: Any = details
     if isinstance(details, Mapping) and "vars" in details:
         modified_details = (
             {k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()}
@@ -294,7 +297,7 @@ def _get_local_vars_of_last_exception() -> str:
     ).decode()
 
 
-def _sanitize_variables(unsanitized_variables: dict) -> dict:
+def _sanitize_variables(unsanitized_variables: dict[str, Any]) -> dict[str, Any]:
     return {
         key: REDACTED_STRING
         if any(sensitive_keyword in key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS)
@@ -337,8 +340,8 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     return val
 
 
-class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport]]):
-    def plugin_name(self, instance: type[ABCCrashReport]) -> str:
+class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport[object]]]):
+    def plugin_name(self, instance: type[ABCCrashReport[object]]) -> str:
         return instance.type()
 
 

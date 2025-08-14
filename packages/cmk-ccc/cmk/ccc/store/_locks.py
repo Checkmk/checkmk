@@ -195,7 +195,7 @@ def acquire_lock(path: Path | str, blocking: bool = True) -> bool:
 
 
 @contextmanager
-def _open_lock_file(path: os.PathLike) -> Iterator[int]:
+def _open_lock_file(path: os.PathLike[str]) -> Iterator[int]:
     fd = None
     try:
         fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)

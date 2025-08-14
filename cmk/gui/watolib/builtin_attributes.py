@@ -1512,9 +1512,6 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
             "and unset in case a later discovery succeeds."
         )
 
-    def get_tag_groups(self, value):
-        return {}
-
 
 class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
     def name(self) -> str:
@@ -1570,9 +1567,6 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
             "This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be "
             "removed after the discovery is ended."
         )
-
-    def get_tag_groups(self, value):
-        return {}
 
 
 class HostAttributeLabels(ABCHostAttributeValueSpec):

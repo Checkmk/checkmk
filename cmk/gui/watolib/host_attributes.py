@@ -446,6 +446,10 @@ class ABCHostAttribute(abc.ABC):
     def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}
+
+        Only use this for tag group and tag combinations which are defined in the configuration of
+        existing tags. The 'site' attribute violates this principle, but is kept for compatibility
+        reasons. You may want to use labels instead, which give you more freedom.
         """
         return {}
 

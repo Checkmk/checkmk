@@ -12,7 +12,7 @@ import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 
-const { t } = usei18n('form-password')
+const { _t } = usei18n()
 
 const props = defineProps<{
   spec: Password
@@ -101,7 +101,7 @@ const passwordStoreOptions = computed(() => {
   <template v-if="data[0] === 'explicit_password'">
     <input
       v-model="explicitPassword"
-      :aria-label="t('explicit-input-aria-label', 'explicit password')"
+      :aria-label="_t('explicit password')"
       type="password"
       :placeholder="'******'"
     />

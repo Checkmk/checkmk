@@ -19,7 +19,7 @@ import {
 
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 
-const { t } = usei18n('agent_connection_test')
+const { _t } = usei18n()
 
 interface Props {
   formElement: HTMLFormElement
@@ -109,24 +109,20 @@ const isError = ref(false)
 const errorDetails = ref('')
 const tooltipText = computed(() => {
   if (isLoading.value) {
-    return t('agent-connection-test-loading-msg', 'Agent connection test running')
+    return _t('Agent connection test running')
   }
   if (isSuccess.value) {
-    return t('agent-connection-test-success-msg', 'Agent connection successful')
+    return _t('Agent connection successful')
   }
   if (isError.value) {
-    return t(
-      'agent-connection-test-error-msg',
+    return _t(
       'Connection failed, enter new hostname to check again or download and install the Checkmk agent.'
     )
   }
   if (!hostname.value) {
-    return t(
-      'agent-connection-test-missing-msg',
-      'Please enter a hostname to test Checkmk agent connection'
-    )
+    return _t('Please enter a hostname to test Checkmk agent connection')
   }
-  return t('agent-connection-test-start-msg', 'Test Checkmk agent connection')
+  return _t('Test Checkmk agent connection')
 })
 const isNotRegistered = computed(() => {
   if (errorDetails.value.includes('controller not registered')) {
@@ -137,9 +133,9 @@ const isNotRegistered = computed(() => {
 
 const slideOutTitle = computed(() => {
   if (isNotRegistered.value) {
-    return t('agent-connection-test-title-register', 'Register agent')
+    return _t('Register agent')
   }
-  return t('agent-connection-test-title-install', 'Install Checkmk agent')
+  return _t('Install Checkmk agent')
 })
 
 type AutomationResponse = {
@@ -213,13 +209,13 @@ const startAjax = (): Promise<void> => {
   })
 }
 
-const reTestAgentTitle = t('re-test-agent-title', 'Re-test agent connection')
-const reTestAgentButton = t('re-test-agent-button', 'Re-test agent connection')
+const reTestAgentTitle = _t('Re-test agent connection')
+const reTestAgentButton = _t('Re-test agent connection')
 const reTestAgentClick: () => Promise<void> = startAjax
 const openSlideoutClick: () => void = () => {
   slideInOpen.value = true
 }
-const closeButtonTitle = t('ads-close-and-test', 'Close & test agent connection')
+const closeButtonTitle = _t('Close & test agent connection')
 
 interface ContainerValues {
   header: string
@@ -233,7 +229,7 @@ interface ContainerValues {
 }
 
 const warnContainerValues = computed<ContainerValues>(() => {
-  let header = t('test-agent-general-header', 'Agent connection failed')
+  let header = _t('Agent connection failed')
   let txt = errorDetails.value
   let buttonOneTitle = reTestAgentTitle
   let buttonOneButton = reTestAgentButton
@@ -243,39 +239,32 @@ const warnContainerValues = computed<ContainerValues>(() => {
   let buttonTwoClick: () => void | Promise<void> = () => {}
 
   if (errorDetails.value.includes('[Errno 111]')) {
-    header = t('test-agent-warning-header', 'Failed to connect to the Checkmk agent')
-    txt = t(
-      'test-agent-warning-msg',
-      'This may be because the agent is not installed or not running on the target system.'
-    )
-    buttonOneTitle = t('download-agent-title', 'Download % install agent')
-    buttonOneButton = t('download-agent-button', 'Download Checkmk agent')
+    header = _t('Failed to connect to the Checkmk agent')
+    txt = _t('This may be because the agent is not installed or not running on the target system.')
+    buttonOneTitle = _t('Download % install agent')
+    buttonOneButton = _t('Download Checkmk agent')
     buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
     buttonTwoClick = reTestAgentClick
   }
   if (isNotRegistered.value) {
-    header = t('test-agent-not-registered-header', 'Agent not registered')
-    txt = t(
-      'test-agent-not-registered-msg',
-      'The agent has been installed on the target system but has not yet been registered.'
-    )
-    buttonOneTitle = t('register-agent-title', 'Register agent')
-    buttonOneButton = t('register-agent-button', 'Register Checkmk agent')
+    header = _t('Agent not registered')
+    txt = _t('The agent has been installed on the target system but has not yet been registered.')
+    buttonOneTitle = _t('Register agent')
+    buttonOneButton = _t('Register Checkmk agent')
     buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
     buttonTwoClick = reTestAgentClick
   }
   if (errorDetails.value.includes('is not providing it')) {
-    header = t('test-agent-no-tls-header', 'TLS connection not provided')
-    txt = t(
-      'test-agent-not-registered-msg',
+    header = _t('TLS connection not provided')
+    txt = _t(
       'The agent has been installed on the target system but is not providing a TLS connection.'
     )
-    buttonOneTitle = t('tls-agent-title', 'Provide TLS connection')
-    buttonOneButton = t('tls-agent-button', 'Provide TLS connection')
+    buttonOneTitle = _t('Provide TLS connection')
+    buttonOneButton = _t('Provide TLS connection')
     buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
@@ -306,18 +295,18 @@ const warnContainerValues = computed<ContainerValues>(() => {
       @click="startAjax"
     >
       <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
-      {{ t('msg-start-test', 'Test agent connection') }}
+      {{ _t('Test agent connection') }}
     </CmkButton>
 
     <div v-if="isLoading" class="loading-container">
       <CmkIcon name="load-graph" :title="tooltipText" size="medium" variant="inline" />
-      {{ t('test-agent-loading', 'Testing agent connection ...') }}
+      {{ _t('Testing agent connection ...') }}
     </div>
 
     <div v-if="isSuccess" class="success-container">
       <CmkIcon name="checkmark" :title="tooltipText" size="medium" variant="inline" />
-      {{ t('test-agent-success', 'Successfully connected to agent.') }}
-      <a href="#" @click.prevent="startAjax">{{ t('msg-retest', 'Re-test agent connection') }}</a>
+      {{ _t('Successfully connected to agent.') }}
+      <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
     </div>
 
     <div v-if="isError" class="warn-container">

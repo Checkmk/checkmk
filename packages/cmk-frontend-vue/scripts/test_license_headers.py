@@ -33,6 +33,7 @@ FILES_IGNORED = {
     Path("pnpm-lock.yaml"),
     Path(".editorconfig"),
     Path("eslint.config.js"),
+    Path("gettext.config.js"),
     Path(".f12"),
     Path(".gitignore"),
     Path(".gitattributes"),

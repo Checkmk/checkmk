@@ -18,39 +18,36 @@ const props = defineProps<{
   save_host: boolean
 }>()
 
-const { t } = usei18n('agent_install_slideout_content')
+const { _t } = usei18n()
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
 }
 
-const registrationMessage = t(
-  'agent-windows-register-msg',
-  'Run this command to register the Checkmk agent controller'
-)
+const registrationMessage = _t('Run this command to register the Checkmk agent controller')
 
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
-    title: t('agent-windows', 'Windows'),
+    title: _t('Windows'),
     registration_msg: registrationMessage,
     registration_cmd: props.agent_registration_cmds.windows.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'linux',
-    title: t('agent-linux', 'Linux'),
+    title: _t('Linux'),
     registration_msg: registrationMessage,
     registration_cmd: props.agent_registration_cmds.linux.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'solaris',
-    title: t('agent-solaris', 'Solaris'),
+    title: _t('Solaris'),
     registration_msg: registrationMessage,
     registration_cmd: props.agent_registration_cmds.solaris.replace('[HOSTNAME]', props.host_name)
   },
   {
     id: 'aix',
-    title: t('agent-solaris', 'AIX'),
+    title: _t('AIX'),
     registration_msg: registrationMessage,
     registration_cmd: props.agent_registration_cmds.aix.replace('[HOSTNAME]', props.host_name)
   }
@@ -60,8 +57,7 @@ const tabs: AgentSlideOutTabs[] = [
 <template>
   <AgentSlideOut
     :dialog_msg="
-      t(
-        'ads-dialog-register-msg',
+      _t(
         'Agent registration configures TLS encryption to ensure secure communication, thereby guaranteeing that data transmitted between the agent and the server is secure and trustworthy.'
       )
     "

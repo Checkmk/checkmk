@@ -28,7 +28,7 @@ import ChangesActivationResult from './components/activation/ChangesActivationRe
 import SiteStatusList from './components/sites/SiteStatusList.vue'
 import PendingChangesList from './components/pending-changes/PendingChangesList.vue'
 
-const { t } = usei18n('changes-app')
+const { _t } = usei18n()
 const props = defineProps<{
   activate_changes_url: string
   user_has_activate_foreign: boolean
@@ -288,7 +288,7 @@ onMounted(() => {
   <DefaultPopup class="cmk-default-popup-mainmenu">
     <div class="cmk-div-mainmenu-container">
       <div class="cmk-div-popup-title-container">
-        <h1>{{ t('activate-pending-changes', 'Activate pending changes') }}</h1>
+        <h1>{{ _t('Activate pending changes') }}</h1>
       </div>
       <div class="cmk-div-buttons-container">
         <CmkButtonSubmit
@@ -296,7 +296,7 @@ onMounted(() => {
           :disabled="activateChangesButtonDisabled"
           @click="() => activateAllChanges()"
         >
-          {{ t('activate-changes-on-all-sites', 'Activate pending changes') }}
+          {{ _t('Activate pending changes') }}
         </CmkButtonSubmit>
         <CmkButton
           variant="secondary"
@@ -304,19 +304,18 @@ onMounted(() => {
           @click="() => openActivateChangesPage()"
         >
           <CmkIcon variant="inline" name="frameurl" />
-          {{ t('open-full-view', 'Open full view') }}
+          {{ _t('Open full view') }}
         </CmkButton>
       </div>
       <CmkDialog
         :message="
-          t(
-            'changes-info-message',
-            'Changes are saved in a temporary environment first, letting you review and adjust them safely.\n' +
-              'Activate changes to apply them to live monitoring.'
+          _t(
+            `Changes are saved in a temporary environment first, letting you review and adjust them safely.\n
+              Activate changes to apply them to live monitoring.`
           )
         "
         :dismissal_button="{
-          title: t('Do not show again', 'Do not show again'),
+          title: _t('Do not show again'),
           key: 'changes-info'
         }"
       />
@@ -325,12 +324,7 @@ onMounted(() => {
         variant="warning"
         class="cmk-alert-box"
       >
-        {{
-          t(
-            'activate-foreign-changes-info',
-            'Sorry, you are not allowed to activate changes of other users.'
-          )
-        }}
+        {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
       </CmkAlertBox>
       <ChangesActivating
         v-if="activateChangesInProgress"
@@ -348,12 +342,11 @@ onMounted(() => {
         "
         type="success"
         :title="
-          t(
-            'successfully-activated-changes',
-            `Successfully activated ${numberOfChangesLastActivation} changes`
-          )
+          _t('Successfully activated %{numberOfChangesLastActivation} changes', {
+            numberOfChangesLastActivation
+          })
         "
-        :info="t('everything-is-up-to-date', 'Everything is up to date')"
+        :info="_t('Everything is up to date')"
         class="cmk-div-activation-result-container"
       >
       </ChangesActivationResult>
@@ -365,8 +358,8 @@ onMounted(() => {
           recentlyActivatedSites.length === 0
         "
         type="success"
-        :title="t('no-pending-changes', 'No pending changes')"
-        :info="t('everything-is-up-to-date', 'Everything is up to date')"
+        :title="_t('No pending changes')"
+        :info="_t('Everything is up to date')"
         class="cmk-div-activation-result-container"
       >
       </ChangesActivationResult>
@@ -381,10 +374,8 @@ onMounted(() => {
           v-if="sitesWithWarningsOrErrors && !activateChangesInProgress"
           class="cmk-div-activation-result-container"
           type="warning"
-          :title="t('problems-detected', 'Problems detected during activation')"
-          :info="
-            t('some-things-may-not-be-monitored', 'Some things may not be monitored properly.')
-          "
+          :title="_t('Problems detected during activation')"
+          :info="_t('Some things may not be monitored properly.')"
         >
         </ChangesActivationResult>
 

@@ -5,7 +5,11 @@
  */
 
 import DemoTypography from './DemoTypography.vue'
+import DemoI18n from './DemoI18n.vue'
 
 import { type Folder, Page } from '@demo/_demo/page'
 
-export const pages: Array<Folder | Page> = [new Page('typography', DemoTypography)]
+export const pages: Array<Folder | Page> = [
+  new Page('typography', DemoTypography),
+  new Page('i18n', DemoI18n)
+]

@@ -14,7 +14,7 @@ import SearchOperatorOptionEntry from './SearchOperatorOptionEntry.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const operatorDropdownBtn = useTemplateRef('unified-search-operator-btn')
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)
@@ -106,18 +106,12 @@ function toggleOperatorOptions() {
       class="unified-search-operator-switch-button"
       :class="{ active: searchUtils.input.searchOperatorSelectActive.value }"
       :disabled="props.disabled"
-      :title="
-        props.disabled
-          ? t('only-available-for-all-monitoring', 'Only available for \'Monitoring\' and \'All\'')
-          : ''
-      "
+      :title="props.disabled ? _t('Only available for \'Monitoring\' and \'All\'') : ''"
       @click.stop="toggleOperatorOptions"
       @keypres.enter.stop="toggleOperatorOptions"
     >
       <CmkIcon name="info" size="small" class="unified-search-operator-info-icon"></CmkIcon>
-      <span class="unified-search-operator-switch-selected">{{
-        t('search-operators', 'Search operators')
-      }}</span>
+      <span class="unified-search-operator-switch-selected">{{ _t('Search operators') }}</span>
       <DropDownIndicator
         class="unified-search-operator-switch-indicator"
         :active="searchUtils.input.searchOperatorSelectActive.value"
@@ -130,7 +124,7 @@ function toggleOperatorOptions() {
     >
       <ul class="unified-search-operator-option-list">
         <li class="unified-search-operator-option-list-section-title">
-          {{ t('type-slash', 'Type "/" to use search operator') }}
+          {{ _t('Type "/" to use search operator') }}
         </li>
         <SearchOperatorOptionEntry
           v-for="(opt, idx) in filterOptions"

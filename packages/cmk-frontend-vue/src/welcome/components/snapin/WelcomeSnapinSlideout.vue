@@ -15,15 +15,15 @@ import { onMounted, ref } from 'vue'
 import CmkButton from '@/components/CmkButton.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 
-const { t } = usei18n('welcome-snapin')
+const { _t } = usei18n()
 
 const urls = ref<WelcomeUrls>()
 const stageInformation = ref<StageInformation>()
 const completedSteps = ref<number>(0)
 const slideInOpen = ref(false)
 const completed = ref(false)
-const nextStepsTitle = t('next-steps-title', 'Next steps with Checkmk')
-const firstStepsTitle = t('first-steps-title', 'First steps with Checkmk')
+const nextStepsTitle = _t('Next steps with Checkmk')
+const firstStepsTitle = _t('First steps with Checkmk')
 const slideInTitle = ref(nextStepsTitle)
 
 function slideInEventListener(event: CustomEvent): void {
@@ -62,7 +62,7 @@ function openSlideIn() {
   >
     <CmkButton variant="secondary" class="full-view-button" @click="() => openFullView()">
       <CmkIcon variant="inline" name="frameurl" />
-      {{ t('open-full-view', 'Open full view') }}
+      {{ _t('Open full view') }}
     </CmkButton>
     <OnboardingStepper
       v-if="!completed && urls"

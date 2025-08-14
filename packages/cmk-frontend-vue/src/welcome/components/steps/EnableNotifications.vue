@@ -15,7 +15,7 @@ import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-const { t } = usei18n('welcome-step-4')
+const { _t } = usei18n()
 
 defineProps<{
   step: number
@@ -29,16 +29,15 @@ defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Enable notifications')"
-    :info="t('time', '5-7 min')"
+    :title="_t('Enable notifications')"
+    :info="_t('5-7 min')"
   >
     <StepParagraph>
       {{
-        t(
-          'paragraph',
-          'Notifications help you to stay on top of problems without having to constantly check the interface. ' +
-            'In Checkmk, they are rule-based, enabling you to create a notification system that evolves alongside ' +
-            'your environment.'
+        _t(
+          `Notifications help you to stay on top of problems without having to constantly check the interface.
+            In Checkmk, they are rule-based, enabling you to create a notification system that evolves alongside
+            your environment.`
         )
       }}
     </StepParagraph>
@@ -46,13 +45,12 @@ defineProps<{
     <CmkWizard mode="overview">
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{ t('stage-0-title', 'Create a notification rule') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Create a notification rule') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
             {{
-              t(
-                'stage-0-instruction-1',
+              _t(
                 'Follow the step-by-step guide in Setup > Notifications to set up notification rules.'
               )
             }}
@@ -60,7 +58,7 @@ defineProps<{
           <StepCardsRow>
             <CmkLinkCard
               icon-name="notifications"
-              :title="t('add-notification-rule', 'Add notification rule')"
+              :title="_t('Add notification rule')"
               :url="urls.add_notification_rule"
               :open-in-new-tab="false"
             />
@@ -70,13 +68,12 @@ defineProps<{
 
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{ t('stage-1-title', 'Send a test notification') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Send a test notification') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
             {{
-              t(
-                'stage-1-instruction-1',
+              _t(
                 'After creation, test your notification rule to make sure alerts reach you the way you expect.'
               )
             }}
@@ -84,7 +81,7 @@ defineProps<{
           <StepCardsRow>
             <CmkLinkCard
               icon-name="analysis"
-              :title="t('test-notifications', 'Test notifications')"
+              :title="_t('Test notifications')"
               :url="urls.test_notifications"
               :open-in-new-tab="false"
             />

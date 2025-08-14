@@ -16,7 +16,7 @@ import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 
-const { t } = usei18n('welcome-step-3')
+const { _t } = usei18n()
 
 const props = defineProps<{
   step: number
@@ -30,17 +30,16 @@ const props = defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Adjust services')"
-    :info="t('time', '5-7 min')"
+    :title="_t('Adjust services')"
+    :info="_t('5-7 min')"
   >
     <StepParagraph>
       {{
-        t(
-          'adjust-services-step-intro',
-          'Each service in Checkmk comes with default parameter values. ' +
-            'You can customize these to match your monitoring needs, ' +
-            'most commonly by setting thresholds for WARN and CRIT states using rules. ' +
-            'To find the right ruleset for a service, start with the Service Discovery page.'
+        _t(
+          `Each service in Checkmk comes with default parameter values.
+            You can customize these to match your monitoring needs,
+            most commonly by setting thresholds for WARN and CRIT states using rules.
+            To find the right ruleset for a service, start with the Service Discovery page.`
         )
       }}
     </StepParagraph>
@@ -48,26 +47,21 @@ const props = defineProps<{
     <CmkWizard mode="overview">
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{ t('stage-0-title', 'Run a service discovery') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
-            {{
-              t(
-                'stage-0-instruction-1',
-                'To adjust parameters for a host, start by running a service discovery.'
-              )
-            }}
+            {{ _t('To adjust parameters for a host, start by running a service discovery.') }}
             <br />
-            {{ t('stage-0-instruction-2', 'In the host table, click on the') }}
+            {{ _t('In the host table, click on the') }}
             <CmkIcon name="services" variant="inline" size="small" />{{
-              t('stage-0-instruction-3', '-icon next to the host to open the service discovery.')
+              _t('-icon next to the host to open the service discovery.')
             }}
           </StepParagraph>
           <StepCardsRow>
             <CmkLinkCard
               icon-name="folder"
-              :title="t('view-host-table', 'View host table')"
+              :title="_t('View host table')"
               :url="props.urls.setup_hosts"
               :open-in-new-tab="false"
             />
@@ -77,22 +71,15 @@ const props = defineProps<{
 
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{
-            t('stage-1-title', 'Open the ruleset for a check parameter')
-          }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Open the ruleset for a check parameter') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
-            {{
-              t(
-                'stage-1-instruction-1',
-                'In the Service Discovery view, find the service you want to configure.'
-              )
-            }}
+            {{ _t('In the Service Discovery view, find the service you want to configure.') }}
             <br />
-            {{ t('stage-1-instruction-2', 'Click the') }}
+            {{ _t('Click the') }}
             <CmkIcon name="check_parameters" variant="inline" size="small" />{{
-              t('stage-1-instruction-3', '-icon next to it to open the corresponding ruleset.')
+              _t('-icon next to it to open the corresponding ruleset.')
             }}
           </StepParagraph>
         </template>
@@ -100,24 +87,18 @@ const props = defineProps<{
 
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{
-            t('stage-2-title', 'Create a check parameter rule')
-          }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Create a check parameter rule') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
             {{
-              t(
-                'stage-2-instruction-1',
+              _t(
                 'In the ruleset view, click Add rule for current host to create a rule that applies specifically to the selected host.'
               )
             }}
             <br />
             {{
-              t(
-                'stage-2-instruction-2',
-                'You can now define custom parameters like thresholds or other check settings.'
-              )
+              _t('You can now define custom parameters like thresholds or other check settings.')
             }}
           </StepParagraph>
         </template>
@@ -125,13 +106,13 @@ const props = defineProps<{
 
       <CmkWizardStep>
         <template #header>
-          <CmkHeading type="h3">{{ t('stage-3-title', 'Activate changes') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
         <template #content>
           <StepCardsRow>
             <CmkLinkCard
               icon-name="main_changes"
-              :title="t('activate-changes', 'Activate changes')"
+              :title="_t('Activate changes')"
               :url="props.urls.activate_changes"
               :open-in-new-tab="false"
             />

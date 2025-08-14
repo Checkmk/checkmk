@@ -10,7 +10,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import StepsProgressBar, { type StepsProgressBarProps } from './StepsProgressBar.vue'
-const { t } = usei18n('welcome-banner')
+const { _t } = usei18n()
 
 const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps>()
 </script>
@@ -20,10 +20,10 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
     <CmkIcon name="checkmk-logo-min" size="xxxlarge" />
     <div class="welcome-banner__content">
       <CmkHeading type="h1" class="welcome-banner__title">
-        {{ t('title', 'Welcome to Checkmk!') }}
+        {{ _t('Welcome to Checkmk!') }}
       </CmkHeading>
       <CmkParagraph class="welcome-banner__subtitle">
-        {{ t('subtitle', 'Get started with Checkmk in 5 easy steps.') }}
+        {{ _t('Get started with Checkmk in 5 easy steps.') }}
       </CmkParagraph>
       <StepsProgressBar :completed-steps="completedSteps" :total-steps="totalSteps" />
     </div>

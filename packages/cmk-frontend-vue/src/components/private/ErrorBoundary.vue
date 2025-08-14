@@ -13,7 +13,7 @@ import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 
-const { t } = usei18n('cmk-error-boundary')
+const { _t } = usei18n()
 
 const showDetails = ref<boolean>(false)
 
@@ -30,14 +30,13 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 
 <template>
   <CmkAlertBox v-if="props.error.value !== null" variant="error">
-    <p>{{ t('unexpected-error', 'An unexpected error occurred') }}:</p>
+    <p>{{ _t('An unexpected error occurred') }}:</p>
     <CmkIndent>
       <CmkHtml :html="props.error.value.message" />
     </CmkIndent>
     <p>
       {{
-        t(
-          'refresh-page',
+        _t(
           'Refresh the page to try again. If the problem persists, reach out to the Checkmk support.'
         )
       }}

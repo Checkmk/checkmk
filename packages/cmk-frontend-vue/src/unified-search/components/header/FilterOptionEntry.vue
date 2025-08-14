@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { immediateWatch } from '@/lib/watch'
 import { useTemplateRef } from 'vue'
-import usei18n from '@/lib/i18n'
 import CmkChip from '@/components/CmkChip.vue'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
@@ -17,7 +16,6 @@ export interface FilterOptemProps {
   active?: boolean | undefined
 }
 
-const { t } = usei18n('unified-search-app')
 const props = defineProps<FilterOptemProps>()
 
 const focusRef = useTemplateRef('filter-focus')
@@ -41,7 +39,7 @@ immediateWatch(
           size="small"
         ></CmkChip
       ></span>
-      <span>{{ t(['filter', option.type, option.value].join('-'), option.title) }}</span>
+      <span>{{ option.title }}</span>
     </button>
   </li>
 </template>

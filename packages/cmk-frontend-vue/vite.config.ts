@@ -52,6 +52,18 @@ export default defineConfig(({ command }) => {
               }
             }
             console.warn(message.message)
+
+            // vue3-gettext uses node to extract gettext strings, but we need the module
+            // as a runtime module as well (not the node part though), so we let this pass
+            if (
+              message.message &&
+              message.message.includes(
+                'Module "fs" has been externalized for browser compatibility'
+              ) &&
+              message.message.includes('pofile/lib/po.js')
+            ) {
+              return
+            }
           } else {
             console.warn(message)
           }

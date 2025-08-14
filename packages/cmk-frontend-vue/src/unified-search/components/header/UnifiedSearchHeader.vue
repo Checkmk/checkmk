@@ -13,12 +13,13 @@ import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import CmkChip from '@/components/CmkChip.vue'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
+import { staticAssertNever } from '@/lib/typeUtils'
 
 interface CmkWindow extends Window {
   main: Window
 }
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 
 const searchUtils = getSearchUtils()
 const searchInput = useTemplateRef('unified-search-input')
@@ -97,20 +98,16 @@ function isMonitoringSearch(): boolean {
 const getSearchInputPlaceholder = computed(() => {
   switch (searchUtils.query.provider.value) {
     case 'all':
-      return t(
-        'search-across-cmk-type-slash',
-        "Search across Checkmk – Type '/' for search operators"
-      )
+      return _t("Search across Checkmk – Type '/' for search operators")
     case 'monitoring':
-      return t(
-        'search-in-monitoring-type-slash',
-        "Search in monitoring – Type '/' for search operators"
-      )
+      return _t("Search in monitoring – Type '/' for search operators")
+    case 'customize':
+      return _t('Search in customize')
+    case 'setup':
+      return _t('Search in setup')
     default:
-      return t(
-        `search-in-${searchUtils.query.provider.value}`,
-        `Search in ${searchUtils.query.provider.value}`
-      )
+      staticAssertNever(searchUtils.query.provider.value)
+      return ''
   }
 })
 </script>
@@ -146,9 +143,9 @@ const getSearchInputPlaceholder = computed(() => {
         ></CmkIcon>
 
         <div v-if="isMonitoringSearch()" class="unified-search-info-item">
-          <span>{{ t('press', 'Press') }}</span>
+          <span>{{ _t('Press') }}</span>
           <CmkChip class="arrow-key enter" size="small" content=""></CmkChip>
-          <span>{{ t('to-trigger-hosts-service-search', 'to trigger host/service search') }}</span>
+          <span>{{ _t('to trigger host/service search') }}</span>
         </div>
       </div>
 

@@ -12,7 +12,7 @@ import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
-const { t } = usei18n('welcome-step-5')
+const { _t } = usei18n()
 
 defineProps<{
   step: number
@@ -26,18 +26,17 @@ defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Customize dashboard')"
-    :info="t('time', '5-7 min')"
+    :title="_t('Customize dashboard')"
+    :info="_t('5-7 min')"
   >
     <StepParagraph>
       {{
-        t(
-          'paragraph',
-          'Tailor your monitoring experience by creating a custom dashboard ' +
-            'that highlights what matters most to you. ' +
-            'Whether you want to track specific hosts, services, or metrics, ' +
-            'dashboards help you stay focused and efficient. ' +
-            'You can create your own or explore the list of all dashboards to find useful presets.'
+        _t(
+          `Tailor your monitoring experience by creating a custom dashboard
+            that highlights what matters most to you.
+            Whether you want to track specific hosts, services, or metrics,
+            dashboards help you stay focused and efficient.
+            You can create your own or explore the list of all dashboards to find useful presets.`
         )
       }}
     </StepParagraph>
@@ -45,13 +44,13 @@ defineProps<{
     <StepCardsRow>
       <CmkLinkCard
         icon-name="new"
-        :title="t('add-custom-dashboard', 'Add custom dashboard')"
+        :title="_t('Add custom dashboard')"
         :url="urls.add_custom_dashboard"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="dashboard"
-        :title="t('list-of-all-dashboards', 'List of all dashboards')"
+        :title="_t('List of all dashboards')"
         :url="urls.all_dashboards"
         :open-in-new-tab="false"
       />

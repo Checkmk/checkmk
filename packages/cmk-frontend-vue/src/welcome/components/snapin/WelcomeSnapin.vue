@@ -14,7 +14,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkButton from '@/components/CmkButton.vue'
 
-const { t } = usei18n('welcome-snapin')
+const { _t } = usei18n()
 
 const props = defineProps<{
   urls: WelcomeUrls
@@ -46,7 +46,7 @@ const completed = completedSteps === totalSteps
       <CmkIcon name="checkmark" size="large"></CmkIcon>
     </CmkBadge>
 
-    {{ t('all-steps-completed', 'All steps completed') }}
+    {{ _t('All steps completed') }}
   </CmkParagraph>
   <StepsProgressBar
     v-else
@@ -63,10 +63,10 @@ const completed = completedSteps === totalSteps
     class="welcome-snapin-continue"
     @click="openSlideIn"
   >
-    {{ t('continue-setup', 'Continue setup') }}
+    {{ _t('Continue setup') }}
   </CmkButton>
   <CmkButton v-else variant="secondary" class="welcome-snapin-continue" @click="openSlideIn">
-    {{ t('continue-setup', "What's next") }}
+    {{ _t("What's next") }}
   </CmkButton>
 </template>
 

@@ -14,7 +14,7 @@ import { getSearchUtils } from '../../providers/search-utils'
 import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 
 const recentlyViewed = ref<HistoryEntry[]>([])
 
@@ -47,7 +47,7 @@ immediateWatch(
 <template>
   <div v-if="recentlyViewed.length > 0" class="recently-viewed">
     <CmkHeading type="h4" class="result-heading">
-      {{ t('recently-viewed', 'Recently viewed') }}
+      {{ _t('Recently viewed') }}
       <button
         @click.stop="
           () => {
@@ -56,7 +56,7 @@ immediateWatch(
           }
         "
       >
-        {{ t('clear-all', 'Clear all') }}
+        {{ _t('Clear all') }}
       </button>
     </CmkHeading>
     <ResultList>

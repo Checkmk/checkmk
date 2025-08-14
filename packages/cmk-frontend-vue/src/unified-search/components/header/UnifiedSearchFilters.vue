@@ -13,7 +13,7 @@ import FilterOptionEntry from './FilterOptionEntry.vue'
 import { availableFilterOptions, availableProviderOptions } from './QueryOptions'
 import type { FilterOption, ProviderOption } from '@/unified-search/providers/search-utils.types'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)
@@ -151,20 +151,17 @@ searchUtils.input.onEmptyBackspace(() => {
       variant="info"
       class="unified-search-filter-suggestions-info not-found"
     >
-      {{
-        t('no-matching-suggestions-fond', 'No filters can be applied to your current search query.')
-      }}
+      {{ _t('No filters can be applied to your current search query.') }}
     </CmkAlertBox>
     <CmkAlertBox variant="info" class="unified-search-filter-suggestions-info">
       {{
-        t(
-          'search-with-regex',
+        _t(
           'Search with regular expressions for menu entries, hosts, services or host and service groups.'
         )
       }}
       <br />
 
-      {{ t('asterisk-sub', "Note that for simplicity '*' will be substituted with '.*'.") }}
+      {{ _t("Note that for simplicity '*' will be substituted with '.*'.") }}
     </CmkAlertBox>
   </div>
 </template>

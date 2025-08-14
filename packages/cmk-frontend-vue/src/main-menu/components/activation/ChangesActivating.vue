@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import usei18n from '@/lib/i18n'
 
-const { t } = usei18n('changes-app')
+const { _t } = usei18n()
 
 defineProps<{
   activatingOnSites: string[] | string | undefined
@@ -18,18 +18,11 @@ defineProps<{
 <template>
   <div class="cmk-changes-activating-container">
     <span v-if="typeof activatingOnSites === 'string'" class="cmk-changes-activating-text"
-      >{{ t('activating-changes-on', 'Activating changes on ') }}
+      >{{ _t('Activating changes on ') }}
       {{ "'".concat(activatingOnSites as string).concat("'...") }}</span
     >
-    <span v-else class="cmk-changes-activating-text"
-      >{{ t('activating-changes', 'Activating changes... ') }}
-    </span>
-    <span>{{
-      t(
-        'safely-navigate-away',
-        "You can safely navigate away - we'll keep working in the background"
-      )
-    }}</span>
+    <span v-else class="cmk-changes-activating-text">{{ _t('Activating changes... ') }} </span>
+    <span>{{ _t("You can safely navigate away - we'll keep working in the background") }}</span>
     <CmkProgressbar max="unknown"></CmkProgressbar>
   </div>
 </template>

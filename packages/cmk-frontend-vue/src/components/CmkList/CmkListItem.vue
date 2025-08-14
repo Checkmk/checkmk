@@ -10,7 +10,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 
-const { t } = usei18n('cmk-list-item')
+const { _t } = usei18n()
 
 const listItemVariants = cva('', {
   variants: {
@@ -50,7 +50,7 @@ const { buttonPadding = '16px' } = defineProps<{
           -->
           <div
             class="cmk-list-item__drag-button"
-            :aria-label="t('drag-aria-label', 'Drag to reorder')"
+            :aria-label="_t('Drag to reorder')"
             role="button"
             :draggable="true"
             @dragstart="draggable?.dragStart"
@@ -64,7 +64,7 @@ const { buttonPadding = '16px' } = defineProps<{
         <CmkIconButton
           name="close"
           size="small"
-          :aria-label="t('remove-aria-label', 'Remove element')"
+          :aria-label="_t('Remove element')"
           @click="() => removeElement()"
         />
       </div>

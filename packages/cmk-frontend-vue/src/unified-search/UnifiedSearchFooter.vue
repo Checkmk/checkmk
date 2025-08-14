@@ -8,7 +8,7 @@ import usei18n from '@/lib/i18n'
 import { getSearchUtils } from './providers/search-utils'
 import ToggleButtonGroup, { type ToggleButtonOption } from '@/components/ToggleButtonGroup.vue'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 
 const searchUtils = getSearchUtils()
 
@@ -31,7 +31,7 @@ const sortOptions: ToggleButtonOption[] = [
 <template>
   <div class="unified-search-footer">
     <div class="sorting">
-      <label>{{ t('result-sorting', 'Result sorting') }}</label>
+      <label>{{ _t('Result sorting') }}</label>
       <ToggleButtonGroup
         v-model="searchUtils.query.sort.value"
         :options="sortOptions"

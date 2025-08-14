@@ -50,7 +50,7 @@ defineProps<{
   save_host: boolean
 }>()
 
-const { t } = usei18n('agent_slideout')
+const { _t } = usei18n()
 
 const emit = defineEmits(['close'])
 const close = () => {
@@ -90,16 +90,16 @@ function saveHost() {
     {{ close_button_title }}
   </CmkButton>
   <CmkButton
-    :title="t('ads-all-agents', 'View all agents')"
+    :title="_t('View all agents')"
     class="all_agents"
     @click="() => openAllAgentsPage(all_agents_url)"
   >
     <CmkIcon name="frameurl" />
-    {{ t('ads-all-agents', 'View all agents') }}
+    {{ _t('View all agents') }}
   </CmkButton>
   <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
   <CmkHeading type="h4" class="select-heading">
-    {{ t('ads-heading2', 'Select the type of system you want to monitor') }}
+    {{ _t('Select the type of system you want to monitor') }}
   </CmkHeading>
   <CmkTabs v-model="openedTab">
     <template #tabs>
@@ -115,7 +115,7 @@ function saveHost() {
           :options="tab.toggle_button_options"
         />
         <CmkHeading v-if="tab.install_msg" type="h4">
-          {{ t('download-and-install', 'Download and install') }}
+          {{ _t('Download and install') }}
         </CmkHeading>
         <CmkCode
           v-if="tab.install_msg && tab.install_cmd"
@@ -163,14 +163,13 @@ function saveHost() {
         <div v-if="tab.registration_msg && tab.registration_cmd">
           <div class="register-heading-row">
             <CmkHeading type="h4">
-              {{ t('register-the-agent', 'Register the agent') }}
+              {{ _t('Register the agent') }}
             </CmkHeading>
             <HelpText
               :help="
-                t(
-                  'register-help-text',
-                  'Agent registration will establish trust between the Agent Controller ' +
-                    'on the host and the Agent Receiver on the Checkmk server.'
+                _t(
+                  `Agent registration will establish trust between the Agent Controller
+                    on the host and the Agent Receiver on the Checkmk server.`
                 )
               "
             />
@@ -178,34 +177,27 @@ function saveHost() {
           <div v-if="save_host" class="save_host__div">
             <CmkParagraph>
               {{
-                t(
-                  'register-agent-create-host-text-1',
+                _t(
                   'Agent registration is only possible for hosts that already exist in Checkmk (they don’t need to be activated yet).'
                 )
               }}
             </CmkParagraph>
             <CmkParagraph>
               {{
-                t(
-                  'register-agent-create-host-text-2',
+                _t(
                   'If the host hasn’t been created yet, please do so first by clicking the Create host button below.'
                 )
               }}
             </CmkParagraph>
             <CmkButton class="save_host__button" @click="saveHost">
-              {{ t('save-host', 'Save host') }}
+              {{ _t('Save host') }}
             </CmkButton>
           </div>
 
           <CmkCode :title="tab.registration_msg" :code_txt="tab.registration_cmd" class="code" />
         </div>
         <CmkParagraph>
-          {{
-            t(
-              'agent-download-finish-msg',
-              'After installing, you can close the slideout and test the agent connection.'
-            )
-          }}
+          {{ _t('After installing, you can close the slideout and test the agent connection.') }}
         </CmkParagraph>
       </CmkTabContent>
     </template>

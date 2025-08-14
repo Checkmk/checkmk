@@ -14,7 +14,7 @@ import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 
 const maxRecentlyViewed = 5
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const recentlyViewed = ref<HistoryEntry[]>(
   searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
@@ -74,13 +74,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="cmk-unified-search-empty-result">
-    <div class="shruggy">{{ t('shruggy', '¯\\_(ツ)_/¯') }}</div>
+    <div class="shruggy">{{ _t('¯\\_(ツ)_/¯') }}</div>
     <div>
-      {{ t('no-results-found', 'No results found for your search') }}
+      {{ _t('No results found for your search') }}
     </div>
     <CmkButton ref="reset-button" class="reset-button" @click.stop="searchUtils.resetSearch()">
       <CmkIcon name="reload"></CmkIcon>
-      {{ t('reset-search', 'Reset search') }}
+      {{ _t('Reset search') }}
     </CmkButton>
   </div>
   <UnifiedSearchRecentlyViewed

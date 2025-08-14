@@ -11,9 +11,9 @@ import DropDownIndicator from './DropDownIndicator.vue'
 import { availableProviderOptions } from './QueryOptions'
 import ProviderOptionEntry from './ProviderOptionEntry.vue'
 import usei18n from '@/lib/i18n'
-import type { ProviderOption } from '@/unified-search/providers/search-utils.types'
+import type { ProviderOption, QueryProvider } from '@/unified-search/providers/search-utils.types'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const providerDropdownBtn = useTemplateRef('unified-search-provider-btn')
 const providerOptions = ref<ProviderOption[]>(availableProviderOptions)
@@ -98,6 +98,13 @@ function toggleProviderOptions() {
     showProviderOptions()
   }
 }
+
+const provideri18n: Record<QueryProvider, string> = {
+  all: _t('All'),
+  monitoring: _t('Monitoring'),
+  customize: _t('Customize'),
+  setup: _t('Setup')
+}
 </script>
 
 <template>
@@ -109,10 +116,7 @@ function toggleProviderOptions() {
       @keypres.enter.stop="toggleProviderOptions"
     >
       <span class="unified-search-provider-switch-selected">{{
-        t(
-          ['filter', 'provider', searchUtils.query.provider].join('-'),
-          searchUtils.query.provider.value
-        )
+        provideri18n[searchUtils.query.provider.value]
       }}</span>
       <DropDownIndicator
         class="unified-search-provider-switch-indicator"
@@ -126,7 +130,7 @@ function toggleProviderOptions() {
     >
       <ul class="unified-search-provider-option-list">
         <li class="unified-search-provider-option-list-section-title">
-          {{ t('search-in', 'Search in') }}
+          {{ _t('Search in') }}
         </li>
         <ProviderOptionEntry
           v-for="(opt, idx) in providerOptions"

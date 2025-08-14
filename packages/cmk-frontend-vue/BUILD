@@ -1,4 +1,4 @@
-load("@aspect_rules_js//js:defs.bzl", "js_run_devserver")
+load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm_cmk_frontend_vue//:defs.bzl", "npm_link_all_packages")
@@ -7,10 +7,59 @@ load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:prettier/package_json.bzl
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 npm_link_all_packages(name = "node_modules")
+
+vue_gettext_bin.vue_gettext_extract_binary(
+    name = "gettext-extract",
+    chdir = package_name(),
+)
+
+vue_gettext_bin.vue_gettext_compile_binary(
+    name = "gettext-compile",
+    chdir = package_name(),
+)
+
+EXTRACTED_LOCALE_OUTS = [
+    "locale/messages.pot",
+    "locale/en.po",
+    "locale/de.po",
+]
+
+LOCALE_OUTS = [
+    "src/assets/locale/en.json",
+    "src/assets/locale/de.json",
+]
+
+js_run_binary(
+    name = "extract_i18n",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.vue",
+        "demo/**/*.ts",
+        "demo/**/*.vue",
+    ]) + [
+        "gettext.config.js",
+        ":node_modules/vue3-gettext",
+    ],
+    outs = EXTRACTED_LOCALE_OUTS,
+    tool = ":gettext-extract",
+    visibility = ["//visibility:private"],
+)
+
+js_run_binary(
+    name = "compile_i18n",
+    srcs = EXTRACTED_LOCALE_OUTS + [
+        "gettext.config.js",
+        ":node_modules/vue3-gettext",
+    ],
+    outs = LOCALE_OUTS,
+    tool = ":gettext-compile",
+    visibility = ["//visibility:private"],
+)
 
 SRCS = [
     ".prettierrc.json",
@@ -26,6 +75,7 @@ SRCS = [
     "vite.config.ts",
     "demo/index.html",
     "//packages/cmk-frontend:dist",
+    ":extract_i18n",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -50,7 +100,8 @@ SRCS = [
     ":node_modules/vitest-fail-on-console",
     ":node_modules/vue",
     ":node_modules/vue-router",
-] + glob([
+    ":node_modules/vue3-gettext",
+] + LOCALE_OUTS + glob([
     "src/**/*.ts",
     "src/**/*.vue",
     "src/**/*.css",

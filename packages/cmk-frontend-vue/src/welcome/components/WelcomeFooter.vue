@@ -15,7 +15,7 @@ const props = defineProps<{
   is_start_url: boolean
 }>()
 
-const { t } = usei18n('welcome-footer')
+const { _t } = usei18n()
 const showWelcomeOnStart = ref(props.is_start_url)
 const welcomeString = ref('welcome.py')
 
@@ -51,17 +51,9 @@ const setStartUrl = async (startUrlValue?: string): Promise<void> => {
 
 <template>
   <section class="welcome-footer">
-    <CmkCheckbox
-      v-model="showWelcomeOnStart"
-      :label="t('show-on-start', 'Show welcome page on start')"
-    />
+    <CmkCheckbox v-model="showWelcomeOnStart" :label="_t('Show welcome page on start')" />
     <CmkParagraph class="welcome-footer__hint">
-      {{
-        t(
-          'access-breadcrumbs',
-          'You can still access it later via Help > Learning Checkmk > Welcome page'
-        )
-      }}
+      {{ _t('You can still access it later via Help > Learning Checkmk > Welcome page') }}
     </CmkParagraph>
   </section>
 </template>

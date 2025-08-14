@@ -15,7 +15,7 @@ import usei18n from '@/lib/i18n'
 import type { PendingChanges } from '../../ChangesInterfaces'
 import PendingChangeItemText from './PendingChangeItemText.vue'
 
-const { t } = usei18n('changes-app')
+const { _t } = usei18n()
 
 const props = defineProps<{
   pendingChanges: PendingChanges[]
@@ -27,11 +27,11 @@ const props = defineProps<{
 const pendingChangesCollapsible = ref<boolean>(true)
 
 const changesTitle = computed(() => {
-  return `${t('changes', 'Changes')} (${props.pendingChanges.length})`
+  return _t('Changes: (%{n})', { n: props.pendingChanges.length })
 })
 
 const changesSideTitle = computed(() => {
-  return `${t('foreign-changes', 'Foreign changes: ')} ${props.numberOfForeignChanges}`
+  return _t('Foreign changes: (%{n})', { n: props.numberOfForeignChanges })
 })
 </script>
 
@@ -48,7 +48,7 @@ const changesSideTitle = computed(() => {
     <CmkCollapsible :open="pendingChangesCollapsible" class="cmk-collapsible-pending-changes">
       <CmkIndent v-if="selectedSites.length === 0" class="cmk-indent-no-sites-selected-container">
         <div class="cmk-div-no-sites-selected">
-          {{ t('no-sites-selected', "You haven't selected any sites") }}
+          {{ _t("You haven't selected any sites") }}
         </div>
       </CmkIndent>
       <CmkScrollContainer

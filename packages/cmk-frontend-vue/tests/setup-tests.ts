@@ -5,6 +5,12 @@
  */
 import failOnConsole from 'vitest-fail-on-console'
 import '@testing-library/jest-dom/vitest'
+import { vi } from 'vitest'
+import usei18n from './setup-tests-i18n'
+
+vi.mock('@/lib/i18n', () => ({
+  default: usei18n
+}))
 
 // Mock the scrollIntoView method to prevent errors. jsdom has no concept of scrolling anyway
 window.HTMLElement.prototype.scrollIntoView = function () {}

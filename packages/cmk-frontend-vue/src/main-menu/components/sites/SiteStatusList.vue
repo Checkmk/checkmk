@@ -15,7 +15,7 @@ import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import { ref } from 'vue'
 import SiteStatusItem from './SiteStatusItem.vue'
 
-const { t } = usei18n('changes-app')
+const { _t } = usei18n()
 
 const props = defineProps<{
   sites: Site[]
@@ -68,7 +68,7 @@ immediateWatch(
       v-if="props.sites.length === 1 && typeof props.sites[0] !== 'undefined' && !activating"
       class="cmk-changes-site-single"
     >
-      <div class="cmk-changes-site-single-title">{{ t('sites', 'Sites') }}</div>
+      <div class="cmk-changes-site-single-title">{{ _t('Sites') }}</div>
       <SiteStatusItem
         :idx="0"
         :site="props.sites[0]"
@@ -81,14 +81,12 @@ immediateWatch(
     </div>
     <CmkTabs v-if="props.sites.length > 1" v-model="activeTab">
       <template #tabs>
-        <CmkTab id="sites-with-changes" :disabled="sitesWithChanges.length === 0"
-          >{{ t('sites-with-changes', 'Sites with changes') }} ({{
-            sitesWithChanges.length
-          }})</CmkTab
-        >
-        <CmkTab id="sites-with-errors" :disabled="sitesWithErrors.length === 0"
-          >{{ t('sites-with-errors', 'Sites with errors') }} ({{ sitesWithErrors.length }})</CmkTab
-        >
+        <CmkTab id="sites-with-changes" :disabled="sitesWithChanges.length === 0">{{
+          _t('Sites with changes: %{n}', { n: sitesWithChanges.length })
+        }}</CmkTab>
+        <CmkTab id="sites-with-errors" :disabled="sitesWithErrors.length === 0">{{
+          _t('Sites with errors: %{n}', { n: sitesWithErrors.length })
+        }}</CmkTab>
       </template>
       <template #tab-contents>
         <CmkTabContent id="sites-with-changes" spacing="none">

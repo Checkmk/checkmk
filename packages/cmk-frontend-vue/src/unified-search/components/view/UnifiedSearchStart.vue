@@ -16,7 +16,7 @@ import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 
 const maxRecentlyViewed = 5
 const maxRecentlySearched = 5
@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 
   <div v-if="recentlySearches.length > 0" class="recent-searches">
     <CmkHeading type="h4" class="result-heading">
-      {{ t('recently-searched', 'Recently searched') }}
+      {{ _t('Recently searched') }}
       <button
         @click.stop="
           () => {
@@ -115,7 +115,7 @@ onBeforeUnmount(() => {
           }
         "
       >
-        {{ t('clear-all', 'Clear all') }}
+        {{ _t('Clear all') }}
       </button>
     </CmkHeading>
     <ResultList>

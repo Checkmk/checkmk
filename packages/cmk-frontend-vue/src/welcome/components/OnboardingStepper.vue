@@ -13,7 +13,7 @@ import usei18n from '@/lib/i18n.ts'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { stepComponents } from './steps/stepComponents'
 
-const { t } = usei18n('onboarding-stepper')
+const { _t } = usei18n()
 
 const props = defineProps<{
   urls: WelcomeUrls
@@ -38,7 +38,7 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
 
 <template>
   <CmkHeading v-if="showHeading" type="h4">
-    {{ t('first-steps', 'First steps with Checkmk') }}
+    {{ _t('First steps with Checkmk') }}
   </CmkHeading>
   <CmkSpace />
   <CmkAccordionStepPanel v-model="openedItems">

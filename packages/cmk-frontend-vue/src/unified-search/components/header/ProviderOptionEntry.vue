@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { immediateWatch } from '@/lib/watch'
 import { useTemplateRef } from 'vue'
-import usei18n from '@/lib/i18n'
 import type { ProviderOption } from '@/unified-search/providers/search-utils.types'
 
 export interface ProviderOptionEntryProps {
@@ -16,7 +15,6 @@ export interface ProviderOptionEntryProps {
   active?: boolean | undefined
 }
 
-const { t } = usei18n('unified-search-app')
 const props = defineProps<ProviderOptionEntryProps>()
 
 const focusRef = useTemplateRef('filter-focus')
@@ -33,7 +31,7 @@ immediateWatch(
 <template>
   <li role="option">
     <button ref="filter-focus" :class="{ active }">
-      <span>{{ t(['filter', option.type, option.value].join('-'), option.title) }}</span>
+      <span>{{ option.title }}</span>
     </button>
   </li>
 </template>

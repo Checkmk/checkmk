@@ -11,7 +11,7 @@ import CmkHeading from './typography/CmkHeading.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
-const { t } = usei18n('cmk-slide-in')
+const { _t } = usei18n()
 
 export interface CmkSlideInDialogProps {
   open: boolean
@@ -29,7 +29,7 @@ const emit = defineEmits(['close'])
     <DialogTitle v-if="header" class="slide-in__title">
       <CmkHeading type="h1">{{ header.title }}</CmkHeading>
       <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-        <CmkIcon :aria-label="t('close-slidein', 'Close')" name="close" size="xsmall" />
+        <CmkIcon :aria-label="_t('Close')" name="close" size="xsmall" />
       </DialogClose>
     </DialogTitle>
 

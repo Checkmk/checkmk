@@ -12,7 +12,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import CmkLinkCardContainer from '@/components/CmkLinkCardContainer.vue'
 
-const { t } = usei18n('next-steps')
+const { _t } = usei18n()
 
 defineProps<{
   urls: WelcomeUrls
@@ -21,17 +21,14 @@ defineProps<{
 
 <template>
   <CmkHeading type="h4">
-    {{ t('whats-next', "What's next?") }}
+    {{ _t("What's next?") }}
   </CmkHeading>
   <CmkSpace />
   <CmkLinkCardContainer class="next-link-card-container">
     <CmkLinkCard
-      :title="t('setup-backup', 'Set up backup')"
+      :title="_t('Set up backup')"
       :subtitle="
-        t(
-          'setup-backup-subtitle',
-          'No backup, no mercy! Protect your configuration and data with automated backups.'
-        )
+        _t('No backup, no mercy! Protect your configuration and data with automated backups.')
       "
       icon-name="backup"
       :url="urls.setup_backup"
@@ -39,23 +36,17 @@ defineProps<{
       :open-in-new-tab="false"
     />
     <CmkLinkCard
-      :title="t('scale-monitoring', 'Scale your monitoring')"
-      :subtitle="
-        t(
-          'scale-monitoring-subtitle',
-          'Add more hosts, sites, or distributed setups as your environment grows.'
-        )
-      "
+      :title="_t('Scale your monitoring')"
+      :subtitle="_t('Add more hosts, sites, or distributed setups as your environment grows.')"
       icon-name="sites"
       :url="urls.scale_monitoring"
       variant="borderless"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
-      :title="t('fine-tune', 'Fine-tune your monitoring')"
+      :title="_t('Fine-tune your monitoring')"
       :subtitle="
-        t(
-          'fine-tune-subtitle',
+        _t(
           'Dive deep into the details and learn how to optimize checks, thresholds, and notifications.'
         )
       "
@@ -65,10 +56,9 @@ defineProps<{
       :open-in-new-tab="true"
     />
     <CmkLinkCard
-      :title="t('license', 'License your site')"
+      :title="_t('License your site')"
       :subtitle="
-        t(
-          'license-subtitle',
+        _t(
           'It’s time to enjoy the full experience! Set up automated licensing for a smooth experience.'
         )
       "

@@ -13,7 +13,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 
 import { type Suggestion, ErrorResponse, Response } from './suggestions'
 
-const { t } = usei18n('cmk-suggestions')
+const { _t } = usei18n()
 
 type SuggestionsFixed = {
   type: 'fixed'
@@ -247,7 +247,7 @@ defineExpose({
       <input
         ref="suggestionInputRef"
         v-model="filterString"
-        :aria-label="t('filter-aria-label', 'filter')"
+        :aria-label="_t('filter')"
         type="text"
         @blur="inputLostFocus"
         @keydown.escape.prevent="emit('blur')"

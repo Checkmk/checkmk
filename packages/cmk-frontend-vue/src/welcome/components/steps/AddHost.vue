@@ -13,7 +13,7 @@ import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAcc
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 
-const { t } = usei18n('welcome-step-2')
+const { _t } = usei18n()
 
 defineProps<{
   step: number
@@ -27,13 +27,12 @@ defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="t('title', 'Add your first host')"
-    :info="t('time', '2-5 min')"
+    :title="_t('Add your first host')"
+    :info="_t('2-5 min')"
   >
     <StepParagraph>
       {{
-        t(
-          'text',
+        _t(
           `Each host includes a number of services that represent what you want to monitor, for example,
   CPU usage, disk space, running processes, or hardware sensors. Checkmk makes this easy with the
   Service Discovery, which automatically detects relevant services on your host, so you can start
@@ -43,42 +42,42 @@ defineProps<{
     </StepParagraph>
 
     <StepHeading>
-      {{ t('on-premise-hosts', 'On-premise-hosts') }}
+      {{ _t('On-premise-hosts') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
-        :title="t('server', 'Server (Linux, Windows, Solaris, ...)')"
+        :title="_t('Server (Linux, Windows, Solaris, ...)')"
         :url="urls.add_host"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="networking"
-        :title="t('network-devices', 'Network devices and SNMP')"
+        :title="_t('Network devices and SNMP')"
         :url="urls.network_devices"
         :open-in-new-tab="false"
       />
     </StepCardsRow>
 
     <StepHeading>
-      {{ t('cloud-hosts', 'Cloud hosts') }}
+      {{ _t('Cloud hosts') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard
         icon-name="aws-logo"
-        :title="t('aws', 'Amazon Web Services (AWS)')"
+        :title="_t('Amazon Web Services (AWS)')"
         :url="urls.aws_quick_setup"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="azure-vms"
-        :title="t('azure', 'Microsoft Azure')"
+        :title="_t('Microsoft Azure')"
         :url="urls.azure_quick_setup"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="gcp"
-        :title="t('gcp', 'Google Cloud Platform (GCP)')"
+        :title="_t('Google Cloud Platform (GCP)')"
         :url="urls.gcp_quick_setup"
         :open-in-new-tab="false"
       />
@@ -86,20 +85,20 @@ defineProps<{
 
     <template v-if="urls.synthetic_monitoring || urls.opentelemetry">
       <StepHeading>
-        {{ t('application-monitoring', 'Application monitoring') }}
+        {{ _t('Application monitoring') }}
       </StepHeading>
       <StepCardsRow>
         <CmkLinkCard
           v-if="urls.synthetic_monitoring"
           icon-name="synthetic-monitoring-yellow"
-          :title="t('synthetic-monitoring', 'Synthetic monitoring')"
+          :title="_t('Synthetic monitoring')"
           :url="urls.synthetic_monitoring"
           :open-in-new-tab="false"
         />
         <CmkLinkCard
           v-if="urls.opentelemetry"
           icon-name="opentelemetry"
-          :title="t('otel', 'OpenTelemetry (Beta)')"
+          :title="_t('OpenTelemetry (Beta)')"
           :url="urls.opentelemetry"
           :open-in-new-tab="false"
         />

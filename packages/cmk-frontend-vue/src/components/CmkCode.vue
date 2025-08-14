@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import usei18n from '@/lib/i18n'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
-const { t } = usei18n('cmk-code')
+const { _t } = usei18n()
 
 const props = defineProps<{
   title?: string
@@ -95,11 +95,7 @@ const toggleExpansion = () => {
               class="toggle_icon"
               :class="{ expanded: isExpanded }"
             />
-            {{
-              isExpanded
-                ? t('cmk-code-show-less', 'Show less')
-                : t('cmk-code-show-more', 'Show more')
-            }}
+            {{ isExpanded ? _t('Show less') : _t('Show more') }}
           </CmkButton>
         </div>
       </div>
@@ -122,8 +118,8 @@ const toggleExpansion = () => {
               />
               {{
                 errorMessage
-                  ? t('cmk-code-copy-error', 'Copy to clipboard failed with error: ') + errorMessage
-                  : t('cmk-code-copy-success', 'Copied to clipboard')
+                  ? _t('Copy to clipboard failed with error: ') + errorMessage
+                  : _t('Copied to clipboard')
               }}
             </div>
           </TooltipContent>

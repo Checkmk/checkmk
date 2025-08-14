@@ -20,7 +20,7 @@ import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-const { t } = usei18n('unified-search-app')
+const { _t } = usei18n()
 
 const searchUtils = getSearchUtils()
 const currentlySelected = ref<number>(-1)
@@ -106,7 +106,7 @@ function searchResultNotEmpty(): boolean {
   <div v-if="searchResultNotEmpty()" class="cmk-unified-search-result-tabs">
     <div>
       <CmkHeading type="h4" class="result-heading">
-        {{ t('results', 'Results') }} ({{ results.length }})
+        {{ _t('Results') }} ({{ results.length }})
       </CmkHeading>
     </div>
     <CmkScrollContainer max-height="calc(100vh - 260px)">

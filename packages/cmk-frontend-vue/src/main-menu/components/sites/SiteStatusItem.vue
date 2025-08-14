@@ -13,7 +13,7 @@ import usei18n from '@/lib/i18n'
 import type { Site } from '../../ChangesInterfaces'
 import CmkIcon from '@/components/CmkIcon.vue'
 
-const { t } = usei18n('changes-app')
+const { _t } = usei18n()
 
 const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
   const mapping: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
@@ -65,14 +65,14 @@ const emit = defineEmits<{
         v-if="site.changes > 0 && !activating && !isRecentlyActivated"
         class="cmk-changes-sites-item-end"
       >
-        <span class="cmk-span-changes-text">{{ t('changes', 'Changes:') }}</span>
+        <span class="cmk-span-changes-text">{{ _t('Changes:') }}</span>
         <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
       </div>
       <div
         v-if="site.changes === 0 && !activating && !isRecentlyActivated"
         class="cmk-changes-sites-item-end"
       >
-        <span class="cmk-span-changes-text">{{ t('no-changes', 'No changes') }}</span>
+        <span class="cmk-span-changes-text">{{ _t('No changes') }}</span>
       </div>
       <div
         v-if="isRecentlyActivated && site.lastActivationStatus !== undefined"
@@ -94,9 +94,7 @@ const emit = defineEmits<{
     >
       <CmkIcon variant="inline" name="validation-error" />
       <div class="cmk-div-warning-or-error-message">
-        <span v-if="site.lastActivationStatus?.state === 'warning'">{{
-          t('changes-activated-with-warning', 'Warning')
-        }}</span>
+        <span v-if="site.lastActivationStatus?.state === 'warning'">{{ _t('Warning') }}</span>
         <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
       </div>
     </div>
@@ -106,9 +104,7 @@ const emit = defineEmits<{
     >
       <CmkIcon variant="inline" name="alert_crit" />
       <div class="cmk-div-warning-or-error-message">
-        <span v-if="site.lastActivationStatus.state === 'error'">{{
-          t('changes-failed-to-activate', 'Error')
-        }}</span>
+        <span v-if="site.lastActivationStatus.state === 'error'">{{ _t('Error') }}</span>
         <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
       </div>
     </div>

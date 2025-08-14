@@ -11,7 +11,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import { type Sizes } from '../../components/CmkProgressbar.vue'
 
-const { t } = usei18n('steps-progress-bar')
+const { _t } = usei18n()
 
 export interface StepsProgressBarProps {
   completedSteps?: number
@@ -26,11 +26,11 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 
 <template>
   <div class="steps-progress-bar">
-    <CmkHeading v-if="!hideHeading" type="h4">{{ t('your-progress', 'Your progress') }}</CmkHeading>
+    <CmkHeading v-if="!hideHeading" type="h4">{{ _t('Your progress') }}</CmkHeading>
     <div class="steps-progress-bar__content" :class="{ 'flex-column': flexColumn }">
       <CmkParagraph>
         {{ completedSteps }}/{{ totalSteps }}
-        {{ t('steps-complete', 'Steps complete') }}
+        {{ _t('Steps complete') }}
       </CmkParagraph>
       <CmkProgressbar
         class="steps-progress-bar__bar"

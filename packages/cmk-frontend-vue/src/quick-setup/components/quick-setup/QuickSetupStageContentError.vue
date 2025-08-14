@@ -15,7 +15,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 
-const { t } = usei18n('quick-setup-stage-content-error')
+const { _t } = usei18n()
 
 const details = ref<boolean>(false)
 const props = defineProps<{ errors: QuickSetupStageContent['errors'] }>()
@@ -31,9 +31,7 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 <template>
   <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
     <CmkHtml :html="error.message" />
-    <CmkButton v-if="details === false" @click="details = true">{{
-      t('show-details', 'Show details')
-    }}</CmkButton>
+    <CmkButton v-if="details === false" @click="details = true">{{ _t('Show details') }}</CmkButton>
     <div v-else>
       <pre>{{ error.details }}</pre>
     </div>

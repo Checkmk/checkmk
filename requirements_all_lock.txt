@@ -2237,9 +2237,9 @@ pathspec==0.12.1 \
     --hash=sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08 \
     --hash=sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712
     # via black
-pbr==6.1.1 \
-    --hash=sha256:38d4daea5d9fa63b3f626131b9d34947fd0c8be9b05a29276870580050a25a76 \
-    --hash=sha256:93ea72ce6989eb2eed99d0f75721474f69ad88128afdef5ac377eb797c4bf76b
+pbr==7.0.0 \
+    --hash=sha256:b447e63a2bc04fd975fc0480b8d5ebf979179e2c0ae203bf1eff9ea20073bc38 \
+    --hash=sha256:cf4127298723dafbce3afd13775ccf3885be5d3c8435751b867f9a6a10b71a39
     # via
     #   python-jenkins
     #   stevedore
@@ -4253,9 +4253,9 @@ vcrpy==7.0.0 \
     --hash=sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
     # via -r requirements_all.txt
-virtualenv==20.33.1 \
-    --hash=sha256:07c19bc66c11acab6a5958b815cbcee30891cd1c2ccf53785a28651a0d8d8a67 \
-    --hash=sha256:1b44478d9e261b3fb8baa5e74a0ca3bc0e05f21aa36167bf9cbf850e542765b8
+virtualenv==20.34.0 \
+    --hash=sha256:341f5afa7eee943e4984a9207c025feedd768baff6753cd660c857ceb3e36026 \
+    --hash=sha256:44815b2c9dee7ed86e387b842a84f20b93f7f417f95886ca1996a72a4138eb1a
     # via pre-commit
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \

@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "5eafcc5970ddbc05826920b451cb3b9c3fa6148c3436c2d416949ddbb9c2aa4d",
+          "@@//requirements_all_lock.txt": "03a91675938d9e10dc69cb6402f43498a52027f45d538069e4b3c439debfde22",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -1921,7 +1921,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "pbr==6.1.1     --hash=sha256:38d4daea5d9fa63b3f626131b9d34947fd0c8be9b05a29276870580050a25a76     --hash=sha256:93ea72ce6989eb2eed99d0f75721474f69ad88128afdef5ac377eb797c4bf76b"
+              "requirement": "pbr==7.0.0     --hash=sha256:b447e63a2bc04fd975fc0480b8d5ebf979179e2c0ae203bf1eff9ea20073bc38     --hash=sha256:cf4127298723dafbce3afd13775ccf3885be5d3c8435751b867f9a6a10b71a39"
             }
           },
           "cmk_requirements_312_ply": {
@@ -5253,7 +5253,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "virtualenv==20.33.1     --hash=sha256:07c19bc66c11acab6a5958b815cbcee30891cd1c2ccf53785a28651a0d8d8a67     --hash=sha256:1b44478d9e261b3fb8baa5e74a0ca3bc0e05f21aa36167bf9cbf850e542765b8"
+              "requirement": "virtualenv==20.34.0     --hash=sha256:341f5afa7eee943e4984a9207c025feedd768baff6753cd660c857ceb3e36026     --hash=sha256:44815b2c9dee7ed86e387b842a84f20b93f7f417f95886ca1996a72a4138eb1a"
             }
           },
           "cmk_requirements_312_zope_event": {

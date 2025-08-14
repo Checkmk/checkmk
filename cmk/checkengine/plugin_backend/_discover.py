@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
 
-from cmk import trace
+import cmk.trace
 from cmk.agent_based import v2
 from cmk.checkengine import plugins
 from cmk.discover_plugins import (
@@ -27,7 +27,7 @@ _ABPlugins = (
     v2.SimpleSNMPSection | v2.SNMPSection | v2.AgentSection | v2.CheckPlugin | v2.InventoryPlugin
 )
 
-tracer = trace.get_tracer()
+tracer = cmk.trace.get_tracer()
 
 
 @tracer.instrument("load_all_plugins")

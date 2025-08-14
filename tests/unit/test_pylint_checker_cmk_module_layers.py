@@ -46,8 +46,6 @@ def test_get_absolute_importee(
         ("cmk/base", "cmk.base", "cmk.gui", False),
         # allow component internal imprt
         ("cmk/gui", "cmk.gui.foo", "cmk.gui.bar", True),
-        # `checkers` in `utils` is wrong but anywhere else is OK
-        ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
         ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),

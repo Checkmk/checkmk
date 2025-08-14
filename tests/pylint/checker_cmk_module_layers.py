@@ -579,35 +579,6 @@ def _allowed_for_robotmk(
     )
 
 
-def _allow_for_cmk_checkengine(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.snmplib")),
-        )
-    )
-
-
-def _allow_for_cmk_fetchers(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.snmplib")),
-            imported.in_component(Component("cmk.checkengine")),
-        )
-    )
-
-
 def _allow_for_cmk_piggyback_hub(
     *,
     imported: ModuleName,
@@ -714,9 +685,65 @@ _COMPONENTS = (
     (Component("cmk.cmkcert"), _allow_for_cmkcert),
     (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),
     (Component("cmk.checkengine.value_store"), _allow("cmk.utils", "cmk.ccc")),
-    (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
-    (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
-    (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (
+        Component("cmk.checkengine"),
+        _allow(
+            "cmk.agent_based",
+            "cmk.ccc",
+            "cmk.discover_plugins",
+            "cmk.inventory",
+            "cmk.piggyback.backend",
+            "cmk.snmplib",
+            "cmk.trace",
+            "cmk.utils.agentdatatype",
+            "cmk.utils.auto_queue",
+            "cmk.utils.check_utils",
+            "cmk.utils.encoding",
+            "cmk.utils.everythingtype",
+            "cmk.utils.labels",
+            "cmk.utils.log",
+            "cmk.utils.metrics",
+            "cmk.utils.parameters",
+            "cmk.utils.paths",
+            "cmk.utils.regex",
+            "cmk.utils.rulesets",
+            "cmk.utils.sectionname",
+            "cmk.utils.servicename",
+            "cmk.utils.structured_data",
+            "cmk.utils.timeout",
+            "cmk.utils.timeperiod",
+            "cmk.utils.translations",
+        ),
+    ),
+    (
+        Component("cmk.fetchers"),
+        _allow(
+            "cmk.ccc",
+            "cmk.checkengine",
+            "cmk.crypto.deprecated",
+            "cmk.piggyback.backend",
+            "cmk.snmplib",
+            "cmk.utils.agentdatatype",
+            "cmk.utils.agent_registration",
+            "cmk.utils.certs",
+            "cmk.utils.paths",
+            "cmk.utils.sectionname",
+        ),
+    ),
+    (
+        Component("cmk.cee.helpers"),
+        _allow(
+            "cmk.ccc",
+            "cmk.checkengine",
+            "cmk.fetchers",
+            "cmk.snmplib",
+            "cmk.utils.config_path",
+            "cmk.utils.observer",
+            "cmk.utils.paths",
+            "cmk.utils.sectionname",
+            "cmk.utils.timeout",
+        ),
+    ),
     (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),

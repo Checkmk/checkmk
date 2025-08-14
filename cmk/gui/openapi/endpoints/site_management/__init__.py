@@ -33,7 +33,6 @@ from cmk.gui.openapi.endpoints.site_management.request_schemas import (
     SITE_ID_EXISTS,
     SiteConnectionRequestCreate,
     SiteConnectionRequestUpdate,
-    SiteLoginRequest,
 )
 from cmk.gui.openapi.endpoints.site_management.response_schemas import (
     SiteConnectionResponse,
@@ -47,7 +46,6 @@ from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
-    LoginException,
     SiteConfig,
     SitesApiMgr,
 )
@@ -107,38 +105,6 @@ def put_site(params: Mapping[str, Any]) -> Response:
         site_config=params["body"]["site_config"],
         is_new_connection=False,
     )
-
-
-@Endpoint(
-    constructors.object_action_href("site_connection", "{site_id}", "login"),
-    "cmk/site_login",
-    method="post",
-    tag_group="Setup",
-    path_params=[SITE_ID_EXISTS],
-    request_schema=SiteLoginRequest,
-    output_empty=True,
-    additional_status_codes=[401],
-    permissions_required=LOGIN_PERMISSIONS,
-)
-def site_login(params: Mapping[str, Any]) -> Response:
-    """Login to a remote site"""
-    user.need_permission("wato.sites")
-    body = params["body"]
-    try:
-        SitesApiMgr().login_to_site(
-            site_id=SiteId(params["site_id"]),
-            username=body["username"],
-            password=body["password"],
-            pprint_value=active_config.wato_pprint_config,
-            debug=active_config.debug,
-        )
-    except LoginException as exc:
-        return problem(
-            status=400,
-            title="Login problem",
-            detail=str(exc),
-        )
-    return Response(status=204)
 
 
 @Endpoint(
@@ -222,5 +188,4 @@ def _convert_validate_and_save_site_data(
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
     endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
-    endpoint_registry.register(site_login, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(site_logout, ignore_duplicates=ignore_duplicates)

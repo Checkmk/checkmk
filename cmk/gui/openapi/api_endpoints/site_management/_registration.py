@@ -9,6 +9,7 @@ from .delete_site_connection import ENDPOINT_DELETE_SITE_CONNECTION
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .list_site_connections import ENDPOINT_LIST_SITE_CONNECTIONS
 from .show_site_connection import ENDPOINT_SHOW_SITE_CONNECTION
+from .site_login import ENDPOINT_SITE_CONNECTION_LOGIN
 
 
 def register(
@@ -31,5 +32,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_DELETE_SITE_CONNECTION,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_SITE_CONNECTION_LOGIN,
         ignore_duplicates=ignore_duplicates,
     )

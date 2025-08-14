@@ -6,3 +6,10 @@
 from cmk.gui.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Perm("wato.sites")
+
+LOGIN_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.users"),
+        PERMISSIONS,
+    ]
+)

@@ -193,12 +193,16 @@ class GroupConverter:
 
 class UserConverter:
     @staticmethod
-    def active(user: str) -> UserId:
-        user_id = UserId.parse(user)
+    def active(raw_user_id: str) -> UserId:
+        user_id = UserId.parse(raw_user_id)
         users = userdb.load_users(lock=False)
         if user_id not in users:
-            raise ValueError(f"User {user!r} does not exist.")
+            raise ValueError(f"User {raw_user_id!r} does not exist.")
         return user_id
+
+    @staticmethod
+    def valid_user_id(raw_user_id: str) -> UserId:
+        return UserId.parse(raw_user_id)
 
 
 class TagConverter:

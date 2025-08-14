@@ -22,6 +22,9 @@ defineProps<{
 
 <style scoped>
 .cmk-accordion-item-state-indicator {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   width: 16px;
   height: 16px;
   &:after {
@@ -34,7 +37,7 @@ defineProps<{
     height: 6px;
     position: relative;
     transform: rotate(45deg);
-    top: -3px;
+    top: 0;
     transition:
       transform 0.3s ease-in-out,
       top 0.3s ease-in-out;
@@ -44,7 +47,7 @@ defineProps<{
 .open {
   &:after {
     transform: rotate(135deg);
-    top: -3px;
+    top: -1px;
     transition:
       transform 0.3s ease-out,
       top 0.3s ease-out;

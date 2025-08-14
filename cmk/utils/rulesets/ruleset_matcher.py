@@ -19,7 +19,7 @@ from typing import (
     TypeVar,
 )
 
-from cmk import trace
+import cmk.trace
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import (
@@ -34,7 +34,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 
-tracer = trace.get_tracer()
+tracer = cmk.trace.get_tracer()
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")

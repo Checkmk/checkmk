@@ -306,6 +306,24 @@ expected_attributes = {
         if is_enterprise_repo()
         else {}
     ),
+    **(
+        {
+            "relay": {
+                "depends_on_roles": [],
+                "depends_on_tags": [],
+                "editable": True,
+                "from_config": False,
+                "show_in_folder": True,
+                "show_in_form": True,
+                "show_in_host_search": True,
+                "show_in_table": True,
+                "show_inherited_value": True,
+                "topic": "Basic settings",
+            },
+        }
+        if is_cloud_repo()
+        else {}
+    ),
     "tag_snmp_ds": {
         "depends_on_roles": [],
         "depends_on_tags": [],
@@ -543,6 +561,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         "basic": [
             "alias",
             "site",
+            *(["relay"] if is_cloud_repo() else []),
             "contactgroups",
             "parents",
         ],

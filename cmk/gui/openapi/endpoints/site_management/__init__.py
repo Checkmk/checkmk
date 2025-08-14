@@ -30,7 +30,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.site_management.request_schemas import (
-    SITE_ID,
     SITE_ID_EXISTS,
     SiteConnectionRequestCreate,
     SiteConnectionRequestUpdate,
@@ -50,7 +49,6 @@ from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
     LoginException,
     SiteConfig,
-    SiteDoesNotExistException,
     SitesApiMgr,
 )
 
@@ -109,31 +107,6 @@ def put_site(params: Mapping[str, Any]) -> Response:
         site_config=params["body"]["site_config"],
         is_new_connection=False,
     )
-
-
-@Endpoint(
-    constructors.object_action_href("site_connection", "{site_id}", "delete"),
-    ".../delete",
-    method="post",
-    tag_group="Setup",
-    path_params=[SITE_ID],
-    output_empty=True,
-    permissions_required=PERMISSIONS,
-)
-def delete_site(params: Mapping[str, Any]) -> Response:
-    """Delete a site connection"""
-    user.need_permission("wato.sites")
-    try:
-        SitesApiMgr().delete_a_site(
-            SiteId(params["site_id"]),
-            pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
-        )
-    except MKUserError as exc:
-        return _problem_from_user_error(exc)
-    except SiteDoesNotExistException:
-        pass
-    return Response(status=204)
 
 
 @Endpoint(
@@ -249,6 +222,5 @@ def _convert_validate_and_save_site_data(
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
     endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
-    endpoint_registry.register(delete_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(site_login, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(site_logout, ignore_duplicates=ignore_duplicates)

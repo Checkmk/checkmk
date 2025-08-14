@@ -7,6 +7,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .list_site_connections import ENDPOINT_LIST_SITE_CONNECTIONS
+from .show_site_connection import ENDPOINT_SHOW_SITE_CONNECTION
 
 
 def register(
@@ -21,5 +22,9 @@ def register(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_LIST_SITE_CONNECTIONS,
+        ignore_duplicates=ignore_duplicates,
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_SHOW_SITE_CONNECTION,
         ignore_duplicates=ignore_duplicates,
     )

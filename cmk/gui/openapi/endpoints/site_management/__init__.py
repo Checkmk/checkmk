@@ -73,23 +73,6 @@ def _problem_from_user_error(e: MKUserError) -> Response:
 
 
 @Endpoint(
-    constructors.object_href("site_connection", "{site_id}"),
-    "cmk/show",
-    method="get",
-    tag_group="Setup",
-    path_params=[SITE_ID_EXISTS],
-    response_schema=SiteConnectionResponse,
-    permissions_required=PERMISSIONS,
-)
-def show_site(params: Mapping[str, Any]) -> Response:
-    """Show a site connection"""
-    user.need_permission("wato.sites")
-    site_id = SiteId(params["site_id"])
-    site: SiteConfiguration = SitesApiMgr().get_a_site(site_id)
-    return serve_json(_serialize_site(SiteConfig.from_internal(site_id, site)))
-
-
-@Endpoint(
     constructors.collection_href("site_connection"),
     "cmk/create",
     method="post",
@@ -264,7 +247,6 @@ def _convert_validate_and_save_site_data(
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
-    endpoint_registry.register(show_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(delete_site, ignore_duplicates=ignore_duplicates)

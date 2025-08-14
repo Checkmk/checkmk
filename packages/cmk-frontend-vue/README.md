@@ -12,14 +12,27 @@ bazel run :vite [-- <ARGS>]
 bazel run :vitest [-- <ARGS>]
 ```
 
-### Trying out changes in a site
+## IDE Support
 
-#### f12
+It's non trivial to set up bazel in such a way that js tooling will have
+access to all required modules. The current suggested practice is to
+create a local node_modules folder. Our tsconfig will fall back onto the
+bazel workspace to find any modules provided by our repo.
+
+To create a local node_modules folder, do:
+
+```bash
+bazel run -- @pnpm//:pnpm --dir $PWD install --frozen-lockfile
+```
+
+## Trying out changes in a site
+
+### f12
 
 f12 is working, but is using the production ready build process and
 therefore not super fast (currently six seconds)
 
-#### Dev server
+### Dev server
 
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
@@ -38,7 +51,7 @@ To watch file changes across the bazelized components, you need to use
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
 
-### Demo App
+## Demo App
 
 To try our reusable components outside a checkmk site, you can
 
@@ -46,7 +59,7 @@ To try our reusable components outside a checkmk site, you can
 * surf to `http://localhost:5174/`
 
 
-### Package management
+## Package management
 
 If you need to change the dependencies you can do so by running pnpm
 inside bazel, for example:

@@ -23,13 +23,23 @@ import { Page, Folder } from '@demo/_demo/page'
 
 import { pages as userInputPages } from './user-input'
 import { pages as typographyPages } from './typography'
+import { pages as CmkAccordionPages } from './CmkAccordion'
 import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'
+import { pages as CmkTabPages } from './CmkTabs'
+import DemoCmkBadge from './DemoCmkBadge.vue'
+import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
+import DemoCmkChip from './DemoCmkChip.vue'
+import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
+import DemoCmkCode from './DemoCmkCode.vue'
+import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
 
 export const pages = [
   new Folder('user-input', DemoEmpty, userInputPages),
   new Folder('typography', DemoEmpty, typographyPages),
+  new Folder('CmkAccordion', DemoEmpty, CmkAccordionPages),
   new Folder('CmkAccordionStepPanel', DemoEmpty, CmkAccordionStepPanelPages),
+  new Folder('CmkTabs', DemoEmpty, CmkTabPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
   new Page('SlideIn', DemoSlideIn),
   new Page('CmkSpace', DemoCmkSpace),
@@ -43,5 +53,12 @@ export const pages = [
   new Page('CmkColorPicker', DemoCmkColorPicker),
   new Page('CmkHtml', DemoCmkHtml),
   new Page('CmkSkeleton', DemoCmkSkeleton),
-  new Page('CmkWizard', DemoCmkWizard)
+  new Page('CmkWizard', DemoCmkWizard),
+  new Page('CmkBadge', DemoCmkBadge),
+  new Page('CmkChip', DemoCmkChip),
+  new Page('CmkProgressbar', DemoCmkProgressbar),
+  new Page('CmkList', DemoCmkList),
+  new Page('CmkLinkCard', DemoCmkLinkCard),
+  new Page('CmkCode', DemoCmkCode),
+  new Page('CmkCollapsible', DemoCmkCollapsible)
 ]

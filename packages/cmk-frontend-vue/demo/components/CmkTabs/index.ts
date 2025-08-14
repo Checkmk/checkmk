@@ -5,6 +5,6 @@
  */
 
 import { Page } from '@demo/_demo/page'
-import DemoCmkStepPanel from './DemoAccordionCmkStepPanel.vue'
+import DemoCmkTabs from './DemoCmkTabs.vue'
 
-export const pages = [new Page('CmkAccordionStepPanel', DemoCmkStepPanel)]
+export const pages = [new Page('CmkTabs', DemoCmkTabs)]

@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import { Page } from '@demo/_demo/page'
-import DemoCmkStepPanel from './DemoAccordionCmkStepPanel.vue'
+import DemoCmkAccordion from './DemoCmkAccordion.vue'
 
-export const pages = [new Page('CmkAccordionStepPanel', DemoCmkStepPanel)]
+import { Page } from '@demo/_demo/page'
+
+export const pages = [new Page('CmkAccordion', DemoCmkAccordion)]

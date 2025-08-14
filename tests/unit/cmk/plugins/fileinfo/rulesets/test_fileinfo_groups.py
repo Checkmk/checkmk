@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.gui.plugins.wato.check_parameters.fileinfo_groups import rule_spec_fileinfo_groups_checking
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-from cmk.plugins.fileinfo.rulesets.fileinfo_groups import rule_spec_fileinfo_groups_checking
 
 
 @pytest.mark.parametrize(

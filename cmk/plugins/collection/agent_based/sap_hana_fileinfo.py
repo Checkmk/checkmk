@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     RuleSetType,
     State,
 )
-from cmk.plugins.fileinfo.lib.fileinfo_lib import (
+from cmk.plugins.lib.fileinfo import (
     check_fileinfo_data,
     check_fileinfo_groups_data,
     discovery_fileinfo,

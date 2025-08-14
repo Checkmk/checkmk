@@ -14,8 +14,9 @@ from typing import Any, NamedTuple
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
-from cmk.plugins.lib import eval_regex
-from cmk.plugins.lib.interfaces import saveint
+
+from . import eval_regex
+from .interfaces import saveint
 
 DiscoveryParams = Iterable[Mapping[str, list[tuple[str, str | tuple[str, str]]]]]
 

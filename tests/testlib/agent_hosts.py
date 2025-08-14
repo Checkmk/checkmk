@@ -71,10 +71,27 @@ def _discover_services_of_piggybacked_hosts(
     host_name: str,
     expected_pb_hosts: list[str],
     folder_name: str = "/",
+    dcd_max_count: int = 30,
+    dcd_interval: int = 5,
     cleanup: bool = True,
 ) -> Iterator[None]:
+    """Discover the services of piggybacked hosts.
+
+    Args:
+        site: The test site.
+        host_name: The name of the piggyback source host.
+        expected_pb_hosts: The list of expected piggybacked hosts.
+        folder_name: The name of the host folder in the site which the host is created in.
+        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
+        dcd_interval: The dcd interval in seconds.
+        cleanup: Specifies if the dump file is cleaned up at the end."""
     with _fake_host_and_discover_services(site, host_name, folder_name, cleanup):
-        execute_dcd_cycle(site, expected_pb_hosts=len(expected_pb_hosts))
+        execute_dcd_cycle(
+            site,
+            expected_pb_hosts=len(expected_pb_hosts),
+            max_count=dcd_max_count,
+            interval=dcd_interval,
+        )
 
         if expected_pb_hosts:
             existing_pb_hosts = site.openapi.hosts.get_all_names(allow=expected_pb_hosts)
@@ -94,9 +111,11 @@ def piggyback_host_from_dump_file(
     site: Site,
     dump_name: str,
     folder_name: str = "/",
+    dcd_max_count: int = 30,
     dcd_interval: int = 5,
     source_dir: Path = Path("plugins_integration/dumps/piggyback"),
     target_dir: Path = Path("var/check_mk/dumps"),
+    change_activation_timeout: int = 300,
     cleanup: bool = True,
 ) -> Iterator[None]:
     """Create a piggyback host from a dump file.
@@ -105,9 +124,11 @@ def piggyback_host_from_dump_file(
         site: The test site.
         dump_name: The name of the dump file, which will also be the host name.
         folder_name: The name of the host folder in the site which the host is created in.
+        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
         source_dir: The source dir of the dump file.
         target_dir: The target dir of the dump file.
+        change_activation_timeout: The timeout for the change activation in seconds.
         cleanup: Specifies if the dump file is cleaned up at the end.
     """
     source_dir = source_dir if source_dir.is_absolute() else (qa_test_data_path() / source_dir)
@@ -115,9 +136,20 @@ def piggyback_host_from_dump_file(
     piggybacked_hosts = list(read_piggyback_hosts_from_dump(read_disk_dump(dump_name, source_dir)))
     try:
         copy_dumps(site, source_dir, target_dir, source_filename=dump_name)
-        with dcd_connector(site, interval=dcd_interval, cleanup=cleanup):
+        with dcd_connector(
+            site,
+            interval=dcd_interval,
+            change_activation_timeout=change_activation_timeout,
+            cleanup=cleanup,
+        ):
             with _discover_services_of_piggybacked_hosts(
-                site, dump_name, piggybacked_hosts, folder_name, cleanup
+                site=site,
+                host_name=dump_name,
+                expected_pb_hosts=piggybacked_hosts,
+                folder_name=folder_name,
+                dcd_max_count=dcd_max_count,
+                dcd_interval=dcd_interval,
+                cleanup=cleanup,
             ):
                 yield
     finally:
@@ -130,9 +162,11 @@ def piggyback_host_from_dummy_generator(
     site: Site,
     host_name: str,
     folder_name: str = "/",
+    dcd_max_count: int = 30,
     dcd_interval: int = 5,
     pb_host_count: int = 10,
     pb_service_count: int = 10,
+    change_activation_timeout: int = 300,
     cleanup: bool = True,
 ) -> Iterator[PiggybackInfo]:
     """Create a piggyback host using a dummy generator.
@@ -141,7 +175,11 @@ def piggyback_host_from_dummy_generator(
         site: The test site.
         host_name: The name of the host to be created.
         folder_name: The name of the host folder in the site which the host is created in.
+        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
+        pb_host_count: The number of piggybacked hosts.
+        pb_service_count: The number of services per piggybacked host.
+        change_activation_timeout: The timeout for the change activation in seconds.
         cleanup: Specifies if the dump file is cleaned up at the end.
 
     Yields:
@@ -154,6 +192,7 @@ def piggyback_host_from_dummy_generator(
         no_deletion_time_after_init=60,
         max_cache_age=60,
         validity_period=60,
+        change_activation_timeout=change_activation_timeout,
         cleanup=cleanup,
     ) as dcd_id:
         with dummy_agent_dump_generator(
@@ -165,6 +204,12 @@ def piggyback_host_from_dummy_generator(
             rule_folder=folder_name,
         ) as datasource_id:
             with _discover_services_of_piggybacked_hosts(
-                site, host_name, piggybacked_hosts, folder_name, cleanup
+                site=site,
+                host_name=host_name,
+                expected_pb_hosts=piggybacked_hosts,
+                folder_name=folder_name,
+                dcd_max_count=dcd_max_count,
+                dcd_interval=dcd_interval,
+                cleanup=cleanup,
             ):
                 yield PiggybackInfo(datasource_id, dcd_id, piggybacked_hosts)

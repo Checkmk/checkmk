@@ -31,12 +31,7 @@ class UnitTestCrashReport(ABCCrashReport):
 
 
 @pytest.fixture()
-def crashdir(tmp_path: Path) -> Path:
-    return tmp_path / "crash"
-
-
-@pytest.fixture()
-def crash(crashdir: Path) -> UnitTestCrashReport:
+def crash(tmp_path: Path) -> UnitTestCrashReport:
     try:
         # We need some var so the local_vars are part of the crash report
         some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]  # noqa: F841
@@ -44,8 +39,8 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
         raise ValueError("XYZ")
     except ValueError:
         return UnitTestCrashReport(
-            crashdir,
-            UnitTestCrashReport.make_crash_info(
+            omd_root=tmp_path,
+            crash_info=UnitTestCrashReport.make_crash_info(
                 VersionInfo(
                     core="test",
                     python_version="test",
@@ -88,8 +83,11 @@ def test_crash_report_ident_to_text(crash: ABCCrashReport) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
-def test_crash_report_crash_dir(crashdir: Path, crash: ABCCrashReport) -> None:
-    assert crash.crash_dir() == crashdir / crash.type() / crash.ident_to_text()
+def test_crash_report_crash_dir(tmp_path: Path, crash: ABCCrashReport) -> None:
+    assert (
+        crash.crash_dir()
+        == tmp_path / "var/check_mk/crashes" / crash.type() / crash.ident_to_text()
+    )
 
 
 def test_crash_report_local_crash_report_url(crash: ABCCrashReport) -> None:
@@ -165,9 +163,9 @@ def patch_uuid1(monkeypatch):
 
 @pytest.mark.usefixtures("patch_uuid1")
 @pytest.mark.parametrize("n_crashes", [15, 45])
-def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
+def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
     store = CrashReportStore()
-    crashes = crashdir / UnitTestCrashReport.type()
+    crashes = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
     assert not set(crashes.glob("*"))
 
     crash_ids = []
@@ -177,8 +175,8 @@ def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
             raise ValueError("Crash #%d" % num)
         except ValueError:
             crash = UnitTestCrashReport(
-                crashdir,
-                UnitTestCrashReport.make_crash_info(
+                omd_root=tmp_path,
+                crash_info=UnitTestCrashReport.make_crash_info(
                     VersionInfo(
                         core="test",
                         python_version="test",

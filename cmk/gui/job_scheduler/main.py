@@ -49,8 +49,8 @@ class JobSchedulerCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
 
 def default_crash_report_callback(_exc: Exception) -> str:
     crash = JobSchedulerCrashReport(
-        paths.crash_dir,
-        JobSchedulerCrashReport.make_crash_info(
+        omd_root=paths.omd_root,
+        crash_info=JobSchedulerCrashReport.make_crash_info(
             cmk_version.get_general_version_infos(paths.omd_root)
         ),
     )

@@ -85,17 +85,18 @@ class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
     def from_exception(
         cls,
-        crashdir: Path,
+        *,
+        omd_root: Path,
         version_info: VersionInfo,
     ) -> Self:
         return cls(
-            crashdir,
-            cls.make_crash_info(
+            omd_root=omd_root,
+            crash_info=cls.make_crash_info(
                 version_info,
-                {
-                    "argv": sys.argv,
-                    "env": dict(os.environ),
-                },
+                BaseDetails(
+                    argv=sys.argv,
+                    env=dict(os.environ),
+                ),
             ),
         )
 
@@ -158,19 +159,21 @@ except OSError as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)
-    crash = CrashReport.from_exception(
-        cmk.utils.paths.crash_dir,
-        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+    CrashReportStore().save(
+        CrashReport.from_exception(
+            omd_root=cmk.utils.paths.omd_root,
+            version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        )
     )
-    CrashReportStore().save(crash)
     raise
 
 except Exception:
-    crash = CrashReport.from_exception(
-        cmk.utils.paths.crash_dir,
-        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+    CrashReportStore().save(
+        CrashReport.from_exception(
+            omd_root=cmk.utils.paths.omd_root,
+            version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        )
     )
-    CrashReportStore().save(crash)
     raise
 
 finally:

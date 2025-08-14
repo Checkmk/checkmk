@@ -31,6 +31,7 @@ from typing import (
 )
 
 from cmk.ccc import version
+from cmk.ccc.crash_reporting import crash_dir
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
@@ -90,7 +91,7 @@ class Response:
 
 def assert_and_delete_rest_crash_report(crash_id: str) -> None:
     """Assert that the REST API crash report with the given ID exists and delete it."""
-    crash_file = paths.crash_dir / "rest_api" / crash_id / "crash.info"
+    crash_file = crash_dir(paths.omd_root) / "rest_api" / crash_id / "crash.info"
     assert crash_file.exists()
     crash_file.unlink()
 

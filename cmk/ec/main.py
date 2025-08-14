@@ -3583,8 +3583,8 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
 
         CrashReportStore().save(
             ECCrashReport(
-                cmk.utils.paths.crash_dir,
-                ECCrashReport.make_crash_info(version_info),
+                omd_root=omd_root,
+                crash_info=ECCrashReport.make_crash_info(version_info),
             )
         )
         bail_out(logger, traceback.format_exc())

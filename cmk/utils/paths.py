@@ -72,7 +72,6 @@ base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels
 discovered_host_labels_dir = base_discovered_host_labels_dir
 autodiscovery_dir = _omd_path("var/check_mk/autodiscovery")
 profile_dir = var_dir / "web"
-crash_dir = var_dir / "crashes"
 diagnostics_dir = var_dir / "diagnostics"
 site_config_dir = var_dir / "site_configs"
 visuals_cache_dir = tmp_dir / "visuals_cache"

@@ -20,7 +20,8 @@ from omdlib.crash_reporting import report_crash
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.version_info import VersionInfo
 
-from cmk.utils.paths import crash_dir
+from cmk.ccc.crash_reporting import crash_dir
+from cmk.utils.paths import omd_root
 
 
 def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
@@ -177,7 +178,7 @@ class ManageUpdate:
             sys.exit(
                 f"The folder {self.backup_dir} contains data from a failed update attempt. This "
                 "only happens, if a serious error occurred during a previous update attempt. "
-                f"Please contact support. A crash report may be available in {crash_dir}. "
+                f"Please contact support. A crash report may be available in {crash_dir(omd_root)}. "
                 "Since the root cause of this error is not known to OMD, the site is an "
                 "unknown state and both, restarting or updating the site, can have unknown effects.\n"
             )

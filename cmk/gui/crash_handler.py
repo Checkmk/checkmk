@@ -62,9 +62,10 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
     @classmethod
     def from_exception(
         cls,
-        crashdir: Path,
+        *,
         version_info: VersionInfo,
         details: GUIDetails | None = None,
+        omd_root: Path,
     ) -> Self:
         try:
             # Access any attribute to trigger proxy object lookup
@@ -96,8 +97,11 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
             )
 
         return cls(
-            crashdir,
-            cls.make_crash_info(version_info, GUIDetails(**{**(details or {}), **request_details})),  # type: ignore[typeddict-item]
+            omd_root=omd_root,
+            crash_info=cls.make_crash_info(
+                version_info,
+                GUIDetails(**{**(details or {}), **request_details}),  # type: ignore[typeddict-item]
+            ),
         )
 
     def url(self) -> str:
@@ -127,9 +131,9 @@ def create_gui_crash_report(
     details: GUIDetails | None = None,
 ) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
-        cmk.utils.paths.crash_dir,
-        cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
+        omd_root=cmk.utils.paths.omd_root,
     )
     CrashReportStore().save(crash)
     return crash

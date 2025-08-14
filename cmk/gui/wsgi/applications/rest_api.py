@@ -124,8 +124,8 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     }
 
     crash = APICrashReport(
-        paths.crash_dir,
-        APICrashReport.make_crash_info(
+        omd_root=paths.omd_root,
+        crash_info=APICrashReport.make_crash_info(
             cmk_version.get_general_version_infos(paths.omd_root), details
         ),
     )

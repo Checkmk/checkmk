@@ -27,6 +27,7 @@ import cmk.crypto.password_hashing
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.ccc import tty
+from cmk.ccc.crash_reporting import crash_dir
 from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
@@ -385,7 +386,7 @@ def cleanup_after_test():
 
     # Fail the execution in case any crash reports were created
     try:
-        _report_crashes(cmk.utils.paths.crash_dir)
+        _report_crashes()
     finally:
         # Ensure there is no file left over in the unit test fake site
         # to prevent tests involving each other
@@ -402,8 +403,8 @@ def cleanup_after_test():
                 logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
 
 
-def _report_crashes(crash_dir: Path) -> None:
-    for crash_file in crash_dir.glob("**/crash.info"):
+def _report_crashes() -> None:
+    for crash_file in crash_dir(cmk.utils.paths.omd_root).glob("**/crash.info"):
         crash = json.loads(crash_file.read_text())
         pytest.fail(
             f"Crash report detected! {crash.get('exc_type', '')}: {crash.get('exc_value', '')}\n"

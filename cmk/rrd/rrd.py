@@ -832,8 +832,10 @@ class RRDCreator:
 def create_crash_report() -> None:
     CrashReportStore().save(
         CMKBaseCrashReport(
-            paths.crash_dir,
-            CMKBaseCrashReport.make_crash_info(get_general_version_infos(paths.omd_root)),
+            omd_root=paths.omd_root,
+            crash_info=CMKBaseCrashReport.make_crash_info(
+                get_general_version_infos(paths.omd_root)
+            ),
         )
     )
 

@@ -158,12 +158,16 @@ class SerializedCrashReport(TypedDict):
     crash_info: CrashInfo[object]
 
 
+def crash_dir(omd_root: Path) -> Path:
+    return omd_root / "var/check_mk/crashes"
+
+
 class ABCCrashReport(Generic[T_co], abc.ABC):
     """Base class for the component specific crash report types"""
 
-    def __init__(self, crashdir: Path, crash_info: CrashInfo[T_co]) -> None:
+    def __init__(self, *, omd_root: Path, crash_info: CrashInfo[T_co]) -> None:
         super().__init__()
-        self.crashdir: Final = crashdir
+        self.crashdir: Final = crash_dir(omd_root)
         self.crash_info = crash_info
 
     @classmethod
@@ -186,11 +190,14 @@ class ABCCrashReport(Generic[T_co], abc.ABC):
 
     @classmethod
     def deserialize(
-        cls, crashdir: Path, serialized: SerializedCrashReport
+        cls,
+        *,
+        omd_root: Path,
+        serialized: SerializedCrashReport,
     ) -> ABCCrashReport[object]:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return class_(crashdir, **serialized)
+        return class_(omd_root=omd_root, **serialized)
 
     def _serialize_attributes(self) -> dict[str, CrashInfo[T_co] | bytes]:
         """Serialize object type specific attributes for transport"""

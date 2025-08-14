@@ -24,8 +24,8 @@ class AgentCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
 def create_agent_crash_dump() -> str:
     try:
         crash = AgentCrashReport(
-            cmk.utils.paths.crash_dir,
-            AgentCrashReport.make_crash_info(
+            omd_root=cmk.utils.paths.omd_root,
+            crash_info=AgentCrashReport.make_crash_info(
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
             ),
         )

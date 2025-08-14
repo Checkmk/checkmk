@@ -27947,12 +27947,12 @@ msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Hardware/Software-Inventário (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory history"
-msgstr "Histórico de inventário do anfitrião"
+msgid "HW/SW Inventory cleanup"
+msgstr "Regras de inventário HW/SW"
 
 #, fuzzy
-msgid "HW/SW Inventory housekeeping"
-msgstr "Plugins de inventário HW/SW obsoletos"
+msgid "HW/SW Inventory history"
+msgstr "Histórico de inventário do anfitrião"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -28316,6 +28316,14 @@ msgstr ""
 "menos um nó estiver em um estado diferente de OK. Os níveis de saúde devem "
 "ser os mesmos em cada nó, portanto, apenas o primeiro nó em que os níveis de "
 "saúde são verificados."
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"Aqui pode configurar níveis absolutos para a contagem total de reinícios e "
+"reinícios na última hora."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -37055,6 +37063,10 @@ msgstr "O último cheque do anfitrião não é suficientemente recente"
 msgid "Last host state change"
 msgstr "Última alteração de estado do anfitrião"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "Últimas 25 horas"
+
 msgid "Last known details"
 msgstr "Últimos detalhes conhecidos"
 
@@ -37400,9 +37412,6 @@ msgstr "Níveis de tráfego IO por segundo."
 msgid "Levels for Inodes"
 msgstr "Níveis para Inodes"
 
-msgid "Levels for Meta"
-msgstr "Níveis para Meta"
-
 msgid "Levels for Number of Licenses"
 msgstr "Níveis de Número de Licenças"
 
@@ -37501,6 +37510,10 @@ msgstr "Níveis de utilização da memória"
 
 msgid "Levels for memory utilization"
 msgstr "Níveis de utilização da memória"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "Níveis para Meta"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Níveis para um tempo mínimo de espera para uma fechadura"
@@ -43369,6 +43382,10 @@ msgstr "Nome do grupo"
 msgid "Name of group in service name"
 msgstr "Nome do grupo em descrição de serviço"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Nome do grupo"
+
 msgid "Name of indice"
 msgstr "Nome do índice"
 
@@ -43644,6 +43661,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: find hosts <b>not</b> tendo este pacote"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Um valor vazio não é permitido aqui."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Combinação negativa (Excluir hospedeiros correspondentes do conjunto)"
@@ -51530,6 +51551,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Recursos do pod: StatefulSet"
 
 #, fuzzy
+msgid "Podman Container Restarts"
+msgstr "# Contentores"
+
+#, fuzzy
 msgid "Podman Containers"
 msgstr "# Contentores"
 
@@ -55145,6 +55170,10 @@ msgid "Restarts"
 msgstr "Reinícios"
 
 msgid "Restarts per hour"
+msgstr "Reinícios por hora"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "Reinícios por hora"
 
 msgid "Restore"
@@ -62537,6 +62566,10 @@ msgid "State of %s if recovery is set (as integer)"
 msgstr ""
 "Estado de %s se a recuperação estiver definida (como um número inteiro)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Início do próximo ano"
+
 msgid "State of NTP peer"
 msgstr "Estado do NTP par"
 
@@ -66701,6 +66734,11 @@ msgid ""
 msgstr ""
 "O ficheiro %s tem de ser criado e mantido manualmente.<br>As entradas de "
 "configuração fornecidas com esta regra serão ignoradas."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "O ficheiro não contém texto XML"
@@ -90254,8 +90292,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Um valor vazio não é permitido aqui."
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "Plugins de inventário HW/SW obsoletos"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

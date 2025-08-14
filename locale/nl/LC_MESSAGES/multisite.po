@@ -27945,12 +27945,12 @@ msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory history"
-msgstr "Inventarisatie geschiedenis van host"
+msgid "HW/SW Inventory cleanup"
+msgstr "HW/SW-inventarisatieregels"
 
 #, fuzzy
-msgid "HW/SW Inventory housekeeping"
-msgstr "Afgeschreven HW/SW inventaris plugins"
+msgid "HW/SW Inventory history"
+msgstr "Inventarisatie geschiedenis van host"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -28318,6 +28318,14 @@ msgstr ""
 "indien minstens één node zich in een andere status dan OK bevindt. De "
 "gezondheidsniveaus moeten voor elk knooppunt gelijk zijn, dus alleen voor "
 "het eerste knooppunt worden de gezondheidsniveaus gecontroleerd."
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"Hier kunt u absolute niveaus configureren voor het totale aantal herstarts "
+"en herstarts in het afgelopen uur."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -37069,6 +37077,10 @@ msgstr "Laatste host controle is niet recent genoeg"
 msgid "Last host state change"
 msgstr "Laatste wijziging van de hoststatus"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "De laatste 25 uur"
+
 msgid "Last known details"
 msgstr "Laatst bekende gegevens"
 
@@ -37418,9 +37430,6 @@ msgstr "Bovenste niveaus voor \"ESI-waarschuwingen\" per seconde"
 msgid "Levels for Inodes"
 msgstr "Niveaus voor Inodes"
 
-msgid "Levels for Meta"
-msgstr "Niveaus voor Meta"
-
 msgid "Levels for Number of Licenses"
 msgstr "Niveaus voor aantal licenties"
 
@@ -37519,6 +37528,10 @@ msgstr "Niveaus voor geheugengebruik"
 
 msgid "Levels for memory utilization"
 msgstr "Niveaus voor geheugengebruik"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "Niveaus voor Meta"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Niveaus voor minimum wachttijd voor een slot"
@@ -43376,6 +43389,10 @@ msgstr "Naam van de groep"
 msgid "Name of group in service name"
 msgstr "Naam van groep in dienstbeschrijving"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Naam van de groep"
+
 msgid "Name of indice"
 msgstr "Naam van het streepje"
 
@@ -43657,6 +43674,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negeren: zoek hosts <b>die dit pakket niet</b> hebben"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Een lege waarde is hier niet toegestaan."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Negatieve overeenkomst (sluit overeenkomende hosts uit van de set)"
@@ -51559,6 +51580,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Pod bronnen: StatefulSet"
 
 #, fuzzy
+msgid "Podman Container Restarts"
+msgstr "# Containers"
+
+#, fuzzy
 msgid "Podman Containers"
 msgstr "# Containers"
 
@@ -55158,6 +55183,10 @@ msgid "Restarts"
 msgstr "Herstart"
 
 msgid "Restarts per hour"
+msgstr "Herstart per uur"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "Herstart per uur"
 
 msgid "Restore"
@@ -62545,6 +62574,10 @@ msgstr "Toestand van %s indien herstel is ingesteld"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Toestand van %s indien herstel is ingesteld (als geheel getal)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Begin volgend jaar"
+
 msgid "State of NTP peer"
 msgstr "Toestand van NTP peer"
 
@@ -66725,6 +66758,11 @@ msgid ""
 msgstr ""
 "Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij deze "
 "regel verstrekte configuratie-items worden genegeerd."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Het bestand bevat geen XML-tekst"
@@ -90364,8 +90402,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Een lege waarde is hier niet toegestaan."
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "Afgeschreven HW/SW inventaris plugins"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

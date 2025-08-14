@@ -27051,11 +27051,12 @@ msgstr "HW-/SW-Inventur"
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "Regeln der HW-/SW-Inventur"
+
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
-
-msgid "HW/SW Inventory housekeeping"
-msgstr "Bereinigung der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory plug-in"
 msgstr "Plugin der HW-/SW-Inventur"
@@ -27412,6 +27413,14 @@ msgstr ""
 "Zustand als OK befindet. Die Gesundheitslevels sollten auf jedem Knoten "
 "gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
 "werden."
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"Hier können Sie absolute Levels für die Gesamtzahl der Neustarts und "
+"Neustarts in der letzten Stunde konfigurieren."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -35701,6 +35710,10 @@ msgstr "Letzter Host-Check ist nicht aktuell genug"
 msgid "Last host state change"
 msgstr "Letzter Host-Zustand-Wechsel"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "Die letzten 25 Stunden"
+
 msgid "Last known details"
 msgstr "Letzten bekannten Details"
 
@@ -36038,9 +36051,6 @@ msgstr "Levels für den E/A-Verkehr pro Sekunde."
 msgid "Levels for Inodes"
 msgstr "Levels für Inodes"
 
-msgid "Levels for Meta"
-msgstr "Levels für Metadaten"
-
 msgid "Levels for Number of Licenses"
 msgstr "Levels für die Anzahl von Lizenzen"
 
@@ -36139,6 +36149,10 @@ msgstr "Levels für Speicherauslastung"
 
 msgid "Levels for memory utilization"
 msgstr "Levels für Speicherauslastung"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "Levels für Metadaten"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Levels für die minimale Wartezeit auf ein Lock"
@@ -41733,6 +41747,10 @@ msgstr "Name der Gruppe"
 msgid "Name of group in service name"
 msgstr "Name der Gruppe in Service-Name"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Name der Gruppe"
+
 msgid "Name of indice"
 msgstr "Name des Indexes"
 
@@ -42026,6 +42044,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Negative Werte sind nicht erlaubt"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
@@ -49430,6 +49452,10 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
+#, fuzzy
+msgid "Podman Container Restarts"
+msgstr "Podman-Container"
+
 msgid "Podman Containers"
 msgstr "Podman-Container"
 
@@ -52861,6 +52887,10 @@ msgid "Restarts"
 msgstr "Neustarts"
 
 msgid "Restarts per hour"
+msgstr "Neustarts pro Stunde"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "Neustarts pro Stunde"
 
 msgid "Restore"
@@ -60053,6 +60083,10 @@ msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist (als Ganzzahl)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Anfang des nächsten Jahres"
+
 msgid "State of NTP peer"
 msgstr "Zustand von NTP-Peer"
 
@@ -64181,6 +64215,11 @@ msgid ""
 msgstr ""
 "Die Datei %s muss manuell erstellt und gepflegt werden.<br>Mit dieser Regel "
 "bereitgestellte Konfigurationseinträge werden ignoriert."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
@@ -87159,9 +87198,8 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Negative Werte sind nicht erlaubt"
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "Bereinigung der HW-/SW-Inventur"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

@@ -27993,12 +27993,12 @@ msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory history"
-msgstr "Istoricul de inventariere a gazdei"
+msgid "HW/SW Inventory cleanup"
+msgstr "Reguli de inventariere HW/SW"
 
 #, fuzzy
-msgid "HW/SW Inventory housekeeping"
-msgstr "Plugin-uri de inventar HW/SW depășite"
+msgid "HW/SW Inventory history"
+msgstr "Istoricul de inventariere a gazdei"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -28365,6 +28365,14 @@ msgstr ""
 "verificarea va returna CRIT dacă cel puțin un nod se află într-o altă stare "
 "decât OK. Nivelurile de sănătate ar trebui să fie identice pe fiecare nod, "
 "astfel încât doar la primul nod se verifică nivelurile de sănătate."
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"Aici puteți configura niveluri absolute pentru numărul total de reporniri și "
+"pentru repornirile din ultima oră."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -37170,6 +37178,10 @@ msgstr "Ultima verificare a gazdei nu este suficient de recentă"
 msgid "Last host state change"
 msgstr "Ultima schimbare de stare a gazdei"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "Ultimele 25 de ore"
+
 msgid "Last known details"
 msgstr "Ultimele detalii cunoscute"
 
@@ -37513,9 +37525,6 @@ msgstr "Niveluri pentru traficul IO pe secundă."
 msgid "Levels for Inodes"
 msgstr "Niveluri pentru Inodes"
 
-msgid "Levels for Meta"
-msgstr "Niveluri pentru Meta"
-
 msgid "Levels for Number of Licenses"
 msgstr "Niveluri pentru numărul de licențe"
 
@@ -37614,6 +37623,10 @@ msgstr "Niveluri de utilizare a memoriei"
 
 msgid "Levels for memory utilization"
 msgstr "Niveluri de utilizare a memoriei"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "Niveluri pentru Meta"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Niveluri pentru timpul minim de așteptare pentru o blocare"
@@ -43460,6 +43473,10 @@ msgstr "Denumirea grupului"
 msgid "Name of group in service name"
 msgstr "Denumirea grupului în descrierea serviciului"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Denumirea grupului"
+
 msgid "Name of indice"
 msgstr "Denumirea indicelui"
 
@@ -43750,6 +43767,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Aici nu este permisă o valoare goală."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Potrivire negativă (Excludeți gazdele corespunzătoare din set)"
@@ -51648,6 +51669,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Resursele din pod: StatefulSet"
 
 #, fuzzy
+msgid "Podman Container Restarts"
+msgstr "# Containere"
+
+#, fuzzy
 msgid "Podman Containers"
 msgstr "# Containere"
 
@@ -55238,6 +55263,10 @@ msgid "Restarts"
 msgstr "Repornește"
 
 msgid "Restarts per hour"
+msgstr "Reporniri pe oră"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "Reporniri pe oră"
 
 msgid "Restore"
@@ -62717,6 +62746,10 @@ msgstr "Starea %s în cazul în care este activată recuperarea"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Starea %s în cazul în care este activată recuperarea (ca număr întreg)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Începutul anului viitor"
+
 msgid "State of NTP peer"
 msgstr "Starea omologului NTP"
 
@@ -66896,6 +66929,11 @@ msgid ""
 msgstr ""
 "Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
 "furnizate cu această regulă vor fi ignorate."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Fișierul nu conține text XML"
@@ -90581,8 +90619,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Aici nu este permisă o valoare goală."
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

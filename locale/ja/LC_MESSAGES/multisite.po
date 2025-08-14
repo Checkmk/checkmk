@@ -26310,11 +26310,12 @@ msgstr "HW/SWインベントリ"
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
 
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "HW/SWインベントリルール"
+
 msgid "HW/SW Inventory history"
 msgstr "HW/SWインベントリ履歴"
-
-msgid "HW/SW Inventory housekeeping"
-msgstr "HW/SWインベントリ ハウスキーピング"
 
 msgid "HW/SW Inventory plug-in"
 msgstr "HW/SWインベントリプラグイン"
@@ -26667,6 +26668,14 @@ msgstr ""
 "worstを選択した場合、少なくとも1つのノードがOK以外の状態であれば、チェックは"
 "CRITを返します。健康レベルは各ノードで同じであるべきなので、健康レベルを"
 "チェックするのは最初のノードだけです。"
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"ここでは、総際起動回数と過去1時間の再起動回数の絶対値を設定することができま"
+"す。"
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -34713,6 +34722,10 @@ msgstr "最後のホストチェックは十分に最近ではありません"
 msgid "Last host state change"
 msgstr "最後のホスト状態変化"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "過去25時間"
+
 msgid "Last known details"
 msgstr "最後にわかった詳細"
 
@@ -35047,9 +35060,6 @@ msgstr "1秒あたりのIOトラフィックのレベル。"
 msgid "Levels for Inodes"
 msgstr "Iノードのレベル"
 
-msgid "Levels for Meta"
-msgstr "メタのレベル"
-
 msgid "Levels for Number of Licenses"
 msgstr "ライセンス数のレベル"
 
@@ -35148,6 +35158,10 @@ msgstr "メモリ使用量のレベル"
 
 msgid "Levels for memory utilization"
 msgstr "メモリ使用率のレベル"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "メタのレベル"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "ロックの最小待機時間のレベル"
@@ -40651,6 +40665,10 @@ msgstr "グループ名"
 msgid "Name of group in service name"
 msgstr "サービス名にあるグループの名前"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "グループ名"
+
 msgid "Name of indice"
 msgstr "インデックスの名前"
 
@@ -40933,6 +40951,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "負の値は不可"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "否定一致(一致するホストをセットから除外)"
@@ -48146,6 +48168,10 @@ msgstr "Podリソース: 名前空間"
 msgid "Pod resources: StatefulSet"
 msgstr "Podリソース: ステータスフルセット"
 
+#, fuzzy
+msgid "Podman Container Restarts"
+msgstr "Podman コンテナ"
+
 msgid "Podman Containers"
 msgstr "Podman コンテナ"
 
@@ -51540,6 +51566,10 @@ msgid "Restarts"
 msgstr "再起動"
 
 msgid "Restarts per hour"
+msgstr "１時間当たりの再起動数"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "１時間当たりの再起動数"
 
 msgid "Restore"
@@ -58530,6 +58560,10 @@ msgstr "リカバリが設定されている場合の%s状態"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "リカバリが設定されている場合の%sの状態(整数)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "来年の始まり"
+
 msgid "State of NTP peer"
 msgstr "NTPピアの状態"
 
@@ -62484,6 +62518,11 @@ msgid ""
 msgstr ""
 "ファイル %s は、手動で作成および保守する必要があります。<br>このルールで指定"
 "された設定項目は無視されます。"
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "ファイルにXMLテキストが含まれていません"
@@ -84532,9 +84571,8 @@ msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
 
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "負の値は不可"
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "HW/SWインベントリ ハウスキーピング"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

@@ -28166,12 +28166,12 @@ msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Inventario de hardware/software (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
-msgid "HW/SW Inventory history"
-msgstr "Historial de inventario del host"
+msgid "HW/SW Inventory cleanup"
+msgstr "reglas de inventario de HW/SW"
 
 #, fuzzy
-msgid "HW/SW Inventory housekeeping"
-msgstr "Plugins de inventario HW/SW obsoletos"
+msgid "HW/SW Inventory history"
+msgstr "Historial de inventario del host"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -28539,6 +28539,14 @@ msgstr ""
 "menos un nodo está en un estado distinto de OK. Los niveles de salud deben "
 "ser los mismos en cada nodo, por lo que sólo en el primer nodo se comprueban "
 "los niveles de salud."
+
+#, fuzzy
+msgid ""
+"Here you can configure absolute levels for total restart count and last hour "
+"restarts."
+msgstr ""
+"Aquí puede configurar los niveles absolutos para el recuento total de "
+"reinicios y los reinicios en la última hora."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -37341,6 +37349,10 @@ msgstr "La última comprobación del host no es lo suficientemente reciente"
 msgid "Last host state change"
 msgstr "Último cambio de estado del host"
 
+#, fuzzy
+msgid "Last hour restarts"
+msgstr "Últimas 25 horas"
+
 msgid "Last known details"
 msgstr "Últimos datos conocidos"
 
@@ -37691,9 +37703,6 @@ msgstr "Niveles máximos de \"avisos ESI\" por segundo"
 msgid "Levels for Inodes"
 msgstr "Niveles para Inodes"
 
-msgid "Levels for Meta"
-msgstr "Niveles para Meta"
-
 msgid "Levels for Number of Licenses"
 msgstr "Niveles para el número de licencias"
 
@@ -37792,6 +37801,10 @@ msgstr "Niveles de uso de la memoria"
 
 msgid "Levels for memory utilization"
 msgstr "Niveles de utilización de la memoria"
+
+#, fuzzy
+msgid "Levels for meta"
+msgstr "Niveles para Meta"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Niveles de tiempo mínimo de espera para un bloqueo"
@@ -43722,6 +43735,10 @@ msgstr "Nombre del grupo"
 msgid "Name of group in service name"
 msgstr "Nombre del grupo en la descripción del servicio"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Nombre del grupo"
+
 msgid "Name of indice"
 msgstr "Nombre del índice"
 
@@ -43999,6 +44016,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negar: encontrar hosts <b>que no tengan este paquete</b>"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Aquí no se permite un valor vacío."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Coincidencia negativa (excluir del conjunto los hosts coincidentes)"
@@ -51968,6 +51989,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Recursos del pod: StatefulSet"
 
 #, fuzzy
+msgid "Podman Container Restarts"
+msgstr "# Contenedores"
+
+#, fuzzy
 msgid "Podman Containers"
 msgstr "# Contenedores"
 
@@ -55609,6 +55634,10 @@ msgid "Restarts"
 msgstr "Reiniciar"
 
 msgid "Restarts per hour"
+msgstr "Reinicios por hora"
+
+#, fuzzy
+msgid "Restarts within the last hour"
 msgstr "Reinicios por hora"
 
 msgid "Restore"
@@ -63090,6 +63119,10 @@ msgstr "Estado de %s si se establece la recuperación"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Estado de %s si se establece la recuperación (como entero)"
 
+#, fuzzy
+msgid "State of Juniper Alarms"
+msgstr "Inicio del próximo año"
+
 msgid "State of NTP peer"
 msgstr "Estado del par NTP"
 
@@ -67295,6 +67328,11 @@ msgid ""
 msgstr ""
 "El archivo %s necesita ser creado y mantenido manualmente.<br>Las entradas "
 "de configuración proporcionadas con esta regla serán ignoradas."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "El fichero no contiene texto XML"
@@ -91085,8 +91123,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Aquí no se permite un valor vacío."
+#~ msgid "HW/SW Inventory housekeeping"
+#~ msgstr "Plugins de inventario HW/SW obsoletos"
 
 #~ msgid "foo.bar"
 #~ msgstr "Joerg's test string"

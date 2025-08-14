@@ -44,7 +44,8 @@ void closeFD(int &fd) {
 }
 }  // namespace
 
-int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger) {
+int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger,
+                           int socket_backlog) {
     int result = -1;
     struct stat st{};
 
@@ -99,7 +100,6 @@ int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger) {
         return -1;
     }
 
-    constexpr int socket_backlog = 10;
     if (0 != ::listen(result, socket_backlog)) {
         const generic_error ge("cannot listen to unix socket at " +
                                path.string());

@@ -21,7 +21,8 @@
 #include <utility>
 class Logger;
 
-int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger);
+int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger,
+                           int socket_backlog = 10);
 
 class SocketPair {
 public:

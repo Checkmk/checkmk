@@ -744,8 +744,28 @@ _COMPONENTS = (
             "cmk.utils.timeout",
         ),
     ),
-    (Component("cmk.automations"), _allow_default_plus_checkers),
-    (Component("cmk.snmplib"), _is_default_allowed_import),
+    (
+        Component("cmk.automations"),
+        _allow(
+            "cmk.ccc",
+            "cmk.checkengine",
+            "cmk.utils.agentdatatype",
+            "cmk.utils.check_utils",
+            "cmk.utils.config_warnings",
+            "cmk.utils.ip_lookup",
+            "cmk.utils.labels",
+            "cmk.utils.notify_types",
+            "cmk.utils.rulesets.ruleset_matcher",
+            "cmk.utils.servicename",
+        ),
+    ),
+    (
+        Component("cmk.snmplib"),
+        _allow(
+            "cmk.ccc",
+            "cmk.utils.sectionname",
+        ),
+    ),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),
     (Component("cmk.gui.cee.plugins"), _allow_for_gui_plugins),
     (Component("cmk.gui.cce.plugins"), _allow_for_gui_plugins),
@@ -819,7 +839,13 @@ _COMPONENTS = (
     (Component("cmk.update_config"), _allow_for_cmk_update_config),
     (
         Component("cmk.validate_config"),
-        _allow("cmk.base", "cmk.gui", "cmk.checkengine", "cmk.utils", "cmk.ccc"),
+        _allow(
+            "cmk.base",
+            "cmk.ccc",
+            "cmk.checkengine",
+            "cmk.gui",
+            "cmk.utils",
+        ),
     ),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.utils"), _is_default_allowed_import),
@@ -834,7 +860,15 @@ _COMPONENTS = (
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
     (Component("cmk.diskspace"), _is_allowed_for_diskspace),
     (Component("cmk.rrd"), _is_allowed_for_rrd),
-    (Component("cmk.inventory"), _is_default_allowed_import),
+    (
+        Component("cmk.inventory"),
+        _allow(
+            "cmk.ccc",
+            "cmk.utils.paths",
+            "cmk.utils.regex",
+            "cmk.utils.structured_data",
+        ),
+    ),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

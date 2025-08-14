@@ -41,7 +41,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, UserSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -252,9 +252,7 @@ def page_message(config: Config) -> None:
     menu = _page_menu(breadcrumb)
     make_header(html, title, breadcrumb, menu)
 
-    vs_message = _vs_message(
-        userdb.UserData.from_userspec(u) for u in config.multisite_users.values()
-    )
+    vs_message = _vs_message(config.multisite_users)
 
     if transactions.check_transaction():
         try:
@@ -311,7 +309,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _vs_message(users: Iterable[userdb.UserData]) -> Dictionary:
+def _vs_message(users: Mapping[str, UserSpec]) -> Dictionary:
     dest_choices: list[CascadingDropdownChoice] = [
         ("all_users", _("All users")),
         (
@@ -319,7 +317,7 @@ def _vs_message(users: Iterable[userdb.UserData]) -> Dictionary:
             _("A list of specific users"),
             DualListChoice(
                 choices=sorted(
-                    [(u.user_id, u.alias) for u in users],
+                    [(uid, u.get("alias", uid)) for uid, u in users.items()],
                     key=lambda x: x[1].lower(),
                 ),
                 allow_empty=False,
@@ -381,14 +379,12 @@ def _vs_message(users: Iterable[userdb.UserData]) -> Dictionary:
                 ),
             ),
         ],
-        validate=partial(_validate_msg, all_users=users),
+        validate=partial(_validate_msg, users=users),
         optional_keys=[],
     )
 
 
-def _validate_msg(
-    msg: DictionaryModel, _varprefix: str, all_users: Iterable[userdb.UserData]
-) -> None:
+def _validate_msg(msg: DictionaryModel, _varprefix: str, users: Mapping[str, UserSpec]) -> None:
     if not msg.get("methods"):
         raise MKUserError("methods", _("Please select at least one messaging method."))
 
@@ -399,11 +395,10 @@ def _validate_msg(
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
-        known_user_ids = frozenset(user.user_id for user in all_users)
-        unknown_user_ids = set(msg["dest"][1]) - known_user_ids
-        if unknown_user_ids:
-            first_unknown = next(iter(unknown_user_ids))
-            raise MKUserError("dest", _('A user with the id "%s" does not exist.') % first_unknown)
+        existing = set(users.keys())
+        for user_id in msg["dest"][1]:
+            if user_id not in existing:
+                raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
 def _process_message(msg: Message, multisite_user_ids: Set[str]) -> None:

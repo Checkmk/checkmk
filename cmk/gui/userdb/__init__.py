@@ -125,7 +125,6 @@ from .store import (
     write_contacts_and_users_file,
 )
 from .user_attributes import show_mode_choices, validate_start_url
-from .userdata import UserData
 
 __all__ = [
     "active_connections",
@@ -229,7 +228,6 @@ __all__ = [
     "UserAttribute",
     "UserAttributeRegistry",
     "UserConnectionConfig",
-    "UserData",
     "ConfigurableUserConnectionSpec",
     "UserRole",
     "UserRolesConfigFile",

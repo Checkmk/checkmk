@@ -11,6 +11,7 @@ from typing import NewType
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import Users
 from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_roles,
@@ -88,7 +89,7 @@ def delete_role(role_id: RoleID, pprint_value: bool) -> None:
         raise MKUserError(None, _("You cannot delete the built-in roles!"))
 
     # Check if currently being used by a user
-    users = load_users()
+    users: Users = load_users()
     for user in users.values():
         if role_id in user["roles"]:
             raise MKUserError(

@@ -31,7 +31,6 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.site_management.request_schemas import (
     SITE_ID_EXISTS,
-    SiteConnectionRequestCreate,
     SiteConnectionRequestUpdate,
 )
 from cmk.gui.openapi.endpoints.site_management.response_schemas import (
@@ -65,25 +64,6 @@ def _problem_from_user_error(e: MKUserError) -> Response:
         status=400,
         title="User Error",
         detail=str(e),
-    )
-
-
-@Endpoint(
-    constructors.collection_href("site_connection"),
-    "cmk/create",
-    method="post",
-    tag_group="Setup",
-    request_schema=SiteConnectionRequestCreate,
-    response_schema=SiteConnectionResponse,
-    permissions_required=PERMISSIONS,
-)
-def post_site(params: Mapping[str, Any]) -> Response:
-    """Create a site connection"""
-    user.need_permission("wato.sites")
-    return _convert_validate_and_save_site_data(
-        site_id=params["body"]["site_config"]["basic_settings"]["site_id"],
-        site_config=params["body"]["site_config"],
-        is_new_connection=True,
     )
 
 
@@ -167,5 +147,4 @@ def _convert_validate_and_save_site_data(
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
-    endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
     endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)

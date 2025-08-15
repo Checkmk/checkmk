@@ -17,6 +17,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     _get_resource_health_sections,
     AzureResource,
     AzureSection,
+    AzureSubscription,
     get_group_labels,
     get_vm_labels_section,
     GroupLabels,
@@ -374,7 +375,7 @@ async def test_get_group_labels(
             '{"group_name": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
             "<<<<>>>>\n"
-            "<<<<>>>>\n"
+            "<<<<subscription_name>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
@@ -389,7 +390,12 @@ def test_write_group_info(
     expected_result: Sequence[str],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    write_group_info(monitored_groups, monitored_resources, group_tags)
+    write_group_info(
+        monitored_groups,
+        monitored_resources,
+        AzureSubscription("subscription_id", "subscription_name", None, False),
+        group_tags,
+    )
     captured = capsys.readouterr()
     assert captured.out == expected_result
 
@@ -497,18 +503,20 @@ async def test_get_resource_health_sections(
     [
         (
             10000,
-            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
+            "<<<<subscription_id>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
         ),
         (
             None,
-            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
+            "<<<<subscription_id>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
         ),
     ],
 )
 def test_write_remaining_reads(
     capsys: pytest.CaptureFixture[str], rate_limit: int | None, expected_output: str
 ) -> None:
-    write_remaining_reads(rate_limit)
+    write_remaining_reads(rate_limit, "subscription_id")
 
     captured = capsys.readouterr()
     assert captured.out == expected_output

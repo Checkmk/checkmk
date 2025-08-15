@@ -28,6 +28,7 @@ from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 
 import requests
 
+from cmk.ccc import hostaddress
 from cmk.plugins.azure.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -274,13 +275,18 @@ class AzureSubscription:
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str] | None] = tags
         self._name: Final[str] = name
+        self._valid_hostname: Final[str] = hostaddress.HostAddress.project_valid(name)
 
         self._safe_name_suffix: Final[str] = f"{self.id[-8:]}"
         self._safe_hostnames: Final[bool] = safe_hostnames
 
     @property
     def hostname(self) -> str:
-        return f"{self._name}-{self._safe_name_suffix}" if self._safe_hostnames else self._name
+        return (
+            f"azr-{self._valid_hostname}-{self._safe_name_suffix}"
+            if self._safe_hostnames
+            else self._valid_hostname
+        )
 
 
 class TagsImportPatternOption(enum.Enum):
@@ -1628,6 +1634,7 @@ async def get_group_labels(
 def write_group_info(
     monitored_groups: Sequence[str],
     monitored_resources: Sequence[AzureResource],
+    subcription: AzureSubscription,
     group_labels: GroupLabels,
 ) -> None:
     for group_name, tags in group_labels.items():
@@ -1636,7 +1643,7 @@ def write_group_info(
         labels_section.add((json.dumps(tags),))
         labels_section.write()
 
-    section = AzureSection("agent_info")
+    section = AzureSection("agent_info", [subcription.hostname])
     section.add(("monitored-groups", json.dumps(monitored_groups)))
     section.add(
         (
@@ -1647,23 +1654,39 @@ def write_group_info(
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
-    AzureSection("agent_info", monitored_groups).write()
+    AzureSection("agent_info", [*monitored_groups, subcription.hostname]).write()
 
 
-def write_remaining_reads(rate_limit: int | None) -> None:
-    agent_info_section = AzureSection("agent_info")
+def write_subscription_info(subcription: AzureSubscription) -> None:
+    labels_section = LabelsSection(subcription.hostname)
+    labels_section.add(
+        (json.dumps({"subscription": subcription.hostname, "entity_subscription": "yes"}),)
+    )
+    labels_section.add((json.dumps(subcription.tags),))
+    labels_section.write()
+
+
+def write_remaining_reads(rate_limit: int | None, subscription: str) -> None:
+    agent_info_section = AzureSection("agent_info", [subscription])
     agent_info_section.add(("remaining-reads", rate_limit))
     agent_info_section.write()
 
 
-def write_to_agent_info_section(message: str, component: str, status: int) -> None:
+def write_to_agent_info_section(
+    message: str, subscription: AzureSubscription | None, component: str, status: int
+) -> None:
     value = json.dumps((status, f"{component}: {message}"))
-    section = AzureSection("agent_info")
+    section = AzureSection("agent_info", [subscription.hostname if subscription else ""])
     section.add(("agent-bailout", value))
     section.write()
 
 
-def write_exception_to_agent_info_section(exception, component):
+def write_exception_to_agent_info_section(
+    exception: BaseException,
+    component: str,
+    subscription: AzureSubscription
+    | None = None,  # empty subscription writes to "main host" section
+) -> None:
     LOGGER.warning("Writing exception for component %s:\n %s", component, exception)
 
     # those exceptions are quite noisy. try to make them more concise:
@@ -1673,7 +1696,7 @@ def write_exception_to_agent_info_section(exception, component):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    write_to_agent_info_section(msg, component, 2)
+    write_to_agent_info_section(msg, subscription, component, 2)
 
 
 async def main_graph_client(args: Args, monitored_services: set[str]) -> None:
@@ -1768,10 +1791,15 @@ async def get_usage_data(
 def write_usage_section(
     usage_data: Sequence[dict[str, Any]],
     monitored_groups: list[str],
+    subscription: str,
     tag_key_pattern: TagsOption,
 ) -> None:
+    """
+    Usage (Cost) services go under the resource group AND the related subscription
+    """
+
     if not usage_data:
-        AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
+        AzureSection("usagedetails", monitored_groups + [subscription]).write(write_empty=True)
 
     for usage in usage_data:
         # fill "resource" mandatory information
@@ -1779,7 +1807,9 @@ def write_usage_section(
         usage["group"] = usage["properties"]["ResourceGroupName"]
 
         usage_resource = AzureResource(usage, tag_key_pattern)
-        piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
+        piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [
+            subscription
+        ]
 
         section = AzureSection(usage_resource.section, piggytargets)
         section.add(usage_resource.dumpinfo())
@@ -1794,14 +1824,22 @@ async def process_usage_details(
     args: Args,
 ) -> None:
     try:
-        usage_section = await get_usage_data(mgmt_client, subscription, args)
-        if not usage_section:
+        usage_data = await get_usage_data(mgmt_client, subscription, args)
+        if not usage_data:
             write_to_agent_info_section(
-                "Azure API did not return any usage details", "Usage client", 0
+                "Azure API did not return any usage details",
+                subscription,
+                "Usage client",
+                0,
             )
             return
 
-        write_usage_section(usage_section, monitored_groups, args.tag_key_pattern)
+        write_usage_section(
+            usage_data,
+            monitored_groups,
+            subscription.hostname,
+            args.tag_key_pattern,
+        )
 
     except NoConsumptionAPIError:
         LOGGER.debug("Azure offer doesn't support querying the cost API")
@@ -1810,12 +1848,13 @@ async def process_usage_details(
     except Exception as exc:
         if args.debug:
             raise
-        write_exception_to_agent_info_section(exc, "Usage client")
-        write_usage_section([], monitored_groups, args.tag_key_pattern)
+        write_exception_to_agent_info_section(exc, "Usage client", subscription)
+        write_usage_section([], monitored_groups, subscription.hostname, args.tag_key_pattern)
 
 
 async def process_resource_health(
     mgmt_client: BaseAsyncApiClient,
+    subscription: AzureSubscription,
     monitored_resources_by_id: Mapping[str, AzureResource],
     monitored_groups: Sequence[str],
     debug: bool,
@@ -1840,7 +1879,7 @@ async def process_resource_health(
         if isinstance(response, BaseException):
             if debug:
                 raise response
-            write_exception_to_agent_info_section(response, "Resource Health client")
+            write_exception_to_agent_info_section(response, "Resource Health client", subscription)
             continue
         health_values.extend(response)
 
@@ -1900,6 +1939,7 @@ async def process_virtual_machines(
 # TODO: test
 async def process_vault(
     api_client: BaseAsyncApiClient,
+    subscription: AzureSubscription,
     resource: AzureResource,
 ) -> AzureSection:
     vault_properties = (
@@ -1926,7 +1966,7 @@ async def process_vault(
         properties = filter_keys(response[0]["properties"], vault_properties)
     except KeyError:
         write_exception_to_agent_info_section(
-            ApiErrorMissingData("Vault properties must be present"), "Vaults"
+            ApiErrorMissingData("Vault properties must be present"), "Vaults", subscription
         )
         raise ApiErrorMissingData("Vault properties must be present")
 
@@ -2034,6 +2074,7 @@ def get_bulk_tasks(
 async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
     args: Args,
+    subscription: AzureSubscription,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[Section]:
     sections = []
@@ -2044,7 +2085,7 @@ async def process_single_resources(
             continue
 
         if resource_type == FetchedResource.vaults.type:
-            tasks.add(process_vault(mgmt_client, resource))
+            tasks.add(process_vault(mgmt_client, subscription, resource))
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
         else:
@@ -2061,7 +2102,9 @@ async def process_single_resources(
         if isinstance(section_async, BaseException):
             if args.debug:
                 raise section_async
-            write_exception_to_agent_info_section(section_async, "Process single resources (async)")
+            write_exception_to_agent_info_section(
+                section_async, "Process single resources (async)", subscription
+            )
             continue
 
         sections.append(section_async)
@@ -2072,6 +2115,7 @@ async def process_single_resources(
 async def process_resources(
     mgmt_client: BaseAsyncApiClient,
     args: Args,
+    subscription: AzureSubscription,
     group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
     monitored_services: set[str],
@@ -2083,7 +2127,7 @@ async def process_resources(
 
     tasks = {
         process_resource_health(
-            mgmt_client, monitored_resources_by_id, monitored_groups, args.debug
+            mgmt_client, subscription, monitored_resources_by_id, monitored_groups, args.debug
         ),
         *get_bulk_tasks(
             mgmt_client,
@@ -2092,7 +2136,7 @@ async def process_resources(
             monitored_services,
             monitored_resources_by_id,
         ),
-        process_single_resources(mgmt_client, args, monitored_resources_by_id),
+        process_single_resources(mgmt_client, args, subscription, monitored_resources_by_id),
     }
 
     for coroutine in asyncio.as_completed(tasks):
@@ -2102,7 +2146,7 @@ async def process_resources(
         except Exception as e:
             if args.debug:
                 raise
-            write_exception_to_agent_info_section(e, "Management client (async)")
+            write_exception_to_agent_info_section(e, "Management client (async)", subscription)
 
 
 async def _collect_resources(
@@ -2143,7 +2187,8 @@ async def main_subscription(
             group_labels = await get_group_labels(
                 mgmt_client, monitored_groups, args.tag_key_pattern
             )
-            write_group_info(monitored_groups, selected_resources, group_labels)
+            write_group_info(monitored_groups, selected_resources, subscription, group_labels)
+            write_subscription_info(subscription)
 
             await process_metrics(mgmt_client, subscription, selected_resources, args)
 
@@ -2154,6 +2199,7 @@ async def main_subscription(
                 process_resources(
                     mgmt_client,
                     args,
+                    subscription,
                     group_labels,
                     selected_resources,
                     monitored_services,
@@ -2163,12 +2209,12 @@ async def main_subscription(
             tasks.discard(None)
             await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
-            write_remaining_reads(mgmt_client.ratelimit)
+            write_remaining_reads(mgmt_client.ratelimit, subscription.hostname)
 
     except Exception as exc:
         if args.debug:
             raise
-        write_exception_to_agent_info_section(exc, "Management client")
+        write_exception_to_agent_info_section(exc, "Management client", subscription)
 
 
 # TODO: test

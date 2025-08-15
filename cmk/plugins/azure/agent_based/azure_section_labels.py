@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from cmk.agent_based.v1 import HostLabel
 from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringTable
@@ -12,16 +13,31 @@ from cmk.agent_based.v2 import AgentSection
 from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 
-def _parse_host_labels(string_table: StringTable) -> tuple[Mapping[str, str], Mapping[str, str]]:
-    return json.loads(string_table[0][0]), json.loads(string_table[1][0])
+@dataclass(frozen=True, kw_only=True)
+class LabelsSection:
+    host_labels: Mapping[str, str]
+    tags: Mapping[str, str]
 
 
-def host_labels(section: tuple[Mapping[str, str], Mapping[str, str]]) -> HostLabelGenerator:
+def _parse_host_labels(string_table: StringTable) -> LabelsSection:
+    return LabelsSection(
+        host_labels=json.loads(string_table[0][0]),
+        tags=json.loads(string_table[1][0]),
+    )
+
+
+def host_labels(section: LabelsSection) -> HostLabelGenerator:
     """Host label function
 
     Labels:
         cmk/azure/resource_group:
             This label contains the name of the resource group.
+
+        cmk/azure/subscription:
+            This label contains the name of the subscription.
+
+        cmk/azure/entity_subscription:
+            This label is set for all hosts monitoring a subscription an its services.
 
         cmk/azure/vm:instance:
             This label is set for all virtual machines monitored as hosts.
@@ -30,13 +46,19 @@ def host_labels(section: tuple[Mapping[str, str], Mapping[str, str]]) -> HostLab
             These labels are yielded for each tag of a resource group or of a virtual machine which
             is monitored as a host. This can be configured via the rule 'Microsoft Azure'.
     """
-    resource_info, tags = section
-    yield HostLabel("cmk/azure/resource_group", resource_info["group_name"])
+    if "group_name" in section.host_labels:
+        yield HostLabel("cmk/azure/resource_group", section.host_labels["group_name"])
+    elif "entity_subscription" in section.host_labels:
+        yield HostLabel("cmk/azure/subscription", section.host_labels["subscription"])
+        yield HostLabel("cmk/azure/entity_subscription", section.host_labels["entity_subscription"])
 
-    if resource_info.get("vm_instance"):
+    if section.host_labels.get("vm_instance"):
         yield HostLabel("cmk/azure/vm", "instance")
 
-    labels = custom_tags_to_valid_labels(tags)
+    if not section.tags:
+        return
+
+    labels = custom_tags_to_valid_labels(section.tags)
     for key, value in labels.items():
         yield HostLabel(f"cmk/azure/tag/{key}", value)
 

@@ -105,10 +105,6 @@ body.inline_help_as_text .help-text__icon {
   }
 }
 
-.help-text__popup {
-  z-index: var(--z-index-tooltip);
-}
-
 .help-text__content {
   background-color: var(--default-tooltip-background-color);
   border-radius: var(--border-radius);

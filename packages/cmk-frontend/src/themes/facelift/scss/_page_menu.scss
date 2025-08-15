@@ -33,6 +33,7 @@ div.success {
 div#top_heading {
   width: 100%;
   padding: 0;
+  z-index: +1;
   div.titlebar {
     display: flex;
     height: 53px;

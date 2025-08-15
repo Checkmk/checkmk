@@ -18,11 +18,11 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import requests
 
@@ -374,7 +374,8 @@ class ABCDiagnosticsElement(abc.ABC):
 
 
 class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
-    def add_or_get_files(self, tmp_dump_folder: Path) -> Iterator[Path]:
+    @override
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         filepath = tmp_dump_folder.joinpath(self.ident)
         store.save_text_to_file(filepath, self._collect_infos())
         yield filepath
@@ -385,6 +386,7 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         infos = self._collect_infos()
         if not infos:
@@ -400,6 +402,7 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
 
 
 class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         infos = self._collect_infos()
         if not infos:
@@ -418,14 +421,17 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
 
 
 class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @override
     @property
     def ident(self) -> str:
         return "file_size"
 
+    @override
     @property
     def title(self) -> str:
         return _("File Size")
 
+    @override
     @property
     def description(self) -> str:
         return _("List of all files in the site including their size")
@@ -458,14 +464,17 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
 
 class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @override
     @property
     def ident(self) -> str:
         return "dpkg_packages"
 
+    @override
     @property
     def title(self) -> str:
         return _("Dpkg packages information")
 
+    @override
     @property
     def description(self) -> str:
         return _("Output of `dpkg -l`. See the corresponding commandline help for more details.")
@@ -481,14 +490,17 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
 
 class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @override
     @property
     def ident(self) -> str:
         return "rpm_packages"
 
+    @override
     @property
     def title(self) -> str:
         return _("Rpm packages information")
 
+    @override
     @property
     def description(self) -> str:
         return _("Output of `rpm -qa`. See the corresponding commandline help for more details.")
@@ -514,14 +526,17 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
 
 class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "general"
 
+    @override
     @property
     def title(self) -> str:
         return _("General")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -548,14 +563,17 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def __init__(self, load_config: LoadedConfigFragment) -> None:
         self._loaded_config = load_config
 
+    @override
     @property
     def ident(self) -> str:
         return "perfdata"
 
+    @override
     @property
     def title(self) -> str:
         return _("Performance data")
 
+    @override
     @property
     def description(self) -> str:
         return _("Performance data related to sizing, e.g. number of helpers, hosts, services")
@@ -664,14 +682,17 @@ def _load_avg_proc_parser(content: list[str]) -> dict[str, str]:
 
 
 class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "hwinfo"
 
+    @override
     @property
     def title(self) -> str:
         return _("HW Information")
 
+    @override
     @property
     def description(self) -> str:
         return _("Hardware information of the Checkmk Server")
@@ -705,14 +726,17 @@ def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
 
 
 class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "vendorinfo"
 
+    @override
     @property
     def title(self) -> str:
         return _("Vendor Information")
 
+    @override
     @property
     def description(self) -> str:
         return _("HW Vendor information of the Checkmk Server")
@@ -722,14 +746,17 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "environment"
 
+    @override
     @property
     def title(self) -> str:
         return _("Environment Variables")
 
+    @override
     @property
     def description(self) -> str:
         return _("Variables set in the site user's environment")
@@ -741,14 +768,17 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "pip_freeze"
 
+    @override
     @property
     def title(self) -> str:
         return _("pip freeze output")
 
+    @override
     @property
     def description(self) -> str:
         return _("The installed Python modules and their versions")
@@ -761,14 +791,17 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "mkp_find_all.json"
 
+    @override
     @property
     def title(self) -> str:
         return _("Extension package files")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -787,14 +820,17 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "mkp_show_all.json"
 
+    @override
     @property
     def title(self) -> str:
         return _("Extension package files")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -811,14 +847,17 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "mkp_list.json"
 
+    @override
     @property
     def title(self) -> str:
         return _("Extension package files")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -834,14 +873,17 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "selinux"
 
+    @override
     @property
     def title(self) -> str:
         return _("SELinux information")
 
+    @override
     @property
     def description(self) -> str:
         return _("Output of `sestatus`. See the corresponding commandline help for more details.")
@@ -869,14 +911,17 @@ def _try_to_read(filename: str | Path) -> list[str]:
 
 
 class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "appliance"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Appliance information")
 
+    @override
     @property
     def description(self) -> str:
         return _("Information about the Appliance hardware and firmware version.")
@@ -894,14 +939,17 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @override
     @property
     def ident(self) -> str:
         return "omd_config"
 
+    @override
     @property
     def title(self) -> str:
         return _("OMD Config")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -920,14 +968,17 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         self.inventory_store = inventory_store
         self.checkmk_server_host = checkmk_server_host
 
+    @override
     @property
     def ident(self) -> str:
         return "checkmk_overview"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Overview of Checkmk Server")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -1023,6 +1074,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 
         return tmp_filepath
 
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         unknown_files = []
 
@@ -1040,15 +1092,18 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         # Unused because we directly pack the .mk or .conf file
         return "checkmk_config_files"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Configuration Files")
 
+    @override
     @property
     def description(self) -> str:
         return _("Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s") % ", ".join(
@@ -1061,15 +1116,18 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         # Unused because we directly pack the .log or .state file
         return "checkmk_log_files"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Log Files")
 
+    @override
     @property
     def description(self) -> str:
         return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
@@ -1085,15 +1143,18 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         # Unused because we directly pack the config, state and history file
         return "checkmk_core_files"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Core Files")
 
+    @override
     @property
     def description(self) -> str:
         return _("Core files (config, state and history) from var/check_mk/core: %s") % ", ".join(
@@ -1106,15 +1167,18 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         # Unused because we directly pack the config, state and history file
         return "checkmk_licensing_files"
 
+    @override
     @property
     def title(self) -> str:
         return _("Checkmk Licensing Files")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -1130,14 +1194,17 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     def __init__(self, checkmk_server_host: str) -> None:
         self.checkmk_server_host = checkmk_server_host
 
+    @override
     @property
     def ident(self) -> str:
         return "performance_graphs"
 
+    @override
     @property
     def title(self) -> str:
         return _("Performance Graphs of Checkmk Server")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -1146,6 +1213,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             "25 hours and 35 days"
         )
 
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         response = self._get_response(checkmk_server_host, get_omd_config())
@@ -1193,14 +1261,17 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class BIDataDiagnosticsElement(ABCDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         return "bi_runtime_data"
 
+    @override
     @property
     def title(self) -> str:
         return _("Business Intelligence runtime data")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -1209,6 +1280,7 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
             "for all hosts/services included in a BI aggregation."
         )
 
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         tmpdir = tmp_dump_folder.joinpath("tmp/check_mk/bi_cache")
         tmpdir.mkdir(parents=True, exist_ok=True)
@@ -1218,18 +1290,22 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         return "crashdumps"
 
+    @override
     @property
     def title(self) -> str:
         return _("The latest crash dumps of each type")
 
+    @override
     @property
     def description(self) -> str:
         return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
 
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         for category in cmk.utils.paths.crash_dir.glob("*"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
@@ -1254,14 +1330,17 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
+    @override
     @property
     def ident(self) -> str:
         return "cmcdump"
 
+    @override
     @property
     def title(self) -> str:
         return _("Config and state dumps of the CMC")
 
+    @override
     @property
     def description(self) -> str:
         return _(
@@ -1269,6 +1348,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
             "cmcdump output of the status and config."
         )
 
+    @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 

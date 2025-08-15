@@ -3,14 +3,72 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Plugin } from 'vue'
-import { createGettext, useGettext } from 'vue3-gettext'
+import { ref, type Ref, type Plugin, computed } from 'vue'
+import { createGettext, useGettext, type Translations } from 'vue3-gettext'
+import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
 
-// Generated during build process
-import de from '@/assets/locale/de.json'
-import en from '@/assets/locale/en.json'
+const AVAILABLE_LANGUAGES: Record<string, string> = {
+  en: 'English',
+  de: 'German',
+  fr: 'French'
+}
+
+export type SupportedLanguage = keyof typeof AVAILABLE_LANGUAGES
 
 type InterpolationValues = Record<string, string | number>
+
+// Lazy loaded translation handling
+async function loadTranslations(language: SupportedLanguage): Promise<Translations> {
+  return (await import(`@/assets/locale/${language}.json`)).default
+}
+
+type GettextInstance = ReturnType<typeof createGettext>
+
+interface I18nState {
+  translationLoading: Ref<boolean>
+  currentLanguage: Ref<SupportedLanguage>
+  instance: GettextInstance | null
+}
+
+const globalState: I18nState = {
+  translationLoading: ref<boolean>(false),
+  currentLanguage: ref<SupportedLanguage>('en'),
+  instance: null
+}
+
+async function switchLanguage(language: SupportedLanguage): Promise<void> {
+  if (!globalState.instance) {
+    throw new Error('Gettext instance is not initialized. Call createi18n() first.')
+  }
+
+  if (language === 'en' || language in globalState.instance.translations) {
+    // No lazy loading required, just switch
+    globalState.translationLoading.value = false
+    globalState.instance.current = language
+    globalState.currentLanguage.value = language
+    return
+  }
+
+  if (globalState.translationLoading.value) {
+    // Waiting on lazy load, keep current language
+    return
+  }
+  globalState.translationLoading.value = true
+
+  try {
+    const data = await loadTranslations(language)
+    globalState.instance.translations = {
+      ...globalState.instance.translations,
+      ...data
+    }
+    globalState.instance.current = language
+    globalState.currentLanguage.value = language
+  } catch (error) {
+    throw new Error(`Failed to load translations for ${language}: ${error}`)
+  } finally {
+    globalState.translationLoading.value = false
+  }
+}
 
 /**
  * Hook to offer i18n functionality in Vue components.
@@ -19,6 +77,7 @@ type InterpolationValues = Record<string, string | number>
  */
 export default function usei18n() {
   const { $gettext, $ngettext, $npgettext, $pgettext } = useGettext()
+  const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
 
   /**
    * Defines a string to be translated.
@@ -41,6 +100,9 @@ export default function usei18n() {
   function _t(msg: string): string
   function _t(msg: string, interpolation: InterpolationValues): string
   function _t(msg: string, interpolation?: InterpolationValues): string {
+    if (showEnglish.value) {
+      return dummyT(msg, interpolation)
+    }
     return interpolation === undefined ? $gettext(msg) : $gettext(msg, interpolation)
   }
 
@@ -84,6 +146,9 @@ export default function usei18n() {
     count: number,
     interpolation?: InterpolationValues
   ): string {
+    if (showEnglish.value) {
+      return dummyTn(singular, plural, count, interpolation)
+    }
     return interpolation === undefined
       ? $ngettext(singular, plural, count)
       : $ngettext(singular, plural, count, interpolation)
@@ -116,6 +181,9 @@ export default function usei18n() {
   function _tp(context: string, msg: string): string
   function _tp(context: string, msg: string, interpolation: InterpolationValues): string
   function _tp(context: string, msg: string, interpolation?: InterpolationValues): string {
+    if (showEnglish.value) {
+      return dummyTp(context, msg, interpolation)
+    }
     return interpolation === undefined
       ? $pgettext(context, msg)
       : $pgettext(context, msg, interpolation)
@@ -169,6 +237,9 @@ export default function usei18n() {
     count: number,
     interpolation?: InterpolationValues
   ): string {
+    if (showEnglish.value) {
+      return dummyTnp(context, singular, plural, count, interpolation)
+    }
     return interpolation === undefined
       ? $npgettext(context, singular, plural, count)
       : $npgettext(context, singular, plural, count, interpolation)
@@ -178,17 +249,20 @@ export default function usei18n() {
     _t,
     _tn,
     _tp,
-    _tnp
+    _tnp,
+    switchLanguage,
+    translationLoading: globalState.translationLoading
   }
 }
 
 export function createi18n(): Plugin {
-  return createGettext({
-    availableLanguages: {
-      en: 'English',
-      de: 'German'
-    },
-    defaultLanguage: 'en',
-    translations: { ...en, ...de }
-  })
+  if (!globalState.instance) {
+    globalState.instance = createGettext({
+      availableLanguages: AVAILABLE_LANGUAGES,
+      defaultLanguage: 'en',
+      translations: {}
+    })
+  }
+
+  return globalState.instance
 }

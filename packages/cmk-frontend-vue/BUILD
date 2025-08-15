@@ -27,11 +27,13 @@ EXTRACTED_LOCALE_OUTS = [
     "locale/messages.pot",
     "locale/en.po",
     "locale/de.po",
+    "locale/fr.po",
 ]
 
 LOCALE_OUTS = [
     "src/assets/locale/en.json",
     "src/assets/locale/de.json",
+    "src/assets/locale/fr.json",
 ]
 
 js_run_binary(
@@ -52,8 +54,9 @@ js_run_binary(
 
 js_run_binary(
     name = "compile_i18n",
-    srcs = EXTRACTED_LOCALE_OUTS + [
+    srcs = [
         "gettext.config.js",
+        ":extract_i18n",
         ":node_modules/vue3-gettext",
     ],
     outs = LOCALE_OUTS,
@@ -75,7 +78,7 @@ SRCS = [
     "vite.config.ts",
     "demo/index.html",
     "//packages/cmk-frontend:dist",
-    ":extract_i18n",
+    ":compile_i18n",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",

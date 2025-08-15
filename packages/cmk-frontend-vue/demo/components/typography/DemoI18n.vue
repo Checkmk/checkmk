@@ -9,16 +9,32 @@ import usei18n from '@/lib/i18n'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkButton from '@/components/CmkButton.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const { _t, _tn } = usei18n()
+const { _t, _tn, switchLanguage, translationLoading } = usei18n()
 
 const appleCount = ref('0')
 const name = ref<string>('Alice')
 </script>
 
 <template>
+  <label>
+    <CmkButton @click="switchLanguage('en')">{{ _t('English') }}</CmkButton>
+  </label>
+  <label>
+    <CmkButton @click="switchLanguage('de')">{{ _t('German') }}</CmkButton>
+  </label>
+  <label>
+    <CmkButton @click="switchLanguage('fr')">{{ _t('French') }}</CmkButton>
+  </label>
+
+  <br />
+  <label>
+    {{ translationLoading ? _t('Loading translations...') : _t('Translations loaded') }}
+  </label>
+  <br />
   <label>
     {{ _t('Your name') }}
     <CmkInput v-model="name" />

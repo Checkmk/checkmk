@@ -17,7 +17,7 @@ export default {
     path: './locale',
     potPath: './messages.pot', // relative to output.path
     jsonPath: '../src/assets/locale/', // relative to output.path
-    locales: ['en', 'de'],
+    locales: ['en', 'de', 'fr'],
     flat: true, // don't create subdirectories for locales
     linguas: false, // create a LINGUAS file
     splitJson: true // create separate json files for each locale. If used, jsonPath must end with a directory, not a file

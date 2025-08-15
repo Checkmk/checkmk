@@ -40665,10 +40665,6 @@ msgstr "グループ名"
 msgid "Name of group in service name"
 msgstr "サービス名にあるグループの名前"
 
-#, fuzzy
-msgid "Name of group2"
-msgstr "グループ名"
-
 msgid "Name of indice"
 msgstr "インデックスの名前"
 
@@ -40951,10 +40947,6 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
-
-#, fuzzy
-msgid "Negative age tolerance"
-msgstr "負の値は不可"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "否定一致(一致するホストをセットから除外)"
@@ -48170,6 +48162,10 @@ msgstr "Podリソース: ステータスフルセット"
 
 #, fuzzy
 msgid "Podman Container Restarts"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman Container Status"
 msgstr "Podman コンテナ"
 
 msgid "Podman Containers"
@@ -62518,11 +62514,6 @@ msgid ""
 msgstr ""
 "ファイル %s は、手動で作成および保守する必要があります。<br>このルールで指定"
 "された設定項目は無視されます。"
-
-msgid ""
-"The file age of files with creation time from the future will be set to 0 if "
-"the creation time is within the tolerance period."
-msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "ファイルにXMLテキストが含まれていません"
@@ -84570,6 +84561,14 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, fuzzy
+#~ msgid "Name of group2"
+#~ msgstr "グループ名"
+
+#, fuzzy
+#~ msgid "Negative age tolerance"
+#~ msgstr "負の値は不可"
 
 #~ msgid "HW/SW Inventory housekeeping"
 #~ msgstr "HW/SWインベントリ ハウスキーピング"

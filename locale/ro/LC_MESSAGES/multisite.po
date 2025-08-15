@@ -43473,10 +43473,6 @@ msgstr "Denumirea grupului"
 msgid "Name of group in service name"
 msgstr "Denumirea grupului în descrierea serviciului"
 
-#, fuzzy
-msgid "Name of group2"
-msgstr "Denumirea grupului"
-
 msgid "Name of indice"
 msgstr "Denumirea indicelui"
 
@@ -43767,10 +43763,6 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
-
-#, fuzzy
-msgid "Negative age tolerance"
-msgstr "Aici nu este permisă o valoare goală."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Potrivire negativă (Excludeți gazdele corespunzătoare din set)"
@@ -51670,6 +51662,10 @@ msgstr "Resursele din pod: StatefulSet"
 
 #, fuzzy
 msgid "Podman Container Restarts"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman Container Status"
 msgstr "# Containere"
 
 #, fuzzy
@@ -66929,11 +66925,6 @@ msgid ""
 msgstr ""
 "Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
 "furnizate cu această regulă vor fi ignorate."
-
-msgid ""
-"The file age of files with creation time from the future will be set to 0 if "
-"the creation time is within the tolerance period."
-msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Fișierul nu conține text XML"
@@ -90617,6 +90608,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Name of group2"
+#~ msgstr "Denumirea grupului"
+
+#, fuzzy
+#~ msgid "Negative age tolerance"
+#~ msgstr "Aici nu este permisă o valoare goală."
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

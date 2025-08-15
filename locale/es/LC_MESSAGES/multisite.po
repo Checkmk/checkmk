@@ -43735,10 +43735,6 @@ msgstr "Nombre del grupo"
 msgid "Name of group in service name"
 msgstr "Nombre del grupo en la descripción del servicio"
 
-#, fuzzy
-msgid "Name of group2"
-msgstr "Nombre del grupo"
-
 msgid "Name of indice"
 msgstr "Nombre del índice"
 
@@ -44016,10 +44012,6 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negar: encontrar hosts <b>que no tengan este paquete</b>"
-
-#, fuzzy
-msgid "Negative age tolerance"
-msgstr "Aquí no se permite un valor vacío."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Coincidencia negativa (excluir del conjunto los hosts coincidentes)"
@@ -51990,6 +51982,10 @@ msgstr "Recursos del pod: StatefulSet"
 
 #, fuzzy
 msgid "Podman Container Restarts"
+msgstr "# Contenedores"
+
+#, fuzzy
+msgid "Podman Container Status"
 msgstr "# Contenedores"
 
 #, fuzzy
@@ -67328,11 +67324,6 @@ msgid ""
 msgstr ""
 "El archivo %s necesita ser creado y mantenido manualmente.<br>Las entradas "
 "de configuración proporcionadas con esta regla serán ignoradas."
-
-msgid ""
-"The file age of files with creation time from the future will be set to 0 if "
-"the creation time is within the tolerance period."
-msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "El fichero no contiene texto XML"
@@ -91121,6 +91112,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Name of group2"
+#~ msgstr "Nombre del grupo"
+
+#, fuzzy
+#~ msgid "Negative age tolerance"
+#~ msgstr "Aquí no se permite un valor vacío."
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

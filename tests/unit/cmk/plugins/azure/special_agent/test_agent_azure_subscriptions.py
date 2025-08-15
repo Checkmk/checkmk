@@ -43,6 +43,37 @@ def test_azuresubscription_hostname(
     assert azure_subscription.hostname == expected_hostname
 
 
+@pytest.mark.parametrize(
+    "azure_subscription, resource_name, expected_resource_hostname",
+    [
+        (
+            AzureSubscription(
+                id="subscription_id_12345678",
+                name="subscription name",
+                tags={},
+                safe_hostnames=False,
+            ),
+            "resource_name",
+            "resource_name",
+        ),
+        (
+            AzureSubscription(
+                id="subscription_id_12345678",
+                name="subscription:name",
+                tags={},
+                safe_hostnames=True,
+            ),
+            "resource_name",
+            "azr-resource_name-12345678",
+        ),
+    ],
+)
+def test_resource_hostname(
+    azure_subscription: AzureSubscription, resource_name: str, expected_resource_hostname: str
+) -> None:
+    assert azure_subscription.get_resource_hostname(resource_name) == expected_resource_hostname
+
+
 RESOURCE_GROUPS_RESPONSE = {
     "value": [
         {

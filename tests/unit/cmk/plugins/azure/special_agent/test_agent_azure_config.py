@@ -19,6 +19,8 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagsImportPatternOption,
 )
 
+from .conftest import fake_azure_subscription
+
 Args = argparse.Namespace
 
 ARGV = [
@@ -181,6 +183,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="resource not in config",
@@ -197,6 +200,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             True,
             id="no explicit config",
@@ -213,6 +217,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             True,
             id="no resources in explicit config",
@@ -242,6 +247,7 @@ def test_explicit_config_is_configured(
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="no required tag",
@@ -259,6 +265,7 @@ def test_explicit_config_is_configured(
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="tag value doesn't match",
@@ -315,6 +322,7 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             True,
             id="both explicit config and tag match",
@@ -336,6 +344,7 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="tag doesn't match",
@@ -357,6 +366,7 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="explicit config doesn't match, unknown resource",
@@ -378,6 +388,7 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             True,
             id="explicit config match for group and tag",
@@ -399,6 +410,7 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             False,
             id="explicit config match for group but not tag",
@@ -420,6 +432,7 @@ def test_selector() -> None:
                     "group": "test-GROUP",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
             ),
             True,
             id="case-insensitive group match",

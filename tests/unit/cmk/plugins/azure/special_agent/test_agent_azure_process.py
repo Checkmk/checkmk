@@ -33,6 +33,8 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     write_remaining_reads,
 )
 
+from .conftest import fake_azure_subscription
+
 Args = argparse.Namespace
 
 
@@ -62,6 +64,12 @@ class MockAzureSection(AzureSection):
                     "group": "BurningMan",
                 },
                 TagsImportPatternOption.import_all,
+                subscription=AzureSubscription(
+                    id="mock_subscription_id",
+                    name="mock_subscription_name",
+                    tags={},
+                    safe_hostnames=False,
+                ),
             ),
             {
                 "burningman": {
@@ -170,6 +178,7 @@ async def test_get_group_labels(
                         "group": "BurningMan",
                     },
                     TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
                 ),
             ],
             {
@@ -222,6 +231,9 @@ _monitored_vm_resource = lambda tag_pattern_option: {
             "tags": {"tag1": "value1"},
         },
         tag_pattern_option,
+        subscription=AzureSubscription(
+            id="mock_subscription_id", name="mock_subscription_name", tags={}, safe_hostnames=False
+        ),
     )
 }
 
@@ -490,7 +502,7 @@ async def test_process_organization(
 
 
 @pytest.mark.asyncio
-async def test_process_redis() -> None:
+async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None:
     resource = AzureResource(
         {
             "id": "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/providers/Microsoft.Cache/Redis/rickcmktest",
@@ -503,6 +515,7 @@ async def test_process_redis() -> None:
             "provider": "Microsoft.Cache",
         },
         TagsImportPatternOption.import_all,
+        mock_azure_subscription,
     )
 
     result_section = await process_redis(resource)
@@ -715,11 +728,14 @@ async def test_collect_resources(
     expected_resources: Sequence[AzureResourceInfo],
     expected_monitored_groups: set[str],
     mock_api_client: AsyncMock,
+    mock_azure_subscription: AzureSubscription,
 ) -> None:
     mock_api_client.get_async.return_value = api_client_mock_return
 
     selector = Selector(args)
-    result_resources, result_groups = await _collect_resources(mock_api_client, args, selector)
+    result_resources, result_groups = await _collect_resources(
+        mock_api_client, mock_azure_subscription, args, selector
+    )
 
     assert len(result_resources) == len(expected_resources), "Resource count mismatch"
     for resource, expected in zip(result_resources, expected_resources):
@@ -784,11 +800,9 @@ def test_azure_resource(
     resource_data: Mapping,
     expected_resource: AzureResourceInfo,
     tags_pattern: TagsOption,
+    mock_azure_subscription: AzureSubscription,
 ) -> None:
-    resource = AzureResource(
-        resource_data,
-        tags_pattern,
-    )
+    resource = AzureResource(resource_data, tags_pattern, mock_azure_subscription)
 
     assert resource.section == expected_resource.section, "Section mismatch"
     assert resource.info["group"] == expected_resource.info_group, "Info group mismatch"

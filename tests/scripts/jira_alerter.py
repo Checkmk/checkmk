@@ -9,18 +9,19 @@ This script provides a simple HTTP service with endpoints to:
 - Create Jira issues (`POST /create`)
 
 Usage:
-    python jira_alerter.py --jira-url <JIRA_URL> --jira-token <JIRA_API_TOKEN>
+    python jira_alerter.py --jira-url <JIRA_URL>
     [--host <address>] [--port <port>]
 
 Options:
     --jira-url (str, required): Jira URL.
-    --jira-token (str, required): Jira Personal Access Token.
     --host (str, optional): Address to bind to (default: 0.0.0.0).
     --port (int, optional): Port to bind to (default: 8000).
 """
 
 import argparse
 import logging
+from getpass import getpass
+from os import getenv
 
 import uvicorn
 from fastapi import FastAPI
@@ -39,7 +40,6 @@ class JiraAlerterArgs(argparse.Namespace):
     """Arguments for the Jira Alerter Service."""
 
     jira_url: str
-    jira_token: str
     host: str
     port: int
 
@@ -48,9 +48,14 @@ class JiraAlerter:
     app = FastAPI()
 
     def __init__(self, url: str, token: str):
+        assert url, "ERROR: Jira URL required!"
         self.url: str = url
         LOGGER.info("Authenticating to %s", self.url)
-        self.client = JIRA(server=self.url, token_auth=token)
+        assert token, "ERROR: Jira Personal Access token required!"
+        self.client = JIRA(
+            server=self.url,
+            token_auth=token,
+        )
 
 
 def parse_args() -> JiraAlerterArgs:
@@ -67,13 +72,6 @@ def parse_args() -> JiraAlerterArgs:
         type=str,
         required=True,
         help="Jira URL",
-    )
-    parser.add_argument(
-        "--jira-token",
-        dest="jira_token",
-        type=str,
-        required=True,
-        help="Jira Personal Access Token",
     )
     parser.add_argument(
         "--host",
@@ -103,7 +101,8 @@ def main():
     Starts the FastAPI application using Uvicorn with specified host and port.
     """
     args = parse_args()
-    jira_alerter = JiraAlerter(url=args.jira_url, token=args.jira_token)
+    jira_token = getenv("JIRA_TOKEN") or getpass("Jira Personal Access Token? ")
+    jira_alerter = JiraAlerter(url=args.jira_url, token=jira_token)
 
     @jira_alerter.app.get("/status")
     def status():

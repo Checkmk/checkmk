@@ -24,7 +24,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Any, Literal, Required, TypedDict, TypeVar
+from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 
 import requests
 
@@ -265,6 +265,22 @@ BULK_QUERIED_RESOURCES = {
     FetchedResource.app_gateways.type,
     FetchedResource.load_balancers.type,
 }
+
+
+class AzureSubscription:
+    def __init__(
+        self, id: str, name: str, tags: Mapping[str, str] | None, safe_hostnames: bool
+    ) -> None:
+        self.id: Final[str] = id
+        self.tags: Final[Mapping[str, str] | None] = tags
+        self._name: Final[str] = name
+
+        self._safe_name_suffix: Final[str] = f"{self.id[-8:]}"
+        self._safe_hostnames: Final[bool] = safe_hostnames
+
+    @property
+    def hostname(self) -> str:
+        return f"{self._name}-{self._safe_name_suffix}" if self._safe_hostnames else self._name
 
 
 class TagsImportPatternOption(enum.Enum):
@@ -1482,7 +1498,7 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 
 async def process_metrics(
     mgmt_client: BaseAsyncApiClient,
-    subscription: str,
+    subscription: AzureSubscription,
     resources: Sequence[AzureResource],
     args: Args,
 ) -> None:
@@ -1499,7 +1515,7 @@ async def process_metrics(
 # TODO: to test
 async def _gather_metrics(
     mgmt_client: BaseAsyncApiClient,
-    subscription: str,
+    subscription: AzureSubscription,
     all_resources: Sequence[AzureResource],
     args: Args,
 ) -> IssueCollector:
@@ -1528,7 +1544,7 @@ async def _gather_metrics(
                 metric_definition=metric_definition,
                 resource_type=resource_type,
                 region=resource_region,
-                subscription=subscription,
+                subscription=subscription.id,
                 cache_id=args.cache_id,
                 ref_time=NOW,
                 debug=args.debug,
@@ -1719,7 +1735,7 @@ def _process_query_id(columns, rows, common_metadata):
 
 
 async def get_usage_data(
-    client: BaseAsyncApiClient, subscription: str, args: Args
+    client: BaseAsyncApiClient, subscription: AzureSubscription, args: Args
 ) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
@@ -1736,7 +1752,7 @@ async def get_usage_data(
 
     try:
         usage_data = await UsageDetailsCache(
-            subscription=subscription,
+            subscription=subscription.id,
             cache_id=args.cache_id,
             debug=args.debug,
         ).get_data(client, use_cache=True)
@@ -1770,8 +1786,12 @@ def write_usage_section(
         section.write()
 
 
+# TODO: test
 async def process_usage_details(
-    mgmt_client: BaseAsyncApiClient, subscription: str, monitored_groups: list[str], args: Args
+    mgmt_client: BaseAsyncApiClient,
+    subscription: AzureSubscription,
+    monitored_groups: list[str],
+    args: Args,
 ) -> None:
     try:
         usage_section = await get_usage_data(mgmt_client, subscription, args)
@@ -2106,11 +2126,11 @@ async def _collect_resources(
 
 
 async def main_subscription(
-    args: Args, selector: Selector, subscription: str, monitored_services: set[str]
+    args: Args, selector: Selector, subscription: AzureSubscription, monitored_services: set[str]
 ) -> None:
     try:
         async with SharedSessionApiClient(
-            get_mgmt_authority_urls(args.authority, subscription),
+            get_mgmt_authority_urls(args.authority, subscription.id),
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
@@ -2151,32 +2171,53 @@ async def main_subscription(
         write_exception_to_agent_info_section(exc, "Management client")
 
 
-async def _get_subscriptions(args: Args) -> set[str]:
-    if args.subscriptions:
-        LOGGER.info("Using subscriptions from command line: %s", args.subscriptions)
-        return set(args.subscriptions)
+# TODO: test
+async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
+    if not args.subscriptions and not args.all_subscriptions:
+        LOGGER.info("No subscriptions selected")
+        return set()
+
+    async with BaseAsyncApiClient(
+        get_mgmt_authority_urls(args.authority, ""),
+        deserialize_http_proxy_config(args.proxy),
+        args.tenant,
+        args.client,
+        args.secret,
+    ) as api_client:
+        response = await api_client.request_async(
+            method="GET",
+            full_uri="https://management.azure.com/subscriptions",
+            params={"api-version": "2022-12-01"},
+        )
+        subscriptions = {
+            item["subscriptionId"]: AzureSubscription(
+                id=item["subscriptionId"],
+                name=item["displayName"],
+                tags=item.get("tags"),
+                safe_hostnames=args.safe_hostnames,
+            )
+            for item in response.get("value", [])
+        }
 
     if args.all_subscriptions:
-        async with BaseAsyncApiClient(
-            get_mgmt_authority_urls(args.authority, ""),
-            deserialize_http_proxy_config(args.proxy),
-            args.tenant,
-            args.client,
-            args.secret,
-        ) as api_client:
-            response = await api_client.request_async(
-                method="GET",
-                full_uri="https://management.azure.com/subscriptions",
-                params={"api-version": "2022-12-01"},
-            )
-            subscriptions = {item["subscriptionId"] for item in response.get("value", [])}
-            LOGGER.info("Using subscriptions from API: %s", subscriptions)
-            return subscriptions
+        LOGGER.info("Using all subscriptions from API: %s", ",".join(subscriptions.keys()))
+        return set(subscriptions.values())
 
-    return set()  # no subscriptions
+    monitored_subscriptions = set()
+    for subscription in args.subscriptions:
+        if subscription not in subscriptions:
+            raise ApiError(f"Subscription {subscription} not found in Azure API")
+
+        monitored_subscriptions.add(subscriptions[subscription])
+
+    LOGGER.info("Using requested subscriptions %s", subscriptions)
+
+    return monitored_subscriptions
 
 
-async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) -> None:
+async def collect_info(
+    args: Args, selector: Selector, subscriptions: set[AzureSubscription]
+) -> None:
     monitored_services = set(args.services)
     await asyncio.gather(
         main_graph_client(args, monitored_services),

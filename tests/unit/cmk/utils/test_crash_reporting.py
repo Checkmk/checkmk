@@ -9,8 +9,9 @@ import itertools
 import json
 import struct
 import uuid
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 
@@ -24,7 +25,11 @@ from cmk.ccc.crash_reporting import (
 )
 
 
-class UnitTestCrashReport(ABCCrashReport):
+class UnitTestDetails(TypedDict):
+    vars: Mapping[str, str]
+
+
+class UnitTestCrashReport(ABCCrashReport[UnitTestDetails]):
     @classmethod
     def type(cls):
         return "test"
@@ -50,47 +55,53 @@ def crash(tmp_path: Path) -> UnitTestCrashReport:
                     time=0.0,
                     os="Foobuntu",
                 ),
-                {"vars": {"my_secret": "1234", "not_import": "1234", "auth_token": "1234"}},
+                UnitTestDetails(
+                    vars={
+                        "my_secret": "1234",
+                        "not_import": "1234",
+                        "auth_token": "1234",
+                    }
+                ),
             ),
         )
 
 
-def test_crash_report_type(crash: ABCCrashReport) -> None:
+def test_crash_report_type(crash: UnitTestCrashReport) -> None:
     assert crash.type() == "test"
 
 
-def test_crash_report_sanitization(crash: ABCCrashReport) -> None:
-    assert crash.crash_info["details"] == {
-        "vars": {
+def test_crash_report_sanitization(crash: UnitTestCrashReport) -> None:
+    assert crash.crash_info["details"] == UnitTestDetails(
+        vars={
             "my_secret": REDACTED_STRING,
             "not_import": "1234",
             "auth_token": REDACTED_STRING,
         }
-    }
+    )
 
 
-def test_crash_report_sanitization_local_vars(crash: ABCCrashReport) -> None:
+def test_crash_report_sanitization_local_vars(crash: UnitTestCrashReport) -> None:
     decoded_local_vars = base64.b64decode(crash.crash_info["local_vars"])
     assert b"verysecret" not in decoded_local_vars
     assert b"notsecret" in decoded_local_vars
 
 
-def test_crash_report_ident(crash: ABCCrashReport) -> None:
+def test_crash_report_ident(crash: UnitTestCrashReport) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 
 
-def test_crash_report_ident_to_text(crash: ABCCrashReport) -> None:
+def test_crash_report_ident_to_text(crash: UnitTestCrashReport) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
-def test_crash_report_crash_dir(tmp_path: Path, crash: ABCCrashReport) -> None:
+def test_crash_report_crash_dir(tmp_path: Path, crash: UnitTestCrashReport) -> None:
     assert (
         crash.crash_dir()
         == tmp_path / "var/check_mk/crashes" / crash.type() / crash.ident_to_text()
     )
 
 
-def test_crash_report_local_crash_report_url(crash: ABCCrashReport) -> None:
+def test_crash_report_local_crash_report_url(crash: UnitTestCrashReport) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
 
@@ -185,7 +196,8 @@ def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
                         version="3.99",
                         time=0.0,
                         os="Foobuntu",
-                    )
+                    ),
+                    UnitTestDetails(vars={}),
                 ),
             )
             store.save(crash)

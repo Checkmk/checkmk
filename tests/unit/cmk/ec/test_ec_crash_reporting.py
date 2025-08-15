@@ -28,7 +28,8 @@ def test_ec_crash_report_from_exception(tmp_path: Path) -> None:
                     version="3.99",
                     time=0.0,
                     os="Foobuntu",
-                )
+                ),
+                None,
             ),
         )
         CrashReportStore().save(crash)

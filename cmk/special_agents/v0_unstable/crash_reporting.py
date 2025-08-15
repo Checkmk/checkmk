@@ -9,13 +9,12 @@ from typing import Literal
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc import crash_reporting
-from cmk.ccc.crash_reporting import VersionInfo
 
 CrashReportStore = crash_reporting.CrashReportStore
 
 
 @crash_reporting.crash_report_registry.register
-class AgentCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
+class AgentCrashReport(crash_reporting.ABCCrashReport[None]):
     @classmethod
     def type(cls) -> Literal["agent"]:
         return "agent"
@@ -26,7 +25,7 @@ def create_agent_crash_dump() -> str:
         crash = AgentCrashReport(
             omd_root=cmk.utils.paths.omd_root,
             crash_info=AgentCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root), None
             ),
         )
         CrashReportStore().save(crash)

@@ -50,10 +50,12 @@ from contextlib import contextmanager
 from datetime import datetime as Datetime
 from getpass import getpass
 from pathlib import Path
+from statistics import fmean
 from sys import exit as sys_exit
 from typing import NamedTuple
 
 import psycopg
+import requests
 from matplotlib import pyplot
 
 logging.basicConfig()
@@ -61,6 +63,12 @@ logger = logging.getLogger(__name__)
 
 Measurements = Mapping[str, object]
 MeasurementsList = list[Measurements]
+
+
+class AverageValues(NamedTuple):
+    avg_time: float
+    avg_cpu: float
+    avg_mem: float
 
 
 class JobDetails(NamedTuple):
@@ -677,6 +685,7 @@ class PerftestPlotArgs(argparse.Namespace):
         dbpass (str): Password for database authentication.
         dbhost (str): Hostname or IP address of the database server.
         dbport (int): Port number for the database connection.
+        alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
     """
 
     root_dir: Path
@@ -693,6 +702,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbpass: str
     dbhost: str
     dbport: int
+    alert_on_failure: bool
 
 
 class PerftestPlot:
@@ -790,9 +800,10 @@ class PerftestPlot:
             with open(json_path, encoding="utf-8") as statistics_file:
                 return json.load(statistics_file)
         except (FileNotFoundError, PermissionError):
-            return None
-        except (json.JSONDecodeError, OSError) as parse_excp:
-            raise Exception(f'Error decoding JSON file "{json_path}"!') from parse_excp
+            logger.error('File "%s" not found!', json_path)
+        except (json.JSONDecodeError, OSError):
+            logger.error('Can not parse JSON file "%s"!', json_path)
+        return None
 
     def job_file_path(self, job_name: str) -> Path:
         """
@@ -996,7 +1007,7 @@ class PerftestPlot:
                         statistics, section, indicator
                     )
                     xmax = int(durations[-1]) if durations[-1] > xmax else xmax
-                    average = sum(values) / len(values)
+                    average = fmean(values or [0])
                     # total_duration = datetime.timedelta(seconds=durations[-1])
                     pg = subplot.plot(
                         durations,
@@ -1067,9 +1078,8 @@ class PerftestPlot:
         if job_file_path.exists() and self.read_from_filesystem:
             logger.info('Reading data for job "%s" from the filesystem...', job_name)
             data = self.read_json(job_file_path)
-            if not isinstance(data, dict):
-                raise ValueError(f"Invalid benchmark data in {job_file_path}")
-            return data
+            if isinstance(data, dict):
+                return data
 
         benchmarks: list[dict[str, str | Measurements]] = []
         if not (self.read_from_database and self.database.check_job(job_name)):
@@ -1241,6 +1251,102 @@ class PerftestPlot:
                         performance_data=performance_data,
                     )
 
+    @staticmethod
+    def get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
+        values: list[float] = [float(str(row[metric_name])) for row in measurements]
+        return fmean(values or [0])
+
+    def calculate_baseline(self, scenario_name: str) -> AverageValues:
+        time_averages: list[float] = []
+        cpu_averages: list[float] = []
+        mem_averages: list[float] = []
+        for job_name, job in self.jobs.items():
+            if not isinstance(benchmarks := job[0]["benchmarks"], list):
+                continue
+            for benchmark in benchmarks:
+                if benchmark["name"] != scenario_name:
+                    logger.info('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
+                    continue
+                time_averages.append(benchmark["stats"]["mean"])
+                if scenario_name not in job[1]:
+                    continue
+                measurements = job[1][benchmark["name"]]
+                cpu_averages.append(self.get_mean_value(measurements, "cpu_info.cpu_percent"))
+                mem_averages.append(
+                    self.get_mean_value(measurements, "memory_info.virtual_memory_percent")
+                )
+        time_baseline = fmean(time_averages or [0])
+        cpu_baseline = fmean(cpu_averages or [0])
+        mem_baseline = fmean(mem_averages or [0])
+
+        return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
+
+    def current_averages(self, scenario_name: str) -> AverageValues | None:
+        job = self.jobs[self.job_names[-1]]
+        benchmarks = job[0]["benchmarks"]
+        if not isinstance(benchmarks, list):
+            return None
+        benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
+        if not benchmark:
+            return None
+        time_avg = benchmark["stats"]["mean"]
+        cpu_avg = self.get_mean_value(job[1][scenario_name], "cpu_info.cpu_percent")
+        mem_avg = self.get_mean_value(job[1][scenario_name], "memory_info.virtual_memory_percent")
+
+        return AverageValues(*(time_avg, cpu_avg, mem_avg))
+
+    def validate_baselines(self) -> list[str]:
+        overshoot_tolerance = 10
+
+        alerts = []
+        for scenario_name in self.scenario_names:
+            msg_prefix = f"Scenario {scenario_name}: "
+            msg_suffix = f"; tolerance: +{overshoot_tolerance}%)"
+            if scenario_name == "test_performance_piggyback":
+                # ignore dcd piggyback test for now
+                continue
+            if not scenario_name.startswith("test_"):
+                continue
+            averages = self.current_averages(scenario_name)
+            if not averages:
+                alerts.append(f"{msg_prefix}Missing data! Test aborted?")
+                continue
+            baseline = self.calculate_baseline(scenario_name)
+            if averages.avg_time > baseline.avg_time * (100 + overshoot_tolerance) / 100:
+                overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
+                msg = (
+                    f"Execution time baseline exceeded by {overshoot}% "
+                    f"(baseline: {round(baseline.avg_time, 2)}; actual: {round(averages.avg_time, 2)}"
+                )
+
+                alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
+            if averages.avg_cpu > baseline.avg_cpu * (100 + overshoot_tolerance) / 100:
+                overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
+                msg = (
+                    f"CPU usage baseline exceeded by {overshoot}% "
+                    f"(baseline: {round(baseline.avg_cpu, 2)}%; actual: {round(averages.avg_cpu, 2)}%"
+                )
+                alerts.append(f"{msg_prefix}{msg} {msg_suffix}")
+            if averages.avg_mem > baseline.avg_mem * (100 + overshoot_tolerance) / 100:
+                overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
+                msg = (
+                    f"Memory usage baseline exceeded by {overshoot}% "
+                    f"(baseline: {round(baseline.avg_mem, 2)}%; actual: {round(averages.avg_mem, 2)}%"
+                )
+                alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
+        return alerts
+
+    def call_alerter(self, summary: str, description: str) -> None:
+        print(f"{summary}:\n{description}")
+        if self.args.alert_on_failure:
+            ticket = {"summary": summary, "description": description}
+            response = requests.post(
+                url="http://qa.lan.checkmk.net:8000/create", json=ticket, timeout=5
+            )
+            assert 200 <= response.status_code < 300, (
+                f"Calling Jira Alerter has failed with status {response.status_code}!"
+            )
+
 
 def parse_args() -> PerftestPlotArgs:
     """
@@ -1326,7 +1432,6 @@ def parse_args() -> PerftestPlotArgs:
     )
     parser.add_argument(
         "--skip-graph-generation",
-        "--skip-graph",
         action=argparse.BooleanOptionalAction,
         dest="skip_graph_generation",
         type=bool,
@@ -1377,6 +1482,14 @@ def parse_args() -> PerftestPlotArgs:
         help="The port for the database connection (default: %(default)d).",
     )
     parser.add_argument(
+        "--alert-on-failure",
+        action=argparse.BooleanOptionalAction,
+        dest="alert_on_failure",
+        type=bool,
+        default=False,
+        help="Enable Jira alerter on baseline validation failure (default: %(default)s).",
+    )
+    parser.add_argument(
         "--log-level",
         dest="log_level",
         type=str,
@@ -1414,6 +1527,11 @@ def main():
     if app.write_graph_files:
         app.plot_benchmark_graph(app.output_dir / "benchmark.png")
         app.plot_resource_graph(app.output_dir / "resources.png")
+
+    if alerts := app.validate_baselines():
+        app.call_alerter(
+            f"Investigate performance test {list(app.jobs.keys())[-1]}", "\n".join(alerts)
+        )
 
     print(app.output_dir)
 

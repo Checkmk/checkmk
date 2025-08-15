@@ -228,6 +228,7 @@ class UserSpec(TypedDict, total=False):
     serial: int
     service_notification_options: str
     store_automation_secret: bool
+    # TODO: do we need session_info in the user?
     session_info: dict[SessionId, SessionInfo]
     show_mode: NotRequired[
         Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
@@ -258,6 +259,7 @@ AnnotatedUserId = Annotated[
 ]
 
 Users = dict[AnnotatedUserId, UserSpec]  # TODO: Improve this type
+
 
 # Visual specific
 FilterName = str

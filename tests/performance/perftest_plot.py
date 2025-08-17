@@ -35,6 +35,7 @@ Options:
     --dbpass                 Database password.
     --dbhost                 Database host (default: localhost).
     --dbport                 Database port (default: 5432).
+    --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --log-level              Set the log level for the application.
     job_names                List of job names to process.
@@ -705,6 +706,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbpass: str
     dbhost: str
     dbport: int
+    validate_baselines: bool
     alert_on_failure: bool
     log_level: str
 
@@ -751,6 +753,7 @@ class PerftestPlot:
         self.write_graph_files = not (
             self.args.skip_graph_generation or self.args.skip_filesystem_writes
         )
+        self.validate_baselines = self.args.validate_baselines or self.args.alert_on_failure
         self.alert_on_failure = self.args.alert_on_failure
         self.job_names = self.read_job_names()
         self.scenario_names = self.read_scenario_names()
@@ -1526,6 +1529,14 @@ def parse_args() -> PerftestPlotArgs:
         help="The port for the database connection (default: %(default)d).",
     )
     parser.add_argument(
+        "--validate-baselines",
+        action=argparse.BooleanOptionalAction,
+        dest="validate_baselines",
+        type=bool,
+        default=True,
+        help="Enable performance baseline validation (default: %(default)s).",
+    )
+    parser.add_argument(
         "--alert-on-failure",
         action=argparse.BooleanOptionalAction,
         dest="alert_on_failure",
@@ -1572,12 +1583,13 @@ def main():
         app.plot_benchmark_graph(app.output_dir / "benchmark.png")
         app.plot_resource_graph(app.output_dir / "resources.png")
 
-    alerts = app.validate_performance_baselines()
-    summary = f"Validate performance test {list(app.jobs.keys())[-1]}"
-    description = (f"\n  {'\n  '.join(alerts)}") if alerts else "PASSED!"
-    print(f"{summary}: {description}")
-    if app.alert_on_failure and alerts:
-        app.call_alerter(summary=summary, description=description)
+    if app.validate_baselines:
+        alerts = app.validate_performance_baselines()
+        summary = f"Validate performance test {list(app.jobs.keys())[-1]}"
+        description = (f"\n  {'\n  '.join(alerts)}") if alerts else "PASSED!"
+        print(f"{summary}: {description}")
+        if app.alert_on_failure and alerts:
+            app.call_alerter(summary=summary, description=description)
 
     print(app.output_dir)
 

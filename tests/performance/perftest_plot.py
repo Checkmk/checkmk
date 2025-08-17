@@ -96,7 +96,6 @@ class JobDetails(NamedTuple):
     system_release: str
     system_machine: str
     host_name: str
-    log_level: str
 
 
 class ScenarioDetails(NamedTuple):
@@ -703,6 +702,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbhost: str
     dbport: int
     alert_on_failure: bool
+    log_level: str
 
 
 class PerftestPlot:

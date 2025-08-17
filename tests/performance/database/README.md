@@ -16,8 +16,9 @@ mk_client_cert.sh -> certificates for client
 
 On the client:
 
-scp -r "root@qa.lan.checkmk.net:~/postgres/ssl_server_files/root*" ~/.postgresql/
-scp -r "root@qa.lan.checkmk.net:~/postgres/ssl_client_files/postgresql/*" ~/.postgresql/
+scp -r "root@qa.lan.checkmk.net:~/postgres/ssl_server_files/root.crt" ~/.postgresql/
+scp -r "root@qa.lan.checkmk.net:~/postgres/ssl_client_files/postgresql/postgresql.crt" ~/.postgresql/
+scp -r "root@qa.lan.checkmk.net:~/postgres/ssl_client_files/postgresql/postgresql.key" ~/.postgresql/
 psql "host=qa.lan.checkmk.net dbname=performance user=performance sslmode=verify-full"
 
 ## postgresql.conf

@@ -31,9 +31,8 @@ Options:
     --skip-graph-generation  Skip graph generation.
     --write-json-files       Write JSON files to filesystem.
     --dbname                 Database name (default: performance).
-    --dbuser                 Database user.
-    --dbpass                 Database password.
-    --dbhost                 Database host (default: localhost).
+    --dbuser                 Database user (default: performance).
+    --dbhost                 Database host (default: None).
     --dbport                 Database port (default: 5432).
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
@@ -41,7 +40,7 @@ Options:
     job_names                List of job names to process.
 
 Example:
-    python perftest_plot.py --dbpass secret 2.5.0-2025.09.10.cce
+    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.cce
 """
 
 import argparse
@@ -51,7 +50,6 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime as Datetime
-from getpass import getpass
 from pathlib import Path
 from statistics import fmean
 from sys import exit as sys_exit
@@ -146,7 +144,6 @@ class PerformanceDb:
     Attributes:
         dbname (str): Name of the database to connect to.
         user (str): Database user.
-        password (str): Password for the database user.
         host (str): Database host address.
         port (int): Database port number.
         dsn (str): Data Source Name for PostgreSQL connection.
@@ -155,17 +152,15 @@ class PerformanceDb:
 
     def __init__(
         self,
-        password: str,
         dbname: str = "performance",
         user: str = "performance",
-        host: str = "localhost",
+        host: str = "qa.lan.checkmk.net",
         port: int = 5432,
     ):
         """
         Initializes a database connection for performance testing.
 
         Args:
-            password (str): Password for the database user.
             dbname (str, optional): Name of the database. Defaults to "performance".
             user (str, optional): Database user name. Defaults to "performance".
             host (str, optional): Database host address. Defaults to "localhost".
@@ -174,21 +169,20 @@ class PerformanceDb:
         Attributes:
             dbname (str): Name of the database.
             user (str): Database user name.
-            password (str): Password for the database user.
             host (str): Database host address.
             port (int): Database port number.
             dsn (str): Data Source Name for the database connection.
             connection: Active connection to the database.
         """
+        self.sslmode = "verify-full"
         self.dbname = dbname
         self.user = user
-        self.password = password
         self.host = host
         self.port = port
-        self.dsn = "dbname=%s user=%s password=%s host=%s port=%s" % (
+        self.dsn = "sslmode=%s dbname=%s user=%s host=%s port=%s" % (
+            self.sslmode,
             self.dbname,
             self.user,
-            self.password,
             self.host,
             self.port,
         )
@@ -684,7 +678,6 @@ class PerftestPlotArgs(argparse.Namespace):
         job_names (list[str]): List of job names to include in the performance test.
         dbname (str): Name of the database to connect to.
         dbuser (str): Username for database authentication.
-        dbpass (str): Password for database authentication.
         dbhost (str): Hostname or IP address of the database server.
         dbport (int): Port number for the database connection.
         validate_baselines (bool): Enable performance baseline validation.
@@ -703,7 +696,6 @@ class PerftestPlotArgs(argparse.Namespace):
     job_names: list[str]
     dbname: str
     dbuser: str
-    dbpass: str
     dbhost: str
     dbport: int
     validate_baselines: bool
@@ -730,10 +722,9 @@ class PerftestPlot:
         self.read_from_database = not self.args.skip_database_reads
         self.read_from_filesystem = not self.args.skip_filesystem_reads
         self.write_to_database = not self.args.skip_database_writes
-        if self.args.dbuser and (self.read_from_database or self.write_to_database):
+        if self.args.dbhost and (self.read_from_database or self.write_to_database):
             try:
                 self.database = PerformanceDb(
-                    password=getpass(f'Password for database user "{self.args.dbuser}"? '),
                     dbname=self.args.dbname,
                     user=self.args.dbuser,
                     host=self.args.dbhost,
@@ -742,10 +733,9 @@ class PerftestPlot:
                 print("A connection was successfully established with the database!")
             except psycopg.OperationalError:
                 print(
-                    'Could not connect to database "%s"; switching to filesystem mode!',
-                    self.args.dbname,
+                    f'Could not connect to database "{self.args.dbname}"; switching to filesystem mode!',
                 )
-                self.read_from_database = self.write_to_database = False
+            self.read_from_database = self.write_to_database = False
         else:
             self.read_from_database = self.write_to_database = False
 
@@ -1504,21 +1494,14 @@ def parse_args() -> PerftestPlotArgs:
         "--dbuser",
         dest="dbuser",
         type=str,
-        default=None,
+        default="performance",
         help="The user name for the database connection.",
-    )
-    parser.add_argument(
-        "--dbpass",
-        dest="dbpass",
-        type=str,
-        default=None,
-        help="The password for the database connection.",
     )
     parser.add_argument(
         "--dbhost",
         dest="dbhost",
         type=str,
-        default="localhost",
+        default=None,
         help="The host name for the database connection (default: %(default)s).",
     )
     parser.add_argument(

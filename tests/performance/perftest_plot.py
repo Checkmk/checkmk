@@ -35,6 +35,8 @@ Options:
     --dbpass                 Database password.
     --dbhost                 Database host (default: localhost).
     --dbport                 Database port (default: 5432).
+    --alert-on-failure       Whether to alert on failed baseline validation.
+    --log-level              Set the log level for the application.
     job_names                List of job names to process.
 
 Example:
@@ -684,7 +686,9 @@ class PerftestPlotArgs(argparse.Namespace):
         dbpass (str): Password for database authentication.
         dbhost (str): Hostname or IP address of the database server.
         dbport (int): Port number for the database connection.
+        validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
+        log_level (str): Logging level of the application.
     """
 
     root_dir: Path
@@ -715,26 +719,12 @@ class PerftestPlot:
         Args:
             args (PerftestPlotArgs): Configuration arguments for performance test plotting.
 
-        Attributes:
-            args (PerftestPlotArgs): Stores the provided arguments.
-            read_from_database (bool): Whether to read data from the database.
-            read_from_filesystem (bool): Whether to read data from the filesystem.
-            write_to_database (bool): Whether to write data to the database.
-            database (PerformanceDb, optional): Database connection object if enabled.
-            final_benchmark (str): Name of the final benchmark job.
-            write_json_files (bool): Whether to write JSON files.
-            write_graph_files (bool): Whether to write graph files.
-            root_dir (Path): Root directory for performance data.
-            job_names (List[str]): List of job names.
-            scenario_names (List[str]): List of scenario names.
-            jobs (Any): Performance data for jobs.
-            output_dir (Path): Directory for output files.
-
         Raises:
             psycopg.OperationalError: If unable to connect to the database.
         """
         super().__init__()
         self.args = args
+        self.root_dir = self.args.root_dir
         self.read_from_database = not self.args.skip_database_reads
         self.read_from_filesystem = not self.args.skip_filesystem_reads
         self.write_to_database = not self.args.skip_database_writes
@@ -757,20 +747,14 @@ class PerftestPlot:
         else:
             self.read_from_database = self.write_to_database = False
 
-        self.final_benchmark = "none"
-
         self.write_json_files = self.args.write_json_files and not self.args.skip_filesystem_writes
         self.write_graph_files = not (
             self.args.skip_graph_generation or self.args.skip_filesystem_writes
         )
-
-        self.root_dir = self.args.root_dir
+        self.alert_on_failure = self.args.alert_on_failure
         self.job_names = self.read_job_names()
         self.scenario_names = self.read_scenario_names()
         self.jobs = self.read_performance_data()
-
-        # select final (i.e. highest version) job
-
         self.output_dir = self.args.output_dir or (
             self.job_file_path(self.job_names[-1]).parent if self.job_names else self.root_dir
         )
@@ -1040,7 +1024,7 @@ class PerftestPlot:
         """
         job_names_on_disk = [
             job.name
-            for job in Path(self.args.root_dir).iterdir()
+            for job in Path(self.root_dir).iterdir()
             if job.is_dir() and self.job_file_path(job.name).exists()
         ]
         return sorted(
@@ -1253,6 +1237,20 @@ class PerftestPlot:
 
     @staticmethod
     def get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
+        """
+        Compute the arithmetic mean for a specified metric across a list of measurement records.
+
+        Parameters:
+            measurements : MeasurementsList
+                Iterable / list of measurement rows containing the target metric.
+            metric_name : str
+                The key/name of the metric to extract from each measurement row.
+
+        Returns:
+            float
+                The mean (floating-point) value of the metric across all measurements.
+                Returns 0.0 if the input list is empty.
+        """
         values: list[float] = [float(str(row[metric_name])) for row in measurements]
         return fmean(values or [0])
 
@@ -1282,6 +1280,21 @@ class PerftestPlot:
         return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
 
     def current_averages(self, scenario_name: str) -> AverageValues | None:
+        """
+        Return averaged performance metrics for a given benchmark scenario of the most recent job.
+
+        If the benchmarks collection is not a list, or the named scenario is not present,
+        the method returns None.
+
+        Parameters:
+            scenario_name : str
+                    The exact benchmark scenario name to search for in the most recent job.
+
+        Returns:
+            AverageValues | None
+                    An AverageValues instance containing (time_avg, cpu_avg, mem_avg) if the
+                    scenario is found; otherwise None.
+        """
         job = self.jobs[self.job_names[-1]]
         benchmarks = job[0]["benchmarks"]
         if not isinstance(benchmarks, list):
@@ -1295,7 +1308,26 @@ class PerftestPlot:
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 
-    def validate_baselines(self) -> list[str]:
+    def validate_performance_baselines(self) -> list[str]:
+        """
+        Validate current performance metrics against calculated baselines for each test scenario.
+
+        For every scenario the method retrieves the current averaged metrics (time, CPU, memory)
+        and a computed baseline, then compares them using a fixed overshoot tolerance (currently +10%).
+
+        An alert is generated when any of the following averaged metrics exceeds its baseline by more
+        than the tolerance percentage:
+            - Execution time (avg_time)
+            - CPU usage (avg_cpu)
+            - Memory usage (avg_mem)
+
+        If no current data (averages) are available for a scenario, an alert noting missing data is added.
+
+        Returns:
+            list[str]
+                A list of human-readable alert messages. The list is empty if all scenarios
+                are within tolerated performance bounds.
+        """
         overshoot_tolerance = 10
 
         alerts = []
@@ -1337,15 +1369,27 @@ class PerftestPlot:
         return alerts
 
     def call_alerter(self, summary: str, description: str) -> None:
-        print(f"{summary}:\n{description}")
-        if self.args.alert_on_failure:
-            ticket = {"summary": summary, "description": description}
-            response = requests.post(
-                url="http://qa.lan.checkmk.net:8000/create", json=ticket, timeout=5
-            )
-            assert 200 <= response.status_code < 300, (
-                f"Calling Jira Alerter has failed with status {response.status_code}!"
-            )
+        """
+        Create an alert ticket by POSTing summary and description to the Jira Alerter service.
+
+        This helper builds a JSON payload with the given summary and description and sends
+        it to the alerter endpoint.
+
+        Parameters:
+            summary (str): Short, human‑readable title for the alert.
+            description (str): Detailed description / context for the alert.
+
+        Raises:
+            AssertionError: If the HTTP response status code is not in the 2xx range.
+            requests.RequestException: Propagated if the POST request fails (e.g., timeout,
+                connection error, DNS failure).
+        """
+        ticket = {"summary": summary, "description": description}
+        response = requests.post(
+            url="http://qa.lan.checkmk.net:8000/create", json=ticket, timeout=5
+        )
+        if not response.ok:
+            logger.error("Calling Jira Alerter has failed with status %s!", response.status_code)
 
 
 def parse_args() -> PerftestPlotArgs:
@@ -1528,10 +1572,12 @@ def main():
         app.plot_benchmark_graph(app.output_dir / "benchmark.png")
         app.plot_resource_graph(app.output_dir / "resources.png")
 
-    if alerts := app.validate_baselines():
-        app.call_alerter(
-            f"Investigate performance test {list(app.jobs.keys())[-1]}", "\n".join(alerts)
-        )
+    alerts = app.validate_performance_baselines()
+    summary = f"Validate performance test {list(app.jobs.keys())[-1]}"
+    description = (f"\n  {'\n  '.join(alerts)}") if alerts else "PASSED!"
+    print(f"{summary}: {description}")
+    if app.alert_on_failure and alerts:
+        app.call_alerter(summary=summary, description=description)
 
     print(app.output_dir)
 

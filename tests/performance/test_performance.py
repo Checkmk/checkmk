@@ -17,6 +17,7 @@ from collections.abc import Iterator
 from time import time
 
 import pytest
+import requests
 from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
 
 from tests.performance.sysmon import track_resources
@@ -227,6 +228,58 @@ class PerformanceTest:
                     interval=5,
                 )
 
+    def scenario_performance_ui_response(self) -> None:
+        """
+        Scenario: UI response time.
+
+        Issues up to 1000 sequential HTTP GET requests against the central site URL login page,
+        appending a millisecond timestamp (_ts) as query parameter to reduce cache hits. Each
+        request includes cache-busting headers and uses a 30-second timeout.
+
+        Behavior:
+        - Logs a warning if a response is non-OK (non-2xx status).
+        - Logs a warning if an exception occurs during the request.
+        - Does not collect timing metrics or enforce performance thresholds.
+
+        Returns:
+            None
+
+        Side Effects:
+            Generates network load and may take noticeable time if the target is slow.
+            Emits warning log entries for failed or errored requests.
+
+        Potential Improvements:
+            - Capture and aggregate latency metrics (e.g., min/avg/p95).
+            - Add success/failure summary and assertions for automated regression detection.
+            - Introduce configurable request count and concurrency for broader coverage.
+        """
+        max_first_request_timeout = 30  # 30 seconds until first request times out
+        max_request_timeout = 0.3  # 300 milliseconds until consecutive requests time out
+
+        site_url = self.central_site.url
+        for i in range(1000):
+            unique_url = f"{site_url}?_ts={int(time() * 1000)}"
+            try:
+                resp = requests.get(
+                    unique_url,
+                    headers={
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Pragma": "no-cache",
+                        "Expires": "0",
+                        "Connection": "close",
+                    },
+                    timeout=max_first_request_timeout if i == 0 else max_request_timeout,
+                )
+                if not resp.ok:
+                    logger.warning(
+                        "UI response request %s failed with status %s (%s)",
+                        i,
+                        resp.status_code,
+                        unique_url,
+                    )
+            except Exception as exc:
+                logger.warning("UI response request %s raised %r (%s)", i, exc, unique_url)
+
 
 @pytest.fixture(name="perftest", scope="session")
 def _perftest(central_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
@@ -286,6 +339,17 @@ def test_performance_piggyback(
 ) -> None:
     benchmark.pedantic(
         perftest.scenario_performance_dcd_piggyback,
+        args=[],
+        rounds=perftest.rounds,
+        iterations=perftest.iterations,
+    )
+
+
+def test_performance_ui_response(
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+) -> None:
+    benchmark.pedantic(
+        perftest.scenario_performance_ui_response,
         args=[],
         rounds=perftest.rounds,
         iterations=perftest.iterations,

@@ -20,8 +20,10 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
 
 from tests.performance.sysmon import track_resources
+from tests.testlib.agent_dumps import dummy_agent_dump_generator
 from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
 from tests.testlib.common.repo import qa_test_data_path
+from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.version import CMKVersion, version_from_env
 
@@ -203,12 +205,27 @@ class PerformanceTest:
             self.central_site,
             source_host_name,
             pb_host_count=pb_host_count,
-            dcd_interval=10,
-        ):
+            dcd_max_count=60,
+            dcd_interval=5,
+        ) as piggyback_info:
             assert (
                 len(self.central_site.openapi.hosts.get_all_names(ignore=[source_host_name]))
                 >= pb_host_count
             )
+
+            # Recreate rule to change number of piggybacked hosts
+            self.central_site.openapi.rules.delete(piggyback_info.datasource_id)
+            self.central_site.openapi.changes.activate_and_wait_for_completion()
+            with dummy_agent_dump_generator(
+                self.central_site,
+                pb_host_count=0,
+            ):
+                execute_dcd_cycle(
+                    self.central_site,
+                    expected_pb_hosts=0,
+                    max_count=60,
+                    interval=5,
+                )
 
 
 @pytest.fixture(name="perftest", scope="session")

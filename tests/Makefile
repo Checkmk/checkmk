@@ -264,7 +264,8 @@ test-performance:
 	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
 	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
-	--self-contained-html --ignore-running-procs
+	--self-contained-html --ignore-running-procs ; \
+	$(realpath performance)/raise_alerts.sh
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)

@@ -809,7 +809,7 @@ class PerftestPlot:
 
     def _plottable_benchmark_data(
         self, scenario_name: str
-    ) -> tuple[list[int | float], list[int | float]]:
+    ) -> tuple[list[float | None], list[float | None]]:
         """
         Extracts plottable mean and standard deviation values for a given benchmark scenario.
 
@@ -822,8 +822,8 @@ class PerftestPlot:
                 - A list of standard deviation values for the specified scenario across all jobs.
                 If a job does not contain the specified scenario, 0.0 is appended for both mean and stddev.
         """
-        values: list[float] = []
-        err_values: list[float] = []
+        values: list[float | None] = []
+        err_values: list[float | None] = []
         for _, benchmark_data in self.jobs.items():
             if not (
                 isinstance(benchmark_data[0], dict)
@@ -841,8 +841,8 @@ class PerftestPlot:
                 values.append(benchmark["stats"]["mean"])
                 err_values.append(benchmark["stats"]["stddev"])
             else:
-                values.append(0.0)
-                err_values.append(0.0)
+                values.append(None)
+                err_values.append(None)
         return values, err_values
 
     def plot_benchmark_graph(self, graph_file: Path) -> None:
@@ -861,21 +861,27 @@ class PerftestPlot:
             None
         """
         for scenario_name in self.scenario_names:
-            values, err_values = self._plottable_benchmark_data(scenario_name)
-            if not (values and err_values) or all(_ == 0 for _ in values):
+            raw_values, raw_err_values = self._plottable_benchmark_data(scenario_name)
+            if not (raw_values and raw_err_values) or all(_ == 0 for _ in raw_values):
                 continue
             graph_file_path = graph_file.parent / f"{scenario_name}.{graph_file.name}"
             logger.info('Writing graph "%s"...', graph_file_path)
             alternate = len(self.jobs) > 6
             max_value = 0
-            names = []
+            values: list[float] = []
+            err_values: list[float] = []
+            names: list[str] = []
             for idx, benchmark in enumerate(self.jobs):
-                value = values[idx]
-                err_value = err_values[idx]
+                value = raw_values[idx]
+                err_value = raw_err_values[idx]
+                if value is None or err_value is None:
+                    continue
                 max_value = int(max(value + err_value + 1, max_value))
                 name = f"{benchmark}\n{round(value, 1)}s (+/-{round(err_value, 1)}s)"
                 if alternate and idx % 2 == 1:
                     name = f"\n\n{name}"
+                values.append(value)
+                err_values.append(err_value)
                 names.append(name)
 
             fig, times = pyplot.subplots(1)
@@ -1262,6 +1268,8 @@ class PerftestPlot:
                 if scenario_name not in job[1]:
                     continue
                 measurements = job[1][benchmark["name"]]
+                if not measurements:
+                    continue
                 cpu_averages.append(self.get_mean_value(measurements, "cpu_info.cpu_percent"))
                 mem_averages.append(
                     self.get_mean_value(measurements, "memory_info.virtual_memory_percent")

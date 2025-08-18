@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.render import date_and_time
 
 from .config import Config
 from .event import Event, scrub_string
@@ -144,18 +143,22 @@ def _expire_logfiles(
                 VERBOSE,
                 "Expiring logfiles (Horizon: %d days -> %s)",
                 days,
-                date_and_time(min_mtime),
+                _date_and_time(min_mtime),
             )
             for path in settings.paths.history_dir.value.glob("*.log"):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info(
-                        "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
+                        "Deleting log file %s (age %s)", path, _date_and_time(path.stat().st_mtime)
                     )
                     path.unlink()
         except Exception as e:
             if settings.options.debug:
                 raise
             logger.warning("Error expiring log files: %s", e)
+
+
+def _date_and_time(timestamp: float) -> str:
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
 
 
 # Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.

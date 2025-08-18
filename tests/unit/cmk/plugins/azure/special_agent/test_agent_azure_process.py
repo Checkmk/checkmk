@@ -31,14 +31,8 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     write_group_info,
     write_remaining_reads,
 )
-from cmk.plugins.azure.special_agent.azure_api_client import BaseAsyncApiClient
 
 Args = argparse.Namespace
-
-
-@pytest.fixture
-def mock_api_client() -> AsyncMock:
-    return AsyncMock(spec=BaseAsyncApiClient)
 
 
 class MockAzureSection(AzureSection):

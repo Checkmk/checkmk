@@ -2217,7 +2217,6 @@ async def main_subscription(
         write_exception_to_agent_info_section(exc, "Management client", subscription)
 
 
-# TODO: test
 async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
     if not args.subscriptions and not args.all_subscriptions:
         LOGGER.info("No subscriptions selected")

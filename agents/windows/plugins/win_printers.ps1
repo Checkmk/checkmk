@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0p10"
+$CMK_VERSION = "2.4.0p11"
 #
 #  http://blogs.technet.com/b/heyscriptingguy/archive/2006/12/04/how-can-i-expand-the-width-of-the-windows-powershell-console.aspx
 # Output is a 4 column table of (Name: str, Jobs: int, PrinterStatus: int, Detectederrorstate: int)

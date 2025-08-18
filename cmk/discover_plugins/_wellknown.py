@@ -10,6 +10,7 @@ CMK_PLUGINS = "cmk.plugins"
 CMK_ADDONS_PLUGINS = "cmk_addons.plugins"
 
 LIBEXEC_FOLDER = "libexec"
+AGENT_PLUGINS_FOLDER = "agents"
 
 
 class PluginGroup(enum.Enum):

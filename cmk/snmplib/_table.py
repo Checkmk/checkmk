@@ -33,10 +33,6 @@ SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
 SNMPRawData = _HostSection[SNMPRawDataElem]
-OIDFunction = Callable[
-    [OID, SNMPDecodedString | None, SectionName | None], SNMPDecodedString | None
-]
-SNMPScanFunction = Callable[[OIDFunction], bool]
 
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]

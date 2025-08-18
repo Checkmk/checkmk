@@ -5,7 +5,7 @@
 import dataclasses
 import inspect
 from collections.abc import Callable, Mapping, Sequence
-from functools import cache
+from functools import lru_cache
 from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
@@ -295,7 +295,7 @@ class EndpointModel[**P, T]:
         self.uses_api_context = uses_api_context
 
     @classmethod
-    @cache
+    @lru_cache(maxsize=64)  # keep in sync with get_cached_type_adapter
     @tracer.instrument("build_endpoint_model")
     def build(cls, handler: Callable[P, T]) -> Self:
         """Build the endpoint model from the handler function."""

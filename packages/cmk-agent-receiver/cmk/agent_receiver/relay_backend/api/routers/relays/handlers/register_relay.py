@@ -13,9 +13,9 @@ class RegisterRelayHandler:
     relays_repository: RelaysRepository
 
     def process(self, relay_id: UUID) -> None:
-        self.__add_registry(relay_id)
+        self._add_registry(relay_id)
 
-    def __add_registry(self, relay_id: UUID) -> None:
+    def _add_registry(self, relay_id: UUID) -> None:
         if self.relays_repository.has_relay(relay_id):
             raise RelayAlreadyRegisteredError(f"Relay ID {relay_id} is already registered.")
 

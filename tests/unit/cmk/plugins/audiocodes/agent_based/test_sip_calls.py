@@ -34,7 +34,15 @@ def test_parse_function() -> None:
 
 
 def test_discovery_function() -> None:
-    assert list(discover_audiocodes_sip_calls(_parsed_section())) == [Service()]
+    sipcalls = _parsed_section()  # A valid SIPCalls with data in it
+    assert list(discover_audiocodes_sip_calls(sipcalls)) == [Service()]
+    assert list(discover_audiocodes_sip_calls(SIPCalls(tel2ip=None, ip2tel=sipcalls.ip2tel))) == [
+        Service()
+    ]
+    assert list(discover_audiocodes_sip_calls(SIPCalls(tel2ip=sipcalls.tel2ip, ip2tel=None))) == [
+        Service()
+    ]
+    assert list(discover_audiocodes_sip_calls(SIPCalls(tel2ip=None, ip2tel=None))) == []
 
 
 @pytest.mark.parametrize(

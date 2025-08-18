@@ -170,7 +170,8 @@ snmp_section_audiocodes_alarms = SNMPSection(
 
 
 def discover_audiocodes_sip_calls(section: SIPCalls) -> DiscoveryResult:
-    yield Service()
+    if section.tel2ip or section.ip2tel:
+        yield Service()
 
 
 def check_audiocodes_sip_calls(section: SIPCalls) -> CheckResult:

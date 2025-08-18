@@ -98,12 +98,16 @@ def merge_sections(
             "livestatus_usage": livestatus_usage,
         }
 
+    # omd_info is present since Checkmk 2.0.0, return here if this is even older
+    pre_versions = section_omd_info.get("versions", {})
+    pre_sites = section_omd_info.get("sites", {})
+    if not pre_versions or not pre_sites:
+        return merged_section
+
+    merged_section["check_mk"]["num_sites"] = len(pre_sites)
+
     # SECTION: omd_status
-    num_sites = 0
     for site, omd_status in section_omd_status.items():
-        # Number of sites was previously calculated from omd_info, but calculating this from
-        # omd_status is way better as this section is always available
-        num_sites += 1
         omd_status_dict = {}
         # create a column for each service
         for service in _make_edition_specific_services(_get_sites_edition()):
@@ -111,13 +115,6 @@ def merge_sections(
         merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
             "status_columns"
         ].update(omd_status_dict)
-
-    merged_section["check_mk"]["num_sites"] = num_sites
-
-    pre_versions = section_omd_info.get("versions", {})
-    pre_sites = section_omd_info.get("sites", {})
-    if not (pre_versions or pre_sites):
-        return merged_section
 
     versions = {
         name: {

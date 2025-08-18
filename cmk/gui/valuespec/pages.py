@@ -5,7 +5,7 @@
 
 import abc
 import socket
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import cmk.utils
 import cmk.utils.paths
@@ -21,7 +21,14 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.utils.encryption import fetch_certificate_details
 
-from .definitions import HostAddress, IconSelector, ListOfMultiple, NetworkPort, ValueSpec
+from .definitions import (
+    GroupedListOfMultipleChoices,
+    HostAddress,
+    IconSelector,
+    ListOfMultiple,
+    ListOfMultipleChoices,
+    NetworkPort,
+)
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -42,13 +49,15 @@ def ajax_popup_icon_selector(config: Config) -> None:
 
 class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     @abc.abstractmethod
-    def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
+    def _get_choices(
+        self, config: Config, api_request: Mapping[str, str]
+    ) -> GroupedListOfMultipleChoices | ListOfMultipleChoices:
         raise NotImplementedError()
 
     def page(self, config: Config) -> dict:
         api_request = request.get_request()
         vs = ListOfMultiple(
-            choices=self._get_choices(api_request), choice_page_name="unused_dummy_page"
+            choices=self._get_choices(config, api_request), choice_page_name="unused_dummy_page"
         )
         with output_funnel.plugged():
             vs.show_choice_row(api_request["varprefix"], api_request["ident"], {})

@@ -7,11 +7,13 @@
 import json
 import sys
 import traceback
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from itertools import chain
+from typing import override
 
 from livestatus import LivestatusTestingError
 
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
@@ -302,7 +304,10 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
 
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, api_request):
+    @override
+    def _get_choices(
+        self, config: Config, api_request: Mapping[str, str]
+    ) -> Sequence[ListOfMultipleChoiceGroup]:
         infos = api_request["infos"]
         return [
             ListOfMultipleChoiceGroup(

@@ -5,7 +5,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, override, TypeVar
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _u
@@ -113,11 +113,12 @@ def _get_tag_group_choice(tag_group: TagGroup) -> tuple[TagGroupID, Tuple | Casc
     )
 
 
-def _get_tag_group_choices() -> Sequence[tuple[TagID | TagGroupID, Tuple | CascadingDropdown]]:
+def _get_tag_group_choices(
+    all_topics: Sequence[tuple[str, str]],
+    tag_groups_by_topic: Mapping[str, Sequence[TagGroup]],
+    aux_tags_by_topic: Mapping[str, Sequence[AuxTag]],
+) -> Sequence[tuple[TagID | TagGroupID, Tuple | CascadingDropdown]]:
     choices: list[tuple[TagID | TagGroupID, Tuple | CascadingDropdown]] = []
-    all_topics = active_config.tags.get_topic_choices()
-    tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
-    aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
     for topic_id, _topic_title in all_topics:
         for tag_group in tag_groups_by_topic.get(topic_id, []):
             choices.append(_get_tag_group_choice(tag_group))
@@ -134,7 +135,11 @@ def _get_cached_tag_group_choices() -> Sequence[
 ]:
     # In case one has configured a lot of tag groups / id recomputing this for
     # every DictHostTagCondition instance takes a lot of time
-    return _get_tag_group_choices()
+    return _get_tag_group_choices(
+        all_topics=active_config.tags.get_topic_choices(),
+        tag_groups_by_topic=dict(active_config.tags.get_tag_groups_by_topic()),
+        aux_tags_by_topic=dict(active_config.tags.get_aux_tags_by_topic()),
+    )
 
 
 class DictHostTagCondition(Transform):
@@ -204,5 +209,11 @@ class DictHostTagCondition(Transform):
 
 class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
     @override
-    def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
-        return _get_tag_group_choices()
+    def _get_choices(
+        self, config: Config, api_request: Mapping[str, str]
+    ) -> Sequence[tuple[str, ValueSpec]]:
+        return _get_tag_group_choices(
+            all_topics=config.tags.get_topic_choices(),
+            tag_groups_by_topic=dict(config.tags.get_tag_groups_by_topic()),
+            aux_tags_by_topic=dict(config.tags.get_aux_tags_by_topic()),
+        )

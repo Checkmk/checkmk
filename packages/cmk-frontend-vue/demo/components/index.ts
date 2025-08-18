@@ -24,6 +24,7 @@ import { Page, Folder } from '@demo/_demo/page'
 import { pages as userInputPages } from './user-input'
 import { pages as typographyPages } from './typography'
 import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'
+import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
 
 export const pages = [
   new Folder('user-input', DemoEmpty, userInputPages),
@@ -41,5 +42,6 @@ export const pages = [
   new Page('CmkSwitch', DemoCmkSwitch),
   new Page('CmkColorPicker', DemoCmkColorPicker),
   new Page('CmkHtml', DemoCmkHtml),
-  new Page('CmkSkeleton', DemoCmkSkeleton)
+  new Page('CmkSkeleton', DemoCmkSkeleton),
+  new Page('CmkWizard', DemoCmkWizard)
 ]

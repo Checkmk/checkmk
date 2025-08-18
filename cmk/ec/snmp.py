@@ -6,6 +6,7 @@
 import traceback
 from collections.abc import Iterable, Mapping
 from logging import Logger
+from pathlib import Path
 from typing import Any
 
 import pyasn1.error
@@ -22,6 +23,15 @@ import pysnmp.smi.error
 import pysnmp.smi.rfc1902
 import pysnmp.smi.view
 from pyasn1.type.base import SimpleAsn1Type
+from pysmi.codegen.pysnmp import PySnmpCodeGen
+from pysmi.compiler import MibCompiler, MibStatus
+from pysmi.parser.smiv1compat import SmiV1CompatParser
+from pysmi.reader.callback import CallbackReader
+from pysmi.reader.localfile import FileReader
+from pysmi.searcher.pyfile import PyFileSearcher
+from pysmi.searcher.pypackage import PyPackageSearcher
+from pysmi.searcher.stub import StubSearcher
+from pysmi.writer.pyfile import PyFileWriter
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import approx_age
@@ -351,3 +361,35 @@ class SNMPTrapTranslator:
         if description := getattr(node, "getDescription", str)():
             translated_value += f"({description})"
         return translated_oid, translated_value
+
+
+def compile_mib(
+    *,
+    mibname: str,
+    content: str,
+    source_dirs: Iterable[Path],
+    search_dirs: Iterable[Path],
+    destination_dir: Path,
+) -> Mapping[str, MibStatus]:
+    # Compile the uploaded SNMP MIB but also resolving dependencies and compiling dependents
+    return (
+        MibCompiler(  # type: ignore[no-untyped-call]
+            SmiV1CompatParser(),
+            PySnmpCodeGen(),  # type: ignore[no-untyped-call]
+            PyFileWriter(destination_dir),  # type: ignore[no-untyped-call]
+        )
+        .addSources(
+            # Provides the just uploaded MIB module
+            CallbackReader(lambda name, _context: content if name == mibname else "", None),  # type: ignore[no-untyped-call]
+            # Directories containing ASN1 MIB files which may be used for dependency resolution
+            *[FileReader(path) for path in source_dirs],  # type: ignore[no-untyped-call]
+        )
+        .addSearchers(
+            # check for additional already compiled MIBs
+            *[PyFileSearcher(path) for path in search_dirs],  # type: ignore[no-untyped-call]
+            # check compiled MIBs shipped with PySNMP
+            *[PyPackageSearcher(package) for package in PySnmpCodeGen.defaultMibPackages],  # type: ignore[no-untyped-call]
+            # never recompile MIBs with MACROs
+            StubSearcher(*PySnmpCodeGen.baseMibs),  # type: ignore[no-untyped-call]
+        )
+    ).compile(mibname, ignoreErrors=True, genTexts=True)

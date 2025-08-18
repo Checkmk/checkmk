@@ -42,6 +42,7 @@ from .rule_packs import save_rule_packs as save_rule_packs
 from .settings import create_paths as create_paths
 from .settings import Paths as Paths
 from .settings import Settings as Settings
+from .snmp import compile_mib as compile_mib
 from .syslog import forward_to_unix_socket as forward_to_unix_socket
 from .syslog import SyslogFacility as SyslogFacility
 from .syslog import SyslogMessage as SyslogMessage

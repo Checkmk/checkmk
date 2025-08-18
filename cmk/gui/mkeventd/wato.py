@@ -17,16 +17,7 @@ from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, Literal, overload, TypeVar
 
-from pysmi.codegen.pysnmp import PySnmpCodeGen
-from pysmi.compiler import MibCompiler
 from pysmi.error import PySmiError
-from pysmi.parser.smiv1compat import SmiV1CompatParser
-from pysmi.reader.callback import CallbackReader
-from pysmi.reader.localfile import FileReader
-from pysmi.searcher.pyfile import PyFileSearcher
-from pysmi.searcher.pypackage import PyPackageSearcher
-from pysmi.searcher.stub import StubSearcher
-from pysmi.writer.pyfile import PyFileWriter
 
 from livestatus import (
     LocalConnection,
@@ -3605,17 +3596,21 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
 
     def _process_uploaded_mib_file(
-        self, filename: str, content: bytes, *, use_git: bool, debug: bool
+        self, filename: str, content_bytes: bytes, *, use_git: bool, debug: bool
     ) -> str:
-        if "." in filename:
-            mibname = filename.split(".")[0]
-        else:
-            mibname = filename
+        mibname = filename.split(".")[0] if "." in filename else filename
 
-        msg = self._validate_and_compile_mib(mibname.upper(), content, debug=debug)
+        # FIXME: This is a temporary local fix that should be removed once
+        # handling of file contents uses a uniformly encoded representation
+        try:
+            content = content_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            content = content_bytes.decode("latin-1")
+
+        msg = self._validate_and_compile_mib(mibname=mibname.upper(), content=content, debug=debug)
         self._paths.local_mibs_dir.value.mkdir(parents=True, exist_ok=True)
         with (self._paths.local_mibs_dir.value / filename).open("wb") as f:
-            f.write(content)
+            f.write(content_bytes)
         self._add_change(
             action_name="uploaded-mib",
             text=_("MIB %s: %s") % (filename, msg),
@@ -3627,54 +3622,31 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         if filename.startswith(".") or "/" in filename:
             raise Exception(_("Invalid filename"))
 
-    def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes, *, debug: bool) -> str:
-        compiled_mibs_dir = self._paths.compiled_mibs_dir.value
-        compiled_mibs_dir.mkdir(mode=0o770, exist_ok=True)
-
-        # This object manages the compilation of the uploaded SNMP mib
-        # but also resolving dependencies and compiling dependents
-        compiler = MibCompiler(
-            SmiV1CompatParser(), PySnmpCodeGen(), PyFileWriter(compiled_mibs_dir)
-        )
-
-        # FIXME: This is a temporary local fix that should be removed once
-        # handling of file contents uses a uniformly encoded representation
-        try:
-            content = content_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content = content_bytes.decode("latin-1")
-
-        # Provides the just uploaded MIB module
-        compiler.addSources(CallbackReader(lambda m, c: m == mibname and c or "", content))
-
-        # Directories containing ASN1 MIB files which may be used for
-        # dependency resolution
-        compiler.addSources(*[FileReader(str(path)) for path, _title in self._mib_dirs()])
-
-        # check for already compiled MIBs
-        compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
-
-        # and also check PySNMP shipped compiled MIBs
-        compiler.addSearchers(*[PyPackageSearcher(x) for x in PySnmpCodeGen.defaultMibPackages])
-
-        # never recompile MIBs with MACROs
-        compiler.addSearchers(StubSearcher(*PySnmpCodeGen.baseMibs))
+    def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:
+        if not content or content.isspace():
+            raise Exception(_("The file is empty"))
 
         try:
-            if not content or content.isspace():
-                raise Exception(_("The file is empty"))
-
-            results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
+            results = ec.compile_mib(
+                mibname=mibname,
+                content=content,
+                source_dirs=[path for path, _title in self._mib_dirs()],
+                search_dirs=[self._paths.compiled_mibs_dir.value],
+                destination_dir=self._paths.compiled_mibs_dir.value,
+            )
 
             errors = []
-            for name, state_obj in sorted(results.items()):
-                if mibname == name and state_obj == "failed":
-                    raise Exception(_("Failed to compile your module: %s") % state_obj.error)
-
-                if state_obj == "missing":
+            for name, mib_status in sorted(results.items()):
+                if mibname == name and mib_status == "failed":
+                    raise Exception(
+                        _("Failed to compile your module: %s") % getattr(mib_status, "error")
+                    )
+                if mib_status == "missing":
                     errors.append(_("%s - Dependency missing") % name)
-                elif state_obj == "failed":
-                    errors.append(_("%s - Failed to compile (%s)") % (name, state_obj.error))
+                elif mib_status == "failed":
+                    errors.append(
+                        _("%s - Failed to compile (%s)") % (name, getattr(mib_status, "error"))
+                    )
 
             msg = _("MIB file %s uploaded.") % mibname
             if errors:

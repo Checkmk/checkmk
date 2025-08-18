@@ -561,6 +561,7 @@ class FilterSidebar(LocatorHelper):
         has_not_text: Pattern[str] | str | None = None,
         has: Locator | None = None,
         has_not: Locator | None = None,
+        check: bool = True,
     ) -> Locator:
         _loc = self._iframe_locator.locator("div#popup_filters")
         if selector:
@@ -572,7 +573,8 @@ class FilterSidebar(LocatorHelper):
             has_not=has_not,
         )
         _loc = _loc.filter(**kwargs) if kwargs else _loc
-        self._unique_web_element(_loc)
+        if check:
+            self._unique_web_element(_loc)
         return _loc
 
     @property
@@ -625,8 +627,10 @@ class FilterSidebar(LocatorHelper):
     def dropdown_option(self, option_name: str, exact: bool = False) -> Locator:
         return self._iframe_locator.get_by_role("option", name=option_name, exact=exact)
 
-    def filter_combobox(self, filter_name: str) -> Locator:
-        return self.locator("div.floatfilter", has_text=filter_name).get_by_role("combobox")
+    def filter_combobox(self, filter_name: str, check: bool = True) -> Locator:
+        return self.locator("div.floatfilter", has_text=filter_name, check=check).get_by_role(
+            "combobox"
+        )
 
     def apply_last_service_state_change_filter(
         self, from_units: str, from_value: str, until_units: str, until_value: str
@@ -659,7 +663,13 @@ class FilterSidebar(LocatorHelper):
         self.dropdown_option(host_filter, exact=True).first.click()
 
     def apply_filter_by_name(self, filter_name: str, filter_value: str) -> None:
-        self.filter_combobox(filter_name).click()
+        filter_combobox = self.filter_combobox(filter_name, check=False)
+
+        if filter_combobox.count() == 0:
+            self.add_filter_button.click()
+            self.filter_button(filter_name).click()
+
+        filter_combobox.click()
         self.search_text_field.fill(filter_value)
         # TODO: remove 'first' after fixing CMK-19975
         self.dropdown_option(filter_value, exact=True).first.click()

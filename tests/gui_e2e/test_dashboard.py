@@ -68,6 +68,63 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
     expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()
 
 
+def test_builtin_dashboard_filter(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
+    """
+    Test the built-in dashboard filter functionality.
+
+    This test checks that the dashboard filter works correctly by applying a filter
+    for a specific host and verifying the displayed results.
+
+    Steps:
+        1. Apply a filter for a specific host.
+        2. Verify that the correct data is displayed.
+        3. Apply a filter for a non-existing host.
+        4. Check that the appropriate message is shown in the dashlets.
+    """
+    host_name_filter = "Host name (regex)"
+    first_host = linux_hosts[0]
+    host_table_dashlet = "Top alerters (last 7 days)"
+    graphic_dashlets = (
+        "Total host problems",
+        "Total service problems",
+        "Percentage of total service problems",
+    )
+
+    dashboard_page.apply_filter_to_the_dashboard(host_name_filter, first_host)
+
+    for host_name in dashboard_page.dashlet_table_column_cells(
+        host_table_dashlet, column_index=2
+    ).all():
+        assert host_name.text_content() == first_host, (
+            f"Unexpected host name found in dashlet '{host_table_dashlet}': "
+            f"{host_name.text_content()}. Only '{first_host}' host is expected"
+        )
+
+    dashboard_page.apply_filter_to_the_dashboard(host_name_filter, "xXxXxXx")
+
+    expected_message = (
+        "As soon as you add your Checkmk server to the monitoring, a graph showing the history "
+        "of your host problems will appear here. Please also be aware that this message might "
+        "appear as a result of a filtered dashboard. This dashlet currently only supports "
+        "filtering for sites.Please refer to the Checkmk user guide for more details."
+    )
+
+    for dashlet_title in graphic_dashlets:
+        success_message = dashboard_page.dashlet(dashlet_title).locator("div.success")
+
+        expect(
+            success_message, message="Dashlet does not contain a success message."
+        ).to_be_visible()
+
+        expect(
+            success_message,
+            message=(
+                f"Dashlet does not contain the expected success message ('{expected_message}'). "
+                f"Actual message: {success_message.text_content()}"
+            ),
+        ).to_have_text(expected_message)
+
+
 @pytest.mark.parametrize(
     "hosts, dashboard_class, dashlets_expected_row_count",
     [

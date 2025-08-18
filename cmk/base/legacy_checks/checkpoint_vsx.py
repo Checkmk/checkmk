@@ -69,7 +69,7 @@ class _Instance:
     bytes_rejected: int | None
 
 
-type _Section = Mapping[str, _Instance]
+type Section = Mapping[str, _Instance]
 
 
 def _opt_int(raw: str) -> int | None:
@@ -79,7 +79,7 @@ def _opt_int(raw: str) -> int | None:
         return None
 
 
-def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> _Section:
+def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> Section:
     status_table, counter_table = string_table
 
     # refactoring: first item occurence used to win. not sure if it matters
@@ -128,7 +128,7 @@ def parse_checkpoint_vsx(string_table: Sequence[StringTable]) -> _Section:
     }
 
 
-def discover_checkpoint_vsx(section: _Section) -> DiscoveryResult:
+def discover_checkpoint_vsx(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
@@ -144,8 +144,8 @@ def discover_checkpoint_vsx(section: _Section) -> DiscoveryResult:
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx(item: str, _no_params: object, parsed: _Section) -> Generator:
-    if not (data := parsed.get(item)):
+def check_checkpoint_vsx(item: str, _no_params: object, section: Section) -> Generator:
+    if not (data := section.get(item)):
         return
 
     yield 0, f"Type: {data.vs_type}"
@@ -183,14 +183,14 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_vsx_connections(section: _Section) -> DiscoveryResult:
+def discover_vsx_connections(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item, data in section.items() if data.conn_num is not None)
 
 
 def check_checkpoint_vsx_connections(
-    item: str, params: Mapping[str, Any], parsed: _Section
+    item: str, params: Mapping[str, Any], section: Section
 ) -> Generator:
-    if not (data := parsed.get(item)):
+    if not (data := section.get(item)):
         return
 
     conn_total = data.conn_num
@@ -243,19 +243,19 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_vsx_packets(section: _Section) -> DiscoveryResult:
+def discover_vsx_packets(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item, data in section.items() if data.packets is not None)
 
 
 def check_checkpoint_vsx_packets(
-    item: str, params: Mapping[str, Any], parsed: _Section
+    item: str, params: Mapping[str, Any], section: Section
 ) -> Generator:
-    if not (data := parsed.get(item)):
+    if not (data := section.get(item)):
         return
 
     value_store = get_value_store()
 
-    for key, infotext, value in [
+    for key, label, value in [
         ("packets", "Total number of packets processed", data.packets),
         ("packets_accepted", "Total number of accepted packets", data.packets_accepted),
         ("packets_dropped", "Total number of dropped packets", data.packets_dropped),
@@ -275,7 +275,7 @@ def check_checkpoint_vsx_packets(
             key,
             params[key],
             human_readable_func=int,
-            infoname=infotext,
+            infoname=label,
             unit="1/s",
         )
 
@@ -308,16 +308,16 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_vsx_traffic(section: _Section) -> DiscoveryResult:
+def discover_vsx_traffic(section: Section) -> DiscoveryResult:
     yield from (
         Service(item=item) for item, data in section.items() if data.bytes_accepted is not None
     )
 
 
 def check_checkpoint_vsx_traffic(
-    item: str, params: Mapping[str, Any], parsed: _Section
+    item: str, params: Mapping[str, Any], section: Section
 ) -> Generator:
-    if not (data := parsed.get(item)):
+    if not (data := section.get(item)):
         return
 
     value_store = get_value_store()
@@ -363,7 +363,7 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_checkpoint_vsx_status(item: str, _no_params: object, parsed: _Section) -> Generator:
+def check_checkpoint_vsx_status(item: str, _no_params: object, parsed: Section) -> Generator:
     if not (data := parsed.get(item)):
         return
 

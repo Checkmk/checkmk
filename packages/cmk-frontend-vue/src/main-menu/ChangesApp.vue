@@ -310,8 +310,8 @@ onMounted(() => {
       <CmkDialog
         :message="
           _t(
-            `Changes are saved in a temporary environment first, letting you review and adjust them safely.\n
-              Activate changes to apply them to live monitoring.`
+            `Changes are saved in a temporary environment first, letting you review and adjust them safely.
+             Activate changes to apply them to live monitoring.`
           )
         "
         :dismissal_button="{

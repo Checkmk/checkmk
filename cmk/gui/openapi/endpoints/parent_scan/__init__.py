@@ -17,12 +17,14 @@ from typing import Any, assert_never
 
 from cmk.gui.background_job import BackgroundJob
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
 from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.openapi.utils import serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,
@@ -39,9 +41,17 @@ from cmk.gui.watolib.parent_scan import (
     additional_status_codes=[409],
     request_schema=ParentScan,
     response_schema=BackgroundJobStatusObject,
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.hosts"),
+            permissions.Perm("wato.parentscan"),
+        ]
+    ),
 )
 def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
     """Start the parent scan background job"""
+    user.need_permission("wato.hosts")
+    user.need_permission("wato.parentscan")
     body = params["body"]
     body_gateway = body["gateway_hosts"]
     where: WhereChoices

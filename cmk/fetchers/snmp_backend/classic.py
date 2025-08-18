@@ -10,7 +10,6 @@ from typing import assert_never, Literal, TypeAlias
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
-from cmk.utils.sectionname import SectionName
 
 from ._utils import strip_snmp_value
 
@@ -105,8 +104,8 @@ class ClassicSNMPBackend(SNMPBackend):
         oid: str,
         *,
         context: SNMPContext,
-        section_name: SectionName | None = None,
-        table_base_oid: str | None = None,
+        section_name: object = None,
+        table_base_oid: object = None,
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 

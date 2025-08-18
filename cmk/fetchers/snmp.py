@@ -15,8 +15,8 @@ from cmk.snmplib import (
     SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
+    SNMPSectionName,
 )
-from cmk.utils.sectionname import SectionMap, SectionName
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
@@ -87,20 +87,20 @@ class SNMPPluginStoreItem(NamedTuple):
         }
 
 
-class SNMPPluginStore(SectionMap[SNMPPluginStoreItem]):
+class SNMPPluginStore(Mapping[SNMPSectionName, SNMPPluginStoreItem]):
     def __init__(
         self,
-        store: SectionMap[SNMPPluginStoreItem] | None = None,
+        store: Mapping[SNMPSectionName, SNMPPluginStoreItem] | None = None,
     ) -> None:
-        self._store: Final[SectionMap[SNMPPluginStoreItem]] = store if store else {}
+        self._store: Final[Mapping[SNMPSectionName, SNMPPluginStoreItem]] = store if store else {}
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: SectionName) -> SNMPPluginStoreItem:
+    def __getitem__(self, key: SNMPSectionName) -> SNMPPluginStoreItem:
         return self._store.__getitem__(key)
 
-    def __iter__(self) -> Iterator[SectionName]:
+    def __iter__(self) -> Iterator[SNMPSectionName]:
         return self._store.__iter__()
 
     def __len__(self) -> int:
@@ -110,7 +110,7 @@ class SNMPPluginStore(SectionMap[SNMPPluginStoreItem]):
     def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStore":
         return cls(
             {
-                SectionName(k): SNMPPluginStoreItem.deserialize(v)
+                SNMPSectionName(k): SNMPPluginStoreItem.deserialize(v)
                 for k, v in serialized["plugin_store"].items()
             }
         )

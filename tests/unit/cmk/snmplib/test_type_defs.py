@@ -17,10 +17,10 @@ from cmk.snmplib import (
     SNMPContextConfig,
     SNMPDetectSpec,
     SNMPHostConfig,
+    SNMPSectionName,
     SNMPVersion,
     SpecialColumn,
 )
-from cmk.utils.sectionname import SectionName
 
 
 class TestSNMPHostConfig:
@@ -46,13 +46,13 @@ class TestSNMPHostConfig:
         ["section_name", "expected_contexts"],
         [
             pytest.param(None, ["bar"], id="blank section name (e.g. for connection test)"),
-            pytest.param(SectionName("foo"), ["foo"], id="match"),
-            pytest.param(SectionName("bar"), ["bar"], id="default with identical section name"),
-            pytest.param(SectionName("foobar"), ["bar"], id="default"),
+            pytest.param(SNMPSectionName("foo"), ["foo"], id="match"),
+            pytest.param(SNMPSectionName("bar"), ["bar"], id="default with identical section name"),
+            pytest.param(SNMPSectionName("foobar"), ["bar"], id="default"),
         ],
     )
     def test_snmpv3_contexts_of(
-        self, section_name: SectionName, expected_contexts: Sequence[SNMPContext]
+        self, section_name: SNMPSectionName, expected_contexts: Sequence[SNMPContext]
     ) -> None:
         conf = SNMPHostConfig(
             is_ipv6_primary=False,
@@ -67,7 +67,7 @@ class TestSNMPHostConfig:
             oid_range_limits={},
             snmpv3_contexts=[
                 SNMPContextConfig(
-                    section=SectionName("foo"), contexts=["foo"], timeout_policy="stop"
+                    section=SNMPSectionName("foo"), contexts=["foo"], timeout_policy="stop"
                 ),
                 SNMPContextConfig(section=None, contexts=["bar"], timeout_policy="continue"),
             ],

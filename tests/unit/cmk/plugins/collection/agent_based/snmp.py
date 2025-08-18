@@ -19,6 +19,7 @@ from cmk.snmplib import (
     get_snmp_table,
     SNMPBackendEnum,
     SNMPHostConfig,
+    SNMPSectionName,
     SNMPVersion,
 )
 
@@ -72,7 +73,7 @@ def get_parsed_snmp_section(
     for tree in section_plugin.trees:
         table.append(
             get_snmp_table(
-                section_name=section_plugin.name,
+                section_name=SNMPSectionName(section_plugin.name),
                 tree=BackendSNMPTree.from_frontend(base=tree.base, oids=tree.oids),
                 walk_cache={},
                 backend=backend,

@@ -20,8 +20,8 @@ from cmk.snmplib import (
     SNMPRawData,
     SNMPRawDataElem,
     SNMPRowInfo,
+    SNMPSectionName,
 )
-from cmk.utils.sectionname import SectionMap, SectionName
 
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
@@ -135,15 +135,15 @@ class SNMPSectionMeta:
 
 class SNMPFetcher(Fetcher[SNMPRawData]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
-        SectionName("brocade_sys"),
-        SectionName("bvip_util"),
+        SNMPSectionName("brocade_sys"),
+        SNMPSectionName("bvip_util"),
     }
     plugin_store: SNMPPluginStore = SNMPPluginStore()
 
     def __init__(
         self,
         *,
-        sections: SectionMap[SNMPSectionMeta],
+        sections: Mapping[SNMPSectionName, SNMPSectionMeta],
         scan_config: SNMPScanConfig,
         do_status_data_inventory: bool,
         section_store_path: Path | str,
@@ -178,15 +178,15 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
     @property
-    def disabled_sections(self) -> frozenset[SectionName]:
+    def disabled_sections(self) -> frozenset[SNMPSectionName]:
         return frozenset(name for name, meta in self.sections.items() if meta.disabled)
 
     @property
-    def checking_sections(self) -> frozenset[SectionName]:
+    def checking_sections(self) -> frozenset[SNMPSectionName]:
         return frozenset(name for name, meta in self.sections.items() if meta.checking)
 
     @property
-    def inventory_sections(self) -> frozenset[SectionName]:
+    def inventory_sections(self) -> frozenset[SNMPSectionName]:
         return frozenset(name for name, data in self.plugin_store.items() if data.inventory)
 
     @property
@@ -219,8 +219,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self._backend = None
 
     def _detect(
-        self, *, select_from: Collection[SectionName], backend: SNMPBackend
-    ) -> frozenset[SectionName]:
+        self, *, select_from: Collection[SNMPSectionName], backend: SNMPBackend
+    ) -> frozenset[SNMPSectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
@@ -228,7 +228,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             backend=backend,
         )
 
-    def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
+    def _get_selection(self, mode: Mode) -> frozenset[SNMPSectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
             return frozenset(
@@ -241,7 +241,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         return frozenset()
 
-    def _get_detected_sections(self, mode: Mode) -> frozenset[SectionName]:
+    def _get_detected_sections(self, mode: Mode) -> frozenset[SNMPSectionName]:
         """Determine the sections fetched after successful detection"""
         if mode is Mode.CHECKING:
             return frozenset(
@@ -286,7 +286,11 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             raise TypeError("missing backend")
 
         now = int(time.time())
-        persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}
+        persisted_sections = (
+            {SNMPSectionName(name): content for name, content in self._section_store.load().items()}
+            if mode is Mode.CHECKING
+            else {}
+        )
         section_names = self._get_selection(mode)
         section_names |= self._detect(
             select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
@@ -303,7 +307,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"
 
-        fetched_data: dict[SectionName, SNMPRawDataElem] = {}
+        fetched_data: dict[SNMPSectionName, SNMPRawDataElem] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -330,8 +334,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     @classmethod
     def _sort_section_names(
         cls,
-        section_names: Iterable[SectionName],
-    ) -> Sequence[SectionName]:
+        section_names: Iterable[SNMPSectionName],
+    ) -> Sequence[SNMPSectionName]:
         # In former Checkmk versions (<=1.4.0) CPU check plug-ins were
         # checked before other check plug-ins like interface checks.
         # In Checkmk 1.5 the order was random and

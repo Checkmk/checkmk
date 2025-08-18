@@ -14,10 +14,15 @@ import cmk.fetchers._snmpcache as snmp_cache
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
-from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
-from cmk.utils.sectionname import SectionName
+from cmk.snmplib import (
+    get_single_oid,
+    SNMPBackend,
+    SNMPDetectAtom,
+    SNMPDetectBaseType,
+    SNMPSectionName,
+)
 
-SNMPScanSection = tuple[SectionName, SNMPDetectBaseType]
+type SNMPScanSection = tuple[SNMPSectionName, SNMPDetectBaseType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,7 +38,7 @@ def gather_available_raw_section_names(
     *,
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
-) -> frozenset[SectionName]:
+) -> frozenset[SNMPSectionName]:
     if not sections:
         return frozenset()
 
@@ -59,7 +64,7 @@ def _snmp_scan(
     *,
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
-) -> frozenset[SectionName]:
+) -> frozenset[SNMPSectionName]:
     snmp_cache.initialize_single_oid_cache(
         backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
@@ -117,8 +122,8 @@ def _find_sections(
     *,
     on_error: OnError,
     backend: SNMPBackend,
-) -> frozenset[SectionName]:
-    found_sections: set[SectionName] = set()
+) -> frozenset[SNMPSectionName]:
+    found_sections: set[SNMPSectionName] = set()
     for name, specs in sections:
         oid_value_getter = functools.partial(
             get_single_oid,
@@ -188,7 +193,7 @@ def _regex_cache(pattern: str, flags: int) -> re.Pattern[str]:
 
 
 def _output_snmp_check_plugins(
-    title: str, collection: Collection[SectionName], logger: Logger
+    title: str, collection: Collection[SNMPSectionName], logger: Logger
 ) -> None:
     collection_out = " ".join(str(n) for n in sorted(collection)) if collection else "-"
     logger.debug(

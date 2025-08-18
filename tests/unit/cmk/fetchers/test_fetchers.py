@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import socket
-from collections.abc import Sequence, Sized
+from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
 from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 
@@ -51,12 +51,13 @@ from cmk.snmplib import (
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
+    SNMPSectionName,
     SNMPTable,
     SNMPVersion,
 )
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.paths import omd_root
-from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.sectionname import SectionName
 
 
 class SensorReading(NamedTuple):
@@ -299,7 +300,7 @@ class TestSNMPPluginStore:
     def store(self) -> SNMPPluginStore:
         return SNMPPluginStore(
             {
-                SectionName("section0"): SNMPPluginStoreItem(
+                SNMPSectionName("section0"): SNMPPluginStoreItem(
                     [
                         BackendSNMPTree(
                             base=".1.2.3",
@@ -327,7 +328,7 @@ class TestSNMPPluginStore:
                     ),
                     False,
                 ),
-                SectionName("section1"): SNMPPluginStoreItem(
+                SNMPSectionName("section1"): SNMPPluginStoreItem(
                     [
                         BackendSNMPTree(
                             base=".1.2.3",
@@ -395,7 +396,7 @@ class TestSNMPFetcherFetch:
         # TODO(ml): This is way too complicated for a unit test.
         SNMPFetcher.plugin_store = SNMPPluginStore(
             {
-                SectionName("pim"): SNMPPluginStoreItem(
+                SNMPSectionName("pim"): SNMPPluginStoreItem(
                     trees=[
                         BackendSNMPTree(
                             base=".1.1.1",
@@ -408,7 +409,7 @@ class TestSNMPFetcherFetch:
                     detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
                     inventory=False,
                 ),
-                SectionName("pam"): SNMPPluginStoreItem(
+                SNMPSectionName("pam"): SNMPPluginStoreItem(
                     trees=[
                         BackendSNMPTree(
                             base=".1.2.3",
@@ -422,7 +423,7 @@ class TestSNMPFetcherFetch:
                     detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
                     inventory=False,
                 ),
-                SectionName("pum"): SNMPPluginStoreItem(
+                SNMPSectionName("pum"): SNMPPluginStoreItem(
                     trees=[
                         BackendSNMPTree(
                             base=".2.2.2", oids=[BackendOIDSpec("2.2", "string", False)]
@@ -441,7 +442,7 @@ class TestSNMPFetcherFetch:
     def create_fetcher(
         *,
         path: Path,
-        sections: SectionMap[SNMPSectionMeta] | None = None,
+        sections: Mapping[SNMPSectionName, SNMPSectionMeta] | None = None,
         do_status_data_inventory: bool = False,
     ) -> SNMPFetcher:
         return SNMPFetcher(
@@ -475,11 +476,11 @@ class TestSNMPFetcherFetch:
     def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)
-        section_name = SectionName("pim")
+        raw_section_name = "pim"
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
-                section_name: SNMPSectionMeta(
+                SNMPSectionName(raw_section_name): SNMPSectionMeta(
                     checking=True,
                     disabled=False,
                     redetect=False,
@@ -498,7 +499,7 @@ class TestSNMPFetcherFetch:
             {}
         )  # 'pim' is not an inventory section
         assert PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
-            {section_name: [table]}
+            {SectionName(raw_section_name): [table]}
         )
 
         monkeypatch.setattr(
@@ -507,11 +508,11 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: {SectionName("pim")},
         )
         assert PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
-            {section_name: [table]}
+            {SectionName(raw_section_name): [table]}
         )
 
     def test_fetch_from_io_partially_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-        section_name = SectionName("pum")
+        section_name = SNMPSectionName("pum")
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
@@ -567,12 +568,12 @@ class TestSNMPFetcherFetch:
         monkeypatch.setattr(
             SNMPFetcher,
             "inventory_sections",
-            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+            property(lambda self: {SNMPSectionName("pim"), SNMPSectionName("pam")}),
         )
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
-                SectionName("pam"): SNMPSectionMeta(
+                SNMPSectionName("pam"): SNMPSectionMeta(
                     checking=False,
                     disabled=True,
                     redetect=False,
@@ -608,7 +609,7 @@ class TestSNMPFetcherFetch:
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
-                SectionName("pam"): SNMPSectionMeta(
+                SNMPSectionName("pam"): SNMPSectionMeta(
                     checking=False,
                     disabled=True,
                     redetect=False,
@@ -638,12 +639,12 @@ class TestSNMPFetcherFetch:
         monkeypatch.setattr(
             SNMPFetcher,
             "inventory_sections",
-            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+            property(lambda self: {SNMPSectionName("pim"), SNMPSectionName("pam")}),
         )
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
-                SectionName("pam"): SNMPSectionMeta(
+                SNMPSectionName("pam"): SNMPSectionMeta(
                     checking=False,
                     disabled=True,
                     redetect=False,
@@ -690,7 +691,7 @@ class TestSNMPFetcherFetch:
 
 class SNMPFetcherStub(SNMPFetcher):
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        return {SectionName("section"): [[b"fetched"]]}
+        return {SNMPSectionName("section"): [[b"fetched"]]}
 
 
 class TestSNMPFetcherFetchCache:
@@ -729,7 +730,7 @@ class TestSNMPFetcherFetchCache:
             use_only_cache=False,
             file_cache_mode=FileCacheMode.DISABLED,
         )
-        file_cache.cache = {SectionName("section"): [[b"cached"]]}
+        file_cache.cache = {SNMPSectionName("section"): [[b"cached"]]}
 
         assert PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
             {SectionName("section"): [[b"cached"]]}

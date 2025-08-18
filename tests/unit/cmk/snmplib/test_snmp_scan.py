@@ -17,10 +17,16 @@ from cmk.ccc.exceptions import MKSNMPError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+    SNMPSectionName,
+    SNMPVersion,
+)
 from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
-from cmk.utils.sectionname import SectionName
 from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 
@@ -225,7 +231,9 @@ def test_snmp_scan_find_plugins__success(
     backend: SNMPBackend,
     agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    sections = [(s.name, s.detect_spec) for s in agent_based_plugins.snmp_sections.values()]
+    sections = [
+        (SNMPSectionName(s.name), s.detect_spec) for s in agent_based_plugins.snmp_sections.values()
+    ]
     found = snmp_scan._find_sections(
         sections,
         on_error=OnError.RAISE,
@@ -247,7 +255,10 @@ def test_gather_available_raw_section_names_defaults(
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 
     assert snmp_scan.gather_available_raw_section_names(
-        [(s.name, s.detect_spec) for s in agent_based_plugins.snmp_sections.values()],
+        [
+            (SNMPSectionName(s.name), s.detect_spec)
+            for s in agent_based_plugins.snmp_sections.values()
+        ],
         scan_config=snmp_scan.SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -255,7 +266,7 @@ def test_gather_available_raw_section_names_defaults(
         ),
         backend=backend,
     ) == {
-        SectionName("hr_mem"),
-        SectionName("snmp_info"),
-        SectionName("snmp_uptime"),
+        SNMPSectionName("hr_mem"),
+        SNMPSectionName("snmp_info"),
+        SNMPSectionName("snmp_uptime"),
     }

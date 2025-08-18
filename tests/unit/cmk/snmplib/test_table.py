@@ -29,12 +29,12 @@ from cmk.snmplib import (
     SNMPContextConfig,
     SNMPContextTimeout,
     SNMPHostConfig,
+    SNMPSectionName,
     SNMPTable,
     SNMPVersion,
     SpecialColumn,
 )
 from cmk.utils.log import logger
-from cmk.utils.sectionname import SectionName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 SNMPConfig = SNMPHostConfig(
@@ -88,7 +88,7 @@ def test_get_snmp_table(
         backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
             return get_snmp_table(
-                section_name=SectionName("unit_test"),
+                section_name=SNMPSectionName("unit_test"),
                 tree=info,
                 walk_cache={},
                 backend=backend,
@@ -96,7 +96,7 @@ def test_get_snmp_table(
             )
         return [
             get_snmp_table(
-                section_name=SectionName("unit_test"),
+                section_name=SNMPSectionName("unit_test"),
                 tree=i,
                 walk_cache={},
                 backend=backend,
@@ -197,7 +197,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
         def walk(self, /, *args: object, **kw: object) -> NoReturn:
             raise SNMPContextTimeout
 
-    section_name = SectionName("section")
+    section_name = SNMPSectionName("section")
     with pytest.raises(MKSNMPError) as excinfo:
         _snmp_table.get_snmpwalk(
             section_name,
@@ -233,7 +233,7 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
         def walk(self, /, *args: object, **kw: object) -> NoReturn:
             raise SNMPContextTimeout
 
-    section_name = SectionName("section")
+    section_name = SNMPSectionName("section")
     with pytest.raises(MKSNMPError) as excinfo:
         _snmp_table.get_snmpwalk(
             section_name,

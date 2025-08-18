@@ -24,7 +24,7 @@ from cmk.checkengine.parser import (
 )
 from cmk.checkengine.parser._agent import ParserState
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPRawData, SNMPSectionName
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
@@ -901,7 +901,9 @@ class TestSNMPParser:
         return {section_a: content_a, section_b: content_b}
 
     def test_no_cache(self, parser: SNMPParser, sections: dict[SectionName, StringTable]) -> None:
-        host_sections = parser.parse(sections, selection=NO_SELECTION)
+        host_sections = parser.parse(
+            {SNMPSectionName(n): c for n, c in sections.items()}, selection=NO_SELECTION
+        )
         assert host_sections.sections == sections
         assert host_sections.cache_info == {}
         assert not host_sections.piggybacked_raw_data
@@ -924,11 +926,10 @@ class TestSNMPParser:
         # Patch IO:
         monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
 
-        raw_data = sections
+        raw_data = {SNMPSectionName(n): c for n, c in sections.items()}
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
-        all_sections = sections.copy()
-        all_sections[SectionName("persisted")] = [["content"]]
+        all_sections = {**sections, SectionName("persisted"): [["content"]]}
         assert ahs.sections == all_sections
         assert ahs.cache_info == {SectionName("persisted"): (42, 27)}
         assert ahs.piggybacked_raw_data == {}
@@ -1203,7 +1204,7 @@ class TestSNMPPersistedSectionHandling:
 
     def test_update_with_empty_store(self, logger: logging.Logger) -> None:
         section_store = MockStore("/dev/null", {}, logger=logger)
-        raw_data: SNMPRawData = {SectionName("fresh"): [["new"]]}
+        raw_data: SNMPRawData = {SNMPSectionName("fresh"): [["new"]]}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1225,7 +1226,7 @@ class TestSNMPPersistedSectionHandling:
             {SectionName("stored"): (0, 0, [["old"]])},
             logger=logger,
         )
-        raw_data: SNMPRawData = {SectionName("fresh"): [["new"]]}
+        raw_data = {SNMPSectionName("fresh"): [["new"]]}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1256,7 +1257,7 @@ class TestSNMPPersistedSectionHandling:
             {SectionName("section"): (0, 0, [["old"]])},
             logger=logger,
         )
-        raw_data: SNMPRawData = {SectionName("section"): [["new"]]}
+        raw_data = {SNMPSectionName("section"): [["new"]]}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,

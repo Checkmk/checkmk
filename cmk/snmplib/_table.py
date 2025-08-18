@@ -6,13 +6,11 @@
 
 import contextlib
 import hashlib
-from collections.abc import Callable, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError
-from cmk.utils.sectionname import SectionMap as _HostSection
-from cmk.utils.sectionname import SectionName
 
 from ._typedefs import (
     BackendSNMPTree,
@@ -23,6 +21,7 @@ from ._typedefs import (
     SNMPContextTimeout,
     SNMPRawValue,
     SNMPRowInfo,
+    SNMPSectionName,
     SNMPValueEncoding,
     SpecialColumn,
 )
@@ -32,7 +31,7 @@ SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
-SNMPRawData = _HostSection[SNMPRawDataElem]
+SNMPRawData = Mapping[SNMPSectionName, SNMPRawDataElem]
 
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
@@ -40,7 +39,7 @@ _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
 
 def get_snmp_table(
     *,
-    section_name: SectionName | None,
+    section_name: SNMPSectionName | None,
     tree: BackendSNMPTree,
     walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     backend: SNMPBackend,
@@ -172,7 +171,7 @@ def _key_oid_pairs(pair1: tuple[OID, SNMPRawValue]) -> list[int]:
 
 
 def get_snmpwalk(
-    section_name: SectionName | None,
+    section_name: SNMPSectionName | None,
     base_oid: str,
     fetchoid: OID,
     *,

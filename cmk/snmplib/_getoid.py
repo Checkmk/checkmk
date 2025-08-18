@@ -10,17 +10,16 @@ import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.sectionname import SectionName
 
 from ._table import SNMPDecodedString
-from ._typedefs import ensure_str, OID, SNMPBackend
+from ._typedefs import ensure_str, OID, SNMPBackend, SNMPSectionName
 
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(
     oid: str,
     *,
-    section_name: SectionName | None = None,
+    section_name: SNMPSectionName | None = None,
     single_oid_cache: dict[OID, SNMPDecodedString | None],
     backend: SNMPBackend,
     log: Callable[[str], None],

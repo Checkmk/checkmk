@@ -23,8 +23,8 @@ from cmk.snmplib import (
     SNMPBackend,
     SNMPBackendEnum,
     SNMPHostConfig,
+    SNMPSectionName,
 )
-from cmk.utils.sectionname import SectionName
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation
@@ -60,7 +60,7 @@ sys.stdout.write(
     repr(
         (
             get_snmp_table(
-                section_name=SectionName("my_Section"),
+                section_name=SNMPSectionName("my_Section"),
                 tree=tree,
                 backend=backend(config, logger),
                 walk_cache=walk_cache,

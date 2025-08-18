@@ -124,6 +124,7 @@ from cmk.snmplib import (  # some of these are required in the modules' namespac
     SNMPContextConfig,
     SNMPCredentials,
     SNMPHostConfig,
+    SNMPSectionName,
     SNMPTiming,
     SNMPVersion,
 )
@@ -1745,7 +1746,7 @@ class ConfigCache:
                 ),
                 snmpv3_contexts=[
                     SNMPContextConfig(
-                        section=SectionName(name) if name is not None else None,
+                        section=SNMPSectionName(name) if name is not None else None,
                         contexts=contexts,
                         timeout_policy=_timeout_policy(timeout_policy),
                     )
@@ -3756,11 +3757,11 @@ class FetcherFactory:
         *,
         checking_sections: frozenset[SectionName],
         sections: Iterable[SNMPSectionPlugin],
-    ) -> dict[SectionName, SNMPSectionMeta]:
+    ) -> Mapping[SNMPSectionName, SNMPSectionMeta]:
         disabled_sections = self._disabled_snmp_sections(host_name)
         redetect_sections = agent_based_register.sections_needing_redetection(sections)
         return {
-            name: SNMPSectionMeta(
+            SNMPSectionName(name): SNMPSectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
                 redetect=name in checking_sections and name in redetect_sections,

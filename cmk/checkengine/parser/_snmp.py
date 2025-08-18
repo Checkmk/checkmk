@@ -11,13 +11,13 @@ from cmk.ccc.hostaddress import HostName
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
-from ._parser import HostSections, Parser, SectionNameCollection
+from ._parser import HostSections, Parser, SectionNameCollection, SNMPParsedData
 from ._sectionstore import SectionStore
 
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
+class SNMPParser(Parser[SNMPRawData, SNMPParsedData]):
     """A parser for SNMP data.
 
     Note:
@@ -50,8 +50,8 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> HostSections[SNMPRawData]:
-        sections = dict(raw_data)
+    ) -> HostSections[SNMPParsedData]:
+        sections = {SectionName(n): content for n, content in raw_data.items()}
         now = int(time.time())
 
         def lookup_persist(section_name: SectionName) -> tuple[int, int] | None:
@@ -71,4 +71,4 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[SNMPRawData](new_sections, cache_info=cache_info)
+        return HostSections[SNMPParsedData](new_sections, cache_info=cache_info)

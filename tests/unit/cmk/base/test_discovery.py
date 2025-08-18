@@ -74,7 +74,7 @@ from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
 from cmk.plugins.collection.agent_based.labels import agent_section_labels
 from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
 from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -1349,7 +1349,7 @@ def test__find_candidates(
         HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[SNMPRawData](
+                    host_sections=HostSections[Mapping[SectionName, SNMPRawDataElem]](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],

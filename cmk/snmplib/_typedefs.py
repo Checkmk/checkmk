@@ -11,11 +11,17 @@ import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, Protocol, Self
+from typing import Any, Literal, NamedTuple, NewType, Protocol, Self
 
 from cmk.ccc.exceptions import MKSNMPError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
+
+# We also have 'SectionName' elsewhere, but this section name is not subject to the same restrictions.
+# We use it to map configuration options like OID ranges and SNMP contexts.
+SNMPSectionName = NewType("SNMPSectionName", str)
+
+
+type SNMPSectionMap[_T_co] = Mapping[SNMPSectionName, _T_co]
 
 SNMPContext = str
 SNMPValueEncoding = Literal["string", "binary"]
@@ -28,10 +34,10 @@ SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
 
 def parse_oid_range_config(
     rule_values: Sequence[object],
-) -> Mapping[SectionName, Sequence[RangeLimit]]:
+) -> Mapping[SNMPSectionName, Sequence[RangeLimit]]:
     """Parse the OID range limits from the given config values."""
     return {
-        SectionName(str(v[0])): [_parse_range_limit(l) for l in v[1]]
+        SNMPSectionName(v[0]): [_parse_range_limit(l) for l in v[1]]
         for v in reversed(rule_values)
         if isinstance(v, tuple)
     }
@@ -108,7 +114,7 @@ def ensure_str(value: str | bytes, *, encoding: str | None) -> str:
 
 @dataclass(frozen=True, kw_only=True)
 class SNMPContextConfig:
-    section: SectionName | None
+    section: SNMPSectionName | None
     contexts: Sequence[SNMPContext]
     timeout_policy: Literal["stop", "continue"]
 
@@ -129,7 +135,7 @@ class SNMPContextConfig:
     ) -> Self:
         section, contexts, timeout = serialized
         return cls(
-            section=SectionName(section) if section is not None else None,
+            section=SNMPSectionName(section) if section is not None else None,
             contexts=contexts,
             timeout_policy=timeout,
         )
@@ -147,7 +153,7 @@ class SNMPHostConfig:
     bulkwalk_enabled: bool
     bulk_walk_size_of: int
     timing: SNMPTiming
-    oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
+    oid_range_limits: Mapping[SNMPSectionName, Sequence[RangeLimit]]
     snmpv3_contexts: Sequence[SNMPContextConfig]
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
@@ -158,7 +164,7 @@ class SNMPHostConfig:
 
     def snmpv3_contexts_of(
         self,
-        section_name: SectionName | None,
+        section_name: SNMPSectionName | None,
     ) -> SNMPContextConfig:
         if self.snmp_version is not SNMPVersion.V3:
             return SNMPContextConfig.default()
@@ -183,7 +189,7 @@ class SNMPHostConfig:
         serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
         serialized_["snmp_version"] = SNMPVersion.deserialize(serialized_["snmp_version"])
         serialized_["oid_range_limits"] = {
-            SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
+            SNMPSectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
         serialized_["snmpv3_contexts"] = [
             SNMPContextConfig.deserialize(c) for c in serialized_["snmpv3_contexts"]
@@ -232,7 +238,7 @@ class SNMPBackend(abc.ABC):
         oid: OID,
         *,
         context: SNMPContext,
-        section_name: SectionName | None = None,
+        section_name: SNMPSectionName | None = None,
         table_base_oid: OID | None = None,
     ) -> SNMPRowInfo:
         return []

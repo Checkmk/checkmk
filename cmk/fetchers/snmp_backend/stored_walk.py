@@ -11,7 +11,6 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
-from cmk.utils.sectionname import SectionName
 
 from ._utils import strip_snmp_value
 
@@ -40,9 +39,9 @@ class StoredWalkSNMPBackend(SNMPBackend):
         /,
         oid: OID,
         *,
-        context: SNMPContext,
-        section_name: SectionName | None = None,
-        table_base_oid: OID | None = None,
+        context: object,
+        section_name: object = None,
+        table_base_oid: object = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]

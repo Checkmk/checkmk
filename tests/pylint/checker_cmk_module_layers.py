@@ -727,7 +727,6 @@ _COMPONENTS = (
             "cmk.utils.agent_registration",
             "cmk.utils.certs",
             "cmk.utils.paths",
-            "cmk.utils.sectionname",
         ),
     ),
     (
@@ -763,7 +762,6 @@ _COMPONENTS = (
         Component("cmk.snmplib"),
         _allow(
             "cmk.ccc",
-            "cmk.utils.sectionname",
         ),
     ),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),

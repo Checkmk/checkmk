@@ -14,7 +14,7 @@ from typing import Final, Generic, Protocol, TypeVar
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import SourceInfo
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.sectionname import SectionMap, SectionName
 
@@ -27,6 +27,7 @@ __all__ = [
     "ParserFunction",
     "SectionNameCollection",
     "HostSections",
+    "SNMPParsedData",
 ]
 
 _Tin = TypeVar("_Tin")
@@ -37,6 +38,8 @@ _Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
 AgentRawDataSectionElem = Sequence[str]
 AgentRawDataSection = SectionMap[Sequence[AgentRawDataSectionElem]]
+
+type SNMPParsedData = Mapping[SectionName, SNMPRawDataElem]
 
 
 class HostSections(Generic[_Tout]):
@@ -111,7 +114,7 @@ def parse_raw_data(
     *,
     selection: SectionNameCollection,
 ) -> result.Result[
-    HostSections[AgentRawDataSection | SNMPRawData],
+    HostSections[AgentRawDataSection | SNMPParsedData],
     Exception,
 ]:
     try:

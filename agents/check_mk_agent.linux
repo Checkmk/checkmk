@@ -1151,7 +1151,7 @@ read_postfix_queue_dirs() {
         echo "[[[${2}]]]"
         for queue in deferred active; do
             count=$(find "${postfix_queue_dir}/${queue}" -type f | wc -l)
-            size=$(du -s "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
+            size=$(du -sb "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
             if [ -z "${size}" ]; then
                 size=0
             fi
@@ -1222,12 +1222,12 @@ section_mailqueue() {
         echo '<<<nullmailer_mailq>>>'
         if [ -d /var/spool/nullmailer/queue ]; then
             COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
-            SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+            SIZE=$(du -sb /var/spool/nullmailer/queue | awk '{print $1 }')
             echo "${SIZE} ${COUNT} deferred"
         fi
         if [ -d /var/spool/nullmailer/failed ]; then
             COUNT=$(find /var/spool/nullmailer/failed -type f | wc -l)
-            SIZE=$(du -s /var/spool/nullmailer/failed | awk '{print $1 }')
+            SIZE=$(du -sb /var/spool/nullmailer/failed | awk '{print $1 }')
             echo "${SIZE} ${COUNT} failed"
         fi
     fi

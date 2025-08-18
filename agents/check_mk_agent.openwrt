@@ -895,7 +895,7 @@ section_postfix() {
             echo '<<<postfix_mailq>>>'
             for queue in deferred active; do
                 count=$(find "${postfix_queue_dir}/${queue}" -type f | wc -l)
-                size=$(du -s "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
+                size=$(du -sb "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
                 if [ -z "${size}" ]; then
                     size=0
                 fi
@@ -921,7 +921,7 @@ section_nullmailer() {
     if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
         echo '<<<nullmailer_mailq>>>'
         COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
-        SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+        SIZE=$(du -sb /var/spool/nullmailer/queue | awk '{print $1 }')
         echo "${SIZE} ${COUNT}"
     fi
 }

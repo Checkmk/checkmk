@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 
 from pydantic import ValidationError
 
 from cmk.ccc import tty
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.exceptions import MKConfigError
 
 
 class ConfigValidationError(MKConfigError):
@@ -23,6 +23,7 @@ class ConfigValidationError(MKConfigError):
         self.original_data = original_data
         self.pydantic_error = pydantic_error
 
+    @override
     def __str__(self) -> str:
         error_count = self.pydantic_error.error_count()
         error_msg = (

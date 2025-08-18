@@ -23,7 +23,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -1186,6 +1186,13 @@ class Ruleset:
 class Rule:
     @classmethod
     def from_ruleset_defaults(cls, folder: Folder, ruleset: Ruleset) -> Rule:
+        try:
+            default_value = get_visitor(
+                ruleset.rulespec.form_spec, VisitorOptions(migrate_values=False, mask_values=False)
+            ).to_disk(DEFAULT_VALUE)
+        except FormSpecNotImplementedError:
+            default_value = ruleset.valuespec().default_value()
+
         return Rule(
             utils.gen_id(),
             folder,
@@ -1198,7 +1205,7 @@ class Rule:
                 docu_url="",
                 predefined_condition_id=None,
             ),
-            ruleset.valuespec().default_value(),
+            default_value,
         )
 
     def __init__(

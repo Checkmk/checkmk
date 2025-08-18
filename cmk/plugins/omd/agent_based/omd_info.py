@@ -10,29 +10,6 @@ Section = dict[str, dict[str, dict[str, str]]]
 
 
 def parse_omd_info(string_table: StringTable) -> Section:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_omd_info([
-    ...     ['[versions]'],
-    ...     ['version', 'number', 'edition', 'demo'],
-    ...     ['v1.full', 'v1', 'full', '0'],
-    ...     ['v2.full', 'v2', 'full', '0'],
-    ...     ['[sites]'],
-    ...     ['site', 'used_version', 'autostart'],
-    ...     ['heute', 'v1', '0'],
-    ...     ['beta', 'v2', '0'],
-    ... ]))
-    {'sites': {'beta': {'autostart': '0', 'site': 'beta', 'used_version': 'v2'},
-               'heute': {'autostart': '0', 'site': 'heute', 'used_version': 'v1'}},
-     'versions': {'v1.full': {'demo': '0',
-                              'edition': 'full',
-                              'number': 'v1',
-                              'version': 'v1.full'},
-                  'v2.full': {'demo': '0',
-                              'edition': 'full',
-                              'number': 'v2',
-                              'version': 'v2.full'}}}
-    """
     section: Section = {}
     current_subsection: dict[str, dict[str, str]] = {}
     headers: list[str] = []

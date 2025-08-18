@@ -1,7 +1,7 @@
 title: Ivanti Neurons for MDM (formerly MobileIron Cloud): Device versions
 agents: mobileiron
 catalog: app/ivantineurons
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The special agent Ivanti Neurons for MDM (formerly MobileIron Cloud) 

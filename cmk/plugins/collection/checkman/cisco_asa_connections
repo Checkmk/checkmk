@@ -2,7 +2,7 @@ title: Cisco ASA: Connections
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk
-license: GPLv3
+license: GPLv2
 description:
  This check monitors the number of connections currently in use by the entire firewall and
  the highest number of connections in use at any one time since system startup of Cisco ASA

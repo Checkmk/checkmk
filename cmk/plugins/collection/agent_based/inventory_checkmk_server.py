@@ -8,6 +8,8 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
+# FIXME: this should be in cmk.plugins.omd
+
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
@@ -37,6 +39,28 @@ def _service_status(
     if service_name in status["stopped"]:
         return "stopped"
     return "running"
+
+
+def _get_sites_edition() -> cmk_version.Edition:
+    # FIXME: shouldn't we use each sites edition for this?!
+    return cmk_version.edition(paths.omd_root)
+
+
+def _make_edition_specific_services(edition: cmk_version.Edition) -> Sequence[str]:
+    # FIXME: this is outdated.
+    common_services = [
+        "apache",
+        "crontab",
+        "mkeventd",
+        "rrdcached",
+        "stunnel",
+        "xinetd",
+    ]
+    match edition:
+        case cmk_version.Edition.CRE:
+            return ["nagios", "npcd", *common_services]
+        case _:
+            return ["cmc", "dcd", "liveproxyd", "mknotifyd", *common_services]
 
 
 def merge_sections(
@@ -75,28 +99,6 @@ def merge_sections(
         }
 
     # SECTION: omd_status
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
-        services = [
-            "nagios",
-            "npcd",
-        ]
-    else:
-        services = [
-            "cmc",
-            "dcd",
-            "liveproxyd",
-            "mknotifyd",
-        ]
-
-    services += [
-        "apache",
-        "crontab",
-        "mkeventd",
-        "rrdcached",
-        "stunnel",
-        "xinetd",
-    ]
-
     num_sites = 0
     for site, omd_status in section_omd_status.items():
         # Number of sites was previously calculated from omd_info, but calculating this from
@@ -104,7 +106,7 @@ def merge_sections(
         num_sites += 1
         omd_status_dict = {}
         # create a column for each service
-        for service in services:
+        for service in _make_edition_specific_services(_get_sites_edition()):
             omd_status_dict[service] = _service_status(omd_status, service)
         merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
             "status_columns"

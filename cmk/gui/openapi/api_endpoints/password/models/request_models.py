@@ -36,7 +36,6 @@ class CreatePassword:
         default="",
     )
     documentation_url: str = api_field(
-        serialization_alias="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
         default="",
@@ -121,7 +120,6 @@ class UpdatePassword:
         default_factory=ApiOmitted,
     )
     documentation_url: str | ApiOmitted = api_field(
-        serialization_alias="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
         default_factory=ApiOmitted,

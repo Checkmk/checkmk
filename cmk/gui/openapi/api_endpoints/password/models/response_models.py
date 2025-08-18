@@ -19,9 +19,8 @@ class PasswordExtension:
         description="An optional comment to explain the purpose of this password.",
         default_factory=ApiOmitted,
     )
-    docu_url: str | ApiOmitted = api_field(
+    documentation_url: str | ApiOmitted = api_field(
         example="localhost",
-        serialization_alias="documentation_url",
         description="A URL pointing to documentation or any other page.",
         default_factory=ApiOmitted,
     )

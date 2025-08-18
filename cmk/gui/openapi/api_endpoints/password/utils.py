@@ -38,7 +38,7 @@ def serialize_password(ident: str, details: Password) -> PasswordObject:
         title=details["title"],
         extensions=PasswordExtension(
             comment=details.get("comment", ApiOmitted()),
-            docu_url=details.get("docu_url", ApiOmitted()),
+            documentation_url=details.get("docu_url", ApiOmitted()),
             editable_by=details.get("owned_by") or ApiOmitted(),
             owned_by=details.get("owned_by") or ApiOmitted(),
             shared_with=details.get("shared_with", ApiOmitted()),

@@ -1,4 +1,3 @@
-import threading
 import uuid
 from unittest.mock import Mock
 
@@ -51,25 +50,3 @@ def test_list_relays_multiple():
         repo.add_relay(rid)
     listed = repo.list_relays()
     assert set(listed) == set(relay_ids)
-
-
-def test_concurrent_add_relay():
-    repo = RelaysRepository()
-    relay_ids = [uuid.uuid4() for _ in range(50)]
-    threads = []
-
-    def add_relay(relay_id):
-        repo.add_relay(relay_id)
-
-    for rid in relay_ids:
-        t = threading.Thread(target=add_relay, args=(rid,))
-        threads.append(t)
-        t.start()
-
-    for t in threads:
-        t.join()
-
-    # After all threads complete, all relays should be present
-    listed = repo.list_relays()
-    assert set(listed) == set(relay_ids)
-    assert len(listed) == 50

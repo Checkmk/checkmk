@@ -1,27 +1,27 @@
 import dataclasses
-import threading
 import uuid
 
 from cmk.relay_protocols.tasks import TaskResponse
 
+# Persistence layer is not thread safe yet.
+# Note: Since we are using async endpoints in the agent-receiver
+# the executions are added as a coroutine to the main async event loop.
+# The persistence layer is for now an in memory dict so we won't need
+# to make this thread-safe as this should not be accessed by multiple threads
+# concurrently.
 GLOBAL_RELAYS: dict[uuid.UUID, list[TaskResponse]] = {}
-GLOBAL_RELAYS_LOCK = threading.RLock()
 
 
 @dataclasses.dataclass
 class RelaysRepository:
     def add_relay(self, relay_id: uuid.UUID) -> None:
-        with GLOBAL_RELAYS_LOCK:
-            GLOBAL_RELAYS[relay_id] = []
+        GLOBAL_RELAYS[relay_id] = []
 
     def list_relays(self) -> list[uuid.UUID]:
-        with GLOBAL_RELAYS_LOCK:
-            return list(GLOBAL_RELAYS.keys())
+        return list(GLOBAL_RELAYS.keys())
 
     def get_relay_tasks(self, relay_id: uuid.UUID) -> list[TaskResponse]:
-        with GLOBAL_RELAYS_LOCK:
-            return GLOBAL_RELAYS[relay_id]
+        return GLOBAL_RELAYS[relay_id]
 
     def has_relay(self, relay_id: uuid.UUID) -> bool:
-        with GLOBAL_RELAYS_LOCK:
-            return relay_id in GLOBAL_RELAYS
+        return relay_id in GLOBAL_RELAYS

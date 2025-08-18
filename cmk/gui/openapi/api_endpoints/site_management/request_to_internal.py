@@ -32,7 +32,7 @@ from .models.common import (
     UserSyncAllModel,
     UserSyncWithLdapModel,
 )
-from .models.request_models import SiteConnectionCreate
+from .models.request_models import SiteConnectionCreate, SiteConnectionEdit
 
 
 def _socket_to_internal(
@@ -161,7 +161,7 @@ def _configuration_connection_to_internal(
     site_configuration["message_broker_port"] = configuration_connection.message_broker_port
 
 
-def to_internal(incoming: SiteConnectionCreate) -> SiteConfiguration:
+def to_internal(incoming: SiteConnectionCreate | SiteConnectionEdit) -> SiteConfiguration:
     # TODO: These three fields should have default values but currently blocked
     # by a pydantic limitation.
     persistent_connection = incoming.status_connection.persistent_connection

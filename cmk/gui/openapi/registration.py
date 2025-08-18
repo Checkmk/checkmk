@@ -32,7 +32,6 @@ from cmk.gui.openapi.endpoints import (
     service,
     service_discovery,
     service_group_config,
-    site_management,
     time_periods,
     user_config,
     version,
@@ -88,7 +87,6 @@ def register(
     service.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     service_discovery.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     service_group_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    site_management.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     time_periods.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     user_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     version.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

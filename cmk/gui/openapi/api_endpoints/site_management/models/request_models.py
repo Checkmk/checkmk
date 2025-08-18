@@ -41,6 +41,32 @@ class BasicSettingsBaseModel:
 
 
 @api_model
+class BasicSettingsEditModel(BasicSettingsBaseModel):
+    site_id: Annotated[
+        SiteId,
+        TypedPlainValidator(str, SiteIdConverter.should_exist),
+    ] = api_field(
+        description="The site ID.",
+        example="prod",
+    )
+
+
+@api_model
+class SiteConnectionEdit(SiteConnectionBaseModel):
+    basic_settings: BasicSettingsEditModel = api_field(
+        description="The basic connection attributes",
+    )
+
+
+@api_model
+class SiteConnectionEditModel:
+    site_config: SiteConnectionEdit = api_field(
+        description="A site's connection.",
+        example=default_config_example(),
+    )
+
+
+@api_model
 class BasicSettingsCreateModel(BasicSettingsBaseModel):
     site_id: Annotated[
         SiteId,

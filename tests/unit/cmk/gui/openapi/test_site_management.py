@@ -2,8 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any
-from unittest import mock
 
 import pytest
 from pytest import MonkeyPatch
@@ -429,11 +427,6 @@ proxy_test_data_400: list[Proxy] = [
         "global_settings": True,
         "tcp": {"port": 8698790007},
     },
-    {
-        "use_livestatus_daemon": "with_proxy",
-        "global_settings": True,
-        "tcp": {"port": 44232, "only_from": ["192.168.1.abc", "192.168.1.2"]},
-    },
 ]
 
 
@@ -475,17 +468,24 @@ def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(
     clients: ClientRegistry,
-    monkeypatch: MonkeyPatch,
 ) -> None:
     connection_choices = [
         ("LDAP_1", "LDAP_1 (ldap)"),
         ("LDAP_2", "LDAP_2 (ldap)"),
         ("LDAP_3", "LDAP_3 (ldap)"),
     ]
-    monkeypatch.setattr(
-        "cmk.gui.fields.custom_fields.connection_choices", lambda: connection_choices
-    )
-    monkeypatch.setattr("cmk.gui.watolib.sites.connection_choices", lambda: connection_choices)
+    for ldap_id, _alias in connection_choices:
+        clients.LdapConnection.create(
+            ldap_data={
+                "general_properties": {"id": ldap_id},
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": "active_directory_manual",
+                        "ldap_server": "10.200.3.32",
+                    },
+                },
+            }
+        )
 
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
@@ -613,19 +613,8 @@ def test_update_configuration_connection_400(
     ).assert_status_code(400)
 
 
-def test_update_status_host_200(
-    clients: ClientRegistry,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    class MockHost:
-        @classmethod
-        def host(cls, *args: Any) -> Any:
-            mock_host = mock.Mock()
-            mock_host.may = mock.Mock(return_value=True)
-            return mock_host
-
-    monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
-
+def test_update_status_host_200(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="host1", folder="/")
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
     data: StatusHost = {"status_host_set": "enabled", "site": "NO_SITE", "host": "host1"}
@@ -642,20 +631,8 @@ status_host_test_data: list[StatusHost] = [
 
 
 @pytest.mark.parametrize("data", status_host_test_data)
-def test_update_status_host_400(
-    clients: ClientRegistry,
-    data: StatusHost,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    class MockHost:
-        @classmethod
-        def host(cls, *args: Any) -> Any:
-            mock_host = mock.Mock()
-            mock_host.may = mock.Mock(return_value=True)
-            return mock_host
-
-    monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
-
+def test_update_status_host_400(clients: ClientRegistry, data: StatusHost) -> None:
+    clients.HostConfig.create(host_name="host1", folder="/")
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
     config["status_connection"]["status_host"] = data

@@ -17,8 +17,6 @@ from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, Literal, overload, TypeVar
 
-from pysmi.error import PySmiError
-
 from livestatus import (
     LocalConnection,
     MKLivestatusSocketError,
@@ -3625,39 +3623,30 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:
         if not content or content.isspace():
             raise Exception(_("The file is empty"))
-
-        try:
-            results = ec.compile_mib(
-                mibname=mibname,
-                content=content,
-                source_dirs=[path for path, _title in self._mib_dirs()],
-                search_dirs=[self._paths.compiled_mibs_dir.value],
-                destination_dir=self._paths.compiled_mibs_dir.value,
-            )
-
-            errors = []
-            for name, mib_status in sorted(results.items()):
-                if mibname == name and mib_status == "failed":
-                    raise Exception(
-                        _("Failed to compile your module: %s") % getattr(mib_status, "error")
-                    )
-                if mib_status == "missing":
-                    errors.append(_("%s - Dependency missing") % name)
-                elif mib_status == "failed":
-                    errors.append(
-                        _("%s - Failed to compile (%s)") % (name, getattr(mib_status, "error"))
-                    )
-
-            msg = _("MIB file %s uploaded.") % mibname
-            if errors:
-                msg += "<br>" + _("But there were errors:") + "<br>"
-                msg += "<br>\n".join(errors)
-            return msg
-
-        except PySmiError as e:
-            if debug:
-                raise e
-            raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
+        results = ec.compile_mib(
+            mibname=mibname,
+            content=content,
+            source_dirs=[path for path, _title in self._mib_dirs()],
+            search_dirs=[self._paths.compiled_mibs_dir.value],
+            destination_dir=self._paths.compiled_mibs_dir.value,
+        )
+        errors = []
+        for name, mib_status in sorted(results.items()):
+            if mibname == name and mib_status == "failed":
+                raise Exception(
+                    _("Failed to compile your module: %s") % getattr(mib_status, "error")
+                )
+            if mib_status == "missing":
+                errors.append(_("%s - Dependency missing") % name)
+            elif mib_status == "failed":
+                errors.append(
+                    _("%s - Failed to compile (%s)") % (name, getattr(mib_status, "error"))
+                )
+        msg = _("MIB file %s uploaded.") % mibname
+        if errors:
+            msg += "<br>" + _("But there were errors:") + "<br>"
+            msg += "<br>\n".join(errors)
+        return msg
 
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)

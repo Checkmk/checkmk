@@ -14,6 +14,7 @@ import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import { ref } from 'vue'
 
 const { _t } = usei18n()
 
@@ -22,6 +23,7 @@ const props = defineProps<{
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+const currentStep = ref(0)
 </script>
 
 <template>
@@ -42,8 +44,8 @@ const props = defineProps<{
       }}
     </StepParagraph>
 
-    <CmkWizard mode="overview">
-      <CmkWizardStep>
+    <CmkWizard v-model="currentStep" mode="overview">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a contact group') }}</CmkHeading>
         </template>
@@ -64,7 +66,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign users to a contact group') }}</CmkHeading>
         </template>
@@ -87,7 +89,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign the contact group to hosts') }}</CmkHeading>
         </template>
@@ -116,7 +118,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>

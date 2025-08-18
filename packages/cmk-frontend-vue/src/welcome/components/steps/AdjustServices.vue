@@ -15,6 +15,7 @@ import StepParagraph from '@/welcome/components/steps/components/StepParagraph.v
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import { ref } from 'vue'
 
 const { _t } = usei18n()
 
@@ -23,6 +24,8 @@ const props = defineProps<{
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+
+const currentStep = ref(0)
 </script>
 
 <template>
@@ -44,8 +47,8 @@ const props = defineProps<{
       }}
     </StepParagraph>
 
-    <CmkWizard mode="overview">
-      <CmkWizardStep>
+    <CmkWizard v-model="currentStep" mode="overview">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
         </template>
@@ -69,7 +72,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('Open the ruleset for a check parameter') }}</CmkHeading>
         </template>
@@ -85,7 +88,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a check parameter rule') }}</CmkHeading>
         </template>
@@ -104,7 +107,7 @@ const props = defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>

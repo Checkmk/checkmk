@@ -5,16 +5,29 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from '../CmkButton.vue'
+import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 
 export interface CmkWizardButtonProps {
   type: 'next' | 'previous' | 'finish'
 }
 
+const context = getWizardContext()
 const props = defineProps<CmkWizardButtonProps>()
+
+function onClick() {
+  switch (props.type) {
+    case 'next':
+      context.navigation.next()
+      break
+    case 'previous':
+      context.navigation.prev()
+      break
+  }
+}
 </script>
 
 <template>
-  <CmkButton> {{ props.type }} </CmkButton>
+  <CmkButton @click="onClick"> {{ props.type }} </CmkButton>
 </template>
 
 <style scoped></style>

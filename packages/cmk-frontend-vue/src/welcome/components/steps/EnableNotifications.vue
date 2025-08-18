@@ -14,6 +14,7 @@ import StepParagraph from '@/welcome/components/steps/components/StepParagraph.v
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import { ref } from 'vue'
 
 const { _t } = usei18n()
 
@@ -22,6 +23,8 @@ defineProps<{
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+
+const currentStep = ref(0)
 </script>
 
 <template>
@@ -42,8 +45,8 @@ defineProps<{
       }}
     </StepParagraph>
 
-    <CmkWizard mode="overview">
-      <CmkWizardStep>
+    <CmkWizard v-model="currentStep" mode="overview">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a notification rule') }}</CmkHeading>
         </template>
@@ -66,7 +69,7 @@ defineProps<{
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep>
+      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('Send a test notification') }}</CmkHeading>
         </template>

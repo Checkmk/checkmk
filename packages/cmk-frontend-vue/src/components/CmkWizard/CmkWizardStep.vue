@@ -3,10 +3,31 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { getWizardContext } from '@/components/CmkWizard/utils.ts'
+
+export interface CmkWizardStepProps {
+  index: number
+  isCompleted: () => boolean
+}
+const context = getWizardContext()
+
+const props = defineProps<CmkWizardStepProps>()
+
+function onClickGoTo() {
+  context.navigation.goto(props.index)
+}
+</script>
 
 <template>
-  <li class="cmk-wizard-step-row">
+  <li
+    class="cmk-wizard-step-row"
+    :class="{
+      'wizard-step--active': context.isSelected(props.index) && context.mode() !== 'overview',
+      'wizard-step--complete': isCompleted() && context.mode() !== 'overview'
+    }"
+    @click="(_mouse_event) => onClickGoTo"
+  >
     <div class="cmk-wizard-step__slots">
       <slot name="header"></slot>
       <slot name="content"></slot>
@@ -53,6 +74,32 @@ conditions defined in the file COPYING, which is part of this source code packag
     bottom: 0;
     width: var(--wizard-progress-bar-width);
     background-color: var(--wizard-progress-bar-background-color, rgb(211, 211, 211));
+  }
+
+  &.wizard-step--active:before,
+  &.wizard-step--complete:before {
+    background-color: var(--success-dimmed);
+  }
+
+  &.wizard-step--active:after {
+    background: linear-gradient(
+      to bottom,
+      var(--success-dimmed) 50px,
+      var(--wizard-progress-bar-background-color) 50px
+    );
+  }
+
+  &.wizard-step--complete {
+    &:before {
+      background-image: var(--icon-check);
+      background-repeat: no-repeat;
+      background-position: center;
+      content: '';
+    }
+
+    &:after {
+      background-color: var(--success-dimmed);
+    }
   }
 }
 

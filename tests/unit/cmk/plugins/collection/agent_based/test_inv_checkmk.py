@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from typing import Any
 
-import pytest
-
-import cmk.ccc.version as cmk_version
 from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.collection.agent_based import inventory_checkmk_server as inv_checkmk
 
@@ -314,90 +310,9 @@ MERGED_SECTION_ENTERPRISE = {
     },
 }
 
-MERGED_SECTION_RAWEDITION = {
-    "check_mk": {"num_sites": 3, "num_versions": 5},
-    "sites": {
-        "cisco": {
-            "inventory_columns": {"autostart": False, "used_version": "1.6.0p13.cee"},
-            "status_columns": {
-                "apache": "stopped",
-                "crontab": "stopped",
-                "mkeventd": "stopped",
-                "nagios": "not existent",
-                "npcd": "not existent",
-                "rrdcached": "stopped",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        },
-        "heute": {
-            "inventory_columns": {"autostart": False, "used_version": "2020.08.20.cee"},
-            "status_columns": {
-                "apache": "running",
-                "check_helper_usage": 6.34573e-12,
-                "fetcher_helper_usage": 0.172541,
-                "checker_helper_usage": 0.172541,
-                "crontab": "running",
-                "livestatus_usage": 0.0,
-                "mkeventd": "running",
-                "nagios": "not existent",
-                "npcd": "not existent",
-                "num_hosts": "1",
-                "num_services": "48",
-                "rrdcached": "running",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        },
-        "stable": {
-            "inventory_columns": {"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
-            "status_columns": {
-                "apache": "running",
-                "check_helper_usage": 3.46e-321,
-                "fetcher_helper_usage": 0.377173,
-                "checker_helper_usage": 0.377173,
-                "crontab": "running",
-                "livestatus_usage": 0.0,
-                "mkeventd": "running",
-                "nagios": "not existent",
-                "npcd": "not existent",
-                "num_hosts": "2",
-                "num_services": "103",
-                "rrdcached": "running",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        },
-    },
-    "versions": {
-        "1.6.0-2020.08.18.cee": {
-            "demo": False,
-            "edition": "cee",
-            "num_sites": 1,
-            "number": "1.6.0-2020.08.18",
-        },
-        "1.6.0p12.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "1.6.0p12"},
-        "1.6.0p13.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "1.6.0p13"},
-        "2020.08.13.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "2020.08.13"},
-        "2020.08.20.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "2020.08.20"},
-    },
-}
 
-
-@pytest.mark.parametrize(
-    "edition, merged_sections",
-    [
-        (cmk_version.Edition.CEE, MERGED_SECTION_ENTERPRISE),
-        (cmk_version.Edition.CRE, MERGED_SECTION_RAWEDITION),
-    ],
-)
-def test_merge_sections(
-    monkeypatch: pytest.MonkeyPatch,
-    edition: cmk_version.Edition,
-    merged_sections: Mapping[str, object],
-) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: edition)
-    assert merged_sections == inv_checkmk.merge_sections(
+def test_merge_sections() -> None:
+    assert MERGED_SECTION_ENTERPRISE == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )
 

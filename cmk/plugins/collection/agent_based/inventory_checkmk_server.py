@@ -11,11 +11,11 @@
 # FIXME: this should be in cmk.plugins.omd
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, assert_never, Literal
 
-import cmk.ccc.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
-from cmk.utils import paths
+
+_Edition = Literal["cre", "cee", "cce", "cme", "cse"]
 
 
 def _service_status(
@@ -41,12 +41,15 @@ def _service_status(
     return "running"
 
 
-def _get_sites_edition() -> cmk_version.Edition:
-    # FIXME: shouldn't we use each sites edition for this?!
-    return cmk_version.edition(paths.omd_root)
+def _get_sites_edition(site_info: Mapping[str, object]) -> _Edition:
+    match str(site_info["used_version"]).rsplit(".", 1)[-1]:
+        case "cre" | "cee" | "cce" | "cme" | "cse" as edition:
+            return edition
+        case other:
+            raise ValueError(other)
 
 
-def _make_edition_specific_services(edition: cmk_version.Edition) -> Sequence[str]:
+def _make_edition_specific_services(edition: _Edition) -> Sequence[str]:
     # FIXME: this is outdated.
     common_services = [
         "apache",
@@ -57,10 +60,12 @@ def _make_edition_specific_services(edition: cmk_version.Edition) -> Sequence[st
         "xinetd",
     ]
     match edition:
-        case cmk_version.Edition.CRE:
+        case "cre":
             return ["nagios", "npcd", *common_services]
-        case _:
+        case "cee" | "cce" | "cme" | "cse":
             return ["cmc", "dcd", "liveproxyd", "mknotifyd", *common_services]
+        case other:
+            assert_never(other)
 
 
 def merge_sections(
@@ -110,7 +115,7 @@ def merge_sections(
     for site, omd_status in section_omd_status.items():
         omd_status_dict = {}
         # create a column for each service
-        for service in _make_edition_specific_services(_get_sites_edition()):
+        for service in _make_edition_specific_services(_get_sites_edition(pre_sites[site])):
             omd_status_dict[service] = _service_status(omd_status, service)
         merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
             "status_columns"

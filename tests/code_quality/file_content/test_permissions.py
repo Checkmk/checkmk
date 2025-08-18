@@ -25,6 +25,7 @@ def is_not_executable(path: Path) -> bool:
 _GLOBAL_EXCLUDES = (
     ".gitignore",
     ".f12",
+    "OWNERS",
 )
 
 _PERMISSIONS = (

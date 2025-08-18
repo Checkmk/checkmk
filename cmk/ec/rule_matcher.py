@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Literal, NamedTuple
 
-import cmk.utils.regex
 from cmk.ccc.site import SiteId
 from cmk.utils.timeperiod import TimeperiodName
 
@@ -69,9 +68,15 @@ def compile_matching_value(key: str, original_value: str) -> TextPattern | None:
             value = value[2:]
     if not value:
         return None
-    if cmk.utils.regex.is_regex(value):
+    if _is_regex(value):
         return re.compile(value, re.IGNORECASE)
     return value.lower()
+
+
+def _is_regex(pattern: str) -> bool:
+    """Checks if a string contains characters that make it necessary
+    to use regular expression logic to handle it correctly"""
+    return any(c in ".?*+^$|[](){}\\" for c in pattern)
 
 
 def compile_rule_attribute(

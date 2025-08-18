@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import abc
 import operator
+import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Literal
 
-import cmk.utils.regex
 from cmk.ccc.exceptions import MKException
 
 
@@ -149,9 +149,9 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
     "<": ("<", operator.lt),
     ">=": (">=", operator.ge),
     "<=": ("<=", operator.le),
-    "~": ("~", lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
+    "~": ("~", lambda a, b: bool(re.search(b, a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
-    "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),
+    "~~": ("~~", lambda a, b: bool(re.search(b.lower, a.lower()))),
     "in": ("in", filter_operator_in),
 }
 

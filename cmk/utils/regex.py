@@ -88,12 +88,6 @@ def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     return reg
 
 
-def is_regex(pattern: str) -> bool:
-    """Checks if a string contains characters that make it necessary
-    to use regular expression logic to handle it correctly"""
-    return any(c in ".?*+^$|[](){}\\" for c in pattern)
-
-
 def escape_regex_chars(match: str) -> str:
     r = ""
     for c in match:

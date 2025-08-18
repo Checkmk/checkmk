@@ -6,7 +6,6 @@
 from typing import Annotated
 
 import fastapi
-from pydantic import UUID4
 
 from cmk.agent_receiver.relay_backend.api.dependencies.get_relay_tasks_handler import (
     get_relay_tasks_handler,
@@ -71,7 +70,7 @@ async def register_relay(
 
 
 @RELAY_ROUTER.delete("/{relay_id}")
-async def unregister_relay(relay_id: UUID4) -> None:
+async def unregister_relay(relay_id: str) -> None:
     """Unregister a relay entity.
 
     This endpoint allows relay entities to be unregistered from the Agent Receiver.
@@ -102,7 +101,7 @@ async def unregister_relay(relay_id: UUID4) -> None:
         202: {"model": TaskCreateResponse},
     },
 )
-async def create_task(relay_id: UUID4, request: TaskCreateRequest) -> TaskCreateResponse:
+async def create_task(relay_id: str, request: TaskCreateRequest) -> TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
 
     This endpoint allows clients to POST new tasks to be assigned to a specific relay.
@@ -144,7 +143,7 @@ async def create_task(relay_id: UUID4, request: TaskCreateRequest) -> TaskCreate
         202: {"model": TaskResponse},
     },
 )
-async def update_task(relay_id: UUID4, task_id: UUID4, request: TaskUpdateRequest) -> TaskResponse:
+async def update_task(relay_id: str, task_id: str, request: TaskUpdateRequest) -> TaskResponse:
     """Update a task with results.
 
     This endpoint allows relays to PATCH tasks with their execution results.
@@ -184,7 +183,7 @@ async def update_task(relay_id: UUID4, task_id: UUID4, request: TaskUpdateReques
 
 @RELAY_ROUTER.get("/{relay_id}/tasks")
 async def get_tasks(
-    relay_id: UUID4,
+    relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
     status: TaskStatus | None = fastapi.Query(None, description="Filter tasks by status"),
 ) -> TaskListResponse:

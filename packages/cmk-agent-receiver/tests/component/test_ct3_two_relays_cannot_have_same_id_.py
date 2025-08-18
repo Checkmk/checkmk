@@ -13,12 +13,12 @@ def test_ct03_two_relays_cannot_have_the_same_id(
     POST /relays/{relay_id} -> 409 Conflict
     """
 
-    relay_id = uuid.uuid4()
+    relay_id = str(uuid.uuid4())
 
     response = agent_receiver_test_client.post(
         f"/{site_name}/agent-receiver/relays",
         json={
-            "relay_id": str(relay_id),
+            "relay_id": relay_id,
             "relay_name": "Relay A",
             "csr": "CSR for Relay A",
             "auth_token": "auth-token-A",
@@ -29,7 +29,7 @@ def test_ct03_two_relays_cannot_have_the_same_id(
     response_conflict = agent_receiver_test_client.post(
         f"/{site_name}/agent-receiver/relays",
         json={
-            "relay_id": str(relay_id),
+            "relay_id": relay_id,
             "relay_name": "Relay A",
             "csr": "CSR for Relay A",
             "auth_token": "auth-token-A",

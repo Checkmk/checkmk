@@ -1,5 +1,4 @@
 import dataclasses
-from uuid import UUID
 
 from cmk.agent_receiver.relay_backend.lib.relays_repository import RelaysRepository
 from cmk.relay_protocols.tasks import TaskListResponse, TaskStatus
@@ -15,10 +14,10 @@ class RelayNotFoundError(Exception):
 class GetRelayTasksHandler:
     relays_repository: RelaysRepository
 
-    def process(self, relay_id: UUID, status: TaskStatus | None) -> TaskListResponse:
+    def process(self, relay_id: str, status: TaskStatus | None) -> TaskListResponse:
         return self._get_tasks(relay_id, status)
 
-    def _get_tasks(self, relay_id: UUID, status: TaskStatus | None) -> TaskListResponse:
+    def _get_tasks(self, relay_id: str, status: TaskStatus | None) -> TaskListResponse:
         if not self.relays_repository.has_relay(relay_id):
             raise RelayNotFoundError(f"Relay with ID {relay_id} not found")
 

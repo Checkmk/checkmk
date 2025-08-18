@@ -15,13 +15,13 @@ def test_ct01_a_relay_can_be_registered(
     GET /relays/{relay_id_B}/tasks
     """
 
-    relay_id_A = uuid.uuid4()
-    relay_id_B = uuid.uuid4()
+    relay_id_A = str(uuid.uuid4())
+    relay_id_B = str(uuid.uuid4())
 
     response_A = agent_receiver_test_client.post(
         f"/{site_name}/agent-receiver/relays",
         json={
-            "relay_id": str(relay_id_A),
+            "relay_id": relay_id_A,
             "relay_name": "Relay A",
             "csr": "CSR for Relay A",
             "auth_token": "auth-token-A",
@@ -33,7 +33,7 @@ def test_ct01_a_relay_can_be_registered(
     response_B = agent_receiver_test_client.post(
         f"/{site_name}/agent-receiver/relays",
         json={
-            "relay_id": str(relay_id_B),
+            "relay_id": relay_id_B,
             "relay_name": "Relay B",
             "csr": "CSR for Relay B",
             "auth_token": "auth-token-B",

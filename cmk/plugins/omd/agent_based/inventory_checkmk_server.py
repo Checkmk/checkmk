@@ -8,8 +8,6 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-# FIXME: this should be in cmk.plugins.omd
-
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, Literal
 

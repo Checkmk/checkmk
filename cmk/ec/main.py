@@ -38,7 +38,6 @@ from setproctitle import setthreadtitle
 
 import cmk.ccc.daemon
 import cmk.ccc.profile
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName

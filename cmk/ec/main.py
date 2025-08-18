@@ -44,7 +44,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import get_general_version_infos
 from cmk.utils import log
-from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.translations import translate_hostname
 
@@ -1779,6 +1778,14 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
         core_host=None,
         host_in_downtime=False,
     )
+
+
+def partition[T](pred: Callable[[T], bool], iterable: Iterable[T]) -> tuple[list[T], list[T]]:
+    yay = list[T]()
+    nay = list[T]()
+    for x in iterable:
+        (yay if pred(x) else nay).append(x)
+    return yay, nay
 
 
 # .

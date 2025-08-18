@@ -1515,12 +1515,12 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         self._rule_packs = list(ec.load_rule_packs(self._paths))
         super().__init__()
 
-    def _mib_dirs(self) -> Sequence[tuple[Path, str]]:
+    def _mib_dirs(self) -> Sequence[tuple[Path, str, bool]]:
         # ASN1 MIB source directory candidates. Non existing dirs are ok.
         return [
-            (self._paths.local_mibs_dir.value, _("Custom MIBs")),
-            (self._paths.checkmk_mibs_dir.value, _("MIBs shipped with Checkmk")),
-            (self._paths.system_mibs_dir.value, _("System MIBs")),
+            (self._paths.local_mibs_dir.value, _("Custom MIBs"), True),
+            (self._paths.checkmk_mibs_dir.value, _("MIBs shipped with Checkmk"), False),
+            (self._paths.system_mibs_dir.value, _("System MIBs"), False),
         ]
 
     def _save_rules(self, config: Config) -> None:
@@ -3400,24 +3400,21 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
-        for mib_path, title in self._mib_dirs():
-            is_custom_dir = mib_path == self._paths.local_mibs_dir.value
-            if is_custom_dir:
+        for mib_path, title, deletable in self._mib_dirs():
+            if deletable:
                 with html.form_context("bulk_delete_form", method="POST"):
-                    self._show_mib_table(mib_path, title)
+                    self._show_mib_table(mib_path, title, deletable)
                     html.hidden_fields()
                     html.end_form()
             else:
-                self._show_mib_table(mib_path, title)
+                self._show_mib_table(mib_path, title, deletable)
 
-    def _show_mib_table(self, path: Path, title: str) -> None:
-        is_custom_dir = path == self._paths.local_mibs_dir.value
-
+    def _show_mib_table(self, path: Path, title: str, deletable: bool) -> None:
         with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
                 table.row()
 
-                if is_custom_dir:
+                if deletable:
                     table.cell(
                         html.render_input(
                             "_toggle_group",
@@ -3430,7 +3427,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     html.checkbox("_c_mib_%s" % filename, deflt=False)
 
                 table.cell(_("Actions"), css=["buttons"])
-                if is_custom_dir:
+                if deletable:
                     delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
                         title=_("Delete MIB file"),
@@ -3626,7 +3623,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         results = ec.compile_mib(
             mibname=mibname,
             content=content,
-            source_dirs=[path for path, _title in self._mib_dirs()],
+            source_dirs=[path for path, _title, _deletable in self._mib_dirs()],
             search_dirs=[self._paths.compiled_mibs_dir.value],
             destination_dir=self._paths.compiled_mibs_dir.value,
         )

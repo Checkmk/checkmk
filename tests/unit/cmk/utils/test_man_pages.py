@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -20,7 +19,7 @@ from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
-    path="/omd/sites/heute/lib/python3/cmk/plugins/collection/checkman/if64",
+    path=Path("/omd/sites/heute/lib/python3/cmk/plugins/collection/checkman/if64"),
     title="Monitor Network Interfaces via Standard MIB Using 64-Bit Counters",
     agents=["snmp"],
     catalog=["hw", "network", "generic"],

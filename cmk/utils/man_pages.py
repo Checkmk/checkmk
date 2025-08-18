@@ -31,7 +31,7 @@ from cmk.ccc.i18n import _
 @dataclass
 class ManPage:
     name: str
-    path: str
+    path: Path
     title: str
     agents: Sequence[str]
     catalog: Sequence[str]
@@ -46,7 +46,7 @@ class ManPage:
     def fallback(cls, path: Path, name: str, msg: str, content: str) -> "ManPage":
         return cls(
             name=name,
-            path=str(path),
+            path=path,
             title=_("%s: Cannot parse man page: %s") % (name, msg),
             agents=[],
             catalog=["generic"],
@@ -515,7 +515,7 @@ def parse_man_page(name: str, path: Path) -> ManPage:
         parsed = _parse_to_raw(path, content)
         return ManPage(
             name=name,
-            path=str(path),
+            path=path,
             title=str(parsed["title"]),
             agents=parsed["agents"].replace(" ", "").split(","),
             license=parsed["license"],
@@ -865,7 +865,7 @@ def man_pages_for_website_export(
 def _extend_categorization_info(man_page: ManPage) -> _SerializableManPageDerivative:
     return {
         "name": man_page.name,
-        "path": man_page.path,
+        "path": str(man_page.path),
         "title": man_page.title,
         "agents": {agent: CHECK_MK_AGENTS.get(agent, agent.title()) for agent in man_page.agents},
         "catalog": [

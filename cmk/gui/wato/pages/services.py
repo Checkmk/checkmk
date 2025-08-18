@@ -587,7 +587,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
-        duration_txt = cmk.utils.render.Age(discovery_result.job_status["duration"])
+        duration_txt = cmk.utils.render.approx_age(discovery_result.job_status["duration"])
         finished_time = (
             discovery_result.job_status["started"] + discovery_result.job_status["duration"]
         )

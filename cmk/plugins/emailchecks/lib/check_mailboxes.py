@@ -9,10 +9,10 @@ import logging
 import socket
 import time
 
-import cmk.utils.render
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import make_fetch_connection, POP3
 from cmk.plugins.emailchecks.lib.utils import active_check_main, Args, CheckResult
+from cmk.utils.render import approx_age
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -123,10 +123,10 @@ def check_mailboxes(args: Args) -> CheckResult:
                         (
                             status,
                             f"Oldest mail in {folder!r} is at least "
-                            f"{cmk.utils.render.Age(oldest)} old "
+                            f"{approx_age(oldest)} old "
                             f"{status_icon[status]}"
-                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_oldest)}"
-                            f"/{cmk.utils.render.Age(args.crit_age_oldest)})",
+                            f"(warn/crit at {approx_age(args.warn_age_oldest)}"
+                            f"/{approx_age(args.crit_age_oldest)})",
                         )
                     )
 
@@ -140,10 +140,10 @@ def check_mailboxes(args: Args) -> CheckResult:
                         (
                             status,
                             f"Newest mail in {folder!r} is at least "
-                            f"{cmk.utils.render.Age(newest)} old "
+                            f"{approx_age(newest)} old "
                             f"{status_icon[status]}"
-                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_newest)}"
-                            f"/{cmk.utils.render.Age(args.crit_age_newest)})",
+                            f"(warn/crit at {approx_age(args.warn_age_newest)}"
+                            f"/{approx_age(args.crit_age_newest)})",
                         )
                     )
                 elif not new_mails:
@@ -153,8 +153,8 @@ def check_mailboxes(args: Args) -> CheckResult:
                         (
                             status,
                             f"No new mails found in {folder!r} {status_icon[status]}"
-                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_newest)}"
-                            f"/{cmk.utils.render.Age(args.crit_age_newest)})",
+                            f"(warn/crit at {approx_age(args.warn_age_newest)}"
+                            f"/{approx_age(args.crit_age_newest)})",
                         )
                     )
 

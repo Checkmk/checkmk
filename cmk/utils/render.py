@@ -95,57 +95,39 @@ def time_since(timestamp: int) -> str:
     return timespan(time.time() - timestamp)
 
 
-class Age:
+def approx_age(secs: float, precision: int | None = None) -> str:
     """Format time difference seconds into approximated human readable text"""
+    if secs < 0:
+        return f"-{approx_age(-secs)}"
+    if precision and secs < 10 ** ((-1) * precision):
+        return fmt_number_with_precision(secs, unit=_("s"), precision=precision)
+    if 0 < secs < 1:  # ms
+        return physical_precision(secs, 3, _("s"))
+    if secs < 10:
+        return "{:.2f} {}".format(secs, _("s"))
+    if secs < 60:
+        return "{:.1f} {}".format(secs, _("s"))
+    if secs < 240:
+        return "%d %s" % (secs, _("s"))
 
-    def __init__(self, secs: float, precision: int | None = None) -> None:
-        super().__init__()
-        self.__secs = secs
-        self.__precision = precision
+    mins = int(secs / 60.0)
+    if mins < 360:
+        return "%d %s" % (mins, _("m"))
 
-    def __str__(self) -> str:
-        secs = self.__secs
-        precision = self.__precision
+    hours = int(mins / 60.0)
+    if hours < 48:
+        return "%d %s" % (hours, _("h"))
 
-        if secs < 0:
-            return f"-{approx_age(-secs)}"
-        if precision and secs < 10 ** ((-1) * precision):
-            return fmt_number_with_precision(secs, unit=_("s"), precision=precision)
-        if 0 < secs < 1:  # ms
-            return physical_precision(secs, 3, _("s"))
-        if secs < 10:
-            return "{:.2f} {}".format(secs, _("s"))
-        if secs < 60:
-            return "{:.1f} {}".format(secs, _("s"))
-        if secs < 240:
-            return "%d %s" % (secs, _("s"))
+    days = hours / 24.0
+    if days < 6:
+        return f"{drop_dotzero(days, 1)} {_('d')}"
+    if days < 999:
+        return "{:.0f} {}".format(days, _("d"))
+    years = days / 365.0
+    if years < 10:
+        return "{:.1f} {}".format(years, _("y"))
 
-        mins = int(secs / 60.0)
-        if mins < 360:
-            return "%d %s" % (mins, _("m"))
-
-        hours = int(mins / 60.0)
-        if hours < 48:
-            return "%d %s" % (hours, _("h"))
-
-        days = hours / 24.0
-        if days < 6:
-            return f"{drop_dotzero(days, 1)} {_('d')}"
-        if days < 999:
-            return "{:.0f} {}".format(days, _("d"))
-        years = days / 365.0
-        if years < 10:
-            return "{:.1f} {}".format(years, _("y"))
-
-        return "{:.0f} {}".format(years, _("y"))
-
-    def __float__(self) -> float:
-        return float(self.__secs)
-
-
-# TODO: Make call sites use Age() directly?
-def approx_age(secs: float) -> str:
-    return f"{Age(secs)}"
+    return "{:.0f} {}".format(years, _("y"))
 
 
 #   .--Prefix & Scale------------------------------------------------------.

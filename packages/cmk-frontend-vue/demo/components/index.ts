@@ -14,7 +14,7 @@ import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
-import DemoSlideIn from './DemoCmkSlideInDialog.vue'
+import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 
@@ -42,7 +42,7 @@ export const pages = [
   new Folder('CmkAccordionStepPanel', DemoEmpty, CmkAccordionStepPanelPages),
   new Folder('CmkTabs', DemoEmpty, CmkTabPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
-  new Page('SlideIn', DemoSlideIn),
+  new Page('CmkSlideInDialog', DemoCmkSlideInDialog),
   new Page('CmkSpace', DemoCmkSpace),
   new Page('CmkIcon', DemoCmkIcon),
   new Page('CmkList', DemoCmkList),

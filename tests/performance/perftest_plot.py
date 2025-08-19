@@ -1254,29 +1254,44 @@ class PerftestPlot:
         return fmean(values or [0])
 
     def calculate_baseline(self, scenario_name: str) -> AverageValues:
+        """
+        Compute average (baseline) metrics for a given benchmark scenario across all loaded jobs.
+
+        This method iterates over all jobs, searches its benchmark list for the specified scenario
+        and aggregates mean values for the execution time, the CPU usage and the memory usage.
+
+        If a scenario is missing in a job, an error is logged and that job is skipped.
+        If no values are collected for a metric, its baseline defaults to 0 (via fmean([0])).
+
+        Parameters:
+            scenario_name : str
+                The name of the benchmark scenario to aggregate across all jobs.
+
+        Returns:
+                AverageValues
+        """
         time_averages: list[float] = []
         cpu_averages: list[float] = []
         mem_averages: list[float] = []
         for job_name, job in self.jobs.items():
             if not isinstance(benchmarks := job[0]["benchmarks"], list):
                 continue
-            for benchmark in benchmarks:
-                if benchmark["name"] != scenario_name:
-                    logger.info('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
-                    continue
-                time_averages.append(benchmark["stats"]["mean"])
-                if scenario_name not in job[1]:
-                    continue
-                measurements = job[1][benchmark["name"]]
-                if not measurements:
-                    continue
-                cpu_averages.append(self.get_mean_value(measurements, "cpu_info.cpu_percent"))
-                mem_averages.append(
-                    self.get_mean_value(measurements, "memory_info.virtual_memory_percent")
-                )
-        time_baseline = fmean(time_averages or [0])
-        cpu_baseline = fmean(cpu_averages or [0])
-        mem_baseline = fmean(mem_averages or [0])
+            benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
+            if not benchmark:
+                logger.error('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
+                continue
+            time_averages.append(benchmark["stats"]["mean"])
+            if scenario_name not in job[1]:
+                continue
+            if not (measurements := job[1][scenario_name]):
+                continue
+            cpu_averages.append(self.get_mean_value(measurements, "cpu_info.cpu_percent"))
+            mem_averages.append(
+                self.get_mean_value(measurements, "memory_info.virtual_memory_percent")
+            )
+        time_baseline = fmean(time_averages) if time_averages else 0.0
+        cpu_baseline = fmean(cpu_averages) if cpu_averages else 0.0
+        mem_baseline = fmean(mem_averages) if mem_averages else 0.0
 
         return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
 

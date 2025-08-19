@@ -11,10 +11,10 @@ import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
-import CmkChip from '@/components/CmkChip.vue'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 import { staticAssertNever } from '@/lib/typeUtils'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
+import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -153,7 +153,7 @@ const getSearchInputPlaceholder = computed(() => {
 
         <div v-if="isMonitoringSearch()" class="unified-search-info-item">
           <span>{{ _t('Press') }}</span>
-          <CmkChip class="arrow-key enter" size="small" content=""></CmkChip>
+          <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
           <span>{{ _t('to trigger host/service search') }}</span>
         </div>
       </div>

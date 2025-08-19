@@ -96,6 +96,7 @@ function getKeyClass(): string {
   border: 1px solid var(--color-midnight-grey-40, var(--font-color));
   color: var(--white);
   display: inline-flex;
+  justify-content: center;
   span {
     margin: 1px 0;
   }
@@ -105,18 +106,21 @@ function getKeyClass(): string {
   font-size: 10px;
   line-height: 10px;
   padding: 1px 3px;
+  min-width: 8px;
 }
 
 .cmk-keyboard-key-size-medium {
   font-size: 12px;
   line-height: 12px;
   padding: 2px 4px;
+  min-width: 10px;
 }
 
 .cmk-keyboard-key-size-large {
   font-size: 14px;
   line-height: 14px;
   padding: 4px 5px;
+  min-width: 12px;
 }
 
 .unicode {

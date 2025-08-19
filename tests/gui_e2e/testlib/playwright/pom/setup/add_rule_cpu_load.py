@@ -66,7 +66,7 @@ class AddRuleCPULoad(CmkPage):
     def levels_checkbox(
         self,
         text: Literal[
-            "Levelc on CPU load: 1 minute average",
+            "Levels on CPU load: 1 minute average",
             "Levels on CPU load: 5 minute average",
             "Levels on CPU load: 5 minute average",
         ],

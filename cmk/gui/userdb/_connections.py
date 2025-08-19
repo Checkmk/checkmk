@@ -344,17 +344,6 @@ def load_connection_config(lock: bool = False) -> UserConnections:
     return UserConnectionConfigFile().load_for_reading()
 
 
-def save_connection_config(connections: list[ConfigurableUserConnectionSpec]) -> None:
-    """Save the connections for the Setup
-
-    Note:
-        This function should only be used in the Setup context, when configuring
-        the connections. During UI rendering, `active_config.user_connections` must
-        be used.
-    """
-    UserConnectionConfigFile().save(connections, pprint_value=active_config.wato_pprint_config)
-
-
 def save_snapshot_user_connection_config(
     connections: list[Mapping[str, Any]],
     snapshot_work_dir: str,
@@ -449,6 +438,28 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         _changes.add_change(
             action_name=f"delete-{connection_type}-connection",
             text=_("Deleted %s connection %s") % (connection_type.upper(), connection_id),
+            user_id=user_id,
+            domains=domains,
+            sites=sites,
+            use_git=use_git,
+        )
+        self.save(cfg, pprint_value=pprint_value)
+
+    def move(
+        self,
+        user_id: UserId | None,
+        cfg: list[ConfigurableUserConnectionSpec],
+        connection_id: str,
+        connection_type: Literal["ldap", "saml2"],
+        to_index: int,
+        sites: list[SiteId],
+        domains: Sequence[ABCConfigDomain] | None,
+        pprint_value: bool,
+        use_git: bool,
+    ) -> None:
+        _changes.add_change(
+            action_name=f"move-{connection_type}-connection",
+            text=_("Changed position of connection %s to %d") % (connection_id, to_index),
             user_id=user_id,
             domains=domains,
             sites=sites,

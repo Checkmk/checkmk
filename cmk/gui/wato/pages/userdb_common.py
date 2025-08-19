@@ -6,7 +6,7 @@
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, NewType
+from typing import Any, Literal, NewType
 
 from livestatus import SiteConfigurations
 
@@ -35,7 +35,6 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb import (
     ConfigurableUserConnectionSpec,
     load_connection_config,
-    save_connection_config,
     UserConnectionConfigFile,
 )
 from cmk.gui.utils.transaction_manager import transactions
@@ -233,27 +232,31 @@ def get_affected_sites(
 def _delete_connection(
     *,
     index: int,
-    connection_type: str,
+    connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
     use_git: bool,
 ) -> None:
-    connections = UserConnectionConfigFile().load_for_modification()
+    user_connection_config_file = UserConnectionConfigFile()
+    connections = user_connection_config_file.load_for_modification()
     connection = connections[index]
     connection_id = connection["id"]
-    add_change(
-        action_name=f"delete-{connection_type}-connection",
-        text=_("Deleted connection %s") % (connection_id),
-        sites=get_affected_sites(site_configs, connection),
-        use_git=use_git,
-    )
 
     for dir_ in custom_config_dirs:
         # Any custom config files the user may have uploaded, such as custom certificates
         _remove_custom_files(dir_)
 
     del connections[index]
-    save_connection_config(connections)
+    user_connection_config_file.delete(
+        user_id=user.id,
+        cfg=connections,
+        connection_id=connection_id,
+        connection_type=connection_type,
+        sites=get_affected_sites(site_configs, connection),
+        domains=[ConfigDomainGUI()],
+        pprint_value=active_config.wato_pprint_config,
+        use_git=use_git,
+    )
 
 
 def _remove_custom_files(cert_dir: Path) -> None:
@@ -265,22 +268,27 @@ def _remove_custom_files(cert_dir: Path) -> None:
 def _move_connection(
     from_index: int,
     to_index: int,
-    connection_type: str,
+    connection_type: Literal["ldap", "saml2"],
     site_configs: SiteConfigurations,
     *,
     use_git: bool,
 ) -> None:
-    connections = UserConnectionConfigFile().load_for_modification()
+    user_connection_config_file = UserConnectionConfigFile()
+    connections = user_connection_config_file.load_for_modification()
     connection = connections[from_index]
-    add_change(
-        action_name=f"move-{connection_type}-connection",
-        text=_("Changed position of connection %s to %d") % (connection["id"], to_index),
-        sites=get_affected_sites(site_configs, connection),
-        use_git=use_git,
-    )
     del connections[from_index]  # make to_pos now match!
     connections[to_index:to_index] = [connection]
-    save_connection_config(connections)
+    user_connection_config_file.move(
+        user_id=user.id,
+        cfg=connections,
+        connection_id=connection["id"],
+        connection_type=connection_type,
+        to_index=to_index,
+        sites=get_affected_sites(site_configs, connection),
+        domains=[ConfigDomainGUI()],
+        pprint_value=active_config.wato_pprint_config,
+        use_git=use_git,
+    )
 
 
 def _gui_index_to_real_index(
@@ -298,7 +306,7 @@ def _gui_index_to_real_index(
 
 def connection_actions(
     config_mode_url: str,
-    connection_type: str,
+    connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
     *,

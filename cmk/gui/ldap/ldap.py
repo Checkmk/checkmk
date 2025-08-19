@@ -7,7 +7,7 @@
 import re
 from collections.abc import Callable, Collection
 from copy import deepcopy
-from typing import Any, cast, override
+from typing import Any, cast, Literal, override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -24,6 +24,7 @@ from cmk.gui.ldap.ldap_connector import (
     LDAPUserConnector,
 )
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
@@ -38,7 +39,7 @@ from cmk.gui.userdb import (
     get_ldap_connections,
     LDAPUserConnectionConfig,
     load_connection_config,
-    save_connection_config,
+    UserConnectionConfigFile,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import strip_tags
@@ -68,12 +69,12 @@ from cmk.gui.wato.pages._password_store_valuespecs import (
     MigrateNotUpdatedToIndividualOrStoredPassword,
 )
 from cmk.gui.wato.pages.userdb_common import (
-    add_change,
     add_connections_page_menu,
     connection_actions,
     get_affected_sites,
     render_connections_page,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
@@ -697,7 +698,7 @@ class ModeLDAPConfig(WatoMode):
         return ["global"]
 
     @property
-    def type(self) -> str:
+    def type(self) -> Literal["ldap"]:
         return "ldap"
 
     @override
@@ -844,25 +845,33 @@ class ModeEditLDAPConnection(WatoMode):
                     % self._connection_cfg["id"],
                 )
             _all_connections[connection_cfg["id"]] = connection_cfg
-            add_change(
-                action_name="new-ldap-connection",
-                text=_("Created new LDAP connection"),
+            self._connection_cfg = connection_cfg
+            connection_list = list(_all_connections.values())
+            UserConnectionConfigFile().create(
+                user_id=user.id,
+                cfg=connection_list,
+                connection_type="ldap",
                 sites=get_affected_sites(config.sites, connection_cfg),
+                domains=[ConfigDomainGUI()],
+                pprint_value=config.wato_use_git,
                 use_git=config.wato_use_git,
             )
 
         else:
             _all_connections[connection_cfg["id"]] = connection_cfg
-            add_change(
-                action_name="edit-ldap-connection",
-                text=_("Changed LDAP connection %s") % connection_cfg["id"],
+            self._connection_cfg = connection_cfg
+            connection_list = list(_all_connections.values())
+            UserConnectionConfigFile().update(
+                user_id=user.id,
+                cfg=connection_list,
+                connection_id=connection_cfg["id"],
+                connection_type="ldap",
                 sites=get_affected_sites(config.sites, connection_cfg),
+                domains=[ConfigDomainGUI()],
+                pprint_value=config.wato_use_git,
                 use_git=config.wato_use_git,
             )
 
-        self._connection_cfg = connection_cfg
-        connection_list = list(_all_connections.values())
-        save_connection_config(connection_list)
         config.user_connections = connection_list  # make directly available on current page
 
         if request.var("_save"):

@@ -52,10 +52,13 @@ class FormSpecValidationError(ValueError):
         return self._messages
 
 
+T = TypeVar("T", bound=object)
+
+
 def create_validation_error_for_mk_user_error(
-    wrapped_function: Callable[[object], None],
-) -> Callable[[object], None]:
-    def wrapped(value: object) -> None:
+    wrapped_function: Callable[[T], None],
+) -> Callable[[T], None]:
+    def wrapped(value: T) -> None:
         try:
             wrapped_function(value)
         except MKUserError as e:

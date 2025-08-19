@@ -5,8 +5,9 @@
 from typing import Any
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.private import SingleChoiceExtended
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, VisitorOptions
-from cmk.rulesets.v1.form_specs import CascadingSingleChoice
+from cmk.rulesets.v1.form_specs import CascadingSingleChoice, SingleChoice
 
 
 def _get_type_of_object_as_string(value: object) -> str:
@@ -53,6 +54,12 @@ def enable_deprecated_alternative(
 
     mapping: dict[str, str] = {}
     for element in wrapped_form_spec.elements:
+        if isinstance(element.parameter_form, SingleChoice | SingleChoiceExtended):
+            # A single choice reports None as default value
+            # A SingleChoiceExtended might report all kinds of data types, but this is not supported here
+            mapping[_get_type_of_object_as_string("")] = element.name
+            continue
+
         visitor = get_visitor(
             element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
         )

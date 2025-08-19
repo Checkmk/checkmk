@@ -974,11 +974,12 @@ def _call_activate_changes_automation(
     site_changes_activate_until: Sequence[ChangeSpec],
     *,
     debug: bool,
+    is_remote_site: bool,
 ) -> ConfigWarnings:
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
     if isinstance(automation_config, LocalAutomationConfig):
-        return execute_activate_changes(domain_requests)
+        return execute_activate_changes(domain_requests, is_remote_site=is_remote_site)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
@@ -1012,13 +1013,18 @@ def _do_activate(
     site_activation_state: SiteActivationState,
     *,
     debug: bool,
+    is_remote_site: bool,
 ) -> ConfigWarnings:
     _set_result(site_activation_state, PHASE_ACTIVATE, _("Activating"))
 
     start = time.time()
 
     configuration_warnings = _call_activate_changes_automation(
-        site_id, automation_config, site_changes_activate_until, debug=debug
+        site_id,
+        automation_config,
+        site_changes_activate_until,
+        debug=debug,
+        is_remote_site=is_remote_site,
     )
 
     duration = time.time() - start
@@ -1033,6 +1039,7 @@ def activate_site_changes(
     origin_span: trace.Span,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     debug: bool,
+    is_remote_site: bool,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -1055,6 +1062,7 @@ def activate_site_changes(
                         site_changes_activate_until,
                         site_activation_state,
                         debug=debug,
+                        is_remote_site=is_remote_site,
                     )
                 _confirm_activated_changes(site_id, site_changes_activate_until)
 
@@ -2430,6 +2438,7 @@ def _sync_and_activate(
                         trace.get_current_span(),
                         automation_config,
                         debug,
+                        is_wato_slave_site(all_site_configs),
                     ),
                     error_callback=_error_callback,
                 )
@@ -2747,7 +2756,9 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 
 
 @tracer.instrument("execute_activate_changes")
-def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
+def execute_activate_changes(
+    domain_requests: DomainRequests, is_remote_site: bool
+) -> ConfigWarnings:
     domain_names = [x.name for x in domain_requests]
 
     all_domain_requests = [
@@ -2775,7 +2786,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     # Only the remote sites are dealt with here, since the central site is dealt with separately.
     # The rabbitmq definition of the central site has to be updated anytime the definition of a
     # remote site is activated, not only when the central site is activated.
-    if is_wato_slave_site(active_config.sites):
+    if is_remote_site:
         _activate_local_rabbitmq_changes()
 
     return results

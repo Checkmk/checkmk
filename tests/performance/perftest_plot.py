@@ -461,8 +461,8 @@ class PerformanceDb:
         Args:
             test_id (int): The identifier of the test to associate the measurements with.
             measurements (MeasurementsList): A list of dictionaries, each containing metric names
-                and their corresponding values.
-                Each dictionary must include a "time" key representing the measurement timestamp.
+                and their corresponding values. Each dictionary must include a "time" key
+                representing the measurement timestamp.
 
         Notes:
             - Each metric is inserted as a separate row in the 'metrics' table.
@@ -492,7 +492,8 @@ class PerformanceDb:
 
         Args:
             test_id (int): The identifier of the test for which statistics are recorded.
-            benchmark_statistics (Measurements): A dictionary containing benchmark metrics and their values.
+            benchmark_statistics (Measurements): A dictionary containing benchmark metrics and
+                their values.
 
         Note:
             Any value types other than int and float are ignored.
@@ -609,7 +610,8 @@ class PerformanceDb:
         """
         Writes performance data and related metadata to the database.
 
-        This method records job, scenario, and test information, then stores associated performance measurements and benchmark statistics.
+        This method records job, scenario and test information, then stores associated performance
+        measurements and benchmark statistics.
 
         Args:
             job_name (str): Name of the job.
@@ -776,11 +778,11 @@ class PerftestPlot:
             json_path (Path): The path to the JSON file.
 
         Returns:
-            Measurements | MeasurementsList | None: The parsed JSON data as a Measurements or MeasurementsList object,
-            or None if the file is not found or cannot be accessed.
+            Measurements | MeasurementsList | None: The parsed JSON data as a Measurements or
+                MeasurementsList object, or None if the file is not found or cannot be accessed.
 
         Raises:
-            Exception: If the JSON file cannot be decoded or another OS error occurs during parsing.
+            Exception: If the JSON file cannot be decoded or another OS error occurs.
         """
         try:
             with open(json_path, encoding="utf-8") as statistics_file:
@@ -805,7 +807,7 @@ class PerftestPlot:
 
     def scenario_file_path(self, job_name: str, scenario_name: str) -> Path:
         """
-        Constructs the file path for a scenario's resources JSON file within a job's performance directory.
+        Constructs the file path for a scenario's resources JSON file.
 
         Args:
             job_name (str): The name of the job.
@@ -829,7 +831,7 @@ class PerftestPlot:
             tuple[list[int | float], list[int | float]]:
                 - A list of mean values for the specified scenario across all jobs.
                 - A list of standard deviation values for the specified scenario across all jobs.
-                If a job does not contain the specified scenario, 0.0 is appended for both mean and stddev.
+                Note: If a job does not contain scenario data, None is appended for both values.
         """
         values: list[float | None] = []
         err_values: list[float | None] = []
@@ -858,13 +860,13 @@ class PerftestPlot:
         """
         Generates and saves a benchmark graph for each scenario.
 
-        For each scenario, this method retrieves benchmark values and error values,
-        formats the labels, and plots an error bar graph showing execution times per job. The graph includes
-        error bars, grid lines, and custom axis labels. The resulting plot is saved as an image file in the
-        specified location.
+        For each scenario, this method retrieves benchmark values and error values, formats the
+        labels, and plots an error bar graph showing execution times per job. The graph includes
+        error bars, grid lines, and custom axis labels. The resulting plot is saved as an image
+        file in the specified location.
 
         Args:
-            graph_file (Path): The path specifying the output file location and name for the saved graph image.
+            graph_file (Path): The file path of the output graph image.
 
         Returns:
             None
@@ -911,21 +913,26 @@ class PerftestPlot:
         statistics: MeasurementsList, section: str, indicator: str
     ) -> tuple[list[float], list[float]]:
         """
-        Extracts and prepares resource usage data for plotting from a list of measurement statistics.
+        Extracts and prepares resource usage data for plotting from a list of measurement values.
 
         Args:
-            statistics (MeasurementsList): A list of measurement dictionaries containing timestamp and resource usage data.
-            section (str): The section name used to identify the resource in the statistics.
-            indicator (str): The indicator name used to identify the specific metric in the statistics.
+            statistics (MeasurementsList): A list of measurement dictionaries containing timestamp
+                and resource usage data.
+            section (str): The section name used to identify the resource.
+            indicator (str): The indicator name used to identify the specific metric.
 
         Returns:
             tuple[list[float], list[float]]:
-                - A list of durations (in seconds) between each timestamp, suitable for use as the x-axis in a plot.
-                - A list of resource usage measurements (as floats), suitable for use as the y-axis in a plot.
+                - A list of durations (in seconds) between each timestamp, suitable for use as the
+                  x-axis in a plot.
+                - A list of resource usage measurements (as floats), suitable for use as the
+                  y-axis in a plot.
 
         Notes:
-            - Only statistics that are dictionaries and contain valid timestamp and resource usage values are processed.
-            - The durations are calculated as evenly spaced intervals between the first and last timestamps.
+            - Only statistics that are dictionaries and contain valid timestamp and resource usage
+              values are processed.
+            - The durations are calculated as evenly spaced intervals between the first and last
+              timestamps.
             - Resource usage values are converted to floats for consistency.
         """
 
@@ -937,7 +944,8 @@ class PerftestPlot:
                 timestamps (list[str]): List of ISO format timestamp strings.
 
             Returns:
-                list[float]: List of durations (in seconds) from the start time, evenly spaced between the first and last timestamp.
+                list[float]: List of durations (in seconds) from the start time, evenly spaced
+                    between the first and last timestamp.
             """
             start_time = Datetime.fromisoformat(timestamps[0])
             end_time = Datetime.fromisoformat(timestamps[-1])
@@ -963,7 +971,7 @@ class PerftestPlot:
         graph_file: Path,
     ) -> None:
         """
-        Plots resource usage graphs (CPU and memory) for each scenario and saves them as image files.
+        Plots resource usage graphs (CPU, memory) for each scenario and saves them as image files.
 
         For each scenario, this method creates a figure with two subplots:
         one for CPU usage and one for memory usage. It iterates over all selected jobs, extracts
@@ -1022,10 +1030,12 @@ class PerftestPlot:
 
     def read_job_names(self) -> list[str]:
         """
-        Retrieves and returns a sorted list of job names that are either present on disk or exist in the database.
+        Retrieves and returns a sorted list of job names that are either present on disk or exist
+        in the database.
 
-        The method checks for job directories in the specified root directory and verifies the existence of corresponding job files.
-        It also checks the database for job names. Only job names specified in `self.args.job_names` that are found on disk or in the database are included.
+        The method checks for job directories in the specified root directory and verifies the
+        existence of corresponding job files. It also checks the database for job names.
+        Only job names that are found on disk or in the database are returned.
 
         Returns:
             list[str]: A sorted list of valid job names found on disk or in the database.
@@ -1104,9 +1114,10 @@ class PerftestPlot:
         """
         Retrieves a sorted list of scenario names from the filesystem and/or database.
 
-        Scenarios are identified by files matching the pattern '*.resources.json' in the job directories.
-        The scenario name is derived from the file stem, with the '.resources' suffix removed.
-        If enabled, scenario names are also retrieved from the database and combined with those from the filesystem.
+        Scenarios are identified by files matching the pattern '*.resources.json' in the job
+        directories. The scenario name is derived from the file stem, with the '.resources' suffix
+        removed. If enabled, scenario names are also retrieved from the database and combined with
+        those from the filesystem.
 
         Returns:
             list[str]: A sorted list of scenario names.
@@ -1130,17 +1141,18 @@ class PerftestPlot:
 
     def read_scenario_data(self, job_name: str) -> dict[str, MeasurementsList]:
         """
-        Reads measurement data for each scenario associated with a given job name from either the filesystem or a database.
+        Reads measurement data for each scenario associated with a given job name from either the
+        filesystem or a database.
 
         Args:
             job_name (str): The name of the job for which scenario data should be retrieved.
 
         Returns:
-            dict[str, MeasurementsList]: A dictionary mapping scenario names to lists of measurements.
+            dict[str, MeasurementsList]: A dictionary mapping scenario names to measurement lists.
 
         Notes:
-            - If `read_from_filesystem` is True and the scenario file exists, data is read from the filesystem.
-            - If `read_from_database` is True and the job exists in the database, data is read from the database.
+            - If `read_from_filesystem` and the scenario file exists, filessystem data is read.
+            - If `read_from_database` and the job exists in the database, database data is read.
             - If no data is found for a scenario, an empty list is returned for that scenario.
         """
         scenario_data: dict[str, MeasurementsList] = {}
@@ -1167,12 +1179,12 @@ class PerftestPlot:
         Retrieve and aggregate performance data for all selected jobs.
 
         For each selected job, this method collects job-specific data and scenario-specific data.
-        The results are returned as a sorted dictionary mapping each job name to a tuple containing its
-        job data and scenario data.
+        The results are returned as a sorted dictionary mapping each job name to a tuple containing
+        its job data and scenario data.
 
         Returns:
-            PerformanceData: A sorted dictionary where each key is a job name and each value is a tuple
-            of (job_data, scenario_data) for that job.
+            PerformanceData: A sorted dictionary where each key is a job name and each value is a
+            tuple of (job_data, scenario_data) for that job.
         """
         return dict(
             sorted(
@@ -1188,12 +1200,15 @@ class PerftestPlot:
         Writes performance data for each job and scenario to JSON files and/or a database.
 
         For each selected job, this method:
-        - Optionally writes the job's benchmark data to a JSON file if `self.write_json_files` is True.
-        - Iterates through each scenario in the job, optionally writing scenario performance data to a JSON file.
-        - If performance data exists for a scenario, and `self.write_to_database` is True, writes the data to the database, including job and test start/end times.
+        - Writes the job benchmark data to a JSON file if `write_json_files` is True.
+        - Iterates through each scenario in the job, optionally writing scenario performance data
+        to a JSON file.
+        - If performance data exists for a scenario, and `write_to_database` is True, writes the
+        data to the database, including job and test start/end times.
 
         Notes:
-            - Test start and end times are extracted from the first and last entries in the scenario's performance data.
+            - Test start and end times are extracted from the first and last entries in the
+            scenario performance data.
 
         Raises:
             Any exceptions raised during file or database operations are propagated.
@@ -1338,15 +1353,15 @@ class PerftestPlot:
         Validate current performance metrics against calculated baselines for each test scenario.
 
         For every scenario the method retrieves the current averaged metrics (time, CPU, memory)
-        and a computed baseline, then compares them using a fixed overshoot tolerance (currently +10%).
+        and a computed baseline, then compares them using a fixed overshoot tolerance (+10%).
 
-        An alert is generated when any of the following averaged metrics exceeds its baseline by more
-        than the tolerance percentage:
+        An alert is generated when any of the following averaged metrics exceeds its baseline by
+        more than the tolerance percentage:
             - Execution time (avg_time)
             - CPU usage (avg_cpu)
             - Memory usage (avg_mem)
 
-        If no current data (averages) are available for a scenario, an alert noting missing data is added.
+        If no current data (averages) are available for a scenario, an alert is added.
 
         Returns:
             list[str]
@@ -1373,7 +1388,8 @@ class PerftestPlot:
                 overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
                 msg = (
                     f"Execution time baseline exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_time, 2)}; actual: {round(averages.avg_time, 2)}"
+                    f"(baseline: {round(baseline.avg_time, 2)};"
+                    f" actual: {round(averages.avg_time, 2)}"
                 )
 
                 alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
@@ -1381,14 +1397,16 @@ class PerftestPlot:
                 overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
                 msg = (
                     f"CPU usage baseline exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_cpu, 2)}%; actual: {round(averages.avg_cpu, 2)}%"
+                    f"(baseline: {round(baseline.avg_cpu, 2)}%;"
+                    f" actual: {round(averages.avg_cpu, 2)}%"
                 )
                 alerts.append(f"{msg_prefix}{msg} {msg_suffix}")
             if averages.avg_mem > baseline.avg_mem * (100 + overshoot_tolerance) / 100:
                 overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
                 msg = (
                     f"Memory usage baseline exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_mem, 2)}%; actual: {round(averages.avg_mem, 2)}%"
+                    f"(baseline: {round(baseline.avg_mem, 2)}%;"
+                    f" actual: {round(averages.avg_mem, 2)}%"
                 )
                 alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
         return alerts
@@ -1481,7 +1499,8 @@ def parse_args() -> PerftestPlotArgs:
         dest="skip_filesystem_writes",
         type=bool,
         default=False,
-        help="Specifies to update the database only and skip writing to the filesystem (default: %(default)s).",
+        help="Specifies to update the database only and skip writing to the filesystem"
+        " (default: %(default)s).",
     )
     parser.add_argument(
         "--skip-database-reads",
@@ -1489,7 +1508,8 @@ def parse_args() -> PerftestPlotArgs:
         dest="skip_database_reads",
         type=bool,
         default=False,
-        help="Specifies to read from the filesystem only and ignore database data (default: %(default)s).",
+        help="Specifies to read from the filesystem only and ignore database data"
+        " (default: %(default)s).",
     )
     parser.add_argument(
         "--skip-database-writes",
@@ -1497,7 +1517,8 @@ def parse_args() -> PerftestPlotArgs:
         dest="skip_database_writes",
         type=bool,
         default=False,
-        help="Specifies to update the filesystem only and skip writing to the database (default: %(default)s).",
+        help="Specifies to update the filesystem only and skip writing to the database"
+        " (default: %(default)s).",
     )
     parser.add_argument(
         "--skip-graph-generation",
@@ -1527,7 +1548,7 @@ def parse_args() -> PerftestPlotArgs:
         dest="dbuser",
         type=str,
         default="performance",
-        help="The user name for the database connection.",
+        help="The user name for the database connection (default: %(default)s).",
     )
     parser.add_argument(
         "--dbhost",

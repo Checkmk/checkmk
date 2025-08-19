@@ -25,7 +25,7 @@ import pydantic
 import requests
 from dateutil import parser as dateutil_parser
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec
 from cmk.ccc.store import load_text_from_file, save_text_to_file
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser

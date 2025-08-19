@@ -20,13 +20,13 @@ from re import Pattern
 from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
 # from cmk.base.config import logwatch_rule will NOT work!
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
-from cmk.base.configlib.servicename import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.configlib.servicename import (
     make_final_service_name_config,
 )
-from cmk.ccc.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
-from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
+from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.plugins import (
     CheckPluginName,
     ServiceID,
 )

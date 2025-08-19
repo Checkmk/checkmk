@@ -657,6 +657,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         # product.
         "cmk.base",
         "cmk.fetchers",
+        "cmk.gui",  # bi
         "cmk.checkengine",
         "cmk.utils",
         "cmk.ccc",
@@ -671,6 +672,9 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "datadog": (
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection
+        "cmk.ec.export",
+        "cmk.gui.form_specs.private",
+        "cmk.gui.mkeventd",
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
@@ -678,6 +682,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.version",  # edition detection
         "cmk.utils.paths",  # edition detection
         "cmk.utils.render",  # FIXME
+        "cmk.gui.mkeventd",
     ),
     "gcp": (
         "cmk.agent_based.v1",  # FIXME
@@ -691,13 +696,26 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "jolokia": ("cmk.utils.paths",),
     "kube": (
-        "cmk.ccc.profile",
         "cmk.ccc.hostaddress",
+        "cmk.ccc.profile",
         "cmk.ccc.version",  # edition detection
-        "cmk.utils.http_proxy_config",
-        "cmk.plugins.lib.node_exporter",
+        "cmk.gui.form_specs.private",
         "cmk.plugins.lib",
+        "cmk.plugins.lib.node_exporter",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # persisting stuff
+    ),
+    "logwatch": (
+        "cmk.base.config",
+        "cmk.base.configlib.servicename",
+        "cmk.ccc.hostaddress",
+        "cmk.ccc.debug",
+        "cmk.checkengine.plugins",
+        "cmk.ec.event",
+        "cmk.ec.export",
+        "cmk.gui.mkeventd",
+        "cmk.plugins.lib",
+        "cmk.utils.paths",
     ),
     "mobileiron": (
         "cmk.utils.http_proxy_config",
@@ -718,13 +736,14 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "otel": (
         "cmk.gui.form_specs.private",
-        "cmk.otel_collector.constants",
+        "cmk.otel_collector",
+        "cmk.shared_typing.vue_formspec_components",
     ),
     "redfish": (
-        "cmk.utils.paths",
         "cmk.plugins.lib.elphase",
         "cmk.plugins.lib.humidity",
         "cmk.plugins.lib.temperature",
+        "cmk.utils.paths",
     ),
     "robotmk": ("cmk.cee.robotmk",),
     "sftp": ("cmk.utils.ssh_client",),

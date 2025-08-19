@@ -5,12 +5,12 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.gui import bi  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.form_specs.private import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui import bi
+from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.private.user_selection import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.form_specs.private.user_selection import (
     UserSelection,
     UserSelectionFilter,
 )

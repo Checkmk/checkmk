@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from typing import Literal
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.mkeventd import syslog_facilities  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.mkeventd import syslog_facilities
 from cmk.plugins.emailchecks.forwarding_option import ECForwarding
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (

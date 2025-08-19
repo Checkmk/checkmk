@@ -8,7 +8,7 @@ import uuid
 from fastapi.testclient import TestClient
 
 
-def test_ct02_a_relay_can_be_unregistered(
+def test_a_relay_can_be_unregistered(
     site_name: str, agent_receiver_test_client: TestClient
 ) -> None:
     """

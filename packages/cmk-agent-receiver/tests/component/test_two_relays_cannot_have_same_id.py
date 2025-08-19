@@ -3,7 +3,7 @@ import uuid
 from fastapi.testclient import TestClient
 
 
-def test_ct03_two_relays_cannot_have_the_same_id(
+def test_two_relays_cannot_have_the_same_id(
     site_name: str, agent_receiver_test_client: TestClient
 ) -> None:
     """

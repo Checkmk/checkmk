@@ -3,9 +3,7 @@ import uuid
 from fastapi.testclient import TestClient
 
 
-def test_ct01_a_relay_can_be_registered(
-    site_name: str, agent_receiver_test_client: TestClient
-) -> None:
+def test_a_relay_can_be_registered(site_name: str, agent_receiver_test_client: TestClient) -> None:
     """
     Test CT-1. Description:
 

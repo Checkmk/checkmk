@@ -2982,6 +2982,17 @@ msgstr "AWS/WAFV2 Grenzen"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web ACL Verzoeken"
 
+#, fuzzy
+msgid "Abnormal terminated calls in"
+msgstr "Actieve paden"
+
+msgid "Abnormal terminated calls in/out"
+msgstr ""
+
+#, fuzzy
+msgid "Abnormal terminated calls out"
+msgstr "Actieve eenheid"
+
 msgid "Abort with an error"
 msgstr "Afbreken met een fout"
 
@@ -3739,12 +3750,12 @@ msgid "Active and inactive memory - files and anonymous"
 msgstr "Actief en inactief geheugen"
 
 #, fuzzy
-msgid "Active calls"
+msgid "Active calls in"
 msgstr "Actieve paden"
 
 #, fuzzy
-msgid "Active calls in"
-msgstr "Actieve paden"
+msgid "Active calls in/out"
+msgstr "Actieve eenheid"
 
 #, fuzzy
 msgid "Active calls out"
@@ -6807,6 +6818,10 @@ msgstr ""
 msgid "Another session is active"
 msgstr "Een andere sessie is actief"
 
+#, fuzzy
+msgid "Answer seizure ratio"
+msgstr "Varnish Backend Succes Ratio"
+
 msgid "AntiVirus last update age"
 msgstr "AntiVirus laatste update leeftijd"
 
@@ -8238,10 +8253,6 @@ msgstr "Gemiddelde groei"
 
 msgid "Average speed of backup"
 msgstr "Gemiddelde snelheid van back-up"
-
-#, fuzzy
-msgid "Average success ratio"
-msgstr "Varnish Backend Succes Ratio"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -11328,22 +11339,6 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Definitieve haken oproepen"
 
-#, fuzzy
-msgid "Calls in"
-msgstr "Beller ID"
-
-#, fuzzy
-msgid "Calls in/out"
-msgstr "Noem een regel"
-
-#, fuzzy
-msgid "Calls out"
-msgstr "Noem een regel"
-
-#, fuzzy
-msgid "Calls per second"
-msgstr "Pagina's per seconde"
-
 msgid "Can be used until version:"
 msgstr "Kan gebruikt worden tot versie:"
 
@@ -11957,6 +11952,10 @@ msgstr "Vernieuwde weergave wijzigen"
 
 msgid "Changed"
 msgstr "Gewijzigd"
+
+#, fuzzy, python-format
+msgid "Changed %s connection %s"
+msgstr "Gewijzigde LDAP-verbinding %s"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -16434,6 +16433,10 @@ msgstr "Gemaakt door ouder scan"
 msgid "Created events"
 msgstr "Gecreëerde gebeurtenissen"
 
+#, fuzzy, python-format
+msgid "Created new %s connection"
+msgstr "Nieuwe LDAP-verbinding gemaakt"
+
 msgid "Created new LDAP connection"
 msgstr "Nieuwe LDAP-verbinding gemaakt"
 
@@ -18938,6 +18941,10 @@ msgstr "Verwijder verdwenen hosts"
 #, python-format
 msgid "Deleted %s %d"
 msgstr "%s %d verwijderd"
+
+#, fuzzy, python-format
+msgid "Deleted %s connection %s"
+msgstr "Verwijderde verbinding %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -23679,6 +23686,26 @@ msgstr "Escaping is <a href=\"%s\">algemeen ingeschakeld</a>"
 msgid "Established TCP/UDP connections"
 msgstr "Gevestigde TCP/UDP-verbindingen"
 
+#, fuzzy
+msgid "Established calls in"
+msgstr "Gevestigde verbindingen"
+
+#, fuzzy
+msgid "Established calls in rate"
+msgstr "Gevestigde verbindingen"
+
+#, fuzzy
+msgid "Established calls in/out"
+msgstr "Actieve eenheid"
+
+#, fuzzy
+msgid "Established calls out"
+msgstr "Actieve eenheid"
+
+#, fuzzy
+msgid "Established calls out rate"
+msgstr "Actieve eenheid"
+
 msgid "Established connections"
 msgstr "Gevestigde verbindingen"
 
@@ -25065,10 +25092,6 @@ msgstr ""
 "De waarde van een regel is niet compatibel met de huidige regel "
 "specificatie. Je kan dit proberen te verhelpen door de regel te openen voor "
 "bewerking en de regel opnieuw op te slaan zonder wijziging."
-
-#, python-format
-msgid "Failed to process your MIB file (%s): %s"
-msgstr "Verwerking van uw MIB-bestand mislukt (%s): %s"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Het is niet gelukt om de Apache proces-ID te lezen"
@@ -39488,7 +39511,7 @@ msgid "Lower levels for active connections"
 msgstr "Niveaus voor actieve verbindingen"
 
 #, fuzzy
-msgid "Lower levels for average success ratio"
+msgid "Lower levels for answer seizure ratio"
 msgstr "Lagere niveaus voor SMS-succespercentage"
 
 msgid "Lower levels for burst balance"
@@ -39520,6 +39543,10 @@ msgid "Lower levels for incoming requests to a JVM application server"
 msgstr ""
 "Deze regel stelt de waarschuwings- en kriticoniveaus in voor het aantal "
 "inkomende verzoeken naar een JVM applicatieserver."
+
+#, fuzzy
+msgid "Lower levels for network effectiveness"
+msgstr "Lagere niveaus voor levenslange gezondheid"
 
 #, fuzzy
 msgid "Lower levels for notification delivery rate"
@@ -43823,6 +43850,10 @@ msgstr "Netwerkadres:"
 #, fuzzy
 msgid "Network containers"
 msgstr "Docker-containers"
+
+#, fuzzy
+msgid "Network effectiveness ratio"
+msgstr "Specificatie van het netwerk"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netwerk bestandssysteem - algemene status en gebruik (b.v. NFS)"
@@ -90391,6 +90422,30 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Active calls"
+#~ msgstr "Actieve paden"
+
+#, fuzzy
+#~ msgid "Calls in"
+#~ msgstr "Beller ID"
+
+#, fuzzy
+#~ msgid "Calls in/out"
+#~ msgstr "Noem een regel"
+
+#, fuzzy
+#~ msgid "Calls out"
+#~ msgstr "Noem een regel"
+
+#, fuzzy
+#~ msgid "Calls per second"
+#~ msgstr "Pagina's per seconde"
+
+#, python-format
+#~ msgid "Failed to process your MIB file (%s): %s"
+#~ msgstr "Verwerking van uw MIB-bestand mislukt (%s): %s"
 
 #, fuzzy
 #~ msgid "Name of group2"

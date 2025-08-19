@@ -2997,6 +2997,17 @@ msgstr "Límites AWS/WAFV2"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "Solicitudes de ACL web de AWS/WAFV2"
 
+#, fuzzy
+msgid "Abnormal terminated calls in"
+msgstr "Vías activas"
+
+msgid "Abnormal terminated calls in/out"
+msgstr ""
+
+#, fuzzy
+msgid "Abnormal terminated calls out"
+msgstr "Unidad activa"
+
 msgid "Abort with an error"
 msgstr "Abortar con un error"
 
@@ -3757,12 +3768,12 @@ msgid "Active and inactive memory - files and anonymous"
 msgstr "Memoria activa e inactiva"
 
 #, fuzzy
-msgid "Active calls"
+msgid "Active calls in"
 msgstr "Vías activas"
 
 #, fuzzy
-msgid "Active calls in"
-msgstr "Vías activas"
+msgid "Active calls in/out"
+msgstr "Unidad activa"
 
 #, fuzzy
 msgid "Active calls out"
@@ -6864,6 +6875,10 @@ msgstr ""
 msgid "Another session is active"
 msgstr "Otra sesión está activa"
 
+#, fuzzy
+msgid "Answer seizure ratio"
+msgstr "Ratio de éxito de Varnish Backend"
+
 msgid "AntiVirus last update age"
 msgstr "Edad de la última actualización del antivirus"
 
@@ -8308,10 +8323,6 @@ msgstr "Crecimiento del tamaño medio"
 
 msgid "Average speed of backup"
 msgstr "Velocidad media de las copias de seguridad"
-
-#, fuzzy
-msgid "Average success ratio"
-msgstr "Ratio de éxito de Varnish Backend"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -11400,22 +11411,6 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Llamada a los ganchos finales"
 
-#, fuzzy
-msgid "Calls in"
-msgstr "Identificación de llamadas"
-
-#, fuzzy
-msgid "Calls in/out"
-msgstr "Llamar a una regla"
-
-#, fuzzy
-msgid "Calls out"
-msgstr "Llamar a una regla"
-
-#, fuzzy
-msgid "Calls per second"
-msgstr "Páginas por segundo"
-
 msgid "Can be used until version:"
 msgstr "Se puede utilizar hasta la versión:"
 
@@ -12040,6 +12035,10 @@ msgstr "Cambiar la visualización de la vista"
 
 msgid "Changed"
 msgstr "Cambiado"
+
+#, fuzzy, python-format
+msgid "Changed %s connection %s"
+msgstr "Conexión LDAP modificada %s"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -16548,6 +16547,10 @@ msgstr "Creado por la exploración de los padres"
 msgid "Created events"
 msgstr "Eventos creados"
 
+#, fuzzy, python-format
+msgid "Created new %s connection"
+msgstr "Se ha creado una nueva conexión LDAP"
+
 msgid "Created new LDAP connection"
 msgstr "Se ha creado una nueva conexión LDAP"
 
@@ -19071,6 +19074,10 @@ msgstr "Borrar hosts desaparecidos"
 #, python-format
 msgid "Deleted %s %d"
 msgstr "Borrado %s %d"
+
+#, fuzzy, python-format
+msgid "Deleted %s connection %s"
+msgstr "Conexión eliminada %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -23870,6 +23877,26 @@ msgstr "La evasión está <a href=\"%s\">habilitada globalmente</a>"
 msgid "Established TCP/UDP connections"
 msgstr "Conexiones TCP/UDP establecidas"
 
+#, fuzzy
+msgid "Established calls in"
+msgstr "Conexiones establecidas"
+
+#, fuzzy
+msgid "Established calls in rate"
+msgstr "Conexiones establecidas"
+
+#, fuzzy
+msgid "Established calls in/out"
+msgstr "Unidad activa"
+
+#, fuzzy
+msgid "Established calls out"
+msgstr "Unidad activa"
+
+#, fuzzy
+msgid "Established calls out rate"
+msgstr "Unidad activa"
+
 msgid "Established connections"
 msgstr "Conexiones establecidas"
 
@@ -25263,10 +25290,6 @@ msgstr ""
 "\"%s\". El valor de una regla es incompatible con la especificación de la "
 "regla actual. Puede intentar solucionarlo abriendo la regla para editarla y "
 "volver a guardarla sin modificarla."
-
-#, python-format
-msgid "Failed to process your MIB file (%s): %s"
-msgstr "Fallo al procesar su archivo MIB (%s): %s"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Fallo en la lectura del ID del proceso de Apache"
@@ -39783,7 +39806,7 @@ msgid "Lower levels for active connections"
 msgstr "Niveles para conexiones activas"
 
 #, fuzzy
-msgid "Lower levels for average success ratio"
+msgid "Lower levels for answer seizure ratio"
 msgstr "Niveles más bajos para la tasa de éxito de los SMS"
 
 msgid "Lower levels for burst balance"
@@ -39815,6 +39838,10 @@ msgid "Lower levels for incoming requests to a JVM application server"
 msgstr ""
 "Esta regla establece los niveles de advertencia y crítica para el número de "
 "solicitudes entrantes a un servidor de aplicaciones JVM."
+
+#, fuzzy
+msgid "Lower levels for network effectiveness"
+msgstr "Niveles más bajos para la salud de por vida"
 
 #, fuzzy
 msgid "Lower levels for notification delivery rate"
@@ -44168,6 +44195,10 @@ msgstr "Dirección de la red:"
 #, fuzzy
 msgid "Network containers"
 msgstr "Contenedores Docker"
+
+#, fuzzy
+msgid "Network effectiveness ratio"
+msgstr "Especificación de la red"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Sistema de archivos de red: estado general y uso (por ejemplo, NFS)"
@@ -91112,6 +91143,30 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Active calls"
+#~ msgstr "Vías activas"
+
+#, fuzzy
+#~ msgid "Calls in"
+#~ msgstr "Identificación de llamadas"
+
+#, fuzzy
+#~ msgid "Calls in/out"
+#~ msgstr "Llamar a una regla"
+
+#, fuzzy
+#~ msgid "Calls out"
+#~ msgstr "Llamar a una regla"
+
+#, fuzzy
+#~ msgid "Calls per second"
+#~ msgstr "Páginas por segundo"
+
+#, python-format
+#~ msgid "Failed to process your MIB file (%s): %s"
+#~ msgstr "Fallo al procesar su archivo MIB (%s): %s"
 
 #, fuzzy
 #~ msgid "Name of group2"

@@ -2863,6 +2863,17 @@ msgstr "AWS/WAFV2の制限"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web ACLリクエスト"
 
+#, fuzzy
+msgid "Abnormal terminated calls in"
+msgstr "アクティブコール"
+
+msgid "Abnormal terminated calls in/out"
+msgstr ""
+
+#, fuzzy
+msgid "Abnormal terminated calls out"
+msgstr "アクティブコールアウト"
+
 msgid "Abort with an error"
 msgstr "エラーで中止"
 
@@ -3556,11 +3567,12 @@ msgstr "アクティブおよび非アクティブメモリ"
 msgid "Active and inactive memory - files and anonymous"
 msgstr "アクティブ/非アクティブメモリ - ファイルと匿名"
 
-msgid "Active calls"
-msgstr "アクティブコール"
-
 msgid "Active calls in"
 msgstr "アクティブコール"
+
+#, fuzzy
+msgid "Active calls in/out"
+msgstr "アクティブコールアウト"
 
 msgid "Active calls out"
 msgstr "アクティブコールアウト"
@@ -6419,6 +6431,10 @@ msgstr ""
 msgid "Another session is active"
 msgstr "別のセッションがアクティブです"
 
+#, fuzzy
+msgid "Answer seizure ratio"
+msgstr "平均成功率"
+
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
 
@@ -7775,9 +7791,6 @@ msgstr "平均サイズの増加"
 
 msgid "Average speed of backup"
 msgstr "バックアップの平均速度"
-
-msgid "Average success ratio"
-msgstr "平均成功率"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -10585,18 +10598,6 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "最終フックの呼び出し"
 
-msgid "Calls in"
-msgstr "コールイン"
-
-msgid "Calls in/out"
-msgstr "コールイン/アウト"
-
-msgid "Calls out"
-msgstr "コールアウト"
-
-msgid "Calls per second"
-msgstr "コール/秒"
-
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
 
@@ -11191,6 +11192,10 @@ msgstr "ビュー表示の更新を変更する"
 
 msgid "Changed"
 msgstr "変更"
+
+#, fuzzy, python-format
+msgid "Changed %s connection %s"
+msgstr "LDAP接続 %s を変更しました"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -15429,6 +15434,10 @@ msgstr "親スキャンによって作成されました"
 msgid "Created events"
 msgstr "作成されたイベント"
 
+#, fuzzy, python-format
+msgid "Created new %s connection"
+msgstr "新しいLDAP接続を作成しました"
+
 msgid "Created new LDAP connection"
 msgstr "新しいLDAP接続を作成しました"
 
@@ -17828,6 +17837,10 @@ msgstr "消えたホストを削除する"
 #, python-format
 msgid "Deleted %s %d"
 msgstr "%s %d を削除しました"
+
+#, fuzzy, python-format
+msgid "Deleted %s connection %s"
+msgstr "接続を削除しました %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -22260,6 +22273,26 @@ msgstr "エスケープは<a href=\"%s\">グローバルに有効</a>"
 msgid "Established TCP/UDP connections"
 msgstr "確立されたTCP/UDP接続"
 
+#, fuzzy
+msgid "Established calls in"
+msgstr "確立された接続"
+
+#, fuzzy
+msgid "Established calls in rate"
+msgstr "確立された接続"
+
+#, fuzzy
+msgid "Established calls in/out"
+msgstr "アクティブコールアウト"
+
+#, fuzzy
+msgid "Established calls out"
+msgstr "アクティブコールアウト"
+
+#, fuzzy
+msgid "Established calls out rate"
+msgstr "アクティブコールアウト"
+
 msgid "Established connections"
 msgstr "確立された接続"
 
@@ -23583,10 +23616,6 @@ msgstr ""
 "ルール #%d の処理に失敗 ルールセット内 \"%s\" フォルダ内 \"%s\"。ルールの値"
 "は、現在のルール仕様と互換性がありません。ルールを開いて編集し、変更せずに"
 "ルールを再度保存することで、これを修正してみることができます。"
-
-#, python-format
-msgid "Failed to process your MIB file (%s): %s"
-msgstr "MIBファイル( %s ) : %s の処理に失敗しました"
 
 msgid "Failed to read the Apache process ID"
 msgstr "ApacheプロセスIDの読み取りに失敗しました"
@@ -37005,7 +37034,8 @@ msgstr "SMS成功率の下位レベル"
 msgid "Lower levels for active connections"
 msgstr "アクティブな接続の下位レベル"
 
-msgid "Lower levels for average success ratio"
+#, fuzzy
+msgid "Lower levels for answer seizure ratio"
 msgstr "平均成功率の下位レベル"
 
 msgid "Lower levels for burst balance"
@@ -37034,6 +37064,10 @@ msgstr "ヒット比率の下位レベル"
 
 msgid "Lower levels for incoming requests to a JVM application server"
 msgstr "JVMアプリケーションサーバーへの着信リクエストの下位レベル"
+
+#, fuzzy
+msgid "Lower levels for network effectiveness"
+msgstr "ヘルスライフタイムの下位レベル"
 
 msgid "Lower levels for notification delivery rate"
 msgstr "通知配信率の下限レベル"
@@ -41087,6 +41121,10 @@ msgstr "ネットワークアドレス:"
 
 msgid "Network containers"
 msgstr "ネットワークコンテナ"
+
+#, fuzzy
+msgid "Network effectiveness ratio"
+msgstr "ネットワーク仕様"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム-全体的なステータスと使用状況(例:NFS)"
@@ -84561,6 +84599,25 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "Active calls"
+#~ msgstr "アクティブコール"
+
+#~ msgid "Calls in"
+#~ msgstr "コールイン"
+
+#~ msgid "Calls in/out"
+#~ msgstr "コールイン/アウト"
+
+#~ msgid "Calls out"
+#~ msgstr "コールアウト"
+
+#~ msgid "Calls per second"
+#~ msgstr "コール/秒"
+
+#, python-format
+#~ msgid "Failed to process your MIB file (%s): %s"
+#~ msgstr "MIBファイル( %s ) : %s の処理に失敗しました"
 
 #, fuzzy
 #~ msgid "Name of group2"

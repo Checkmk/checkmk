@@ -3009,6 +3009,17 @@ msgstr "Limitele AWS/WAFV2"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "Solicitări ACL Web AWS/WAFV2 Web ACL"
 
+#, fuzzy
+msgid "Abnormal terminated calls in"
+msgstr "Trasee active"
+
+msgid "Abnormal terminated calls in/out"
+msgstr ""
+
+#, fuzzy
+msgid "Abnormal terminated calls out"
+msgstr "Unitate activă"
+
 msgid "Abort with an error"
 msgstr "Renunț cu o eroare"
 
@@ -3759,12 +3770,12 @@ msgid "Active and inactive memory - files and anonymous"
 msgstr "Memorie activă și inactivă"
 
 #, fuzzy
-msgid "Active calls"
+msgid "Active calls in"
 msgstr "Trasee active"
 
 #, fuzzy
-msgid "Active calls in"
-msgstr "Trasee active"
+msgid "Active calls in/out"
+msgstr "Unitate activă"
 
 #, fuzzy
 msgid "Active calls out"
@@ -6821,6 +6832,10 @@ msgstr ""
 msgid "Another session is active"
 msgstr "O altă sesiune este activă"
 
+#, fuzzy
+msgid "Answer seizure ratio"
+msgstr "Rata de succes a backend-ului Varnish"
+
 msgid "AntiVirus last update age"
 msgstr "Vârsta ultimei actualizări AntiVirus"
 
@@ -8238,10 +8253,6 @@ msgstr "Creșterea dimensiunii medii"
 
 msgid "Average speed of backup"
 msgstr "Viteza medie de backup"
-
-#, fuzzy
-msgid "Average success ratio"
-msgstr "Rata de succes a backend-ului Varnish"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -11357,22 +11368,6 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Apelarea cârligelor finale"
 
-#, fuzzy
-msgid "Calls in"
-msgstr "Identificarea apelantului"
-
-#, fuzzy
-msgid "Calls in/out"
-msgstr "Apelarea unei reguli"
-
-#, fuzzy
-msgid "Calls out"
-msgstr "Apelarea unei reguli"
-
-#, fuzzy
-msgid "Calls per second"
-msgstr "Pagini pe secundă"
-
 msgid "Can be used until version:"
 msgstr "Poate fi utilizat până la versiunea:"
 
@@ -11980,6 +11975,10 @@ msgstr "Schimbare afișare vizualizare reîmprospătare"
 
 msgid "Changed"
 msgstr "Modificat"
+
+#, fuzzy, python-format
+msgid "Changed %s connection %s"
+msgstr "Conexiune LDAP schimbată %s"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -16446,6 +16445,10 @@ msgstr "Creat de părinte scanare"
 msgid "Created events"
 msgstr "Evenimente create"
 
+#, fuzzy, python-format
+msgid "Created new %s connection"
+msgstr "A creat o nouă conexiune LDAP"
+
 msgid "Created new LDAP connection"
 msgstr "A creat o nouă conexiune LDAP"
 
@@ -18955,6 +18958,10 @@ msgstr "Ștergeți gazdele dispărute"
 #, python-format
 msgid "Deleted %s %d"
 msgstr "Șters %s %d"
+
+#, fuzzy, python-format
+msgid "Deleted %s connection %s"
+msgstr "Conexiune ștearsă %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -23745,6 +23752,26 @@ msgstr "Evadarea este <a href=\"%s\">activată la nivel global</a>."
 msgid "Established TCP/UDP connections"
 msgstr "Conexiuni TCP/UDP stabilite"
 
+#, fuzzy
+msgid "Established calls in"
+msgstr "Conexiuni stabilite"
+
+#, fuzzy
+msgid "Established calls in rate"
+msgstr "Conexiuni stabilite"
+
+#, fuzzy
+msgid "Established calls in/out"
+msgstr "Unitate activă"
+
+#, fuzzy
+msgid "Established calls out"
+msgstr "Unitate activă"
+
+#, fuzzy
+msgid "Established calls out rate"
+msgstr "Unitate activă"
+
 msgid "Established connections"
 msgstr "Conexiuni stabilite"
 
@@ -25135,10 +25162,6 @@ msgstr ""
 "\"%s\". Valoarea unei reguli este incompatibilă cu specificația curentă a "
 "regulii. Puteți încerca să remediați acest lucru deschizând regula pentru "
 "editare și salvând din nou regula fără modificări."
-
-#, python-format
-msgid "Failed to process your MIB file (%s): %s"
-msgstr "Nu a reușit să proceseze fișierul MIB (%s): %s."
 
 msgid "Failed to read the Apache process ID"
 msgstr "Nu a reușit să citească ID-ul procesului Apache"
@@ -39561,7 +39584,7 @@ msgid "Lower levels for active connections"
 msgstr "Niveluri pentru conexiuni active"
 
 #, fuzzy
-msgid "Lower levels for average success ratio"
+msgid "Lower levels for answer seizure ratio"
 msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 
 msgid "Lower levels for burst balance"
@@ -39594,6 +39617,10 @@ msgid "Lower levels for incoming requests to a JVM application server"
 msgstr ""
 "Niveluri inferioare pentru solicitările primite către un server de aplicații "
 "JVM"
+
+#, fuzzy
+msgid "Lower levels for network effectiveness"
+msgstr "Niveluri mai mici pentru durata de viață a sănătății"
 
 #, fuzzy
 msgid "Lower levels for notification delivery rate"
@@ -43916,6 +43943,10 @@ msgstr "Adresa de rețea:"
 #, fuzzy
 msgid "Network containers"
 msgstr "Containere Docker"
+
+#, fuzzy
+msgid "Network effectiveness ratio"
+msgstr "Specificația rețelei"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr ""
@@ -90608,6 +90639,30 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Active calls"
+#~ msgstr "Trasee active"
+
+#, fuzzy
+#~ msgid "Calls in"
+#~ msgstr "Identificarea apelantului"
+
+#, fuzzy
+#~ msgid "Calls in/out"
+#~ msgstr "Apelarea unei reguli"
+
+#, fuzzy
+#~ msgid "Calls out"
+#~ msgstr "Apelarea unei reguli"
+
+#, fuzzy
+#~ msgid "Calls per second"
+#~ msgstr "Pagini pe secundă"
+
+#, python-format
+#~ msgid "Failed to process your MIB file (%s): %s"
+#~ msgstr "Nu a reușit să proceseze fișierul MIB (%s): %s."
 
 #, fuzzy
 #~ msgid "Name of group2"

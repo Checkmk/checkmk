@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-08 01:35+0000\n"
+"PO-Revision-Date: 2025-08-19 00:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2973,6 +2973,17 @@ msgstr "AWS/WAFV2 Grenzen"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web-ACL-Anfragen"
 
+#, fuzzy
+msgid "Abnormal terminated calls in"
+msgstr "Aktive eingehende Anrufe"
+
+msgid "Abnormal terminated calls in/out"
+msgstr ""
+
+#, fuzzy
+msgid "Abnormal terminated calls out"
+msgstr "Aktive ausgehende Anrufe"
+
 msgid "Abort with an error"
 msgstr "Abbruch mit Fehler"
 
@@ -3681,11 +3692,12 @@ msgstr "Aktiver und inaktiver Speicher"
 msgid "Active and inactive memory - files and anonymous"
 msgstr "Aktiver und inaktiver Speicher - Dateien und anonym"
 
-msgid "Active calls"
-msgstr "Aktive Anrufe"
-
 msgid "Active calls in"
 msgstr "Aktive eingehende Anrufe"
+
+#, fuzzy
+msgid "Active calls in/out"
+msgstr "Aktive ausgehende Anrufe"
 
 msgid "Active calls out"
 msgstr "Aktive ausgehende Anrufe"
@@ -6640,6 +6652,10 @@ msgstr ""
 msgid "Another session is active"
 msgstr "Andere Sitzung aktiv"
 
+#, fuzzy
+msgid "Answer seizure ratio"
+msgstr "Durchschnittliche Erfolgsrate"
+
 msgid "AntiVirus last update age"
 msgstr "Alter des letzten AntiVirus-Updates"
 
@@ -7397,7 +7413,6 @@ msgstr "Von Hosts zu entfernende Attribute"
 msgid "AudioCodes SBC Calls"
 msgstr "AudioCodes SBC Anrufe"
 
-#, fuzzy
 msgid "AudioCodes system events"
 msgstr "AudioCodes-Systemereignisse"
 
@@ -8022,9 +8037,6 @@ msgstr "Durschnittliches Größenwachstum"
 
 msgid "Average speed of backup"
 msgstr "Durchschnittliche Geschwindigkeit der Sicherung"
-
-msgid "Average success ratio"
-msgstr "Durchschnittliche Erfolgsrate"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -10908,18 +10920,6 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
-msgid "Calls in"
-msgstr "Eingehende Anrufe"
-
-msgid "Calls in/out"
-msgstr "Eingehende/ausgehende Anrufe"
-
-msgid "Calls out"
-msgstr "Ausgehende Anrufe"
-
-msgid "Calls per second"
-msgstr "Aufrufe pro Sekunde"
-
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
 
@@ -11540,6 +11540,10 @@ msgstr "Verändere Refresh der Ansichtenanzeige"
 
 msgid "Changed"
 msgstr "Geändert"
+
+#, fuzzy, python-format
+msgid "Changed %s connection %s"
+msgstr "LDAP-Verbindung %s geändert"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -15930,6 +15934,10 @@ msgstr "Durch Parent Scan erzeugt"
 msgid "Created events"
 msgstr "Ereignisse erzeugt"
 
+#, fuzzy, python-format
+msgid "Created new %s connection"
+msgstr "Neue LDAP-Verbindung erstellt"
+
 msgid "Created new LDAP connection"
 msgstr "Neue LDAP-Verbindung erstellt"
 
@@ -18370,6 +18378,10 @@ msgstr "Verschwundene Hosts löschen"
 #, python-format
 msgid "Deleted %s %d"
 msgstr "%s %d gelöscht"
+
+#, fuzzy, python-format
+msgid "Deleted %s connection %s"
+msgstr "Verbindung %s löschen"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -21908,7 +21920,7 @@ msgstr "Elektrische Ausgangsleistung"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -22927,6 +22939,26 @@ msgstr "Ausschluss ist <a href=\"%s\">global aktiviert</a>"
 msgid "Established TCP/UDP connections"
 msgstr "Bestehende TCP/UDP Verbindungen"
 
+#, fuzzy
+msgid "Established calls in"
+msgstr "Bestehenden Verbindungen"
+
+#, fuzzy
+msgid "Established calls in rate"
+msgstr "Bestehenden Verbindungen"
+
+#, fuzzy
+msgid "Established calls in/out"
+msgstr "Aktive ausgehende Anrufe"
+
+#, fuzzy
+msgid "Established calls out"
+msgstr "Aktive ausgehende Anrufe"
+
+#, fuzzy
+msgid "Established calls out rate"
+msgstr "Aktive ausgehende Anrufe"
+
 msgid "Established connections"
 msgstr "Bestehenden Verbindungen"
 
@@ -23825,7 +23857,7 @@ msgid "Extend downtimes by..."
 msgstr "Wartungszeit verlängern um..."
 
 msgid "Extend post-diagnostics phase by additional time span"
-msgstr ""
+msgstr "Post-Diagnose-Phase um eine zusätzliche Zeitspanne verlängern"
 
 msgid "Extend the Checkmk GUI with your custom icons"
 msgstr "Erweitern Sie die Checkmk-GUI mit eigenen benutzerdefinierten Icons"
@@ -24266,10 +24298,6 @@ msgstr ""
 "Regelspezifikation kompatibel. Sie können versuchen, dies zu beheben, indem "
 "Sie die Regel zur Bearbeitung öffnen und die Regel ohne Änderung erneut "
 "speichern."
-
-#, python-format
-msgid "Failed to process your MIB file (%s): %s"
-msgstr "Fehler beim Einlesen Ihrer MIB-Datei (%s): %s"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Lesen der Apache-Prozess-ID fehlgeschlagen"
@@ -27051,9 +27079,8 @@ msgstr "HW-/SW-Inventur"
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 
-#, fuzzy
 msgid "HW/SW Inventory cleanup"
-msgstr "Regeln der HW-/SW-Inventur"
+msgstr "Bereinigung der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
@@ -27414,7 +27441,6 @@ msgstr ""
 "gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
 "werden."
 
-#, fuzzy
 msgid ""
 "Here you can configure absolute levels for total restart count and last hour "
 "restarts."
@@ -32576,9 +32602,8 @@ msgstr "Diese Levels ignorieren"
 msgid "Ignore undo tablespaces (Default)"
 msgstr "Undo Tablespaces ignorieren (Standard)"
 
-#, fuzzy
 msgid "Ignore unrecognized events"
-msgstr "Quittierte Ereignisse ignorieren"
+msgstr "Unrecognized Events ignorieren"
 
 msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
 msgstr "Fehlgeschlagene Validierung ignorieren (im Falle von TLS/SSL)"
@@ -35710,9 +35735,8 @@ msgstr "Letzter Host-Check ist nicht aktuell genug"
 msgid "Last host state change"
 msgstr "Letzter Host-Zustand-Wechsel"
 
-#, fuzzy
 msgid "Last hour restarts"
-msgstr "Die letzten 25 Stunden"
+msgstr "Neustarts der letzten Stunde"
 
 msgid "Last known details"
 msgstr "Letzten bekannten Details"
@@ -36150,9 +36174,8 @@ msgstr "Levels für Speicherauslastung"
 msgid "Levels for memory utilization"
 msgstr "Levels für Speicherauslastung"
 
-#, fuzzy
 msgid "Levels for meta"
-msgstr "Levels für Metadaten"
+msgstr "Levels für Meta"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Levels für die minimale Wartezeit auf ein Lock"
@@ -38038,7 +38061,8 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 msgid "Lower levels for active connections"
 msgstr "Untergrenzen für aktive Verbindungen"
 
-msgid "Lower levels for average success ratio"
+#, fuzzy
+msgid "Lower levels for answer seizure ratio"
 msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
 
 msgid "Lower levels for burst balance"
@@ -38067,6 +38091,10 @@ msgstr "Untergrenzen für die Trefferquote"
 
 msgid "Lower levels for incoming requests to a JVM application server"
 msgstr "Untergrenzen für eingehende Anfragen an einen JVM Applikationsserver"
+
+#, fuzzy
+msgid "Lower levels for network effectiveness"
+msgstr "Untergrenzen für Health-Lebensdauer"
 
 msgid "Lower levels for notification delivery rate"
 msgstr "Untergrenzen für Zustellungsrate der Benachrichtigungen"
@@ -38142,9 +38170,9 @@ msgstr "Unterer Schwellwert für offene Dateien und Sockets"
 msgid "Lower threshold on {property} number of Podman containers"
 msgstr "Unterer Schwellwert für die {property} Anzahl an Podman-Containern"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Lower threshold on {property} number of Podman pods"
-msgstr "Unterer Schwellwert für die {property} Anzahl an Podman-Containern"
+msgstr "Unterer Schwellwert für die {property} Anzahl an Podman Pods"
 
 msgid "Lower thresholds on mail transfer threads"
 msgstr "Unterer Schwellwert für Mail Transfer Threads"
@@ -42181,6 +42209,10 @@ msgstr "Netzwerkadresse:"
 msgid "Network containers"
 msgstr "Netzwerk-Container"
 
+#, fuzzy
+msgid "Network effectiveness ratio"
+msgstr "Netzwerkspezifikation"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netzwerk-Dateisystem - Gesamtstatus und Nutzung (z. B. NFS)"
 
@@ -44019,9 +44051,8 @@ msgstr "Anzahl der Kontextzeilen vor Meldungen"
 msgid "Number of created Podman containers"
 msgstr "Anzahl der erstellten Podman-Container"
 
-#, fuzzy
 msgid "Number of created Podman pods"
-msgstr "Anzahl der erstellten Podman-Container"
+msgstr "Anzahl der erstellten Podman Pods"
 
 msgid "Number of critical alerts"
 msgstr "Anzahl von kritischen Alerts"
@@ -44053,9 +44084,8 @@ msgstr "Mehrere Tage (einzelne Seite)"
 msgid "Number of dead Podman containers"
 msgstr "Anzahl der toten Podman-Container"
 
-#, fuzzy
 msgid "Number of dead Podman pods"
-msgstr "Anzahl der toten Podman-Container"
+msgstr "Anzahl der toten Podman Pods"
 
 msgid "Number of delayed unassigned shards"
 msgstr "Anzahl von verzögerten, nicht zugewiesenen Shards"
@@ -44091,9 +44121,8 @@ msgstr "Anzahl der beendeten Podman-Container"
 msgid "Number of exited Podman containers (non-zero)"
 msgstr "Anzahl der beendeten Podman-Container (ungleich Null)"
 
-#, fuzzy
 msgid "Number of exited Podman pods"
-msgstr "Anzahl der beendeten Podman-Container"
+msgstr "Anzahl der beendeten Podman Pods"
 
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Meldungen"
@@ -44359,9 +44388,8 @@ msgstr "Anzahl der Regelgruppen"
 msgid "Number of running Podman containers"
 msgstr "Anzahl der laufenden Podman-Container"
 
-#, fuzzy
 msgid "Number of running Podman pods"
-msgstr "Anzahl der laufenden Podman-Container"
+msgstr "Anzahl der laufenden Podman Pods"
 
 msgid "Number of running containers"
 msgstr "Anzahl der laufenden Container"
@@ -44482,9 +44510,8 @@ msgstr "Anzahl der Schritte, die in einem Datenpunkt aggregiert sind"
 msgid "Number of stopped Podman containers"
 msgstr "Anzahl der gestoppten Podman-Container"
 
-#, fuzzy
 msgid "Number of stopped Podman pods"
-msgstr "Anzahl der gestoppten Podman-Container"
+msgstr "Anzahl der gestoppten Podman Pods"
 
 msgid "Number of stuck tasks"
 msgstr "Anzahl der hängengebliebenen Aufgaben"
@@ -49444,13 +49471,11 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "Podman Container Restarts"
-msgstr "Podman-Container"
+msgstr "Neustarts von Podman-Container"
 
-#, fuzzy
 msgid "Podman Container Status"
-msgstr "Podman-Container"
+msgstr "Status von Podman-Container"
 
 msgid "Podman Containers"
 msgstr "Podman-Container"
@@ -49461,9 +49486,8 @@ msgstr "Podman-Festplattennutzung"
 msgid "Podman Monitoring"
 msgstr "Podman-Monitoring"
 
-#, fuzzy
 msgid "Podman Pods"
-msgstr "Podman-Container"
+msgstr "Podman Pods"
 
 msgid "Podman socket path"
 msgstr "Pfad zum Podman-Socket"
@@ -52885,9 +52909,8 @@ msgstr "Neustarts"
 msgid "Restarts per hour"
 msgstr "Neustarts pro Stunde"
 
-#, fuzzy
 msgid "Restarts within the last hour"
-msgstr "Neustarts pro Stunde"
+msgstr "Neustarts während der letzten Stunde"
 
 msgid "Restore"
 msgstr "Wiederherstellen"
@@ -60079,9 +60102,8 @@ msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist"
 msgid "State of %s if recovery is set (as integer)"
 msgstr "Zustand von %s, wenn Wiederherstellung eingestellt ist (als Ganzzahl)"
 
-#, fuzzy
 msgid "State of Juniper Alarms"
-msgstr "Anfang des nächsten Jahres"
+msgstr "Zustände der Juniper Alarme"
 
 msgid "State of NTP peer"
 msgstr "Zustand von NTP-Peer"
@@ -72487,9 +72509,8 @@ msgstr "Schwellwerte für den Service der Podman-Container."
 msgid "Thresholds for the podman disk usage services."
 msgstr "Schwellwerte für die Services der Podman-Festplattenauslastung."
 
-#, fuzzy
 msgid "Thresholds for the podman pods service."
-msgstr "Schwellwerte für den Service der Podman-Container."
+msgstr "Schwellwerte für den Service der Podman Pods."
 
 msgid "Thresholds on lower message count"
 msgstr "Schwellwerte für untere Meldungsanzahl"
@@ -72640,10 +72661,11 @@ msgstr "Zeitintervall"
 msgid "Time left on Battery at and below which a warning state is triggered"
 msgstr "Restzeit der Batterie, aber der eine Warnung augelöst wird"
 
-#, fuzzy
 msgid ""
 "Time left on Battery at and below which a warning/critical state is triggered"
-msgstr "Restzeit der Batterie, aber der eine Warnung augelöst wird"
+msgstr ""
+"Verbleibende Batterielaufzeit bei und unterhalb derer ein WARNING/CRITICAL "
+"Zustand ausgelöst wird"
 
 msgid "Time left on battery"
 msgstr "Restzeit der Batterie"
@@ -73675,9 +73697,8 @@ msgstr "Gesamtzahl nicht-konformer Geräte"
 msgid "Total number of Podman containers"
 msgstr "Gesamtzahl der Podman-Container"
 
-#, fuzzy
 msgid "Total number of Podman pods"
-msgstr "Gesamtzahl der Podman-Container"
+msgstr "Gesamtzahl der Podman Pods"
 
 msgid "Total number of Sessions"
 msgstr "Gesamtzahl von Sitzungen"
@@ -77568,9 +77589,9 @@ msgstr "Oberer Schwellwert für offene Dateien und Sockets"
 msgid "Upper threshold on {property} number of Podman containers"
 msgstr "Oberer Schwellwert für die {property} Anzahl an Podman-Containern"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Upper threshold on {property} number of Podman pods"
-msgstr "Oberer Schwellwert für die {property} Anzahl an Podman-Containern"
+msgstr "Oberer Schwellwert für die {property} Anzahl an Podman Pods"
 
 msgid "Upper thresholds"
 msgstr "Obere Schwellwerte"
@@ -87160,9 +87181,8 @@ msgstr "{property.capitalize()} "
 msgid "{property.capitalize()} Podman containers"
 msgstr "{property.capitalize()} Podman-Container"
 
-#, fuzzy
 msgid "{property.capitalize()} Podman pods"
-msgstr "{property.capitalize()} Podman-Container"
+msgstr "{property.capitalize()} Podman Pods"
 
 #, python-brace-format
 msgid "{region} ({id_})"
@@ -87188,6 +87208,25 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Active calls"
+#~ msgstr "Aktive Anrufe"
+
+#~ msgid "Calls in"
+#~ msgstr "Eingehende Anrufe"
+
+#~ msgid "Calls in/out"
+#~ msgstr "Eingehende/ausgehende Anrufe"
+
+#~ msgid "Calls out"
+#~ msgstr "Ausgehende Anrufe"
+
+#~ msgid "Calls per second"
+#~ msgstr "Aufrufe pro Sekunde"
+
+#, python-format
+#~ msgid "Failed to process your MIB file (%s): %s"
+#~ msgstr "Fehler beim Einlesen Ihrer MIB-Datei (%s): %s"
 
 #, fuzzy
 #~ msgid "Name of group2"

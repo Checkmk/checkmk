@@ -238,7 +238,7 @@ def get_imported_libs(repopath: Path) -> list[Import]:
 
     for path in iter_relevant_files(repopath):
         for imp in imports_for_file(path):
-            imports_to_files[imp].add(path)
+            imports_to_files[imp].add(path.relative_to(repopath))
 
     return [
         Import(name, paths) for name, paths in imports_to_files.items() if name not in IGNORED_LIBS

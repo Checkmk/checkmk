@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "46efd11a89b1c1eb823b535abe19efc2c4e628a305274120df3b6ef715e61a55",
+          "@@//requirements_all_lock.txt": "77f0fe82134830a4459c9f060bff3df4567803d77828bc1707142ada7ac78929",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -7021,7 +7021,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "jaraco-functools==4.2.1     --hash=sha256:590486285803805f4b1f99c60ca9e94ed348d4added84b74c7a12885561e524e     --hash=sha256:be634abfccabce56fa3053f8c7ebe37b682683a4ee7793670ced17bab0087353"
+              "requirement": "jaraco-functools==4.3.0     --hash=sha256:227ff8ed6f7b8f62c56deff101545fa7543cf2c8e7b82a7c2116e672f29c26e8     --hash=sha256:cfd13ad0dd2c47a3600b439ef72d8615d482cedcff1632930d6f28924d92f294"
             }
           },
           "cmk_requirements_312_packaging_legacy": {
@@ -7531,7 +7531,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "jsonschema[format]==4.25.0     --hash=sha256:24c2e8da302de79c8b9382fee3e76b355e44d2a4364bb207159ce10b517bd716     --hash=sha256:e63acf5c11762c0e6672ffb61482bdf57f0876684d8d249c0fe2d730d48bc55f"
+              "requirement": "jsonschema[format]==4.25.1     --hash=sha256:3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63     --hash=sha256:e4a9655ce0da0c0b67a085847e00a3a51449e1157f4f75e9fb5aa545e122eb85"
             }
           },
           "cmk_requirements_312_python_lsp_jsonrpc": {

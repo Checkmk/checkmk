@@ -1306,9 +1306,9 @@ jaraco-context==6.0.1 \
     --hash=sha256:9bae4ea555cf0b14938dc0aee7c9f32ed303aa20a3b73e7dc80111628792d1b3 \
     --hash=sha256:f797fc481b490edb305122c9181830a3a5b76d84ef6d1aef2fb9b47ab956f9e4
     # via keyring
-jaraco-functools==4.2.1 \
-    --hash=sha256:590486285803805f4b1f99c60ca9e94ed348d4added84b74c7a12885561e524e \
-    --hash=sha256:be634abfccabce56fa3053f8c7ebe37b682683a4ee7793670ced17bab0087353
+jaraco-functools==4.3.0 \
+    --hash=sha256:227ff8ed6f7b8f62c56deff101545fa7543cf2c8e7b82a7c2116e672f29c26e8 \
+    --hash=sha256:cfd13ad0dd2c47a3600b439ef72d8615d482cedcff1632930d6f28924d92f294
     # via keyring
 jedi==0.19.2 \
     --hash=sha256:4770dc3de41bde3966b02eb84fbcf557fb33cce26ad23da12c742fb50ecb11f0 \
@@ -1361,9 +1361,9 @@ jsonpointer==3.0.0 \
     #   jsonpatch
     #   jsonschema
     #   redfish
-jsonschema[format]==4.25.0 \
-    --hash=sha256:24c2e8da302de79c8b9382fee3e76b355e44d2a4364bb207159ce10b517bd716 \
-    --hash=sha256:e63acf5c11762c0e6672ffb61482bdf57f0876684d8d249c0fe2d730d48bc55f
+jsonschema[format]==4.25.1 \
+    --hash=sha256:3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63 \
+    --hash=sha256:e4a9655ce0da0c0b67a085847e00a3a51449e1157f4f75e9fb5aa545e122eb85
     # via
     #   -r requirements_all.txt
     #   -r requirements_dev.txt

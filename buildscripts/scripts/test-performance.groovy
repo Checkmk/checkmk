@@ -40,7 +40,7 @@ def main() {
             name: make_target,
             cmd: "make -C tests ${make_target}",
             // output_file: "test-performance.txt",
-            container_name: "ubuntu-2404-${setup_values.safe_branch_name}-latest",
+            container_name: "this-distro-container",
         ]);
 
         // stage("Archive / process test reports") {

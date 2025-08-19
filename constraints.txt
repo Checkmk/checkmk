@@ -11,3 +11,5 @@ pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-2402
 schemathesis<4 # breaking changes here that require updates to the code CMK-24390
 pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
+pytest-asyncio @ git+https://github.com/pytest-dev/pytest-asyncio@db36483bc47c804b74aa6e0baab5d701a9224776 # incompatible dependency names CMK-25423
+

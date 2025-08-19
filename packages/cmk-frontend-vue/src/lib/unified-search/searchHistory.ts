@@ -56,6 +56,7 @@ export class SearchHistoryService {
           ) === index
         )
       })
+      .reverse()
       .slice(0, limit ? limit - 1 : limit)
   }
 

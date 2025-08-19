@@ -25,7 +25,6 @@ from typing import Any, Final
 import requests
 import urllib3
 
-from cmk.ccc.exceptions import MKException
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 from cmk.utils.password_store import replace_passwords
@@ -361,7 +360,7 @@ SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst", "ucs_c_rack_server_fau
 #   '----------------------------------------------------------------------'
 
 
-class CommunicationException(MKException):
+class CommunicationException(Exception):
     pass
 
 

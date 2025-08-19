@@ -42,8 +42,7 @@ from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKException
-from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
+from cmk.plugins.aws.constants import (
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
@@ -7783,7 +7782,7 @@ def agent_aws_main(args: Args) -> int:
     return 1 if has_exceptions else 0
 
 
-class AwsAccessError(MKException):
+class AwsAccessError(Exception):
     pass
 
 

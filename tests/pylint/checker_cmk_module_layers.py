@@ -627,6 +627,117 @@ def _is_allowed_for_rrd(
     )
 
 
+_PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
+    "aws": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.ccc.version",  # edition detection
+        "cmk.ccc.store",
+        "cmk.plugins.lib",  # ?
+        "cmk.utils.paths",  # edition detection
+    ),
+    "azure": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.ccc.version",  # edition detection
+        "cmk.ccc.hostaddress",  # FormSpec validation
+        "cmk.plugins.lib",  # ?
+        "cmk.plugins.lib.azure_app_gateway",  # FIXME
+        "cmk.plugins.lib.azure",  # FIXME
+        "cmk.utils.azure_constants",  # FIXME
+        "cmk.utils.http_proxy_config",
+        "cmk.utils.paths",  # edition detection
+    ),
+    "bazel": (
+        "cmk.utils.semantic_version",
+        "cmk.utils.paths",
+    ),
+    "checkmk": (
+        # These plugins are tightly coupled to Checkmk.
+        # We cannot expect them to not depend on the core
+        # product.
+        "cmk.base",
+        "cmk.fetchers",
+        "cmk.checkengine",
+        "cmk.utils",
+        "cmk.ccc",
+    ),
+    "cisco_meraki": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.utils.paths",
+        "cmk.plugins.lib.cisco_meraki",  # FIXME
+        "cmk.plugins.lib.humidity",
+        "cmk.plugins.lib.temperature",
+    ),
+    "datadog": (
+        "cmk.ccc.store",
+        "cmk.ccc.version",  # edition detection
+        "cmk.utils.http_proxy_config",
+        "cmk.utils.paths",  # edition detection
+    ),
+    "emailchecks": (
+        "cmk.ccc.version",  # edition detection
+        "cmk.utils.paths",  # edition detection
+        "cmk.utils.render",  # FIXME
+    ),
+    "gcp": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.ccc.version",  # edition detection
+        "cmk.utils.paths",  # edition detection
+        "cmk.plugins.lib",  # diskstat + X
+    ),
+    "gerrit": (
+        "cmk.utils.semantic_version",
+        "cmk.utils.paths",
+    ),
+    "jolokia": ("cmk.utils.paths",),
+    "kube": (
+        "cmk.ccc.profile",
+        "cmk.ccc.hostaddress",
+        "cmk.ccc.version",  # edition detection
+        "cmk.utils.http_proxy_config",
+        "cmk.plugins.lib.node_exporter",
+        "cmk.plugins.lib",
+        "cmk.utils.paths",  # persisting stuff
+    ),
+    "mobileiron": (
+        "cmk.utils.http_proxy_config",
+        "cmk.utils.regex",
+    ),
+    "mqtt": ("cmk.ccc.hostaddress",),
+    "prometheus": (
+        "cmk.ccc.hostaddress",
+        "cmk.plugins.lib.prometheus_form_elements",  # FIXME
+        "cmk.plugins.lib.prometheus",  # FIXME
+        "cmk.plugins.lib.node_exporter",
+    ),
+    "proxmox_ve": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.plugins.lib.memory",
+        "cmk.plugins.lib.cpu_util",
+        "cmk.utils.paths",
+    ),
+    "otel": (
+        "cmk.gui.form_specs.private",
+        "cmk.otel_collector.constants",
+    ),
+    "redfish": (
+        "cmk.utils.paths",
+        "cmk.plugins.lib.elphase",
+        "cmk.plugins.lib.humidity",
+        "cmk.plugins.lib.temperature",
+    ),
+    "robotmk": ("cmk.cee.robotmk",),
+    "sftp": ("cmk.utils.ssh_client",),
+    "smb": ("cmk.ccc.hostaddress",),
+    "storeonce4x": ("cmk.utils.paths",),
+    "vnx_quotas": ("cmk.utils.ssh_client",),
+    "vsphere": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.utils.paths",
+        "cmk.plugins.lib",
+    ),
+}
+
+
 _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
@@ -775,47 +886,21 @@ _COMPONENTS = (
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.piggyback.hub"), _allow_for_cmk_piggyback_hub),
-    (
-        Component("cmk.plugins.robotmk.agent_based.cee"),
-        _is_allowed_for_robotmk_agent_based_cee_plugins,
-    ),
-    (
-        Component("cmk.plugins.robotmk.graphing.cee"),
-        _is_allowed_for_robotmk_graphing_cee_plugins,
-    ),
-    (
-        Component("cmk.plugins.robotmk.rulesets.cee"),
-        _is_allowed_for_robotmk_rulesets_cee_plugins,
-    ),
-    (
-        Component("cmk.plugins.checkmk"),
-        _allow(
-            "cmk.agent_based.v2",
-            "cmk.rulesets.v1",
-            "cmk.graphing.v1",
-            "cmk.server_side_calls.v1",
-            "cmk.base",
-            "cmk.fetchers",
-            "cmk.checkengine",
-            "cmk.utils",
-            "cmk.ccc",
-            "cmk.inventory_ui.v1_alpha",
-        ),
-    ),
-    (
-        Component("cmk.plugins.otel"),
-        _allow(
-            "cmk.agent_based.v1",
-            "cmk.agent_based.v2",
-            "cmk.graphing.v1",
-            "cmk.rulesets.v1",
-            "cmk.gui.form_specs.private",
-            "cmk.server_side_calls.v1",
-            "cmk.special_agents.v0_unstable",
-            "cmk.plugins",
-            "cmk.inventory_ui.v1_alpha",
-            "cmk.otel_collector.constants",
-        ),
+    *(  # some plugin families that refuse to play by the rules:
+        (
+            Component(f"cmk.plugins.{family}"),
+            _allow(
+                "cmk.agent_based.v2",
+                "cmk.graphing.v1",
+                "cmk.inventory_ui.v1_alpha",
+                "cmk.rulesets.v1",
+                "cmk.server_side_calls.v1",
+                "cmk.special_agents.v0_unstable",
+                "cmk.utils.password_store",
+                *violations,
+            ),
+        )
+        for family, violations in _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS.items()
     ),
     (
         Component("cmk.plugins"),
@@ -823,13 +908,11 @@ _COMPONENTS = (
             "cmk.agent_based.v1",
             "cmk.agent_based.v2",
             "cmk.graphing.v1",
+            "cmk.inventory_ui.v1_alpha",
             "cmk.rulesets.v1",
             "cmk.server_side_calls.v1",
             "cmk.special_agents.v0_unstable",
-            "cmk.plugins",
-            "cmk.utils",  # FIXME (should only be password store)
-            "cmk.ccc",  # FIXME
-            "cmk.inventory_ui.v1_alpha",
+            "cmk.utils.password_store",
         ),
     ),
     (

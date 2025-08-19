@@ -56,7 +56,7 @@ from sys import exit as sys_exit
 from typing import NamedTuple
 
 import psycopg
-import requests
+from jira import JIRA
 from matplotlib import pyplot
 
 logging.basicConfig()
@@ -682,6 +682,8 @@ class PerftestPlotArgs(argparse.Namespace):
         dbport (int): Port number for the database connection.
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
+        jira_url (str): The URL of the Jira server.
+        jira_token_path (Path): The path to the Jira token file.
         log_level (str): Logging level of the application.
     """
 
@@ -700,6 +702,8 @@ class PerftestPlotArgs(argparse.Namespace):
     dbport: int
     validate_baselines: bool
     alert_on_failure: bool
+    jira_url: str
+    jira_token_path: Path
     log_level: str
 
 
@@ -743,8 +747,13 @@ class PerftestPlot:
         self.write_graph_files = not (
             self.args.skip_graph_generation or self.args.skip_filesystem_writes
         )
-        self.validate_baselines = self.args.validate_baselines or self.args.alert_on_failure
-        self.alert_on_failure = self.args.alert_on_failure
+        self.jira_url = self.args.jira_url
+        try:
+            self.jira_token: str | None = Path(self.args.jira_token_path).read_text().split("\n")[0]
+        except (OSError, TypeError):
+            self.jira_token = None
+        self.alert_on_failure = self.args.alert_on_failure and self.jira_url and self.jira_token
+        self.validate_baselines = self.args.validate_baselines or self.alert_on_failure
         self.job_names = self.read_job_names()
         self.scenario_names = self.read_scenario_names()
         self.jobs = self.read_performance_data()
@@ -1384,28 +1393,28 @@ class PerftestPlot:
                 alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
         return alerts
 
-    def call_alerter(self, summary: str, description: str) -> None:
+    def create_ticket(self, summary: str, description: str) -> None:
         """
-        Create an alert ticket by POSTing summary and description to the Jira Alerter service.
+        Create an alert ticket by POSTing summary and description to the Jira server.
 
-        This helper builds a JSON payload with the given summary and description and sends
-        it to the alerter endpoint.
+        This helper builds a JSON payload with the given summary and description and creates
+        a ticket from it via the Jira API.
 
         Parameters:
             summary (str): Short, human‑readable title for the alert.
             description (str): Detailed description / context for the alert.
-
-        Raises:
-            AssertionError: If the HTTP response status code is not in the 2xx range.
-            requests.RequestException: Propagated if the POST request fails (e.g., timeout,
-                connection error, DNS failure).
         """
-        ticket = {"summary": summary, "description": description}
-        response = requests.post(
-            url="http://qa.lan.checkmk.net:8000/create", json=ticket, timeout=5
+        jira_issue = {
+            "project": {"key": "CMK"},
+            "summary": summary,
+            "description": description,
+            "issuetype": {"name": "Task"},
+        }
+        jira_client = JIRA(
+            server=self.jira_url,
+            token_auth=self.jira_token,
         )
-        if not response.ok:
-            logger.error("Calling Jira Alerter has failed with status %s!", response.status_code)
+        jira_client.create_issue(jira_issue)
 
 
 def parse_args() -> PerftestPlotArgs:
@@ -1551,6 +1560,20 @@ def parse_args() -> PerftestPlotArgs:
         help="Enable Jira alerter on baseline validation failure (default: %(default)s).",
     )
     parser.add_argument(
+        "--jira-url",
+        dest="jira_url",
+        type=str,
+        default=None,
+        help="The URL of the Jira server (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--jira-token-path",
+        dest="jira_token_path",
+        type=Path,
+        default=None,
+        help="The path to the Jira token file (default: %(default)s).",
+    )
+    parser.add_argument(
         "--log-level",
         dest="log_level",
         type=str,
@@ -1595,7 +1618,7 @@ def main():
         description = (f"\n  {'\n  '.join(alerts)}") if alerts else "PASSED!"
         print(f"{summary}: {description}")
         if app.alert_on_failure and alerts:
-            app.call_alerter(summary=summary, description=description)
+            app.create_ticket(summary=summary, description=description)
 
     print(app.output_dir)
 

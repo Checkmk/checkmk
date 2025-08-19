@@ -373,6 +373,14 @@ class MainMenu(LocatorHelper):
     def help_werks(self) -> Locator:
         return self.help_menu("Change log (Werks)")
 
+    @property
+    def changes_activate_pending_btn(self) -> Locator:
+        return self.changes_menu("Activate pending changes", exact=True)
+
+    @property
+    def changes_open_full_view_btn(self) -> Locator:
+        return self.changes_menu("Open full view", exact=True)
+
     def logout(self) -> None:
         logger.info("Click logout button")
         self.user_logout.click()

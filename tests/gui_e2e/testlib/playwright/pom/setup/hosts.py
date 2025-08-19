@@ -238,7 +238,9 @@ class AddHost(CmkPage):
     def snmp_dropdown_button(self) -> Locator:
         return self.main_area.locator("div#attr_entry_tag_snmp_ds >> b")
 
-    def create_host(self, host: HostDetails, test_site: Site | None = None) -> None:
+    def create_host(
+        self, host: HostDetails, test_site: Site | None = None, activate_changes: bool = True
+    ) -> None:
         """On `Setup -> Hosts -> Add host` page, create a new host and activate changes.
 
         Note: only host name and ip address are filled in this method. If needed the method can
@@ -280,7 +282,8 @@ class AddHost(CmkPage):
                 )
                 e.add_note(error_msg)
             raise e
-        self.activate_changes(test_site)
+        if activate_changes:
+            self.activate_changes(test_site)
 
 
 class HostProperties(CmkPage):
@@ -346,11 +349,12 @@ class HostProperties(CmkPage):
         setattr(mapping, "Host", "menu_host")
         return mapping
 
-    def delete_host(self, test_site: Site | None = None) -> None:
+    def delete_host(self, test_site: Site | None = None, activate: bool = True) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
         self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         SetupHost(self.page, navigate_to_page=False).check_host_not_present(self.details.name)
-        self.activate_changes(test_site)
-        self._exists = False
+        if activate:
+            self.activate_changes(test_site)
+            self._exists = False

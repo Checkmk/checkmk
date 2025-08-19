@@ -15,6 +15,7 @@ import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
+import UnifiedSearchEmptyStart from './UnifiedSearchEmptyStart.vue'
 
 const { _t } = usei18n()
 
@@ -99,6 +100,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <UnifiedSearchEmptyStart v-if="recentlySearches.length === 0 && recentlyViewed.length === 0">
+  </UnifiedSearchEmptyStart>
+
   <UnifiedSearchRecentlyViewed
     :focus="currentlySelected"
     :history-entries="recentlyViewed"

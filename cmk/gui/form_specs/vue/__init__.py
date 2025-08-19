@@ -7,6 +7,7 @@ from ._registry import (
     get_visitor,
 )
 from ._type_defs import (
+    create_validation_error_for_mk_user_error,
     DEFAULT_VALUE,
     DefaultValue,
     DiskModel,
@@ -40,5 +41,6 @@ __all__ = [
     "serialize_data_for_frontend",
     "parse_data_from_frontend",
     "process_validation_messages",
+    "create_validation_error_for_mk_user_error",
     "render_form_spec",
 ]

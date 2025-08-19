@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
+from cmk.gui.exceptions import MKUserError
+from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 DiskModel = Any
@@ -46,6 +50,18 @@ class FormSpecValidationError(ValueError):
     @property
     def messages(self) -> list[ValidationMessage]:
         return self._messages
+
+
+def create_validation_error_for_mk_user_error(
+    wrapped_function: Callable[[object], None],
+) -> Callable[[object], None]:
+    def wrapped(value: object) -> None:
+        try:
+            wrapped_function(value)
+        except MKUserError as e:
+            raise ValidationError(message=Message(str(e)))  # pylint: disable=localization-of-non-literal-string
+
+    return wrapped
 
 
 @dataclass(kw_only=True)

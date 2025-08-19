@@ -14,6 +14,7 @@ import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import CmkChip from '@/components/CmkChip.vue'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 import { staticAssertNever } from '@/lib/typeUtils'
+import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 
 interface CmkWindow extends Window {
   main: Window
@@ -83,9 +84,17 @@ function checkEmptyBackspace(e: KeyboardEvent) {
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
-      ;(top!.frames as CmkWindow).main.location.href = 'search_open.py?q='.concat(
-        searchUtils.query.input.value
+      const url = 'search_open.py?q='.concat(searchUtils.query.input.value)
+      searchUtils.history?.add(
+        new HistoryEntry(searchUtils.query.toQueryLike(), {
+          title: searchUtils.query.input.value,
+          url,
+          topic: 'Host/service search',
+          provider: 'monitoring',
+          context: ''
+        })
       )
+      ;(top!.frames as CmkWindow).main.location.href = url
       searchUtils.closeSearch()
     }
   }

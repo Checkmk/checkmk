@@ -22,6 +22,7 @@ export const topicIconMapping: ProviderTopicIconMapping = {
     other: 'other',
     overview: 'overview',
     problems: 'problems',
+    hostservice_search: 'search',
     service_description: 'services',
     synthetic_monitoring: 'synthetic-monitoring',
     system: 'system'

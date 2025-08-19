@@ -152,6 +152,7 @@
   --icon-topic-visualization: url('~cmk-frontend/themes/facelift/images/icon_topic_visualization.png');
   --icon-topic-synthetic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_synthetic_monitoring_topic.svg');
   --icon-topic-pagetype: url('~cmk-frontend/themes/facelift/images/icon_pagetype_topic.svg');
+  --icon-topic-search: url('~cmk-frontend/themes/facelift/images/icon_main_search_active.svg');
 }
 
 @layer theme {

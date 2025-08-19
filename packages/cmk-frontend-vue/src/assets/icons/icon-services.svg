@@ -1,0 +1,10 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 1L17 4.42681L9 7.85773L1 4.42681L9 1Z" fill="black" class="icon-primary-color"
+        fill-opacity="0.8" />
+    <path d="M1 4.42676L9 7.85768V16.9999L1 13.569V4.42676Z" fill="black"
+        class="icon-primary-color" />
+    <path d="M17 4.42676L9 7.85768V16.9999L17 13.569V4.42676Z"
+        class="icon-primary-color" fill="black" fill-opacity="0.6" />
+    <path d="M1 4.42676V13.569L9 16.9999V7.85768L1 4.42676Z"
+        class="icon-primary-color" fill="black" />
+</svg>

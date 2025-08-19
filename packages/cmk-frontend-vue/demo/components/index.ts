@@ -23,6 +23,7 @@ import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
+import DemoCmkMultitoneIcon from './DemoCmkMultitoneIcon.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
@@ -52,6 +53,7 @@ export const pages = [
   new Page('CmkColorPicker', DemoCmkColorPicker),
   new Page('CmkHtml', DemoCmkHtml),
   new Page('CmkSkeleton', DemoCmkSkeleton),
+  new Page('CmkMultitoneIcon', DemoCmkMultitoneIcon),
   new Page('CmkWizard', DemoCmkWizard),
   new Page('CmkBadge', DemoCmkBadge),
   new Page('CmkChip', DemoCmkChip),

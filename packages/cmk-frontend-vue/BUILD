@@ -111,6 +111,7 @@ SRCS = [
     "src/**/*.ts",
     "src/**/*.vue",
     "src/**/*.css",
+    "src/**/*.svg",
     "demo/**/*.ts",
     "demo/**/*.vue",
     "demo/**/*.css",

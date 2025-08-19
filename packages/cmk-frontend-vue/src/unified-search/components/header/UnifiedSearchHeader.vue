@@ -95,7 +95,9 @@ function onInputEnter() {
         })
       )
       ;(top!.frames as CmkWindow).main.location.href = url
+
       searchUtils.closeSearch()
+      searchUtils.resetSearch()
     }
   }
 }

@@ -359,6 +359,24 @@ CEE_UNUSED_PACKAGES = [
     "types-pika-ts",
 ]
 
+KNOWN_UNDECLARED_DEPENDENCIES = {
+    "buildscripts",  # used in build helper scripts in buildscripts/scripts
+    "netsnmp",  # We ship it with omd/packages
+    "pymongo",  # Optional except ImportError...
+    "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
+    "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
+    "docker",  # optional
+    "msrest",  # used in publish_cloud_images.py and not in the product
+    "pip",  # is included by default in python
+    "rrdtool",  # is built as part of the project
+    # the following packages must be installed additionally by the user
+    "ibm_db",  # active_checks/check_sql
+    "ibm_db_dbi",  # active_checks/check_sql
+    "sqlanydb",  # active_checks/check_sql
+    "libcst",  # doc/treasures/migration_helpers
+    "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/_registry.py
+}
+
 
 def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
@@ -388,33 +406,16 @@ def test_dependencies_are_declared() -> None:
     mostly optional imports and OMD-only shiped packages."""
     undeclared_dependencies = list(get_undeclared_dependencies())
     undeclared_dependencies_str = {d.name for d in undeclared_dependencies}
-    known_undeclared_dependencies = {
-        "buildscripts",  # used in build helper scripts in buildscripts/scripts
-        "netsnmp",  # We ship it with omd/packages
-        "pymongo",  # Optional except ImportError...
-        "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
-        "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
-        "docker",  # optional
-        "msrest",  # used in publish_cloud_images.py and not in the product
-        "pip",  # is included by default in python
-        "rrdtool",  # is built as part of the project
-        # the following packages must be installed additionally by the user
-        "ibm_db",  # active_checks/check_sql
-        "ibm_db_dbi",  # active_checks/check_sql
-        "sqlanydb",  # active_checks/check_sql
-        "libcst",  # doc/treasures/migration_helpers
-        "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/_registry.py
-    }
 
-    assert undeclared_dependencies_str >= known_undeclared_dependencies, (
+    assert undeclared_dependencies_str >= KNOWN_UNDECLARED_DEPENDENCIES, (
         "The exceptionlist is outdated, these are the 'offenders':"
-        + str(known_undeclared_dependencies - undeclared_dependencies_str)
+        + str(KNOWN_UNDECLARED_DEPENDENCIES - undeclared_dependencies_str)
     )
-    undeclared_dependencies_str -= known_undeclared_dependencies
+    undeclared_dependencies_str -= KNOWN_UNDECLARED_DEPENDENCIES
     assert undeclared_dependencies_str == set(), (
         "There are imports that are not declared in the requirements files:\n    "
         + "\n    ".join(
-            str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
+            str(d) for d in undeclared_dependencies if d.name not in KNOWN_UNDECLARED_DEPENDENCIES
         )
     )
 

@@ -16,7 +16,7 @@ import requests
 import urllib3
 
 from cmk.special_agents.v0_unstable.misc import vcrtrace
-from cmk.utils import password_store
+from cmk.utils.password_store import replace_passwords
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {
@@ -127,7 +127,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """Just replace password placeholders in command line args and call
     write_section_from_get_request()"""
     if argv is None:
-        password_store.replace_passwords()
+        replace_passwords()
         argv = sys.argv[1:]
 
     write_section_from_get_request(argv)

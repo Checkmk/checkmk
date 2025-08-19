@@ -12,7 +12,7 @@ from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 
 
 def main() -> int:
@@ -69,7 +69,7 @@ def get_password_from_args(args: Args) -> str:
 
     pw_id, pw_file = args.password_ref.split(":", maxsplit=1)
 
-    return password_store.lookup(pathlib.Path(pw_file), pw_id)
+    return password_store_lookup(pathlib.Path(pw_file), pw_id)
 
 
 def write_sections(sections: Sections) -> None:

@@ -36,7 +36,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils import paths
+from cmk.utils.paths import omd_root
 
 
 def _valuespec_special_agents_datadog() -> Dictionary:
@@ -135,7 +135,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
 
 
 def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
-    if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
+    if edition(omd_root) is Edition.CSE:  # disabled in CSE
         return {}
     return {
         "events": DictElement(

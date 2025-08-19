@@ -15,7 +15,7 @@ from typing import NamedTuple
 import paramiko
 from pydantic import BaseModel
 
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.ssh_client import get_ssh_client
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
@@ -45,7 +45,7 @@ class Args(BaseModel):
             return self.secret
         if self.secret_reference is not None:
             secret_id, file = self.secret_reference.split(":", 1)
-            return password_store.lookup(Path(file), secret_id)
+            return password_store_lookup(Path(file), secret_id)
         return None
 
 

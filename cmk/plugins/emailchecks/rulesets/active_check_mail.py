@@ -27,7 +27,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
-from cmk.utils import paths
+from cmk.utils.paths import omd_root
 
 from .options import fetching, timeout
 
@@ -62,7 +62,7 @@ def _valuespec_active_checks_mail() -> Dictionary:
             ),
             **(
                 {}
-                if edition(paths.omd_root) is Edition.CSE
+                if edition(omd_root) is Edition.CSE
                 else {"forward": DictElement(parameter_form=_forward_to_ec_form())}
             ),
         },

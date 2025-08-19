@@ -12,7 +12,7 @@ from pathlib import Path
 import requests
 import urllib3
 
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -45,7 +45,7 @@ def _make_auth(
         return (user, password)
     if password_ref is not None:
         pw_id, pw_file = password_ref.split(":", 1)
-        return (user, password_store.lookup(Path(pw_file), pw_id))
+        return (user, password_store_lookup(Path(pw_file), pw_id))
     return None
 
 

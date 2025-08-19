@@ -30,7 +30,7 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 
 SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 
@@ -322,7 +322,7 @@ def get_session(args: Args) -> HttpClient:
             password=(
                 args.password
                 if args.password is not None
-                else password_store.lookup(Path(pw_path), pw_id)
+                else password_store_lookup(Path(pw_path), pw_id)
             ),
             cafile="",
             default_prefix="/redfish/v1",

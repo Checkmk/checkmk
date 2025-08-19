@@ -20,12 +20,12 @@ from typing import Literal, NewType, TypeVar
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-import cmk.utils
 from cmk.plugins.kube import common
 from cmk.plugins.kube.schemata import section
+from cmk.utils.paths import tmp_dir
 
 AGENT_TMP_PATH = (
-    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else Path(tempfile.gettempdir())
+    tmp_dir if os.environ.get("OMD_SITE") else Path(tempfile.gettempdir())
 ) / "agent_kube"
 
 ContainerName = NewType("ContainerName", str)

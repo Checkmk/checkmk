@@ -34,7 +34,8 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
-from cmk.utils import password_store, paths
+from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.utils.paths import tmp_dir
 
 
 class CachedSectionWriter(SectionManager):
@@ -80,7 +81,7 @@ class Vendor:
 class ClientSession:
     """Client session data"""
 
-    DIR = paths.tmp_dir / "agents/agent_redfish"
+    DIR = tmp_dir / "agents/agent_redfish"
 
     def __init__(self, location: str, session: str) -> None:
         self.location: Final = location
@@ -684,7 +685,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:
 
 
 def _make_cached_section_path(hostname: str, section: str) -> Path:
-    return paths.tmp_dir / "agents" / "agent_redfish" / f"{hostname}_{section}.json"
+    return tmp_dir / "agents" / "agent_redfish" / f"{hostname}_{section}.json"
 
 
 def store_section_data(redfishobj: RedfishData) -> None:
@@ -752,7 +753,7 @@ def get_session(args: Args) -> RedfishData:
                     password=(
                         args.password
                         if args.password is not None
-                        else password_store.lookup(Path(pw_path), pw_id)
+                        else password_store_lookup(Path(pw_path), pw_id)
                     ),
                     cafile="",
                     default_prefix="/redfish/v1",

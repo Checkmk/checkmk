@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.agent_based.v2 import render
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 
 
 @dataclass
@@ -163,7 +163,7 @@ def _make_secret(args: argparse.Namespace) -> str:
         return args.password
 
     pw_id, pw_file = ref.split(":", 1)
-    return password_store.lookup(Path(pw_file), pw_id)
+    return password_store_lookup(Path(pw_file), pw_id)
 
 
 @dataclass(frozen=True)

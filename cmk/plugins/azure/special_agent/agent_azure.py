@@ -28,7 +28,7 @@ from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 
 import requests
 
-from cmk.ccc import hostaddress
+from cmk.ccc.hostaddress import HostAddress
 from cmk.plugins.azure.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -44,8 +44,8 @@ from cmk.plugins.azure.special_agent.azure_api_client import (
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.password_store import replace_passwords
 from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
@@ -275,7 +275,7 @@ class AzureSubscription:
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str] | None] = tags
         self._name: Final[str] = name
-        self._valid_hostname: Final[str] = hostaddress.HostAddress.project_valid(name)
+        self._valid_hostname: Final[str] = HostAddress.project_valid(name)
 
         self._safe_name_suffix: Final[str] = f"{self.id[-8:]}"
         self._safe_hostnames: Final[bool] = safe_hostnames
@@ -434,7 +434,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
     # I'm not sure this is still needed
     if argv is None:
-        password_store.replace_passwords()
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parser.parse_args(argv)

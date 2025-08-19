@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.ccc import version
 from cmk.ccc.hostaddress import HostAddress
-from cmk.ccc.version import Edition
+from cmk.ccc.version import Edition, edition
 from cmk.gui.form_specs.private import ListExtended  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -33,7 +32,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils import paths
+from cmk.utils.paths import omd_root
 
 OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
 
@@ -65,12 +64,12 @@ def _tcp_timeouts() -> Dictionary:
     )
 
 
-def _usage_endpoint(edition: Edition) -> CascadingSingleChoice:
+def _usage_endpoint(edition_: Edition) -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Enrich with usage data"),
         migrate=_migrate_usage_endpoint,
         elements=[_cluster_collector(), _openshift()]
-        if edition in OPENSHIFT_EDITIONS
+        if edition_ in OPENSHIFT_EDITIONS
         else [_cluster_collector()],
         prefill=DefaultValue("cluster_collector"),
     )
@@ -88,15 +87,15 @@ def _is_cre_spec(k: str, vs: object) -> bool:
     return isinstance(vs, tuple) and vs[0] in ("cluster_collector", "cluster-collector")
 
 
-def _transform_openshift_endpoint(p: dict[str, object], edition: Edition) -> dict[str, object]:
+def _transform_openshift_endpoint(p: dict[str, object], edition_: Edition) -> dict[str, object]:
     return (
-        p if edition in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+        p if edition_ in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
     )
 
 
-def _migrate_and_transform(p: object, edition: Edition) -> dict[str, object]:
+def _migrate_and_transform(p: object, edition_: Edition) -> dict[str, object]:
     p = _migrate_form_specs(p)
-    return _transform_openshift_endpoint(p, edition)
+    return _transform_openshift_endpoint(p, edition_)
 
 
 def _openshift() -> CascadingSingleChoiceElement:
@@ -281,7 +280,7 @@ def _migrate_import_annotations(p: object) -> tuple[str, object]:
 
 def _valuespec_special_agents_kube() -> Dictionary:
     return Dictionary(
-        migrate=lambda v: _migrate_and_transform(v, version.edition(paths.omd_root)),
+        migrate=lambda v: _migrate_and_transform(v, edition(omd_root)),
         title=Title("Kubernetes"),
         elements={
             "cluster_name": DictElement(
@@ -313,7 +312,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
             ),
             "usage_endpoint": DictElement(
                 required=False,
-                parameter_form=_usage_endpoint(version.edition(paths.omd_root)),
+                parameter_form=_usage_endpoint(edition(omd_root)),
             ),
             "monitored_objects": DictElement(
                 required=True,

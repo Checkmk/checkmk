@@ -10,7 +10,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import assert_never, Literal
 
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 
 
 @dataclass
@@ -183,7 +183,7 @@ def _parse_secret(secret: str | None, reference: str | None) -> str:
     if reference is None:
         raise ValueError("Either secret or secret reference must be set")
     secret_id, file = reference.split(":", 1)
-    return password_store.lookup(Path(file), secret_id)
+    return password_store_lookup(Path(file), secret_id)
 
 
 def _parse_port(raw: Mapping[str, object]) -> int:

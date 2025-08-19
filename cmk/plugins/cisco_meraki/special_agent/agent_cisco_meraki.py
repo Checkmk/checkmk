@@ -23,7 +23,7 @@ from cmk.special_agents.v0_unstable.agent_common import (
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 _LOGGER = logging.getLogger("agent_cisco_meraki")
@@ -438,7 +438,7 @@ def _make_secret(args: Args) -> str:
     if args.apikey:
         return args.apikey
     pw_id, pw_file = args.apikey_reference.split(":", 1)
-    return password_store.lookup(Path(pw_file), pw_id)
+    return password_store_lookup(Path(pw_file), pw_id)
 
 
 def agent_cisco_meraki_main(args: Args) -> int:

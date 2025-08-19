@@ -41,7 +41,7 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.ccc import store
+from cmk.ccc.store import save_text_to_file
 from cmk.plugins.aws.constants import (
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
@@ -63,7 +63,7 @@ from cmk.special_agents.v0_unstable.misc import (
     get_seconds_since_midnight,
     vcrtrace,
 )
-from cmk.utils import password_store
+from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 if TYPE_CHECKING:
@@ -375,7 +375,7 @@ class AWSConfig:
             return None
 
     def _write_config_hash(self) -> None:
-        store.save_text_to_file(self._config_hash_file, f"{self._current_config_hash}\n")
+        save_text_to_file(self._config_hash_file, f"{self._current_config_hash}\n")
 
 
 # .
@@ -7585,7 +7585,7 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
             proxy_password = args.proxy_password
         elif args.proxy_password_reference:
             pw_id, pw_file = args.proxy_password_reference.split(":", 1)
-            proxy_password = password_store.lookup(Path(pw_file), pw_id)
+            proxy_password = password_store_lookup(Path(pw_file), pw_id)
         else:
             proxy_password = None
         return botocore.config.Config(
@@ -7675,7 +7675,7 @@ def _create_session_from_args(
         secret_access_key = args.secret_access_key
     elif args.secret_access_key_reference:
         pw_id, pw_file = args.secret_access_key_reference.split(":", 1)
-        secret_access_key = password_store.lookup(Path(pw_file), pw_id)
+        secret_access_key = password_store_lookup(Path(pw_file), pw_id)
 
     if args.assume_role:
         return _sts_assume_role(

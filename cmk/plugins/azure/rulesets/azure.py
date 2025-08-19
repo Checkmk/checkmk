@@ -30,7 +30,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils import paths
+from cmk.utils.paths import omd_root
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
@@ -72,7 +72,7 @@ def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
 
 
 def get_azure_services() -> Sequence[tuple[str, Title]]:
-    if edition(paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
+    if edition(omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
     return RAW_AZURE_SERVICES
 

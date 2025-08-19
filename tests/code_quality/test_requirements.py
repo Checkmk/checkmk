@@ -10,7 +10,7 @@ import logging
 import re
 import warnings
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from functools import cache
 from itertools import chain
 from pathlib import Path
@@ -360,22 +360,87 @@ CEE_UNUSED_PACKAGES = [
 ]
 
 KNOWN_UNDECLARED_DEPENDENCIES = {
-    "buildscripts",  # used in build helper scripts in buildscripts/scripts
-    "netsnmp",  # We ship it with omd/packages
-    "pymongo",  # Optional except ImportError...
-    "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
-    "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
-    "docker",  # optional
-    "msrest",  # used in publish_cloud_images.py and not in the product
-    "pip",  # is included by default in python
-    "rrdtool",  # is built as part of the project
-    # the following packages must be installed additionally by the user
-    "ibm_db",  # active_checks/check_sql
-    "ibm_db_dbi",  # active_checks/check_sql
-    "sqlanydb",  # active_checks/check_sql
-    "libcst",  # doc/treasures/migration_helpers
-    "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/_registry.py
+    ImportName("buildscripts"): {
+        Path("buildscripts/scripts/assert_build_artifacts.py"),
+        Path("buildscripts/scripts/get_distros.py"),
+        Path("buildscripts/scripts/build-cmk-container.py"),
+    },
+    ImportName("msrest"): {  # used in publish_cloud_images.py and not in the product
+        Path("buildscripts/scripts/publish_cloud_images.py"),
+    },
+    ImportName("tests"): {
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/controller.py"
+        ),
+        Path("buildscripts/scripts/lib/registry.py"),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_ct03_handle_dying_fetchers.py"
+        ),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/worker.py"),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_ct09_core_does_not_mix_host_data.py"
+        ),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/conftest.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/core_helpers.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_core.py"),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/behavior.py"
+        ),
+        Path("buildscripts/scripts/assert_build_artifacts.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_ct04_fetcher_timeouts.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_ct02_fetcher_returns_data.py"
+        ),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/behavior_controller.py"
+        ),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/main.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/test_fake_fetcher.py"),
+    },
+    ImportName("libcst"): {
+        Path("doc/treasures/migration_helpers/legacy_ssc_to_v1.py"),
+        Path("doc/treasures/migration_helpers/legacy_checks_to_v2.py"),
+        Path("doc/treasures/migration_helpers/legacy_vs_to_ruleset_v1.py"),
+    },
+    ImportName("pip"): {  # is included by default in python
+        Path("omd/packages/Python/pip")
+    },
+    ImportName("pymongo"): {  # Optional except ImportError...
+        Path("cmk/ec/history_mongo.py")
+    },
+    ImportName("ibm_db"): {Path("cmk/plugins/sql/active_check/check_sql.py")},
+    ImportName("sqlanydb"): {Path("cmk/plugins/sql/active_check/check_sql.py")},
+    ImportName("ibm_db_dbi"): {Path("cmk/plugins/sql/active_check/check_sql.py")},
+    ImportName("mypy_boto3_logs"): {  # used by mypy within typing.TYPE_CHECKING
+        Path("cmk/plugins/aws/special_agent/agent_aws.py")
+    },
+    ImportName("tinkerforge"): {Path("cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py")},
+    ImportName("netsnmp"): {  # We ship it with omd/packages
+        Path("cmk/fetchers/cee/snmp_backend/inline.py")
+    },
+    ImportName("rrdtool"): {  # is built as part of the project
+        Path("bin/cmk-convert-rrds"),
+        Path("bin/cmk-create-rrd"),
+    },
+    ImportName("docker"): (
+        Path("buildscripts/docker_image_aliases/register.py"),
+        Path("buildscripts/scripts/lib/registry.py"),
+        Path("buildscripts/scripts/build-cmk-container.py"),
+    ),
 }
+
+
+def _asym_diff(
+    minuend: Mapping[ImportName, Iterable[Path]], subtrahend: Mapping[ImportName, Iterable[Path]]
+) -> Mapping[ImportName, Iterable[Path]]:
+    return {
+        key: left_paths
+        for key, paths in minuend.items()
+        if (left_paths := set(paths) - set(subtrahend.get(key, ())))
+    }
 
 
 def test_dependencies_are_used() -> None:
@@ -404,19 +469,14 @@ def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the requirements files
 
     mostly optional imports and OMD-only shiped packages."""
-    undeclared_dependencies = list(get_undeclared_dependencies())
-    undeclared_dependencies_str = {d.name for d in undeclared_dependencies}
+    undeclared_dependencies = {i.name: i.paths for i in get_undeclared_dependencies()}
 
-    assert undeclared_dependencies_str >= KNOWN_UNDECLARED_DEPENDENCIES, (
-        "The exceptionlist is outdated, these are the 'offenders':"
-        + str(KNOWN_UNDECLARED_DEPENDENCIES - undeclared_dependencies_str)
+    assert not (outdated := _asym_diff(KNOWN_UNDECLARED_DEPENDENCIES, undeclared_dependencies)), (
+        f"The exceptionlist is outdated, these are the 'offenders': {outdated!r}"
     )
-    undeclared_dependencies_str -= KNOWN_UNDECLARED_DEPENDENCIES
-    assert undeclared_dependencies_str == set(), (
-        "There are imports that are not declared in the requirements files:\n    "
-        + "\n    ".join(
-            str(d) for d in undeclared_dependencies if d.name not in KNOWN_UNDECLARED_DEPENDENCIES
-        )
+
+    assert not (offending := _asym_diff(undeclared_dependencies, KNOWN_UNDECLARED_DEPENDENCIES)), (
+        f"There are imports that are not declared in the requirements files: {offending!r}"
     )
 
 

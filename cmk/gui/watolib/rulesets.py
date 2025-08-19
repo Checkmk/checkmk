@@ -747,24 +747,36 @@ class Ruleset:
             object_ref=rule.object_ref(),
         )
 
-    def move_to_folder(
-        self,
-        rule: Rule,
-        folder: Folder,
-        index: int = BOTTOM,
-    ) -> None:
-        source_rules = self._rules[rule.folder.path()]
+    def move_to_folder(self, rule: Rule, folder: Folder, index: int = BOTTOM) -> None:
+        source_folder = rule.folder
+        if source_folder == folder:
+            # same folder, use the simpler audit log entry
+            self.move_rule_to(rule, index=index)
+            return
+
+        source_rules = self._rules[source_folder.path()]
         dest_rules = self._rules.setdefault(folder.path(), [])
 
         # The actual move
         source_rules.remove(rule)
         if index == Ruleset.BOTTOM:
+            index = len(dest_rules)  # write correct index to audit log
             dest_rules.append(rule)
         else:
             index = self.get_index_for_move(folder, rule, index)
             dest_rules.insert(index, rule)
         rule.folder = folder
 
+        affected_sites = set(source_folder.all_site_ids())
+        affected_sites.update(folder.all_site_ids())
+
+        add_change(
+            action_name="edit-rule",
+            text=_l('Moved rule %s of ruleset "%s" from folder "%s" to position #%d in folder "%s"')
+            % (rule.id, self.title(), source_folder.title(), index, folder.title()),
+            sites=list(affected_sites),
+            object_ref=rule.object_ref(),
+        )
         self._on_change()
 
     def append_rule(self, folder: Folder, rule: Rule) -> int:

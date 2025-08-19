@@ -22,7 +22,7 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 <style scoped>
 .result-item-skeleton {
   list-style-type: none;
-  margin-bottom: var(--dimension-item-spacing-1) !important;
+  margin-bottom: var(--dimension-1) !important;
   height: 53px;
 
   .result-item-skeleton-handler {

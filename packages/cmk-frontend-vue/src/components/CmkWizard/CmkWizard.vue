@@ -19,7 +19,7 @@ defineProps<CmkWizardProps>()
 
 <style scoped>
 .cmk-wizard {
-  margin: var(--dimension-item-spacing-4) 0 0;
+  margin: var(--dimension-4) 0 0;
   padding-left: 0;
   counter-reset: stage-index;
 }

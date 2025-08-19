@@ -5,81 +5,15 @@
  */
 
 :root {
-  /* Padding */
-  --dimension-padding-1: 1px;
-  --dimension-padding-2: 2px;
-  --dimension-padding-3: 4px;
-  --dimension-padding-4: 8px;
-  --dimension-padding-5: 12px;
-  --dimension-padding-6: 16px;
-  --dimension-padding-7: 20px;
-  --dimension-padding-8: 24px;
-  --dimension-padding-9: 28px;
-  --dimension-padding-10: 32px;
-  --dimension-padding-11: 36px;
-
-  /* Item spacing */
-  --dimension-item-spacing-1: 1px;
-  --dimension-item-spacing-2: 2px;
-  --dimension-item-spacing-3: 4px;
-  --dimension-item-spacing-4: 8px;
-  --dimension-item-spacing-5: 12px;
-  --dimension-item-spacing-6: 16px;
-  --dimension-item-spacing-7: 20px;
-  --dimension-item-spacing-8: 24px;
-  --dimension-item-spacing-9: 28px;
-  --dimension-item-spacing-10: 32px;
-  --dimension-item-spacing-11: 36px;
-
-  /* Radius */
-  --dimension-radius-1: 1px;
-  --dimension-radius-2: 2px;
-  --dimension-radius-3: 4px;
-  --dimension-radius-4: 8px;
-  --dimension-radius-5: 12px;
-  --dimension-radius-6: 16px;
-  --dimension-radius-7: 20px;
-  --dimension-radius-8: 24px;
-  --dimension-radius-9: 28px;
-  --dimension-radius-10: 32px;
-  --dimension-radius-11: 36px;
-
-  /* Height */
-  --dimension-height-1: 1px;
-  --dimension-height-2: 2px;
-  --dimension-height-3: 4px;
-  --dimension-height-4: 8px;
-  --dimension-height-5: 12px;
-  --dimension-height-6: 16px;
-  --dimension-height-7: 20px;
-  --dimension-height-8: 24px;
-  --dimension-height-9: 28px;
-  --dimension-height-10: 32px;
-  --dimension-height-11: 36px;
-
-  /* Width */
-  --dimension-width-1: 1px;
-  --dimension-width-2: 2px;
-  --dimension-width-3: 4px;
-  --dimension-width-4: 8px;
-  --dimension-width-5: 12px;
-  --dimension-width-6: 16px;
-  --dimension-width-7: 20px;
-  --dimension-width-8: 24px;
-  --dimension-width-9: 28px;
-  --dimension-width-10: 32px;
-  --dimension-width-11: 36px;
-
-  /* Border width */
-  --dimension-border-width-1: 1px;
-  --dimension-border-width-2: 2px;
-  --dimension-border-width-3: 4px;
-  --dimension-border-width-4: 8px;
-  --dimension-border-width-5: 12px;
-  --dimension-border-width-6: 16px;
-  --dimension-border-width-7: 20px;
-  --dimension-border-width-8: 24px;
-  --dimension-border-width-9: 28px;
-  --dimension-border-width-10: 32px;
-  --dimension-border-width-11: 36px;
+  --dimension-1: 1px;
+  --dimension-2: 2px;
+  --dimension-3: 4px;
+  --dimension-4: 8px;
+  --dimension-5: 12px;
+  --dimension-6: 16px;
+  --dimension-7: 20px;
+  --dimension-8: 24px;
+  --dimension-9: 28px;
+  --dimension-10: 32px;
+  --dimension-11: 36px;
 }

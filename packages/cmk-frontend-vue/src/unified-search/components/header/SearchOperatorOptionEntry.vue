@@ -44,7 +44,7 @@ li {
     background: transparent;
     border: 1px solid transparent;
     width: 100%;
-    padding: var(--dimension-padding-2) var(--dimension-padding-4);
+    padding: var(--dimension-2) var(--dimension-4);
     margin: 0;
     text-align: left;
     font-weight: normal;

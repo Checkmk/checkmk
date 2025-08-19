@@ -30,11 +30,11 @@ defineProps<{
 <style scoped>
 .cmk-changes-activating-container {
   display: flex;
-  padding: var(--dimension-padding-9) var(--dimension-padding-4);
+  padding: var(--dimension-9) var(--dimension-4);
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
   align-self: stretch;
   background: var(--ux-theme-4);
   border-radius: var(--border-radius);

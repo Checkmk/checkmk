@@ -99,14 +99,14 @@ const changesSideTitle = computed(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-top: var(--dimension-item-spacing-8);
-  margin-bottom: var(--dimension-item-spacing-6);
+  margin-top: var(--dimension-8);
+  margin-bottom: var(--dimension-6);
 }
 
 .collapsible-title {
   position: relative;
   height: auto;
-  padding: 0 0 var(--dimension-padding-4) var(--dimension-padding-2);
+  padding: 0 0 var(--dimension-4) var(--dimension-2);
   font-weight: bold;
   width: 100%;
   box-sizing: border-box;
@@ -125,7 +125,7 @@ const changesSideTitle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--dimension-item-spacing-3);
+  gap: var(--dimension-3);
 }
 
 .cmk-div-no-sites-selected {
@@ -135,8 +135,8 @@ const changesSideTitle = computed(() => {
   width: 100%;
   height: 100%;
   color: var(--font-color-dimmed);
-  margin-top: var(--dimension-item-spacing-6);
-  margin-bottom: var(--dimension-item-spacing-6);
+  margin-top: var(--dimension-6);
+  margin-bottom: var(--dimension-6);
 }
 
 .cmk-scroll-pending-changes-container {
@@ -154,12 +154,12 @@ const changesSideTitle = computed(() => {
 }
 
 .cmk-indent-pending-change-container {
-  --margin-left: var(--dimension-item-spacing-4);
+  --margin-left: var(--dimension-4);
   display: flex;
-  padding: 0 0 0 var(--dimension-padding-4) !important;
+  padding: 0 0 0 var(--dimension-4) !important;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--dimension-item-spacing-3);
+  gap: var(--dimension-3);
   box-sizing: border-box;
   margin-top: 0;
   margin-bottom: 0;
@@ -169,7 +169,7 @@ const changesSideTitle = computed(() => {
 
 .pending-change__zebra {
   background-color: var(--default-bg-color);
-  padding: var(--dimension-padding-4);
+  padding: var(--dimension-4);
   width: 100%;
   box-sizing: border-box;
 }
@@ -201,6 +201,6 @@ const changesSideTitle = computed(() => {
 .cmk-div-user-sites-timestamp {
   display: flex;
   align-items: center;
-  gap: var(--dimension-item-spacing-3);
+  gap: var(--dimension-3);
 }
 </style>

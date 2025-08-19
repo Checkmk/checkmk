@@ -189,7 +189,7 @@ const getSearchInputPlaceholder = computed(() => {
   width: 70%;
   position: relative;
   flex: 5;
-  margin-right: var(--dimension-item-spacing-4);
+  margin-right: var(--dimension-4);
 }
 
 .unified-search-input-tag-root {
@@ -260,7 +260,7 @@ const getSearchInputPlaceholder = computed(() => {
   line-height: 15px;
   height: 27px;
   padding: 0;
-  margin-left: var(--dimension-padding-4);
+  margin-left: var(--dimension-4);
   flex-grow: 5;
 
   &::placeholder {

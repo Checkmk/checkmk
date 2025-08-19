@@ -156,7 +156,7 @@ function toggleOperatorOptions() {
 
   .unified-search-operator-switch-button {
     height: 100%;
-    padding: 0 var(--dimension-padding-3) 0 var(--dimension-padding-4);
+    padding: 0 var(--dimension-3) 0 var(--dimension-4);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -178,14 +178,14 @@ function toggleOperatorOptions() {
     }
 
     .unified-search-operator-switch-indicator {
-      padding: 0 0 0 var(--dimension-padding-4);
+      padding: 0 0 0 var(--dimension-4);
     }
 
     .unified-search-operator-info-icon {
       background: var(--color-dark-blue-50);
       border-radius: 99px;
-      padding: var(--dimension-padding-3);
-      margin-right: var(--dimension-item-spacing-4);
+      padding: var(--dimension-3);
+      margin-right: var(--dimension-4);
     }
   }
 
@@ -202,7 +202,7 @@ function toggleOperatorOptions() {
 
 .unified-search-operator-options {
   position: absolute;
-  margin-top: var(--dimension-item-spacing-2);
+  margin-top: var(--dimension-2);
   right: var(--spacing-double);
   padding: 0;
   background: var(--default-form-element-bg-color);
@@ -214,7 +214,7 @@ function toggleOperatorOptions() {
 .unified-search-operator-option-list-section-title {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
-  padding: var(--dimension-padding-2) var(--dimension-padding-3) !important;
+  padding: var(--dimension-2) var(--dimension-3) !important;
 }
 
 .unified-search-operator-option-list {

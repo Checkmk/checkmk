@@ -126,18 +126,18 @@ immediateWatch(
 
 <style scoped>
 .cmk-changes-sites {
-  margin-top: var(--dimension-item-spacing-7);
+  margin-top: var(--dimension-7);
 }
 
 .cmk-changes-site-single {
   background: var(--ux-theme-3);
-  padding: var(--dimension-padding-4);
+  padding: var(--dimension-4);
   border-radius: var(--border-radius);
 
   .cmk-changes-site-single-title {
     color: var(--font-color);
     font-weight: var(--font-weight-bold);
-    padding-bottom: var(--dimension-padding-4);
+    padding-bottom: var(--dimension-4);
   }
 }
 </style>

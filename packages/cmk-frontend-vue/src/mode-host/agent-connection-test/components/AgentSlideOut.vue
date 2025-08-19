@@ -206,16 +206,16 @@ function saveHost() {
 
 <style scoped>
 .select-heading {
-  margin-top: var(--dimension-item-spacing-5);
-  margin-bottom: var(--dimension-item-spacing-4);
+  margin-top: var(--dimension-5);
+  margin-bottom: var(--dimension-4);
 }
 
 button.close_and_test {
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
 }
 
 button.all_agents {
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
   margin-left: var(--spacing);
 }
 
@@ -233,14 +233,14 @@ button.all_agents {
 }
 
 .code {
-  margin-bottom: var(--dimension-item-spacing-7);
+  margin-bottom: var(--dimension-7);
 }
 
 .register-heading-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
 }
 
 .save_host__div {
@@ -248,7 +248,7 @@ button.all_agents {
 }
 
 .save_host__button {
-  margin-top: var(--dimension-item-spacing-4);
+  margin-top: var(--dimension-4);
 }
 
 .install_url__div {

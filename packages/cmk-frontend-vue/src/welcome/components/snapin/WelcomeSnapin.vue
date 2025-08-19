@@ -83,7 +83,7 @@ const completed = completedSteps === totalSteps
 }
 .welcome-snapin-continue {
   display: flex;
-  height: var(--dimension-height-10);
+  height: var(--dimension-10);
   background: var(--success);
   color: var(--black);
   width: 100%;

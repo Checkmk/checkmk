@@ -114,7 +114,7 @@ const emit = defineEmits<{
 <style scoped>
 .cmk-changes-sites-item-wrapper {
   background: var(--default-bg-color);
-  padding: var(--dimension-padding-3);
+  padding: var(--dimension-3);
   box-sizing: border-box;
 }
 
@@ -166,20 +166,20 @@ const emit = defineEmits<{
 .cmk-div-site-activate-warning,
 .cmk-div-site-activate-error {
   display: flex;
-  padding: var(--dimension-padding-2) var(--dimension-padding-4);
+  padding: var(--dimension-2) var(--dimension-4);
   justify-content: left;
   align-items: center;
-  gap: var(--dimension-item-spacing-3);
+  gap: var(--dimension-3);
   align-self: stretch;
   border-radius: var(--border-radius);
-  margin: 0 var(--dimension-item-spacing-3);
+  margin: 0 var(--dimension-3);
 }
 
 .cmk-div-warning-or-error-message {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-item-spacing-3);
-  padding: var(--dimension-padding-3) 0;
+  gap: var(--dimension-3);
+  padding: var(--dimension-3) 0;
   font-weight: var(--font-weight-bold);
 }
 

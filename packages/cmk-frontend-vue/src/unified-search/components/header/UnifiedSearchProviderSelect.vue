@@ -160,7 +160,7 @@ const provideri18n: Record<QueryProvider, string> = {
 
   .unified-search-provider-switch-button {
     height: 100%;
-    padding: 0 var(--dimension-padding-3) 0 var(--dimension-padding-4);
+    padding: 0 var(--dimension-3) 0 var(--dimension-4);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -182,7 +182,7 @@ const provideri18n: Record<QueryProvider, string> = {
     }
 
     .unified-search-provider-switch-indicator {
-      padding: 0 0 0 var(--dimension-padding-4);
+      padding: 0 0 0 var(--dimension-4);
     }
   }
 }
@@ -201,7 +201,7 @@ const provideri18n: Record<QueryProvider, string> = {
 .unified-search-provider-option-list-section-title {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
-  padding: var(--dimension-padding-2) var(--dimension-padding-3) !important;
+  padding: var(--dimension-2) var(--dimension-3) !important;
 }
 
 .unified-search-provider-option-list {

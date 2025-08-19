@@ -19,9 +19,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 .cmk-wizard-step-row {
   position: relative;
   display: flex;
-  gap: var(--dimension-item-spacing-6);
-  --wizard-step-number-badge-width: var(--dimension-width-8);
-  --wizard-progress-bar-width: var(--dimension-width-3);
+  gap: var(--dimension-6);
+  --wizard-step-number-badge-width: var(--dimension-8);
+  --wizard-progress-bar-width: var(--dimension-3);
 
   &:not(:last-child) {
     padding-bottom: 1rem;
@@ -59,6 +59,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 .cmk-wizard-step__slots {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
 }
 </style>

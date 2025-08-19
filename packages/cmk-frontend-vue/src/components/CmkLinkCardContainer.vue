@@ -38,7 +38,7 @@ defineProps<CmkLinkCardContainerProps>()
 <style scoped>
 .cmk-link-card-container {
   display: flex;
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
   flex-direction: column;
 
   &.cmk-link-card-container--horizontal {

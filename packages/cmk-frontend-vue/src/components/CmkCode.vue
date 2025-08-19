@@ -131,7 +131,7 @@ const toggleExpansion = () => {
 
 <style scoped>
 .cmk-code__heading {
-  margin-bottom: var(--dimension-item-spacing-3);
+  margin-bottom: var(--dimension-3);
   color: var(--font-color);
   font-weight: 400;
 }
@@ -140,7 +140,7 @@ const toggleExpansion = () => {
   display: flex;
   align-items: flex-start;
   margin-bottom: var(--spacing);
-  gap: var(--dimension-item-spacing-4);
+  gap: var(--dimension-4);
   max-width: 100%;
 
   .code_container {
@@ -150,8 +150,7 @@ const toggleExpansion = () => {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
-    padding: var(--dimension-item-spacing-4) var(--dimension-item-spacing-5)
-      var(--dimension-item-spacing-3) var(--dimension-item-spacing-5);
+    padding: var(--dimension-4) var(--dimension-5) var(--dimension-3) var(--dimension-5);
     color: var(--font-color);
     border-radius: var(--border-radius);
     border: var(--border-width-1, 1px) solid var(--code-background-color);
@@ -162,9 +161,7 @@ const toggleExpansion = () => {
 
     .code_scroll_container {
       overflow-x: auto;
-      padding-bottom: var(
-        --dimension-padding-3
-      ); /* Firefox will place the scrollbar on top of it */
+      padding-bottom: var(--dimension-3); /* Firefox will place the scrollbar on top of it */
     }
 
     &.has-toggle:not(.expanded) .code_scroll_container {
@@ -203,19 +200,19 @@ const toggleExpansion = () => {
       position: relative;
       left: auto;
       transform: none;
-      margin-top: var(--dimension-item-spacing-4);
+      margin-top: var(--dimension-4);
       text-align: center;
       width: 100%;
     }
 
     .toggle_button {
       font-size: var(--font-size-normal);
-      padding: 0px var(--dimension-padding-4);
+      padding: 0px var(--dimension-4);
       border-color: var(--font-color);
       color: var(--font-color);
       display: inline-flex;
       align-items: center;
-      gap: var(--dimension-item-spacing-3);
+      gap: var(--dimension-3);
     }
 
     .toggle_icon {
@@ -236,7 +233,7 @@ const toggleExpansion = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--dimension-padding-4);
+    padding: var(--dimension-4);
     border-radius: var(--border-radius);
     border: var(--border-width-1, 1px) solid var(--color-corporate-green-50);
     background: var(--color-corporate-green-50);
@@ -248,7 +245,7 @@ const toggleExpansion = () => {
   display: flex;
   align-items: center;
   gap: var(--spacing);
-  padding: var(--dimension-padding-3) var(--dimension-padding-4);
+  padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
   background-color: var(--code-background-color);
   color: var(--font-color);

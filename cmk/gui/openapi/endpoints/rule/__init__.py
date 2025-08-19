@@ -13,7 +13,6 @@ from typing import Any
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
     APILabelGroupCondition,
@@ -37,7 +36,6 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.utils import gen_id
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import (
@@ -172,23 +170,11 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
             )
 
     dest_folder.permissions.need_permission("write")
-    source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
-    source_entry.folder = dest_folder
-    all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
-    affected_sites = source_entry.folder.all_site_ids()
-
-    if dest_folder != source_entry.folder:
-        affected_sites.extend(dest_folder.all_site_ids())
-
-    add_change(
-        action_name="edit-rule",
-        text=_l('Changed properties of rule "%s", moved from folder "%s" to top of folder "%s"')
-        % (source_entry.rule.id, source_entry.folder.title(), dest_folder.title()),
-        user_id=user.id,
-        sites=list(set(affected_sites)),
-        object_ref=source_entry.rule.object_ref(),
-        use_git=active_config.wato_use_git,
+    source_entry.ruleset.move_to_folder(
+        source_entry.rule, dest_folder, index, use_git=active_config.wato_use_git
     )
+    source_entry.folder = dest_folder  # this ensures the correct folder is returned in the response
+    all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
     return serve_json(_serialize_rule(source_entry))
 

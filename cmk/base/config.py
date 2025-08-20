@@ -1773,7 +1773,7 @@ class ConfigCache:
         ],
         *,
         selected_sections: SectionNameCollection,
-    ) -> frozenset[SectionName]:
+    ) -> frozenset[SNMPSectionName]:
         if selected_sections is not NO_SELECTION:
             checking_sections = selected_sections
         else:
@@ -1798,7 +1798,9 @@ class ConfigCache:
                     ),
                 )
             )
-        return frozenset(s for s in checking_sections if s in plugins.snmp_sections)
+        return frozenset(
+            SNMPSectionName(s) for s in checking_sections if s in plugins.snmp_sections
+        )
 
     def invalidate_host_config(self) -> None:
         self.__enforced_services_table.clear()
@@ -3722,13 +3724,13 @@ class FetcherFactory:
         self._service_name_config: Final = service_name_config
         self._enforced_services_table: Final = enforced_services_table
         self.is_cmc: Final = is_cmc
-        self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
+        self.__disabled_snmp_sections: dict[HostName, frozenset[SNMPSectionName]] = {}
 
     def clear(self) -> None:
         self.__disabled_snmp_sections.clear()
 
-    def _disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
-        def disabled_snmp_sections_impl() -> frozenset[SectionName]:
+    def _disabled_snmp_sections(self, host_name: HostName) -> frozenset[SNMPSectionName]:
+        def disabled_snmp_sections_impl() -> frozenset[SNMPSectionName]:
             """Return a set of disabled snmp sections"""
             rules = self._ruleset_matcher.get_host_values_all(
                 host_name, snmp_exclude_sections, self._label_manager.labels_of_host
@@ -3741,7 +3743,7 @@ class FetcherFactory:
                     merged_section_settings[section] = True
 
             return frozenset(
-                SectionName(name)
+                SNMPSectionName(name)
                 for name, is_disabled in merged_section_settings.items()
                 if is_disabled
             )
@@ -3755,11 +3757,14 @@ class FetcherFactory:
         self,
         host_name: HostName,
         *,
-        checking_sections: frozenset[SectionName],
+        checking_sections: frozenset[SNMPSectionName],
         sections: Iterable[SNMPSectionPlugin],
     ) -> Mapping[SNMPSectionName, SNMPSectionMeta]:
         disabled_sections = self._disabled_snmp_sections(host_name)
-        redetect_sections = agent_based_register.sections_needing_redetection(sections)
+        redetect_sections = {
+            SNMPSectionName(name)
+            for name in agent_based_register.sections_needing_redetection(sections)
+        }
         return {
             SNMPSectionName(name): SNMPSectionMeta(
                 checking=name in checking_sections,

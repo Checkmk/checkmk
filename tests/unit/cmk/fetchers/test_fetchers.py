@@ -51,6 +51,7 @@ from cmk.snmplib import (
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
+    SNMPSectionMarker,
     SNMPSectionName,
     SNMPTable,
     SNMPVersion,
@@ -691,7 +692,7 @@ class TestSNMPFetcherFetch:
 
 class SNMPFetcherStub(SNMPFetcher):
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        return {SNMPSectionName("section"): [[b"fetched"]]}
+        return {SNMPSectionMarker("section"): [[b"fetched"]]}
 
 
 class TestSNMPFetcherFetchCache:
@@ -730,7 +731,7 @@ class TestSNMPFetcherFetchCache:
             use_only_cache=False,
             file_cache_mode=FileCacheMode.DISABLED,
         )
-        file_cache.cache = {SNMPSectionName("section"): [[b"cached"]]}
+        file_cache.cache = {SNMPSectionMarker("section"): [[b"cached"]]}
 
         assert PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
             {SectionName("section"): [[b"cached"]]}

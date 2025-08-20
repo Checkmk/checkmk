@@ -11,6 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
+from ._markers import SectionMarker
 from ._parser import HostSections, Parser, SectionNameCollection, SNMPParsedData
 from ._sectionstore import SectionStore
 
@@ -51,7 +52,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPParsedData]):
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
     ) -> HostSections[SNMPParsedData]:
-        sections = {SectionName(n): content for n, content in raw_data.items()}
+        sections = {SectionMarker.from_header(n): content for n, content in raw_data.items()}
         now = int(time.time())
 
         def lookup_persist(section_name: SectionName) -> tuple[int, int] | None:
@@ -59,9 +60,11 @@ class SNMPParser(Parser[SNMPRawData, SNMPParsedData]):
                 return now, now + interval
             return None
 
-        cache_info: MutableSectionMap[tuple[int, int]] = {}
+        cache_info: MutableSectionMap[tuple[int, int]] = {
+            marker.name: marker.cached for marker in sections if marker.cached
+        }
         new_sections = self.section_store.update(
-            sections,
+            {marker.name: raw_data_elem for marker, raw_data_elem in sections.items()},
             cache_info,
             lookup_persist,
             # persisted section is considered valid for one host check interval after fetch

@@ -21,6 +21,7 @@ from cmk.snmplib import (
     SNMPRawData,
     SNMPRawDataElem,
     SNMPRowInfo,
+    SNMPSectionMarker,
     SNMPSectionName,
 )
 
@@ -348,7 +349,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         walk_cache.save()
 
-        return fetched_data
+        # TODO: create a meaningful marker here.
+        return {SNMPSectionMarker(name): data for name, data in fetched_data.items()}
 
     @classmethod
     def _sort_section_names(

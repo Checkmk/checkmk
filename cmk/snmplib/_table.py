@@ -21,6 +21,7 @@ from ._typedefs import (
     SNMPContextTimeout,
     SNMPRawValue,
     SNMPRowInfo,
+    SNMPSectionMarker,
     SNMPSectionName,
     SNMPValueEncoding,
     SpecialColumn,
@@ -31,7 +32,7 @@ SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
-SNMPRawData = Mapping[SNMPSectionName, SNMPRawDataElem]
+SNMPRawData = Mapping[SNMPSectionMarker, SNMPRawDataElem]
 
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]

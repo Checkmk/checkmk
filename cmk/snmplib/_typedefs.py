@@ -20,6 +20,9 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 # We use it to map configuration options like OID ranges and SNMP contexts.
 SNMPSectionName = NewType("SNMPSectionName", str)
 
+# A lightweight section marker ("section_name" or "section_name:cached(12,34)")
+SNMPSectionMarker = NewType("SNMPSectionMarker", str)
+
 
 type SNMPSectionMap[_T_co] = Mapping[SNMPSectionName, _T_co]
 

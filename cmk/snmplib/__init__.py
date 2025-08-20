@@ -31,6 +31,7 @@ from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawValue as SNMPRawValue
 from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPSectionMap as SNMPSectionMap
+from ._typedefs import SNMPSectionMarker as SNMPSectionMarker
 from ._typedefs import SNMPSectionName as SNMPSectionName
 from ._typedefs import SNMPTiming as SNMPTiming
 from ._typedefs import SNMPVersion as SNMPVersion

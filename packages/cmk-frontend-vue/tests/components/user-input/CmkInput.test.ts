@@ -61,7 +61,7 @@ test('CmkInput switches aria-role on type', async () => {
 })
 
 test('CmkInput validates input', async () => {
-  const data: string | null = null
+  const data: string | number = ''
   render(CmkInput, {
     props: {
       modelValue: data,
@@ -92,7 +92,7 @@ test('CmkInput renders updated validation', async () => {
 })
 
 test('CmkInput local validators override external errors', async () => {
-  const data: string | null = null
+  const data: string = ''
   render(CmkInput, {
     props: {
       modelValue: data,
@@ -109,7 +109,7 @@ test('CmkInput local validators override external errors', async () => {
 })
 
 test('CmkInput changes do not reset external validations without local validators', async () => {
-  const data: string | null = null
+  const data: string = ''
   render(CmkInput, {
     props: {
       modelValue: data,

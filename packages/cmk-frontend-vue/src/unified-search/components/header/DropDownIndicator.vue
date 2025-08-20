@@ -16,7 +16,7 @@ defineProps<{
 <style scoped>
 .cmk-dropdown-indicator {
   width: 16px;
-  height: 16px;
+
   &:after {
     border-color: var(--help-text-font-color);
     border-style: solid;

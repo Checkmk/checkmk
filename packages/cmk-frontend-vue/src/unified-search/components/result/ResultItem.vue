@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
 
   .result-item-handler-wrapper {
     width: 100%;
-    height: 100%;
+    height: auto;
     display: flex;
     flex-direction: row;
     align-items: center;

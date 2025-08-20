@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { render, type RenderResult } from '@testing-library/vue'
 import FormDataVisualizer from './FormDataVisualizer.vue'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
@@ -12,10 +12,10 @@ export function renderFormWithData(props: {
   spec: FormSpec
   data: unknown
   backendValidation: ValidationMessages
-}) {
+}): RenderResult & { getCurrentData: () => string | null | undefined } {
   const { container, ...renderResult } = render(FormDataVisualizer, { props: props })
 
   const getCurrentData = () => container.querySelector('[data-testid=test-data]')?.textContent
 
-  return { getCurrentData: getCurrentData, ...renderResult }
+  return { getCurrentData: getCurrentData, container, ...renderResult }
 }

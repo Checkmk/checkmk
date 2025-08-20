@@ -16,6 +16,7 @@ from cmk.checkengine.parser import SectionStore
 from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,
+    SNMPBackendEnum,
     SNMPHostConfig,
     SNMPRawData,
     SNMPRawDataElem,
@@ -27,7 +28,25 @@ from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
 from .snmp import make_backend, SNMPPluginStore
 
-__all__ = ["SNMPFetcher", "SNMPSectionMeta", "SNMPScanConfig"]
+__all__ = [
+    "SNMPFetcher",
+    "SNMPFetcherConfig",
+    "SNMPScanConfig",
+    "SNMPSectionMeta",
+    "NoSelectedSNMPSections",
+]
+
+
+class NoSelectedSNMPSections: ...
+
+
+@dataclasses.dataclass(frozen=True)
+class SNMPFetcherConfig:
+    scan_config: SNMPScanConfig
+    selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections
+    backend_override: SNMPBackendEnum | None
+    stored_walk_path: Path
+    walk_cache_path: Path
 
 
 class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):

@@ -15,7 +15,6 @@ from ._sources import MissingSourceSource as MissingSourceSource
 from ._sources import PiggybackSource as PiggybackSource
 from ._sources import ProgramSource as ProgramSource
 from ._sources import PushAgentSource as PushAgentSource
-from ._sources import SNMPFetcherConfig as SNMPFetcherConfig
 from ._sources import SNMPSource as SNMPSource
 from ._sources import SpecialAgentSource as SpecialAgentSource
 from ._sources import TCPSource as TCPSource

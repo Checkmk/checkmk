@@ -37,7 +37,6 @@ from cmk.base.sources import (
     make_parser,
     make_sources,
     ParserConfig,
-    SNMPFetcherConfig,
     Source,
     SpecialAgentSource,
 )
@@ -61,7 +60,7 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.parameters import Parameters
-from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
+from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AggregatedResult,
@@ -83,11 +82,19 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
-from cmk.fetchers import Fetcher, FetcherTrigger, Mode, SNMPScanConfig, TLSConfig
+from cmk.fetchers import (
+    Fetcher,
+    FetcherTrigger,
+    Mode,
+    NoSelectedSNMPSections,
+    SNMPFetcherConfig,
+    SNMPScanConfig,
+    TLSConfig,
+)
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
-from cmk.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData, SNMPSectionName
 from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -363,7 +370,7 @@ class CMKFetcher:
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,
-        selected_snmp_sections: SectionNameCollection,
+        selected_snmp_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
         snmp_backend_override: SNMPBackendEnum | None,
@@ -460,7 +467,8 @@ class CMKFetcher:
                             oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                         ),
                         selected_sections=(
-                            self.selected_sections if not is_cluster else NO_SELECTION
+                            # Does this make sense? Why should we ignore the preselected sections (if any) for a cluster?
+                            self.selected_sections if not is_cluster else NoSelectedSNMPSections()
                         ),
                         backend_override=self.snmp_backend_override,
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,

@@ -7,13 +7,11 @@
 
 import os.path
 import socket
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
-from cmk.checkengine.parser import SectionNameCollection
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import (
     Fetcher,
@@ -22,7 +20,7 @@ from cmk.fetchers import (
     NoFetcherError,
     PiggybackFetcher,
     ProgramFetcher,
-    SNMPScanConfig,
+    SNMPFetcherConfig,
     TCPFetcher,
     TLSConfig,
 )
@@ -35,7 +33,7 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
-from cmk.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.snmplib import SNMPRawData
 from cmk.utils.agentdatatype import AgentRawData
 
 from ._api import Source
@@ -55,15 +53,6 @@ __all__ = [
 
 # Singleton
 _NO_CACHE: Final[FileCache] = NoCache()
-
-
-@dataclass(frozen=True)
-class SNMPFetcherConfig:
-    scan_config: SNMPScanConfig
-    selected_sections: SectionNameCollection
-    backend_override: SNMPBackendEnum | None
-    stored_walk_path: Path
-    walk_cache_path: Path
 
 
 class FetcherFactory(Protocol):

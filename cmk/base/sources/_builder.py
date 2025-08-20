@@ -16,7 +16,7 @@ from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import SNMPFetcher, TLSConfig
+from cmk.fetchers import SNMPFetcher, SNMPFetcherConfig, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum
@@ -34,7 +34,6 @@ from ._sources import (
     PiggybackSource,
     ProgramSource,
     PushAgentSource,
-    SNMPFetcherConfig,
     SNMPSource,
     SpecialAgentSource,
     TCPSource,

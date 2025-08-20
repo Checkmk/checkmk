@@ -50,7 +50,7 @@ from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.sources import ParserConfig, SNMPFetcherConfig
+from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -70,10 +70,6 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.parser import (
-    NO_SELECTION,
-    SectionNameCollection,
-)
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
     convert_legacy_sections,
@@ -94,10 +90,12 @@ from cmk.fetchers import (
     FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
+    NoSelectedSNMPSections,
     PiggybackFetcher,
     PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPFetcherConfig,
     SNMPSectionMeta,
     TCPFetcher,
     TCPFetcherConfig,
@@ -1772,34 +1770,34 @@ class ConfigCache:
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         *,
-        selected_sections: SectionNameCollection,
+        selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections,
     ) -> frozenset[SNMPSectionName]:
-        if selected_sections is not NO_SELECTION:
-            checking_sections = selected_sections
-        else:
-            checking_sections = frozenset(
-                agent_based_register.filter_relevant_raw_sections(
-                    consumers=[
-                        p
-                        for n in self.check_table(
-                            hostname,
-                            plugins.check_plugins,
-                            service_configurer,
-                            service_name_config,
-                            enforced_services_table,
-                            filter_mode=FilterMode.INCLUDE_CLUSTERED,
-                            skip_ignored=True,
-                        ).needed_check_names()
-                        if (p := agent_based_register.get_check_plugin(n, plugins.check_plugins))
-                        is not None
-                    ],
-                    sections=itertools.chain(
-                        plugins.agent_sections.values(), plugins.snmp_sections.values()
-                    ),
-                )
+        if not isinstance(selected_sections, NoSelectedSNMPSections):
+            return selected_sections
+
+        checking_sections = frozenset(
+            agent_based_register.filter_relevant_raw_sections(
+                consumers=[
+                    p
+                    for n in self.check_table(
+                        hostname,
+                        plugins.check_plugins,
+                        service_configurer,
+                        service_name_config,
+                        enforced_services_table,
+                        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+                        skip_ignored=True,
+                    ).needed_check_names()
+                    if (p := agent_based_register.get_check_plugin(n, plugins.check_plugins))
+                    is not None
+                ],
+                sections=itertools.chain(
+                    plugins.agent_sections.values(), plugins.snmp_sections.values()
+                ),
             )
+        )
         return frozenset(
-            SNMPSectionName(s) for s in checking_sections if s in plugins.snmp_sections
+            SNMPSectionName(s) for s in checking_sections if SectionName(s) in plugins.snmp_sections
         )
 
     def invalidate_host_config(self) -> None:

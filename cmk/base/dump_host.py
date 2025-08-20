@@ -17,19 +17,20 @@ import cmk.utils.render
 from cmk.base import sources
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
-from cmk.base.sources import SNMPFetcherConfig, Source
+from cmk.base.sources import Source
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
 from cmk.fetchers import (
     IPMIFetcher,
+    NoSelectedSNMPSections,
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPFetcherConfig,
     SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
@@ -242,7 +243,7 @@ def dump_host(
                         missing_sys_description=config_cache.missing_sys_description(hostname),
                         oid_cache_dir=oid_cache_dir,
                     ),
-                    selected_sections=NO_SELECTION,
+                    selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,

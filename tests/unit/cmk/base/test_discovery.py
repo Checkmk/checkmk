@@ -67,7 +67,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.fetchers import Mode, PlainFetcherTrigger
+from cmk.fetchers import Mode, NoSelectedSNMPSections, PlainFetcherTrigger
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
@@ -1529,7 +1529,7 @@ def test_commandline_discovery(
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,
-        selected_snmp_sections=NO_SELECTION,
+        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=True,
         snmp_backend_override=None,
         password_store_file=Path("/pw/store"),

@@ -11,15 +11,16 @@ from typing import Literal
 import pytest
 
 from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
+from cmk.base.sources import make_sources, Source
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import (
+    NoSelectedSNMPSections,
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPFetcherConfig,
     SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
@@ -69,7 +70,7 @@ def _make_sources(
                 missing_sys_description=False,
                 oid_cache_dir=tmp_path,
             ),
-            selected_sections=NO_SELECTION,
+            selected_sections=NoSelectedSNMPSections(),
             backend_override=None,
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,

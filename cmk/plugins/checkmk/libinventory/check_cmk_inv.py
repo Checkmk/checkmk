@@ -40,6 +40,7 @@ from cmk.checkengine.plugin_backend import (
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers import NoSelectedSNMPSections
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import (
@@ -182,7 +183,7 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
-        selected_snmp_sections=NO_SELECTION,
+        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(),

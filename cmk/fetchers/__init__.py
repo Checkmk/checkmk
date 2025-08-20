@@ -20,7 +20,9 @@ from ._nofetcher import NoFetcher as NoFetcher
 from ._nofetcher import NoFetcherError as NoFetcherError
 from ._piggyback import PiggybackFetcher as PiggybackFetcher
 from ._program import ProgramFetcher as ProgramFetcher
+from ._snmp import NoSelectedSNMPSections as NoSelectedSNMPSections
 from ._snmp import SNMPFetcher as SNMPFetcher
+from ._snmp import SNMPFetcherConfig as SNMPFetcherConfig
 from ._snmp import SNMPScanConfig as SNMPScanConfig
 from ._snmp import SNMPSectionMeta as SNMPSectionMeta
 from ._tcp import TCPFetcher as TCPFetcher

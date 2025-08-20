@@ -119,7 +119,7 @@ from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
-from cmk.base.sources import make_parser, SNMPFetcherConfig
+from cmk.base.sources import make_parser
 from cmk.ccc import tty, version
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -161,8 +161,10 @@ from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
     Mode,
+    NoSelectedSNMPSections,
     PlainFetcherTrigger,
     ProgramFetcher,
+    SNMPFetcherConfig,
     SNMPScanConfig,
     TCPEncryptionHandling,
     TCPFetcher,
@@ -385,7 +387,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             on_error=on_error,
-            selected_snmp_sections=NO_SELECTION,
+            selected_snmp_sections=NoSelectedSNMPSections(),
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -619,7 +621,7 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             on_error=on_error,
-            selected_snmp_sections=NO_SELECTION,
+            selected_snmp_sections=NoSelectedSNMPSections(),
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -1078,7 +1080,7 @@ def _execute_autodiscovery(
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         on_error=OnError.IGNORE,
-        selected_snmp_sections=NO_SELECTION,
+        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
@@ -3376,7 +3378,7 @@ class AutomationDiagHost(Automation):
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
-                selected_sections=NO_SELECTION,
+                selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=walk_cache_path,
@@ -3929,7 +3931,7 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,
-                        selected_sections=NO_SELECTION,
+                        selected_sections=NoSelectedSNMPSections(),
                         backend_override=None,
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,

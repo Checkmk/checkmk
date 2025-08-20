@@ -28,7 +28,7 @@ python-ldap==3.4.3 # needed by GUI (User sync), python-active-directory
 cython==3.0.11 # needed by numpy & pymssql
 numpy==1.26.4 # needed by GUI (metrics)
 reportlab==4.1.0 # needed by GUI (reporting)
-pypdf==5.1.0 # needed by GUI (reporting)
+pypdf==6.0.0 # needed by GUI (reporting)
 roman==4.0 # needed by GUI (reporting)
 google-auth==2.37.0 # needed by kubernetes
 kubernetes==21.7.0 # needed by kubernetes

@@ -14,9 +14,9 @@ defineProps<CmkCollapsibleProps>()
 </script>
 
 <template>
-  <CollapsibleRoot v-slot="{ open: openSlot }" :open="open" class="cmk-collapsible">
+  <CollapsibleRoot :open="open" class="cmk-collapsible">
     <Transition name="content">
-      <CollapsibleContent v-show="open" :open="openSlot" class="cmk-collapsible__content">
+      <CollapsibleContent v-show="open" class="cmk-collapsible__content">
         <slot />
       </CollapsibleContent>
     </Transition>

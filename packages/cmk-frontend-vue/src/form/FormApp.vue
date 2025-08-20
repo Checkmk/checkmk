@@ -78,8 +78,8 @@ const { ErrorBoundary } = useErrorBoundary()
             <tr>
               <td>
                 <FormEdit
+                  v-if="display_mode === 'edit' || display_mode === 'both'"
                   v-model:data="dataRef"
-                  :v-if="display_mode === 'edit' || display_mode === 'both'"
                   :backend-validation="validation"
                   :spec="spec"
                 />

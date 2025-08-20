@@ -43,7 +43,7 @@ const classes = computed(() => [
     <CmkIcon v-if="iconName" :name="iconName" size="xxlarge" class="cmk-link-card__icon" />
     <div class="cmk-link-card__text-area">
       <CmkHeading type="h4" class="cmk-link-card__heading">{{ title }}</CmkHeading>
-      <CmkParagraph :v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
+      <CmkParagraph v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
     <CmkIcon v-if="openInNewTab" name="export_link" class="cmk-link-card__export-icon" />
   </a>

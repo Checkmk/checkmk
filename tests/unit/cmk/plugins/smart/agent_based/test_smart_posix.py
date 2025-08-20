@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-import pytest
-
 from cmk.plugins.smart.agent_based.smart_posix import parse_smart_posix
 
 
@@ -57,7 +54,6 @@ def test_parse_unable_to_detect_device() -> None:
     parse_smart_posix(string_table)
 
 
-@pytest.mark.xfail(strict=True)
 def test_parse_missing_tresh_ata_attributes() -> None:
     string_table = [
         [  # Edited serial number, removed ata_smart_data, interface_speed, and most ata_smart_attributes in table

@@ -250,11 +250,12 @@ def _check_smart_ata(
             label="Reallocated events",
             metric_name="harddrive_reallocated_events",
         )
-        yield from check_levels(
-            value=reallocated_events.value,
-            levels_lower=("fixed", (reallocated_events.thresh, reallocated_events.thresh)),
-            label="Normalized value",
-        )
+        if reallocated_events.thresh is not None:
+            yield from check_levels(
+                value=reallocated_events.value,
+                levels_lower=("fixed", (reallocated_events.thresh, reallocated_events.thresh)),
+                label="Normalized value",
+            )
 
     if (pending_sectors := disk.by_id(197)) is not None:
         yield from _check_against_params(

@@ -31,7 +31,9 @@ function onClickGoTo() {
     <div class="cmk-wizard-step__slots">
       <slot name="header"></slot>
       <slot name="content"></slot>
-      <slot name="actions"></slot>
+      <div class="cmk-wizard-step__actions">
+        <slot name="actions"></slot>
+      </div>
     </div>
   </li>
 </template>
@@ -106,6 +108,13 @@ function onClickGoTo() {
 .cmk-wizard-step__slots {
   display: flex;
   flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.cmk-wizard-step__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: var(--dimension-4);
 }
 </style>

@@ -218,10 +218,8 @@ function getInitStep() {
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
-              <div class="agent_slideout__actions">
-                <CmkWizardButton type="next" :override-label="_t('Next step: Register agent')" />
-                <CmkWizardButton type="previous" />
-              </div>
+              <CmkWizardButton type="next" :override-label="_t('Next step: Register agent')" />
+              <CmkWizardButton type="previous" />
             </template>
           </CmkWizardStep>
 
@@ -256,15 +254,13 @@ function getInitStep() {
               </div>
             </template>
             <template v-if="currentStep === 3" #actions>
-              <div class="agent_slideout__actions">
-                <CmkWizardButton
-                  type="finish"
-                  :override-label="close_button_title"
-                  icon-name="connection_tests"
-                  @click="close"
-                />
-                <CmkWizardButton type="previous" />
-              </div>
+              <CmkWizardButton
+                type="finish"
+                :override-label="close_button_title"
+                icon-name="connection_tests"
+                @click="close"
+              />
+              <CmkWizardButton type="previous" />
             </template>
           </CmkWizardStep>
         </CmkWizard>
@@ -318,13 +314,6 @@ button.all_agents {
 
 .install_url__div {
   margin-bottom: var(--spacing);
-}
-
-.agent_slideout__actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--dimension-4);
 }
 
 .agent_slideout__paragraph_host_exists {

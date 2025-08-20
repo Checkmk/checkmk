@@ -100,7 +100,7 @@ const toggleExpansion = () => {
         </div>
       </div>
       <TooltipProvider>
-        <Tooltip :open="showMessage" disable-hover-trigger>
+        <Tooltip :open="showMessage">
           <TooltipTrigger as-child @click="copyToClipboard">
             <CmkIconButton name="copied" size="medium" class="copy_button" />
           </TooltipTrigger>

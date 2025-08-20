@@ -141,9 +141,6 @@ RUN /opt/install-python.sh
 COPY install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
 
-COPY install-rust-cargo.sh /opt/
-RUN /opt/install-rust-cargo.sh
-
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
 COPY strip_binaries /opt/
@@ -173,7 +170,6 @@ RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-bazel.sh link-only
-RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 COPY "${DISTRO_MK_FILE}" /opt/
@@ -186,8 +182,6 @@ RUN /opt/install-patchelf.sh
 # Ubuntu 23.10 introduced a user group named "ubuntu" with the ID 1000
 # Jenkins is using this group ID everywhere, so lets move it
 RUN groupmod -g 3000 ubuntu
-
-ENV RUSTUP_HOME=/opt/rust/rustup
 
 COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc

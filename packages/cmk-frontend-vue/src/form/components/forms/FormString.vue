@@ -48,7 +48,6 @@ const componentId = useId()
         v-model="value"
         class="cmk-form-string--dropdown"
         :size="inputSizes[props.spec.field_size].width"
-        :reset-input-on-add="false"
         :autocompleter="spec.autocompleter"
         :placeholder="spec.input_hint ?? ''"
         :label="spec.label || ''"

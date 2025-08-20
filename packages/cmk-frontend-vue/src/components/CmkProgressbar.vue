@@ -65,7 +65,6 @@ const cmkProgressbaId = useId()
 
 <template>
   <div
-    :max="max"
     class="cmk-progressbar"
     :class="sizes({ size })"
     :title="accessibilityLabelString"

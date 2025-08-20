@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from marshmallow import ValidationError
@@ -93,12 +93,12 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredHost,
     String,
 )
-from cmk.utils.tags import TagGroupID
+from cmk.utils.tags import TagGroupID, TagID
 
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):
     @property
-    def _size(self):
+    def _size(self) -> int:
         return 64
 
     def topic(self) -> HostAttributeTopic:
@@ -114,7 +114,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def name(self) -> str:
         return "alias"
 
-    def nagios_name(self):
+    def nagios_name(self) -> str:
         return "alias"
 
     def is_explicit(self) -> bool:
@@ -123,10 +123,10 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def title(self) -> str:
         return _("Alias")
 
-    def help(self):
+    def help(self) -> str:
         return _("Add a comment or describe this host")
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
     def openapi_field(self) -> gui_fields.Field:
@@ -144,10 +144,10 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "ipaddress"
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def depends_on_tags(self):
+    def depends_on_tags(self) -> list[str]:
         return ["ip-v4"]
 
     def valuespec(self) -> ValueSpec:
@@ -215,10 +215,10 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "ipv6address"
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def depends_on_tags(self):
+    def depends_on_tags(self) -> list[str]:
         return ["ip-v6"]
 
     def valuespec(self) -> ValueSpec:
@@ -289,13 +289,13 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "additional_ipv4addresses"
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def depends_on_tags(self):
+    def depends_on_tags(self) -> list[str]:
         return ["ip-v4"]
 
     def valuespec(self) -> ValueSpec:
@@ -349,13 +349,13 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "additional_ipv6addresses"
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def depends_on_tags(self):
+    def depends_on_tags(self) -> list[str]:
         return ["ip-v6"]
 
     def valuespec(self) -> ValueSpec:
@@ -406,13 +406,13 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "snmp_community"
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
-    def depends_on_tags(self):
+    def depends_on_tags(self) -> list[str]:
         return ["snmp"]
 
     def valuespec(self) -> ValueSpec:
@@ -539,7 +539,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         return any(item in value for item in crit)
 
 
-def validate_host_parents(host):
+def validate_host_parents(host: Host) -> None:
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
@@ -567,7 +567,7 @@ def validate_host_parents(host):
 
 
 @hooks.request_memoize()
-def _get_criticality_choices():
+def _get_criticality_choices() -> Sequence[tuple[TagID | None, str]]:
     """Returns the current configuration of the tag_group criticality"""
     tags = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
     criticality_group = tags.get_tag_group(TagGroupID("criticality"))
@@ -581,7 +581,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "network_scan"
 
-    def may_edit(self):
+    def may_edit(self) -> bool:
         return user.may("wato.manage_hosts")
 
     def topic(self) -> HostAttributeTopic:
@@ -591,19 +591,19 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 90
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
     def valuespec(self) -> ValueSpec:
@@ -632,8 +632,8 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
         )
 
-    def _network_scan_elements(self):
-        elements = [
+    def _network_scan_elements(self) -> list[tuple[str, ValueSpec]]:
+        elements: list[tuple[str, ValueSpec]] = [
             (
                 "ip_ranges",
                 ListOf(
@@ -745,7 +745,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             for user_id, user in userdb.load_users(lock=False).items()
         ]
 
-    def _optional_tag_criticality_element(self):
+    def _optional_tag_criticality_element(self) -> list[tuple[str, ValueSpec]]:
         """This element is optional. The user may have deleted the tag group criticality"""
         choices = _get_criticality_choices()
         if not choices:
@@ -767,7 +767,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             )
         ]
 
-    def _vs_ip_range(self, with_regexp=False):
+    def _vs_ip_range(self, with_regexp: bool = False) -> ValueSpec[Any]:
         # NOTE: The `ip_regex_list` choice is only used in the `exclude_ranges` key.
         options: list[tuple[str, str, ValueSpec[Any]]] = [
             (
@@ -847,25 +847,25 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 100
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
-    def openapi_editable(self):
+    def openapi_editable(self) -> bool:
         return False
 
     def openapi_field(self) -> gui_fields.Field:
@@ -957,10 +957,10 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 120
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
     def valuespec(self) -> ValueSpec:
@@ -1009,10 +1009,10 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 110
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -1062,10 +1062,10 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 130
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -1132,10 +1132,10 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 140
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -1176,10 +1176,10 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 20
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return True
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -1219,14 +1219,14 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             presence="might_not_exist_on_view",
         )
 
-    def get_tag_groups(self, value):
+    def get_tag_groups(self, value: Literal[False] | None | str) -> Mapping[TagGroupID, TagID]:
         # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
         # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
-            return {"site": ""}
+            return {TagGroupID("site"): TagID("")}
 
         if value is not None:
-            return {"site": value}
+            return {TagGroupID("site"): TagID(value)}
 
         return {}
 
@@ -1242,25 +1242,25 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 160
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return True
 
-    def show_on_create(self):
+    def show_on_create(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return True
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
     def valuespec(self) -> ValueSpec:
@@ -1326,25 +1326,25 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 170
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return True
 
-    def show_on_create(self):
+    def show_on_create(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
     def valuespec(self) -> ValueSpec:
@@ -1385,25 +1385,25 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 155
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return True
 
-    def show_on_create(self):
+    def show_on_create(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
     def openapi_editable(self) -> bool:
@@ -1468,25 +1468,25 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 200
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return False
 
-    def show_on_create(self):
+    def show_on_create(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
     def openapi_editable(self) -> bool:
@@ -1524,25 +1524,25 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 210
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_form(self):
+    def show_in_form(self) -> bool:
         return False
 
-    def show_on_create(self):
+    def show_on_create(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return False
 
-    def show_in_host_search(self):
+    def show_in_host_search(self) -> bool:
         return False
 
-    def show_inherited_value(self):
+    def show_inherited_value(self) -> bool:
         return False
 
-    def editable(self):
+    def editable(self) -> bool:
         return False
 
     def openapi_editable(self) -> bool:
@@ -1583,7 +1583,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def sort_index(cls) -> int:
         return 190
 
-    def help(self):
+    def help(self) -> str:
         return _(
             "Labels allow you to flexibly group your hosts in order to "
             "refer to them later at other places in Checkmk, e.g. in rule "
@@ -1592,10 +1592,10 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
             "any other validation on the labels you use."
         )
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return False
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -1623,5 +1623,5 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         if ":" in data:
             raise ValidationError(f"Invalid label value: {data!r}")
 
-    def filter_matches(self, crit, value, hostname):
+    def filter_matches(self, crit: list, value: list, hostname: HostName) -> bool:
         return set(value).issuperset(set(crit))

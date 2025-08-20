@@ -57,13 +57,10 @@ function toggleContent() {
   </h3>
   <div v-if="isContentVisible" class="notification-overview__container">
     <div class="notification-overview__stats-container">
-      <NotificationStats
-        :notification_stats="notification_stats"
-        :toggle_content="toggleContent"
-      ></NotificationStats>
+      <NotificationStats :notification_stats="notification_stats"></NotificationStats>
       <NotificationCoreStats :stats="core_stats"></NotificationCoreStats>
     </div>
-    <NotificationRules :rule_sections="rule_sections" :collapse="toggleContent"></NotificationRules>
+    <NotificationRules :rule_sections="rule_sections"></NotificationRules>
   </div>
 </template>
 

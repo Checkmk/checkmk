@@ -11,7 +11,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-class ResetDeprecationsScheduling(UpdateAction):  # pylint: disable=too-few-public-methods
+class ResetDeprecationsScheduling(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         # Note: We have to call 'reset_scheduling' from 'job_scheduler' directly and NOT via

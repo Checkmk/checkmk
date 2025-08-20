@@ -17,11 +17,7 @@ class LegacyValueSpec(cmk.rulesets.v1.form_specs.FormSpec[Any]):
     @classmethod
     def wrap(cls, valuespec: ValueSpec[Any]) -> "LegacyValueSpec":
         return cls(
-            title=cmk.rulesets.v1.Title(  # pylint: disable=localization-of-non-literal-string
-                str(valuespec.title() or "")
-            ),  # pylint: disable=localization-of-non-literal-string
-            help_text=cmk.rulesets.v1.Help(  # pylint: disable=localization-of-non-literal-string
-                str(valuespec.help() or "")
-            ),
+            title=cmk.rulesets.v1.Title(str(valuespec.title() or "")),
+            help_text=cmk.rulesets.v1.Help(str(valuespec.help() or "")),
             valuespec=valuespec,
         )

@@ -414,7 +414,7 @@ test-packaging:
 	$(PYTEST) packaging
 
 test-pylint:
-	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+	cd ..; $(UVENV) pylint --disable=all --enable=useless-suppression,$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST) \
 	    --config-file=pyproject.toml \
 	    --override-ini="pythonpath=." \

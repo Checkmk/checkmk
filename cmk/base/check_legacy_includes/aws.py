@@ -7,7 +7,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import Any, NotRequired, TypedDict, TypeVar
 
 import cmk.plugins.aws.constants as agent_aws_types
-import cmk.plugins.aws.lib as aws  # pylint: disable=cmk-module-layer-violation
+import cmk.plugins.aws.lib as aws
 from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckResult,

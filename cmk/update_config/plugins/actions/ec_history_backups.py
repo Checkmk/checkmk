@@ -12,7 +12,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-class RemoveECHistoryBackups(UpdateAction):  # pylint: disable=too-few-public-methods
+class RemoveECHistoryBackups(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         history_dir = create_paths(cmk.utils.paths.omd_root).history_dir.value

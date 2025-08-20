@@ -53,7 +53,7 @@ def list_versions(args: argparse.Namespace) -> None:
 
 def _import_cre_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.cre.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.cre.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             register as cre_registration,
         )
 
@@ -89,7 +89,7 @@ def _import_cme_endpoints() -> None:
 
 def _import_cse_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.cse.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.cse.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             register as cse_registration,
         )
 

@@ -2,9 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disable-error-code="import-untyped,no-untyped-def"
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
+
+# mypy: disable-error-code="import-untyped,no-untyped-def"
 
 import argparse
 import csv
@@ -141,7 +142,7 @@ def heading(text: str, link: str, sty: PS) -> Paragraph:
     # Modify paragraph text to include an anchor point with name bn
     h = Paragraph(f'{text}<a name="{bn}"/>', sty)
     # Store the bookmark name on the flowable so afterFlowable can see this
-    h._bookmarkName = bn  # pylint: disable=protected-access  # noqa: SLF001
+    h._bookmarkName = bn  # noqa: SLF001
     return h
 
 

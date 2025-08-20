@@ -43,7 +43,6 @@ const style = computed(() => {
       :aria-label="spec.label || spec.title"
       rows="4"
       cols="60"
-      type="text"
     />
     <FormValidation :validation="validation"></FormValidation>
   </div>

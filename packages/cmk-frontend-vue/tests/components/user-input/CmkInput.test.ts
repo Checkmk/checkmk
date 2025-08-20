@@ -77,7 +77,7 @@ test('CmkInput validates input', async () => {
 })
 
 test('CmkInput renders updated validation', async () => {
-  const props: typeof CmkInput.props = {
+  const props = {
     modelValue: 'foo',
     externalErrors: ['some old validation']
   }

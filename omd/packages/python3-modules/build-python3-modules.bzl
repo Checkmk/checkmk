@@ -85,7 +85,6 @@ build_cmd = """
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
-      --verbose \\
       --no-binary=":all:" \\
       --no-deps \\
       --compile \\

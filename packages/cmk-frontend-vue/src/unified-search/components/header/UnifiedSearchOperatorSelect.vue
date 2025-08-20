@@ -137,7 +137,6 @@ function toggleOperatorOptions() {
           :focus="isFocused(idx)"
           :idx="idx"
           :option="opt"
-          :active="opt.value === searchUtils.query.provider.value"
           @click.stop="() => handleOperatorSelect(opt)"
           @keypres.enter.stop="() => handleOperatorSelect(opt)"
         ></SearchOperatorOptionEntry>

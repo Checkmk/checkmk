@@ -74,8 +74,6 @@ immediateWatch(
         :inline-buttons="item.element.inlineButtons"
         :url="item.element.url"
         :html="searchUtils.highlightQuery(item.element.title)"
-        :provider="item.element.provider"
-        :topic="item.element.topic"
         :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"
         :focus="isFocused(idx)"
         @keypress.enter="

@@ -28,7 +28,11 @@ from ._agentprtcl import (
     validate_agent_protocol,
 )
 
-__all__ = ["TCPFetcher", "TLSConfig"]
+__all__ = [
+    "TCPFetcher",
+    "TCPFetcherConfig",
+    "TLSConfig",
+]
 
 
 @dataclass(frozen=True, kw_only=True)

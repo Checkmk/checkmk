@@ -19,7 +19,6 @@ interface Props {
   slide_in_button_title: string
   docs_button_title: string
   close_button_title: string
-  host_name: string
   agent_slideout: AgentSlideout
   all_agents_url: string
   is_not_registered: boolean
@@ -79,7 +78,7 @@ const tooltipOpen = ref(true)
   >
     <AgentSlideOutContent
       :all_agents_url="all_agents_url"
-      :host_name="host_name"
+      :host_name="agent_slideout.host_name"
       :agent_install_cmds="agent_slideout.agent_install_cmds"
       :agent_registration_cmds="agent_slideout.agent_registration_cmds"
       :legacy_agent_url="agent_slideout.legacy_agent_url"

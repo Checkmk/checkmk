@@ -14,7 +14,6 @@ const { _t } = usei18n()
 const props = defineProps<{
   output: string
   all_agents_url: string
-  host_name: string
   agent_slideout: AgentSlideout
 }>()
 
@@ -54,7 +53,6 @@ const docsButtonTitle = _t('Read Checkmk user guide')
     :slide_in_button_title="slideInButtonTitle"
     :docs_button_title="docsButtonTitle"
     :close_button_title="_t('Close & run service discovery')"
-    :host_name="host_name"
     :agent_slideout="agent_slideout"
     :all_agents_url="all_agents_url"
     :is_not_registered="output.includes(notRegisteredSearchTerm)"

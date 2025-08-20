@@ -126,12 +126,12 @@ const deleteItem = (index: number) => {
   </CmkList>
   <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
     <!-- In formLabel, the size on input is a fixed size -->
+    <!-- @vue-ignore keydown.enter does not exist on FormAutocompleter -->
     <FormAutocompleter
       v-model="selectedValue"
       :size="inputSizes['MEDIUM'].width"
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
-      :show="!error"
       :filter="filterKeyValuePairs"
       @keydown.enter="
         (e: KeyboardEvent) => {

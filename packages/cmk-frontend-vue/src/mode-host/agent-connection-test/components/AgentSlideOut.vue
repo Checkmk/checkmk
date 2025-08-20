@@ -15,11 +15,13 @@ import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkCode from '@/components/CmkCode.vue'
-import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
+import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
+import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
 
 export interface AgentSlideOutTabs {
   id: string
@@ -42,12 +44,14 @@ export interface InstallUrl {
   icon?: string
 }
 
-defineProps<{
+const props = defineProps<{
   dialog_msg: string
   tabs: AgentSlideOutTabs[]
   all_agents_url: string
   close_button_title: string
   save_host: boolean
+  agent_installed: boolean
+  host_name: string
 }>()
 
 const { _t } = usei18n()
@@ -82,6 +86,16 @@ function saveHost() {
   sessionStorage.setItem('slideInTabState', openedTab.value)
   cmk.page_menu.form_submit('edit_host', 'save_and_edit')
 }
+const currentStep = ref(getInitStep())
+function getInitStep() {
+  if (props.save_host) {
+    return 1
+  }
+  if (!props.agent_installed) {
+    return 2
+  }
+  return 3
+}
 </script>
 
 <template>
@@ -114,91 +128,146 @@ function saveHost() {
           v-model="model"
           :options="tab.toggle_button_options"
         />
-        <CmkHeading v-if="tab.install_msg" type="h4">
-          {{ _t('Download and install') }}
-        </CmkHeading>
-        <CmkCode
-          v-if="tab.install_msg && tab.install_cmd"
-          :title="tab.install_msg"
-          :code_txt="tab.install_cmd"
-          class="code"
-        />
-        <div
-          v-if="
-            tab.install_url &&
-            !tab.install_cmd &&
-            !(tab.install_deb_cmd && model === packageFormatDeb) &&
-            !(tab.install_rpm_cmd && model === packageFormatRpm) &&
-            !(tab.install_tgz_cmd && model === packageFormatTgz)
-          "
-          class="install_url__div"
-        >
-          <CmkParagraph v-if="tab.install_url.msg">{{ tab.install_url.msg }}</CmkParagraph>
-          <CmkLinkCard
-            :title="tab.install_url.title"
-            :url="tab.install_url.url"
-            :icon-name="tab.install_url.icon"
-            :open-in-new-tab="true"
-          />
-        </div>
+        <CmkWizard v-model="currentStep" mode="guided">
+          <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || !save_host">
+            <template #header>
+              <CmkHeading> {{ _t('Save host') }}</CmkHeading>
+            </template>
 
-        <CmkCode
-          v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
-          :title="tab.install_msg"
-          :code_txt="tab.install_deb_cmd"
-          class="code"
-        />
-        <CmkCode
-          v-if="tab.install_msg && tab.install_rpm_cmd && model === packageFormatRpm"
-          :title="tab.install_msg"
-          :code_txt="tab.install_rpm_cmd"
-          class="code"
-        />
-        <CmkCode
-          v-if="tab.install_msg && tab.install_tgz_cmd && model === packageFormatTgz"
-          :title="tab.install_msg"
-          :code_txt="tab.install_tgz_cmd"
-          class="code"
-        />
-        <div v-if="tab.registration_msg && tab.registration_cmd">
-          <div class="register-heading-row">
-            <CmkHeading type="h4">
-              {{ _t('Register the agent') }}
-            </CmkHeading>
-            <HelpText
-              :help="
-                _t(
-                  `Agent registration will establish trust between the Agent Controller
+            <template #content>
+              <div class="save_host__div">
+                <CmkParagraph>
+                  {{
+                    _t(
+                      'Agent registration is only possible for hosts that already exist in Checkmk (they don’t need to be activated yet).'
+                    )
+                  }}
+                </CmkParagraph>
+              </div>
+              <div v-if="!save_host" class="save_host__div">
+                <CmkParagraph class="agent_slideout__paragraph_host_exists">
+                  <CmkIcon name="checkmark" />
+                  {{ _t(`Host "${host_name}" exists`) }}
+                </CmkParagraph>
+              </div>
+            </template>
+            <template #actions>
+              <CmkWizardButton
+                v-if="save_host"
+                :override-label="_t('Save host & next step')"
+                type="next"
+                @click="saveHost"
+              />
+              <CmkWizardButton v-else-if="currentStep === 1" type="next" />
+            </template>
+          </CmkWizardStep>
+
+          <CmkWizardStep :index="2" :is-completed="() => currentStep > 2 || agent_installed">
+            <template #header>
+              <CmkHeading> {{ _t('Download and install') }}</CmkHeading>
+            </template>
+            <template #content>
+              <div v-if="currentStep === 2">
+                <CmkCode
+                  v-if="tab.install_msg && tab.install_cmd"
+                  :title="tab.install_msg"
+                  :code_txt="tab.install_cmd"
+                  class="code"
+                />
+                <div
+                  v-if="
+                    tab.install_url &&
+                    !tab.install_cmd &&
+                    !(tab.install_deb_cmd && model === packageFormatDeb) &&
+                    !(tab.install_rpm_cmd && model === packageFormatRpm) &&
+                    !(tab.install_tgz_cmd && model === packageFormatTgz)
+                  "
+                  class="install_url__div"
+                >
+                  <CmkParagraph v-if="tab.install_url.msg">{{ tab.install_url.msg }}</CmkParagraph>
+                  <CmkLinkCard
+                    :title="tab.install_url.title"
+                    :url="tab.install_url.url"
+                    :icon-name="tab.install_url.icon"
+                    :open-in-new-tab="true"
+                  />
+                </div>
+                <CmkCode
+                  v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
+                  :title="tab.install_msg"
+                  :code_txt="tab.install_deb_cmd"
+                  class="code"
+                />
+                <CmkCode
+                  v-if="tab.install_msg && tab.install_rpm_cmd && model === packageFormatRpm"
+                  :title="tab.install_msg"
+                  :code_txt="tab.install_rpm_cmd"
+                  class="code"
+                />
+                <CmkCode
+                  v-if="tab.install_msg && tab.install_tgz_cmd && model === packageFormatTgz"
+                  :title="tab.install_msg"
+                  :code_txt="tab.install_tgz_cmd"
+                  class="code"
+                />
+              </div>
+              <div v-else>
+                <CmkParagraph>
+                  {{ _t('Run this command to download and install the Checkmk agent.') }}
+                </CmkParagraph>
+              </div>
+            </template>
+            <template v-if="currentStep === 2" #actions>
+              <div class="agent_slideout__actions">
+                <CmkWizardButton type="next" :override-label="_t('Next step: Register agent')" />
+                <CmkWizardButton type="previous" />
+              </div>
+            </template>
+          </CmkWizardStep>
+
+          <CmkWizardStep :index="3" :is-completed="() => currentStep > 3 || !tab.registration_msg">
+            <template #header>
+              <CmkHeading> {{ _t('Register agent') }}</CmkHeading>
+            </template>
+            <template #content>
+              <div v-if="currentStep === 3">
+                <div v-if="tab.registration_msg && tab.registration_cmd">
+                  <div class="register-heading-row">
+                    <CmkParagraph>
+                      {{
+                        _t(
+                          `Agent registration will establish trust between the Agent Controller
                     on the host and the Agent Receiver on the Checkmk server.`
-                )
-              "
-            />
-          </div>
-          <div v-if="save_host" class="save_host__div">
-            <CmkParagraph>
-              {{
-                _t(
-                  'Agent registration is only possible for hosts that already exist in Checkmk (they don’t need to be activated yet).'
-                )
-              }}
-            </CmkParagraph>
-            <CmkParagraph>
-              {{
-                _t(
-                  'If the host hasn’t been created yet, please do so first by clicking the Create host button below.'
-                )
-              }}
-            </CmkParagraph>
-            <CmkButton class="save_host__button" @click="saveHost">
-              {{ _t('Save host') }}
-            </CmkButton>
-          </div>
-
-          <CmkCode :title="tab.registration_msg" :code_txt="tab.registration_cmd" class="code" />
-        </div>
-        <CmkParagraph>
-          {{ _t('After installing, you can close the slideout and test the agent connection.') }}
-        </CmkParagraph>
+                        )
+                      }}
+                    </CmkParagraph>
+                  </div>
+                  <CmkCode
+                    :title="tab.registration_msg"
+                    :code_txt="tab.registration_cmd"
+                    class="code"
+                  />
+                </div>
+              </div>
+              <div v-else>
+                <CmkParagraph>
+                  {{ _t('Run this command to register the Checkmk agent controller.') }}
+                </CmkParagraph>
+              </div>
+            </template>
+            <template v-if="currentStep === 3" #actions>
+              <div class="agent_slideout__actions">
+                <CmkWizardButton
+                  type="finish"
+                  :override-label="close_button_title"
+                  icon-name="connection_tests"
+                  @click="close"
+                />
+                <CmkWizardButton type="previous" />
+              </div>
+            </template>
+          </CmkWizardStep>
+        </CmkWizard>
       </CmkTabContent>
     </template>
   </CmkTabs>
@@ -247,11 +316,20 @@ button.all_agents {
   margin-bottom: var(--spacing);
 }
 
-.save_host__button {
-  margin-top: var(--dimension-4);
-}
-
 .install_url__div {
   margin-bottom: var(--spacing);
+}
+
+.agent_slideout__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--dimension-4);
+}
+
+.agent_slideout__paragraph_host_exists {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
 }
 </style>

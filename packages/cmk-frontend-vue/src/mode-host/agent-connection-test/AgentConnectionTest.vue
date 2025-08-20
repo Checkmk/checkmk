@@ -10,8 +10,7 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import AgentInstallSlideOutContent from '@/mode-host/agent-connection-test/components/AgentInstallSlideOutContent.vue'
-import AgentRegisterSlideOutContent from '@/mode-host/agent-connection-test/components/AgentRegisterSlideOutContent.vue'
+import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 import {
   type ModeHostSite,
   type ModeHostAgentConnectionMode
@@ -344,17 +343,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
       :open="slideInOpen"
       @close="slideInOpen = false"
     >
-      <AgentRegisterSlideOutContent
-        v-if="isNotRegistered"
-        :all_agents_url="agent_slideout.all_agents_url"
-        :host_name="hostname"
-        :agent_registration_cmds="agent_slideout.agent_registration_cmds"
-        :close_button_title="closeButtonTitle"
-        :save_host="agent_slideout.save_host"
-        @close="((slideInOpen = false), (isError = false), startAjax())"
-      />
-      <AgentInstallSlideOutContent
-        v-else
+      <AgentSlideOutContent
         :all_agents_url="agent_slideout.all_agents_url"
         :host_name="hostname"
         :agent_install_cmds="agent_slideout.agent_install_cmds"
@@ -362,6 +351,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :legacy_agent_url="agent_slideout.legacy_agent_url"
         :close_button_title="closeButtonTitle"
         :save_host="agent_slideout.save_host"
+        :agent_installed="isNotRegistered"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
     </CmkSlideInDialog>

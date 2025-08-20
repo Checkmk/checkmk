@@ -7,8 +7,11 @@ description:
  This check monitors the resource conservation status for the Cisco Security Management Appliance (SMA).
 
  Resource conservation mode: Off = OK
+
  Resource conservation mode: On, Reason: Memory shortage = WARN
+
  Resource conservation mode: On, Reason: Queue space shortage = WARN
+
  Resource conservation mode: On, Reason: Queue full = CRIT
 
  The check utilizes the following OID from ASYNCOS-MAIL-MIB:

@@ -46,7 +46,7 @@ function getLabel() {
 }
 
 function getButtonConfig(
-  variant: 'next' | 'prev' | 'save' | unknown,
+  variant: 'next' | 'previous' | 'finish' | unknown,
   iconName: string = '',
   iconRotate: number = 0
 ): {
@@ -64,7 +64,7 @@ function getButtonConfig(
       return {
         icon: { name: 'continue', rotate: 90 }
       }
-    case 'save':
+    case 'finish':
       return {
         icon: { name: 'checkmark', rotate: 0 }
       }

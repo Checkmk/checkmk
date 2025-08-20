@@ -12,8 +12,8 @@ import pytest
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import TableRow
 from cmk.ccc.version import parse_check_mk_version
-from cmk.plugins.collection.agent_based import checkmk_agent_plugins as cap
-from cmk.plugins.lib import checkmk
+from cmk.plugins.checkmk.agent_based import checkmk_agent_plugins as cap
+from cmk.plugins.checkmk.agent_based import lib as checkmk
 
 
 class _OsType(Enum):

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib.checkmk import CachedPlugin, CachedPluginsSection, CachedPluginType
+from cmk.plugins.checkmk.agent_based.lib import CachedPlugin, CachedPluginsSection, CachedPluginType
 
 
 def _split_plugin_descr(plugin_descr: str) -> tuple[CachedPluginType | None, str]:

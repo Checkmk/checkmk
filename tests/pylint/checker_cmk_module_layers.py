@@ -651,6 +651,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",
     ),
     "checkmk": (
+        "cmk.agent_based.v1",  # FIXME
         # These plugins are tightly coupled to Checkmk.
         # We cannot expect them to not depend on the core
         # product.

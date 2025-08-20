@@ -22,11 +22,8 @@ from cmk.agent_based.v2 import (
 )
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.ccc.version import (  # pylint: disable=cmk-module-layer-violation
-    __version__,
-    parse_check_mk_version,
-)
-from cmk.plugins.lib.checkmk import (
+from cmk.ccc.version import __version__, parse_check_mk_version
+from cmk.plugins.checkmk.agent_based.lib import (
     CachedPlugin,
     CachedPluginsSection,
     CheckmkSection,

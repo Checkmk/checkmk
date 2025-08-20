@@ -8,8 +8,8 @@ import datetime
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.cmk_agent_ctl_status import parse_cmk_agent_ctl_status
-from cmk.plugins.lib.checkmk import (
+from cmk.plugins.checkmk.agent_based.cmk_agent_ctl_status import parse_cmk_agent_ctl_status
+from cmk.plugins.checkmk.agent_based.lib import (
     CertInfoController,
     Connection,
     ControllerSection,

@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib.checkmk import ControllerSection
+from cmk.plugins.checkmk.agent_based.lib import ControllerSection
 
 
 def parse_cmk_agent_ctl_status(string_table: StringTable) -> ControllerSection | None:

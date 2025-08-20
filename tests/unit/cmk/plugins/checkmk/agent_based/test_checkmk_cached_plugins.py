@@ -7,8 +7,8 @@
 import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.plugins.collection.agent_based.checkmk_cached_plugins import parse_checkmk_cached_plugins
-from cmk.plugins.lib.checkmk import CachedPlugin, CachedPluginsSection, CachedPluginType
+from cmk.plugins.checkmk.agent_based.checkmk_cached_plugins import parse_checkmk_cached_plugins
+from cmk.plugins.checkmk.agent_based.lib import CachedPlugin, CachedPluginsSection, CachedPluginType
 
 
 @pytest.mark.parametrize(

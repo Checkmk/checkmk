@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import HostLabel
-from cmk.plugins.collection.agent_based.check_mk import (
+from cmk.plugins.checkmk.agent_based.check_mk import (
     host_label_function_labels,
     parse_checkmk_labels,
 )

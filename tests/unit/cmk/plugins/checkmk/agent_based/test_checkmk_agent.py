@@ -13,7 +13,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
-from cmk.plugins.collection.agent_based.checkmk_agent import (
+from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
     _check_encryption_panic,
@@ -25,13 +25,13 @@ from cmk.plugins.collection.agent_based.checkmk_agent import (
     check_checkmk_agent,
     discover_checkmk_agent,
 )
-from cmk.plugins.collection.agent_based.checkmk_agent import (
+from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _expand_curly_address_notation as expand_curly_address_notation,
 )
-from cmk.plugins.collection.agent_based.cmk_update_agent_status import (
+from cmk.plugins.checkmk.agent_based.cmk_update_agent_status import (
     _parse_cmk_update_agent_status,
 )
-from cmk.plugins.lib.checkmk import (
+from cmk.plugins.checkmk.agent_based.lib import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,

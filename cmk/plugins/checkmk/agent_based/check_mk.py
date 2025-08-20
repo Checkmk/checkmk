@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     StringTable,
 )
-from cmk.plugins.lib.checkmk import CheckmkSection
+from cmk.plugins.checkmk.agent_based.lib import CheckmkSection
 
 
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:

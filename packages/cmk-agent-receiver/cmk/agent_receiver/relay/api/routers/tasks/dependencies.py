@@ -5,13 +5,13 @@ import fastapi
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
     get_relays_repository,
 )
-from cmk.agent_receiver.relay.api.routers.relays.handlers import (
-    RegisterRelayHandler,
+from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    GetRelayTasksHandler,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
-def get_register_relay_handler(
+def get_relay_tasks_handler(
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
-) -> RegisterRelayHandler:
-    return RegisterRelayHandler(relays_repository=relays_repository)
+) -> GetRelayTasksHandler:
+    return GetRelayTasksHandler(relays_repository=relays_repository)

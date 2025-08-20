@@ -111,6 +111,11 @@ SRCS = [
     "demo/**/*.css",
 ])
 
+SRCS_AND_TESTS = SRCS + glob([
+    "tests/**/*.ts",
+    "tests/**/*.vue",
+])
+
 npm_link_package(
     name = "node_modules/cmk-shared-typing-bzl",
     src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
@@ -131,17 +136,17 @@ vitest_bin.vitest_test(
     name = "unit-test",
     args = ["run"],
     chdir = package_name(),
-    data = SRCS + glob([
-        "tests/**/*.ts",
-        "tests/**/*.vue",
-    ]),
+    data = SRCS_AND_TESTS,
 )
 
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",
-    args = ["--build --force"],
+    args = [
+        "--build",
+        "--force",
+    ],
     chdir = package_name(),
-    data = SRCS,
+    data = SRCS_AND_TESTS,
     include_types = True,
 )
 
@@ -158,10 +163,7 @@ js_run_devserver(
 vitest_bin.vitest_binary(
     name = "vitest",
     chdir = package_name(),
-    data = SRCS + glob([
-        "tests/**/*.ts",
-        "tests/**/*.vue",
-    ]),
+    data = SRCS_AND_TESTS,
 )
 
 # This should be done as shown

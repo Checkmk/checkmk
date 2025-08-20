@@ -51,7 +51,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <span>
     <CmkList
       :items-props="{ itemData: data, itemElementValidation: elementValidation }"
-      :draggable="props.spec.editable_order ? { onReorder: reorderElements } : null"
+      :drag-callbacks="props.spec.editable_order ? { onReorder: reorderElements } : null"
       :add="{
         show: true,
         tryAdd: addElement,

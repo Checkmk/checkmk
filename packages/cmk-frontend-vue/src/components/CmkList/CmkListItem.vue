@@ -31,7 +31,7 @@ const { buttonPadding = '16px' } = defineProps<{
   removeElement: () => void
   variant?: ListItemVariants['variant']
   buttonPadding?: '16px' | '8px'
-  draggable?: {
+  dragCallbacks?: {
     dragStart: (event: DragEvent) => void
     dragEnd: (event: DragEvent) => void
     dragging: (event: DragEvent) => void | null
@@ -43,7 +43,7 @@ const { buttonPadding = '16px' } = defineProps<{
   <div class="cmk-list-item" :class="listItemVariants({ variant })">
     <div class="cmk-list-item__button-container">
       <div class="cmk-list-item__buttons">
-        <template v-if="draggable!!">
+        <template v-if="dragCallbacks!!">
           <!--
             There are NO automatic tests for the dragging behavior, see comment
             in tests. If you change anything here, test manually!
@@ -53,9 +53,9 @@ const { buttonPadding = '16px' } = defineProps<{
             :aria-label="_t('Drag to reorder')"
             role="button"
             :draggable="true"
-            @dragstart="draggable?.dragStart"
-            @drag="draggable?.dragging"
-            @dragend="draggable?.dragEnd"
+            @dragstart="dragCallbacks?.dragStart"
+            @drag="dragCallbacks?.dragging"
+            @dragend="dragCallbacks?.dragEnd"
           >
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </div>

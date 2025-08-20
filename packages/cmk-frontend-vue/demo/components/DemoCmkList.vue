@@ -60,7 +60,7 @@ const { data: data2, addElement: addElement2, deleteElement: deleteElement2 } = 
     <dd>
       <CmkList
         :items-props="{ itemData: data1 }"
-        :draggable="{ onReorder: reorderElements1 }"
+        :drag-callbacks="{ onReorder: reorderElements1 }"
         :add="{
           show: true,
           tryAdd: addElement1,

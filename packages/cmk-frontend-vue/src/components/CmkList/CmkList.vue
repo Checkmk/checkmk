@@ -19,7 +19,7 @@ const { orientation = 'vertical', ...props } = defineProps<{
   itemsProps: ItemsProps
   tryDelete: (index: number) => boolean
   add?: { show: boolean; tryAdd: (index: number) => boolean; label: string }
-  draggable?: { onReorder: (order: number[]) => void } | null
+  dragCallbacks?: { onReorder: (order: number[]) => void } | null
   orientation?: 'vertical' | 'horizontal'
 }>()
 
@@ -58,7 +58,7 @@ function dragging(event: DragEvent) {
 
 function dragEnd(event: DragEvent) {
   _dragEnd(event)
-  props.draggable?.onReorder(localOrder.value)
+  props.dragCallbacks?.onReorder(localOrder.value)
 }
 
 function removeElement(dataIndex: number) {
@@ -109,7 +109,7 @@ function getItemVariant(index: number, length: number) {
             <CmkListItem
               :remove-element="() => removeElement(dataIndex)"
               :variant="getItemVariant(listIndex, localOrder.length)"
-              :draggable="draggable ? { dragStart, dragEnd, dragging } : null"
+              :drag-callbacks="dragCallbacks ? { dragStart, dragEnd, dragging } : null"
             >
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
             </CmkListItem>

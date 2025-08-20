@@ -18,7 +18,7 @@ test('CmkList does not submit form when clicking drag button', async () => {
           <form>
             <CmkList
                 :items-props="{ itemData: ['foo'] }"
-                :draggable="{ onReorder: () => {} }"
+                :dragCallbacks="{ onReorder: () => {} }"
                 :try-delete="() => {}"
             >
                 <template #item="{ itemData }">

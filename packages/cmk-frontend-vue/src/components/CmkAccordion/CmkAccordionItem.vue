@@ -23,6 +23,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
         <slot name="header" />
       </CmkAccordionTrigger>
     </AccordionHeader>
+    <!-- @vue-ignore aria-labelledby not a property of AccordionContent -->
     <AccordionContent
       :id="'cmk-accordion-content-'.concat(value)"
       class="cmk-accordion-item-content"

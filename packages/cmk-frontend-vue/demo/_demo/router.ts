@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocation } from 'vue-router'
 
 import DemoHome from './DemoHome.vue'
 import DemoEmpty from './DemoEmpty.vue'
@@ -20,12 +20,17 @@ const root: RootFolder = new RootFolder(DemoHome, [
   new Folder('form', DemoEmpty, formPages)
 ])
 
+function defaultProps(route: RouteLocation): { screenshotMode: boolean } {
+  return { screenshotMode: route.query.screenshot === 'true' }
+}
+
 function toRoute(element: Page | Folder | RootFolder, prefixPath: string): Array<Route> {
   if (element instanceof Page) {
     return [
       {
         path: `${prefixPath}${element.name}`,
         meta: { type: 'page', name: element.name, inFolder: prefixPath },
+        props: defaultProps,
         component: element.component
       }
     ]
@@ -53,6 +58,7 @@ function toRoute(element: Page | Folder | RootFolder, prefixPath: string): Array
         content: pages,
         inFolder: inFolder
       },
+      props: defaultProps,
       component: element.component
     }
     for (const subPage of element.pages) {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import DemoPassThrough from '@demo/_demo/DemoPassThrough.vue'
+import DemoEmpty from '@demo/_demo/DemoEmpty.vue'
 
 import DemoFormAll from './DemoFormAll.vue'
 
@@ -12,6 +12,6 @@ import { pages as componentPages } from './components'
 import { Page, Folder } from '@demo/_demo/page'
 
 export const pages: Array<Folder | Page> = [
-  new Folder('components', DemoPassThrough, componentPages),
+  new Folder('components', DemoEmpty, componentPages),
   new Page('all', DemoFormAll)
 ]

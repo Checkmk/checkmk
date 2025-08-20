@@ -132,13 +132,13 @@ immediateWatch(
       </ul>
     </nav>
     <main>
-      <h1>{{ $route.meta.name }}</h1>
+      <h1>{{ currentRoute.meta.name }}</h1>
       <div class="demo-area">
-        <RouterView :screenshot-mode="screenshotMode" />
+        <RouterView />
       </div>
     </main>
   </div>
-  <RouterView v-else :screenshot-mode="screenshotMode" />
+  <RouterView v-else />
 </template>
 
 <style scoped>

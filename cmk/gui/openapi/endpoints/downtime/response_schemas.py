@@ -11,6 +11,49 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
 
+class FixedDowntimeMode(BaseSchema):
+    type = fields.Constant(
+        "fixed",
+        description="The downtime is fixed to the start and end time.",
+        example="fixed",
+        required=True,
+    )
+
+
+class FlexibleDowntimeMode(BaseSchema):
+    type = fields.Constant(
+        "flexible",
+        description=(
+            "The downtime starts if the host or service goes down during the specified start and "
+            "end time window. It will then last for at most the given duration, which can extend "
+            "past the end time."
+        ),
+        example="flexible",
+        required=True,
+    )
+    duration_minutes = fields.Integer(
+        description="The flexible duration in minutes.",
+        example=120,
+        required=True,
+    )
+
+
+class DowntimeMode(OneOfSchema):
+    type_field = "type"
+    type_schemas = {
+        "fixed": FixedDowntimeMode,
+        "flexible": FlexibleDowntimeMode,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj: object) -> str:
+        if isinstance(obj, dict) and "type" in obj:
+            type_key = obj["type"]
+            assert isinstance(type_key, str)
+            return type_key
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+
 class BaseDowntimeSchema(BaseSchema):
     site_id = gui_fields.SiteField(
         description="The site id of the downtime.",
@@ -47,6 +90,15 @@ class BaseDowntimeSchema(BaseSchema):
         required=True,
         description="A comment text.",
         example="Down for update",
+    )
+    mode = fields.Nested(
+        DowntimeMode,
+        required=True,
+        description="The mode of the downtime, either fixed or flexible.",
+        example={
+            "type": "flexible",
+            "duration_minutes": 120,
+        },
     )
 
 

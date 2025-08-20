@@ -144,10 +144,7 @@ onMounted(() => {
     <UnifiedSearchHeader> </UnifiedSearchHeader>
     <UnifiedSearchStart v-if="!showTabResults()" :history-result="historyResult">
     </UnifiedSearchStart>
-    <UnifiedSearchWaitForResults
-      v-if="waitForSearchResults && showTabResults()"
-      :result="searchResult"
-    >
+    <UnifiedSearchWaitForResults v-if="waitForSearchResults && showTabResults()">
     </UnifiedSearchWaitForResults>
     <UnifiedSearchTabResults
       v-if="!waitForSearchResults && showTabResults()"

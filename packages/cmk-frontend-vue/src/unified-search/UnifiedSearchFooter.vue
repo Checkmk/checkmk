@@ -34,6 +34,7 @@ const sortOptions: ToggleButtonOption[] = [
   <div class="unified-search-footer">
     <div class="sorting">
       <label>{{ _t('Result sorting') }}</label>
+      <!-- @vue-ignore click handler does not exist on ToggleButtonGroup -->
       <ToggleButtonGroup
         v-model="searchUtils.query.sort.value"
         :options="sortOptions"

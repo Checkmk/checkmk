@@ -79,7 +79,7 @@ const waitIconEnabled = computed(() => {
             }
           })"
           :key="action.label"
-          :aria-label="action.ariaLabel"
+          :aria-label="action.ariaLabel || ''"
           :variant="
             action.variant === 'next' || action.variant === 'save' ? 'secondary' : 'optional'
           "

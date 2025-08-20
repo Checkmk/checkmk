@@ -24,6 +24,7 @@ interface TooltipContentProps {
   side?: 'right' | 'left' | 'top' | 'bottom'
   align?: 'center' | 'end' | 'start'
   class?: string
+  avoidCollisions?: boolean
 }
 
 const props = withDefaults(
@@ -48,7 +49,10 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 <template>
   <TooltipPortal>
-    <TooltipContent v-bind="{ ...forwarded, ...$attrs }" :class="props.class">
+    <TooltipContent
+      v-bind="{ ...forwarded, avoidCollisions: avoidCollisions!! }"
+      :class="props.class"
+    >
       <slot />
     </TooltipContent>
   </TooltipPortal>

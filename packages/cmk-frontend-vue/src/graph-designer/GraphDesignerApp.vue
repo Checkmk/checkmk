@@ -17,6 +17,7 @@ defineProps<{
   graph_id: string
   graph_lines: GraphLines
   graph_options: GraphOptions
+  graph_renderer?: typeof graphRenderer
   i18n: I18N
 }>()
 </script>
@@ -27,6 +28,6 @@ defineProps<{
     :graph_lines="graph_lines"
     :graph_options="graph_options"
     :i18n="i18n"
-    :graph_renderer="graphRenderer"
+    :graph_renderer="graph_renderer || graphRenderer"
   />
 </template>

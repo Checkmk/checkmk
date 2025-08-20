@@ -8,11 +8,11 @@ import { render } from '@testing-library/vue'
 import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
-function fakeGraphRenderer(
-  graph_id: string,
-  graph_lines: GraphLines,
-  graph_options: GraphOptions,
-  container: HTMLDivElement
+async function fakeGraphRenderer(
+  _graphId: string,
+  _graphLines: GraphLines,
+  _graphOptions: GraphOptions,
+  _container: HTMLDivElement
 ) {
   return
 }

@@ -3423,7 +3423,6 @@ class ReceiveConfigSyncRequest(NamedTuple):
     to_delete: list[str]
     config_generation: int
     use_git: bool
-    site_config: SiteConfiguration
 
 
 class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
@@ -3447,7 +3446,6 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             ast.literal_eval(request.get_str_input_mandatory("to_delete")),
             request.get_integer_input_mandatory("config_generation"),
             config.wato_use_git,
-            config.sites[site_id],
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
@@ -3462,12 +3460,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
                 )
 
             logger.debug("Updating configuration from sync snapshot")
-            self._update_config_on_remote_site(
-                api_request.sync_archive,
-                api_request.to_delete,
-                api_request.site_id,
-                api_request.site_config,
-            )
+            self._update_config_on_remote_site(api_request.sync_archive, api_request.to_delete)
 
             logger.debug("Executing post sync actions")
             _execute_post_config_sync_actions(
@@ -3481,18 +3474,12 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             logger.debug("Done")
             return True
 
-    def _update_config_on_remote_site(
-        self,
-        sync_archive: bytes,
-        to_delete: list[str],
-        site_id: SiteId,
-        site_config: SiteConfiguration,
-    ) -> None:
+    def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: list[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
         base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
-        default_sync_config = user_sync_default_config(site_config, site_id)
+        default_sync_config = user_sync_default_config(active_config.sites[omd_site()], omd_site())
         current_users = {}
         keep_local_users = False
         active_connectors = []

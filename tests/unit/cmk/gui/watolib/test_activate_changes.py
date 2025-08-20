@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from werkzeug.test import create_environ
 
-from livestatus import SiteConfiguration, SiteConfigurations
+from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils
@@ -892,33 +892,6 @@ class TestAutomationReceiveConfigSync:
                 ],
                 config_generation=0,
                 use_git=False,
-                site_config=SiteConfiguration(
-                    id=SiteId("remote"),
-                    alias="remote site",
-                    disable_wato=True,
-                    disabled=False,
-                    insecure=False,
-                    multisiteurl="http://127.0.0.1/remote/check_mk/",
-                    persist=False,
-                    replicate_ec=True,
-                    replicate_mkps=True,
-                    replication="slave",
-                    message_broker_port=5673,
-                    secret="watosecret",
-                    status_host=None,
-                    timeout=2,
-                    user_login=True,
-                    url_prefix="/remote/",
-                    proxy=None,
-                    socket=(
-                        "tcp",
-                        NetworkSocketDetails(
-                            address=("127.0.0.1", 6790),
-                            tls=("encrypted", {"verify": True}),
-                        ),
-                    ),
-                    user_sync="all",
-                ),
             )
         )
 
@@ -951,41 +924,14 @@ class TestAutomationReceiveConfigSync:
                 },
             )
         )
-        config = Config()
-        config.sites = SiteConfigurations(
-            {
-                SiteId("NO_SITE"): SiteConfiguration(
-                    id=SiteId("NO_SITE"),
-                    alias="NO_SITE site",
-                    disable_wato=True,
-                    disabled=False,
-                    insecure=False,
-                    multisiteurl="http://127.0.0.1/NO_SITE/check_mk/",
-                    persist=False,
-                    replicate_ec=False,
-                    replicate_mkps=False,
-                    replication=None,
-                    message_broker_port=5673,
-                    secret="watosecret",
-                    status_host=None,
-                    timeout=2,
-                    user_login=True,
-                    url_prefix="/NO_SITE/",
-                    proxy=None,
-                    socket=("local", None),
-                    user_sync="all",
-                )
-            }
-        )
         assert activate_changes.AutomationReceiveConfigSync().get_request(
-            config, request
+            Config(), request
         ) == activate_changes.ReceiveConfigSyncRequest(
             site_id=SiteId("NO_SITE"),
             sync_archive=b"some data",
             to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
             config_generation=123,
             use_git=False,
-            site_config=config.sites[SiteId("NO_SITE")],
         )
 
 

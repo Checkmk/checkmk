@@ -108,7 +108,7 @@ def add_links(
 
         for method in endpoint["methods"]:
             trg_schema = raw_schema["paths"][endpoint["target"]][method.lower()]
-            parameter_pattern = trg_schema["parameters"][0]["schema"].get("pattern", None)
+            parameter_pattern = trg_schema["parameters"][0].get("schema", {}).get("pattern", None)
 
             if parameter_pattern and not property_pattern:
                 logger.error(

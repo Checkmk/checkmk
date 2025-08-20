@@ -147,7 +147,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
     RuleSpec,
-    SingleHostRulesetMatcher,
     SingleHostRulesetMatcherMerge,
     SingleServiceRulesetMatcherFirst,
 )
@@ -3674,11 +3673,6 @@ def make_parser_config(
     return ParserConfig(
         fallback_agent_output_encoding=loaded_config.fallback_agent_output_encoding,
         check_interval=_check_mk_check_interval,
-        snmp_fetch_intervals=SingleHostRulesetMatcher(
-            loaded_config.snmp_check_interval,
-            ruleset_matcher,
-            label_manager.labels_of_host,
-        ),
         piggyback_translations=SingleHostRulesetMatcherMerge(
             loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
         ),
@@ -3801,12 +3795,9 @@ class FetcherFactory:
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
-            section_store_path=make_persisted_section_dir(
-                host_name,
-                ident="snmp",
-                section_cache_path=cmk.utils.paths.var_dir,
-            ),
+            section_cache_path=self._snmp_fetcher_config.section_cache_path(host_name),
             snmp_config=snmp_config,
+            caching_config=self._snmp_fetcher_config.caching_config(host_name),
             stored_walk_path=self._snmp_fetcher_config.stored_walk_path,
             walk_cache_path=self._snmp_fetcher_config.walk_cache_path,
         )

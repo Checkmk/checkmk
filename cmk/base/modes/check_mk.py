@@ -45,6 +45,7 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import DiscoveryConfig
+from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
@@ -98,7 +99,7 @@ from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
-from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
@@ -708,6 +709,12 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     backend_override=snmp_backend_override,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loading_result.loaded_config,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
                 ),
             ),
             simulation_mode=config.simulation_mode,
@@ -870,6 +877,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
         sys.stderr.write(f"unknown host: {hostname}\n")
     for hostname in sorted(hosts & all_hosts):
         cmk.base.dump_host.dump_host(
+            loading_result.loaded_config,
             config_cache,
             service_name_config,
             enforced_services_table,
@@ -2204,6 +2212,10 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,
@@ -2565,6 +2577,10 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,
@@ -2806,6 +2822,10 @@ def run_checking(
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,
@@ -3080,6 +3100,10 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,
@@ -3360,9 +3384,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
 
     parser = CMKParser(
-        config.make_parser_config(
-            loading_result.loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
-        ),
+        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -3383,6 +3405,10 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,

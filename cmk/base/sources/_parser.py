@@ -17,8 +17,6 @@ from cmk.checkengine.parser import (
     SectionStore,
     SNMPParser,
 )
-from cmk.snmplib import SNMPRawDataElem
-from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import parse_translation_options, TranslationOptions
 
 __all__ = ["make_parser", "ParserConfig"]
@@ -28,20 +26,7 @@ __all__ = ["make_parser", "ParserConfig"]
 class ParserConfig:
     fallback_agent_output_encoding: str
     check_interval: Callable[[HostName], float]
-    snmp_fetch_intervals: Callable[
-        [HostName], Sequence[tuple[list[str], tuple[object, float | None]]]
-    ]
     piggyback_translations: Callable[[HostName], Mapping[str, object]]
-
-    def parsed_snmp_fetch_intervals(self, host_name: HostName) -> Mapping[SectionName, int | None]:
-        """Return the configured SNMP fetch intervals for a host"""
-        return {
-            SectionName(section_name): None if seconds is None else round(seconds)
-            for sections, (_option_id, seconds) in reversed(  # use first match
-                self.snmp_fetch_intervals(host_name)
-            )
-            for section_name in sections
-        }
 
     def parsed_piggyback_translations(self, host_name: HostName) -> TranslationOptions:
         """Return the configured piggyback translations for a host"""
@@ -58,17 +43,7 @@ def make_parser(
     logger: logging.Logger,
 ) -> Parser:
     if fetcher_type is FetcherType.SNMP:
-        return SNMPParser(
-            host_name,
-            SectionStore[SNMPRawDataElem](
-                persisted_section_dir,
-                logger=logger,
-            ),
-            persist_periods=config.parsed_snmp_fetch_intervals(host_name),
-            host_check_interval=config.check_interval(host_name),
-            keep_outdated=keep_outdated,
-            logger=logger,
-        )
+        return SNMPParser()
 
     return AgentParser(
         host_name,

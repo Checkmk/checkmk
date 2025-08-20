@@ -22,6 +22,7 @@ from cmk.base.checkers import (
     CMKSummarizer,
     SectionPluginMapper,
 )
+from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.base.modes.check_mk import execute_active_check_inventory
@@ -41,6 +42,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
+from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import (
@@ -139,17 +141,19 @@ def inventory_as_check(
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
     loading_result = config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
     config_cache = loading_result.config_cache
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    hosts_config = config.make_hosts_config(loading_result.loaded_config)
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    hosts_config = config.make_hosts_config(loaded_config)
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loaded_config, ruleset_matcher)
     )
     enforced_service_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
-            loading_result.loaded_config.static_checks,
-            loading_result.config_cache.ruleset_matcher,
-            loading_result.config_cache.label_manager.labels_of_host,
+            loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
         ),
         service_name_config,
         plugins.check_plugins,
@@ -180,6 +184,10 @@ def inventory_as_check(
                 backend_override=None,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
             ),
         ),
         plugins,
@@ -195,11 +203,7 @@ def inventory_as_check(
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(
-        config.make_parser_config(
-            loading_result.loaded_config,
-            config_cache.ruleset_matcher,
-            config_cache.label_manager,
-        ),
+        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

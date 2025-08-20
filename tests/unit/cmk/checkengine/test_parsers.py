@@ -8,7 +8,6 @@ import copy
 import itertools
 import logging
 import time
-from collections import defaultdict
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -870,18 +869,8 @@ class TestSNMPParser:
         return "hostname"
 
     @pytest.fixture
-    def parser(self, hostname):
-        return SNMPParser(
-            hostname,
-            SectionStore(
-                "/tmp/store",
-                logger=logging.Logger("test"),
-            ),
-            persist_periods={},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logging.Logger("test"),
-        )
+    def parser(self):
+        return SNMPParser()
 
     def test_empty_raw_data(self, parser: SNMPParser) -> None:
         raw_data: SNMPRawData = {}
@@ -908,30 +897,12 @@ class TestSNMPParser:
         assert host_sections.cache_info == {}
         assert not host_sections.piggybacked_raw_data
 
-    def test_with_persisted_sections(
-        self,
-        parser: SNMPParser,
-        sections: dict[SectionName, StringTable],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-        monkeypatch.setattr(parser, "persist_periods", defaultdict(lambda: 33))
-        monkeypatch.setattr(
-            SectionStore,
-            "load",
-            lambda self: {
-                SectionName("persisted"): (42, 69, [["content"]]),
-            },
+    def test_with_cached_sections(self, parser: SNMPParser) -> None:
+        ahs = parser.parse(
+            {SNMPSectionMarker("my_section:cached(123,456)"): [["content"]]}, selection=NO_SELECTION
         )
-        # Patch IO:
-        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
-
-        raw_data = {SNMPSectionMarker(n): c for n, c in sections.items()}
-
-        ahs = parser.parse(raw_data, selection=NO_SELECTION)
-        all_sections = {**sections, SectionName("persisted"): [["content"]]}
-        assert ahs.sections == all_sections
-        assert ahs.cache_info == {SectionName("persisted"): (42, 27)}
+        assert ahs.sections == {SectionName("my_section"): [["content"]]}
+        assert ahs.cache_info == {SectionName("my_section"): (123, 456)}
         assert ahs.piggybacked_raw_data == {}
 
 
@@ -1153,200 +1124,6 @@ class TestAgentPersistentSectionHandling:
         assert ahs.cache_info == {SectionName("section"): (500, 100)}
         assert not ahs.piggybacked_raw_data
         assert section_store.load() == {SectionName("section"): (500, 600, [])}
-
-
-class TestSNMPPersistedSectionHandling:
-    @pytest.fixture
-    def logger(self):
-        return logging.getLogger("test")
-
-    def test_update_with_empty_store_and_persisted(self, logger: logging.Logger) -> None:
-        section_store = MockStore("/dev/null", {}, logger=logger)
-        raw_data: SNMPRawData = {}
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {}
-        assert shs.cache_info == {}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {}
-
-    def test_update_with_empty_persisted(self, logger: logging.Logger) -> None:
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("stored"): (0, 0, [["old"]])},
-            logger=logger,
-        )
-        raw_data: SNMPRawData = {}
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("stored"): [["old"]]}
-        assert shs.cache_info == {SectionName("stored"): (0, 0)}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {
-            SectionName("stored"): (0, 0, [["old"]]),
-        }
-
-    def test_update_with_empty_store(self, logger: logging.Logger) -> None:
-        section_store = MockStore("/dev/null", {}, logger=logger)
-        raw_data: SNMPRawData = {SNMPSectionMarker("fresh"): [["new"]]}
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("fresh"): [["new"]]}
-        assert shs.cache_info == {}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {}
-
-    def test_update_with_persisted_and_store(self, logger: logging.Logger) -> None:
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("stored"): (0, 0, [["old"]])},
-            logger=logger,
-        )
-        raw_data = {SNMPSectionMarker("fresh"): [["new"]]}
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {
-            SectionName("stored"): [["old"]],
-            SectionName("fresh"): [["new"]],
-        }
-        assert shs.cache_info == {SectionName("stored"): (0, 0)}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {
-            SectionName("stored"): (0, 0, [["old"]]),
-        }
-
-    def test_check_intervals_updates_persisted(
-        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("section"): (0, 0, [["old"]])},
-            logger=logger,
-        )
-        raw_data = {SNMPSectionMarker("section"): [["new"]]}
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={SectionName("section"): 42},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("section"): [["new"]]}
-        assert shs.cache_info == {}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {SectionName("section"): (1000, 1042, [["new"]])}
-
-    def test_keep_outdated_false(
-        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("section"): (500, 600, [["old"]])},
-            logger=logger,
-        )
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={SectionName("section"): 42},
-            host_check_interval=60,
-            keep_outdated=False,
-            logger=logger,
-        )
-        shs = parser.parse({}, selection=NO_SELECTION)
-        assert shs.sections == {}
-        assert shs.cache_info == {}
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {}
-
-    def test_keep_outdated_true(
-        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("section"): (500, 600, [["old"]])},
-            logger=logger,
-        )
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={SectionName("section"): 42},
-            host_check_interval=60,
-            keep_outdated=True,
-            logger=logger,
-        )
-        shs = parser.parse({}, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("section"): [["old"]]}
-        assert shs.cache_info == {
-            SectionName("section"): (500, 100),
-        }
-        assert shs.piggybacked_raw_data == {}
-        assert not section_store.load() == {SectionName("section"): (1000, 1042, [["old"]])}
-
-    def test_section_expired_during_checking(
-        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-
-        section_store = MockStore(
-            "/dev/null",
-            {SectionName("section"): (890, 990, [["old"]])},
-            logger=logger,
-        )
-        parser = SNMPParser(
-            HostName("testhost"),
-            section_store,
-            persist_periods={SectionName("section"): 100},
-            host_check_interval=60,
-            keep_outdated=False,
-            logger=logger,
-        )
-        shs = parser.parse({}, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("section"): [["old"]]}
-        assert shs.cache_info == {
-            SectionName("section"): (890, 100),
-        }
-        assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == {SectionName("section"): (890, 990, [["old"]])}
 
 
 class TestMarkers:

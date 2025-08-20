@@ -16,6 +16,8 @@ import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
 from cmk.base.config import ConfigCache
+from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import Source
 from cmk.ccc import tty
@@ -34,6 +36,7 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
+from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
@@ -116,6 +119,7 @@ def print_(txt: str) -> None:
 
 
 def dump_host(
+    loaded_config: LoadedConfigFragment,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     enforced_services_table: Callable[
@@ -243,6 +247,12 @@ def dump_host(
                         backend_override=None,
                         stored_walk_path=stored_walk_path,
                         walk_cache_path=walk_cache_path,
+                        section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                        caching_config=make_parsed_snmp_fetch_intervals_config(
+                            loaded_config=loaded_config,
+                            ruleset_matcher=config_cache.ruleset_matcher,
+                            labels_of_host=config_cache.label_manager.labels_of_host,
+                        ),
                     ),
                 ),
                 file_cache_options=FileCacheOptions(),

@@ -106,6 +106,7 @@ from cmk.base.config import (
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
+from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
@@ -169,7 +170,7 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -323,7 +324,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             loading_result = load_config(
                 discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
-
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
         label_manager = loading_result.config_cache.label_manager
@@ -386,6 +386,10 @@ class AutomationDiscovery(DiscoveryAutomation):
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                     walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
                 ),
             ),
             plugins,
@@ -537,6 +541,8 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                         backend_override=None,
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                        caching_config=lambda host_name: {},
+                        section_cache_path=lambda host_name: Path("/dev/null"),
                     ),
                 ),
                 agent_name=run_settings.agent_name,
@@ -638,6 +644,12 @@ class AutomationDiscoveryPreview(Automation):
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                     walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loading_result.loaded_config,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
                 ),
             ),
             plugins,
@@ -1098,6 +1110,12 @@ def _execute_autodiscovery(
                 backend_override=None,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loading_result.loaded_config,
+                    config_cache.ruleset_matcher,
+                    config_cache.label_manager.labels_of_host,
+                ),
+                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
             ),
         ),
         ab_plugins,
@@ -3411,6 +3429,12 @@ class AutomationDiagHost(Automation):
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                     walk_cache_path=walk_cache_path,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config,
+                        config_cache.ruleset_matcher,
+                        config_cache.label_manager.labels_of_host,
+                    ),
+                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
                 ),
             ),
             simulation_mode=config.simulation_mode,
@@ -3880,16 +3904,18 @@ class AutomationGetAgentOutput(Automation):
 
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+        loaded_config = loading_result.loaded_config
+        ruleset_matcher = loading_result.config_cache.ruleset_matcher
+        label_manager = loading_result.config_cache.label_manager
+
         service_name_config = loading_result.config_cache.make_passive_service_name_config(
-            make_final_service_name_config(
-                loading_result.loaded_config, loading_result.config_cache.ruleset_matcher
-            )
+            make_final_service_name_config(loaded_config, ruleset_matcher)
         )
         service_configurer = loading_result.config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
         config_cache = loading_result.config_cache
-        hosts_config = config.make_hosts_config(loading_result.loaded_config)
+        hosts_config = config.make_hosts_config(loaded_config)
 
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
@@ -3960,6 +3986,12 @@ class AutomationGetAgentOutput(Automation):
                             backend_override=None,
                             stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                             walk_cache_path=walk_cache_path,
+                            section_cache_path=make_cached_snmp_sections_dir(
+                                cmk.utils.paths.var_dir
+                            ),
+                            caching_config=make_parsed_snmp_fetch_intervals_config(
+                                loaded_config, ruleset_matcher, label_manager.labels_of_host
+                            ),
                         ),
                     ),
                     simulation_mode=config.simulation_mode,

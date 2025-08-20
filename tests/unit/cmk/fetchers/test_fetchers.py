@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import socket
+import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
 from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
@@ -59,6 +60,47 @@ from cmk.snmplib import (
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.paths import omd_root
 from cmk.utils.sectionname import SectionName
+
+# TODO(ml): This is way too complicated for a unit test.
+PLUGIN_STORE = SNMPPluginStore(
+    {
+        SNMPSectionName("pim"): SNMPPluginStoreItem(
+            trees=[
+                BackendSNMPTree(
+                    base=".1.1.1",
+                    oids=[
+                        BackendOIDSpec("1.2", "string", False),
+                        BackendOIDSpec("3.4", "string", False),
+                    ],
+                )
+            ],
+            detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
+            inventory=False,
+        ),
+        SNMPSectionName("pam"): SNMPPluginStoreItem(
+            trees=[
+                BackendSNMPTree(
+                    base=".1.2.3",
+                    oids=[
+                        BackendOIDSpec("4.5", "string", False),
+                        BackendOIDSpec("6.7", "string", False),
+                        BackendOIDSpec("8.9", "string", False),
+                    ],
+                ),
+            ],
+            detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
+            inventory=False,
+        ),
+        SNMPSectionName("pum"): SNMPPluginStoreItem(
+            trees=[
+                BackendSNMPTree(base=".2.2.2", oids=[BackendOIDSpec("2.2", "string", False)]),
+                BackendSNMPTree(base=".3.3.3", oids=[BackendOIDSpec("2.2", "string", False)]),
+            ],
+            detect_spec=SNMPDetectSpec([[]]),
+            inventory=False,
+        ),
+    }
+)
 
 
 class SensorReading(NamedTuple):
@@ -367,7 +409,6 @@ class TestSNMPFetcherDeserialization:
                 oid_cache_dir=tmp_path,
             ),
             do_status_data_inventory=False,
-            section_store_path="/tmp/db",
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
@@ -385,6 +426,8 @@ class TestSNMPFetcherDeserialization:
                 character_encoding=None,
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
+            section_cache_path="/tmp/db",
+            caching_config={SNMPSectionName("foobar"): 42},
         )
 
     def test_repr(self, fetcher: SNMPFetcher) -> None:
@@ -396,6 +439,7 @@ def _create_fetcher(
     path: Path,
     sections: Mapping[SNMPSectionName, SNMPSectionMeta] | None = None,
     do_status_data_inventory: bool = False,
+    caching_config: Mapping[SNMPSectionName, int] | None = None,
 ) -> SNMPFetcher:
     return SNMPFetcher(
         sections={} if sections is None else sections,
@@ -405,7 +449,6 @@ def _create_fetcher(
             oid_cache_dir=path,
         ),
         do_status_data_inventory=do_status_data_inventory,
-        section_store_path="/tmp/db",
         stored_walk_path=path,
         walk_cache_path=path,
         snmp_config=SNMPHostConfig(
@@ -423,56 +466,15 @@ def _create_fetcher(
             character_encoding=None,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
+        section_cache_path=path / "section_cache_path",
+        caching_config=caching_config or {},
     )
 
 
 class TestSNMPFetcherFetch:
     @pytest.fixture(autouse=True)
     def snmp_plugin_fixture(self) -> None:
-        # TODO(ml): This is way too complicated for a unit test.
-        SNMPFetcher.plugin_store = SNMPPluginStore(
-            {
-                SNMPSectionName("pim"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(
-                            base=".1.1.1",
-                            oids=[
-                                BackendOIDSpec("1.2", "string", False),
-                                BackendOIDSpec("3.4", "string", False),
-                            ],
-                        )
-                    ],
-                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
-                    inventory=False,
-                ),
-                SNMPSectionName("pam"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(
-                            base=".1.2.3",
-                            oids=[
-                                BackendOIDSpec("4.5", "string", False),
-                                BackendOIDSpec("6.7", "string", False),
-                                BackendOIDSpec("8.9", "string", False),
-                            ],
-                        ),
-                    ],
-                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
-                    inventory=False,
-                ),
-                SNMPSectionName("pum"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(
-                            base=".2.2.2", oids=[BackendOIDSpec("2.2", "string", False)]
-                        ),
-                        BackendSNMPTree(
-                            base=".3.3.3", oids=[BackendOIDSpec("2.2", "string", False)]
-                        ),
-                    ],
-                    detect_spec=SNMPDetectSpec([[]]),
-                    inventory=False,
-                ),
-            }
-        )
+        SNMPFetcher.plugin_store = PLUGIN_STORE
 
     def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
@@ -690,6 +692,81 @@ class TestSNMPFetcherFetch:
         )
 
 
+class TestSNMPFetcherConfiguredCaching:
+    @pytest.fixture(autouse=True)
+    def snmp_plugin_fixture(self) -> None:
+        SNMPFetcher.plugin_store = PLUGIN_STORE
+
+    @pytest.fixture(autouse=True, scope="function")
+    def _get_snmp_table(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        vals = iter("ab")
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda section_name, **__: [[next(vals)]])
+
+    @staticmethod
+    def _create_fetcher(
+        tmp_path: Path, caching_config: Mapping[SNMPSectionName, int]
+    ) -> SNMPFetcher:
+        return _create_fetcher(
+            path=tmp_path,
+            sections={
+                SNMPSectionName("pim"): SNMPSectionMeta(
+                    checking=True, disabled=False, redetect=False
+                ),
+            },
+            caching_config=caching_config,
+        )
+
+    @staticmethod
+    def _fetch(fetcher: SNMPFetcher, mode: Mode) -> SNMPRawData:
+        return PlainFetcherTrigger().get_raw_data(NoCache(), fetcher, mode).ok
+
+    def test_uncached(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        fetcher = self._create_fetcher(tmp_path, caching_config={})
+
+        assert self._fetch(fetcher, Mode.CHECKING) == {SNMPSectionMarker("pim"): [[["a"]]]}
+        assert self._fetch(fetcher, Mode.CHECKING) == {SNMPSectionMarker("pim"): [[["b"]]]}
+
+    def test_cached(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setattr(time, "time", lambda c=iter((0, 100)): next(c))
+
+        fetcher = self._create_fetcher(tmp_path, caching_config={SNMPSectionName("pim"): 123})
+
+        assert self._fetch(fetcher, Mode.CHECKING) == {
+            SNMPSectionMarker("pim:cached(0,123)"): [[["a"]]]
+        }
+        assert self._fetch(fetcher, Mode.CHECKING) == {
+            SNMPSectionMarker("pim:cached(0,123)"): [[["a"]]]
+        }
+
+    def test_cache_outdated(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setattr(time, "time", lambda c=iter((0, 100)): next(c))
+
+        fetcher = self._create_fetcher(tmp_path, caching_config={SNMPSectionName("pim"): 42})
+
+        assert self._fetch(fetcher, Mode.CHECKING) == {
+            SNMPSectionMarker("pim:cached(0,42)"): [[["a"]]]
+        }
+        assert self._fetch(fetcher, Mode.CHECKING) == {
+            SNMPSectionMarker("pim:cached(100,42)"): [[["b"]]]
+        }
+
+    @pytest.mark.parametrize("mode", [Mode.DISCOVERY, Mode.INVENTORY, Mode.FORCE_SECTIONS])
+    def test_cache_disabled_non_checking_mode(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mode: Mode
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=iter((0, 100)): next(c))
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda **__: frozenset({SNMPSectionName("pim")}),
+        )
+
+        fetcher = self._create_fetcher(tmp_path, caching_config={SNMPSectionName("pim"): 123})
+
+        assert self._fetch(fetcher, mode) == {SNMPSectionMarker("pim:cached(0,123)"): [[["a"]]]}
+        assert self._fetch(fetcher, mode) == {SNMPSectionMarker("pim:cached(100,123)"): [[["b"]]]}
+
+
 class SNMPFetcherStub(SNMPFetcher):
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         return {SNMPSectionMarker("section"): [[b"fetched"]]}
@@ -705,7 +782,6 @@ class TestSNMPFetcherFetchCache:
                 oid_cache_dir=tmp_path,
             ),
             do_status_data_inventory=False,
-            section_store_path="/tmp/db",
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
@@ -723,6 +799,8 @@ class TestSNMPFetcherFetchCache:
                 character_encoding=None,
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
+            section_cache_path="/tmp/db",
+            caching_config={},
         )
         file_cache = StubFileCache[SNMPRawData](
             path_template=os.devnull,

@@ -1535,6 +1535,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
                 myself=myself,
                 basic_attributes=basic_attributes,
                 aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
+                config=config,
             )
 
             forms.end()

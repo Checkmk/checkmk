@@ -10,6 +10,7 @@ from typing import cast, Literal
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -59,6 +60,7 @@ def configure_attributes(
     for_what: DialogIdent,
     parent: Folder | SearchFolder | None,
     aux_tags_by_tag: Mapping[TagID | None, Sequence[TagID]],
+    config: Config,
     myself: Folder | None = None,
     without_attributes: Sequence[str] | None = None,
     varprefix: str = "",
@@ -102,7 +104,7 @@ def configure_attributes(
             topic_title,
             isopen=topic_id in ["basic", "address", "monitoring_agents"],
             table_id=topic_id,
-            show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
+            show_more_toggle=any(attribute.is_show_more(config) for attribute in topic_attributes),
             show_more_mode=show_more_mode,
         )
 
@@ -290,7 +292,7 @@ def configure_attributes(
                 _u(attr.title()),
                 checkbox=checkbox_code,
                 section_id="attr_" + attrname,
-                is_show_more=attr.is_show_more(),
+                is_show_more=attr.is_show_more(config),
                 is_changed=active,
             )
             html.help(attr.help())

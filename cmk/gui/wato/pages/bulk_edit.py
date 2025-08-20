@@ -155,6 +155,7 @@ class ModeBulkEdit(WatoMode):
                 for_what="bulk",
                 parent=self._folder,
                 aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
+                config=config,
             )
             forms.end()
             html.hidden_fields()

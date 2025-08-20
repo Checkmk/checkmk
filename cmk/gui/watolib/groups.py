@@ -11,6 +11,7 @@ from typing import Any, Literal
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui import hooks
+from cmk.gui.config import Config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
@@ -344,7 +345,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def sort_index(cls) -> int:
         return 25
 
-    def is_show_more(self) -> bool:
+    def is_show_more(self, config: Config) -> bool:
         return True
 
     def help(self) -> str:

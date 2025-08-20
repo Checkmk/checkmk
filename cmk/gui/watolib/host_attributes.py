@@ -23,6 +23,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.fields import String
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
@@ -468,7 +469,7 @@ class ABCHostAttribute(abc.ABC):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_show_more(self) -> bool:
+    def is_show_more(self, config: Config) -> bool:
         """Whether or not this attribute is treated as an element only shown on
         show more button in the GUI"""
         return False
@@ -1024,7 +1025,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
-    def is_show_more(self) -> bool:
+    def is_show_more(self, config: Config) -> bool:
         return self._tag_group.id in ["criticality", "networking", "piggyback"]
 
 

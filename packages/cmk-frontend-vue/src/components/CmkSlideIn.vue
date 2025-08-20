@@ -32,6 +32,7 @@ watch(
     <DialogPortal>
       <DialogOverlay class="slide-in__overlay" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
+      <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app slide-in__container"

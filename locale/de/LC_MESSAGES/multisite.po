@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-19 00:35+0000\n"
+"PO-Revision-Date: 2025-08-19 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2973,16 +2973,14 @@ msgstr "AWS/WAFV2 Grenzen"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web-ACL-Anfragen"
 
-#, fuzzy
 msgid "Abnormal terminated calls in"
-msgstr "Aktive eingehende Anrufe"
+msgstr "Abnormal abgebrochene eingehende Anrufe"
 
 msgid "Abnormal terminated calls in/out"
-msgstr ""
+msgstr "Abnormal abgebrochene ein-/ausgehende Anrufe"
 
-#, fuzzy
 msgid "Abnormal terminated calls out"
-msgstr "Aktive ausgehende Anrufe"
+msgstr "Abnormal abgebrochene ausgehende Anrufe"
 
 msgid "Abort with an error"
 msgstr "Abbruch mit Fehler"
@@ -3695,9 +3693,8 @@ msgstr "Aktiver und inaktiver Speicher - Dateien und anonym"
 msgid "Active calls in"
 msgstr "Aktive eingehende Anrufe"
 
-#, fuzzy
 msgid "Active calls in/out"
-msgstr "Aktive ausgehende Anrufe"
+msgstr "Aktive ein-/ausgehende Anrufe"
 
 msgid "Active calls out"
 msgstr "Aktive ausgehende Anrufe"
@@ -6652,9 +6649,8 @@ msgstr ""
 msgid "Another session is active"
 msgstr "Andere Sitzung aktiv"
 
-#, fuzzy
 msgid "Answer seizure ratio"
-msgstr "Durchschnittliche Erfolgsrate"
+msgstr "Antwort-Anfalls-Verhältnis (Answer Seizure Ratio, ASR)"
 
 msgid "AntiVirus last update age"
 msgstr "Alter des letzten AntiVirus-Updates"
@@ -11541,9 +11537,9 @@ msgstr "Verändere Refresh der Ansichtenanzeige"
 msgid "Changed"
 msgstr "Geändert"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Changed %s connection %s"
-msgstr "LDAP-Verbindung %s geändert"
+msgstr "Geänderte %s Verbindung %s"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -15934,9 +15930,9 @@ msgstr "Durch Parent Scan erzeugt"
 msgid "Created events"
 msgstr "Ereignisse erzeugt"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Created new %s connection"
-msgstr "Neue LDAP-Verbindung erstellt"
+msgstr "Neue %s Verbindung erstellt"
 
 msgid "Created new LDAP connection"
 msgstr "Neue LDAP-Verbindung erstellt"
@@ -18379,9 +18375,9 @@ msgstr "Verschwundene Hosts löschen"
 msgid "Deleted %s %d"
 msgstr "%s %d gelöscht"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deleted %s connection %s"
-msgstr "Verbindung %s löschen"
+msgstr "Gelöschte %s Verbindung %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -22939,25 +22935,20 @@ msgstr "Ausschluss ist <a href=\"%s\">global aktiviert</a>"
 msgid "Established TCP/UDP connections"
 msgstr "Bestehende TCP/UDP Verbindungen"
 
-#, fuzzy
 msgid "Established calls in"
-msgstr "Bestehenden Verbindungen"
+msgstr "Bestehende eingehende Anrufe"
 
-#, fuzzy
 msgid "Established calls in rate"
-msgstr "Bestehenden Verbindungen"
+msgstr "Quote bestehender eingehender Anrufe"
 
-#, fuzzy
 msgid "Established calls in/out"
-msgstr "Aktive ausgehende Anrufe"
+msgstr "Bestehende ein-/ausgehende Anrufe"
 
-#, fuzzy
 msgid "Established calls out"
-msgstr "Aktive ausgehende Anrufe"
+msgstr "Bestehende ausgehende Anrufe"
 
-#, fuzzy
 msgid "Established calls out rate"
-msgstr "Aktive ausgehende Anrufe"
+msgstr "Quote bestehender ausgehender Anrufe"
 
 msgid "Established connections"
 msgstr "Bestehenden Verbindungen"
@@ -27276,6 +27267,10 @@ msgstr "Health check Prozent Gesunde"
 
 msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
+
+#, fuzzy
+msgid "Healthy"
+msgstr "Integrität"
 
 msgid "Healthy hosts"
 msgstr "Gesunde Hosts"
@@ -38061,9 +38056,9 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 msgid "Lower levels for active connections"
 msgstr "Untergrenzen für aktive Verbindungen"
 
-#, fuzzy
 msgid "Lower levels for answer seizure ratio"
-msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
+msgstr ""
+"Untergrenzen für Antwort-Anfalls-Verhältnis (Answer Seizure Ratio, ASR)"
 
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
@@ -38092,9 +38087,8 @@ msgstr "Untergrenzen für die Trefferquote"
 msgid "Lower levels for incoming requests to a JVM application server"
 msgstr "Untergrenzen für eingehende Anfragen an einen JVM Applikationsserver"
 
-#, fuzzy
 msgid "Lower levels for network effectiveness"
-msgstr "Untergrenzen für Health-Lebensdauer"
+msgstr "Untergrenzen für Netzwerk-Effektivität"
 
 msgid "Lower levels for notification delivery rate"
 msgstr "Untergrenzen für Zustellungsrate der Benachrichtigungen"
@@ -42209,9 +42203,8 @@ msgstr "Netzwerkadresse:"
 msgid "Network containers"
 msgstr "Netzwerk-Container"
 
-#, fuzzy
 msgid "Network effectiveness ratio"
-msgstr "Netzwerkspezifikation"
+msgstr "Quote der Netzwerk-Effizienz"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netzwerk-Dateisystem - Gesamtstatus und Nutzung (z. B. NFS)"
@@ -42496,6 +42489,10 @@ msgstr "Keine GUI-Erweiterungen, welche die veraltete API verwenden"
 
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Keine HW-/SW-Inventur Plugins, welche die veraltete API verwenden"
+
+#, fuzzy
+msgid "No Health Check"
+msgstr "Nächster Check"
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -49470,6 +49467,10 @@ msgstr "Pod-Ressourcen: Namespace"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
+
+#, fuzzy
+msgid "Podman Container Health"
+msgstr "Neustarts von Podman-Container"
 
 msgid "Podman Container Restarts"
 msgstr "Neustarts von Podman-Container"
@@ -59676,6 +59677,10 @@ msgstr "Gestartet am %s"
 #, python-format
 msgid "Started at: %s."
 msgstr "Gestartet um: %s."
+
+#, fuzzy
+msgid "Starting"
+msgstr "Startend"
 
 msgid "Starting Quick setup action..."
 msgstr "Quick Setup Aktion wird gestartet..."
@@ -76438,6 +76443,10 @@ msgstr "unbehandelte P."
 msgid "Unhandled service problems"
 msgstr "Unbehandelte Serviceprobleme"
 
+#, fuzzy
+msgid "Unhealthy"
+msgstr "Integrität"
+
 msgid "Unicast packet rates"
 msgstr "Unicast-Paketraten"
 
@@ -85251,6 +85260,10 @@ msgstr "Beschäftigte Worker"
 msgid "bytes/s"
 msgstr "Bytes/s"
 
+#, fuzzy
+msgid "bytes/sec"
+msgstr "Bytes/s"
+
 msgid "cAdvisor"
 msgstr "cAdvisor"
 
@@ -86510,6 +86523,10 @@ msgid "over threshold"
 msgstr "oberhalb des Schwellwerts"
 
 msgid "packets/s"
+msgstr "Pkt/s"
+
+#, fuzzy
+msgid "packets/sec"
 msgstr "Pkt/s"
 
 msgid "pages/s"

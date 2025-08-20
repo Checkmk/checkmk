@@ -28177,6 +28177,10 @@ msgstr "Percentage gezondheidscontrole"
 msgid "Health probe status lower levels"
 msgstr "Gezondheidssonde status lagere niveaus"
 
+#, fuzzy
+msgid "Healthy"
+msgstr "Gezondheid"
+
 msgid "Healthy hosts"
 msgstr "Gezonde gastheren"
 
@@ -44165,6 +44169,10 @@ msgstr "Geen controleplugins die de verouderde API gebruiken"
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
 
+#, fuzzy
+msgid "No Health Check"
+msgstr "Volgende controle"
+
 msgid "No IP"
 msgstr "Geen IP"
 
@@ -51601,6 +51609,10 @@ msgstr "Pod hulpbronnen: Namespace"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Pod bronnen: StatefulSet"
+
+#, fuzzy
+msgid "Podman Container Health"
+msgstr "# Containers"
 
 #, fuzzy
 msgid "Podman Container Restarts"
@@ -62149,6 +62161,10 @@ msgstr "Begonnen op %s"
 #, python-format
 msgid "Started at: %s."
 msgstr "Begonnen op: %s."
+
+#, fuzzy
+msgid "Starting"
+msgstr "Opstarten"
 
 #, fuzzy
 msgid "Starting Quick setup action..."
@@ -79373,6 +79389,10 @@ msgstr "Onbehandelde p."
 msgid "Unhandled service problems"
 msgstr "Onbehandelde dienst problemen"
 
+#, fuzzy
+msgid "Unhealthy"
+msgstr "Gezondheid"
+
 msgid "Unicast packet rates"
 msgstr "Unicast pakketsnelheden"
 
@@ -88413,6 +88433,10 @@ msgstr "drukke werknemers"
 msgid "bytes/s"
 msgstr "bytes/s"
 
+#, fuzzy
+msgid "bytes/sec"
+msgstr "bytes/s"
+
 msgid "cAdvisor"
 msgstr "cAdvisor"
 
@@ -89710,6 +89734,10 @@ msgid "over threshold"
 msgstr "over de drempel"
 
 msgid "packets/s"
+msgstr "pakketten/s"
+
+#, fuzzy
+msgid "packets/sec"
 msgstr "pakketten/s"
 
 msgid "pages/s"

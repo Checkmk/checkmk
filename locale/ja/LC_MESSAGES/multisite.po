@@ -26542,6 +26542,10 @@ msgstr "ヘルスチェックの正常な割合"
 msgid "Health probe status lower levels"
 msgstr "ヘルスプローブステータス下位レベル"
 
+#, fuzzy
+msgid "Healthy"
+msgstr "健康"
+
 msgid "Healthy hosts"
 msgstr "正常なホスト"
 
@@ -41408,6 +41412,10 @@ msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用する HW/SW Inventory プラグインは使用しないでください"
 
+#, fuzzy
+msgid "No Health Check"
+msgstr "次のチェック"
+
 msgid "No IP"
 msgstr "IPなし"
 
@@ -48197,6 +48205,10 @@ msgstr "Podリソース: 名前空間"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Podリソース: ステータスフルセット"
+
+#, fuzzy
+msgid "Podman Container Health"
+msgstr "Podman コンテナ"
 
 #, fuzzy
 msgid "Podman Container Restarts"
@@ -58177,6 +58189,10 @@ msgstr "%s で開始"
 #, python-format
 msgid "Started at: %s."
 msgstr "開始: %s。"
+
+#, fuzzy
+msgid "Starting"
+msgstr "起動"
 
 msgid "Starting Quick setup action..."
 msgstr "クイックセットアップを開始します..."
@@ -74211,6 +74227,10 @@ msgstr "未処理の問題"
 msgid "Unhandled service problems"
 msgstr "未処理のサービスの問題"
 
+#, fuzzy
+msgid "Unhealthy"
+msgstr "健康"
+
 msgid "Unicast packet rates"
 msgstr "ユニキャストのパケットレート"
 
@@ -82664,6 +82684,10 @@ msgstr "ビジーワーカー"
 msgid "bytes/s"
 msgstr "バイト/秒"
 
+#, fuzzy
+msgid "bytes/sec"
+msgstr "バイト/秒"
+
 msgid "cAdvisor"
 msgstr "cAdvisor"
 
@@ -83909,6 +83933,10 @@ msgid "over threshold"
 msgstr "しきい値超過"
 
 msgid "packets/s"
+msgstr "パケット/秒"
+
+#, fuzzy
+msgid "packets/sec"
 msgstr "パケット/秒"
 
 msgid "pages/s"

@@ -28178,6 +28178,10 @@ msgstr "Verificação de saúde percentagem de saúde"
 msgid "Health probe status lower levels"
 msgstr "Estado da sonda de saúde níveis inferiores"
 
+#, fuzzy
+msgid "Healthy"
+msgstr "Saúde"
+
 msgid "Healthy hosts"
 msgstr "Anfitriões saudáveis"
 
@@ -44153,6 +44157,10 @@ msgstr "Não verificar os plugins que utilizam a API obsoleta"
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
+#, fuzzy
+msgid "No Health Check"
+msgstr "Próxima verificação"
+
 msgid "No IP"
 msgstr "Sem IP"
 
@@ -51572,6 +51580,10 @@ msgstr "Recursos do pod: Espaço de nome"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Recursos do pod: StatefulSet"
+
+#, fuzzy
+msgid "Podman Container Health"
+msgstr "# Contentores"
 
 #, fuzzy
 msgid "Podman Container Restarts"
@@ -62140,6 +62152,10 @@ msgstr "Começou em %s"
 #, python-format
 msgid "Started at: %s."
 msgstr "Comecei por aí: %s."
+
+#, fuzzy
+msgid "Starting"
+msgstr "Início de operação"
 
 #, fuzzy
 msgid "Starting Quick setup action..."
@@ -79321,6 +79337,10 @@ msgstr "P. Sem mãos."
 msgid "Unhandled service problems"
 msgstr "Problemas de serviço sem problemas"
 
+#, fuzzy
+msgid "Unhealthy"
+msgstr "Saúde"
+
 msgid "Unicast packet rates"
 msgstr "Taxas de pacotes unicast"
 
@@ -88313,6 +88333,10 @@ msgstr "trabalhadores ocupados"
 msgid "bytes/s"
 msgstr "bytes/s"
 
+#, fuzzy
+msgid "bytes/sec"
+msgstr "bytes/s"
+
 msgid "cAdvisor"
 msgstr "cAdvisor"
 
@@ -89602,6 +89626,10 @@ msgid "over threshold"
 msgstr "sobre a limitação"
 
 msgid "packets/s"
+msgstr "pacotes"
+
+#, fuzzy
+msgid "packets/sec"
 msgstr "pacotes"
 
 msgid "pages/s"

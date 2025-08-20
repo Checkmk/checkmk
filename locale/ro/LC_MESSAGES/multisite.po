@@ -28224,6 +28224,10 @@ msgstr "Procentul de verificare a stării de sănătate healty"
 msgid "Health probe status lower levels"
 msgstr "Starea sondei de sănătate niveluri inferioare"
 
+#, fuzzy
+msgid "Healthy"
+msgstr "Sănătate"
+
 msgid "Healthy hosts"
 msgstr "Gazde sănătoase"
 
@@ -44255,6 +44259,10 @@ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
+#, fuzzy
+msgid "No Health Check"
+msgstr "Următoarea verificare"
+
 msgid "No IP"
 msgstr "Fără IP"
 
@@ -51690,6 +51698,10 @@ msgstr "Resursele din pod: Spațiul de nume"
 
 msgid "Pod resources: StatefulSet"
 msgstr "Resursele din pod: StatefulSet"
+
+#, fuzzy
+msgid "Podman Container Health"
+msgstr "# Containere"
 
 #, fuzzy
 msgid "Podman Container Restarts"
@@ -62321,6 +62333,10 @@ msgstr "A început la %s"
 #, python-format
 msgid "Started at: %s."
 msgstr "A început la: %s."
+
+#, fuzzy
+msgid "Starting"
+msgstr "Pornirea"
 
 #, fuzzy
 msgid "Starting Quick setup action..."
@@ -79570,6 +79586,10 @@ msgstr "P."
 msgid "Unhandled service problems"
 msgstr "Probleme de serviciu nerezolvate"
 
+#, fuzzy
+msgid "Unhealthy"
+msgstr "Sănătate"
+
 msgid "Unicast packet rates"
 msgstr "Ratele pachetelor unicast"
 
@@ -88626,6 +88646,10 @@ msgstr "muncitori ocupați"
 msgid "bytes/s"
 msgstr "bytes/s"
 
+#, fuzzy
+msgid "bytes/sec"
+msgstr "bytes/s"
+
 msgid "cAdvisor"
 msgstr "cAdvisor"
 
@@ -89922,6 +89946,10 @@ msgid "over threshold"
 msgstr "peste treshold"
 
 msgid "packets/s"
+msgstr "pachete/s"
+
+#, fuzzy
+msgid "packets/sec"
 msgstr "pachete/s"
 
 msgid "pages/s"

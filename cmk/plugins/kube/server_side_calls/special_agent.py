@@ -102,11 +102,11 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
 
     match params.namespaces:
         case ("namespace_include_patterns", namespace_patterns):
-            args.append("--namespace-include-patterns")
-            args.extend(namespace_patterns)
+            for namespace_pattern in namespace_patterns:
+                args.extend(["--namespace-include-pattern", namespace_pattern])
         case ("namespace_exclude_patterns", namespace_patterns):
-            args.append("--namespace-exclude-patterns")
-            args.extend(namespace_patterns)
+            for namespace_pattern in namespace_patterns:
+                args.extend(["--namespace-exclude-pattern", namespace_pattern])
 
     match params.cluster_resource_aggregation:
         case None:

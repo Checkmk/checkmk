@@ -2,12 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from argparse import Namespace
 from collections.abc import Mapping, Sequence
 
 import pytest
 
+from cmk.plugins.kube.agent_handlers.common import AnnotationNonPatternOption
 from cmk.plugins.kube.server_side_calls.special_agent import special_agent_kube
+from cmk.plugins.kube.special_agents.agent_kube import MonitoredObject, parse_arguments
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
@@ -411,16 +413,18 @@ def test_host_labels_annotation_selection() -> None:
         (
             ("namespace_include_patterns", ["default", "kube-system"]),
             [
-                "--namespace-include-patterns",
+                "--namespace-include-pattern",
                 "default",
+                "--namespace-include-pattern",
                 "kube-system",
             ],
         ),
         (
             ("namespace_exclude_patterns", ["default", "kube-system"]),
             [
-                "--namespace-exclude-patterns",
+                "--namespace-exclude-pattern",
                 "default",
+                "--namespace-exclude-pattern",
                 "kube-system",
             ],
         ),
@@ -629,3 +633,131 @@ def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) 
             assert expected_proxy_arg == argument_after
             return
     assert False, "--api-server-proxy is missing"
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        pytest.param(
+            {
+                "cluster_name": "mycluster",
+                "token": Secret(1),
+                "kubernetes_api_server": {
+                    "endpoint_v2": "http://localhost:111",
+                    "verify_cert": False,
+                    "proxy": NoProxy(),
+                },
+                "monitored_objects": ["pods"],
+            },
+            Namespace(
+                debug=False,
+                verbose=0,
+                vcrtrace=False,
+                cluster="mycluster",
+                kubernetes_cluster_hostname="host",
+                token="Secret(id=1, format='%s', pass_safely=False)",
+                monitored_objects=[MonitoredObject.pods],
+                api_server_endpoint="http://localhost:111",
+                api_server_proxy="NO_PROXY",
+                verify_cert_api=False,
+                namespace_include_patterns=[],
+                namespace_exclude_patterns=[],
+                profile=None,
+                k8s_api_connect_timeout=10,
+                k8s_api_read_timeout=12,
+                roles=["control-plane", "infra"],
+                annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
+                cluster_collector_endpoint=None,
+                prometheus_endpoint=None,
+                usage_connect_timeout=10,
+                usage_read_timeout=12,
+                usage_proxy="FROM_ENVIRONMENT",
+                usage_verify_cert=False,
+            ),
+            id="basic_config",
+        ),
+        pytest.param(
+            {
+                "cluster_name": "mycluster",
+                "token": Secret(1),
+                "kubernetes_api_server": {
+                    "endpoint_v2": "http://localhost:111",
+                    "verify_cert": False,
+                    "proxy": NoProxy(),
+                },
+                "monitored_objects": ["pods"],
+                "namespaces": ("namespace_include_patterns", ["^default", "^test"]),
+            },
+            Namespace(
+                debug=False,
+                verbose=0,
+                vcrtrace=False,
+                cluster="mycluster",
+                kubernetes_cluster_hostname="host",
+                token="Secret(id=1, format='%s', pass_safely=False)",
+                monitored_objects=[MonitoredObject.pods],
+                api_server_endpoint="http://localhost:111",
+                api_server_proxy="NO_PROXY",
+                verify_cert_api=False,
+                namespace_include_patterns=["^default", "^test"],
+                namespace_exclude_patterns=[],
+                profile=None,
+                k8s_api_connect_timeout=10,
+                k8s_api_read_timeout=12,
+                roles=["control-plane", "infra"],
+                annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
+                cluster_collector_endpoint=None,
+                prometheus_endpoint=None,
+                usage_connect_timeout=10,
+                usage_read_timeout=12,
+                usage_proxy="FROM_ENVIRONMENT",
+                usage_verify_cert=False,
+            ),
+            id="include patterns",
+        ),
+        pytest.param(
+            {
+                "cluster_name": "mycluster",
+                "token": Secret(1),
+                "kubernetes_api_server": {
+                    "endpoint_v2": "http://localhost:111",
+                    "verify_cert": False,
+                    "proxy": NoProxy(),
+                },
+                "monitored_objects": ["pods"],
+                "namespaces": ("namespace_exclude_patterns", ["^default", "^test"]),
+            },
+            Namespace(
+                debug=False,
+                verbose=0,
+                vcrtrace=False,
+                cluster="mycluster",
+                kubernetes_cluster_hostname="host",
+                token="Secret(id=1, format='%s', pass_safely=False)",
+                monitored_objects=[MonitoredObject.pods],
+                api_server_endpoint="http://localhost:111",
+                api_server_proxy="NO_PROXY",
+                verify_cert_api=False,
+                namespace_include_patterns=[],
+                namespace_exclude_patterns=["^default", "^test"],
+                profile=None,
+                k8s_api_connect_timeout=10,
+                k8s_api_read_timeout=12,
+                roles=["control-plane", "infra"],
+                annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
+                cluster_collector_endpoint=None,
+                prometheus_endpoint=None,
+                usage_connect_timeout=10,
+                usage_read_timeout=12,
+                usage_proxy="FROM_ENVIRONMENT",
+                usage_verify_cert=False,
+            ),
+            id="exclude patterns",
+        ),
+    ],
+)
+def test_server_side_calls_parseable(params: Mapping[str, object], expected: Namespace) -> None:
+    host_config = HostConfig(name="host", ipv4_config=IPv4Config(address="11.222.3.44"))
+    commands = list(special_agent_kube(params, host_config))
+    assert len(commands) == 1
+    assert parse_arguments([str(arg) for arg in commands[0].command_arguments]) == expected

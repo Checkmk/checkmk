@@ -52,7 +52,6 @@ const componentId = useId()
         :placeholder="spec.input_hint ?? ''"
         :label="spec.label || ''"
         :start-of-group="true"
-        :show-icon="true"
       /><CmkDropdownButton group="end" @click="value = ''">
         <X class="form-string__button-clear-x" />
       </CmkDropdownButton>

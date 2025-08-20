@@ -1,0 +1,11 @@
+load("//bazel/toolchains/rust:rust_tools.bzl", "cargo", "rustc")
+
+rustc(
+    name = "rustc",
+    visibility = ["//visibility:public"],
+)
+
+cargo(
+    name = "cargo",
+    visibility = ["//visibility:public"],
+)

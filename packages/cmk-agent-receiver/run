@@ -18,6 +18,7 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -u, --unit-tests        run unit tests"
+    echo "  -c, --component-tests   run component tests"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
     echo "  -a, --all               shortcut for -u -F -l all"
@@ -30,6 +31,7 @@ usage() {
 parse_options() {
     # Yes, all those option variables are global.
     RUN_UNIT_TESTS=no
+    RUN_COMPONENT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
     RUN_RUFF=no
@@ -38,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'uFl:afDj:h' --long 'unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ucFl:afDj:h' --long 'unit-tests,component-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -49,6 +51,10 @@ parse_options() {
         case "$1" in
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
+                shift
+                ;;
+            '-c' | '--component-tests')
+                RUN_COMPONENT_TESTS=yes
                 shift
                 ;;
             '-F' | '--check-format')
@@ -70,6 +76,7 @@ parse_options() {
                 ;;
             '-a' | '--all')
                 RUN_UNIT_TESTS=yes
+                RUN_COMPONENT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
                 RUN_RUFF=yes
@@ -102,7 +109,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS RUN_COMPONENT_TESTS
 }
 
 setup_venv() {
@@ -116,7 +123,11 @@ setup_venv() {
 }
 
 run_unit_tests() {
-    bazel test :all
+    bazel test :unit
+}
+
+run_component_tests() {
+    bazel test :component
 }
 
 run_check_format() {
@@ -169,6 +180,7 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_COMPONENT_TESTS} = yes && run_component_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
     test ${RUN_RUFF} = yes && run_ruff

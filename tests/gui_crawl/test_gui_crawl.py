@@ -16,7 +16,6 @@ def test_crawl(test_crawler: Crawler) -> None:
     asyncio.run(test_crawler.crawl(max_tasks=int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", "7"))))
 
 
-@pytest.mark.type("unit")
 @pytest.mark.parametrize(
     "url,payload,expected_urls",
     [
@@ -39,7 +38,6 @@ def test_mutate_url_with_xss_payload(url: str, payload: str, expected_urls: Iter
     assert [u.url for u in mutate_url_with_xss_payload(Url(url), payload)] == expected_urls
 
 
-@pytest.mark.type("unit")
 def test_mutate_url_with_xss_payload_url_metadata() -> None:
     url = Url(
         url="http://host/page.py?key=value",

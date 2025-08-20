@@ -15,7 +15,7 @@ test('Add hist entry on search history service', async () => {
   const searchHistory = new SearchHistoryService('test-search')
 
   const histE = new HistoryEntry(
-    { input: 'test', filters: [], sort: 'none' },
+    { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
       url: 'www.google.com',
@@ -32,7 +32,7 @@ test('Add hist entry twice on search history service', async () => {
   const searchHistory = new SearchHistoryService('test-search')
 
   const histE = new HistoryEntry(
-    { input: 'test', filters: [], sort: 'none' },
+    { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
       url: 'www.google.com',
@@ -51,7 +51,7 @@ test('Test SearchHistorySearchProvider', async () => {
   const histSearch = new SearchHistorySearchProvider(searchHistory)
 
   const histE1 = new HistoryEntry(
-    { input: 'test', filters: [], sort: 'none' },
+    { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
       url: 'www.google.com',
@@ -62,7 +62,7 @@ test('Test SearchHistorySearchProvider', async () => {
   )
 
   const histE2 = new HistoryEntry(
-    { input: 'abc', filters: [], sort: 'none' },
+    { input: 'abc', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'abcTitle',
       url: 'www.abc.com',
@@ -74,7 +74,12 @@ test('Test SearchHistorySearchProvider', async () => {
   searchHistory.add(histE1)
   searchHistory.add(histE2)
 
-  const { entries, queries } = await histSearch.search({ input: 'abc', filters: [], sort: 'none' })
+  const { entries, queries } = await histSearch.search({
+    input: 'abc',
+    filters: [],
+    sort: 'none',
+    provider: 'all'
+  })
 
   expect(entries).toMatchObject([histE2])
   expect(queries).toMatchObject([histE2.query])

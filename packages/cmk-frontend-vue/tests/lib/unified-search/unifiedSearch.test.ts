@@ -27,7 +27,7 @@ test('Unified search instance with setup & monitoring search provider, returns p
   const sp = new UnifiedSearchProvider(['monitoring', 'setup'])
   const search = new UnifiedSearch('test-search', api, [sp])
 
-  const result = search.search({ input: 'test', filters: [] })
+  const result = search.search({ input: 'test', filters: [], provider: 'all', sort: 'ut' })
 
   expect(result).toBeDefined()
   expect(result?.get(sp.id)).toBeDefined()
@@ -45,7 +45,7 @@ test('Unified search instance with setup & monitoring search provider, returns p
   const sp = new UnifiedSearchProvider(['monitoring', 'setup'])
   const search = new UnifiedSearch('test-search', api, [sp])
 
-  const result = search.search({ input: 'test', filters: [] })
+  const result = search.search({ input: 'test', filters: [], provider: 'all', sort: 'ut' })
 
   expect(result).toBeDefined()
 

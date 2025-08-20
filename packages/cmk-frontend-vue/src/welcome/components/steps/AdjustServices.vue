@@ -16,11 +16,14 @@ import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import { ref } from 'vue'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import { markStepAsComplete, type StepId } from '@/welcome/components/steps/utils.ts'
 
 const { _t } = usei18n()
 
-const props = defineProps<{
+defineProps<{
   step: number
+  stepId: StepId
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -47,12 +50,12 @@ const currentStep = ref(0)
       }}
     </StepParagraph>
 
-    <CmkWizard v-model="currentStep" mode="overview">
+    <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 0" #content>
           <StepParagraph>
             {{ _t('To adjust parameters for a host, start by running a service discovery.') }}
             <br />
@@ -65,10 +68,13 @@ const currentStep = ref(0)
             <CmkLinkCard
               icon-name="folder"
               :title="_t('View host table')"
-              :url="props.urls.setup_hosts"
+              :url="urls.setup_hosts"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
         </template>
       </CmkWizardStep>
 
@@ -76,7 +82,7 @@ const currentStep = ref(0)
         <template #header>
           <CmkHeading type="h3">{{ _t('Open the ruleset for a check parameter') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 1" #content>
           <StepParagraph>
             {{ _t('In the Service Discovery view, find the service you want to configure.') }}
             <br />
@@ -86,13 +92,17 @@ const currentStep = ref(0)
             }}
           </StepParagraph>
         </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
+        </template>
       </CmkWizardStep>
 
       <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a check parameter rule') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 2" #content>
           <StepParagraph>
             {{
               _t(
@@ -105,21 +115,34 @@ const currentStep = ref(0)
             }}
           </StepParagraph>
         </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
+        </template>
       </CmkWizardStep>
 
       <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 3" #content>
           <StepCardsRow>
             <CmkLinkCard
               icon-name="main_changes"
               :title="_t('Activate changes')"
-              :url="props.urls.activate_changes"
+              :url="urls.activate_changes"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton
+            v-if="!accomplished && stepId"
+            type="finish"
+            :override-label="_t('Mark as complete')"
+            @click="markStepAsComplete(urls.mark_step_completed, stepId)"
+          />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
     </CmkWizard>

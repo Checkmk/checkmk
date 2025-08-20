@@ -5,7 +5,6 @@
 from collections.abc import Generator
 from dataclasses import asdict
 
-from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.dashboard.store import get_all_dashboards
@@ -23,8 +22,6 @@ from cmk.gui.watolib.sample_config import get_default_notification_rule
 from cmk.gui.watolib.sample_config._constants import SHIPPED_RULES
 from cmk.gui.welcome.registry import welcome_url_registry
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.notify_types import EventRule
 from cmk.utils.urls import is_allowed_url
 
@@ -47,8 +44,7 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if any(Host.all()):
         yield FinishedEnum.add_host
 
-    # Activation of the host
-    if Query([Hosts.name]).fetchall(sites=sites.live()):
+    if "adjust_services" in user.welcome_completed_steps:
         yield FinishedEnum.adjust_services
 
     rules = (
@@ -136,6 +132,13 @@ def _welcome_page(config: Config) -> None:
             ),
         )
         return
+
+    # Handle step completion if completed-step parameter is provided
+    if completed_step_name := request.get_ascii_input("_completed_step"):
+        if completed_step_name in FinishedEnum:
+            completed_steps = user.welcome_completed_steps
+            completed_steps.add(completed_step_name)
+            user.welcome_completed_steps = completed_steps
 
     html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
 
@@ -265,6 +268,11 @@ def get_welcome_data() -> WelcomePage:
                 request,
                 addvars=[],
                 filename="edit_dashboards.py",
+            ),
+            mark_step_completed=makeuri(
+                request,
+                addvars=[("_completed_step", "PLACEHOLDER")],
+                filename="welcome.py",
             ),
         ),
         is_start_url=user.start_url == "welcome.py",

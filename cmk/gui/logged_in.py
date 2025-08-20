@@ -72,6 +72,7 @@ UserFileName = Literal[
     "virtual_host_tree",
     "wato_folders_show_labels",
     "wato_folders_show_tags",
+    "welcome_completed_steps",
 ]
 
 # a str consisting of `rowselection/` and a SelectionId (uuid)
@@ -294,6 +295,14 @@ class LoggedInUser:
     @bi_expansion_level.setter
     def bi_expansion_level(self, value: int) -> None:
         self.save_file("bi_treestate", (value,))
+
+    @property
+    def welcome_completed_steps(self) -> set[str]:
+        return self.load_file("welcome_completed_steps", set())
+
+    @welcome_completed_steps.setter
+    def welcome_completed_steps(self, value: set[str]) -> None:
+        self.save_file("welcome_completed_steps", value)
 
     @property
     def stars(self) -> set[str]:

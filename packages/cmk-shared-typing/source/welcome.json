@@ -47,7 +47,8 @@
                 "add_notification_rule": { "type": "string" },
                 "test_notifications": { "type": "string" },
                 "add_custom_dashboard": { "type": "string" },
-                "all_dashboards": { "type": "string" }
+                "all_dashboards": { "type": "string" },
+                "mark_step_completed": { "type": "string" }
             },
             "required": [
                 "checkmk_ai",
@@ -75,7 +76,8 @@
                 "add_notification_rule",
                 "test_notifications",
                 "add_custom_dashboard",
-                "all_dashboards"
+                "all_dashboards",
+                "mark_step_completed"
             ]
         },
         "stage_information": {

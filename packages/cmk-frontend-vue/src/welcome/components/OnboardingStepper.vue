@@ -47,6 +47,7 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
       v-for="{ component, stepNumber, stepId } in stepComponents"
       :key="stepNumber"
       :step="stepNumber"
+      :step-id="stepId"
       :urls="urls"
       :accomplished="finishedSteps.includes(stepId)"
     />

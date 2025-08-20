@@ -256,7 +256,7 @@ class ParserState(abc.ABC):
                 # There is no section footer in the protocol but some non-compliant plugins still
                 # add one and we accept it.
                 return (
-                    self.on_section_header(SectionMarker.from_header(header))
+                    self.on_section_header(SectionMarker.from_header(header.decode()))
                     if (header := line[3:-3]) and not header.startswith(b":")
                     else self.on_section_footer()
                 )

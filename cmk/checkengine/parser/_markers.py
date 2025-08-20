@@ -75,8 +75,8 @@ class SectionMarker(NamedTuple):
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod
-    def from_header(cls, header: bytes) -> "SectionMarker":
-        raw_section_name, *elems = header.decode().split(":")
+    def from_header(cls, header: str) -> "SectionMarker":
+        raw_section_name, *elems = header.split(":")
 
         # NOTE: We silenty ignore some syntactically invalid options below, but throw for others. Hmmm...
         options = {

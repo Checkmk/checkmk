@@ -6,7 +6,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, Field, UUID4
 
 
 class TaskType(StrEnum):
@@ -29,6 +29,12 @@ class TaskCreateRequest(BaseModel, frozen=True):
     type: TaskType
     payload: str
     version: int = 1
+    timeout: float = Field(
+        title="Fetcher timeout",
+        description="Fetcher timeout for tasks in seconds",
+        default=60.0,
+        ge=0,
+    )
 
 
 class TaskCreateResponse(BaseModel, frozen=True):

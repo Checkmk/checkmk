@@ -138,7 +138,6 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
       v-for="item in items"
       :key="item.id"
       :value="item.id"
-      :title="item.header.title"
       :disabled="item.disabled"
     >
       <template #header>

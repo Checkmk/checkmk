@@ -5,7 +5,7 @@
 
 from fastapi import FastAPI
 
-from cmk.agent_receiver.relay_backend.api.routers.base_router import RELAY_ROUTER
+from cmk.agent_receiver.relay.api.routers.base_router import RELAY_ROUTER
 
 # NOTE: The import below is a hack, we should register endpoints explicitly!
 # TODO: The "bazel lint ..." calls for run_check_format() and run_check_ruff() don't agree on their findings. Why??

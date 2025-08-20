@@ -2,13 +2,13 @@ from typing import Annotated
 
 import fastapi
 
-from cmk.agent_receiver.relay_backend.api.dependencies.relays_repository import (
+from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
     get_relays_repository,
 )
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_relay_tasks import (
+from cmk.agent_receiver.relay.api.routers.relays.handlers.get_relay_tasks import (
     GetRelayTasksHandler,
 )
-from cmk.agent_receiver.relay_backend.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
 def get_relay_tasks_handler(

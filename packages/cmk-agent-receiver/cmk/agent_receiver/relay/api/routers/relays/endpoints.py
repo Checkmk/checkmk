@@ -7,16 +7,16 @@ from typing import Annotated
 
 import fastapi
 
-from cmk.agent_receiver.relay_backend.api.dependencies.get_relay_tasks_handler import (
+from cmk.agent_receiver.relay.api.dependencies.get_relay_tasks_handler import (
     get_relay_tasks_handler,
 )
-from cmk.agent_receiver.relay_backend.api.dependencies.register_relay_handler import (
+from cmk.agent_receiver.relay.api.dependencies.register_relay_handler import (
     get_register_relay_handler,
 )
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_relay_tasks import (
+from cmk.agent_receiver.relay.api.routers.relays.handlers.get_relay_tasks import (
     GetRelayTasksHandler,
 )
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.register_relay import (
+from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
     RelayAlreadyRegisteredError,
 )

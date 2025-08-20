@@ -1,6 +1,6 @@
 import dataclasses
 
-from cmk.agent_receiver.relay_backend.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.relay_protocols.tasks import TaskListResponse, TaskStatus
 
 

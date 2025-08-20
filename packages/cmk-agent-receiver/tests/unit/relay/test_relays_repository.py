@@ -3,8 +3,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from cmk.agent_receiver.relay_backend.lib import relays_repository
-from cmk.agent_receiver.relay_backend.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib import relays_repository
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
 @pytest.fixture(autouse=True)

@@ -3,11 +3,11 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.register_relay import (
+from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
     RelayAlreadyRegisteredError,
 )
-from cmk.agent_receiver.relay_backend.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
 @pytest.fixture()

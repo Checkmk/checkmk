@@ -13,7 +13,6 @@ from cmk.agent_receiver.relay_backend.api.dependencies.get_relay_tasks_handler i
 from cmk.agent_receiver.relay_backend.api.dependencies.register_relay_handler import (
     get_register_relay_handler,
 )
-from cmk.agent_receiver.relay_backend.api.routers.base_router import RELAY_ROUTER
 from cmk.agent_receiver.relay_backend.api.routers.relays.handlers.get_relay_tasks import (
     GetRelayTasksHandler,
 )
@@ -31,8 +30,10 @@ from cmk.relay_protocols.tasks import (
     TaskUpdateRequest,
 )
 
+router = fastapi.APIRouter()
 
-@RELAY_ROUTER.post("/", status_code=fastapi.status.HTTP_200_OK)
+
+@router.post("/", status_code=fastapi.status.HTTP_200_OK)
 async def register_relay(
     request: RelayRegistrationRequest,
     handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
@@ -69,7 +70,7 @@ async def register_relay(
     )
 
 
-@RELAY_ROUTER.delete("/{relay_id}")
+@router.delete("/{relay_id}")
 async def unregister_relay(relay_id: str) -> None:
     """Unregister a relay entity.
 
@@ -94,7 +95,7 @@ async def unregister_relay(relay_id: str) -> None:
     raise NotImplementedError("Relay unregistration business logic not implemented")
 
 
-@RELAY_ROUTER.post(
+@router.post(
     "/{relay_id}/tasks/",
     status_code=fastapi.status.HTTP_202_ACCEPTED,
     responses={
@@ -136,7 +137,7 @@ async def create_task(relay_id: str, request: TaskCreateRequest) -> TaskCreateRe
     raise NotImplementedError("Task creation business logic not implemented")
 
 
-@RELAY_ROUTER.patch(
+@router.patch(
     "/{relay_id}/tasks/{task_id}",
     status_code=fastapi.status.HTTP_202_ACCEPTED,
     responses={
@@ -181,7 +182,7 @@ async def update_task(relay_id: str, task_id: str, request: TaskUpdateRequest) -
     raise NotImplementedError("Task update business logic not implemented")
 
 
-@RELAY_ROUTER.get("/{relay_id}/tasks")
+@router.get("/{relay_id}/tasks")
 async def get_tasks(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],

@@ -207,8 +207,6 @@ def _process_request(
             page_handler = _page_not_found
         elif _handler := pages.get_page_handler(file_name):
             page_handler = ensure_authentication(_handler)
-            if file_name.find("ajax") == -1:
-                html.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)
         else:

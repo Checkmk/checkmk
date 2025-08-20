@@ -146,7 +146,7 @@ const truncatedButtonLabel = computed(() =>
     class="cmk-dropdown"
   >
     <CmkDropdownButton
-      :id="componentId"
+      v-bind="componentId!! ? { id: componentId } : {}"
       ref="comboboxButtonRef"
       :aria-label="label"
       :aria-expanded="suggestionsShown"
@@ -154,7 +154,6 @@ const truncatedButtonLabel = computed(() =>
       :disabled="disabled"
       :multiple-choices-available="multipleChoicesAvailable"
       :value-is-selected="selectedOption !== null"
-      :open="suggestionsShown"
       :group="startOfGroup ? 'start' : 'no'"
       :width="width"
       @click="showSuggestions"

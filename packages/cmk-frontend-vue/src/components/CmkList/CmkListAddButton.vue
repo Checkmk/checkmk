@@ -7,6 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import FormButton from '@/form/components/forms/FormButton.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
+defineOptions({
+  inheritAttrs: false
+})
+
 defineProps<{
   addElementLabel: string | undefined
   addElement: () => void

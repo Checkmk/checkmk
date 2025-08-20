@@ -777,6 +777,8 @@ def _default_tables() -> dict[TableName, ResultList]:
                 "end_time": 1596448719,
                 "recurring": 0,
                 "comment": "Downtime for service",
+                "fixed": 1,
+                "duration": 0,
             }
         ],
         "hosts": [

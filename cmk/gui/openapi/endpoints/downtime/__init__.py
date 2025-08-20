@@ -376,6 +376,8 @@ def _show_downtimes(param: Mapping[str, Any]) -> Response:
             Downtimes.end_time,
             Downtimes.recurring,
             Downtimes.comment,
+            Downtimes.fixed,
+            Downtimes.duration,
         ]
     )
 
@@ -437,6 +439,8 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
             Downtimes.end_time,
             Downtimes.recurring,
             Downtimes.comment,
+            Downtimes.fixed,
+            Downtimes.duration,
         ],
         filter_expr=Downtimes.id.op("=", downtime_id),
     )
@@ -617,6 +621,12 @@ def _downtime_properties(info: ResultRow) -> dict[str, Any]:
 
     if info["is_service"]:
         downtime["service_description"] = info["service_description"]
+
+    downtime["mode"] = (
+        {"type": "fixed"}
+        if info["fixed"] == 1
+        else {"type": "flexible", "duration_minutes": info["duration"] // 60}
+    )
 
     return downtime
 

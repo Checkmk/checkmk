@@ -44,7 +44,7 @@ class ATATableEntry(BaseModel, frozen=True):
     id: int
     name: str
     value: int
-    thresh: int
+    thresh: int | None = None
     raw: ATARawValue
 
 

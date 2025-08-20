@@ -95,7 +95,7 @@ defineProps<{ screenshotMode: boolean }>()
               ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
             ></CmkBadge>
             <CmkBadge type="fill" size="large" color="warning">2</CmkBadge>
-            <CmkBadge stype="fill" size="large" color="danger">33</CmkBadge>
+            <CmkBadge type="fill" size="large" color="danger">33</CmkBadge>
           </div>
         </td>
         <td>
@@ -110,7 +110,7 @@ defineProps<{ screenshotMode: boolean }>()
           <div class="flex">
             <CmkBadge shape="circle" size="large">1</CmkBadge>
             <CmkBadge type="fill" shape="circle" size="large" color="success"
-              ><CmkIcon shape="circle" size="xxlarge" name="checkmark"></CmkIcon
+              ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
             ></CmkBadge>
             <CmkBadge shape="circle" size="large" color="warning">2</CmkBadge>
             <CmkBadge shape="circle" size="large" color="danger">33</CmkBadge>

@@ -19,5 +19,5 @@ const data = defineModel<unknown>('data', { required: true })
 
 <template>
   <FormEdit v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
-  <pre data-testid="test-data">{{ JSON.stringify(data) }}</pre>
+  <pre id="test-data">{{ JSON.stringify(data) }}</pre>
 </template>

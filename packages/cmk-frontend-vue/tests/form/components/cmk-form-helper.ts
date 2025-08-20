@@ -17,7 +17,7 @@ export function renderFormWithData(props: {
 }): RenderResult & { getCurrentData: () => string | null | undefined } {
   const { container, ...renderResult } = render(FormDataVisualizer, { props: props })
 
-  const getCurrentData = () => container.querySelector('[data-testid=test-data]')?.textContent
+  const getCurrentData = () => container.querySelector('[id=test-data]')?.textContent
 
   return { getCurrentData: getCurrentData, container, ...renderResult }
 }

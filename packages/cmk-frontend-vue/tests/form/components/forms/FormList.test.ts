@@ -72,7 +72,7 @@ test.skip('List elements are draggable', async () => {
   await draggables[0]!.trigger('dragend')
 
   wrapper.vm.$nextTick(() => {
-    expect(wrapper.find('[data-testid="test-data"]').text()).toBe('["second_value","first_value"]')
+    expect(wrapper.find('[id="test-data"]').text()).toBe('["second_value","first_value"]')
   })
 })
 

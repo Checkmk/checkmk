@@ -3,173 +3,154 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
-# Example output from agent:
-#
-# <<<postfix_mailq>>>
-# -Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
-# CA29995448EB     4638 Fri Jul  2 14:39:01  nagios
-#                                          donatehosts@mathias-kettner.de
-#
-# E085095448EC      240 Fri Jul  2 14:40:01  root
-#                                          lm@mathias-kettner.de
-#
-# D9EBC95448EE     4804 Fri Jul  2 14:40:03  nagios
-#                                          donatehosts@mathias-kettner.de
-#
-# -- 9 Kbytes in 3 Requests.
-#
-#
-# **************
-#
-# <<<postfix_mailq>>>
-# -Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
-# 748C8C3D4AB     1436 Fri Jul  2 16:39:10  lm@mathias-kettner.de
-#      (connect to mail.larsmichelsen.com[78.46.117.178]:25: Connection refused)
-#                                          lm@larsmichelsen.com
-#
-# -- 1 Kbytes in 1 Request.
-#
-# Yet another one (I believe, this is from sendmail, though:)
-# <<<postfix_mailq>>>
-#       8BITMIME   (Deferred: Connection refused by mail.gargl.com.)
-#                                          <franz@gargle.com>
-# q1L4ovDO002485     3176 Tue Feb 21 05:50 MAILER-DAEMON
-#                  (Deferred: 451 Try again later)
-#                                          <wrdlpfrmpft@karl-valentin.com>
-#                 Total requests: 2
-#
-# **************
-# new format
-# <<<postfix_mailq>>>
-# QUEUE_deferred 60 1
-# QUEUE_active 4 0
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    render,
+    Service,
+    StringTable,
+)
 
-# new format multi-instance
-# <<<postfix_mailq>>>
-# [[[/etc/postfix-external]]]
-# QUEUE_deferred 0 0
-# QUEUE_active 0 0
-# <<<postfix_mailq>>>
-# [[[/etc/postfix-internal]]]
-# QUEUE_deferred 0 0
-# QUEUE_active 0 0
+DEFAULT_ITEM_NAME: str = "default"
 
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-
-check_info = {}
-
-DEFAULT_ITEM_NAME = "default"
+@dataclass
+class PostfixMailQueue:
+    name: str | None = None
+    size: int = 0  # in bytes
+    length: int = 0
 
 
-def postfix_mailq_to_bytes(value, uom):
+Section = Mapping[str, list[PostfixMailQueue]]
+
+
+def postfix_mailq_to_bytes(value: float, uom: str) -> int:
     uom = uom.lower()
     if uom == "kbytes":
-        return value * 1024
+        return int(value * 1024)
     if uom == "mbytes":
-        return value * 1024 * 1024
+        return int(value * 1024 * 1024)
     if uom == "gbytes":
-        return value * 1024 * 1024 * 1024
-    return None
+        return int(value * 1024 * 1024 * 1024)
+    return 0
 
 
-def parse_postfix_mailq(string_table):
-    parsed = {}
-    instance_name = DEFAULT_ITEM_NAME
+def parse_postfix_mailq(string_table: StringTable) -> Section:
+    result: dict[str, list[PostfixMailQueue]] = {}
+    instance_name: str = DEFAULT_ITEM_NAME
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             # deal with the pre 2.3 agent output that will send an empty instance
             # name for the "default" queue.
             instance_name = line[0][3:-3] or DEFAULT_ITEM_NAME
 
-        queueinfo = None
+        postfix_mail_queue: PostfixMailQueue = PostfixMailQueue()
         # single and old output formats
         if line[0].startswith("QUEUE_"):
             # Deal with old agent (pre 1.2.8) which did not send size
             # infos in case of different error cases
             if len(line) == 2:
-                size = 0
-                length = int(line[1])  # number of mails
+                postfix_mail_queue.size = 0
+                postfix_mail_queue.length = int(line[1])  # number of mails
             else:
-                size = int(line[1])  # in bytes
-                length = int(line[2])  # number of mails
+                postfix_mail_queue.size = int(line[1])  # in bytes
+                postfix_mail_queue.length = int(line[2])  # number of mails
 
-            queueinfo = line[0].split("_")[1], size, length
+            postfix_mail_queue.name = line[0].split("_")[1]
 
         elif " ".join(line[-2:]) == "is empty":
-            queueinfo = "empty", 0, 0
+            postfix_mail_queue.name = "empty"
+            postfix_mail_queue.size = 0
+            postfix_mail_queue.length = 0
 
         elif line[0] == "--" or line[0:2] == ["Total", "requests:"]:
             if line[0] == "--":
-                size = postfix_mailq_to_bytes(float(line[1]), line[2])
-                length = int(line[4])
+                postfix_mail_queue.size = postfix_mailq_to_bytes(float(line[1]), line[2])
+                postfix_mail_queue.length = int(line[4])
             else:
-                size = 0
-                length = int(line[2])
+                postfix_mail_queue.size = 0
+                postfix_mail_queue.length = int(line[2])
 
-            queueinfo = "mail", size, length
+            postfix_mail_queue.name = "mail"
 
-        if queueinfo is not None:
-            parsed.setdefault(instance_name, [])
-            parsed[instance_name].append(queueinfo)
+        if postfix_mail_queue.name is not None:
+            result.setdefault(instance_name, [])
+            result[instance_name].append(postfix_mail_queue)
 
-    return parsed
-
-
-def inventory_postfix_mailq(parsed):
-    for queue in parsed:
-        yield queue, {}
+    return result
 
 
-def check_postfix_mailq(item, params, parsed):
+def discovery_postfix_mailq(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
+
+
+def check_postfix_mailq(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     # If the user disabled the "Use new service description" option, we arrive
     # at this function with item being None. In this case we still need to
     # lookup the data in parsed under the default item name.
     if item is None:
         item = DEFAULT_ITEM_NAME
 
-    if item not in parsed:
+    if item not in section:
         return
 
     if not isinstance(params, dict):
         params = {"deferred": params}
 
-    for what, size, length in parsed[item]:
-        # In previous check version mail and deferred had same params
-        warn, crit = params.get({"mail": "deferred"}.get(what, what), (None, None))
-        if what in ["active", "deferred", "mail"]:
-            state = 0
-            infotext = "%s queue length: %d" % (what.title(), length)
+    for mail_queue in section[item]:
+        _queue_name = mail_queue.name if mail_queue.name else ""
+        warn, crit = params.get({"mail": "deferred"}.get(_queue_name, _queue_name), (None, None))
+        length_limit: LevelsT = ("no_levels", None)
+        if warn is not None and crit is not None:
+            length_limit = ("fixed", (warn, crit))
 
-            if what in ["deferred", "mail"]:
-                length_var = "length"
-                size_var = "size"
-            else:
-                length_var = "mail_queue_active_length"
-                size_var = "mail_queue_active_size"
+        # Metric names differ for active mailqueue
+        length_metric_name: str = "length"
+        size_metric_name: str = "size"
+        if mail_queue.name == "active":
+            length_metric_name = "mail_queue_active_length"
+            size_metric_name = "mail_queue_active_size"
 
-            if crit is not None and length >= crit:
-                state = 2
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-            elif warn is not None and length >= warn:
-                state = 1
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
+        # Label differs for empty mailqueue
+        length_label: str = f"{_queue_name} queue length"
+        size_label: str = f"{_queue_name} queue size"
+        if mail_queue.name == "empty":
+            length_label = "The mailqueue is empty"
+            size_label = "The mailqueue is empty"
 
-            yield state, infotext, [(length_var, length, warn, crit), (size_var, size)]
+        yield from check_levels(
+            mail_queue.length,
+            metric_name=length_metric_name,
+            levels_upper=length_limit,
+            render_func=str,
+            label=length_label,
+        )
+        yield from check_levels(
+            mail_queue.size,
+            metric_name=size_metric_name,
+            render_func=render.bytes,
+            label=size_label,
+        )
 
-        elif what == "empty":
-            yield 0, "The mailqueue is empty", [("length", 0, warn, crit), ("size", 0)]
 
-
-check_info["postfix_mailq"] = LegacyCheckDefinition(
+agent_section_postfix_mailq = AgentSection(
     name="postfix_mailq",
     parse_function=parse_postfix_mailq,
+)
+
+check_plugin_postfix_mailq = CheckPlugin(
+    name="postfix_mailq",
     service_name="Postfix Queue %s",
-    discovery_function=inventory_postfix_mailq,
+    discovery_function=discovery_postfix_mailq,
     check_function=check_postfix_mailq,
     check_ruleset_name="mail_queue_length",
     check_default_parameters={

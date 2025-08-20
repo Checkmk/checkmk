@@ -182,7 +182,7 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
+        selected_snmp_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(),

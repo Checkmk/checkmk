@@ -1529,7 +1529,7 @@ def test_commandline_discovery(
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
+        selected_snmp_sections=NO_SELECTION,
         simulation_mode=True,
         snmp_backend_override=None,
         password_store_file=Path("/pw/store"),

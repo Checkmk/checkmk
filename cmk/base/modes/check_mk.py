@@ -2193,7 +2193,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
+        selected_snmp_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         max_cachefile_age=MaxAge(
             checking=config.check_max_cachefile_age,
@@ -2541,8 +2541,12 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
+        selected_snmp_sections=(
+            NO_SELECTION
+            if selected_sections is NO_SELECTION
+            else frozenset(n for n in selected_sections if n in plugins.snmp_sections)
+        ),
         on_error=on_error,
-        selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -2762,8 +2766,12 @@ def run_checking(
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
+        selected_snmp_sections=(
+            NO_SELECTION
+            if selected_sections is NO_SELECTION
+            else frozenset(n for n in selected_sections if n in plugins.snmp_sections)
+        ),
         on_error=OnError.RAISE,
-        selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
         password_store_file=password_store_file,
@@ -3020,8 +3028,12 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
+        selected_snmp_sections=(
+            NO_SELECTION
+            if selected_sections is NO_SELECTION
+            else frozenset(n for n in selected_sections if n in plugins.snmp_sections)
+        ),
         on_error=OnError.RAISE,
-        selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -3315,7 +3327,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
+        selected_snmp_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.core_password_store_path(),

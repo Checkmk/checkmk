@@ -363,7 +363,7 @@ class CMKFetcher:
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,
-        selected_sections: SectionNameCollection,
+        selected_snmp_sections: SectionNameCollection,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
         snmp_backend_override: SNMPBackendEnum | None,
@@ -382,7 +382,7 @@ class CMKFetcher:
         self.mode: Final = mode
         self.on_error: Final = on_error
         self.password_store_file: Final = password_store_file
-        self.selected_sections: Final = selected_sections
+        self.selected_sections: Final = selected_snmp_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override

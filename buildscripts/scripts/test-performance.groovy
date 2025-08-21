@@ -11,7 +11,7 @@ def main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-
+    def result_dir = "${checkout_dir}/results";
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
@@ -22,6 +22,15 @@ def main() {
     def make_target = "test-performance-docker";
 
     def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+
+    stage("Prepare workspace") {
+        dir("${checkout_dir}") {
+            sh("""
+                rm -rf "${result_dir}"
+                mkdir -p "${result_dir}"
+            """);
+        }
+    }
 
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
@@ -53,11 +62,11 @@ def main() {
             ]);
         }
 
-        // stage("Archive / process test reports") {
-        //     show_duration("archiveArtifacts") {
-        //         archiveArtifacts("test-performance.txt");
-        //     }
-        // }
+        stage("Archive / process test reports") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts("${result_dir}/**");
+            }
+        }
     }
 }
 

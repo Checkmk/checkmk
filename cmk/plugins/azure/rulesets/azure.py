@@ -14,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    FieldSize,
     FixedValue,
     List,
     MatchingScope,
@@ -194,6 +195,7 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
                     parameter_form=String(
                         title=Title("The subscription tag"),
                         custom_validate=(validators.LengthInRange(min_value=1),),
+                        field_size=FieldSize.LARGE,
                     ),
                     required=True,
                 ),
@@ -211,6 +213,7 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
                                 title=Title("is"),
                                 parameter_form=String(
                                     title=Title("Tag value"),
+                                    field_size=FieldSize.LARGE,
                                 ),
                             ),
                         ],
@@ -283,7 +286,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         title=Title("Explicit list of subscription IDs"),
                         parameter_form=List(
                             title=Title("Explicitly specify subscription IDs"),
-                            element_template=String(macro_support=True),
+                            element_template=String(macro_support=True, field_size=FieldSize.LARGE),
                             custom_validate=(validators.LengthInRange(min_value=1),),
                             editable_order=False,
                         ),
@@ -384,8 +387,8 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 label=Label("Enable safe host names"),
                 help_text=Help(
                     "Using this option will let Checkmk create safe host names for piggyback hosts "
-                    "to avoid conflicts in entity names in Azure. This option will append the last part "
-                    "of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'. "
+                    "to avoid conflicts in entity names from Azure. This option will prepend 'azr-' and append the last part "
+                    "of the subscription ID to host names. Example: 'azr-my-vm-1a2b3c4d'. "
                     "Enable this option if you have resources or resource groups with the same name."
                 ),
                 prefill=DefaultValue(False),

@@ -15,6 +15,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     List,
+    ServiceState,
     SingleChoice,
     SingleChoiceElement,
     String,
@@ -29,7 +30,7 @@ from cmk.rulesets.v1.rule_specs import (
 
 def _migrate_tuple(value: object) -> Sequence[Any]:
     """
-    Convert a list of tuple to a list of dictionary with keys 'service_name' and 'state'.
+    Convert a list of tuple to a list of dictionary with keys 'service_name' and 'default_status'.
     """
     if isinstance(value, list):
         if all(isinstance(item, dict) for item in value):
@@ -37,7 +38,7 @@ def _migrate_tuple(value: object) -> Sequence[Any]:
         return [
             {
                 "service_name": item[0],
-                "expected_state": item[1],
+                "default_status": item[1],
             }
             for item in value
             if isinstance(item, tuple) and len(item) == 2
@@ -48,7 +49,7 @@ def _migrate_tuple(value: object) -> Sequence[Any]:
 def create_default_status_element() -> DictElement:
     return DictElement(
         parameter_form=SingleChoice(
-            title=Title("Default State"),
+            title=Title("Default status"),
             elements=[
                 SingleChoiceElement(
                     name="active",
@@ -64,10 +65,19 @@ def create_default_status_element() -> DictElement:
     )
 
 
+def create_state_if_not_default_element() -> DictElement:
+    return DictElement(
+        parameter_form=ServiceState(
+            title=Title("State if not default"),
+            prefill=DefaultValue(ServiceState.WARN),
+        ),
+    )
+
+
 def create_match_services_element() -> DictElement:
     return DictElement(
         parameter_form=List(
-            title=Title("Special States"),
+            title=Title("Special cases for specific services"),
             migrate=_migrate_tuple,
             element_template=Dictionary(
                 elements={
@@ -78,10 +88,10 @@ def create_match_services_element() -> DictElement:
                             custom_validate=(LengthInRange(min_value=1),),
                         ),
                     ),
-                    "expected_state": DictElement(
+                    "default_status": DictElement(
                         required=True,
                         parameter_form=SingleChoice(
-                            title=Title("State"),
+                            title=Title("Default status"),
                             elements=[
                                 SingleChoiceElement(
                                     name="active",
@@ -94,6 +104,13 @@ def create_match_services_element() -> DictElement:
                             ],
                         ),
                     ),
+                    "state_if_not_default": DictElement(
+                        required=False,
+                        parameter_form=ServiceState(
+                            title=Title("State if not default"),
+                            prefill=DefaultValue(ServiceState.WARN),
+                        ),
+                    ),
                 }
             ),
         ),
@@ -104,6 +121,7 @@ def _parameter_valuespec_hyperv_vm_integration():
     return Dictionary(
         elements={
             "default_status": create_default_status_element(),
+            "state_if_not_default": create_state_if_not_default_element(),
             "match_services": create_match_services_element(),
         }
     )
@@ -111,7 +129,7 @@ def _parameter_valuespec_hyperv_vm_integration():
 
 rule_spec_hyperv_vm_integration = CheckParameters(
     name="hyperv_vm_integration",
-    title=Title("Hyper-V Integration Services Status"),
+    title=Title("Hyper-V VM integration services"),
     topic=Topic.APPLICATIONS,
     condition=HostCondition(),
     parameter_form=_parameter_valuespec_hyperv_vm_integration,

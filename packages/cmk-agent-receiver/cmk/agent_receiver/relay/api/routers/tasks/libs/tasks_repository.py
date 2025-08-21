@@ -4,13 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import logging
 
+from cmk.relay_protocols.tasks import TaskResponse
 
-class RelayNotFoundError(Exception):
-    pass
-
-
-# Note: Consider use Annotated in case we would like to have some pydantic validation
 RelayID = str
 
 # Persistence layer is not thread safe yet.
@@ -19,20 +16,15 @@ RelayID = str
 # The persistence layer is for now an in memory dict so we won't need
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
-GLOBAL_RELAYS: set[RelayID] = set()
+GLOBAL_TASKS: dict[RelayID, list[TaskResponse]] = {}
 
 
 @dataclasses.dataclass
-class RelaysRepository:
-    def add_relay(self, relay_id: RelayID) -> None:
-        if relay_id not in GLOBAL_RELAYS:
-            GLOBAL_RELAYS.add(relay_id)
-
-    def list_relays(self) -> list[RelayID]:
-        return list(GLOBAL_RELAYS)
-
-    def has_relay(self, relay_id: RelayID) -> bool:
-        return relay_id in GLOBAL_RELAYS
-
-    def remove_relay(self, relay_id: RelayID) -> None:
-        GLOBAL_RELAYS.discard(relay_id)
+class TasksRepository:
+    def get_tasks(self, relay_id: RelayID) -> list[TaskResponse]:
+        try:
+            tasks = GLOBAL_TASKS[relay_id]
+        except KeyError:
+            logging.warning(f"Relay with ID {relay_id} not found")
+            return []
+        return tasks

@@ -33,7 +33,6 @@ def test_process_adds_new_relay_id_to_registry(
     relay_id = str(uuid.uuid4())
     register_relay_handler.process(relay_id)
     assert register_relay_handler.relays_repository.has_relay(relay_id)
-    assert register_relay_handler.relays_repository.get_relay_tasks(relay_id) == []
 
 
 def test_process_existing_relay_id_returns_error(
@@ -45,12 +44,13 @@ def test_process_existing_relay_id_returns_error(
         register_relay_handler.process(relay_id)
 
 
-def test_add_multiple_relays(register_relay_handler: RegisterRelayHandler) -> None:
+def test_add_multiple_relays(
+    register_relay_handler: RegisterRelayHandler,
+) -> None:
     relay_ids = [str(uuid.uuid4()) for _ in range(5)]
     for relay_id in relay_ids:
         register_relay_handler.process(relay_id)
         assert register_relay_handler.relays_repository.has_relay(relay_id)
-        assert register_relay_handler.relays_repository.get_relay_tasks(relay_id) == []
 
 
 def test_register_relay_with_duplicate_id(register_relay_handler: RegisterRelayHandler) -> None:

@@ -83,7 +83,7 @@ const emit = defineEmits<{
           {{ site.lastActivationStatus.status_text }}
         </div>
       </div>
-      <div v-if="activating && !isRecentlyActivated" class="cmk-changes-sites-item-end">
+      <div v-if="activating && !isRecentlyActivated && checked" class="cmk-changes-sites-item-end">
         <div class="cmk-progress-bar-site-activation-in-progress">
           <CmkProgressbar max="unknown"></CmkProgressbar>
         </div>

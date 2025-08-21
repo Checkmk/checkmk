@@ -5,13 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import usei18n from '@/lib/i18n'
+import { computed, ref } from 'vue'
 import type { PendingChanges } from '../../ChangesInterfaces'
 import PendingChangeItemText from './PendingChangeItemText.vue'
 
@@ -26,8 +26,17 @@ const props = defineProps<{
 
 const pendingChangesCollapsible = ref<boolean>(true)
 
+function filterPendingChanges(change: PendingChanges): boolean {
+  return (
+    (change.whichSites.includes('All sites') && props.selectedSites.length > 0) ||
+    change.whichSites.some((site: string) => props.selectedSites.includes(site))
+  )
+}
+
 const changesTitle = computed(() => {
-  return _t('Changes: (%{n})', { n: props.pendingChanges.length })
+  return _t('Changes: (%{n})', {
+    n: props.pendingChanges.filter(filterPendingChanges).length
+  })
 })
 
 const changesSideTitle = computed(() => {
@@ -57,15 +66,11 @@ const changesSideTitle = computed(() => {
         height="auto"
       >
         <div
-          v-for="(change, idx) in pendingChanges"
+          v-for="(change, idx) in pendingChanges.filter(filterPendingChanges)"
           :key="change.changeId"
           class="cmk-div-pending-changes-container"
         >
           <CmkIndent
-            v-if="
-              change.whichSites.includes('All sites') ||
-              change.whichSites.some((site) => selectedSites.includes(site))
-            "
             class="cmk-indent-pending-change-container"
             :class="{ 'red-text': change.user !== userName && change.user !== null }"
           >

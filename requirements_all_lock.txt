@@ -1331,9 +1331,9 @@ jinja2==3.1.6 \
     #   pytest-html
     #   sphinx
     #   sphinx-autoapi
-jira==3.8.0 \
-    --hash=sha256:12190dc84dad00b8a6c0341f7e8a254b0f38785afdec022bd5941e1184a5a3fb \
-    --hash=sha256:63719c529a570aaa01c3373dbb5a104dab70381c5be447f6c27f997302fa335a
+jira==3.10.5 \
+    --hash=sha256:2d09ae3bf4741a2787dd889dfea5926a5d509aac3b28ab3b98c098709e6ee72d \
+    --hash=sha256:d4da1385c924ee693d6cc9838e56a34e31d74f0d6899934ef35bbd0d2d33997f
     # via -r requirements_all.txt
 jmespath==1.0.1 \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
@@ -2360,7 +2360,6 @@ pillow==11.3.0 \
     --hash=sha256:fe27fb049cdcca11f11a7bfda64043c37b30e6b91f10cb5bab275806c32f6ab3
     # via
     #   -r requirements_all.txt
-    #   jira
     #   reportlab
 pipfile==0.0.2 \
     --hash=sha256:f7d9f15de8b660986557eb3cc5391aa1a16207ac41bc378d03f414762d36c984

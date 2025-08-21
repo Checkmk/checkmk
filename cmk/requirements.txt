@@ -21,7 +21,7 @@ openapi-spec-validator==0.7.1  # direct dependency
 psutil==5.9.8  # needed for omdlib
 oauthlib==3.2.2
 requests-oauthlib==1.3.1
-jira==3.8.0 # needed by jira
+jira==3.10.5 # needed by jira
 msal==1.26.0 # needed by agent_azure
 pillow==11.3.0 # needed by reporting & CME logo image processing
 python-ldap==3.4.3 # needed by GUI (User sync), python-active-directory

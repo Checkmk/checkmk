@@ -12092,14 +12092,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Cambiadas las propiedades de la regla \"%s\", movida de la carpeta \"%s\" a "
-"la parte superior de la carpeta \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Cambiadas las propiedades de la regla \"%s\", movida la regla de la carpeta "
@@ -42839,6 +42831,14 @@ msgid ""
 msgstr ""
 "Movida la regla %s de la posición #%d a #%d en el conjunto de reglas \"%s\" "
 "en la carpeta \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Cambiadas las propiedades de la regla \"%s\", movida de la carpeta \"%s\" a "
+"la parte superior de la carpeta \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"

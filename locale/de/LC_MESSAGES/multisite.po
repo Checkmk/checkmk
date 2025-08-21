@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-08-18 20:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -11626,14 +11626,6 @@ msgstr "Eigenschaften von Kunde geändert"
 #, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Eigenschaften des installierten Erweiterungspaketes %s %s geändert"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
-"den Anfang des Ordners \"%s\""
 
 #, python-format
 msgid ""
@@ -41015,6 +41007,14 @@ msgid ""
 msgstr ""
 "Regel %s von Position #%d nach #%d im Regelsatz \"%s\" im Ordner \"%s\" "
 "verschoben"
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
+"den Anfang des Ordners \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"

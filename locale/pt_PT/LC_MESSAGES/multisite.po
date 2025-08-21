@@ -12023,14 +12023,6 @@ msgstr "Propriedades alteradas do pacote de extensão instalado %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Propriedades alteradas da regra \"%s\", movida da pasta \"%s\" para o topo "
-"da pasta \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
@@ -42497,6 +42489,14 @@ msgid ""
 msgstr ""
 "Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
 "pasta \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Propriedades alteradas da regra \"%s\", movida da pasta \"%s\" para o topo "
+"da pasta \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"

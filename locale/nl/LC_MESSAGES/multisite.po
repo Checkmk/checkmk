@@ -12017,14 +12017,6 @@ msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
-"boven in map \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Eigenschappen van regel \"%s\" gewijzigd, regel verplaatst van map \"%s\" "
@@ -42501,6 +42493,14 @@ msgid ""
 "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
 msgstr ""
 "Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
+"boven in map \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"

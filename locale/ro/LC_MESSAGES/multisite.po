@@ -12043,14 +12043,6 @@ msgstr "Proprietăți modificate ale pachetului de extensii instalat %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Proprietățile schimbate ale regulii \"%s\", mutate din folderul \"%s\" în "
-"partea de sus a folderului \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Proprietățile schimbate ale regulii \"%s\", a mutat regula din folderul "
@@ -42568,6 +42560,14 @@ msgid ""
 msgstr ""
 "A mutat regula %s de la poziția #%d la #%d în ruleset \"%s\" în folderul "
 "\"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Proprietățile schimbate ale regulii \"%s\", mutate din folderul \"%s\" în "
+"partea de sus a folderului \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"

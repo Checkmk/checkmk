@@ -11280,14 +11280,6 @@ msgstr "インストールされた拡張パッケージのプロパティを変
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
@@ -39947,6 +39939,14 @@ msgid ""
 msgstr ""
 "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
 "です"
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
+"移動しました"
 
 #, python-format
 msgid "Moved rule %s to pack %s"

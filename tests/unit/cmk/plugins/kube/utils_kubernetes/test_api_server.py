@@ -124,6 +124,25 @@ version_json_pytest_params = [
         api.KubernetesVersion(git_version=api.GitVersion("v1.21.9-eks-0d102a7"), major=1, minor=21),
         id="AWS cluster, eks flavor, supported version",
     ),
+    pytest.param(
+        {
+            "major": "1",
+            "minor": "33",
+            "emulationMajor": "1",
+            "emulationMinor": "33",
+            "minCompatibilityMajor": "1",
+            "minCompatibilityMinor": "32",
+            "gitVersion": "v1.33.1",
+            "gitCommit": "8adc0f041b8e7ad1d30e29cc59c6ae7a15e19828",
+            "gitTreeState": "clean",
+            "buildDate": "2025-05-15T08:19:08Z",
+            "goVersion": "go1.24.2",
+            "compiler": "gc",
+            "platform": "linux/amd64",
+        },
+        api.KubernetesVersion(git_version=api.GitVersion("v1.33.1"), major=1, minor=33),
+        id="New extended format starting from 1.33, KEP-4330",
+    ),
 ]
 
 

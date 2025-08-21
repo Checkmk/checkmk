@@ -5,7 +5,7 @@
 
 from cmk.graphing.v1 import metrics, Title
 
-UNIT_BITS_PER_SECOND = metrics.Unit(metrics.IECNotation("bits/s"))
+UNIT_BITS_PER_SECOND = metrics.Unit(metrics.IECNotation("bit/s"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))

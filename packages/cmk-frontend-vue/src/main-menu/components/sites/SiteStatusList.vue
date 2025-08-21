@@ -97,7 +97,7 @@ immediateWatch(
               :idx="idx"
               :site="site"
               :activating="activating"
-              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
+              :checked="selectedSites.includes(site.siteId)"
               :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
               @update-checked="toggleSelectedSite"
             ></SiteStatusItem>

@@ -466,10 +466,7 @@ class CMKFetcher:
                             on_error=self.on_error if not is_cluster else OnError.RAISE,
                             oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                         ),
-                        selected_sections=(
-                            # Does this make sense? Why should we ignore the preselected sections (if any) for a cluster?
-                            self.selected_sections if not is_cluster else NoSelectedSNMPSections()
-                        ),
+                        selected_sections=self.selected_sections,
                         backend_override=self.snmp_backend_override,
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,

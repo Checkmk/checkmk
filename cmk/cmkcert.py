@@ -17,7 +17,8 @@ from dateutil.relativedelta import relativedelta
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
-from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
+from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
+from cmk.utils.log.security_event import log_security_event
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
 
@@ -87,6 +88,17 @@ def replace_site_certificate(
         key_size=key_size,
     )
 
+    site_cert = SiteCA.load_site_certificate(cert_dir=certificate_directory, site_id=site_id)
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="site certificate",
+            actor="cmk-cert",
+            cert=site_cert.certificate if site_cert else None,
+        )
+    )
+
 
 def replace_site_ca(
     site_id: SiteId,
@@ -94,11 +106,20 @@ def replace_site_ca(
     expiry: relativedelta,
     key_size: int = 4096,
 ) -> None:
-    SiteCA.create(
+    site_ca = SiteCA.create(
         cert_dir=certificate_directory,
         site_id=site_id,
         expiry=expiry,
         key_size=key_size,
+    )
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="site certificate authority",
+            actor="cmk-cert",
+            cert=site_ca.root_ca.certificate,
+        )
     )
 
 
@@ -110,11 +131,20 @@ def replace_agent_ca(
 ) -> None:
     agent_ca_path = agent_root_ca_path(site_root_dir=omd_root)
 
-    RootCA.load_or_create(
+    root_ca = RootCA.create(
         path=agent_ca_path,
         name=f"Site '{site_id}' agent signing CA",
         validity=expiry,
         key_size=key_size,
+    )
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="agent certificate authority",
+            actor="cmk-cert",
+            cert=root_ca.certificate,
+        )
     )
 
 
@@ -190,6 +220,6 @@ def main(args: Sequence[str]) -> int:
         return -1
 
     sys.stdout.write(
-        f"cmk-cert: {parsed_args.target_certificate} certificate rotated successfully."
+        f"cmk-cert: {parsed_args.target_certificate} certificate rotated successfully.\n"
     )
     return 0

@@ -55,6 +55,24 @@ class RootCA(CertificateWithPrivateKey):
     """
 
     @classmethod
+    def create(
+        cls,
+        path: Path,
+        name: str,
+        validity: relativedelta = relativedelta(years=10),
+        key_size: int = 4096,
+    ) -> RootCA:
+        ca = CertificateWithPrivateKey.generate_self_signed(
+            common_name=name,
+            organization=f"Checkmk Site {omd_site()}",
+            expiry=validity,
+            key_size=key_size,
+            is_ca=True,
+        )
+        _save_cert_chain(path, [ca.certificate], ca.private_key)
+        return cls(ca.certificate, ca.private_key)
+
+    @classmethod
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
@@ -73,15 +91,12 @@ class RootCA(CertificateWithPrivateKey):
         try:
             return cls.load(path)
         except FileNotFoundError:
-            ca = CertificateWithPrivateKey.generate_self_signed(
-                common_name=name,
-                organization=f"Checkmk Site {omd_site()}",
-                expiry=validity,
+            return cls.create(
+                path=path,
+                name=name,
+                validity=validity,
                 key_size=key_size,
-                is_ca=True,
             )
-            _save_cert_chain(path, [ca.certificate], ca.private_key)
-            return cls(ca.certificate, ca.private_key)
 
 
 def cert_dir(site_root_dir: Path) -> Path:
@@ -215,6 +230,15 @@ class SiteCA:
     def site_certificate_exists(cls, cert_dir: Path, site_id: SiteId) -> bool:
         return cls.site_certificate_path(cert_dir, site_id).exists()
 
+    @classmethod
+    def load_site_certificate(
+        cls, cert_dir: Path, site_id: SiteId
+    ) -> CertificateWithPrivateKey | None:
+        return CertificateWithPrivateKey.load_combined_file_content(
+            cls.site_certificate_path(cert_dir=cert_dir, site_id=site_id).read_text(),
+            passphrase=None,
+        )
+
     def create_site_certificate(
         self,
         site_id: SiteId,
@@ -286,6 +310,9 @@ class CertManagementEvent(SecurityEvent):
         "backup encryption keys",
         "agent bakery",
         "trusted certificate authorities",
+        "site certificate authority",
+        "agent certificate authority",
+        "site certificate",
     ]
 
     def __init__(
@@ -296,6 +323,7 @@ class CertManagementEvent(SecurityEvent):
             "certificate removed",
             "certificate uploaded",
             "certificate added",
+            "certificate rotated",
         ],
         component: CertManagementEvent.ComponentType,
         actor: UserId | str | None,

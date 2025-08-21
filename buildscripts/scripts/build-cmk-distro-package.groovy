@@ -94,6 +94,9 @@ def main() {
                     find . -name *.pth -delete
                 """);
                 if(disable_cache) {
+                    if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != 1) {
+                        error("Package builds without cache can not be done on other days than Sunday");
+                    }
                     sh("""
                         rm -rf remote.bazelrc
                     """)

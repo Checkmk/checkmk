@@ -31,7 +31,6 @@ from cmk.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
-    SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
 )
@@ -236,17 +235,15 @@ def dump_host(
                     ip_address_of,
                     service_name_config,
                     enforced_services_table,
-                ),
-                snmp_fetcher_config=SNMPFetcherConfig(
-                    scan_config=SNMPScanConfig(
+                    SNMPFetcherConfig(
                         on_error=OnError.RAISE,
-                        missing_sys_description=config_cache.missing_sys_description(hostname),
+                        missing_sys_description=config_cache.missing_sys_description,
                         oid_cache_dir=oid_cache_dir,
+                        selected_sections=NoSelectedSNMPSections(),
+                        backend_override=None,
+                        stored_walk_path=stored_walk_path,
+                        walk_cache_path=walk_cache_path,
                     ),
-                    selected_sections=NoSelectedSNMPSections(),
-                    backend_override=None,
-                    stored_walk_path=stored_walk_path,
-                    walk_cache_path=walk_cache_path,
                 ),
                 file_cache_options=FileCacheOptions(),
                 simulation_mode=simulation_mode,

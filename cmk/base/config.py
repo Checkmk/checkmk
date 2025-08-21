@@ -96,6 +96,7 @@ from cmk.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
+    SNMPScanConfig,
     SNMPSectionMeta,
     TCPFetcher,
     TCPFetcherConfig,
@@ -1615,6 +1616,7 @@ class ConfigCache:
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
+        snmp_fetcher_config: SNMPFetcherConfig,
     ) -> FetcherFactory:
         return FetcherFactory(
             self,
@@ -1622,6 +1624,7 @@ class ConfigCache:
             make_tcp_fetcher_config(
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
+            snmp_fetcher_config,
             self.ruleset_matcher,
             service_configurer,
             service_name_config,
@@ -3704,6 +3707,7 @@ class FetcherFactory:
         config_cache: ConfigCache,
         ip_lookup: ip_lookup.IPLookup,
         tcp_fetcher_config: TCPFetcherConfig,
+        snmp_fetcher_config: SNMPFetcherConfig,
         ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
         service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
@@ -3716,6 +3720,7 @@ class FetcherFactory:
         self._config_cache: Final = config_cache
         self._ip_lookup: Final = ip_lookup
         self._tcp_fetcher_config: Final = tcp_fetcher_config
+        self._snmp_fetcher_config: Final = snmp_fetcher_config
         self._label_manager: Final = config_cache.label_manager
         self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
@@ -3780,14 +3785,13 @@ class FetcherFactory:
         ip_address: HostAddress,
         *,
         source_type: SourceType,
-        fetcher_config: SNMPFetcherConfig,
     ) -> SNMPFetcher:
         snmp_config = self._config_cache.make_snmp_config(
             host_name,
             host_ip_family,
             ip_address,
             source_type,
-            backend_override=fetcher_config.backend_override,
+            backend_override=self._snmp_fetcher_config.backend_override,
         )
         fetcher = SNMPFetcher(
             sections=self._make_snmp_sections(
@@ -3798,11 +3802,17 @@ class FetcherFactory:
                     self._service_name_config,
                     host_name,
                     self._enforced_services_table,
-                    selected_sections=fetcher_config.selected_sections,
+                    selected_sections=self._snmp_fetcher_config.selected_sections,
                 ),
                 sections=plugins.snmp_sections.values(),
             ),
-            scan_config=fetcher_config.scan_config,
+            scan_config=SNMPScanConfig(
+                on_error=self._snmp_fetcher_config.on_error,
+                missing_sys_description=self._snmp_fetcher_config.missing_sys_description(
+                    host_name
+                ),
+                oid_cache_dir=self._snmp_fetcher_config.oid_cache_dir,
+            ),
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
@@ -3812,8 +3822,8 @@ class FetcherFactory:
                 section_cache_path=cmk.utils.paths.var_dir,
             ),
             snmp_config=snmp_config,
-            stored_walk_path=fetcher_config.stored_walk_path,
-            walk_cache_path=fetcher_config.walk_cache_path,
+            stored_walk_path=self._snmp_fetcher_config.stored_walk_path,
+            walk_cache_path=self._snmp_fetcher_config.walk_cache_path,
         )
         return fetcher
 

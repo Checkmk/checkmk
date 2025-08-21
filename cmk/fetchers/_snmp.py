@@ -6,12 +6,21 @@
 import dataclasses
 import logging
 import time
-from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from pathlib import Path
 from typing import Any, Final
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.parser import SectionStore
 from cmk.snmplib import (
     get_snmp_table,
@@ -43,7 +52,9 @@ class NoSelectedSNMPSections: ...
 
 @dataclasses.dataclass(frozen=True)
 class SNMPFetcherConfig:
-    scan_config: SNMPScanConfig
+    on_error: OnError
+    missing_sys_description: Callable[[HostName], bool]
+    oid_cache_dir: Path
     selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections
     backend_override: SNMPBackendEnum | None
     stored_walk_path: Path

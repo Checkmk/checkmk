@@ -40,7 +40,7 @@ from cmk.checkengine.plugin_backend import (
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import NoSelectedSNMPSections
+from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import (
@@ -172,6 +172,15 @@ def inventory_as_check(
             ip_address_of,
             service_name_config,
             enforced_service_table,
+            SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -182,10 +191,7 @@ def inventory_as_check(
         ip_address_of_mandatory=ip_address_of_bare,
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
-        on_error=OnError.RAISE,
-        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(

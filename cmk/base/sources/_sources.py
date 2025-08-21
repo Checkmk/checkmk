@@ -20,7 +20,6 @@ from cmk.fetchers import (
     NoFetcherError,
     PiggybackFetcher,
     ProgramFetcher,
-    SNMPFetcherConfig,
     TCPFetcher,
     TLSConfig,
 )
@@ -64,7 +63,6 @@ class FetcherFactory(Protocol):
         ipaddress: HostAddress,
         *,
         source_type: SourceType,
-        fetcher_config: SNMPFetcherConfig,
     ) -> Fetcher: ...
 
     def make_ipmi_fetcher(
@@ -118,7 +116,6 @@ class SNMPSource(Source[SNMPRawData]):
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ipaddress: HostAddress,
         *,
-        fetcher_config: SNMPFetcherConfig,
         max_age: MaxAge,
         file_cache_path: Path,
     ) -> None:
@@ -128,7 +125,6 @@ class SNMPSource(Source[SNMPRawData]):
         self.host_name: Final = host_name
         self.host_ip_family: Final = host_ip_family
         self.ipaddress: Final = ipaddress
-        self._fetcher_config: Final = fetcher_config
         self._max_age: Final = max_age
         self._file_cache_path: Final = file_cache_path
 
@@ -148,7 +144,6 @@ class SNMPSource(Source[SNMPRawData]):
             self.host_ip_family,
             self.ipaddress,
             source_type=self.source_type,
-            fetcher_config=self._fetcher_config,
         )
 
     def file_cache(
@@ -177,7 +172,6 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ipaddress: HostAddress,
         *,
-        fetcher_config: SNMPFetcherConfig,
         max_age: MaxAge,
         file_cache_path: Path,
     ) -> None:
@@ -188,7 +182,6 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self.host_ip_family: Final = host_ip_family
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._fetcher_config: Final = fetcher_config
         self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
@@ -207,7 +200,6 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.host_ip_family,
             self.ipaddress,
             source_type=self.source_type,
-            fetcher_config=self._fetcher_config,
         )
 
     def file_cache(

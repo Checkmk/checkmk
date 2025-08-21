@@ -16,7 +16,7 @@ from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import SNMPFetcher, SNMPFetcherConfig, TLSConfig
+from cmk.fetchers import SNMPFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum
@@ -53,7 +53,6 @@ class _Builder:
         *,
         simulation_mode: bool,
         fetcher_factory: FetcherFactory,
-        snmp_fetcher_config: SNMPFetcherConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend: SNMPBackendEnum,
@@ -76,7 +75,6 @@ class _Builder:
         self.host_ip_family: Final = host_ip_family
         self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
-        self.snmp_fetcher_config: Final = snmp_fetcher_config
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
         self.max_age_agent: Final = max_age_agent
@@ -179,7 +177,6 @@ class _Builder:
                     self.host_name,
                     self.host_ip_family,
                     self.ipaddress or HostAddress("127.0.0.1"),
-                    fetcher_config=self.snmp_fetcher_config,
                     max_age=self.max_age_snmp,
                     file_cache_path=self._file_cache_path,
                 )
@@ -200,7 +197,6 @@ class _Builder:
                 self.host_name,
                 self.host_ip_family,
                 self.ipaddress,
-                fetcher_config=self.snmp_fetcher_config,
                 max_age=self.max_age_snmp,
                 file_cache_path=self._file_cache_path,
             )
@@ -227,7 +223,6 @@ class _Builder:
                         self.host_name,
                         self.host_ip_family,
                         self.management_ip,
-                        fetcher_config=self.snmp_fetcher_config,
                         max_age=self.max_age_snmp,
                         file_cache_path=self._file_cache_path,
                     )
@@ -306,7 +301,6 @@ def make_sources(
     *,
     fetcher_factory: FetcherFactory,
     force_snmp_cache_refresh: bool = False,
-    snmp_fetcher_config: SNMPFetcherConfig,
     snmp_backend: SNMPBackendEnum,
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
@@ -349,7 +343,6 @@ def make_sources(
         ip_stack_config,
         simulation_mode=simulation_mode,
         fetcher_factory=fetcher_factory,
-        snmp_fetcher_config=snmp_fetcher_config,
         snmp_backend=snmp_backend,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),

@@ -97,7 +97,7 @@ from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, SNMPScanConfig, TLSConfig
+from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -680,11 +680,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
-        snmp_scan_config = SNMPScanConfig(
-            on_error=OnError.RAISE,
-            missing_sys_description=config_cache.missing_sys_description(hostname),
-            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
-        )
 
         output = []
         # Show errors of problematic data sources
@@ -701,13 +696,15 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 ip_address_of,
                 service_name_config,
                 enforced_services_table,
-            ),
-            snmp_fetcher_config=SNMPFetcherConfig(
-                scan_config=snmp_scan_config,
-                selected_sections=NoSelectedSNMPSections(),
-                backend_override=snmp_backend_override,
-                stored_walk_path=stored_walk_path,
-                walk_cache_path=walk_cache_path,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=snmp_backend_override,
+                    stored_walk_path=stored_walk_path,
+                    walk_cache_path=walk_cache_path,
+                ),
             ),
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -2181,6 +2178,15 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             ip_address_of,
             service_name_config,
             enforced_services_table,
+            SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=snmp_backend_override,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -2193,15 +2199,12 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
-        on_error=OnError.RAISE,
-        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
         max_cachefile_age=MaxAge(
             checking=config.check_max_cachefile_age,
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
-        snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(
@@ -2528,6 +2531,21 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             ip_address_of,
             service_name_config,
             enforced_services_table,
+            SNMPFetcherConfig(
+                on_error=on_error,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=(
+                    NoSelectedSNMPSections()
+                    if selected_sections is NO_SELECTION
+                    else frozenset(
+                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
+                    )
+                ),
+                backend_override=snmp_backend_override,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -2542,16 +2560,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        selected_snmp_sections=(
-            NoSelectedSNMPSections()
-            if selected_sections is NO_SELECTION
-            else frozenset(
-                SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
-            )
-        ),
-        on_error=on_error,
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     for hostname in sorted(
@@ -2755,6 +2764,21 @@ def run_checking(
             ip_address_of,
             service_name_config,
             enforced_service_table,
+            SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=(
+                    NoSelectedSNMPSections()
+                    if selected_sections is NO_SELECTION
+                    else frozenset(
+                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
+                    )
+                ),
+                backend_override=snmp_backend_override,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -2769,16 +2793,7 @@ def run_checking(
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        selected_snmp_sections=(
-            NoSelectedSNMPSections()
-            if selected_sections is NO_SELECTION
-            else frozenset(
-                SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
-            )
-        ),
-        on_error=OnError.RAISE,
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=snmp_backend_override,
         password_store_file=password_store_file,
     )
     parser = CMKParser(
@@ -3019,6 +3034,21 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             ip_address_of,
             service_name_config,
             enforced_service_table,
+            SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=(
+                    NoSelectedSNMPSections()
+                    if selected_sections is NO_SELECTION
+                    else frozenset(
+                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
+                    )
+                ),
+                backend_override=snmp_backend_override,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -3033,16 +3063,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        selected_snmp_sections=(
-            NoSelectedSNMPSections()
-            if selected_sections is NO_SELECTION
-            else frozenset(
-                SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
-            )
-        ),
-        on_error=OnError.RAISE,
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     parser = CMKParser(
@@ -3321,6 +3342,15 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
             ip_address_of,
             service_name_config,
             enforced_service_table,
+            SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=(NoSelectedSNMPSections()),
+                backend_override=snmp_backend_override,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -3333,10 +3363,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
-        on_error=OnError.RAISE,
-        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=snmp_backend_override,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
 

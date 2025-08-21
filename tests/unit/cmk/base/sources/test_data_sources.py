@@ -21,7 +21,6 @@ from cmk.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
-    SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
 )
@@ -63,17 +62,15 @@ def _make_sources(
             ip_lookup=lambda *a: ipaddress,
             service_name_config=lambda *a: "",
             enforced_services_table=lambda hn: {},
-        ),
-        snmp_fetcher_config=SNMPFetcherConfig(
-            scan_config=SNMPScanConfig(
+            snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
-                missing_sys_description=False,
+                missing_sys_description=lambda host_name: False,
                 oid_cache_dir=tmp_path,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                stored_walk_path=tmp_path,
+                walk_cache_path=tmp_path,
             ),
-            selected_sections=NoSelectedSNMPSections(),
-            backend_override=None,
-            stored_walk_path=tmp_path,
-            walk_cache_path=tmp_path,
         ),
         simulation_mode=True,
         file_cache_options=FileCacheOptions(),

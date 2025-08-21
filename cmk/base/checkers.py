@@ -42,7 +42,7 @@ from cmk.base.sources import (
 )
 from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
-from cmk.ccc.exceptions import MKTimeout, OnError
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checking import cluster_mode
 from cmk.checkengine.checkresults import (
@@ -86,15 +86,12 @@ from cmk.fetchers import (
     Fetcher,
     FetcherTrigger,
     Mode,
-    NoSelectedSNMPSections,
-    SNMPFetcherConfig,
-    SNMPScanConfig,
     TLSConfig,
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
-from cmk.snmplib import SNMPBackendEnum, SNMPRawData, SNMPSectionName
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -368,12 +365,9 @@ class CMKFetcher:
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
-        on_error: OnError,
         password_store_file: Path,
-        selected_snmp_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
-        snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
         self.make_trigger: Final = make_trigger
@@ -387,12 +381,9 @@ class CMKFetcher:
         self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
-        self.on_error: Final = on_error
         self.password_store_file: Final = password_store_file
-        self.selected_sections: Final = selected_snmp_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
-        self.snmp_backend_override: Final = snmp_backend_override
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -439,7 +430,6 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
@@ -458,19 +448,6 @@ class CMKFetcher:
                     current_ip_address,
                     current_ip_stack_config,
                     fetcher_factory=self.factory,
-                    snmp_fetcher_config=SNMPFetcherConfig(
-                        scan_config=SNMPScanConfig(
-                            missing_sys_description=self.config_cache.missing_sys_description(
-                                current_host_name
-                            ),
-                            on_error=self.on_error if not is_cluster else OnError.RAISE,
-                            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
-                        ),
-                        selected_sections=self.selected_sections,
-                        backend_override=self.snmp_backend_override,
-                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                        walk_cache_path=walk_cache_path,
-                    ),
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if not is_cluster else False
                     ),

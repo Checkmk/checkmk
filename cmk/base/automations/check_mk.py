@@ -165,7 +165,6 @@ from cmk.fetchers import (
     PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcherConfig,
-    SNMPScanConfig,
     TCPEncryptionHandling,
     TCPFetcher,
     TLSConfig,
@@ -375,7 +374,19 @@ class AutomationDiscovery(DiscoveryAutomation):
             config_cache,
             lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
             config_cache.fetcher_factory(
-                service_configurer, ip_address_of, service_name_config, enforced_services_table
+                service_configurer,
+                ip_address_of,
+                service_name_config,
+                enforced_services_table,
+                SNMPFetcherConfig(
+                    on_error=on_error,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=None,
+                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                ),
             ),
             plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
@@ -386,10 +397,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
-            on_error=on_error,
-            selected_snmp_sections=NoSelectedSNMPSections(),
             simulation_mode=config.simulation_mode,
-            snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         # sort clusters last, to have them operate with the new nodes host labels.
@@ -518,6 +526,15 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                         service_name_config,
                         plugins.check_plugins,
                     ),
+                    SNMPFetcherConfig(  # unused, obviously
+                        on_error=OnError.RAISE,
+                        missing_sys_description=config_cache.missing_sys_description,
+                        oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                        selected_sections=NoSelectedSNMPSections(),
+                        backend_override=None,
+                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                        walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                    ),
                 ),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
@@ -610,6 +627,15 @@ class AutomationDiscoveryPreview(Automation):
                     service_name_config,
                     plugins.check_plugins,
                 ),
+                SNMPFetcherConfig(
+                    on_error=on_error,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=None,
+                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                ),
             ),
             plugins,
             default_address_family=ip_lookup_config.default_address_family,
@@ -620,10 +646,7 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
-            on_error=on_error,
-            selected_snmp_sections=NoSelectedSNMPSections(),
             simulation_mode=config.simulation_mode,
-            snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
@@ -1069,6 +1092,15 @@ def _execute_autodiscovery(
             slightly_different_ip_address_of,
             passive_service_name_config,
             enforced_services_table,
+            SNMPFetcherConfig(
+                on_error=OnError.IGNORE,
+                missing_sys_description=config_cache.missing_sys_description,
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+            ),
         ),
         ab_plugins,
         default_address_family=ip_lookup_config.default_address_family,
@@ -1079,10 +1111,7 @@ def _execute_autodiscovery(
         ip_address_of_mandatory=ip_address_of,
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
-        on_error=OnError.IGNORE,
-        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=config.simulation_mode,
-        snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
@@ -3350,11 +3379,6 @@ class AutomationDiagHost(Automation):
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         passwords = cmk.utils.password_store.load(pending_passwords_file)
-        snmp_scan_config = SNMPScanConfig(
-            on_error=OnError.RAISE,
-            missing_sys_description=config_cache.missing_sys_description(host_name),
-            oid_cache_dir=oid_cache_dir,
-        )
         trigger = config.make_fetcher_trigger(edition, host_name, config_cache.host_tags.tags)
         for source in sources.make_sources(
             plugins,
@@ -3375,13 +3399,15 @@ class AutomationDiagHost(Automation):
                     service_name_config,
                     plugins.check_plugins,
                 ),
-            ),
-            snmp_fetcher_config=SNMPFetcherConfig(
-                scan_config=snmp_scan_config,
-                selected_sections=NoSelectedSNMPSections(),
-                backend_override=None,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                walk_cache_path=walk_cache_path,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    oid_cache_dir=oid_cache_dir,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=None,
+                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                    walk_cache_path=walk_cache_path,
+                ),
             ),
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -3896,11 +3922,6 @@ class AutomationGetAgentOutput(Automation):
                 ca_store=Path(cmk.utils.paths.agent_cert_store),
                 site_crt=Path(cmk.utils.paths.site_cert_file),
             )
-            snmp_scan_config = SNMPScanConfig(
-                on_error=OnError.RAISE,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
-                missing_sys_description=config_cache.missing_sys_description(hostname),
-            )
 
             if ty == "agent":
                 if hostname in hosts_config.clusters:
@@ -3928,13 +3949,15 @@ class AutomationGetAgentOutput(Automation):
                             service_name_config,
                             plugins.check_plugins,
                         ),
-                    ),
-                    snmp_fetcher_config=SNMPFetcherConfig(
-                        scan_config=snmp_scan_config,
-                        selected_sections=NoSelectedSNMPSections(),
-                        backend_override=None,
-                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                        walk_cache_path=walk_cache_path,
+                        snmp_fetcher_config=SNMPFetcherConfig(
+                            on_error=OnError.RAISE,
+                            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
+                            missing_sys_description=config_cache.missing_sys_description,
+                            selected_sections=NoSelectedSNMPSections(),
+                            backend_override=None,
+                            stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                            walk_cache_path=walk_cache_path,
+                        ),
                     ),
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,

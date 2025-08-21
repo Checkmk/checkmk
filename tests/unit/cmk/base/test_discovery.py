@@ -67,7 +67,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.fetchers import Mode, NoSelectedSNMPSections, PlainFetcherTrigger
+from cmk.fetchers import Mode, NoSelectedSNMPSections, PlainFetcherTrigger, SNMPFetcherConfig
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
@@ -1518,6 +1518,15 @@ def test_commandline_discovery(
             ip_lookup=lambda *a: HostAddress(""),
             service_name_config=service_name_config,
             enforced_services_table=lambda hn: {},
+            snmp_fetcher_config=SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=lambda host_name: False,
+                oid_cache_dir=Path("/dev/null"),
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                stored_walk_path=Path("/dev/null"),
+                walk_cache_path=Path("/dev/null"),
+            ),
         ),
         agent_based_plugins,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,
@@ -1528,10 +1537,7 @@ def test_commandline_discovery(
         ip_address_of_mandatory=lambda *a: HostAddress(""),
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
-        on_error=OnError.RAISE,
-        selected_snmp_sections=NoSelectedSNMPSections(),
         simulation_mode=True,
-        snmp_backend_override=None,
         password_store_file=Path("/pw/store"),
     )
 

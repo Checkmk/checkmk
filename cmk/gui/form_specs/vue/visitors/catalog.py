@@ -199,7 +199,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                         _spec, element_default_value = element_visitor.to_vue(DEFAULT_VALUE)
                         return create_validation_error(
                             element_default_value,
-                            f"Required element {element_name} missing in topic {topic_name}",
+                            f"Required element '{element_name}' missing in topic {topic_name}",
                             location=[topic_name, element_name],
                         )
                     continue

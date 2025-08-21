@@ -5,14 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { Site } from '../../ChangesInterfaces'
-import usei18n from '@/lib/i18n'
-import { immediateWatch } from '@/lib/watch'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch'
 import { ref } from 'vue'
+import type { Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'
 
 const { _t } = usei18n()
@@ -97,7 +97,7 @@ immediateWatch(
               :idx="idx"
               :site="site"
               :activating="activating"
-              :checked="selectedSites.includes(site.siteId)"
+              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
               :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
               @update-checked="toggleSelectedSite"
             ></SiteStatusItem>
@@ -112,7 +112,7 @@ immediateWatch(
               :idx="idx"
               :site="site"
               :activating="activating"
-              :checked="selectedSites.includes(site.siteId)"
+              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
               :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
               :hide-checkbox="true"
               @update-checked="toggleSelectedSite"

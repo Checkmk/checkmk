@@ -19,7 +19,7 @@ def main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
-    def make_target = "test-performance";
+    def make_target = "test-performance-docker";
 
     def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 

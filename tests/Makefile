@@ -267,6 +267,9 @@ test-performance:
 	--self-contained-html --ignore-running-procs ; \
 	$(realpath performance)/raise_alerts.sh
 
+test-performance-docker:
+	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
+
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 

@@ -1,0 +1,35 @@
+Title: Jira Notifications: Handle Cloud API removals
+Class: fix
+Compatible: incomp
+Component: notifications
+Date: 1755791096
+Edition: cee
+Level: 1
+Version: 2.2.0p46
+
+This Werk fixes an issue with Jira notifications due to the removal of legacy
+search APIs in the Jira Cloud version.
+
+<h3>Removal of workaround might be necessary</h3>
+
+
+To fix compatibility to the new Jira API, you might have followed instructions
+to install a compatible version of the Python jira module. Such a workaround was
+made available in <a href="https://checkmk.atlassian.net/wiki/spaces/KB/pages/449937409">our Knowledge Base</a>.
+
+Since the files installed by the workaround will conflict with upcoming updates,
+it must be removed before performing the Checkmk update. Thus, this Werk has
+been labeled incompatible. To find out whether the workaround has been applied,
+check if the <code>jira</code> package has been manually installed by issuing a <code>find</code>
+command:
+
+C+:
+OMD[mysite]:~$ find ~/local/lib/python3/ -type d -name 'jira*-info'
+C-:
+
+If the <code>jira</code> module is found, uninstall it after stopping the site and before
+performing the update by running:
+
+C+:
+OMD[mysite]:~$ pip3 uninstall jira
+C-:

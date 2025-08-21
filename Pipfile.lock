@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "af9603ecf98092ad73f9ebea22a7de66f8bb6f168ad4e13f7bb8743eb83b9dfe"
+            "sha256": "908edc33f914ddb3722de91c9cba0a03090d5a0848c623e642cc56d721933cfe"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -1033,12 +1033,12 @@
         },
         "jira": {
             "hashes": [
-                "sha256:20e2df51cc686f663034543c4dec65783e9c721de6448b433d659d5c95b01c7b",
-                "sha256:9b1286a3eada593bb1c83e12989dc2e7c796867523049fa6a680c3a2757e4d17"
+                "sha256:2d09ae3bf4741a2787dd889dfea5926a5d509aac3b28ab3b98c098709e6ee72d",
+                "sha256:d4da1385c924ee693d6cc9838e56a34e31d74f0d6899934ef35bbd0d2d33997f"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==3.4.1"
+            "markers": "python_version >= '3.10'",
+            "version": "==3.10.5"
         },
         "jmespath": {
             "hashes": [

@@ -41,14 +41,8 @@ const props = defineProps<Props>()
 const slideInOpen = ref(false)
 
 const showTest = ref(true)
+const isPushMode = ref(false)
 const switchVisibility = () => {
-  const agentConnectionModeHash = props.cmkAgentConnectionModeSelectElement?.value
-  const agentConnectionMode =
-    props.agentConnectionModes.find((mode) => mode.id_hash === agentConnectionModeHash)?.mode ?? ''
-  if (agentConnectionMode === 'push-agent') {
-    showTest.value = false
-    return
-  }
   if (props.changeTagAgent.checked) {
     showTest.value = props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
     return
@@ -57,6 +51,14 @@ const switchVisibility = () => {
   showTest.value = !props.tagAgentDefault.textContent?.includes('no Checkmk agent')
 }
 switchVisibility()
+checkPushMode()
+
+function checkPushMode() {
+  const agentConnectionModeHash = props.cmkAgentConnectionModeSelectElement?.value
+  const agentConnectionMode =
+    props.agentConnectionModes.find((mode) => mode.id_hash === agentConnectionModeHash)?.mode ?? ''
+  isPushMode.value = agentConnectionMode === 'push-agent'
+}
 
 const hostname = ref(props.hostnameInputElement.value || '')
 const ipV4 = ref(props.ipv4InputElement.value || '')
@@ -79,6 +81,7 @@ onMounted(() => {
       case props.formElement:
       case props.changeTagAgent: {
         switchVisibility()
+        checkPushMode()
 
         targetElement.value = props.changeTagAgent.checked
           ? (props.tagAgent.parentNode as HTMLElement)
@@ -214,7 +217,6 @@ const reTestAgentClick: () => Promise<void> = startAjax
 const openSlideoutClick: () => void = () => {
   slideInOpen.value = true
 }
-const closeButtonTitle = _t('Close & test agent connection')
 
 interface ContainerValues {
   header: string
@@ -281,6 +283,14 @@ const warnContainerValues = computed<ContainerValues>(() => {
     buttonTwoClick
   }
 })
+
+function onClose() {
+  slideInOpen.value = false
+  isError.value = false
+  if (!isPushMode.value) {
+    void startAjax()
+  }
+}
 </script>
 
 <template>
@@ -349,10 +359,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
         :agent-install-cmds="agentSlideout.agent_install_cmds"
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"
-        :close-button-title="closeButtonTitle"
         :save-host="agentSlideout.save_host"
         :agent-installed="isNotRegistered"
-        @close="((slideInOpen = false), (isError = false), startAjax())"
+        :is-push-mode="isPushMode"
+        @close="onClose"
       />
     </CmkSlideInDialog>
   </Teleport>

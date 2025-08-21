@@ -19,9 +19,9 @@ const props = defineProps<{
   hostName: string
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
-  closeButtonTitle: string
   saveHost: boolean
   agentInstalled: boolean
+  isPushMode: boolean
 }>()
 
 const { _t } = usei18n()
@@ -134,10 +134,10 @@ const tabs: AgentSlideOutTabs[] = [
     "
     :tabs="tabs"
     :all-agents-url="allAgentsUrl"
-    :close-button-title="closeButtonTitle"
     :save-host="saveHost"
     :agent-installed="agentInstalled"
     :host-name="hostName"
+    :is-push-mode="isPushMode"
     @close="close"
   />
 </template>

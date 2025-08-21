@@ -48,14 +48,15 @@ const props = defineProps<{
   dialogMsg: string
   tabs: AgentSlideOutTabs[]
   allAgentsUrl: string
-  closeButtonTitle: string
   saveHost: boolean
   agentInstalled: boolean
+  isPushMode: boolean
   hostName: string
 }>()
 
 const { _t } = usei18n()
 
+const closeButtonTitle = props.isPushMode ? _t('Close slideout') : _t('Close & test connection')
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
@@ -255,11 +256,32 @@ function getInitStep() {
             </template>
             <template v-if="currentStep === 3" #actions>
               <CmkWizardButton
+                v-if="!isPushMode"
                 type="finish"
                 :override-label="closeButtonTitle"
                 icon-name="connection_tests"
                 @click="close"
               />
+              <CmkWizardButton v-else type="next" />
+              <CmkWizardButton type="previous" />
+            </template>
+          </CmkWizardStep>
+
+          <CmkWizardStep v-if="isPushMode" :index="4" :is-completed="() => currentStep > 4">
+            <template #header>
+              <CmkHeading> {{ _t('Test connection') }}</CmkHeading>
+            </template>
+            <template #content>
+              <CmkParagraph>
+                {{
+                  _t(`Test if you have configured everything correctly with pasting the following
+                  command into the CLI of the target system.`)
+                }}
+              </CmkParagraph>
+              <CmkCode v-if="currentStep === 4" code_txt="cmk-agent-ctl status" />
+            </template>
+            <template #actions>
+              <CmkWizardButton type="finish" :override-label="closeButtonTitle" @click="close" />
               <CmkWizardButton type="previous" />
             </template>
           </CmkWizardStep>

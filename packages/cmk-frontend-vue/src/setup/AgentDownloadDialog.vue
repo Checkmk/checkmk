@@ -85,6 +85,7 @@ const tooltipOpen = ref(true)
       :close-button-title="close_button_title"
       :save-host="agent_slideout.save_host"
       :agent-installed="is_not_registered"
+      :is-push-mode="false"
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />
   </CmkSlideInDialog>

@@ -36,8 +36,9 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type PropType, type VNode, defineComponent, h } from 'vue'
 
+import type { DualListElement } from '@/components/CmkDualList'
+
 import type { CheckboxListChoiceElement } from '@/form/components/forms/FormCheckboxListChoice.vue'
-import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
 import FormLabelsLabel from '@/form/components/forms/FormLabelsLabel.vue'
 import {
   type ValidationMessages,
@@ -109,7 +110,7 @@ function renderForm(
     case 'catalog':
       return h('div', 'Catalog does not support readonly')
     case 'dual_list_choice':
-      return renderDualListChoice(formSpec as DualListChoice, value as DualListChoiceElement[])
+      return renderDualListChoice(formSpec as DualListChoice, value as DualListElement[])
     case 'checkbox_list_choice':
       return renderCheckboxListChoice(
         formSpec as CheckboxListChoice,
@@ -201,7 +202,7 @@ function renderTuple(
   )
 }
 
-function renderDualListChoice(formSpec: DualListChoice, value: DualListChoiceElement[]): VNode {
+function renderDualListChoice(formSpec: DualListChoice, value: DualListElement[]): VNode {
   let localElements: MultipleChoiceElement[] = formSpec.elements
   if (formSpec.autocompleter) {
     localElements = [...localElements, ...value]

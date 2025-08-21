@@ -18,6 +18,7 @@ import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
+import DemoCmkDualList from './DemoCmkDualList.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
@@ -62,5 +63,6 @@ export const pages = [
   new Page('CmkLinkCard', DemoCmkLinkCard),
   new Page('CmkCode', DemoCmkCode),
   new Page('CmkCollapsible', DemoCmkCollapsible),
-  new Page('CmkKeyboardKey', DemoCmkKeyboardKey)
+  new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
+  new Page('CmkDualList', DemoCmkDualList)
 ]

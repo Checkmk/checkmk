@@ -10,6 +10,7 @@ import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
+import DemoFormDualListChoice from './DemoFormDualListChoice.vue'
 import DemoFormLabels from './DemoFormLabels.vue'
 import DemoFormList from './DemoFormList.vue'
 import DemoFormMetric from './DemoFormMetric.vue'
@@ -31,5 +32,6 @@ export const pages: Array<Folder | Page> = [
   new Page('FormSingleChoice', DemoFormSingleChoice),
   new Page('FormTuple', DemoFormTuple),
   new Page('FormLabels', DemoFormLabels),
-  new Page('FormSingleChoiceEditableEditAsync', DemoFormSingleChoiceEditableEditAsync)
+  new Page('FormSingleChoiceEditableEditAsync', DemoFormSingleChoiceEditableEditAsync),
+  new Page('FormDualListChoice', DemoFormDualListChoice)
 ]

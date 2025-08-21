@@ -11209,10 +11209,6 @@ msgid "Changed DCD global settings"
 msgstr "DCDグローバル設定の変更"
 
 #, python-format
-msgid "Changed LDAP connection %s"
-msgstr "LDAP接続 %s を変更しました"
-
-#, python-format
 msgid "Changed alert handler rule %d"
 msgstr "アラートハンドラルール%dを変更しました"
 
@@ -11286,14 +11282,6 @@ msgstr "カスタマーのプロパティを変更しました"
 #, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "インストールされた拡張パッケージのプロパティを変更%s%s"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
 
 #, python-format
 msgid ""
@@ -15438,9 +15426,6 @@ msgstr "作成されたイベント"
 msgid "Created new %s connection"
 msgstr "新しいLDAP接続を作成しました"
 
-msgid "Created new LDAP connection"
-msgstr "新しいLDAP接続を作成しました"
-
 msgid "Created new alert handler rule"
 msgstr "新しいアラートハンドラルールを作成しました"
 
@@ -17873,10 +17858,6 @@ msgstr "クイックセットアップ {bundle_id} を削除しました"
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "属性 %sを削除しました"
-
-#, python-format
-msgid "Deleted connection %s"
-msgstr "接続を削除しました %s"
 
 #, python-format
 msgid "Deleted custom GUI logo %s"
@@ -21554,6 +21535,10 @@ msgstr "マスターからのレプリケーションを有効にする"
 
 msgid "Enable row shading"
 msgstr "行のシェーディングを有効にする"
+
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "ホスト名を翻訳する"
 
 msgid "Enable service notifications"
 msgstr "サービス通知を有効にする"
@@ -40272,6 +40257,14 @@ msgid ""
 msgstr ""
 "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
 "です"
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
+"移動しました"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -76642,6 +76635,14 @@ msgstr ""
 "によるログインを有効にするには、このプロパティを使用します。"
 
 msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names in Azure. This option will append "
+"the last part of the subscription ID to host names. Example: 'my-"
+"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
+"with the same name."
+msgstr ""
+
+msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -84627,6 +84628,17 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, python-format
+#~ msgid "Changed LDAP connection %s"
+#~ msgstr "LDAP接続 %s を変更しました"
+
+#~ msgid "Created new LDAP connection"
+#~ msgstr "新しいLDAP接続を作成しました"
+
+#, python-format
+#~ msgid "Deleted connection %s"
+#~ msgstr "接続を削除しました %s"
 
 #~ msgid "Active calls"
 #~ msgstr "アクティブコール"

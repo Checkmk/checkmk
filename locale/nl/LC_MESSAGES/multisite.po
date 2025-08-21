@@ -11970,10 +11970,6 @@ msgid "Changed DCD global settings"
 msgstr "Globale instelling wijzigen"
 
 #, python-format
-msgid "Changed LDAP connection %s"
-msgstr "Gewijzigde LDAP-verbinding %s"
-
-#, python-format
 msgid "Changed alert handler rule %d"
 msgstr "Waarschuwings afhandel regel %d veranderd"
 
@@ -12049,14 +12045,6 @@ msgstr "Veranderde eigenschappen van klant"
 #, fuzzy, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
-"boven in map \"%s\""
 
 #, python-format
 msgid ""
@@ -16437,9 +16425,6 @@ msgstr "Gecreëerde gebeurtenissen"
 msgid "Created new %s connection"
 msgstr "Nieuwe LDAP-verbinding gemaakt"
 
-msgid "Created new LDAP connection"
-msgstr "Nieuwe LDAP-verbinding gemaakt"
-
 msgid "Created new alert handler rule"
 msgstr "Nieuwe alert handler regel gemaakt"
 
@@ -18977,10 +18962,6 @@ msgstr ""
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Attribuut %s verwijderd"
-
-#, python-format
-msgid "Deleted connection %s"
-msgstr "Verwijderde verbinding %s"
 
 #, python-format
 msgid "Deleted custom GUI logo %s"
@@ -22949,6 +22930,10 @@ msgstr "Activeer replicatie van een master"
 
 msgid "Enable row shading"
 msgstr "Rij arcering inschakelen"
+
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "Hostnamen vertalen"
 
 msgid "Enable service notifications"
 msgstr "Inschakelen dienst meldingen"
@@ -42920,6 +42905,14 @@ msgid ""
 "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
 msgstr ""
 "Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
+"boven in map \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -81974,6 +81967,14 @@ msgstr ""
 "schakelen."
 
 msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names in Azure. This option will append "
+"the last part of the subscription ID to host names. Example: 'my-"
+"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
+"with the same name."
+msgstr ""
+
+msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -90450,6 +90451,17 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "Changed LDAP connection %s"
+#~ msgstr "Gewijzigde LDAP-verbinding %s"
+
+#~ msgid "Created new LDAP connection"
+#~ msgstr "Nieuwe LDAP-verbinding gemaakt"
+
+#, python-format
+#~ msgid "Deleted connection %s"
+#~ msgstr "Verwijderde verbinding %s"
 
 #, fuzzy
 #~ msgid "Active calls"

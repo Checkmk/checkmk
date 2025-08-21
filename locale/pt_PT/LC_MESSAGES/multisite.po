@@ -11977,10 +11977,6 @@ msgid "Changed DCD global settings"
 msgstr "Editar cenário global"
 
 #, python-format
-msgid "Changed LDAP connection %s"
-msgstr "Ligação LDAP alterada %s"
-
-#, python-format
 msgid "Changed alert handler rule %d"
 msgstr "Alteração da regra do manipulador de alertas %d"
 
@@ -12056,14 +12052,6 @@ msgstr "Alteração das propriedades do cliente"
 #, fuzzy, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Propriedades alteradas do pacote de extensão instalado %s"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Propriedades alteradas da regra \"%s\", movida da pasta \"%s\" para o topo "
-"da pasta \"%s\""
 
 #, python-format
 msgid ""
@@ -16436,9 +16424,6 @@ msgstr "Eventos criados"
 msgid "Created new %s connection"
 msgstr "Criada nova conexão LDAP"
 
-msgid "Created new LDAP connection"
-msgstr "Criada nova conexão LDAP"
-
 msgid "Created new alert handler rule"
 msgstr "Criada a nova regra do manipulador de alertas"
 
@@ -18972,10 +18957,6 @@ msgstr ""
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Atributos eliminados %s"
-
-#, python-format
-msgid "Deleted connection %s"
-msgstr "Ligação eliminada %s"
 
 #, python-format
 msgid "Deleted custom GUI logo %s"
@@ -22941,6 +22922,10 @@ msgstr "Habilitar a replicação de um mestre"
 
 msgid "Enable row shading"
 msgstr "Habilitar sombreamento de linha"
+
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "Traduzir Hostnames"
 
 msgid "Enable service notifications"
 msgstr "Habilitar notificações de serviço"
@@ -42913,6 +42898,14 @@ msgid ""
 msgstr ""
 "Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
 "pasta \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Propriedades alteradas da regra \"%s\", movida da pasta \"%s\" para o topo "
+"da pasta \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -81909,6 +81902,14 @@ msgstr ""
 "método GET para todos os utilizadores."
 
 msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names in Azure. This option will append "
+"the last part of the subscription ID to host names. Example: 'my-"
+"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
+"with the same name."
+msgstr ""
+
+msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -90340,6 +90341,17 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "Changed LDAP connection %s"
+#~ msgstr "Ligação LDAP alterada %s"
+
+#~ msgid "Created new LDAP connection"
+#~ msgstr "Criada nova conexão LDAP"
+
+#, python-format
+#~ msgid "Deleted connection %s"
+#~ msgstr "Ligação eliminada %s"
 
 #, fuzzy
 #~ msgid "Active calls"

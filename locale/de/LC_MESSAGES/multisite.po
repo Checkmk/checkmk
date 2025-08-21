@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-19 19:35+0000\n"
+"PO-Revision-Date: 2025-08-20 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -11553,10 +11553,6 @@ msgid "Changed DCD global settings"
 msgstr "Globale DCD-Einstellungen wurden geändert"
 
 #, python-format
-msgid "Changed LDAP connection %s"
-msgstr "LDAP-Verbindung %s geändert"
-
-#, python-format
 msgid "Changed alert handler rule %d"
 msgstr "Alert Handler-Regel %d geändert"
 
@@ -11631,14 +11627,6 @@ msgstr "Eigenschaften von Kunde geändert"
 #, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Eigenschaften des installierten Erweiterungspaketes %s %s geändert"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
-"den Anfang des Ordners \"%s\""
 
 #, python-format
 msgid ""
@@ -15934,9 +15922,6 @@ msgstr "Ereignisse erzeugt"
 msgid "Created new %s connection"
 msgstr "Neue %s Verbindung erstellt"
 
-msgid "Created new LDAP connection"
-msgstr "Neue LDAP-Verbindung erstellt"
-
 msgid "Created new alert handler rule"
 msgstr "Neue Alert Handler-Regel erzeugt"
 
@@ -18410,10 +18395,6 @@ msgstr "Quick Setup {bundle_id} gelöscht"
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Attribut %s gelöscht"
-
-#, python-format
-msgid "Deleted connection %s"
-msgstr "Verbindung %s löschen"
 
 #, python-format
 msgid "Deleted custom GUI logo %s"
@@ -22176,6 +22157,10 @@ msgstr "Replikation von einer Zentralinstanz aktivieren"
 
 msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
+
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "Host-Namen übersetzen"
 
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
@@ -27268,9 +27253,8 @@ msgstr "Health check Prozent Gesunde"
 msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
 
-#, fuzzy
 msgid "Healthy"
-msgstr "Integrität"
+msgstr ""
 
 msgid "Healthy hosts"
 msgstr "Gesunde Hosts"
@@ -41338,6 +41322,14 @@ msgstr ""
 "Regel %s von Position #%d nach #%d im Regelsatz \"%s\" im Ordner \"%s\" "
 "verschoben"
 
+#, fuzzy, python-format
+msgid ""
+"Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
+"\"%s\""
+msgstr ""
+"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
+"den Anfang des Ordners \"%s\""
+
 #, python-format
 msgid "Moved rule %s to pack %s"
 msgstr "Regel %s in Paket %s verschoben"
@@ -42490,9 +42482,8 @@ msgstr "Keine GUI-Erweiterungen, welche die veraltete API verwenden"
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Keine HW-/SW-Inventur Plugins, welche die veraltete API verwenden"
 
-#, fuzzy
 msgid "No Health Check"
-msgstr "Nächster Check"
+msgstr "Kein Gesundheits-Check"
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -49468,9 +49459,8 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "Podman Container Health"
-msgstr "Neustarts von Podman-Container"
+msgstr "Gesundheit des Podman-Containers"
 
 msgid "Podman Container Restarts"
 msgstr "Neustarts von Podman-Container"
@@ -59678,7 +59668,6 @@ msgstr "Gestartet am %s"
 msgid "Started at: %s."
 msgstr "Gestartet um: %s."
 
-#, fuzzy
 msgid "Starting"
 msgstr "Startend"
 
@@ -76443,9 +76432,8 @@ msgstr "unbehandelte P."
 msgid "Unhandled service problems"
 msgstr "Unbehandelte Serviceprobleme"
 
-#, fuzzy
 msgid "Unhealthy"
-msgstr "Integrität"
+msgstr "Nicht gesund"
 
 msgid "Unicast packet rates"
 msgstr "Unicast-Paketraten"
@@ -78923,6 +78911,14 @@ msgstr ""
 "Einzelheiten finden Sie in unserem Werk 14261). Wir deaktivieren die "
 "Anmeldung über diese Methode standardmäßig. Verwenden Sie diese Eigenschaft, "
 "um die Anmeldung über die GET-Methode für alle Benutzer zu aktivieren."
+
+msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names in Azure. This option will append "
+"the last part of the subscription ID to host names. Example: 'my-"
+"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
+"with the same name."
+msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -85260,9 +85256,8 @@ msgstr "Beschäftigte Worker"
 msgid "bytes/s"
 msgstr "Bytes/s"
 
-#, fuzzy
 msgid "bytes/sec"
-msgstr "Bytes/s"
+msgstr "Bytes/sek"
 
 msgid "cAdvisor"
 msgstr "cAdvisor"
@@ -86525,9 +86520,8 @@ msgstr "oberhalb des Schwellwerts"
 msgid "packets/s"
 msgstr "Pkt/s"
 
-#, fuzzy
 msgid "packets/sec"
-msgstr "Pkt/s"
+msgstr "Pakete/sek"
 
 msgid "pages/s"
 msgstr "Seiten/s"
@@ -87225,6 +87219,17 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#, python-format
+#~ msgid "Changed LDAP connection %s"
+#~ msgstr "LDAP-Verbindung %s geändert"
+
+#~ msgid "Created new LDAP connection"
+#~ msgstr "Neue LDAP-Verbindung erstellt"
+
+#, python-format
+#~ msgid "Deleted connection %s"
+#~ msgstr "Verbindung %s löschen"
 
 #~ msgid "Active calls"
 #~ msgstr "Aktive Anrufe"

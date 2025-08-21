@@ -2523,17 +2523,13 @@ def connection(
     remote_site: Site,
 ) -> Iterator[None]:
     """Set up the site connection between central and remote site for a distributed setup"""
+    basic_settings = {
+        "alias": "Remote Testsite",
+        "site_id": remote_site.id,
+    }
+
     if central_site.edition.is_managed_edition():
-        basic_settings = {
-            "alias": "Remote Testsite",
-            "site_id": remote_site.id,
-            "customer": "provider",
-        }
-    else:
-        basic_settings = {
-            "alias": "Remote Testsite",
-            "site_id": remote_site.id,
-        }
+        basic_settings["customer"] = "provider"
 
     configuration_connection = {
         "enable_replication": True,

@@ -328,3 +328,20 @@ def test_cron_job_status_with_success_criteria_met_job() -> None:
     assert isinstance(status_check_result, Result)
     assert status_check_result.state == State.OK
     assert status_check_result.summary == "Latest job: Completed"
+
+
+def test_determine_job_status_completed() -> None:
+    # https://github.com/kubernetes/kubernetes/pull/132728/commits/38512533053ae8bafbed7680e77cfbc9c49bea56
+    # Based on this issue, a job can now be Completed and SuccessCriteriaMet.
+    pod = None  # Unclear what a Pod would be in a real system.
+    success = JobConditionFactory.build(
+        type_=JobConditionType.SUCCESS_CRITERIA_MET, status=ConditionStatus.TRUE
+    )
+    completed = JobConditionFactory.build(
+        type_=JobConditionType.COMPLETE, status=ConditionStatus.TRUE
+    )
+    assert (
+        kube_cronjob_status._determine_job_status([success, completed], pod)
+        == kube_cronjob_status._determine_job_status([completed, success], pod)
+        == kube_cronjob_status.JobStatusType.COMPLETED
+    )

@@ -33,7 +33,7 @@ interface Props {
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
-  agent_slideout: AgentSlideout
+  agentSlideout: AgentSlideout
 }
 
 const props = defineProps<Props>()
@@ -68,7 +68,7 @@ const targetElement = ref<HTMLElement>(
 onMounted(() => {
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     void startAjax().then(() => {
-      if (!props.agent_slideout.save_host) {
+      if (!props.agentSlideout.save_host) {
         slideInOpen.value = true
         sessionStorage.removeItem('reopenSlideIn')
       }
@@ -344,14 +344,14 @@ const warnContainerValues = computed<ContainerValues>(() => {
       @close="slideInOpen = false"
     >
       <AgentSlideOutContent
-        :all_agents_url="agent_slideout.all_agents_url"
-        :host_name="hostname"
-        :agent_install_cmds="agent_slideout.agent_install_cmds"
-        :agent_registration_cmds="agent_slideout.agent_registration_cmds"
-        :legacy_agent_url="agent_slideout.legacy_agent_url"
-        :close_button_title="closeButtonTitle"
-        :save_host="agent_slideout.save_host"
-        :agent_installed="isNotRegistered"
+        :all-agents-url="agentSlideout.all_agents_url"
+        :host-name="hostname"
+        :agent-install-cmds="agentSlideout.agent_install_cmds"
+        :agent-registration-cmds="agentSlideout.agent_registration_cmds"
+        :legacy-agent-url="agentSlideout.legacy_agent_url"
+        :close-button-title="closeButtonTitle"
+        :save-host="agentSlideout.save_host"
+        :agent-installed="isNotRegistered"
         @close="((slideInOpen = false), (isError = false), startAjax())"
       />
     </CmkSlideInDialog>

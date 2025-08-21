@@ -77,14 +77,14 @@ const tooltipOpen = ref(true)
     @close="slideInOpen = false"
   >
     <AgentSlideOutContent
-      :all_agents_url="all_agents_url"
-      :host_name="agent_slideout.host_name"
-      :agent_install_cmds="agent_slideout.agent_install_cmds"
-      :agent_registration_cmds="agent_slideout.agent_registration_cmds"
-      :legacy_agent_url="agent_slideout.legacy_agent_url"
-      :close_button_title="close_button_title"
-      :save_host="agent_slideout.save_host"
-      :agent_installed="is_not_registered"
+      :all-agents-url="all_agents_url"
+      :host-name="agent_slideout.host_name"
+      :agent-install-cmds="agent_slideout.agent_install_cmds"
+      :agent-registration-cmds="agent_slideout.agent_registration_cmds"
+      :legacy-agent-url="agent_slideout.legacy_agent_url"
+      :close-button-title="close_button_title"
+      :save-host="agent_slideout.save_host"
+      :agent-installed="is_not_registered"
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />
   </CmkSlideInDialog>

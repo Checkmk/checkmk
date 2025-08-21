@@ -144,7 +144,7 @@ function getElementBySelector<T>(selector: string): T {
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"
     :agent-connection-modes="agent_connection_modes"
-    :agent_slideout="agent_slideout"
+    :agent-slideout="agent_slideout"
   ></AgentConnectionTest>
 </template>
 

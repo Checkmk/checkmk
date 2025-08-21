@@ -26,15 +26,15 @@ import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
 export interface AgentSlideOutTabs {
   id: string
   title: string
-  install_msg?: string
-  install_cmd?: string | undefined
-  install_deb_cmd?: string
-  install_rpm_cmd?: string
-  install_tgz_cmd?: string | undefined
-  registration_msg?: string
-  registration_cmd?: string
-  install_url?: InstallUrl | undefined
-  toggle_button_options?: PackageOptions
+  installMsg?: string
+  installCmd?: string | undefined
+  installDebCmd?: string
+  installRpmCmd?: string
+  installTgzCmd?: string | undefined
+  registrationMsg?: string
+  registrationCmd?: string
+  installUrl?: InstallUrl | undefined
+  toggleButtonOptions?: PackageOptions
 }
 
 export interface InstallUrl {
@@ -45,13 +45,13 @@ export interface InstallUrl {
 }
 
 const props = defineProps<{
-  dialog_msg: string
+  dialogMsg: string
   tabs: AgentSlideOutTabs[]
-  all_agents_url: string
-  close_button_title: string
-  save_host: boolean
-  agent_installed: boolean
-  host_name: string
+  allAgentsUrl: string
+  closeButtonTitle: string
+  saveHost: boolean
+  agentInstalled: boolean
+  hostName: string
 }>()
 
 const { _t } = usei18n()
@@ -80,7 +80,7 @@ sessionStorage.removeItem('slideInTabState')
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
-function saveHost() {
+function saveHostAction() {
   sessionStorage.setItem('reopenSlideIn', 'true')
   sessionStorage.setItem('slideInModelState', model.value)
   sessionStorage.setItem('slideInTabState', openedTab.value)
@@ -88,10 +88,10 @@ function saveHost() {
 }
 const currentStep = ref(getInitStep())
 function getInitStep() {
-  if (props.save_host) {
+  if (props.saveHost) {
     return 1
   }
-  if (!props.agent_installed) {
+  if (!props.agentInstalled) {
     return 2
   }
   return 3
@@ -99,19 +99,19 @@ function getInitStep() {
 </script>
 
 <template>
-  <CmkButton :title="close_button_title" class="close_and_test" @click="close">
+  <CmkButton :title="closeButtonTitle" class="close_and_test" @click="close">
     <CmkIcon name="connection_tests" />
-    {{ close_button_title }}
+    {{ closeButtonTitle }}
   </CmkButton>
   <CmkButton
     :title="_t('View all agents')"
     class="all_agents"
-    @click="() => openAllAgentsPage(all_agents_url)"
+    @click="() => openAllAgentsPage(allAgentsUrl)"
   >
     <CmkIcon name="frameurl" />
     {{ _t('View all agents') }}
   </CmkButton>
-  <CmkDialog :message="dialog_msg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
+  <CmkDialog :message="dialogMsg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
   <CmkHeading type="h4" class="select-heading">
     {{ _t('Select the type of system you want to monitor') }}
   </CmkHeading>
@@ -124,12 +124,12 @@ function getInitStep() {
     <template #tab-contents>
       <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
         <ToggleButtonGroup
-          v-if="tab.toggle_button_options"
+          v-if="tab.toggleButtonOptions"
           v-model="model"
-          :options="tab.toggle_button_options"
+          :options="tab.toggleButtonOptions"
         />
         <CmkWizard v-model="currentStep" mode="guided">
-          <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || !save_host">
+          <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || !saveHost">
             <template #header>
               <CmkHeading> {{ _t('Save host') }}</CmkHeading>
             </template>
@@ -144,70 +144,70 @@ function getInitStep() {
                   }}
                 </CmkParagraph>
               </div>
-              <div v-if="!save_host" class="save_host__div">
+              <div v-if="!saveHost" class="save_host__div">
                 <CmkParagraph class="agent_slideout__paragraph_host_exists">
                   <CmkIcon name="checkmark" />
-                  {{ _t(`Host "${host_name}" exists`) }}
+                  {{ _t(`Host "${hostName}" exists`) }}
                 </CmkParagraph>
               </div>
             </template>
             <template #actions>
               <CmkWizardButton
-                v-if="save_host"
+                v-if="saveHost"
                 :override-label="_t('Save host & next step')"
                 type="next"
-                @click="saveHost"
+                @click="saveHostAction"
               />
               <CmkWizardButton v-else-if="currentStep === 1" type="next" />
             </template>
           </CmkWizardStep>
 
-          <CmkWizardStep :index="2" :is-completed="() => currentStep > 2 || agent_installed">
+          <CmkWizardStep :index="2" :is-completed="() => currentStep > 2 || agentInstalled">
             <template #header>
               <CmkHeading> {{ _t('Download and install') }}</CmkHeading>
             </template>
             <template #content>
               <div v-if="currentStep === 2">
                 <CmkCode
-                  v-if="tab.install_msg && tab.install_cmd"
-                  :title="tab.install_msg"
-                  :code_txt="tab.install_cmd"
+                  v-if="tab.installMsg && tab.installCmd"
+                  :title="tab.installMsg"
+                  :code_txt="tab.installCmd"
                   class="code"
                 />
                 <div
                   v-if="
-                    tab.install_url &&
-                    !tab.install_cmd &&
-                    !(tab.install_deb_cmd && model === packageFormatDeb) &&
-                    !(tab.install_rpm_cmd && model === packageFormatRpm) &&
-                    !(tab.install_tgz_cmd && model === packageFormatTgz)
+                    tab.installUrl &&
+                    !tab.installCmd &&
+                    !(tab.installDebCmd && model === packageFormatDeb) &&
+                    !(tab.installRpmCmd && model === packageFormatRpm) &&
+                    !(tab.installTgzCmd && model === packageFormatTgz)
                   "
                   class="install_url__div"
                 >
-                  <CmkParagraph v-if="tab.install_url.msg">{{ tab.install_url.msg }}</CmkParagraph>
+                  <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
                   <CmkLinkCard
-                    :title="tab.install_url.title"
-                    :url="tab.install_url.url"
-                    :icon-name="tab.install_url.icon"
+                    :title="tab.installUrl.title"
+                    :url="tab.installUrl.url"
+                    :icon-name="tab.installUrl.icon"
                     :open-in-new-tab="true"
                   />
                 </div>
                 <CmkCode
-                  v-if="tab.install_msg && tab.install_deb_cmd && model === packageFormatDeb"
-                  :title="tab.install_msg"
-                  :code_txt="tab.install_deb_cmd"
+                  v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
+                  :title="tab.installMsg"
+                  :code_txt="tab.installDebCmd"
                   class="code"
                 />
                 <CmkCode
-                  v-if="tab.install_msg && tab.install_rpm_cmd && model === packageFormatRpm"
-                  :title="tab.install_msg"
-                  :code_txt="tab.install_rpm_cmd"
+                  v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
+                  :title="tab.installMsg"
+                  :code_txt="tab.installRpmCmd"
                   class="code"
                 />
                 <CmkCode
-                  v-if="tab.install_msg && tab.install_tgz_cmd && model === packageFormatTgz"
-                  :title="tab.install_msg"
-                  :code_txt="tab.install_tgz_cmd"
+                  v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
+                  :title="tab.installMsg"
+                  :code_txt="tab.installTgzCmd"
                   class="code"
                 />
               </div>
@@ -223,13 +223,13 @@ function getInitStep() {
             </template>
           </CmkWizardStep>
 
-          <CmkWizardStep :index="3" :is-completed="() => currentStep > 3 || !tab.registration_msg">
+          <CmkWizardStep :index="3" :is-completed="() => currentStep > 3 || !tab.registrationMsg">
             <template #header>
               <CmkHeading> {{ _t('Register agent') }}</CmkHeading>
             </template>
             <template #content>
               <div v-if="currentStep === 3">
-                <div v-if="tab.registration_msg && tab.registration_cmd">
+                <div v-if="tab.registrationMsg && tab.registrationCmd">
                   <div class="register-heading-row">
                     <CmkParagraph>
                       {{
@@ -241,8 +241,8 @@ function getInitStep() {
                     </CmkParagraph>
                   </div>
                   <CmkCode
-                    :title="tab.registration_msg"
-                    :code_txt="tab.registration_cmd"
+                    :title="tab.registrationMsg"
+                    :code_txt="tab.registrationCmd"
                     class="code"
                   />
                 </div>
@@ -256,7 +256,7 @@ function getInitStep() {
             <template v-if="currentStep === 3" #actions>
               <CmkWizardButton
                 type="finish"
-                :override-label="close_button_title"
+                :override-label="closeButtonTitle"
                 icon-name="connection_tests"
                 @click="close"
               />

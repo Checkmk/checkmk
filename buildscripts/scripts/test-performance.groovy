@@ -36,12 +36,22 @@ def main() {
             );
         }
 
-        test_jenkins_helper.execute_test([
-            name: make_target,
-            cmd: "make -C tests ${make_target}",
-            // output_file: "test-performance.txt",
-            container_name: "this-distro-container",
-        ]);
+        inside_container(
+            args: [
+                "--env HOME=/home/jenkins",
+            ],
+            set_docker_group_id: true,
+            ulimit_nofile: 1024,
+            mount_credentials: true,
+            privileged: true,
+        ) {
+            test_jenkins_helper.execute_test([
+                name: make_target,
+                cmd: "make -C tests ${make_target}",
+                // output_file: "test-performance.txt",
+                container_name: "this-distro-container",
+            ]);
+        }
 
         // stage("Archive / process test reports") {
         //     show_duration("archiveArtifacts") {

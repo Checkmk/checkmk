@@ -99,6 +99,7 @@ SRCS = [
     ":node_modules/vitest",
     ":node_modules/vitest-fail-on-console",
     ":node_modules/vue",
+    ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
     ":node_modules/vue3-gettext",
 ] + LOCALE_OUTS + glob([

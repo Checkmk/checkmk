@@ -23,7 +23,10 @@ def parse_dbs(string_table: StringTable) -> Section:
         if name == "[databases_start]":
             for name_inner, *_rest in lines:
                 if name_inner == "[databases_end]":
-                    headers = next(lines)[1:]
+                    try:
+                        headers = next(lines)[1:]
+                    except StopIteration:
+                        return dbs
                     break
                 dbs[f"{inst_name}{name_inner}"] = []
 

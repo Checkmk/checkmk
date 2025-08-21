@@ -59,3 +59,17 @@ def test_parse_function_for_stats_section() -> None:
             },
         ],
     }
+
+
+def test_parse_function_if_no_query_results_exist() -> None:
+    assert postgres.parse_dbs(
+        [
+            ["[databases_start]"],
+            ["postgres"],
+            ["ringman"],
+            ["[databases_end]"],
+        ]
+    ) == {
+        "ringman": [],
+        "postgres": [],
+    }

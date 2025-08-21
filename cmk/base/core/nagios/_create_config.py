@@ -43,7 +43,7 @@ from cmk.base.core.shared import (
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
+from cmk.checkengine.plugin_backend import plugin_index
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
@@ -605,7 +605,6 @@ def _process_services_data(
         # Services Dependencies for autochecks
         cfg.write_str(_get_dependencies(service_depends_on, hostname, service.description))
 
-        plugin = get_check_plugin(service.check_plugin_name, plugins)
         passive_service_attributes = _to_nagios_core_attributes(
             get_cmk_passive_service_attributes(
                 config_cache,
@@ -613,9 +612,6 @@ def _process_services_data(
                 service.description,
                 service.labels,
                 check_mk_attrs,
-                extra_icon=None
-                if plugin is None
-                else config_cache.make_extra_icon(plugin.check_ruleset_name, service.parameters),
             )
         )
 
@@ -666,7 +662,7 @@ def create_nagios_servicedefs(
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
-        get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None)
+        get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels)
     )
 
     services_ids, service_labels = _process_services_data(
@@ -736,7 +732,6 @@ def create_nagios_servicedefs(
                 hostname,
                 service_data.description,
                 active_service_labels,
-                extra_icon=None,
             )
         )
 
@@ -803,9 +798,7 @@ def create_nagios_servicedefs(
                 "service_description": service_discovery_name,
             }
             | _to_nagios_core_attributes(
-                get_service_attributes(
-                    config_cache, hostname, service_discovery_name, labels, extra_icon=None
-                )
+                get_service_attributes(config_cache, hostname, service_discovery_name, labels)
             )
             | _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name, labels)
             | {
@@ -924,7 +917,7 @@ def _create_custom_check(
     labels = _get_service_labels(config_cache.label_manager, hostname, description)
 
     service_attr = _to_nagios_core_attributes(
-        get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
+        get_service_attributes(config_cache, hostname, description, labels)
     )
     service_spec = (
         {
@@ -1044,9 +1037,7 @@ def _make_ping_only_spec(
             "check_command": f"{ping_command}!{arguments}",
         }
         | _to_nagios_core_attributes(
-            get_service_attributes(
-                config_cache, host_name, service_name, service_labels, extra_icon=None
-            )
+            get_service_attributes(config_cache, host_name, service_name, service_labels)
         )
         | _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
     )

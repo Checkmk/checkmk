@@ -192,14 +192,12 @@ def get_cmk_passive_service_attributes(
     service_name: ServiceName,
     service_labels: Labels,
     check_mk_attrs: ObjectAttributes,
-    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
         config_cache,
         host_name,
         service_name,
         service_labels,
-        extra_icon,
     )
 
     attrs["check_interval"] = check_mk_attrs["check_interval"]
@@ -212,10 +210,9 @@ def get_service_attributes(
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
-    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
-        config_cache, host_name, service_name, service_labels, extra_icon
+        config_cache, host_name, service_name, service_labels
     )
     attrs.update(
         ConfigCache._get_tag_attributes(
@@ -232,7 +229,6 @@ def _extra_service_attributes(
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
-    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 
@@ -252,9 +248,7 @@ def _extra_service_attributes(
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(
-        host_name, service_name, service_labels, extra_icon
-    )
+    actions = config_cache.icons_and_actions_of_service(host_name, service_name, service_labels)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs

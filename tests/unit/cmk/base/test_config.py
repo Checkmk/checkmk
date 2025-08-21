@@ -2127,7 +2127,6 @@ def test_config_cache_icons_and_actions(
             hostname,
             "CPU load",
             {},
-            None,
         )
     ) == sorted(result)
 

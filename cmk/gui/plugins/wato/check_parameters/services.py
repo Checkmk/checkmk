@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -16,11 +18,11 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ListOf,
     ListOfStrings,
+    Migrate,
     MonitoringState,
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import UserIconOrAction
 
 
 def _valuespec_inventory_services_rules():
@@ -102,78 +104,76 @@ def _item_spec_services():
     )
 
 
+def _drop_icon_key(p: Mapping[str, object]) -> Mapping[str, object]:
+    return {k: v for k, v in p.items() if k != "icon"}
+
+
 def _parameter_valuespec_services():
-    return Dictionary(
-        elements=[
-            (
-                "additional_servicenames",
-                ListOfStrings(
-                    title=_("Alternative names for the service"),
-                    help=_(
-                        "Here you can specify alternative names that the service might have. "
-                        "This helps when the exact spelling of the services can changed from "
-                        "one version to another."
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "additional_servicenames",
+                    ListOfStrings(
+                        title=_("Alternative names for the service"),
+                        help=_(
+                            "Here you can specify alternative names that the service might have. "
+                            "This helps when the exact spelling of the services can changed from "
+                            "one version to another."
+                        ),
                     ),
                 ),
-            ),
-            (
-                "states",
-                ListOf(
-                    valuespec=Tuple(
-                        orientation="horizontal",
-                        elements=[
-                            DropdownChoice(
-                                title=_("Expected state"),
-                                default_value="running",
-                                choices=[
-                                    (None, _("ignore the state")),
-                                    ("running", _("running")),
-                                    ("paused", _("paused")),
-                                    ("stopped", _("stopped")),
-                                ],
-                            ),
-                            DropdownChoice(
-                                title=_("Start type"),
-                                default_value="auto",
-                                choices=[
-                                    (None, _("ignore the start type")),
-                                    ("demand", _("demand")),
-                                    ("disabled", _("disabled")),
-                                    ("auto", _("auto")),
-                                    ("unknown", _("unknown (old agent)")),
-                                ],
-                            ),
-                            MonitoringState(
-                                title=_("Resulting state"),
-                                default_value=0,
-                            ),
-                        ],
-                    ),
-                    title=_("Services states"),
-                    help=_(
-                        "You can specify a separate monitoring state for each possible "
-                        "combination of service state and start type. If you do not use "
-                        "this parameter, then only running/auto will be assumed to be OK."
-                    ),
-                ),
-            ),
-            (
-                "else",
-                MonitoringState(
-                    title=_("State if no entry matches"),
-                    default_value=2,
-                ),
-            ),
-            (
-                "icon",
-                UserIconOrAction(
-                    title=_("Add custom icon or action"),
-                    help=_(
-                        "You can assign icons or actions to the found services in the status GUI."
+                (
+                    "states",
+                    ListOf(
+                        valuespec=Tuple(
+                            orientation="horizontal",
+                            elements=[
+                                DropdownChoice(
+                                    title=_("Expected state"),
+                                    default_value="running",
+                                    choices=[
+                                        (None, _("ignore the state")),
+                                        ("running", _("running")),
+                                        ("paused", _("paused")),
+                                        ("stopped", _("stopped")),
+                                    ],
+                                ),
+                                DropdownChoice(
+                                    title=_("Start type"),
+                                    default_value="auto",
+                                    choices=[
+                                        (None, _("ignore the start type")),
+                                        ("demand", _("demand")),
+                                        ("disabled", _("disabled")),
+                                        ("auto", _("auto")),
+                                        ("unknown", _("unknown (old agent)")),
+                                    ],
+                                ),
+                                MonitoringState(
+                                    title=_("Resulting state"),
+                                    default_value=0,
+                                ),
+                            ],
+                        ),
+                        title=_("Services states"),
+                        help=_(
+                            "You can specify a separate monitoring state for each possible "
+                            "combination of service state and start type. If you do not use "
+                            "this parameter, then only running/auto will be assumed to be OK."
+                        ),
                     ),
                 ),
-            ),
-        ],
+                (
+                    "else",
+                    MonitoringState(
+                        title=_("State if no entry matches"),
+                        default_value=2,
+                    ),
+                ),
+            ],
+        ),
+        migrate=_drop_icon_key,
     )
 
 

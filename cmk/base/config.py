@@ -2991,38 +2991,23 @@ class ConfigCache:
 
         return attrs
 
-    def make_extra_icon(
-        self, check_ruleset_name: RuleSetName | None, params: TimespecificParameters | None
-    ) -> str | None:
-        # Some WATO rules might register icons on their own
-        if not isinstance(params, dict):
-            # Note: according to the typing this function will always return None,
-            # meaning the 'icon' parameters of the 'ps' and 'services' rulesets do not do anything.
-            # It seems like this last worked in 2.0.0. CMK-16562
-            return None
-        return str(params.get("icon")) if str(check_ruleset_name) in {"ps", "services"} else None
-
     def icons_and_actions_of_service(
         self,
         host_name: HostName,
         service_name: ServiceName,
         service_labels: Labels,
-        extra_icon: str | None,
     ) -> list[str]:
-        actions = set(
-            self.ruleset_matcher.get_service_values_all(
-                host_name,
-                service_name,
-                service_labels,
-                service_icons_and_actions,
-                self.label_manager.labels_of_host,
+        return list(
+            set(
+                self.ruleset_matcher.get_service_values_all(
+                    host_name,
+                    service_name,
+                    service_labels,
+                    service_icons_and_actions,
+                    self.label_manager.labels_of_host,
+                )
             )
         )
-
-        if extra_icon:
-            actions.add(extra_icon)
-
-        return list(actions)
 
     def servicegroups_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels

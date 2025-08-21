@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Mapping
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -30,6 +31,7 @@ from cmk.gui.valuespec import (
     Labels,
     ListChoice,
     ListOf,
+    Migrate,
     MonitoringState,
     Percentage,
     RegExp,
@@ -37,7 +39,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato import UserIconOrAction
 
 # This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
 # be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use
@@ -387,13 +388,6 @@ def process_level_elements():
                 default_value=0,
             ),
         ),
-        (
-            "icon",
-            UserIconOrAction(
-                title=_("Add custom icon or action"),
-                help=_("You can assign icons or actions to the found services in the status GUI."),
-            ),
-        ),
     ]
 
 
@@ -597,16 +591,23 @@ def _item_spec_ps():
     )
 
 
-def _parameter_valuespec_ps() -> Dictionary:
-    return Dictionary(
-        elements=process_level_elements(),
-        ignored_keys=[
-            "process",
-            "match_groups",
-            "user",
-            "cgroup",
-        ],
-        required_keys=["cpu_rescale_max"],
+def _drop_icon_key(p: Mapping[str, object]) -> dict[str, object]:
+    return {k: v for k, v in p.items() if k != "icon"}
+
+
+def _parameter_valuespec_ps() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=process_level_elements(),
+            ignored_keys=[
+                "process",
+                "match_groups",
+                "user",
+                "cgroup",
+            ],
+            required_keys=["cpu_rescale_max"],
+        ),
+        migrate=_drop_icon_key,
     )
 
 
@@ -636,15 +637,18 @@ def _manual_item_spec_ps():
     )
 
 
-def _manual_parameter_valuespec_ps() -> Dictionary:
-    return Dictionary(
-        elements=[
-            ("process", process_match_options()),
-            ("user", user_match_options()),
-        ]
-        + process_level_elements(),
-        ignored_keys=["match_groups"],
-        required_keys=["cpu_rescale_max"],
+def _manual_parameter_valuespec_ps() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                ("process", process_match_options()),
+                ("user", user_match_options()),
+            ]
+            + process_level_elements(),
+            ignored_keys=["match_groups"],
+            required_keys=["cpu_rescale_max"],
+        ),
+        migrate=_drop_icon_key,
     )
 
 
@@ -710,19 +714,22 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             ),
             (
                 "default_params",
-                Dictionary(
-                    title=_("Default parameters for detected services"),
-                    help=_(
-                        "Here you can select default parameters that are being set "
-                        "for detected services. Note: the preferred way for setting parameters is to use "
-                        'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
-                        "State and Count of Processes</a> instead. "
-                        "A change there will immediately be active, while a change in this rule "
-                        "requires a re-discovery of the services."
+                Migrate(
+                    valuespec=Dictionary(
+                        title=_("Default parameters for detected services"),
+                        help=_(
+                            "Here you can select default parameters that are being set "
+                            "for detected services. Note: the preferred way for setting parameters is to use "
+                            'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
+                            "State and Count of Processes</a> instead. "
+                            "A change there will immediately be active, while a change in this rule "
+                            "requires a re-discovery of the services."
+                        ),
+                        elements=process_level_elements(),
+                        ignored_keys=["match_groups"],
+                        required_keys=["cpu_rescale_max"],
                     ),
-                    elements=process_level_elements(),
-                    ignored_keys=["match_groups"],
-                    required_keys=["cpu_rescale_max"],
+                    migrate=_drop_icon_key,
                 ),
             ),
         ],

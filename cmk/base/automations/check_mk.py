@@ -3765,7 +3765,6 @@ class AutomationActiveCheck(Automation):
             hostname,
             service_desc,
             config_cache.label_manager.labels_of_service(hostname, service_desc, discovered_labels),
-            extra_icon=None,
         )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
         macros.update(config.get_resource_macros())
@@ -3781,7 +3780,7 @@ class AutomationActiveCheck(Automation):
         config_cache: ConfigCache,
     ) -> str:
         service_attrs = get_service_attributes(
-            config_cache, host_name, service_name, service_labels, extra_icon=None
+            config_cache, host_name, service_name, service_labels
         )
         service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
 

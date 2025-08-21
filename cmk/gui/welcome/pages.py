@@ -17,9 +17,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sample_config import get_default_notification_rule
-from cmk.gui.watolib.sample_config._constants import SHIPPED_RULES
 from cmk.gui.welcome.registry import welcome_url_registry
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
 from cmk.utils.notify_types import EventRule
@@ -47,18 +45,8 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if "adjust_services" in user.welcome_completed_steps:
         yield FinishedEnum.adjust_services
 
-    rules = (
-        SingleRulesetRecursively.load_single_ruleset_recursively(name="host_contactgroups")
-        .get("host_contactgroups")
-        .get_rules()
-    )
-    if len(rules) > 1:
+    if "assign_responsibilities" in user.welcome_completed_steps:
         yield FinishedEnum.assign_responsibilities
-
-    if len(rules) == 1:
-        _folder, _rule_index, rule = rules[0]
-        if [rule.to_config()] != SHIPPED_RULES["host_contactgroups"]:
-            yield FinishedEnum.assign_responsibilities
 
     notification_rules = NotificationRuleConfigFile().load_for_reading()
     # Creation of a new notification rule

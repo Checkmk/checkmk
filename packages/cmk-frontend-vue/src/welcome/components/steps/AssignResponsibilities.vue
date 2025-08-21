@@ -15,11 +15,14 @@ import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import { ref } from 'vue'
+import { markStepAsComplete, type StepId } from '@/welcome/components/steps/utils.ts'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<{
+defineProps<{
   step: number
+  stepId: StepId
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -44,12 +47,12 @@ const currentStep = ref(0)
       }}
     </StepParagraph>
 
-    <CmkWizard v-model="currentStep" mode="overview">
+    <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a contact group') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 0" #content>
           <StepParagraph>
             {{ _t('On default, there is one contact group available "Everything".') }}
             <br />
@@ -59,10 +62,13 @@ const currentStep = ref(0)
             <CmkLinkCard
               icon-name="contactgroups"
               :title="_t('Contact groups')"
-              :url="props.urls.create_contactgroups"
+              :url="urls.create_contactgroups"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
         </template>
       </CmkWizardStep>
 
@@ -70,7 +76,7 @@ const currentStep = ref(0)
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign users to a contact group') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 1" #content>
           <StepParagraph>
             {{
               _t(
@@ -82,10 +88,14 @@ const currentStep = ref(0)
             <CmkLinkCard
               icon-name="users"
               :title="_t('Users')"
-              :url="props.urls.users"
+              :url="urls.users"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
 
@@ -93,7 +103,7 @@ const currentStep = ref(0)
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign the contact group to hosts') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 2" #content>
           <StepParagraph>
             {{
               _t(
@@ -111,10 +121,14 @@ const currentStep = ref(0)
             <CmkLinkCard
               icon-name="assign"
               :title="_t('Assignment of hosts to contact groups')"
-              :url="props.urls.assign_host_to_contactgroups"
+              :url="urls.assign_host_to_contactgroups"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
 
@@ -122,15 +136,24 @@ const currentStep = ref(0)
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 3" #content>
           <StepCardsRow>
             <CmkLinkCard
               icon-name="main_changes"
               :title="_t('Activate changes')"
-              :url="props.urls.activate_changes"
+              :url="urls.activate_changes"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton
+            v-if="!accomplished && stepId"
+            type="finish"
+            :override-label="_t('Mark as complete')"
+            @click="markStepAsComplete(urls.mark_step_completed, stepId)"
+          />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
     </CmkWizard>

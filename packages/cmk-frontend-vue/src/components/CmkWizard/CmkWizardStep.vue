@@ -23,7 +23,7 @@ function onClickGoTo() {
   <li
     class="cmk-wizard-step-row"
     :class="{
-      'wizard-step--active': context.isSelected(props.index) && context.mode() !== 'overview',
+      'wizard-step--active': context.isSelected(index) && context.mode() !== 'overview',
       'wizard-step--complete': isCompleted() && context.mode() !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
@@ -31,7 +31,7 @@ function onClickGoTo() {
     <div class="cmk-wizard-step__slots">
       <slot name="header"></slot>
       <slot name="content"></slot>
-      <div class="cmk-wizard-step__actions">
+      <div v-if="context.isSelected(index)" class="cmk-wizard-step__actions">
         <slot name="actions"></slot>
       </div>
     </div>

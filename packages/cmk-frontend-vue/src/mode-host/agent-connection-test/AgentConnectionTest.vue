@@ -360,6 +360,7 @@ function onClose() {
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"
         :save-host="agentSlideout.save_host"
+        :close-button-title="isPushMode ? _t('Close slideout') : _t('Close & test connection')"
         :agent-installed="isNotRegistered"
         :is-push-mode="isPushMode"
         @close="onClose"

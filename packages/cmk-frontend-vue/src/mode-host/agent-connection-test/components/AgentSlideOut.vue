@@ -48,6 +48,7 @@ const props = defineProps<{
   dialogMsg: string
   tabs: AgentSlideOutTabs[]
   allAgentsUrl: string
+  closeButtonTitle: string
   saveHost: boolean
   agentInstalled: boolean
   isPushMode: boolean
@@ -56,7 +57,6 @@ const props = defineProps<{
 
 const { _t } = usei18n()
 
-const closeButtonTitle = props.isPushMode ? _t('Close slideout') : _t('Close & test connection')
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')

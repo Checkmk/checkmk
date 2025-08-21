@@ -21,7 +21,7 @@ Args = argparse.Namespace
             AzureSubscription(
                 id="subscription_id_12345678",
                 name="subscription name",
-                tags=None,
+                tags={},
                 safe_hostnames=False,
             ),
             "subscription_name",
@@ -48,17 +48,17 @@ RESOURCE_GROUPS_RESPONSE = {
         {
             "subscriptionId": "subscription_id_12345678",
             "displayName": "Subscription Name 1",
-            "tags": "",
+            "tags": {"key1": "value1", "key2": "value2"},
         },
         {
             "subscriptionId": "subscription_id_987654321",
             "displayName": "Subscription Name 2",
-            "tags": "",
+            "tags": {},
         },
         {
             "subscriptionId": "subscription_id_abcdefgh",
             "displayName": "Subscription Name 3",
-            "tags": "",
+            "tags": {},
         },
     ]
 }
@@ -74,9 +74,12 @@ RESOURCE_GROUPS_RESPONSE = {
                 client="",
                 secret="",
                 authority="global",
+                no_subscriptions=True,
                 all_subscriptions=False,
                 subscriptions=None,
                 safe_hostnames=False,
+                subscriptions_require_tag=[],
+                subscriptions_require_tag_value=[],
             ),
             set(),
         ),
@@ -87,9 +90,12 @@ RESOURCE_GROUPS_RESPONSE = {
                 client="",
                 secret="",
                 authority="global",
+                no_subscriptions=False,
                 all_subscriptions=True,
                 subscriptions=None,
                 safe_hostnames=False,
+                subscriptions_require_tag=[],
+                subscriptions_require_tag_value=[],
             ),
             {
                 "subscription_id_12345678",
@@ -104,17 +110,54 @@ RESOURCE_GROUPS_RESPONSE = {
                 client="",
                 secret="",
                 authority="global",
+                no_subscriptions=False,
                 all_subscriptions=False,
                 subscriptions=[
                     "subscription_id_987654321",
                     "subscription_id_abcdefgh",
                 ],
                 safe_hostnames=False,
+                subscriptions_require_tag=[],
+                subscriptions_require_tag_value=[],
             ),
             {
                 "subscription_id_987654321",
                 "subscription_id_abcdefgh",
             },
+        ),
+        (
+            Args(
+                proxy="",
+                tenant="tenant",
+                client="",
+                secret="",
+                authority="global",
+                no_subscriptions=False,
+                all_subscriptions=False,
+                subscriptions=None,
+                safe_hostnames=False,
+                subscriptions_require_tag=[("key2")],
+                subscriptions_require_tag_value=[("key1", "value1")],
+            ),
+            {
+                "subscription_id_12345678",
+            },
+        ),
+        (
+            Args(
+                proxy="",
+                tenant="tenant",
+                client="",
+                secret="",
+                authority="global",
+                no_subscriptions=False,
+                all_subscriptions=False,
+                subscriptions=None,
+                safe_hostnames=False,
+                subscriptions_require_tag=[("key_non_existent")],
+                subscriptions_require_tag_value=[("key1", "value1")],
+            ),
+            set(),
         ),
     ],
 )
@@ -144,12 +187,15 @@ async def test_get_subscriptions_wrong_subscription(mock_api_client: AsyncMock) 
         client="",
         secret="",
         authority="global",
+        no_subscriptions=False,
         all_subscriptions=False,
         subscriptions=[
             "subscription_id_987654321",
             "non_existent_subscription_id",
         ],
         safe_hostnames=False,
+        subscriptions_require_tag=[],
+        subscriptions_require_tag_value=[],
     )
 
     mock_api_client.request_async.return_value = RESOURCE_GROUPS_RESPONSE

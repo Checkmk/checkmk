@@ -42,6 +42,7 @@ class AzureParams(BaseModel):
         tuple[Literal["no_subscriptions"], None]
         | tuple[Literal["explicit_subscriptions"], list[str]]
         | tuple[Literal["all_subscriptions"], None]
+        | tuple[Literal["tag_matching_subscriptions"], list[TagBased]]
     )
     tenant: str
     client: str
@@ -57,13 +58,20 @@ class AzureParams(BaseModel):
     safe_hostnames: bool = False
 
 
-def _tag_based_args(tag_based: list[TagBased]) -> list[str]:
+def _tag_based_args(tag_based: list[TagBased], is_subscription: bool = False) -> list[str]:
     args = []
     for tag_config in tag_based:
         if tag_config.condition[0] == "exists":
-            args += ["--require-tag", tag_config.tag]
+            args += [
+                "--subscriptions-require-tag" if is_subscription else "--require-tag",
+                tag_config.tag,
+            ]
         if isinstance(tag_config.condition, tuple) and tag_config.condition[0] == "equals":
-            args += ["--require-tag-value", tag_config.tag, tag_config.condition[1]]
+            args += [
+                "--subscriptions-require-tag-value" if is_subscription else "--require-tag-value",
+                tag_config.tag,
+                tag_config.condition[1],
+            ]
     return args
 
 
@@ -94,7 +102,7 @@ def agent_azure_arguments(
         ]
 
     if params.subscription[0] == "no_subscriptions":
-        ...
+        args += ["--no-subscriptions"]
     elif params.subscription[0] == "explicit_subscriptions":
         args += [
             replace_macros(item, host_config.macros)
@@ -103,6 +111,8 @@ def agent_azure_arguments(
         ]
     elif params.subscription[0] == "all_subscriptions":
         args += ["--all-subscriptions"]
+    elif params.subscription[0] == "tag_matching_subscriptions":
+        args += _tag_based_args(params.subscription[1], is_subscription=True)
     else:
         assert_never(params.subscription[0])
 

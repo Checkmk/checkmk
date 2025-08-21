@@ -115,6 +115,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 Secret(0).unsafe(),
                 "--authority",
                 "global",
+                "--no-subscriptions",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",

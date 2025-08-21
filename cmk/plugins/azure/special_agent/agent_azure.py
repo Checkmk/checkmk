@@ -269,11 +269,9 @@ BULK_QUERIED_RESOURCES = {
 
 
 class AzureSubscription:
-    def __init__(
-        self, id: str, name: str, tags: Mapping[str, str] | None, safe_hostnames: bool
-    ) -> None:
+    def __init__(self, id: str, name: str, tags: Mapping[str, str], safe_hostnames: bool) -> None:
         self.id: Final[str] = id
-        self.tags: Final[Mapping[str, str] | None] = tags
+        self.tags: Final[Mapping[str, str]] = tags
         self._name: Final[str] = name
         self._valid_hostname: Final[str] = HostAddress.project_valid(name)
 
@@ -322,6 +320,12 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
 
     group_subscription = parser.add_mutually_exclusive_group(required=False)
+
+    group_subscription.add_argument(
+        "--no-subscriptions",
+        action="store_true",
+        help="Do not monitor subscriptions",
+    )
     group_subscription.add_argument(
         "--subscription",
         dest="subscriptions",
@@ -333,6 +337,23 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "--all-subscriptions",
         action="store_true",
         help="Monitor all available Azure subscriptions",
+    )
+    group_subscription.add_argument(
+        "--subscriptions-require-tag",
+        default=[],
+        metavar="TAG",
+        action="append",
+        help="""Only monitor subscriptions that have the specified TAG.
+              To require multiple tags, provide the option more than once.""",
+    )
+    group_subscription.add_argument(
+        "--subscriptions-require-tag-value",
+        default=[],
+        metavar=("TAG", "VALUE"),
+        nargs=2,
+        action="append",
+        help="""Only monitor subscriptions that have the specified TAG set to VALUE.
+             To require multiple tags, provide the option more than once.""",
     )
 
     # REQUIRED
@@ -516,7 +537,7 @@ class TagBasedConfig:
         self._required = required
         self._values = key_values
 
-    def is_configured(self, resource: AzureResource) -> bool:
+    def is_configured(self, resource: AzureResource | AzureSubscription) -> bool:
         if not all(k in resource.tags for k in self._required):
             return False
         for key, val in self._values:
@@ -2218,7 +2239,7 @@ async def main_subscription(
 
 
 async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
-    if not args.subscriptions and not args.all_subscriptions:
+    if args.no_subscriptions:
         LOGGER.info("No subscriptions selected")
         return set()
 
@@ -2238,7 +2259,7 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
             item["subscriptionId"]: AzureSubscription(
                 id=item["subscriptionId"],
                 name=item["displayName"],
-                tags=item.get("tags"),
+                tags=item.get("tags", {}),
                 safe_hostnames=args.safe_hostnames,
             )
             for item in response.get("value", [])
@@ -2247,6 +2268,21 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
     if args.all_subscriptions:
         LOGGER.info("Using all subscriptions from API: %s", ",".join(subscriptions.keys()))
         return set(subscriptions.values())
+
+    if args.subscriptions_require_tag or args.subscriptions_require_tag_value:
+        tag_based_config = TagBasedConfig(
+            args.subscriptions_require_tag, args.subscriptions_require_tag_value
+        )
+        monitored_subscriptions = {
+            subscription
+            for subscription in list(subscriptions.values())
+            if tag_based_config.is_configured(subscription)
+        }
+        LOGGER.info(
+            "Using tag matching subscriptions: %s",
+            ",".join(subscription.id for subscription in monitored_subscriptions),
+        )
+        return monitored_subscriptions
 
     monitored_subscriptions = set()
     for subscription in args.subscriptions:

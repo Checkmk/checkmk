@@ -200,7 +200,7 @@ def test_write_group_info(
     write_group_info(
         monitored_groups,
         monitored_resources,
-        AzureSubscription("subscription_id", "subscription_name", None, False),
+        AzureSubscription("subscription_id", "subscription_name", {}, False),
         group_tags,
     )
     captured = capsys.readouterr()

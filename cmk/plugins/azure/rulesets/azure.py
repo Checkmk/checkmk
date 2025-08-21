@@ -137,7 +137,7 @@ def _migrate_tag_based_config(values: object) -> dict:
     raise TypeError(values)
 
 
-def _special_agents_azure_tag_based_config():
+def _special_agents_azure_tag_based_config_resources() -> DictElement:
     return DictElement(
         parameter_form=List(
             custom_validate=(validators.LengthInRange(min_value=1),),
@@ -176,7 +176,56 @@ def _special_agents_azure_tag_based_config():
             ),
             title=Title("Resources matching tag based criteria"),
             add_element_label=Label("Add resource tag"),
-        )
+            help_text=Help(
+                "Add the tags you want to use to filter the resources. "
+                "Only resources with every tags matching, will be monitored."
+            ),
+        ),
+    )
+
+
+def _special_agents_azure_tag_based_config_subscriptions() -> List:
+    return List(
+        custom_validate=(validators.LengthInRange(min_value=1),),
+        element_template=Dictionary(
+            migrate=_migrate_tag_based_config,
+            elements={
+                "tag": DictElement(
+                    parameter_form=String(
+                        title=Title("The subscription tag"),
+                        custom_validate=(validators.LengthInRange(min_value=1),),
+                    ),
+                    required=True,
+                ),
+                "condition": DictElement(
+                    parameter_form=CascadingSingleChoice(
+                        title=None,
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="exists",
+                                title=Title("exists"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="equals",
+                                title=Title("is"),
+                                parameter_form=String(
+                                    title=Title("Tag value"),
+                                ),
+                            ),
+                        ],
+                        prefill=DefaultValue("exists"),
+                    ),
+                    required=True,
+                ),
+            },
+        ),
+        title=Title("Subscriptions matching tag based criteria"),
+        add_element_label=Label("Add subscription tag"),
+        help_text=Help(
+            "Add the tags you want to use to filter the subscriptions. "
+            "Only subscriptions with every tags matching, will be monitored."
+        ),
     )
 
 
@@ -243,6 +292,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         name="all_subscriptions",
                         title=Title("Monitor all subscriptions"),
                         parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="tag_matching_subscriptions",
+                        title=Title("Tag matching subscriptions"),
+                        parameter_form=_special_agents_azure_tag_based_config_subscriptions(),
                     ),
                 ],
                 prefill=DefaultValue("no_subscriptions"),
@@ -355,7 +409,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 % ("12000", "200"),
                 elements={
                     "explicit": _special_agents_azure_explicit_config(),
-                    "tag_based": _special_agents_azure_tag_based_config(),
+                    "tag_based": _special_agents_azure_tag_based_config_resources(),
                 },
             ),
             required=True,

@@ -103,12 +103,12 @@ def check_postfix_mailq(item: str, params: Mapping[str, Any], section: Section) 
     if item not in section:
         return
 
-    if not isinstance(params, dict):
+    if not isinstance(params, dict) and isinstance(params, tuple):
         params = {"deferred": params}
 
     for mail_queue in section[item]:
         _queue_name = mail_queue.name if mail_queue.name else ""
-        warn, crit = params.get({"mail": "deferred"}.get(_queue_name, _queue_name), (None, None))
+        warn, crit = params.get(_queue_name if _queue_name != "mail" else "deferred", (None, None))
         length_limit: LevelsT = ("no_levels", None)
         if warn is not None and crit is not None:
             length_limit = ("fixed", (warn, crit))

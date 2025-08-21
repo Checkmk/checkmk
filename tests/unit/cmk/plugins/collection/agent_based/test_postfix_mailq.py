@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.checkengine.parameters import Parameters
 from cmk.plugins.collection.agent_based.postfix_mailq import (
     check_postfix_mailq,
     DEFAULT_ITEM_NAME,
@@ -166,10 +167,10 @@ def test_discovery_postfix_mailq() -> None:
 def test_check_postfix_mailq() -> None:
     item = "deferred"
     params = {"deferred": (10, 20)}
-    parsed: Section = {
+    section: Section = {
         "deferred": [PostfixMailQueue(name="deferred", size=2048, length=1)],
     }
-    result = list(check_postfix_mailq(item, params, parsed))
+    result = list(check_postfix_mailq(item, params, section))
     assert len(result) == 4
     assert isinstance(result[0], Result)
     assert isinstance(result[1], Metric)
@@ -180,3 +181,21 @@ def test_check_postfix_mailq() -> None:
     assert result[1] == Metric("length", 1, levels=(10.0, 20.0))
     assert result[2] == Result(state=State.OK, summary="deferred queue size: 2.00 KiB")
     assert result[3] == Metric("size", 2048)
+
+
+def test_check_postfix_mailq_with_parameters_class() -> None:
+    """This test validates that the Parameters class works with check_postfix_mailq function."""
+    params = Parameters({"active": (200, 300), "deferred": (10, 20)})
+    section = {
+        "default": [
+            PostfixMailQueue(name="deferred", size=256, length=40),
+            PostfixMailQueue(name="active", size=4, length=0),
+        ]
+    }
+    result = list(check_postfix_mailq("default", params, section))
+
+    assert (
+        Result(state=State.CRIT, summary="deferred queue length: 40 (warn/crit at 10/20)") in result
+    )
+    assert Metric("length", 40, levels=(10.0, 20.0)) in result
+    assert Metric("mail_queue_active_length", 0, levels=(200.0, 300.0)) in result

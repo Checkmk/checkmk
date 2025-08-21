@@ -16,25 +16,13 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.watolib.notifications import NotificationRuleConfigFile
-from cmk.gui.watolib.sample_config import get_default_notification_rule
 from cmk.gui.welcome.registry import welcome_url_registry
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
-from cmk.utils.notify_types import EventRule
 from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
-
-
-def _compare_notification_rules(
-    notification_rule_1: EventRule,
-    notification_rule_2: EventRule,
-) -> bool:
-    return {k: v for k, v in notification_rule_1.items() if k != "rule_id"} == {
-        k: v for k, v in notification_rule_2.items() if k != "rule_id"
-    }
 
 
 def _get_finished_stages() -> Generator[FinishedEnum]:
@@ -48,14 +36,7 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if "assign_responsibilities" in user.welcome_completed_steps:
         yield FinishedEnum.assign_responsibilities
 
-    notification_rules = NotificationRuleConfigFile().load_for_reading()
-    # Creation of a new notification rule
-    if len(notification_rules) > 1:
-        yield FinishedEnum.enable_notifications
-    # Adjusted the built-in notification rule
-    if len(notification_rules) == 1 and not _compare_notification_rules(
-        notification_rules[0], get_default_notification_rule()
-    ):
+    if "enable_notifications" in user.welcome_completed_steps:
         yield FinishedEnum.enable_notifications
 
     # Creation of a custom dashboard

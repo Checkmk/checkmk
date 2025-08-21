@@ -15,11 +15,14 @@ import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import { ref } from 'vue'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import { markStepAsComplete, type StepId } from '@/welcome/components/steps/utils.ts'
 
 const { _t } = usei18n()
 
 defineProps<{
   step: number
+  stepId: StepId
   urls: WelcomeUrls
   accomplished: boolean
 }>()
@@ -45,12 +48,12 @@ const currentStep = ref(0)
       }}
     </StepParagraph>
 
-    <CmkWizard v-model="currentStep" mode="overview">
+    <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a notification rule') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 0" #content>
           <StepParagraph>
             {{
               _t(
@@ -67,13 +70,16 @@ const currentStep = ref(0)
             />
           </StepCardsRow>
         </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+        </template>
       </CmkWizardStep>
 
       <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('Send a test notification') }}</CmkHeading>
         </template>
-        <template #content>
+        <template v-if="currentStep === 1" #content>
           <StepParagraph>
             {{
               _t(
@@ -89,6 +95,15 @@ const currentStep = ref(0)
               :open-in-new-tab="false"
             />
           </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton
+            v-if="!accomplished && stepId"
+            type="finish"
+            :override-label="_t('Mark as complete')"
+            @click="markStepAsComplete(urls.mark_step_completed, stepId)"
+          />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
     </CmkWizard>

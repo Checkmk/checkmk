@@ -47,14 +47,14 @@ const docsButtonTitle = _t('Read Checkmk user guide')
 
 <template>
   <AgentDownloadDialog
-    :dialog_title="dialogTitle"
-    :dialog_message="dialogMessage"
-    :slide_in_title="slideInTitle"
-    :slide_in_button_title="slideInButtonTitle"
-    :docs_button_title="docsButtonTitle"
-    :close_button_title="_t('Close & run service discovery')"
-    :agent_slideout="agent_slideout"
-    :all_agents_url="all_agents_url"
-    :is_not_registered="output.includes(notRegisteredSearchTerm)"
+    :dialog-title="dialogTitle"
+    :dialog-message="dialogMessage"
+    :slide-in-title="slideInTitle"
+    :slide-in-button-title="slideInButtonTitle"
+    :docs-button-title="docsButtonTitle"
+    :close-button-title="_t('Close & run service discovery')"
+    :agent-slideout="agent_slideout"
+    :all-agents-url="all_agents_url"
+    :is-not-registered="output.includes(notRegisteredSearchTerm)"
   />
 </template>

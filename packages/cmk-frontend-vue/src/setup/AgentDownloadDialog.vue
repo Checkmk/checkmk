@@ -13,15 +13,15 @@ import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
 interface Props {
-  dialog_title: string
-  dialog_message: string
-  slide_in_title: string
-  slide_in_button_title: string
-  docs_button_title: string
-  close_button_title: string
-  agent_slideout: AgentSlideout
-  all_agents_url: string
-  is_not_registered: boolean
+  dialogTitle: string
+  dialogMessage: string
+  slideInTitle: string
+  slideInButtonTitle: string
+  docsButtonTitle: string
+  closeButtonTitle: string
+  agentSlideout: AgentSlideout
+  allAgentsUrl: string
+  isNotRegistered: boolean
 }
 
 defineProps<Props>()
@@ -48,18 +48,18 @@ const tooltipOpen = ref(true)
         <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
         <button class="tooltip-close" @click.prevent="tooltipOpen = false">×</button>
         <CmkDialog
-          :title="dialog_title"
-          :message="dialog_message"
+          :title="dialogTitle"
+          :message="dialogMessage"
           :buttons="[
             {
-              title: slide_in_button_title,
+              title: slideInButtonTitle,
               onclick: () => {
                 slideInOpen = true
               },
               variant: 'info'
             },
             {
-              title: docs_button_title,
+              title: docsButtonTitle,
               onclick: () => {
                 openDocs()
               },
@@ -73,18 +73,18 @@ const tooltipOpen = ref(true)
   </TooltipProvider>
   <CmkSlideInDialog
     :open="slideInOpen"
-    :header="{ title: slide_in_title, closeButton: true }"
+    :header="{ title: slideInTitle, closeButton: true }"
     @close="slideInOpen = false"
   >
     <AgentSlideOutContent
-      :all-agents-url="all_agents_url"
-      :host-name="agent_slideout.host_name"
-      :agent-install-cmds="agent_slideout.agent_install_cmds"
-      :agent-registration-cmds="agent_slideout.agent_registration_cmds"
-      :legacy-agent-url="agent_slideout.legacy_agent_url"
-      :close-button-title="close_button_title"
-      :save-host="agent_slideout.save_host"
-      :agent-installed="is_not_registered"
+      :all-agents-url="allAgentsUrl"
+      :host-name="agentSlideout.host_name"
+      :agent-install-cmds="agentSlideout.agent_install_cmds"
+      :agent-registration-cmds="agentSlideout.agent_registration_cmds"
+      :legacy-agent-url="agentSlideout.legacy_agent_url"
+      :close-button-title="closeButtonTitle"
+      :save-host="agentSlideout.save_host"
+      :agent-installed="isNotRegistered"
       :is-push-mode="false"
       @close="((slideInOpen = false), (tooltipOpen = false))"
     />

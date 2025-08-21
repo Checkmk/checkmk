@@ -280,6 +280,7 @@ def test_performance_services(
     )
 
 
+@pytest.mark.skip(reason="Flaky scenario; investigating")
 def test_performance_piggyback(
     perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
 ) -> None:

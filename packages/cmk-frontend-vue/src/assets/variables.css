@@ -217,7 +217,7 @@
     --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240, 240, 240);
-    --help-text-bg-color: var(--ux-theme-3);
+    --help-text-bg-color: var(--ux-theme-5);
     --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
@@ -289,8 +289,8 @@
     --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46, 44, 44);
-    --help-text-bg-color: var(--ux-theme-3);
-    --help-text-font-color: var(--white);
+    --default-dialog-bg-color: var(--ux-theme-5);
+    --default-dialog-font-color: var(--white);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-midnight-grey-100);

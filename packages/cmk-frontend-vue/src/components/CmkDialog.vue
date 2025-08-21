@@ -4,13 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { isWarningDismissed } from '@/lib/userConfig'
+import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
 import usePersistentRef from '@/lib/usePersistentRef'
+import { isWarningDismissed } from '@/lib/userConfig'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps<{
   title?: string
@@ -72,8 +72,8 @@ div.cmk-dialog {
   display: flex;
 
   div.cmk-dialog__content {
-    background-color: var(--help-text-bg-color);
-    color: var(--help-text-font-color);
+    background-color: var(--default-dialog-bg-color);
+    color: var(--default-dialog-font-color);
     border-radius: 0 4px 4px 0;
     flex-grow: 1;
     padding: var(--spacing);

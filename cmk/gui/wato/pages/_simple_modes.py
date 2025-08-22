@@ -27,7 +27,12 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
-from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.private import (
+    Catalog,
+    CommentTextArea,
+    LegacyValueSpec,
+    SingleChoiceExtended,
+)
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_data_from_frontend,
     render_form_spec,
@@ -72,7 +77,13 @@ from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import DictElement, FieldSize, FormSpec
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    FieldSize,
+    FormSpec,
+    MultipleChoice,
+    SingleChoice,
+)
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
@@ -101,6 +112,11 @@ class SimpleModeType(Generic[_T], abc.ABC):
 
     def site_valuespec(self) -> DualListChoice | VSSetupSiteChoice:
         return VSSetupSiteChoice()
+
+    def site_form_spec(
+        self,
+    ) -> SingleChoice | MultipleChoice | SingleChoiceExtended:
+        return create_setup_site_choice()
 
     @abc.abstractmethod
     def can_be_disabled(self) -> bool:
@@ -633,7 +649,9 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             )
 
         if self._mode_type.is_site_specific():
-            elements["site"] = form_specs.DictElement(parameter_form=create_setup_site_choice())
+            elements["site"] = form_specs.DictElement(
+                parameter_form=self._mode_type.site_form_spec()
+            )
 
         return elements
 

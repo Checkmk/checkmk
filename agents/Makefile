@@ -63,9 +63,11 @@ waitmax: waitmax.c
 setversion:
 	# IMPORTANT do not version bazelized packages here.  Bazel can set the
 	# version natively.
-	sed -i 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.ps1 ; \
-	sed -i 's/^set CMK_VERSION=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' windows/plugins/*.bat ; \
-	sed -i 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.vbs ; \
+	sed -i \
+	-e 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' \
+	-e 's/^set CMK_VERSION=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
+	-e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' \
+	windows/plugins/* ; \
 	sed -i \
 	-e 's/^CMK_VERSION=".*/CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' \

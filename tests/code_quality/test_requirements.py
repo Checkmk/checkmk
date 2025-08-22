@@ -369,36 +369,32 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("buildscripts/scripts/publish_cloud_images.py"),
     },
     ImportName("tests"): {
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/controller.py"
-        ),
+        Path("buildscripts/scripts/assert_build_artifacts.py"),
         Path("buildscripts/scripts/lib/registry.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_ct03_handle_dying_fetchers.py"
-        ),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/worker.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_ct09_core_does_not_mix_host_data.py"
-        ),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/conftest.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_core_does_not_mix_host_data.py"
+        ),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_returns_data.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_timeouts.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_handle_dying_fetchers.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/core_helpers.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_core.py"),
         Path(
             "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/behavior.py"
-        ),
-        Path("buildscripts/scripts/assert_build_artifacts.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_ct04_fetcher_timeouts.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_ct02_fetcher_returns_data.py"
         ),
         Path(
             "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/behavior_controller.py"
         ),
+        Path(
+            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/controller.py"
+        ),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/main.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/worker.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/test_fake_fetcher.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_core.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),
     },
     ImportName("libcst"): {
         Path("doc/treasures/migration_helpers/legacy_ssc_to_v1.py"),

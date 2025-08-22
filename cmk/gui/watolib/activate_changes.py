@@ -3712,8 +3712,7 @@ def activate_changes_start(
     """
 
     changes = ActivateChanges()
-    # TODO: So far we used all_site_configs. Would it be enough to use the passed sites?
-    changes.load(list(all_site_configs))
+    changes.load(sites if sites else list(all_site_configs))
 
     _raise_for_license_block()
 
@@ -3735,8 +3734,7 @@ def activate_changes_start(
             )
 
     manager = ActivateChangesManager()
-    # TODO: So far we used all_site_configs. Would it be enough to use the passed sites?
-    manager.changes.load(list(all_site_configs))
+    manager.changes.load(sites if sites else list(all_site_configs))
 
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)

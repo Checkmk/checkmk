@@ -259,16 +259,16 @@ test-lint-groovy:
 
 test-performance:
 	RELEASE="$$(make --no-print-directory --file=../defines.make print-BRANCH_VERSION)-$$(date '+%Y.%m.%d').cee" ; \
-	BENCHMARK_DIR=../results/performance/$$RELEASE ; \
+	BENCHMARK_DIR=$(or $(RESULT_PATH),"../results")/performance/$$RELEASE ; \
 	mkdir -p "$$BENCHMARK_DIR" ; \
-	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) -k ui \
 	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
 	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
-	--self-contained-html --ignore-running-procs ; \
-	$(realpath performance)/raise_alerts.sh
+	--self-contained-html --ignore-running-procs ; 
+	$(UVENV) $(realpath performance)/raise_alerts.sh
 
 test-performance-docker:
-	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
+	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)

@@ -67,13 +67,15 @@ setversion:
 	-e 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' \
 	-e 's/^set CMK_VERSION=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
 	-e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' \
-	windows/plugins/* ; \
+	windows/plugins/* \
+	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ; \
 	sed -i \
 	-e 's/^CMK_VERSION=".*/CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION=".*/$$CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
-	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) ; \
+	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) \
+	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' \
 	    check_mk_agent.aix \

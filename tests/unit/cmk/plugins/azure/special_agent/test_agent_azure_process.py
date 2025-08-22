@@ -23,6 +23,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     GroupLabels,
     process_app_registrations,
     process_organization,
+    process_redis,
     process_users,
     ResourceHealth,
     Selector,
@@ -488,6 +489,36 @@ async def test_process_organization(
     assert result_section == expected_section, "Section not as expected"
 
 
+@pytest.mark.asyncio
+async def test_process_redis() -> None:
+    resource = AzureResource(
+        {
+            "id": "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/providers/Microsoft.Cache/Redis/rickcmktest",
+            "name": "rickcmktest",
+            "type": "Microsoft.Cache/Redis",
+            "location": "centralus",
+            "tags": {},
+            "subscription": "ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
+            "group": "gemdev",
+            "provider": "Microsoft.Cache",
+        },
+        TagsImportPatternOption.import_all,
+    )
+
+    result_section = await process_redis(resource)
+
+    expected_section = MockAzureSection(
+        "redis",
+        content=[
+            "Resource\n",
+            '{"id": "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/providers/Microsoft.Cache/Redis/rickcmktest", "name": "rickcmktest", "type": "Microsoft.Cache/Redis", "location": "centralus", "tags": {}, "subscription": "ba9f74ff-6a4c-41e0-ab55-15c7fe79632f", "group": "gemdev", "provider": "Microsoft.Cache"}\n',
+        ],
+        piggytargets=["rickcmktest"],
+    )
+
+    assert result_section == expected_section, "Section not as expected"
+
+
 @dataclass
 class AzureResourceInfo:
     section: str
@@ -531,6 +562,16 @@ RESOURCES_API_RESPONSE = [
         "location": "westeurope",
         "tags": {"ms-resource-usage": "azure-cloud-shell"},
     },
+    {
+        "id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/providers/Microsoft.Cache/Redis/redis_cache_1",
+        "name": "redis_cache_1",
+        "type": "Microsoft.Cache/Redis",
+        "location": "centralus",
+        "tags": {},
+        "subscription": "subscription_id",
+        "group": "somegroup",
+        "provider": "Microsoft.Cache",
+    },
 ]
 
 
@@ -570,6 +611,12 @@ RESOURCES_API_RESPONSE = [
                     info_group="resource_group_1",
                     piggytargets=["resource_group_1"],
                     tags={"ms-resource-usage": "azure-cloud-shell"},
+                ),
+                AzureResourceInfo(
+                    section="redis",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
                 ),
             ],
             [
@@ -613,6 +660,12 @@ RESOURCES_API_RESPONSE = [
                     piggytargets=["resource_group_1"],
                     tags={},
                 ),
+                AzureResourceInfo(
+                    section="redis",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
+                ),
             ],
             [
                 "resource_group_1",
@@ -642,6 +695,12 @@ RESOURCES_API_RESPONSE = [
                     info_group="resource_group_1",
                     piggytargets=["resource_group_1"],
                     tags={"ms-resource-usage": "azure-cloud-shell"},
+                ),
+                AzureResourceInfo(
+                    section="redis",
+                    info_group="resource_group_1",
+                    piggytargets=["resource_group_1"],
+                    tags={},
                 ),
             ],
             ["resource_group_1"],

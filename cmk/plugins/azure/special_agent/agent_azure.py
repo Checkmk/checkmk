@@ -216,6 +216,7 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
             "total",
         ),
     ],
+    "Microsoft.Cache/Redis": [],
 }
 
 OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
@@ -247,6 +248,7 @@ class FetchedResource(Enum):
         "Microsoft.Network/virtualNetworkGateways",
         "virtualnetworkgateways",
     )
+    redis = ("Microsoft.Cache/Redis", "redis")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -316,7 +318,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "--piggyback_vms",
         default="grouphost",
         choices=["grouphost", "self"],
-        help="""Send VM piggyback data to group host (default) or the VM iteself""",
+        help="""Send VM piggyback data to group host (default) or the VM itself""",
     )
 
     group_subscription = parser.add_mutually_exclusive_group(required=False)
@@ -1187,6 +1189,16 @@ async def process_virtual_net_gw(
     section = AzureSection(
         FetchedResource.virtual_network_gateways.section,
         resource.piggytargets,
+    )
+    section.add(resource.dumpinfo())
+
+    return section
+
+
+async def process_redis(resource: AzureResource) -> AzureSection:
+    section = AzureSection(
+        FetchedResource.redis.section,
+        [resource.info["name"]],
     )
     section.add(resource.dumpinfo())
 
@@ -2109,6 +2121,8 @@ async def process_single_resources(
             tasks.add(process_vault(mgmt_client, subscription, resource))
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
+        elif resource_type == FetchedResource.redis.type:
+            tasks.add(process_redis(resource))
         else:
             # simple sections without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:

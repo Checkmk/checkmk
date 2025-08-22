@@ -1,0 +1,13 @@
+title: Microsoft Azure Redis Cache
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check always reports OK.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created.

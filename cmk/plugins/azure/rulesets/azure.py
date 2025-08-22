@@ -33,7 +33,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 from cmk.utils.paths import omd_root
 
-# Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
+# Note: the first element of the tuple should match the id of the metric specified in ALL_METRICS
 # in the azure special agent
 RAW_AZURE_SERVICES: Final = [
     ("users_count", Title("Users in Entra ID")),
@@ -60,6 +60,7 @@ RAW_AZURE_SERVICES: Final = [
     ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
+    ("Microsoft.Cache/Redis", Title("Redis Caches")),
 ]
 
 CCE_AZURE_SERVICES: Final = [

@@ -101,11 +101,17 @@ def render_form_spec(
     html.vue_component(component_name="cmk-form-spec", data=asdict(vue_app_config))
 
 
+def read_data_from_frontend(field_id: str) -> RawFrontendData:
+    if not request.has_var(field_id):
+        raise MKGeneralException("Formular data is missing in request")
+    return RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
+
+
 def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> object:
     """Computes/validates the value from a vue formular field"""
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
-    value_from_frontend = RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
+    value_from_frontend = read_data_from_frontend(field_id)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
     _process_validation_errors(visitor.validate(value_from_frontend))
     return visitor.to_disk(value_from_frontend)

@@ -22,6 +22,7 @@ from .form_spec_visitor import (
     DisplayMode,
     parse_data_from_frontend,
     process_validation_messages,
+    read_data_from_frontend,
     render_form_spec,
     serialize_data_for_frontend,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "RawFrontendData",
     "FormSpecValidationError",
     "serialize_data_for_frontend",
+    "read_data_from_frontend",
     "parse_data_from_frontend",
     "process_validation_messages",
     "create_validation_error_for_mk_user_error",

@@ -14,19 +14,21 @@ import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import { ref } from 'vue'
 import { markStepAsComplete, type StepId } from '@/welcome/components/steps/utils.ts'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import usePersistentRef from '@/lib/usePersistentRef.ts'
+import type { Ref } from 'vue'
 
 const { _t } = usei18n()
 
-defineProps<{
+const props = defineProps<{
   step: number
   stepId: StepId
   urls: WelcomeUrls
   accomplished: boolean
 }>()
-const currentStep = ref(0)
+
+const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-currentStep`, 0, 'local')
 </script>
 
 <template>

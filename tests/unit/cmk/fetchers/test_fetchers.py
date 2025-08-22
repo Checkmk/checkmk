@@ -391,6 +391,41 @@ class TestSNMPFetcherDeserialization:
         assert isinstance(repr(fetcher), str)
 
 
+def _create_fetcher(
+    *,
+    path: Path,
+    sections: Mapping[SNMPSectionName, SNMPSectionMeta] | None = None,
+    do_status_data_inventory: bool = False,
+) -> SNMPFetcher:
+    return SNMPFetcher(
+        sections={} if sections is None else sections,
+        scan_config=SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=False,
+            oid_cache_dir=path,
+        ),
+        do_status_data_inventory=do_status_data_inventory,
+        section_store_path="/tmp/db",
+        stored_walk_path=path,
+        walk_cache_path=path,
+        snmp_config=SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname=HostName("bob"),
+            ipaddress=HostAddress("1.2.3.4"),
+            credentials="public",
+            port=42,
+            bulkwalk_enabled=True,
+            snmp_version=SNMPVersion.V1,
+            bulk_walk_size_of=0,
+            timing={},
+            oid_range_limits={},
+            snmpv3_contexts=[],
+            character_encoding=None,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
+        ),
+    )
+
+
 class TestSNMPFetcherFetch:
     @pytest.fixture(autouse=True)
     def snmp_plugin_fixture(self) -> None:
@@ -439,46 +474,11 @@ class TestSNMPFetcherFetch:
             }
         )
 
-    @staticmethod
-    def create_fetcher(
-        *,
-        path: Path,
-        sections: Mapping[SNMPSectionName, SNMPSectionMeta] | None = None,
-        do_status_data_inventory: bool = False,
-    ) -> SNMPFetcher:
-        return SNMPFetcher(
-            sections={} if sections is None else sections,
-            scan_config=SNMPScanConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=False,
-                oid_cache_dir=path,
-            ),
-            do_status_data_inventory=do_status_data_inventory,
-            section_store_path="/tmp/db",
-            stored_walk_path=path,
-            walk_cache_path=path,
-            snmp_config=SNMPHostConfig(
-                is_ipv6_primary=False,
-                hostname=HostName("bob"),
-                ipaddress=HostAddress("1.2.3.4"),
-                credentials="public",
-                port=42,
-                bulkwalk_enabled=True,
-                snmp_version=SNMPVersion.V1,
-                bulk_walk_size_of=0,
-                timing={},
-                oid_range_limits={},
-                snmpv3_contexts=[],
-                character_encoding=None,
-                snmp_backend=SNMPBackendEnum.CLASSIC,
-            ),
-        )
-
     def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)
         raw_section_name = "pim"
-        fetcher = self.create_fetcher(
+        fetcher = _create_fetcher(
             path=tmp_path,
             sections={
                 SNMPSectionName(raw_section_name): SNMPSectionMeta(
@@ -514,7 +514,7 @@ class TestSNMPFetcherFetch:
 
     def test_fetch_from_io_partially_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         section_name = SNMPSectionName("pum")
-        fetcher = self.create_fetcher(
+        fetcher = _create_fetcher(
             path=tmp_path,
             sections={
                 section_name: SNMPSectionMeta(
@@ -552,7 +552,7 @@ class TestSNMPFetcherFetch:
             use_only_cache=False,
             file_cache_mode=FileCacheMode.DISABLED,
         )
-        fetcher = self.create_fetcher(path=tmp_path)
+        fetcher = _create_fetcher(path=tmp_path)
         monkeypatch.setattr(
             fetcher,
             "_detect",
@@ -571,7 +571,7 @@ class TestSNMPFetcherFetch:
             "inventory_sections",
             property(lambda self: {SNMPSectionName("pim"), SNMPSectionName("pam")}),
         )
-        fetcher = self.create_fetcher(
+        fetcher = _create_fetcher(
             path=tmp_path,
             sections={
                 SNMPSectionName("pam"): SNMPSectionMeta(
@@ -607,7 +607,7 @@ class TestSNMPFetcherFetch:
             "inventory_sections",
             property(lambda self: {SectionName("pim"), SectionName("pam")}),
         )
-        fetcher = self.create_fetcher(
+        fetcher = _create_fetcher(
             path=tmp_path,
             sections={
                 SNMPSectionName("pam"): SNMPSectionMeta(
@@ -642,7 +642,7 @@ class TestSNMPFetcherFetch:
             "inventory_sections",
             property(lambda self: {SNMPSectionName("pim"), SNMPSectionName("pam")}),
         )
-        fetcher = self.create_fetcher(
+        fetcher = _create_fetcher(
             path=tmp_path,
             sections={
                 SNMPSectionName("pam"): SNMPSectionMeta(
@@ -672,7 +672,7 @@ class TestSNMPFetcherFetch:
     def test_mode_checking_not_do_status_data_inventory(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        fetcher = self.create_fetcher(path=tmp_path)
+        fetcher = _create_fetcher(path=tmp_path)
         monkeypatch.setattr(
             fetcher,
             "_detect",

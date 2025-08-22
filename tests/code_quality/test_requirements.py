@@ -152,6 +152,8 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
         # TODO: We need to find a better way for the bazel-* folders created by bazel
         if "bazel-" in sub_path.name:
             continue
+        if sub_path.name == "external":  # Bazel external dependencies
+            continue
         if sub_path.name == "node_modules":
             continue
         if sub_path.name.startswith("."):

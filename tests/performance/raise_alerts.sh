@@ -7,4 +7,4 @@ for ((i = -5; i <= 0; i++)); do
     _RELEASES+=("${_BRANCH}-$(date -d "$i days" +"%Y.%m.%d").${_EDITION}")
 done
 _DAILY_RELEASE=${_BRANCH}-$(date +"%Y.%m.%d").${_EDITION}
-"${_GIT_ROOT}/tests/performance/perftest_plot.py" "${_RELEASES[@]}" --validate-baselines --alert-on-failure "${@}"
+"${_GIT_ROOT}/tests/performance/perftest_plot.py" "${_RELEASES[@]}" --dbhost=qa.lan.checkmk.net --validate-baselines --alert-on-failure "${@}"

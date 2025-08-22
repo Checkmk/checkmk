@@ -6,9 +6,8 @@
 import dataclasses
 import logging
 
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.tasks import TaskResponse
-
-RelayID = str
 
 # Persistence layer is not thread safe yet.
 # Note: Since we are using async endpoints in the agent-receiver

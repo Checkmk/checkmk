@@ -8,6 +8,7 @@ import dataclasses
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs import tasks_repository
 from cmk.agent_receiver.relay.lib import relays_repository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.tasks import TaskListResponse, TaskStatus
 
 
@@ -22,10 +23,10 @@ class GetRelayTasksHandler:
     tasks_repository: tasks_repository.TasksRepository
     relay_repository: relays_repository.RelaysRepository
 
-    def process(self, relay_id: str, status: TaskStatus | None) -> TaskListResponse:
+    def process(self, relay_id: RelayID, status: TaskStatus | None) -> TaskListResponse:
         return self._get_tasks(relay_id, status)
 
-    def _get_tasks(self, relay_id: str, status: TaskStatus | None) -> TaskListResponse:
+    def _get_tasks(self, relay_id: RelayID, status: TaskStatus | None) -> TaskListResponse:
         if not self.relay_repository.has_relay(relay_id):
             raise RelayNotFoundError(f"Relay with ID {relay_id} not found")
 

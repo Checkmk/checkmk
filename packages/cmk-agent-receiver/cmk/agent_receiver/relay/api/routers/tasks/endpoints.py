@@ -14,6 +14,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTasksHandler,
     RelayNotFoundError,
 )
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.tasks import (
     TaskCreateRequest,
     TaskCreateResponse,
@@ -145,7 +146,7 @@ async def get_tasks(
     #         instead of having a separate cleanup task
     # - Return filtered task list
     try:
-        tasks = handler.process(relay_id, status)
+        tasks = handler.process(RelayID(relay_id), status)
     except RelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND, detail="Relay not found"

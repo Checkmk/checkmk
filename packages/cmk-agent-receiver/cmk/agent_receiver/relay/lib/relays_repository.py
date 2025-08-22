@@ -5,13 +5,12 @@
 
 import dataclasses
 
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
+
 
 class RelayNotFoundError(Exception):
     pass
 
-
-# Note: Consider use Annotated in case we would like to have some pydantic validation
-RelayID = str
 
 # Persistence layer is not thread safe yet.
 # Note: Since we are using async endpoints in the agent-receiver

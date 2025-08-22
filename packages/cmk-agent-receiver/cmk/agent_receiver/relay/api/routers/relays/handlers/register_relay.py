@@ -6,6 +6,7 @@
 import dataclasses
 
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
 
 class RelayAlreadyRegisteredError(Exception):
@@ -16,10 +17,10 @@ class RelayAlreadyRegisteredError(Exception):
 class RegisterRelayHandler:
     relays_repository: RelaysRepository
 
-    def process(self, relay_id: str) -> None:
+    def process(self, relay_id: RelayID) -> None:
         self._add_registry(relay_id)
 
-    def _add_registry(self, relay_id: str) -> None:
+    def _add_registry(self, relay_id: RelayID) -> None:
         if self.relays_repository.has_relay(relay_id):
             raise RelayAlreadyRegisteredError(f"Relay ID {relay_id} is already registered.")
 

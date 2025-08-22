@@ -6,6 +6,7 @@
 import dataclasses
 
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
 
 class RelayNotFoundError(Exception):
@@ -16,10 +17,10 @@ class RelayNotFoundError(Exception):
 class UnregisterRelayHandler:
     relays_repository: RelaysRepository
 
-    def process(self, relay_id: str) -> None:
+    def process(self, relay_id: RelayID) -> None:
         self._remove_registry(relay_id)
 
-    def _remove_registry(self, relay_id: str) -> None:
+    def _remove_registry(self, relay_id: RelayID) -> None:
         if not self.relays_repository.has_relay(relay_id):
             raise RelayNotFoundError(f"Relay ID {relay_id} is not registered.")
 

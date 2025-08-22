@@ -17,6 +17,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RelayNotFoundError,
     UnregisterRelayHandler,
 )
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 
 router = fastapi.APIRouter()
@@ -49,7 +50,7 @@ async def register_relay(
     # - Generate and return appropriate certificates
 
     try:
-        handler.process(request.relay_id)
+        handler.process(RelayID(str(request.relay_id)))
     except RelayAlreadyRegisteredError:
         return fastapi.Response(
             status_code=fastapi.status.HTTP_409_CONFLICT, content="Relay ID already registered"
@@ -81,7 +82,7 @@ async def unregister_relay(
         - This endpoint is idempotent
     """
     try:
-        handler.process(relay_id)
+        handler.process(RelayID(relay_id))
     except RelayNotFoundError:
         # When the relay is not found we chose to return a 200 to make this endpoint idempotent
         return fastapi.Response(

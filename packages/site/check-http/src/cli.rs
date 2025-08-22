@@ -219,12 +219,16 @@ pub struct Cli {
     /// Use TLS version for HTTPS requests.
     ///
     /// Not relevant for HTTP connections without TLS.
+    ///
+    /// Please note that tls10 and tls11 are not activated in the openssl-backend by default.
     #[arg(short = 'S', long)]
     pub tls_version: Option<TlsVersion>,
 
     /// Set minimum accepted TLS version for HTTPS requests.
     ///
     /// Not relevant for HTTP connections without TLS.
+    ///
+    /// Please note that tls10 and tls11 are not activated in the openssl-backend by default.
     #[arg(long, conflicts_with = "tls_version")]
     pub min_tls_version: Option<TlsVersion>,
 

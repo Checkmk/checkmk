@@ -37,6 +37,7 @@ class GroupConfig(TypedDict):
 
 class ContactGroupConfig(GroupConfig):
     inventory_paths: NotRequired[InventoryPaths]
+    nagvis_maps: NotRequired[list[str]]
 
 
 class GroupConfigs(TypedDict):

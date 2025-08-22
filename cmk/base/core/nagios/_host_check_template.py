@@ -88,21 +88,21 @@ def main() -> int:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
-        discovery_rulesets = extract_known_discovery_rulesets(plugins)
-
         loading_result = config.load_packed_config(
-            VersionedConfigPath.LATEST_CONFIG, discovery_rulesets
+            VersionedConfigPath.LATEST_CONFIG,
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
         )
-        hosts_config = config.make_hosts_config(loading_result.loaded_config)
 
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return run_checking(
             loading_result.loaded_config,
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
             plugins,
             loading_result.config_cache,
-            hosts_config,
+            config.make_hosts_config(loading_result.loaded_config),
             # NOTE: At the time of writing we do respect the "monitoring_core" setting even in
             # the raw edition (which will fail if it is set to "cmc").
             # But here we are run by the Nagios core, so we can safely hardcode it.

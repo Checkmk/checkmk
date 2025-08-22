@@ -130,22 +130,13 @@ def extract(password_id: PasswordId) -> str:
             raise MKGeneralException("Unknown password type.")
 
 
-def make_staged_passwords_lookup() -> Callable[[str], str]:
-    """Returns something similar as `extract`. Intended for internal use only."""
+def make_staged_passwords_lookup() -> Callable[[str], str | None]:
+    """Returns something similar to `extract`. Intended for internal use only."""
     staging_path = (
         pending_password_store_path()
     )  # maybe we should pass this, but lets be consistent for now.
     store = load(staging_path)
-
-    def lookup(password_id: str) -> str:
-        try:
-            return store[password_id]
-        except KeyError:
-            # the fact that this is a dict is an implementation detail.
-            # Let's make it a ValueError.
-            raise ValueError(f"Password '{password_id}' not found in {staging_path}")
-
-    return lookup
+    return store.get
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

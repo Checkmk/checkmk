@@ -2237,9 +2237,9 @@ pathspec==0.12.1 \
     --hash=sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08 \
     --hash=sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712
     # via black
-pbr==7.0.0 \
-    --hash=sha256:b447e63a2bc04fd975fc0480b8d5ebf979179e2c0ae203bf1eff9ea20073bc38 \
-    --hash=sha256:cf4127298723dafbce3afd13775ccf3885be5d3c8435751b867f9a6a10b71a39
+pbr==7.0.1 \
+    --hash=sha256:32df5156fbeccb6f8a858d1ebc4e465dcf47d6cc7a4895d5df9aa951c712fc35 \
+    --hash=sha256:3ecbcb11d2b8551588ec816b3756b1eb4394186c3b689b17e04850dfc20f7e57
     # via
     #   python-jenkins
     #   stevedore
@@ -3982,9 +3982,9 @@ types-beautifulsoup4==4.12.0.20241020 \
     # via
     #   -r requirements_dev.txt
     #   types-lxml
-types-cffi==1.17.0.20250809 \
-    --hash=sha256:426099ada3e54a525795e04259edf10d96c8ea245b4efff29dcd086bdf242a64 \
-    --hash=sha256:d25a61025306cf2276a3010e11dc694e48da64d21fda694f3b323a9faddc3ea2
+types-cffi==1.17.0.20250822 \
+    --hash=sha256:183dd76c1871a48936d7b931488e41f0f25a7463abe10b5816be275fc11506d5 \
+    --hash=sha256:bf6f5a381ea49da7ff895fae69711271e6192c434470ce6139bf2b2e0d0fa08d
     # via types-pyopenssl
 types-docutils==0.21.0.20241128 \
     --hash=sha256:4dd059805b83ac6ec5a223699195c4e9eeb0446a4f7f2aeff1759a4a7cc17473 \

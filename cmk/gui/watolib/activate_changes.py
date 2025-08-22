@@ -1332,20 +1332,7 @@ class ActivateChanges:
     def get_all_data_required_for_activation_popout(
         self, sites: SiteConfigurations
     ) -> ActivationChangesSummary:
-        # TODO: Isn't activation_sites() enough here?
-        self.load(list(sites))
-
-        changes_that_require_activation: list[tuple[str, ChangeSpec]] = [
-            (change_id, change)
-            for change_id, change in self._all_changes
-            if not change["has_been_activated"]
-        ]
-
-        # Count changes per affected site
-        site_change_counter: Counter = Counter()
-        for _change_id, change in changes_that_require_activation:
-            for site in change["affected_sites"]:
-                site_change_counter[site] += 1
+        self.load(list(activation_sites(sites)))
 
         def _get_site_version(site_id: SiteId) -> str:
             site_status = sites_states().get(site_id, SiteStatus({}))
@@ -1355,6 +1342,25 @@ class ActivateChanges:
             if site_version and "-" in site_version:
                 site_version = site_version.split("-", 1)[0]
             return site_version
+
+        site_change_counter: Counter = Counter()
+        pending_changes: list[PendingChangesSummary] = []
+        for _changeid, change in self._all_changes:
+            if not has_been_activated(change):
+                for site in change["affected_sites"]:
+                    site_change_counter[site] += 1
+
+                pending_changes.append(
+                    PendingChangesSummary(
+                        changeId=change["id"],
+                        changeText=unescape(change["text"]),
+                        user=change["user_id"],
+                        time=change["time"],
+                        whichSites=["All sites"]
+                        if affects_all_sites(list(activation_sites(sites)), change)
+                        else change["affected_sites"],
+                    )
+                )
 
         return ActivationChangesSummary(
             sites=[
@@ -1371,18 +1377,7 @@ class ActivateChanges:
                 )
                 for site_id, site in activation_sites(sites).items()
             ],
-            pendingChanges=[
-                PendingChangesSummary(
-                    changeId=change["id"],
-                    changeText=unescape(change["text"]),
-                    user=change["user_id"],
-                    time=change["time"],
-                    whichSites=["All sites"]
-                    if affects_all_sites(list(activation_sites(sites)), change)
-                    else change["affected_sites"],
-                )
-                for _, change in changes_that_require_activation
-            ],
+            pendingChanges=pending_changes,
         )
 
 

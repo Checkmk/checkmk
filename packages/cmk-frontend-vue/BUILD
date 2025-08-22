@@ -87,6 +87,7 @@ SRCS = [
     ":node_modules/class-variance-authority",
     ":node_modules/cmk-shared-typing-bzl",
     ":node_modules/eslint-plugin-vue",
+    ":node_modules/grid-layout-plus",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
     ":node_modules/prettier",

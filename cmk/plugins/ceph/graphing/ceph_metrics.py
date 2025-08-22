@@ -40,6 +40,12 @@ metric_pgstate_active_clean_inconsistent = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )
+metric_pgstate_active_clean_laggy = metrics.Metric(
+    name="pgstate_active_clean_laggy",
+    title=Title("PGs Active + Clean + Laggy"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.DARK_CYAN,
+)
 metric_pgstate_active_clean_remapped = metrics.Metric(
     name="pgstate_active_clean_remapped",
     title=Title("PGs Active + Clean + Remapped"),

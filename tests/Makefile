@@ -261,7 +261,7 @@ test-performance:
 	RELEASE="$$(make --no-print-directory --file=../defines.make print-BRANCH_VERSION)-$$(date '+%Y.%m.%d').cee" ; \
 	BENCHMARK_DIR=$(or $(RESULT_PATH),"../results")/performance/$$RELEASE ; \
 	mkdir -p "$$BENCHMARK_DIR" ; \
-	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) -k ui \
+	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
 	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
 	--self-contained-html --ignore-running-procs ; 

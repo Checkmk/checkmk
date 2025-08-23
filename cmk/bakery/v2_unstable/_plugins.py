@@ -6,7 +6,7 @@
 import string
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Never
 
 from ..v1._artifact_types import (
     Plugin,
@@ -50,6 +50,10 @@ def no_op_parser(
     return parameters
 
 
+def _nothing(conf: object) -> Iterable[Never]:
+    return ()
+
+
 @dataclass
 class BakeryPlugin[ConfigType]:
     """
@@ -67,22 +71,19 @@ class BakeryPlugin[ConfigType]:
 
     name: str
     parameter_parser: Callable[[Mapping[str, object]], ConfigType]
-    files_function: (
-        Callable[[ConfigType], Iterable[Plugin | PluginConfig | SystemBinary | SystemConfig]] | None
-    ) = None
-    scriptlets_function: Callable[[ConfigType], Iterable[Scriptlet]] | None = None
-    windows_config_function: (
-        Callable[
-            [ConfigType],
-            Iterable[
-                WindowsConfigEntry
-                | WindowsGlobalConfigEntry
-                | WindowsSystemConfigEntry
-                | WindowsConfigItems
-            ],
-        ]
-        | None
-    ) = None
+    files_function: Callable[
+        [ConfigType], Iterable[Plugin | PluginConfig | SystemBinary | SystemConfig]
+    ] = _nothing
+    scriptlets_function: Callable[[ConfigType], Iterable[Scriptlet]] = _nothing
+    windows_config_function: Callable[
+        [ConfigType],
+        Iterable[
+            WindowsConfigEntry
+            | WindowsGlobalConfigEntry
+            | WindowsSystemConfigEntry
+            | WindowsConfigItems
+        ],
+    ] = _nothing
 
     def __post_init__(self) -> None:
         self.name = _parse_valid_plugin_name(self.name)

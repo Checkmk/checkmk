@@ -10,9 +10,6 @@ from cmk.plugins.ceph.bakery.ceph import bakery_plugin_ceph
 
 
 def test_get_ceph_files_no_deploy() -> None:
-    # TODO: Consider making files functions etc not-None
-    # to avoid conditions in code and assertions in tests.
-    assert bakery_plugin_ceph.files_function is not None
     assert not list(
         bakery_plugin_ceph.files_function(
             bakery_plugin_ceph.parameter_parser({"deploy": False, "interval": ("cached", 58.0)})
@@ -21,7 +18,6 @@ def test_get_ceph_files_no_deploy() -> None:
 
 
 def test_get_ceph_files_interval_uncached() -> None:
-    assert bakery_plugin_ceph.files_function is not None
     assert list(
         bakery_plugin_ceph.files_function(
             bakery_plugin_ceph.parameter_parser({"deploy": True, "interval": ("uncached", None)})
@@ -36,7 +32,6 @@ def test_get_ceph_files_interval_uncached() -> None:
 
 
 def test_get_ceph_files_interval_cached() -> None:
-    assert bakery_plugin_ceph.files_function is not None
     assert list(
         bakery_plugin_ceph.files_function(
             bakery_plugin_ceph.parameter_parser({"deploy": True, "interval": ("cached", 123.0)})
@@ -51,7 +46,6 @@ def test_get_ceph_files_interval_cached() -> None:
 
 
 def test_get_ceph_files_config() -> None:
-    assert bakery_plugin_ceph.files_function is not None
     assert list(
         bakery_plugin_ceph.files_function(
             bakery_plugin_ceph.parameter_parser(
@@ -74,7 +68,6 @@ def test_get_ceph_files_config() -> None:
 
 
 def test_get_ceph_files_client() -> None:
-    assert bakery_plugin_ceph.files_function is not None
     assert list(
         bakery_plugin_ceph.files_function(
             bakery_plugin_ceph.parameter_parser(

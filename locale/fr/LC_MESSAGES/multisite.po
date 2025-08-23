@@ -4088,9 +4088,6 @@ msgstr "Ajouter du contenu"
 msgid "Add context information to title"
 msgstr "Ajouter des informations contextuelles au titre"
 
-msgid "Add custom icon or action"
-msgstr "Ajouter une icône ou une action personnalisée"
-
 msgid "Add customer"
 msgstr "Ajouter un client"
 
@@ -4485,6 +4482,10 @@ msgstr "Ajouter une configuration d'état"
 msgid "Add stored report"
 msgstr "Ajouter un rapport stocké"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "État de l'abonnement"
+
 msgid "Add tag"
 msgstr "Ajouter une étiquette"
 
@@ -4516,6 +4517,16 @@ msgid ""
 msgstr ""
 "Ajoute le texte des événements aux données transmises à la console "
 "d'événements. Les caractères de une nouvelle ligne sont remplacés par '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Ajouter ces groupes de contacts à l'hôte"
@@ -64003,6 +64014,10 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activer le contrôle (désactivé : ignorer l'état de l'abonnement)"
 
 #, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "ressources correspondant aux critères basés sur les étiquettes"
+
+#, fuzzy
 msgid "Subscriptions to monitor"
 msgstr "Régions à surveiller"
 
@@ -64861,6 +64876,10 @@ msgstr "Groupes de tags"
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr ""
 "Les groupes d'étiquettes avec un seul choix doivent avoir un ID d'étiquette."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Abonnements aux événements"
 
 msgid "Tag usage"
 msgstr "Utilisation des balises"
@@ -69911,6 +69930,10 @@ msgstr ""
 "Le sous-dossier <i>%s</i> possède le site explicite <i>%s</i> défini, qui "
 "appartient au client <i>%s</i>. Cela constitue une violation de la "
 "hiérarchie des dossiers de l'MEC."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Abonnements aux événements"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -82701,10 +82724,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -86944,12 +86967,6 @@ msgid "You can assign icons or actions to services for the status GUI."
 msgstr ""
 "Vous pouvez attribuer des icônes ou des actions aux services pour "
 "l'interface graphique d'état."
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"Vous pouvez attribuer des icônes ou des actions aux services trouvés dans le "
-"GUI d'état."
 
 #, python-format
 msgid ""
@@ -91265,6 +91282,15 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "Ajouter une icône ou une action personnalisée"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "Vous pouvez attribuer des icônes ou des actions aux services trouvés dans "
+#~ "le GUI d'état."
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "Modification de la connexion LDAP %s"
@@ -91980,9 +92006,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "État de l'hôte"
-
-#~ msgid "Subscription Status"
-#~ msgstr "État de l'abonnement"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "Le micro noyau Checkmk"

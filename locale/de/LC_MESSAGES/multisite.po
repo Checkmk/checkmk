@@ -3989,9 +3989,6 @@ msgstr "Inhalt hinzufügen"
 msgid "Add context information to title"
 msgstr "Kontaktinformation zu Titel ergänzen"
 
-msgid "Add custom icon or action"
-msgstr "Benutzersymbol oder -aktion hinzufügen"
-
 msgid "Add customer"
 msgstr "Kunde hinzufügen"
 
@@ -4365,6 +4362,10 @@ msgstr "Neue Zustandskonfiguration hinzufügen"
 msgid "Add stored report"
 msgstr "Gespeicherten Bericht hinzufügen"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Subskriptionszustand"
+
 msgid "Add tag"
 msgstr "Merkmal hinzufügen"
 
@@ -4395,6 +4396,16 @@ msgid ""
 msgstr ""
 "Bei der Weiterleitung an die Event Console den Text des Ereignisses "
 "hinzufügen. Zeilenumbrüche werden ersetzt durch '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -60923,6 +60934,10 @@ msgstr "Subskription"
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
 
+#, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "Ressourcen, die den merkmalbasierten Kriterien entsprechen"
+
 msgid "Subscriptions to monitor"
 msgstr "Zu überwachende Subskriptionen"
 
@@ -61716,6 +61731,10 @@ msgstr "Merkmalsgruppen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Merkmal-Gruppen mit nur einer Auswahl müssen eine Merkmal-ID haben."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Ereignis-Subskriptionen"
 
 msgid "Tag usage"
 msgstr "Merkmalnutzung"
@@ -66860,6 +66879,10 @@ msgid ""
 msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Ereignis-Subskriptionen"
 
 #, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -78914,10 +78937,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -82927,12 +82950,6 @@ msgstr "Sie können dem Host für die Status-GUI Symbole oder Aktionen zuordnen.
 
 msgid "You can assign icons or actions to services for the status GUI."
 msgstr "Sie können Symbole oder Aktionen für die Status-GUI Services zuordnen."
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"Sie können Symbole oder Aktionen den gefundenen Services in der Status-GUI "
-"zuordnen."
 
 #, python-format
 msgid ""
@@ -87220,6 +87237,15 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "Benutzersymbol oder -aktion hinzufügen"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "Sie können Symbole oder Aktionen den gefundenen Services in der Status-"
+#~ "GUI zuordnen."
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "LDAP-Verbindung %s geändert"
@@ -87999,9 +88025,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "Zustand des Hosts"
-
-#~ msgid "Subscription Status"
-#~ msgstr "Subskriptionszustand"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "Der Checkmk Micro Core"

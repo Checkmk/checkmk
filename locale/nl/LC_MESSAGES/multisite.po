@@ -4060,9 +4060,6 @@ msgstr "Inhoud toevoegen"
 msgid "Add context information to title"
 msgstr "Voeg contextinformatie toe aan titel"
 
-msgid "Add custom icon or action"
-msgstr "Aangepast pictogram of actie toevoegen"
-
 msgid "Add customer"
 msgstr "Klant toevoegen"
 
@@ -4456,6 +4453,10 @@ msgstr "Configuratie toestand toevoegen"
 msgid "Add stored report"
 msgstr "Opgeslagen rapport toevoegen"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Abonnementsstatus"
+
 msgid "Add tag"
 msgstr "Tag toevoegen"
 
@@ -4488,6 +4489,16 @@ msgstr ""
 "Voeg tekst van gebeurtenissen toe aan gegevens die naar de "
 "gebeurtenissenconsole worden doorgestuurd. Tekens met een nieuwe regel "
 "worden vervangen door '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Voeg deze contactgroepen toe aan de host"
@@ -63470,6 +63481,10 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
 
 #, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
+
+#, fuzzy
 msgid "Subscriptions to monitor"
 msgstr "Te controleren regio's"
 
@@ -64320,6 +64335,10 @@ msgstr "Tag groepen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Taggroepen met slechts één keuze moeten een tag ID hebben."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Abonnementen op evenementen"
 
 msgid "Tag usage"
 msgstr "Tag gebruik"
@@ -69325,6 +69344,10 @@ msgid ""
 msgstr ""
 "De submap <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Abonnementen op evenementen"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -81968,10 +81991,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -86166,12 +86189,6 @@ msgstr "U kunt pictogrammen of acties aan hosts toewijzen voor de status-GUI."
 msgid "You can assign icons or actions to services for the status GUI."
 msgstr ""
 "U kunt pictogrammen of acties aan services toewijzen voor de status-GUI."
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"U kunt pictogrammen of acties toewijzen aan de gevonden diensten in de "
-"status GUI."
 
 #, python-format
 msgid ""
@@ -90452,6 +90469,15 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "Aangepast pictogram of actie toevoegen"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "U kunt pictogrammen of acties toewijzen aan de gevonden diensten in de "
+#~ "status GUI."
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "Gewijzigde LDAP-verbinding %s"
@@ -91178,9 +91204,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "Staat van gastheer"
-
-#~ msgid "Subscription Status"
-#~ msgstr "Abonnementsstatus"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "De Checkmk Micro Kern"

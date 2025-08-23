@@ -3863,9 +3863,6 @@ msgstr "コンテンツを追加する"
 msgid "Add context information to title"
 msgstr "タイトルにコンテキスト情報を追加する"
 
-msgid "Add custom icon or action"
-msgstr "カスタムアイコンまたはアクションを追加する"
-
 msgid "Add customer"
 msgstr "カスタマーを追加する"
 
@@ -4236,6 +4233,10 @@ msgstr "状態構成を追加する"
 msgid "Add stored report"
 msgstr "保存レポートの追加"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "サブスクリプションステータス"
+
 msgid "Add tag"
 msgstr "タグ付けする"
 
@@ -4266,6 +4267,16 @@ msgid ""
 msgstr ""
 "イベントコンソールに転送されるデータに、イベントのテキストを追加します。改行"
 "文字は'~'に置き換わります。"
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "これらの連絡先グループをホストに追加します"
@@ -59417,6 +59428,10 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr ""
 "サブスクリプションステータス（オフ：サブスクリプションステータスを無視）"
 
+#, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "タグベースの基準に一致するリソース"
+
 msgid "Subscriptions to monitor"
 msgstr "監視のサブスクリプション"
 
@@ -60202,6 +60217,10 @@ msgstr "タググループ"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "選択肢が1つしかないタググループには、タグIDが必要です。"
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "イベントサブスクリプション"
 
 msgid "Tag usage"
 msgstr "タグの使用法"
@@ -65022,6 +65041,10 @@ msgid ""
 msgstr ""
 "サブフォルダ <i>%s</i> には明示的なサイト <i>%s</i> が設定されていて、これは"
 "カスタマー <i>%s</i>に属します。これは、CMEフォルダー階層に違反します。"
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "イベントサブスクリプション"
 
 #, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -76636,10 +76659,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -80502,12 +80525,6 @@ msgstr ""
 msgid "You can assign icons or actions to services for the status GUI."
 msgstr ""
 "ステータスGUIのサービスにアイコンまたはアクションを割り当てることができます。"
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"ステータスGUIで、見つかったサービスにアイコンまたはアクションを割り当てること"
-"ができます。"
 
 #, python-format
 msgid ""
@@ -84629,6 +84646,15 @@ msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "カスタムアイコンまたはアクションを追加する"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "ステータスGUIで、見つかったサービスにアイコンまたはアクションを割り当てる"
+#~ "ことができます。"
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "LDAP接続 %s を変更しました"
@@ -85365,9 +85391,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "ホストの状態"
-
-#~ msgid "Subscription Status"
-#~ msgstr "サブスクリプションステータス"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "Checkmk Micro Core"

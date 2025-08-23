@@ -4059,9 +4059,6 @@ msgstr "Adicionar conteúdo"
 msgid "Add context information to title"
 msgstr "Adicionar informação de contexto ao título"
 
-msgid "Add custom icon or action"
-msgstr "Adicionar ícone ou ação personalizada"
-
 msgid "Add customer"
 msgstr "Adicionar cliente"
 
@@ -4456,6 +4453,10 @@ msgstr "Adicionar configuração do estado"
 msgid "Add stored report"
 msgstr "Adicionar relatório armazenado"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Status da Assinatura"
+
 msgid "Add tag"
 msgstr "Adicionar etiqueta"
 
@@ -4487,6 +4488,16 @@ msgid ""
 msgstr ""
 "Adiciona texto de eventos aos dados encaminhados para a Consola de Eventos. "
 "Os caracteres de nova linha são substituídos por '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Adicione estes grupos de contato ao anfitrião"
@@ -63462,6 +63473,10 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Ativar Verificação (desativar: ignorar status de assinatura)"
 
 #, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "recursos correspondentes aos critérios baseados em etiquetas"
+
+#, fuzzy
 msgid "Subscriptions to monitor"
 msgstr "Regiões a monitorizar"
 
@@ -64312,6 +64327,10 @@ msgstr "Grupos de etiquetas"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Grupos de etiquetas com apenas uma opção devem ter um ID de etiqueta."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Assinaturas de eventos"
 
 msgid "Tag usage"
 msgstr "Uso da etiqueta"
@@ -69291,6 +69310,10 @@ msgid ""
 msgstr ""
 "A subpasta <i>%s</i> tem o site explícito <i>%s</i> definido, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Assinaturas de eventos"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -81903,10 +81926,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -86071,11 +86094,6 @@ msgstr ""
 
 msgid "You can assign icons or actions to services for the status GUI."
 msgstr "Você pode atribuir ícones ou ações a serviços para o status GUI."
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"Você pode atribuir ícones ou ações aos serviços encontrados na GUI de status."
 
 #, python-format
 msgid ""
@@ -90342,6 +90360,15 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "Adicionar ícone ou ação personalizada"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "Você pode atribuir ícones ou ações aos serviços encontrados na GUI de "
+#~ "status."
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "Ligação LDAP alterada %s"
@@ -91073,9 +91100,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "Estado de acolhimento"
-
-#~ msgid "Subscription Status"
-#~ msgstr "Status da Assinatura"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "O Micro Núcleo Checkmk"

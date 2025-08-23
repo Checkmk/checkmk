@@ -4076,9 +4076,6 @@ msgstr "Adăugați conținut"
 msgid "Add context information to title"
 msgstr "Adăugați informații de context la titlu"
 
-msgid "Add custom icon or action"
-msgstr "Adăugați o pictogramă sau o acțiune personalizată"
-
 msgid "Add customer"
 msgstr "Adăugați clientul"
 
@@ -4468,6 +4465,10 @@ msgstr "Adăugați configurația de stare"
 msgid "Add stored report"
 msgstr "Adăugați un raport stocat"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Starea abonamentului"
+
 msgid "Add tag"
 msgstr "Adăugați eticheta"
 
@@ -4499,6 +4500,16 @@ msgid ""
 msgstr ""
 "Adăugați textul evenimentelor la datele transmise către Consola de "
 "evenimente. Caracterele Newline sunt înlocuite cu '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Adăugați aceste grupuri de contacte la gazdă"
@@ -63656,6 +63667,10 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
 
 #, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "resurse care corespund criteriilor bazate pe etichete"
+
+#, fuzzy
 msgid "Subscriptions to monitor"
 msgstr "Regiuni de monitorizat"
 
@@ -64490,6 +64505,10 @@ msgstr "Grupuri de etichete"
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr ""
 "Grupurile de etichete cu o singură alegere trebuie să aibă un ID de etichetă."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Abonamente la evenimente"
 
 msgid "Tag usage"
 msgstr "Utilizarea etichetelor"
@@ -69518,6 +69537,10 @@ msgid ""
 msgstr ""
 "Subfolderul <i>%s</i> are setul explicit de site-uri <i>%s</i>, care "
 "aparține clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Abonamente la evenimente"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -82172,10 +82195,10 @@ msgstr ""
 
 msgid ""
 "Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names in Azure. This option will append "
-"the last part of the subscription ID to host names. Example: 'my-"
-"vm-1a2b3c4d'. Enable this option if you have resources or resource groups "
-"with the same name."
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
 msgstr ""
 
 msgid ""
@@ -86367,11 +86390,6 @@ msgstr ""
 
 msgid "You can assign icons or actions to services for the status GUI."
 msgstr "Puteți atribui pictograme sau acțiuni serviciilor pentru GUI de stare."
-
-msgid ""
-"You can assign icons or actions to the found services in the status GUI."
-msgstr ""
-"Puteți atribui pictograme sau acțiuni serviciilor găsite în GUI de stare."
 
 #, python-format
 msgid ""
@@ -90669,6 +90687,14 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#~ msgid "Add custom icon or action"
+#~ msgstr "Adăugați o pictogramă sau o acțiune personalizată"
+
+#~ msgid ""
+#~ "You can assign icons or actions to the found services in the status GUI."
+#~ msgstr ""
+#~ "Puteți atribui pictograme sau acțiuni serviciilor găsite în GUI de stare."
+
 #, python-format
 #~ msgid "Changed LDAP connection %s"
 #~ msgstr "Conexiune LDAP schimbată %s"
@@ -91410,9 +91436,6 @@ msgstr ""
 
 #~ msgid "State of host"
 #~ msgstr "Statul de gazdă"
-
-#~ msgid "Subscription Status"
-#~ msgstr "Starea abonamentului"
 
 #~ msgid "The Checkmk Micro Core"
 #~ msgstr "Checkmk Micro Core"

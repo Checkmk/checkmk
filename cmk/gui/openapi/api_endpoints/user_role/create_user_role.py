@@ -18,7 +18,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.userroles import clone_role
+from cmk.gui.watolib.userroles import clone_role, get_all_roles
 
 from .endpoint_family import USER_ROLE_FAMILY
 from .models.request_models import CreateUserRoleModel
@@ -38,7 +38,8 @@ def create_user_role_v1(api_context: ApiContext, body: CreateUserRoleModel) -> U
             if isinstance(body.enforce_two_factor_authentication, bool)
             else None,
             pprint_value=api_context.config.wato_pprint_config,
-        )
+        ),
+        get_all_roles(),
     )
 
 

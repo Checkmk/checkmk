@@ -4,42 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Literal, override, TypedDict
+from typing import override
 
 from cmk.ccc import store
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _
+from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.gui.type_defs import RoleName
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
-
-class BuiltInUserRoleValues(str, Enum):
-    USER = "user"
-    ADMIN = "admin"
-    GUEST = "guest"
-    AGENT_REGISTRATION = "agent_registration"
-    NO_PERMISSIONS = "no_permissions"
-
-
-class UserRoleBase(TypedDict):
-    alias: str
-    permissions: dict[str, bool]
-
-
-class CustomUserRole(UserRoleBase):
-    builtin: Literal[False]
-    basedon: BuiltInUserRoleValues
-
-
-class BuiltInUserRole(UserRoleBase):
-    builtin: Literal[True]
-
-
-RoleSpec = dict[str, Any]  # TODO: Improve this type
-Roles = dict[str, RoleSpec]  # TODO: Improve this type
+RoleSpec = BuiltInUserRole | CustomUserRole
+Roles = dict[str, RoleSpec]
 
 
 def _get_builtin_roles() -> dict[RoleName, BuiltInUserRole]:
@@ -96,8 +73,8 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
     # TODO: Why is this not implemented by overriding validate()?
     def read_file_and_validate(self) -> None:
         for role in self.load_for_reading().values():
-            if "basedon" in role and role["basedon"] in builtin_role_ids:
-                role["basedon"] = BuiltInUserRoleValues(role["basedon"])
+            if not role["builtin"] and role["basedon"] in builtin_role_ids:
+                role["basedon"] = role["basedon"]
 
     @override
     def save(self, cfg: Roles, pprint_value: bool) -> None:
@@ -128,21 +105,25 @@ class UserRole:
     builtin: bool = False
     permissions: dict[str, bool] = field(default_factory=dict)
     two_factor: bool = False
-    basedon: str | None = None
+    basedon: BuiltInUserRoleID | None = None
 
-    def to_dict(self) -> dict[str, str | dict | bool]:
+    def to_dict(self) -> CustomUserRole | BuiltInUserRole:
         if self.basedon is None:
-            return {
+            return BuiltInUserRole(
+                {
+                    "alias": self.alias,
+                    "permissions": self.permissions,
+                    "builtin": True,
+                    "two_factor": self.two_factor,
+                }
+            )
+
+        return CustomUserRole(
+            {
                 "alias": self.alias,
                 "permissions": self.permissions,
-                "builtin": True,
+                "builtin": False,
                 "two_factor": self.two_factor,
+                "basedon": self.basedon,
             }
-
-        return {
-            "alias": self.alias,
-            "permissions": self.permissions,
-            "builtin": False,
-            "two_factor": self.two_factor,
-            "basedon": self.basedon,
-        }
+        )

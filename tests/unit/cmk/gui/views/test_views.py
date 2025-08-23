@@ -22,6 +22,7 @@ from cmk.gui.painter.v0 import all_painters, Cell, Painter, PainterRegistry, reg
 from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
+from cmk.gui.role_types import CustomUserRole
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
@@ -439,7 +440,20 @@ def test_gui_view_row_limit(
     with monkeypatch.context() as m:
         if limit is not None:
             monkeypatch.setitem(request._vars, "limit", limit)
-        m.setattr(active_config, "roles", {"nobody": {"permissions": permissions}})
+        m.setattr(
+            active_config,
+            "roles",
+            {
+                "nobody": CustomUserRole(
+                    {
+                        "alias": "",
+                        "builtin": False,
+                        "basedon": "no_permissions",
+                        "permissions": permissions,
+                    }
+                ),
+            },
+        )
         m.setattr(user, "role_ids", ["nobody"])
         assert get_limit() == result
 

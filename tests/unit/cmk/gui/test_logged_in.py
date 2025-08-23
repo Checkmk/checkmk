@@ -25,6 +25,7 @@ from cmk.gui.config import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.role_types import CustomUserRole
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.utils.rulesets.definition import RuleGroup
@@ -255,7 +256,14 @@ def test_logged_in_super_user_permissions(mocker: MockerFixture, monkeypatch: Mo
             active_config,
             "roles",
             {
-                "admin": {"permissions": {"eat_other_peoples_cake": True}},
+                "admin": CustomUserRole(
+                    {
+                        "alias": "",
+                        "builtin": False,
+                        "basedon": "no_permissions",
+                        "permissions": {"eat_other_peoples_cake": True},
+                    }
+                ),
             },
         )
 
@@ -385,18 +393,28 @@ def test_monitoring_user_permissions(
             {
                 # The admin permissions are needed, otherwise the teardown code would not run due to
                 # missing permissions.
-                "admin": {
-                    "permissions": {
-                        "wato.users": True,
-                        "wato.edit": True,
-                    },
-                },
-                "user": {
-                    "permissions": {
-                        "action.star": False,
-                        "general.edit_views": True,
+                "admin": CustomUserRole(
+                    {
+                        "alias": "",
+                        "builtin": False,
+                        "basedon": "no_permissions",
+                        "permissions": {
+                            "wato.users": True,
+                            "wato.edit": True,
+                        },
                     }
-                },
+                ),
+                "user": CustomUserRole(
+                    {
+                        "alias": "",
+                        "builtin": False,
+                        "basedon": "no_permissions",
+                        "permissions": {
+                            "action.star": False,
+                            "general.edit_views": True,
+                        },
+                    }
+                ),
             },
         )
 

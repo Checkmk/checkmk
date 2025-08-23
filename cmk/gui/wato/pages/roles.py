@@ -54,6 +54,7 @@ from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import builtin_role_id_from_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -335,8 +336,9 @@ class ModeEditRole(WatoMode):
         self._role.alias = new_alias
 
         if not self._role.builtin:
-            basedon = request.get_ascii_input_mandatory("basedon")
-            self._role.basedon = basedon
+            self._role.basedon = builtin_role_id_from_str(
+                request.get_ascii_input_mandatory("basedon")
+            )
 
         new_id = request.get_ascii_input_mandatory("id")
         try:

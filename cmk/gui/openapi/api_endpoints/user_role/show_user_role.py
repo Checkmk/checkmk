@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.watolib.userroles import get_role, RoleID
+from cmk.gui.watolib.userroles import get_all_roles, get_role, RoleID
 
 from .endpoint_family import USER_ROLE_FAMILY
 from .models.response_models import UserRoleModel
@@ -34,7 +34,7 @@ def show_user_role_v1(
     ],
 ) -> UserRoleModel:
     """Show a user role"""
-    return serialize_role(get_role(role_id))
+    return serialize_role(get_role(role_id), get_all_roles())
 
 
 ENDPOINT_SHOW_USER_ROLE = VersionedEndpoint(

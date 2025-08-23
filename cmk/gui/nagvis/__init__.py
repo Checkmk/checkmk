@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from cmk.gui import hooks, userdb
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar._snapin._registry import SnapinRegistry
+from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.watolib.groups import (
     ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry,
 )
@@ -31,15 +32,29 @@ def _register_hooks() -> None:
     # TODO: Should we not execute this hook also when folders are modified?
     args: Sequence[tuple[str, Callable]] = (
         ("userdb-job", _auth_php._on_userdb_job),
-        ("users-saved", lambda users: _auth_php._create_auth_file("users-saved", users)),
-        ("roles-saved", lambda x: _auth_php._create_auth_file("roles-saved", userdb.load_users())),
+        (
+            "users-saved",
+            lambda users: _auth_php._create_auth_file(
+                "users-saved", users, UserRolesConfigFile().load_for_reading()
+            ),
+        ),
+        (
+            "roles-saved",
+            lambda x: _auth_php._create_auth_file(
+                "roles-saved", userdb.load_users(), UserRolesConfigFile().load_for_reading()
+            ),
+        ),
         (
             "contactgroups-saved",
-            lambda x: _auth_php._create_auth_file("contactgroups-saved", userdb.load_users()),
+            lambda x: _auth_php._create_auth_file(
+                "contactgroups-saved", userdb.load_users(), UserRolesConfigFile().load_for_reading()
+            ),
         ),
         (
             "activate-changes",
-            lambda x: _auth_php._create_auth_file("activate-changes", userdb.load_users()),
+            lambda x: _auth_php._create_auth_file(
+                "activate-changes", userdb.load_users(), UserRolesConfigFile().load_for_reading()
+            ),
         ),
         ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),
     )

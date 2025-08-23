@@ -12,6 +12,7 @@ from livestatus import BrokerConnections, SiteConfigurations
 
 from cmk.ccc.version import Edition, edition
 from cmk.checkengine.discovery import DiscoverySettingFlags
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import (
     AgentControllerCertificates,
     BuiltinIconVisibility,
@@ -97,7 +98,45 @@ class CREConfig:
     #   '----------------------------------------------------------------------'
 
     # User supplied roles
-    roles: dict[str, Any] = field(default_factory=dict)
+    roles: dict[str, BuiltInUserRole | CustomUserRole] = field(
+        default_factory=lambda: {
+            "admin": BuiltInUserRole(
+                {
+                    "alias": "Administrator",
+                    "permissions": {},
+                    "builtin": True,
+                }
+            ),
+            "user": BuiltInUserRole(
+                {
+                    "alias": "Normal monitoring user",
+                    "permissions": {},
+                    "builtin": True,
+                }
+            ),
+            "guest": BuiltInUserRole(
+                {
+                    "alias": "Guest user",
+                    "permissions": {},
+                    "builtin": True,
+                }
+            ),
+            "agent_registration": BuiltInUserRole(
+                {
+                    "alias": "Agent registration user",
+                    "permissions": {},
+                    "builtin": True,
+                }
+            ),
+            "no_permissions": BuiltInUserRole(
+                {
+                    "alias": "Empty template for least privilege roles",
+                    "permissions": {},
+                    "builtin": True,
+                }
+            ),
+        }
+    )
 
     # define default values for all settings
     sites: SiteConfigurations = field(default_factory=lambda: SiteConfigurations({}))

@@ -3,15 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Final, Literal
+from typing import cast, Final, get_args, Literal
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui import permissions
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.utils import paths
+
+
+def builtin_role_id_from_str(role_id: str) -> BuiltInUserRoleID:
+    if role_id not in get_args(BuiltInUserRoleID):
+        raise ValueError("Invalid built-in role ID: {role_id}")
+    return cast(BuiltInUserRoleID, role_id)
 
 
 @request_memoize()
@@ -19,10 +27,12 @@ def user_may(user_id: UserId | None, pname: str) -> bool:
     return may_with_roles(roles_of_user(user_id), pname)
 
 
-def get_role_permissions() -> dict[str, list[str]]:
+def get_role_permissions(
+    roles: Mapping[str, CustomUserRole | BuiltInUserRole],
+) -> dict[str, list[str]]:
     """Returns the set of permissions for all roles"""
     role_permissions: dict[str, list[str]] = {}
-    roleids = set(active_config.roles.keys())
+    roleids = set(roles.keys())
     for perm in permissions.permission_registry.values():
         for role_id in roleids:
             if role_id not in role_permissions:
@@ -58,10 +68,9 @@ def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
             they_may = role.get("permissions", {}).get(pname[8:])
 
         if they_may is None:  # not explicitely listed -> take defaults
-            if "basedon" in role:
-                base_role_id = role["basedon"]
-            else:
-                base_role_id = role_id
+            base_role_id = (
+                role["basedon"] if not role["builtin"] else builtin_role_id_from_str(role_id)
+            )
             if pname not in permissions.permission_registry:
                 return False  # Permission unknown. Assume False. Functionality might be missing
             perm = permissions.permission_registry[pname]
@@ -75,7 +84,9 @@ def is_two_factor_required(user_id: UserId) -> bool:
     users_roles = roles_of_user(user_id)
 
     return any(
-        active_config.roles.get(role_id, {}).get("two_factor", False) for role_id in users_roles
+        active_config.roles[role_id].get("two_factor", False)
+        for role_id in users_roles
+        if role_id in active_config.roles
     )
 
 

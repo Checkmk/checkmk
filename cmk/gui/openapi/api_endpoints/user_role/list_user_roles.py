@@ -43,10 +43,11 @@ def list_user_roles_v1() -> UserRoleCollectionModel:
     """Show all user roles"""
     load_dynamic_permissions()
     user.need_permission("wato.users")
+    roles = get_all_roles()
     return UserRoleCollectionModel(
         id="user_role",
         domainType="user_role",
-        value=[serialize_role(role) for role in get_all_roles().values()],
+        value=[serialize_role(role, roles) for role in roles.values()],
         links=[LinkModel.create("self", collection_href("user_role"))],
     )
 

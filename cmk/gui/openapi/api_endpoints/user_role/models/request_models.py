@@ -11,6 +11,7 @@ from cmk.gui.openapi.framework.model.converter import (
     TypedPlainValidator,
     UserRoleIdConverter,
 )
+from cmk.gui.role_types import BuiltInUserRoleID
 from cmk.gui.watolib.userroles import RoleID
 
 _role_id_converter = UserRoleIdConverter(permission_type="wato.users")
@@ -23,7 +24,7 @@ NewRoleId = Annotated[
     TypedPlainValidator(str, _role_id_converter.should_not_exist),
 ]
 BuiltInRoleId = Annotated[
-    RoleID,
+    BuiltInUserRoleID,
     TypedPlainValidator(str, _role_id_converter.should_be_builtin),
 ]
 

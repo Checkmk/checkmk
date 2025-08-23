@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.userdb import UserRole
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.watolib.userroles import RoleID
 
 from .models.response_models import UserRoleExtensionsModel, UserRoleModel
 
@@ -19,14 +22,17 @@ RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
-def serialize_role(role: UserRole) -> UserRoleModel:
+def serialize_role(role: UserRole, roles: Mapping[RoleID, UserRole]) -> UserRoleModel:
     user_role_model = UserRoleModel(
         domainType="user_role",
         id=role.name,
         title=role.alias,
         extensions=UserRoleExtensionsModel(
             alias=role.alias,
-            permissions=get_role_permissions().get(role.name) or [],
+            permissions=get_role_permissions({k: v.to_dict() for k, v in roles.items()}).get(
+                role.name
+            )
+            or [],
             builtin=role.builtin,
             enforce_two_factor_authentication=role.two_factor,
         ),

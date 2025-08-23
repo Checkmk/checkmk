@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Self
@@ -13,6 +14,7 @@ from livestatus import SiteConfigurations
 from cmk.gui.config import Config
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import AgentControllerCertificates, GraphTimerange, PasswordPolicy
 from cmk.utils.tags import TagGroup
 
@@ -75,6 +77,7 @@ class ApiConfig:
     wato_max_snapshots: int
     wato_pprint_config: bool
     wato_use_git: bool
+    roles: Mapping[str, CustomUserRole | BuiltInUserRole]
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -88,6 +91,7 @@ class ApiConfig:
             wato_max_snapshots=config.wato_max_snapshots,
             wato_pprint_config=config.wato_pprint_config,
             wato_use_git=config.wato_use_git,
+            roles=config.roles,
         )
 
 

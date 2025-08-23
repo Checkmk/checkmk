@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -19,11 +20,13 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.userdb import UserRole
 from cmk.gui.watolib.userroles import (
+    get_all_roles,
     get_role,
     RoleID,
     update_permissions,
@@ -85,7 +88,7 @@ def edit_user_role_v1(
     _check_and_update_new_alias(existing_userrole_copy, body)
     _check_and_update_new_role_id(existing_userrole_copy, body)
 
-    if isinstance(body.new_basedon, str):
+    if not isinstance(body.new_basedon, ApiOmitted):
         existing_userrole_copy.basedon = body.new_basedon
 
     if isinstance(body.enforce_two_factor_authentication, bool):
@@ -101,7 +104,7 @@ def edit_user_role_v1(
         pprint_value=api_context.config.wato_pprint_config,
     )
 
-    return serialize_role(existing_userrole_copy)
+    return serialize_role(existing_userrole_copy, get_all_roles())
 
 
 ENDPOINT_EDIT_USER_ROLE = VersionedEndpoint(

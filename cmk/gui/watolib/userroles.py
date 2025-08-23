@@ -11,6 +11,7 @@ from typing import NewType
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_roles,
@@ -19,6 +20,7 @@ from cmk.gui.userdb import (
     UserRole,
     UserRolesConfigFile,
 )
+from cmk.gui.utils.roles import builtin_role_id_from_str
 
 RoleID = NewType("RoleID", str)
 
@@ -47,7 +49,11 @@ def clone_role(
 
     cloned_user_role = UserRole(
         name=new_role_id,
-        basedon=role_to_clone.basedon or role_to_clone.name,
+        basedon=(
+            role_to_clone.basedon
+            if role_to_clone.basedon is not None
+            else builtin_role_id_from_str(role_to_clone.name)
+        ),
         two_factor=role_to_clone.two_factor if two_factor is None else two_factor,
         alias=new_alias,
         permissions=role_to_clone.permissions,
@@ -61,7 +67,7 @@ def clone_role(
 
 
 def get_all_roles() -> dict[RoleID, UserRole]:
-    stored_roles: dict[str, dict] = load_roles()
+    stored_roles: dict[str, BuiltInUserRole | CustomUserRole] = load_roles()
     return {
         RoleID(roleid): UserRole(name=roleid, **params) for roleid, params in stored_roles.items()
     }

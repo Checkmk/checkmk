@@ -217,7 +217,18 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
             "total",
         ),
     ],
-    "Microsoft.Cache/Redis": [],
+    "Microsoft.Cache/Redis": [
+        (
+            "allconnectedclients",
+            "PT1M",
+            "maximum",
+        ),
+        (
+            "allConnectionsCreatedPerSecond,allConnectionsClosedPerSecond",
+            "PT1M",
+            "maximum",
+        ),
+    ],
 }
 
 OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {

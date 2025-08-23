@@ -49,7 +49,7 @@ def _get_builtin_roles() -> dict[RoleName, BuiltInUserRole]:
         "user": _("Normal monitoring user"),
         "guest": _("Guest user"),
         "agent_registration": _("Agent registration user"),
-        "no_permission": _("Empty template for least privilege roles"),
+        "no_permissions": _("Empty template for least privilege roles"),
     }
 
     return {

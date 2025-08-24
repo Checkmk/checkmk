@@ -8,7 +8,7 @@ from typing import override
 
 from cmk.ccc import store
 from cmk.gui import hooks
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.gui.type_defs import RoleName
@@ -78,20 +78,12 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
 
     @override
     def save(self, cfg: Roles, pprint_value: bool) -> None:
-        active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)
         super().save(cfg, pprint_value)
 
 
 def load_roles() -> Roles:
-    roles = UserRolesConfigFile().load_for_modification()
-    # Reflect the data in the roles dict kept in the config module needed
-    # for instant changes in current page while saving modified roles.
-    # Otherwise the hooks would work with old data when using helper
-    # functions from the config module
-    # TODO: load_roles() should not update global structures
-    active_config.roles.update(roles)
-    return roles
+    return UserRolesConfigFile().load_for_modification()
 
 
 def register_userroles_config_file(config_file_registry: ConfigFileRegistry) -> None:

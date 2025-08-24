@@ -7,7 +7,7 @@
 import base64
 import time
 import traceback
-from collections.abc import Collection, Iterable, Iterator, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import cast, Literal, overload
 
 from cmk.ccc.user import UserId
@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
@@ -1014,11 +1014,13 @@ class ModeEditUser(WatoMode):
         load_notification_scripts()
 
         with html.form_context("user", method="POST"):
-            self._show_form(config.default_language)
+            self._show_form(config.default_language, config.wato_user_attrs)
 
-    def _show_form(self, default_language: str) -> None:
+    def _show_form(
+        self, default_language: str, custom_user_attributes: Sequence[CustomUserAttrSpec]
+    ) -> None:
         html.prevent_password_auto_completion()
-        custom_user_attr_topics = get_user_attributes_by_topic()
+        custom_user_attr_topics = get_user_attributes_by_topic(custom_user_attributes)
         is_automation_user = self._user.get("is_automation_user", False)
 
         if self._can_edit_users:

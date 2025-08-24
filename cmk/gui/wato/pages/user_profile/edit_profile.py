@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from typing import Any
 
@@ -19,7 +19,7 @@ from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -118,9 +118,11 @@ class UserProfile(Page):
 
         html.show_user_errors()
 
-        self._show_form(config.default_language)
+        self._show_form(config.default_language, config.wato_user_attrs)
 
-    def _show_form(self, default_language: str) -> None:
+    def _show_form(
+        self, default_language: str, custom_user_attributes: Sequence[CustomUserAttrSpec]
+    ) -> None:
         assert user.id is not None
 
         users = userdb.load_users()
@@ -145,7 +147,7 @@ class UserProfile(Page):
             select_language(user_spec, default_language)
 
             if user.may("general.edit_user_attributes"):
-                custom_user_attr_topics = get_user_attributes_by_topic()
+                custom_user_attr_topics = get_user_attributes_by_topic(custom_user_attributes)
                 _show_custom_user_attr(user_spec, custom_user_attr_topics.get("personal", []))
                 forms.header(_("User interface settings"))
                 _show_custom_user_attr(user_spec, custom_user_attr_topics.get("interface", []))

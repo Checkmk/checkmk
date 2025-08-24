@@ -13,6 +13,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
@@ -282,7 +283,7 @@ class CustomUserAttributes(BaseSchema):
             original_data.pop(field, None)
 
         for name, value in original_data.items():
-            attribute = dict(all_user_attributes()).get(name)
+            attribute = dict(all_user_attributes(active_config.wato_user_attrs)).get(name)
             if attribute is None:
                 raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
             if not attribute.is_custom():

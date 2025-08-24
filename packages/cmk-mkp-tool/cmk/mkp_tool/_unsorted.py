@@ -142,7 +142,12 @@ class PackageStore:
 
     def remove(self, package_id: PackageID) -> None:
         """Remove a local optional package file"""
-        (self.local_packages / format_file_name(package_id)).unlink()
+        try:
+            (self.local_packages / format_file_name(package_id)).unlink()
+        except FileNotFoundError as exc:
+            raise PackageError(
+                f"Package {package_id.name} {package_id.version} not found."
+            ) from exc
 
     def list_local_packages(self) -> list[Path]:
         try:

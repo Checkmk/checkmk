@@ -9,6 +9,7 @@ import tarfile
 from io import BytesIO
 from pathlib import Path
 from typing import NoReturn
+from unittest.mock import patch
 
 import pytest
 
@@ -20,6 +21,7 @@ from cmk.mkp_tool import (
     Installer,
     Manifest,
     PackageError,
+    PackageID,
     PackageName,
     PackagePart,
     PackageStore,
@@ -431,3 +433,19 @@ def test_create_package_with_folder_fails(
             persisting_function=lambda _a, _b: 0,
             version_packaged="3.14.0p15",
         )
+
+
+def test_remove(installer: Installer, path_config: PathConfig, package_store: PackageStore) -> None:
+    name = PackageName("foo")
+    installed_ver = PackageVersion("1.0.0")
+    missing_ver = PackageVersion("1.3.3.7")
+    _create_simple_test_package(installer, name, path_config, package_store)
+
+    with pytest.raises(PackageError, match="Package foo 1.3.3.7 not found"):
+        pkg_id = PackageID(name=name, version=missing_ver)
+        package_store.remove(pkg_id)
+
+    with patch("cmk.mkp_tool._unsorted.Path.unlink") as unlink:
+        pkg_id = PackageID(name=name, version=installed_ver)
+        package_store.remove(pkg_id)
+        unlink.assert_called_once()

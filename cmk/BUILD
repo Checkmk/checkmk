@@ -4,10 +4,7 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-exports_files([
-    "requirements.in",
-    "gui/openapi/spec/spec_generator/generate_api_spec.py",
-])
+exports_files(["requirements.in"])
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
@@ -217,11 +214,7 @@ py_library(
     name = "lib_cmk_cre",
     srcs = CRE_PY,
     imports = [".."],
-    visibility = [
-        "//tests:__subpackages__",
-        # for api spec
-        "//omd:__subpackages__",
-    ],
+    visibility = ["//tests:__subpackages__"],
     deps = [
         "lib_cmk",
     ],
@@ -266,9 +259,7 @@ py_library(
     srcs = glob(["**/*.py"]),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
-    visibility = [
-        "//tests/unit:__pkg__",
-    ],
+    visibility = ["//tests/unit:__pkg__"],
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({

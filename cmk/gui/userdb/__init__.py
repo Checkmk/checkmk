@@ -8,7 +8,6 @@ from cmk.gui.type_defs import Users, UserSpec
 
 from ._check_credentials import (
     check_credentials,
-    create_non_existing_user,
     is_customer_user_allowed_to_login,
     user_exists,
     user_exists_according_to_profile,
@@ -140,7 +139,6 @@ __all__ = [
     "contactgroups_of_user",
     "convert_idle_timeout",
     "create_cmk_automation_user",
-    "create_non_existing_user",
     "custom_attr_path",
     "CheckCredentialsResult",
     "ConnectorType",

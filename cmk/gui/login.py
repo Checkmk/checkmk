@@ -38,7 +38,7 @@ from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session, UserContext
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.userdb import get_active_saml_connections
+from cmk.gui.userdb import get_active_saml_connections, get_user_attributes
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils import roles
 from cmk.gui.utils.html import HTML
@@ -210,7 +210,9 @@ class LoginPage(Page):
                 origtarget = default_origtarget
 
             now = datetime.now()
-            if result := userdb.check_credentials(username, password, now):
+            if result := userdb.check_credentials(
+                username, password, get_user_attributes(config.wato_user_attrs), now
+            ):
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.

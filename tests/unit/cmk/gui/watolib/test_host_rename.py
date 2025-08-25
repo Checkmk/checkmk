@@ -125,6 +125,7 @@ def test_rename_host(
     perform_rename_hosts(
         renamings=[(folder, old, new) for old, new in renamings],
         job_interface=job_interface,
+        custom_user_attributes=[],
         site_configs={
             SiteId("NO_SITE"): {
                 "id": SiteId("NO_SITE"),

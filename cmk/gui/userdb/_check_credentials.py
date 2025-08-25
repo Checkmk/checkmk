@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Literal
 
@@ -23,7 +24,7 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.utils.log.security_event import log_security_event
 
 from ._connections import active_connections, get_connection
-from ._user_attribute import get_user_attributes
+from ._user_attribute import UserAttribute
 from ._user_spec import new_user_template
 from .store import load_user, load_users, save_users
 
@@ -31,7 +32,10 @@ auth_logger = gui_logger.getChild("auth")
 
 
 def check_credentials(
-    username: UserId, password: Password, now: datetime
+    username: UserId,
+    password: Password,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    now: datetime,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
@@ -60,7 +64,7 @@ def check_credentials(
         #    and Checkmk does not have a user entry yet
         #
         # In this situation a user account with the "default profile" should be created
-        create_non_existing_user(connection_id, user_id, now)
+        _create_non_existing_user(connection_id, user_id, user_attributes, now)
 
         if not is_customer_user_allowed_to_login(user_id):
             # A CME not assigned with the current sites customer
@@ -79,7 +83,12 @@ def check_credentials(
     return False
 
 
-def create_non_existing_user(connection_id: str, username: UserId, now: datetime) -> None:
+def _create_non_existing_user(
+    connection_id: str,
+    username: UserId,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    now: datetime,
+) -> None:
     # Since user_exists also looks into the htpasswd and treats all users that can be found there as
     # "existing users", we don't care about partially known users here and don't create them ad-hoc.
     # The load_users() method will handle this kind of users (TODO: Consolidate this!).
@@ -91,7 +100,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
     users[username].setdefault("alias", username)
-    save_users(users, get_user_attributes(active_config.wato_user_attrs), now)
+    save_users(users, user_attributes, now)
 
     # Call the sync function for this new user
     connection = get_connection(connection_id)

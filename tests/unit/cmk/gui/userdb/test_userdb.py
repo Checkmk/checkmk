@@ -557,7 +557,12 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    assert userdb.check_credentials(username, Password(password), datetime.now()) == username
+    assert (
+        userdb.check_credentials(
+            username, Password(password), get_user_attributes([]), datetime.now()
+        )
+        == username
+    )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -574,7 +579,10 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb.user_exists_according_to_profile(user_id)
     assert user_id in _load_users_uncached(lock=False)
 
-    assert userdb.check_credentials(user_id, Password("cmk"), datetime.now()) == user_id
+    assert (
+        userdb.check_credentials(user_id, Password("cmk"), get_user_attributes([]), datetime.now())
+        == user_id
+    )
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
@@ -585,15 +593,16 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
     now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, Password(password), now) == user_id
+    user_attributes = get_user_attributes([])
+    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
-    save_users(users, get_user_attributes([]), now)
+    save_users(users, user_attributes, now)
 
     with pytest.raises(MKUserError, match="User is locked"):
-        userdb.check_credentials(user_id, Password(password), now)
+        userdb.check_credentials(user_id, Password(password), user_attributes, now)
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -618,8 +627,8 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    save_users(users, get_user_attributes([]), now)
-    assert userdb.check_credentials(user_id, Password(password), now) == user_id
+    save_users(users, (user_attributes := get_user_attributes([])), now)
+    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -629,8 +638,8 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "test-customer"
-    save_users(users, get_user_attributes([]), now)
-    assert userdb.check_credentials(user_id, Password(password), now) == user_id
+    save_users(users, (user_attributes := get_user_attributes([])), now)
+    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -642,8 +651,8 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "wrong-customer"
-    save_users(users, get_user_attributes([]), now)
-    assert userdb.check_credentials(user_id, Password(password), now) is False
+    save_users(users, (user_attributes := get_user_attributes([])), now)
+    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:

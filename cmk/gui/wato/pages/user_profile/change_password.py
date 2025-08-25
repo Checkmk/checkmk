@@ -70,7 +70,15 @@ class UserChangePasswordPage(Page):
             raise MKUserError("password", _("The new password must differ from your current one."))
 
         now = datetime.now()
-        if userdb.check_credentials(user.id, cur_password, now) is False:
+        if (
+            userdb.check_credentials(
+                user.id,
+                cur_password,
+                (user_attributes := get_user_attributes(config.wato_user_attrs)),
+                now,
+            )
+            is False
+        ):
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
@@ -100,7 +108,7 @@ class UserChangePasswordPage(Page):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users, get_user_attributes(config.wato_user_attrs), now)
+        userdb.save_users(users, user_attributes, now)
         connection_id = user_spec.get("connector", None)
         connection = get_connection(connection_id)
         log_security_event(

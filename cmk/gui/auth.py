@@ -29,6 +29,7 @@ from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
@@ -384,6 +385,13 @@ def _verify_user_login(user_id: UserId, password: Password) -> bool:
         True if a userdb connector successfully verifies the user and password.
     """
     try:
-        return bool(userdb.check_credentials(user_id, password, datetime.now()))
+        return bool(
+            userdb.check_credentials(
+                user_id,
+                password,
+                get_user_attributes(active_config.wato_user_attrs),
+                datetime.now(),
+            )
+        )
     except MKUserError:
         return False

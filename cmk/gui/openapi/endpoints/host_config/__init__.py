@@ -768,6 +768,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
                 pprint_value=active_config.wato_pprint_config,
                 use_git=active_config.wato_use_git,
                 debug=active_config.debug,
+                custom_user_attributes=active_config.wato_user_attrs,
             ),
         ),
         InitialStatusArgs(

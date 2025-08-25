@@ -36,7 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -179,6 +179,7 @@ class ModeBulkRenameHost(WatoMode):
                         callable=rename_hosts_job_entry_point,
                         args=RenameHostsJobArgs(
                             renamings=_renamings_to_job_args(renamings),
+                            custom_user_attributes=config.wato_user_attrs,
                             site_configs=config.sites,
                             pprint_value=config.wato_pprint_config,
                             use_git=config.wato_use_git,
@@ -446,6 +447,7 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     use_git: bool
     debug: bool
     site_configs: Mapping[SiteId, SiteConfiguration]
+    custom_user_attributes: Sequence[CustomUserAttrSpec]
 
 
 def rename_hosts_job_entry_point(
@@ -458,6 +460,7 @@ def rename_hosts_job_entry_point(
         actions, auth_problems = _rename_hosts(
             renamings,
             job_interface,
+            custom_user_attributes=args.custom_user_attributes,
             site_configs=args.site_configs,
             pprint_value=args.pprint_value,
             use_git=args.use_git,
@@ -584,6 +587,7 @@ class ModeRenameHost(WatoMode):
                     callable=rename_hosts_job_entry_point,
                     args=RenameHostsJobArgs(
                         renamings=_renamings_to_job_args(renamings),
+                        custom_user_attributes=config.wato_user_attrs,
                         site_configs=config.sites,
                         pprint_value=config.wato_pprint_config,
                         use_git=config.wato_use_git,
@@ -664,6 +668,7 @@ def _rename_hosts(
     renamings: Sequence[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
     *,
+    custom_user_attributes: Sequence[CustomUserAttrSpec],
     site_configs: Mapping[SiteId, SiteConfiguration],
     pprint_value: bool,
     use_git: bool,
@@ -672,6 +677,7 @@ def _rename_hosts(
     action_counts, auth_problems = perform_rename_hosts(
         renamings,
         job_interface,
+        custom_user_attributes=custom_user_attributes,
         site_configs=site_configs,
         pprint_value=pprint_value,
         use_git=use_git,

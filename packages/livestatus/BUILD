@@ -63,7 +63,10 @@ cc_shared_library(
 cc_test(
     name = "test",
     size = "small",
-    srcs = glob(["test/*.cc"]),
+    srcs = glob([
+        "test/*.cc",
+        "test/*.h",
+    ]),
     deps = [
         ":livestatus_base",
         "@googletest//:gtest_main",

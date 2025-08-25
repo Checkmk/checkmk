@@ -59,6 +59,12 @@ def main() {
                     credentialsId: 'JIRA_API_TOKEN_QA_ALERTS',
                     variable: 'JIRA_API_TOKEN_QA_ALERTS'
                 ),
+                certificate(
+                    credentialsId: 'QA_POSTGRES_CERT',
+                    aliasVariable: 'POSTGRES_KEYSTORE_ALIAS',
+                    keystoreVariable: 'POSTGRES_KEY',
+                    passwordVariable: ''
+                ),
             ]) {
                 test_jenkins_helper.execute_test([
                     name: make_target,

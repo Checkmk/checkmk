@@ -24,8 +24,8 @@ pytestmark = [
 ]
 
 
-def test_otel_collector_exists(site: Site) -> None:
-    assert Path(site.root, "bin", "otelcol").exists()
+def test_otel_collector_exists(otel_site: Site) -> None:
+    assert Path(otel_site.root, "bin", "otelcol").exists()
 
 
 @pytest.mark.parametrize(
@@ -34,17 +34,17 @@ def test_otel_collector_exists(site: Site) -> None:
         ["otelcol", "--help"],
     ],
 )
-def test_otel_collector_command_availability(site: Site, command: list[str]) -> None:
+def test_otel_collector_command_availability(otel_site: Site, command: list[str]) -> None:
     # Commands executed here should return with exit code 0
-    site.check_output(command)
+    otel_site.check_output(command)
 
 
-def test_otel_collector_build_configuration(site: Site) -> None:
+def test_otel_collector_build_configuration(otel_site: Site) -> None:
     with open(
         repo_path() / "non-free" / "packages" / "otel-collector" / "builder-config.yaml"
     ) as f:
         expected_config = yaml.safe_load(f)
-    actual_config = yaml.safe_load(site.check_output(["otelcol", "components"]))
+    actual_config = yaml.safe_load(otel_site.check_output(["otelcol", "components"]))
 
     assert actual_config["buildinfo"]["description"] == expected_config["dist"]["description"]
 
@@ -54,11 +54,11 @@ def test_otel_collector_build_configuration(site: Site) -> None:
 
 
 @contextmanager
-def _modify_test_site(site: Site, hostname: str) -> Iterator[None]:
+def _modify_test_site(otel_site: Site, hostname: str) -> Iterator[None]:
     rule_id = ""
     try:
-        site.set_config("OPENTELEMETRY_COLLECTOR", "on", with_restart=True)
-        site.openapi.hosts.create(
+        otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on", with_restart=True)
+        otel_site.openapi.hosts.create(
             hostname,
             attributes={
                 "tag_address_family": "no-ip",
@@ -67,7 +67,7 @@ def _modify_test_site(site: Site, hostname: str) -> Iterator[None]:
             },
             folder="/",
         )
-        rule_id = site.openapi.rules.create(
+        rule_id = otel_site.openapi.rules.create(
             ruleset_name="special_agents:otel",
             value={"include_self_monitoring": True},
             conditions={
@@ -81,17 +81,17 @@ def _modify_test_site(site: Site, hostname: str) -> Iterator[None]:
         yield
     finally:
         if rule_id:
-            site.openapi.rules.delete(rule_id)
-        site.openapi.hosts.delete(hostname)
-        site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
+            otel_site.openapi.rules.delete(rule_id)
+        otel_site.openapi.hosts.delete(hostname)
+        otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
 
 
-def test_otel_collector_self_monitoring(site: Site) -> None:
+def test_otel_collector_self_monitoring(otel_site: Site) -> None:
     hostname = "otelhost"
-    with _modify_test_site(site, hostname):
-        site.ensure_running()
-        site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
-        result = site.openapi.service_discovery.get_discovery_result(hostname)
+    with _modify_test_site(otel_site, hostname):
+        otel_site.ensure_running()
+        otel_site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
+        result = otel_site.openapi.service_discovery.get_discovery_result(hostname)
     assert result["extensions"] == {
         "check_table": {},
         "host_labels": {

@@ -144,9 +144,10 @@ namespace {
 std::string query(Table &table, ICore &core,
                   const std::vector<std::string> &lines) {
     OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};
-    Query{ParsedQuery{
-              lines, [&table]() { return table.allColumns(); },
-              [&table](const auto &colname) { return table.column(colname); }},
+    Query{ParsedQuery{lines, [&table]() { return table.allColumns(); },
+                      [&core, &table](const auto &colname) {
+                          return table.column(colname, core);
+                      }},
           table, core, output}
         .process();
     return output.str();

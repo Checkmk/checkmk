@@ -84,7 +84,7 @@ public:
     void answerQuery(Query &query, const User &user,
                      const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
-        std::string colname) const override;
+        std::string colname, const ICore &core) const override;
 
     using state_info_t =
         std::map<HostServiceKey, std::unique_ptr<HostServiceState>>;

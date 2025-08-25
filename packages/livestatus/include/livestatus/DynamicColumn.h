@@ -12,6 +12,8 @@
 
 #include "livestatus/Column.h"
 
+class ICore;
+
 class DynamicColumn {
 public:
     DynamicColumn(std::string name, std::string description,
@@ -23,8 +25,9 @@ public:
 
     [[nodiscard]] std::string name() const { return _name; };
 
-    virtual std::unique_ptr<Column> createColumn(
-        const std::string &name, const std::string &arguments) = 0;
+    virtual std::unique_ptr<Column> createColumn(const std::string &name,
+                                                 const std::string &arguments,
+                                                 const ICore &core) = 0;
 
 protected:
     const std::string _name;

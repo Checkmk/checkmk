@@ -18,6 +18,8 @@
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/FileSystemHelper.h"
 
+class ICore;
+
 template <typename T>
 class DynamicFileColumn : public DynamicColumn {
 public:
@@ -27,7 +29,8 @@ public:
         std::function<std::filesystem::path(const T &)> basepath,
         std::function<std::filesystem::path(const std::string &args)> filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,
-                                         const std::string &arguments) override;
+                                         const std::string &arguments,
+                                         const ICore &core) override;
     [[nodiscard]] std::filesystem::path basepath(const T & /*data*/) const;
 
 private:
@@ -55,7 +58,7 @@ template <typename T>
 
 template <typename T>
 std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
-    const std::string &name, const std::string &arguments) {
+    const std::string &name, const std::string &arguments, const ICore &core) {
     // Arguments contains a path relative to basepath and possibly escaped.
     if (arguments.empty()) {
         throw std::runtime_error("invalid arguments for column '" + _name +

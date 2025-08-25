@@ -93,7 +93,7 @@ public:
     /// lookup, and if that didn't find a column, the lookup is retried with a
     /// "current_" prefix. This logic should probably not live in cmc at all.
     [[nodiscard]] virtual std::shared_ptr<Column> column(
-        std::string colname) const;
+        std::string colname, const ICore &core) const;
 
     // NOTE: We can't make the query argument 'const' right now, because we call
     // the non-const Query::processDataset() member function on it. This is a
@@ -122,7 +122,8 @@ public:
 
 private:
     [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
-        const std::string &colname, const std::string &rest) const;
+        const std::string &colname, const std::string &rest,
+        const ICore &core) const;
 
     std::map<std::string, std::shared_ptr<Column>> _columns;
     std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;

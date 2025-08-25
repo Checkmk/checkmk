@@ -43,23 +43,23 @@ private:
 }  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
-    const std::string &name, const std::string &description, ICore *mc,
+    const std::string &name, const std::string &description,
     const ColumnOffsets &offsets)
-    : DynamicColumn(name, description, offsets), _mc(mc) {}
+    : DynamicColumn(name, description, offsets) {}
 
 std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
-    const std::string &name, const std::string &arguments) {
+    const std::string &name, const std::string &arguments, const ICore &core) {
     std::string result;
-    if (_mc->mkeventdEnabled()) {
+    if (core.mkeventdEnabled()) {
         auto command = "REPLICATE " + arguments;
         try {
-            ECTableConnection ec(_mc->loggerLivestatus(),
-                                 _mc->paths()->event_console_status_socket(),
+            ECTableConnection ec(core.loggerLivestatus(),
+                                 core.paths()->event_console_status_socket(),
                                  command);
             ec.run();
             result = ec.getResult();
         } catch (const std::runtime_error &err) {
-            Alert(_mc->loggerLivestatus()) << err.what();
+            Alert(core.loggerLivestatus()) << err.what();
         }
     }
     // TODO(sp) Using TableEventConsoleReplication here is a cruel hack,

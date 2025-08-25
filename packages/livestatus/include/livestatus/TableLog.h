@@ -21,7 +21,7 @@ public:
     void answerQuery(Query &query, const User &user,
                      const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
-        std::string colname) const override;
+        std::string colname, const ICore &core) const override;
 
 private:
     LogCache *log_cache_;

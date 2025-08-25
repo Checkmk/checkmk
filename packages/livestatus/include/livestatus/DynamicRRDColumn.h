@@ -23,8 +23,8 @@ template <typename T>
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
-                     const ICore &core, const ColumnOffsets &offsets)
-        : DynamicColumn{name, description, offsets}, core_{&core} {}
+                     const ColumnOffsets &offsets)
+        : DynamicColumn{name, description, offsets} {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         RelationalOperator /*unused*/, const std::string & /*unused*/) const {
@@ -32,15 +32,13 @@ public:
                                  "' not supported");
     }
 
-    std::unique_ptr<Column> createColumn(
-        const std::string &name, const std::string &arguments) override {
+    std::unique_ptr<Column> createColumn(const std::string &name,
+                                         const std::string &arguments,
+                                         const ICore &core) override {
         return std::make_unique<T>(
             name, "dynamic column", _offsets, std::make_unique<RRDRenderer>(),
-            RRDDataMaker{*core_, RRDColumnArgs{arguments, _name}});
+            RRDDataMaker{core, RRDColumnArgs{arguments, _name}});
     }
-
-private:
-    const ICore *core_;
 };
 
 #endif  // DynamicRRDColumn_h

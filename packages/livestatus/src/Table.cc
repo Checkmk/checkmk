@@ -35,7 +35,8 @@ std::vector<std::shared_ptr<Column>> Table::allColumns() const {
     return {v.begin(), v.end()};
 }
 
-std::shared_ptr<Column> Table::column(std::string colname) const {
+std::shared_ptr<Column> Table::column(std::string colname,
+                                      const ICore &core) const {
     // Strip away a sequence of prefixes.
     while (colname.starts_with(namePrefix())) {
         colname = colname.substr(namePrefix().size());
@@ -44,7 +45,8 @@ std::shared_ptr<Column> Table::column(std::string colname) const {
     auto sep = colname.find(':');
     if (sep != std::string::npos) {
         // TODO(sp) Use shared_ptr
-        return dynamicColumn(colname.substr(0, sep), colname.substr(sep + 1));
+        return dynamicColumn(colname.substr(0, sep), colname.substr(sep + 1),
+                             core);
     }
 
     // First try exact match...
@@ -64,7 +66,8 @@ std::shared_ptr<Column> Table::column(std::string colname) const {
 }
 
 std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
-                                             const std::string &rest) const {
+                                             const std::string &rest,
+                                             const ICore &core) const {
     auto it = _dynamic_columns.find(colname);
     if (it == _dynamic_columns.end()) {
         throw std::runtime_error("table '" + name() +
@@ -80,7 +83,7 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
         throw std::runtime_error("empty column name for dynamic column '" +
                                  colname + "'");
     }
-    return it->second->createColumn(colname2, rest.substr(sep_pos + 1));
+    return it->second->createColumn(colname2, rest.substr(sep_pos + 1), core);
 }
 
 Row Table::get(const std::string & /*unused*/, const ICore & /*core*/) const {

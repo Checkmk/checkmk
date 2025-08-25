@@ -22,7 +22,6 @@ Store::Store(ICore *mc)
     , _table_downtimes{mc}
     , _table_eventconsoleevents{mc}
     , _table_eventconsolehistory{mc}
-    , _table_eventconsolereplication{mc}
     , _table_hosts{mc}
     , _table_hostsbygroup{mc}
     , _table_log{mc, &_log_cache}
@@ -70,8 +69,8 @@ bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
     return Query{ParsedQuery{lines, [&table]() { return table.allColumns(); },
-                             [&table](const auto &colname) {
-                                 return table.column(colname);
+                             [this, &table](const auto &colname) {
+                                 return table.column(colname, *_mc);
                              }},
                  table, *_mc, output}
         .process();

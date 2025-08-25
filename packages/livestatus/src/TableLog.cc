@@ -245,15 +245,16 @@ void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
                        process);
 }
 
-std::shared_ptr<Column> TableLog::column(std::string colname) const {
+std::shared_ptr<Column> TableLog::column(std::string colname,
+                                         const ICore &core) const {
     try {
         // First try to find column in the usual way
-        return Table::column(colname);
+        return Table::column(colname, core);
     } catch (const std::runtime_error &e) {
         // Now try with prefix "current_", since our joined tables have this
         // prefix in order to make clear that we access current and not
         // historic data and in order to prevent mixing up historic and
         // current fields with the same name.
-        return Table::column("current_" + colname);
+        return Table::column("current_" + colname, core);
     }
 }

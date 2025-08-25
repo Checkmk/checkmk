@@ -50,6 +50,7 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime as Datetime
+from os import getenv
 from pathlib import Path
 from statistics import fmean
 from sys import exit as sys_exit
@@ -689,7 +690,8 @@ class PerftestPlotArgs(argparse.Namespace):
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
         jira_url (str): The URL of the Jira server.
-        jira_token_path (Path): The path to the Jira token file.
+        jira_token_var (str): The name of the environment variable that holds the Jira token.
+        jira_token_path (Path): The path of file that holds the Jira token.
         log_level (str): Logging level of the application.
     """
 
@@ -709,6 +711,7 @@ class PerftestPlotArgs(argparse.Namespace):
     validate_baselines: bool
     alert_on_failure: bool
     jira_url: str
+    jira_token_var: str
     jira_token_path: Path
     log_level: str
 
@@ -747,6 +750,7 @@ class PerftestPlot:
                 )
                 self.read_from_database = self.write_to_database = False
         else:
+            print("Database access disabled; switching to filesystem mode!")
             self.read_from_database = self.write_to_database = False
 
         self.write_json_files = self.args.write_json_files and not self.args.skip_filesystem_writes
@@ -755,7 +759,10 @@ class PerftestPlot:
         )
         self.jira_url = self.args.jira_url
         try:
-            self.jira_token: str | None = Path(self.args.jira_token_path).read_text().split("\n")[0]
+            self.jira_token: str | None = (
+                getenv(self.args.jira_token_var)
+                or Path(self.args.jira_token_path).read_text().split("\n")[0]
+            )
         except (OSError, TypeError):
             self.jira_token = None
         self.alert_on_failure = self.args.alert_on_failure and self.jira_url and self.jira_token
@@ -1595,6 +1602,13 @@ def parse_args() -> PerftestPlotArgs:
         type=str,
         default=None,
         help="The URL of the Jira server (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--jira-token-var",
+        dest="jira_token_var",
+        type=str,
+        default="JIRA_API_TOKEN_QA_ALERTS",
+        help="The name of the Jira token variable (default: %(default)s).",
     )
     parser.add_argument(
         "--jira-token-path",

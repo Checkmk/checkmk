@@ -41,6 +41,7 @@ openssl = "0.10"
 os_info = "3.9"
 predicates = "*"
 rand = "0.8"
+rayon = "1.11"
 reqwest = "0.12"
 rpassword = "7.3"
 rustls = { version = "0.23.19", default-features = false }

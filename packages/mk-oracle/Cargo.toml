@@ -27,6 +27,7 @@ log.workspace = true
 # https://github.com/rust-cross/rust-musl-cross/issues/44
 openssl = { workspace = true, features = ["vendored"] }
 oracle = "0.6.3"
+rayon.workspace = true
 tokio = { workspace = true, features = [
   "full",
   "rt",

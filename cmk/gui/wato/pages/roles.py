@@ -51,7 +51,7 @@ from cmk.gui.permissions import (
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.userdb import UserRole
+from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import builtin_role_id_from_str
@@ -121,7 +121,11 @@ class ModeRoles(WatoMode):
 
         if request.var("_delete"):
             role_id = RoleID(request.get_ascii_input_mandatory("_delete"))
-            userroles.delete_role(role_id, pprint_value=config.wato_pprint_config)
+            userroles.delete_role(
+                role_id,
+                get_user_attributes(config.wato_user_attrs),
+                pprint_value=config.wato_pprint_config,
+            )
             _changes.add_change(
                 action_name="edit-roles",
                 text=_("Deleted role '%s'") % role_id,
@@ -276,7 +280,7 @@ class ModeRoleTwoFactor(WatoMode):
             new_roleid=self._role_id,
             pprint_value=config.wato_pprint_config,
         )
-        userroles.logout_users_with_role(self._role_id)
+        userroles.logout_users_with_role(self._role_id, get_user_attributes(config.wato_user_attrs))
         _changes.add_change(
             action_name="edit-roles",
             text=_("Modified user role '%s'") % self._role_id,

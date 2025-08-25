@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Self
@@ -15,7 +15,12 @@ from cmk.gui.config import Config
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
-from cmk.gui.type_defs import AgentControllerCertificates, GraphTimerange, PasswordPolicy
+from cmk.gui.type_defs import (
+    AgentControllerCertificates,
+    CustomUserAttrSpec,
+    GraphTimerange,
+    PasswordPolicy,
+)
 from cmk.utils.tags import TagGroup
 
 from .api_config import APIVersion
@@ -78,6 +83,7 @@ class ApiConfig:
     wato_pprint_config: bool
     wato_use_git: bool
     roles: Mapping[str, CustomUserRole | BuiltInUserRole]
+    wato_user_attrs: Sequence[CustomUserAttrSpec]
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -92,6 +98,7 @@ class ApiConfig:
             wato_pprint_config=config.wato_pprint_config,
             wato_use_git=config.wato_use_git,
             roles=config.roles,
+            wato_user_attrs=config.wato_user_attrs,
         )
 
 

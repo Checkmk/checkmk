@@ -4,21 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import NewType
 
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.userdb import (
-    get_user_attributes,
     is_two_factor_login_enabled,
     load_roles,
     load_users,
     save_users,
+    UserAttribute,
     UserRole,
     UserRolesConfigFile,
 )
@@ -88,7 +87,9 @@ def role_exists(role_id: RoleID) -> bool:
     return False
 
 
-def delete_role(role_id: RoleID, pprint_value: bool) -> None:
+def delete_role(
+    role_id: RoleID, user_attributes: Sequence[tuple[str, UserAttribute]], pprint_value: bool
+) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_delete: UserRole = get_role(role_id)
 
@@ -105,7 +106,9 @@ def delete_role(role_id: RoleID, pprint_value: bool) -> None:
             )
 
     # TODO: Not sure this call is required. Error is already raised above if an existing user has this role.
-    rename_user_role(role_id, None)  # Remove from existing users
+    _rename_user_role(
+        role_id, new_role_id=None, user_attributes=user_attributes
+    )  # Remove from existing users
 
     del all_roles[role_id]
     UserRolesConfigFile().save(
@@ -113,14 +116,18 @@ def delete_role(role_id: RoleID, pprint_value: bool) -> None:
     )
 
 
-def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
+def _rename_user_role(
+    role_id: RoleID,
+    new_role_id: RoleID | None,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> None:
     users = load_users(lock=True)
     for user in users.values():
         if role_id in user["roles"]:
             user["roles"].remove(role_id)
             if new_role_id:
                 user["roles"].append(new_role_id)
-    save_users(users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
+    save_users(users, user_attributes, datetime.now())
 
 
 def validate_new_alias(old_alias: str, new_alias: str) -> None:
@@ -179,9 +186,11 @@ def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID, pprint_v
     )
 
 
-def logout_users_with_role(role_id: RoleID) -> None:
+def logout_users_with_role(
+    role_id: RoleID, user_attributes: Sequence[tuple[str, UserAttribute]]
+) -> None:
     users = load_users(lock=True)
     for user_id, user in users.items():
         if role_id in user["roles"] and not is_two_factor_login_enabled(user_id):
             user["serial"] = user.get("serial", 0) + 1
-    save_users(users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
+    save_users(users, user_attributes, datetime.now())

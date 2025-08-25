@@ -16,6 +16,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.userroles import delete_role, RoleID
 
 from .endpoint_family import USER_ROLE_FAMILY
@@ -36,7 +37,11 @@ def delete_user_role_v1(
     ],
 ) -> None:
     """Delete a user role"""
-    delete_role(RoleID(role_id), pprint_value=api_context.config.wato_pprint_config)
+    delete_role(
+        RoleID(role_id),
+        get_user_attributes(api_context.config.wato_user_attrs),
+        pprint_value=api_context.config.wato_pprint_config,
+    )
 
 
 ENDPOINT_DELETE_USER_ROLE = VersionedEndpoint(

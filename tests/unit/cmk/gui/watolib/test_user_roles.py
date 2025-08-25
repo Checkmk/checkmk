@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 import cmk.ccc.version as cmk_version
 import cmk.gui.utils.transaction_manager
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.userdb import UserRole
+from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
 from cmk.utils import paths
@@ -37,7 +37,7 @@ def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch, request_contex
         )
         for roleid in default_roles.keys():
             with should_raise_a_mkusererror():
-                userroles.delete_role(roleid, pprint_value=False)
+                userroles.delete_role(roleid, get_user_attributes([]), pprint_value=False)
 
 
 def test_deleting_cloned_user_roles(request_context: None) -> None:
@@ -47,7 +47,7 @@ def test_deleting_cloned_user_roles(request_context: None) -> None:
     assert (
         len(all_roles) == 5 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE else 4
     )
-    userroles.delete_role(RoleID("adminx"), pprint_value=False)
+    userroles.delete_role(RoleID("adminx"), get_user_attributes([]), pprint_value=False)
     roles_after_deletion: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (
         len(roles_after_deletion) == 4

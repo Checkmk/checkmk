@@ -19,6 +19,7 @@
 
 class Aggregation;
 class Aggregator;
+class ICore;
 class Sorter;
 enum class RelationalOperator;
 class RowRenderer;
@@ -73,7 +74,8 @@ public:
     [[nodiscard]] virtual ColumnType type() const = 0;
 
     virtual void output(Row row, RowRenderer &r, const User &user,
-                        std::chrono::seconds timezone_offset) const = 0;
+                        std::chrono::seconds timezone_offset,
+                        const ICore & /*core*/) const = 0;
 
     [[nodiscard]] virtual std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

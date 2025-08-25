@@ -78,7 +78,8 @@ public:
     [[nodiscard]] ColumnType type() const override { return ColumnType::list; }
 
     void output(Row row, RowRenderer &r, const User &user,
-                std::chrono::seconds timezone_offset) const override {
+                std::chrono::seconds timezone_offset,
+                const ICore & /*core*/) const override {
         ListRenderer l{r};
         for (const auto &val : getRawValue(row, user, timezone_offset)) {
             renderer_->output(l, val);

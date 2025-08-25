@@ -12,7 +12,8 @@
 #include "livestatus/Row.h"
 
 void NullColumn::output(Row /*row*/, RowRenderer &r, const User & /*user*/,
-                        std::chrono::seconds /*timezone_offset*/) const {
+                        std::chrono::seconds /*timezone_offset*/,
+                        const ICore & /*core*/) const {
     r.output(Null());
 }
 

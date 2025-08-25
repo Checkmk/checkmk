@@ -43,7 +43,8 @@ public:
     }
 
     void output(Row row, RowRenderer &r, const User & /*user*/,
-                std::chrono::seconds /*timezone_offset*/) const override {
+                std::chrono::seconds /*timezone_offset*/,
+                const ICore & /*core*/) const override {
         DictRenderer d(r);
         for (const auto &it : getValue(row)) {
             d.output(it.first, it.second);
@@ -103,7 +104,8 @@ public:
     }
 
     void output(Row row, RowRenderer &r, const User & /*user*/,
-                std::chrono::seconds /*timezone_offset*/) const override {
+                std::chrono::seconds /*timezone_offset*/,
+                const ICore & /*core*/) const override {
         DictRenderer d(r);
         for (const auto &it : getValue(row)) {
             d.output(it.first, it.second);

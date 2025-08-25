@@ -308,7 +308,7 @@ const std::unordered_set<std::string> &Query::allColumnNames() const {
 void Query::renderColumns(Row row, QueryRenderer &q) const {
     RowRenderer r{q};
     for (const auto &column : parsed_query_.columns) {
-        column->output(row, r, *user_, parsed_query_.timezone_offset);
+        column->output(row, r, *user_, parsed_query_.timezone_offset, core_);
     }
 }
 

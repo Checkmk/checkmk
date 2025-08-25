@@ -109,19 +109,20 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
     now = datetime.now()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     assert active_config.lock_on_logon_failures == 10
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
+    userdb.on_failed_login(user_id, user_attributes, now)
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
+    userdb.on_failed_login(user_id, user_attributes, now)
     assert _load_failed_logins(user_id) == 2
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
+    userdb.on_failed_login(user_id, user_attributes, now)
     assert _load_failed_logins(user_id) == 3
     assert not userdb.user_locked(user_id)
 
@@ -129,11 +130,12 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
     now = datetime.now()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     assert active_config.lock_on_logon_failures == 10
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
+    userdb.on_failed_login(user_id, user_attributes, now)
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
@@ -147,20 +149,21 @@ def test_on_failed_login_with_locking(
     monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
 ) -> None:
     now = datetime.now()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     with set_config(lock_on_logon_failures=3):
         assert active_config.lock_on_logon_failures == 3
         assert _load_failed_logins(user_id) == 0
         assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, now)
+        userdb.on_failed_login(user_id, user_attributes, now)
         assert _load_failed_logins(user_id) == 1
         assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, now)
+        userdb.on_failed_login(user_id, user_attributes, now)
         assert _load_failed_logins(user_id) == 2
         assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, now)
+        userdb.on_failed_login(user_id, user_attributes, now)
         assert _load_failed_logins(user_id) == 3
         assert userdb.user_locked(user_id)
 

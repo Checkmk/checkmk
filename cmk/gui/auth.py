@@ -11,7 +11,7 @@ import contextlib
 import hmac
 import re
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Literal
 
@@ -29,7 +29,7 @@ from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType
-from cmk.gui.userdb import get_user_attributes
+from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
@@ -208,13 +208,17 @@ def _check_auth_by_header(
         # Note: not wrong, invalid. E.g. contains null bytes or is empty
         raise MKAuthException(f"Invalid password: {e}")
 
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
+
     # Could be an automation user or a regular user
-    if _verify_automation_login(user_id, password.raw) or _verify_user_login(user_id, password):
+    if _verify_automation_login(user_id, password.raw) or _verify_user_login(
+        user_id, password, user_attributes
+    ):
         return user_id
 
     # At this point: invalid credentials. Could be user, password or both.
     # on_failed_login wants to be informed about non-existing users as well.
-    userdb.on_failed_login(user_id, datetime.now())
+    userdb.on_failed_login(user_id, user_attributes, datetime.now())
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 
@@ -378,7 +382,11 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     )
 
 
-def _verify_user_login(user_id: UserId, password: Password) -> bool:
+def _verify_user_login(
+    user_id: UserId,
+    password: Password,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> bool:
     """Verify the user's login credentials.
 
     Returns:
@@ -389,7 +397,7 @@ def _verify_user_login(user_id: UserId, password: Password) -> bool:
             userdb.check_credentials(
                 user_id,
                 password,
-                get_user_attributes(active_config.wato_user_attrs),
+                user_attributes,
                 datetime.now(),
             )
         )

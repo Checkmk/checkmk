@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from datetime import datetime
 
 from cmk.ccc.user import UserId
@@ -12,18 +13,20 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils import roles
 
-from ._user_attribute import get_user_attributes
+from ._user_attribute import UserAttribute
 from .store import load_users, update_user
 
 auth_logger = gui_logger.getChild("auth")
 
 
-def on_failed_login(username: UserId, now: datetime) -> None:
+def on_failed_login(
+    username: UserId, user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime
+) -> None:
     all_users = load_users(lock=True)
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user)
-        update_user(username, all_users, get_user_attributes(active_config.wato_user_attrs), now)
+        update_user(username, all_users, user_attributes, now)
 
     if active_config.log_logon_failures:
         if user:

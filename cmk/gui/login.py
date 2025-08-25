@@ -211,7 +211,10 @@ class LoginPage(Page):
 
             now = datetime.now()
             if result := userdb.check_credentials(
-                username, password, get_user_attributes(config.wato_user_attrs), now
+                username,
+                password,
+                (user_attributes := get_user_attributes(config.wato_user_attrs)),
+                now,
             ):
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
@@ -265,7 +268,7 @@ class LoginPage(Page):
 
                 raise HTTPRedirect(origtarget)
 
-            userdb.on_failed_login(username, now)
+            userdb.on_failed_login(username, user_attributes, now)
             raise MKUserError(self._password_varname, self._default_login_error_msg)
 
         except MKUserError as e:

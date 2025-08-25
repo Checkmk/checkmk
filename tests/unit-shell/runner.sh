@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 _REPO="$(git rev-parse --show-toplevel)"
+UNIT_SH_SHUNIT2="${_REPO}/tests/unit-shell/shunit2"
+UNIT_SH_AGENTS_DIR="${_REPO}/agents"
+UNIT_SH_PLUGINS_DIR="${UNIT_SH_AGENTS_DIR}/plugins"
 
-export UNIT_SH_SHUNIT2="${_REPO}/tests/unit-shell/shunit2"
-export UNIT_SH_AGENTS_DIR="${_REPO}/agents"
-export UNIT_SH_PLUGINS_DIR="$UNIT_SH_AGENTS_DIR/plugins"
+export UNIT_SH_SHUNIT2 UNIT_SH_AGENTS_DIR UNIT_SH_PLUGINS_DIR
 
 run_file() {
     bname="${1##.*tests/unit-shell/}"

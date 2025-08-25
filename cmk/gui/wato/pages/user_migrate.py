@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -26,7 +26,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.userdb import connections_by_type, ConnectorType, get_connection, get_user_attributes
+from cmk.gui.userdb import (
+    connections_by_type,
+    ConnectorType,
+    get_connection,
+    get_user_attributes,
+    UserAttribute,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.selection_id import SelectionId
@@ -128,11 +134,11 @@ class ModeUserMigrate(WatoMode):
 
     def page(self, config: Config) -> None:
         if request.var("selection"):
-            self._show_form_page()
+            self._show_form_page(get_user_attributes(config.wato_user_attrs))
         else:
             self._show_result_page()
 
-    def _show_form_page(self) -> None:
+    def _show_form_page(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> None:
         if not (selected_users := _get_selected_users()):
             raise MKUserError("users", _("You have to select at least one user."))
 
@@ -146,7 +152,7 @@ class ModeUserMigrate(WatoMode):
         )
 
         with html.form_context("user_migrate", method="POST"):
-            self._valuespec().render_input_as_form("_user_migrate", {})
+            self._valuespec(user_attributes).render_input_as_form("_user_migrate", {})
 
             html.hidden_fields()
         html.footer()
@@ -169,14 +175,17 @@ class ModeUserMigrate(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        vs_user_migrate = self._valuespec()
-        migration_params = self._valuespec().from_html_vars("_user_migrate")
+        user_attributes = get_user_attributes(config.wato_user_attrs)
+        vs_user_migrate = self._valuespec(user_attributes)
+        migration_params = self._valuespec(user_attributes).from_html_vars("_user_migrate")
         vs_user_migrate.validate_value(migration_params, "_user_migrate")
         if not (connector := migration_params.get("connector")):
             raise MKUserError("_user_migrate", _("You have to specify a connector to migrate to."))
 
         attributes: list[str] = migration_params.get("attributes", [])
-        users_with_warning, users_migrated = self._migrate_users(connector, attributes)
+        users_with_warning, users_migrated = self._migrate_users(
+            connector, attributes, user_attributes
+        )
 
         flashed_msg: str = _("Migrated %d %s to connector '%s': %s") % (
             len(users_migrated),
@@ -204,7 +213,7 @@ class ModeUserMigrate(WatoMode):
 
         return redirect(mode_url("user_migrate", connector=connector))
 
-    def _valuespec(self) -> Dictionary:
+    def _valuespec(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> Dictionary:
         return Dictionary(
             elements=[
                 (
@@ -219,7 +228,7 @@ class ModeUserMigrate(WatoMode):
                     "attributes",
                     ListChoice(
                         title=_("Unset user attributes on migration"),
-                        choices=_get_attribute_choices(),
+                        choices=_get_attribute_choices(user_attributes),
                     ),
                 ),
             ],
@@ -230,6 +239,7 @@ class ModeUserMigrate(WatoMode):
         self,
         connector: str,
         attributes: list[str],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> tuple[list[str], list[str]]:
         users_with_warning: list[str] = []
         users_migrated: list[str] = []
@@ -257,14 +267,14 @@ class ModeUserMigrate(WatoMode):
 
             users_migrated.append(username)
 
-        userdb.save_users(
-            all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
-        )
+        userdb.save_users(all_users, user_attributes, datetime.now())
 
         return users_with_warning, users_migrated
 
 
-def _get_attribute_choices() -> list[tuple[str, str]]:
+def _get_attribute_choices(
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> list[tuple[str, str]]:
     # TODO can we collect all together somehow?
     default_choices: list[tuple[str, str]] = [
         ("email", "Email address"),
@@ -275,7 +285,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     ]
 
     builtin_attribute_choices: list[tuple[str, str]] = []
-    for name, attr in get_user_attributes(active_config.wato_user_attrs):
+    for name, attr in user_attributes:
         builtin_attribute_choices.append((name, attr.valuespec().title() or attr.name()))
 
     return default_choices + builtin_attribute_choices

@@ -72,6 +72,7 @@ from cmk.gui.site_config import (
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
+from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -2706,7 +2707,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
+    def _save_rules(
+        self,
+        rules: list[EventRule],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        pprint_value: bool,
+    ) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -3237,7 +3243,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        self._save_rules(self._rules, config.wato_pprint_config)
+        self._save_rules(
+            self._rules, get_user_attributes(config.wato_user_attrs), config.wato_pprint_config
+        )
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(
@@ -3295,7 +3303,12 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
             return NotificationRuleConfigFile().load_for_modification()
         return NotificationRuleConfigFile().load_for_reading()
 
-    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
+    def _save_rules(
+        self,
+        rules: list[EventRule],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        pprint_value: bool,
+    ) -> None:
         NotificationRuleConfigFile().save(rules, pprint_value=pprint_value)
 
     def _user_id(self) -> None:
@@ -3376,10 +3389,13 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
-    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
-        userdb.save_users(
-            self._users, userdb.get_user_attributes(active_config.wato_user_attrs), datetime.now()
-        )
+    def _save_rules(
+        self,
+        rules: list[EventRule],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        pprint_value: bool,
+    ) -> None:
+        userdb.save_users(self._users, user_attributes, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
@@ -3453,10 +3469,13 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
-    def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
-        userdb.save_users(
-            self._users, userdb.get_user_attributes(active_config.wato_user_attrs), datetime.now()
-        )
+    def _save_rules(
+        self,
+        rules: list[EventRule],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        pprint_value: bool,
+    ) -> None:
+        userdb.save_users(self._users, user_attributes, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())

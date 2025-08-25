@@ -25,6 +25,40 @@ from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from ._model.dashboard import DashboardResponse
 from ._model.response_model import DashboardDomainObject
 
+INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
+    "problem_graph": "problem_graph",
+    "combined_graph": "combined_graph",
+    "single_timeseries": "single_timeseries",
+    "custom_graph": "custom_graph",
+    "pnpgraph": "performance_graph",
+    "inventory": "inventory",
+    "barplot": "barplot",
+    "gauge": "gauge",
+    "single_metric": "single_metric",
+    "average_scatterplot": "average_scatterplot",
+    "top_list": "top_list",
+    "ntop_alerts": "ntop_alerts",
+    "ntop_flows": "ntop_flows",
+    "ntop_top_talkers": "ntop_top_talkers",
+    "alert_overview": "alert_overview",
+    "site_overview": "site_overview",
+    "snapin": "sidebar_element",
+    "state_host": "host_state",
+    "state_service": "service_state",
+    "host_state_summary": "host_state_summary",
+    "service_state_summary": "service_state_summary",
+    "hoststats": "host_stats",
+    "servicestats": "service_stats",
+    "eventstats": "event_stats",
+    "nodata": "static_text",
+    "alerts_bar_chart": "alert_timeline",
+    "notifications_bar_chart": "notification_timeline",
+    "url": "url",
+    "user_messages": "user_messages",
+    "linked_view": "linked_view",
+    "view": "embedded_view",
+}
+
 # if a dashboard contains view widgets, these might come up (even for reads)
 PERMISSIONS_VIEW_WIDGET = permissions.Optional(
     permissions.AllPerm(

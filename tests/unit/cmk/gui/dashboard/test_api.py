@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 import pytest
 
 from cmk.gui.dashboard.api import ApiCustomGraphValidation
+from cmk.gui.dashboard.api._model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api._model.widget_content._base import BaseWidgetContent
+from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.views.icon.registry import all_icons
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import (
@@ -18,6 +21,36 @@ from tests.testlib.common.repo import (
     is_saas_repo,
 )
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+
+@pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)
+def test_widget_api_model_has_valid_type_mapping(widget_api_model: BaseWidgetContent) -> None:
+    literal_values = get_args(get_type_hints(widget_api_model)["type"])
+
+    api_widget_type_name = literal_values[0] if literal_values else None
+    internal_widget_type_name = widget_api_model.internal_type()
+    mapped_api_type_name = INTERNAL_TO_API_TYPE_NAME.get(internal_widget_type_name)
+
+    assert len(literal_values) == 1, "Widget content model  should have exactly one Literal value"
+
+    assert internal_widget_type_name in INTERNAL_TO_API_TYPE_NAME, (
+        f"Internal widget type '{internal_widget_type_name}' not found in INTERNAL_TO_API_TYPE_NAME mapping. "
+        f"INTERNAL_TO_API_TYPE_NAME must contain all internal widget types."
+    )
+
+    assert mapped_api_type_name == api_widget_type_name, (
+        f"Mismatch between internal type '{internal_widget_type_name}' and API type '{api_widget_type_name}'. "
+        f"INTERNAL_TO_API_TYPE must map '{internal_widget_type_name}' to '{api_widget_type_name}'. "
+    )
+
+
+def test_show_dashboard_constants(clients: ClientRegistry) -> None:
+    resp = clients.ConstantClient.get_dashboard()
+
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert len(resp.json["extensions"]["widgets"]) > 0, (
+        "Expected at least one widget to be returned"
+    )
 
 
 def test_list_dashboards(

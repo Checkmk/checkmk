@@ -24,6 +24,7 @@ DomainType = Literal[
     "broker_connection",
     "comment",
     "configuration_entity",
+    "constant",
     "contact_group_config",
     "dashboard",
     "dcd",

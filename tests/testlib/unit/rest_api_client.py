@@ -3388,6 +3388,18 @@ class DashboardClient(RestApiClient):
         )
 
 
+class ConstantClient(RestApiClient):
+    domain: DomainType = "constant"
+    default_version = APIVersion.UNSTABLE
+
+    def get_dashboard(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/dashboard",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3443,6 +3455,7 @@ class ClientRegistry:
     OtelConfigClient: OtelConfigClient
     VisualFilterClient: VisualFilterClient
     DashboardClient: DashboardClient
+    ConstantClient: ConstantClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3490,4 +3503,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
+        ConstantClient=ConstantClient(request_handler, url_prefix),
     )

@@ -21,7 +21,7 @@
 
 using row_type = CrashReport;
 
-TableCrashReports::TableCrashReports(ICore *mc) {
+TableCrashReports::TableCrashReports() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
         "id", "The ID of a crash report", offsets,
@@ -31,8 +31,8 @@ TableCrashReports::TableCrashReports(ICore *mc) {
         offsets, [](const row_type &row) { return row.component; }));
     addDynamicColumn(std::make_unique<DynamicFileColumn<row_type>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
-        [mc](const row_type & /*row*/) {
-            return mc->paths()->crash_reports_directory();
+        [](const row_type & /*row*/, const ICore &core) {
+            return core.paths()->crash_reports_directory();
         },
         [](const std::string &args) { return std::filesystem::path{args}; }));
 }

@@ -124,7 +124,7 @@ public:
                  Encoding::utf8,
                  "enterprise",
                  {}};
-    TableCrashReports table{&core};
+    TableCrashReports table;
 
 private:
     [[nodiscard]] NagiosPathConfig paths_() const {

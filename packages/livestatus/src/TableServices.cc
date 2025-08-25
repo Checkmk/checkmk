@@ -600,7 +600,7 @@ void TableServices::addColumns(Table *table, const ICore &core,
         [](const row_type &row) { return row.pending_flex_downtime(); }));
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<row_type>>(
         prefix + "prediction_file", "Fetch prediction data", offsets,
-        [&core](const row_type &row) {
+        [](const row_type &row, const ICore &core) {
             return core.paths()->prediction_directory() /
                    pnp_cleanup(row.host_name()) /
                    pnp_cleanup(row.description());

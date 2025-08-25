@@ -705,7 +705,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<row_type>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
-        [&core](const row_type & /*row*/) {
+        [](const row_type & /*row*/, const ICore &core) {
             return core.paths()->logwatch_directory();
         },
         [](const std::string &args) { return std::filesystem::path{args}; }));

@@ -18,7 +18,6 @@ Store::Store(ICore *mc)
     : _mc{mc}
     , _log_cache{mc}
     , _table_comments{mc}
-    , _table_crash_reports{mc}
     , _table_downtimes{mc}
     , _table_eventconsoleevents{mc}
     , _table_eventconsolehistory{mc}

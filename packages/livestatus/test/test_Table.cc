@@ -524,8 +524,8 @@ ColumnDefinitions crash_reports_columns() {
 }  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableCrashReports) {
-    EXPECT_EQ(crash_reports_columns(),
-              ColumnDefinitions(TableCrashReports{&mc_}));
+    EXPECT_EQ(crash_reports_columns(),  //
+              ColumnDefinitions(TableCrashReports{}));
 }
 
 namespace {

@@ -82,7 +82,7 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
         .unwrap_err();
     let stderr = std::str::from_utf8(&output_err.as_output().unwrap().stderr)?;
     assert!(stderr.contains("Could not initialize TLS"));
-    assert!(stderr.contains("invalid peer certificate: NotValidForName"));
+    assert!(stderr.contains("not valid for name"));
 
     test_dir
         .close()

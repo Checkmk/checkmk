@@ -20,7 +20,7 @@ find_test_files() {
 }
 
 run_file() {
-    bname="${1##.*tests/unit-shell/}"
+    bname="${1##*tests/unit-shell/}"
     printf "%s\n" "${bname}"
     if ! OUTPUT=$("${1}"); then
         _failed_tests="$_failed_tests ${bname}"

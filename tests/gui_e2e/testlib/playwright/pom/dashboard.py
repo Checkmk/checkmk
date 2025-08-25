@@ -141,6 +141,16 @@ class BaseDashboard(CmkPage):
             message=f"Expected {expected_count} dashlets, but found {self.dashlets.count()}.",
         ).to_have_count(expected_count)
 
+    def check_dashlet_is_present(self, dashlet_title: str) -> None:
+        """Check that a specific dashlet is present on the page.
+
+        Args:
+            dashlet_title: The title of the dashlet to check.
+        """
+        expect(
+            self.dashlet(dashlet_title), f"Dashlet '{dashlet_title}' is not presented on the page"
+        ).to_be_visible()
+
     def apply_filter_to_the_dashboard(
         self,
         filter_name: str,
@@ -163,6 +173,15 @@ class BaseDashboard(CmkPage):
         self.filter_sidebar.expect_to_be_hidden()
 
         self.validate_page()
+
+    def add_top_list_dashlet(self, metric_name: str) -> None:
+        """Add a new dashlet to the dashboard."""
+        self.main_area.click_item_in_dropdown_list("Add", "Top list")
+        self.main_area.locator("span#select2-type_p_metric-container").click()
+        self.main_area.locator("ul#select2-type_p_metric-results").get_by_text(
+            metric_name, exact=True
+        ).click()
+        self.main_area.get_suggestion("Save").click()
 
 
 class Dashboard(BaseDashboard):

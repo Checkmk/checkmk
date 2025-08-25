@@ -12,7 +12,10 @@ from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.pom.custom_dashboard import CustomDashboard
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
-from tests.gui_e2e.testlib.playwright.pom.edit_dashboard import EditDashboard
+from tests.gui_e2e.testlib.playwright.pom.dashboard_properties import (
+    CreateDashboard,
+    EditDashboard,
+)
 from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
     EditElementTopList,
@@ -56,7 +59,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
         6. Check that the SVGs for 'Host statistics' and 'Service statistics' dashlets are visible.
     """
     for dashlet_title in dashboard_page.default_dashlets_list:
-        expect(dashboard_page.dashlet(dashlet_title)).to_be_visible()
+        dashboard_page.check_dashlet_is_present(dashlet_title)
 
     for dropdown_button_name in dashboard_page.dropdown_buttons:
         expect(dashboard_page.main_area.dropdown_button(dropdown_button_name)).to_be_visible()
@@ -192,10 +195,7 @@ def test_host_dashboard(
 
     logger.info("Check that all expected dashlets are presented on the page")
     for dashlet_title in hosts_dashboard_page.dashlets_list:
-        expect(
-            hosts_dashboard_page.dashlet(dashlet_title),
-            f"Dashlet '{dashlet_title}' is not presented on the page",
-        ).to_be_visible()
+        hosts_dashboard_page.check_dashlet_is_present(dashlet_title)
 
     logger.info("Check that dashlets with tables are not empty")
     for dashlet_title in hosts_dashboard_page.table_dashlets:
@@ -362,7 +362,7 @@ def test_add_top_list_dashlet(
     cloned_linux_hosts_dashboard.validate_page()
 
     logger.info("Check that new dashlet is visible and not empty")
-    expect(cloned_linux_hosts_dashboard.dashlet(f"Top 10: {metric}")).to_be_visible()
+    cloned_linux_hosts_dashboard.check_dashlet_is_present(f"Top 10: {metric}")
     rows_count = cloned_linux_hosts_dashboard.dashlet_table_rows(f"Top 10: {metric}").count()
     assert rows_count % hosts_count == 0, "Dashlet table has unexpected amount of rows"
 
@@ -454,3 +454,37 @@ def test_dashboard_required_context_filter_by_host_name(
             cloned_linux_hosts_dashboard.dashlet(dashlet_title).locator("div.simplebar-content"),
             message=f"Dashlet '{dashlet_title}' is not empty.",
         ).to_have_text("No entries.")
+
+
+def test_create_new_dashboard(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
+    """Test dashboard creation from scratch.
+
+    Steps:
+        1. Navigate to the dashboard page.
+        2. Create a new dashboard.
+        3. Add a "CPU utilization" top list dashlet to the dashboard.
+        4. Check that the dashlet is present on the dashboard.
+        5. Check the hosts are present in the dashlet.
+        6. Delete the created dashboard.
+    """
+    dashlet_to_add = "Top 10: CPU utilization"
+
+    create_dashboard = CreateDashboard(dashboard_page.page)
+    custom_dashboard = create_dashboard.create_custom_dashboard("Test Dashboard")
+
+    try:
+        custom_dashboard.add_top_list_dashlet("CPU utilization")
+        custom_dashboard.leave_layout_mode()
+        custom_dashboard.check_dashlet_is_present(dashlet_to_add)
+        for host_name in custom_dashboard.dashlet_table_column_cells(
+            dashlet_to_add, column_index=1
+        ).all():
+            assert host_name.text_content() in linux_hosts, (
+                f"Unexpected host name found in dashlet '{dashlet_to_add}': "
+                f"{host_name.text_content()}. Only one of "
+                f"{', '.join(linux_hosts)} hosts is expected"
+            )
+
+    finally:
+        if os.getenv("CLEANUP", "1") == "1":
+            custom_dashboard.delete()

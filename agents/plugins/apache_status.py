@@ -37,7 +37,7 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 
-def urlopen_(request, timeout=5, cafile=None, context=None):
+def urlopen_(request, timeout=5, context=None):
     if sys.version_info[0] == 2:
         scheme = request.get_type()
     else:
@@ -45,7 +45,7 @@ def urlopen_(request, timeout=5, cafile=None, context=None):
     if scheme not in ["http", "https"]:
         raise ValueError("Scheme '%s' is not allowed" % scheme)
     return urlopen(  # nosec B310 # BNS:6b61d9
-        request, timeout=timeout, cafile=cafile, context=context
+        request, timeout=timeout, context=context
     )
 
 
@@ -211,6 +211,13 @@ def get_ssl_no_verify_context():
     return context
 
 
+def get_ssl_cafile_context(cafile):
+    import ssl
+
+    context = ssl.create_default_context(cafile=cafile)
+    return context
+
+
 def get_response_body(proto, cafile, address, portspec, page):
     response = get_response(proto, cafile, address, portspec, page)
     return response.read().decode(get_response_charset(response))
@@ -236,7 +243,7 @@ def get_response(proto, cafile, address, portspec, page):
     # Try to fetch the status page for each server
     try:
         if proto == "https" and cafile:
-            return urlopen_(request, cafile=cafile, timeout=5)
+            return urlopen_(request, context=get_ssl_cafile_context(cafile=cafile), timeout=5)
         if proto == "https" and is_local:
             return urlopen_with_ssl(request, timeout=5)
         return urlopen_(request, timeout=5)

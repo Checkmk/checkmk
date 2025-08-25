@@ -73,11 +73,11 @@ def main() {
                     container_name: "this-distro-container",
                 ]);
             }
-        }
 
-        stage("Archive / process test reports") {
-            show_duration("archiveArtifacts") {
-                archiveArtifacts("${result_dir}/**");
+            stage("Archive / process test reports") {
+                show_duration("archiveArtifacts") {
+                    archiveArtifacts("${result_dir}/**");
+                }
             }
         }
     }

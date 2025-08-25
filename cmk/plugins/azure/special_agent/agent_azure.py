@@ -277,7 +277,7 @@ class AzureSubscription:
         self._name: Final[str] = name
         self._valid_hostname: Final[str] = HostAddress.project_valid(name)
 
-        self._safe_name_suffix: Final[str] = f"{self.id[-8:]}"
+        self._safe_name_suffix: Final[str] = self.id[-8:]
         self._safe_hostnames: Final[bool] = safe_hostnames
 
     @property

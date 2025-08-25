@@ -70,16 +70,11 @@ provide_clone = { repo_name, credentials_id ->
 withCredentialFileAtLocation = {Map args, Closure body ->
     body.resolveStrategy = Closure.OWNER_FIRST;
     body.delegate = [:];
-    def parent_directory = new File(args.location).parent;
     def cp_cmd = onWindows ? "pwsh -c cp" : "cp"
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
-    def mkdir_cmd = onWindows ? "pwsh -c mkdir -p" : "mkdir -p";
 
     try {
         withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
-                if (args.create_parent_folder) {
-                    cmd_output("${mkdir_cmd} ${parent_directory}");
-                }
                 cmd_output("${cp_cmd} ${SECRET_LOCATION} ${args.location}");
                 body();
         }

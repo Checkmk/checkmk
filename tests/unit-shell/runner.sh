@@ -21,14 +21,14 @@ find_test_files() {
 
 run_file() {
     bname="${1##*tests/unit-shell/}"
-    printf "%s\n" "${bname}"
+
     if ! OUTPUT=$("${1}"); then
         _failed_tests="$_failed_tests ${bname}"
         printf "\n%s\n" "${OUTPUT}"
         return 1
     fi
 
-    printf "%s" "${OUTPUT##*Ran}" | tr '\n.' ' '
+    printf "%s %s" "${bname}" "${OUTPUT##*Ran}" | tr '\n.' ' '
     printf "\n"
     return 0
 }

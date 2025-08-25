@@ -49,7 +49,8 @@ def _agent_elasticsearch_arguments(
 
     if "stats" in params:
         assert isinstance(params["stats"], Sequence)
-        args.extend(["--stats", *(str(i) for i in params["stats"])])
+        for stat in params["stats"]:
+            args.extend(["--stat", str(stat)])
 
     args.append("--")  # make sure the hosts are separated from the infos
     args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])

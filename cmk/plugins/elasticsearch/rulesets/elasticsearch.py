@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -39,7 +38,7 @@ def _migrate(value: object) -> Mapping[str, object]:
     return value
 
 
-def _validate_index_patterns(value: Any) -> None:
+def _validate_index_patterns(value: str) -> None:
     # Based on index name criteria:
     # https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html
 

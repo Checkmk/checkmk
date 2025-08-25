@@ -86,9 +86,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument("--nodes", action="store_true", help="Query nodes data")
 
     parser.add_argument(
-        "--stats",
-        nargs="*",
+        "--stat",
         default=[],
+        dest="stats",
+        action="append",
         help="List of patterns for the statistics query",
     )
 

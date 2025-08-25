@@ -41,10 +41,11 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, cast, Literal, override
 
-# docs: http://www.python-ldap.org/doc/html/index.html
-import ldap
-import ldap.filter
-from ldap import (  # type: ignore[attr-defined]  # dynamic attributes
+# "unused-ignore" is needed because rules_mypy and the IDEs behave differently
+# See https://tribe29.slack.com/archives/C01EA6ZBG58/p1753888028549459
+import ldap  # type: ignore[import-untyped,unused-ignore]
+import ldap.filter  # type: ignore[import-untyped,unused-ignore]
+from ldap import (  # type: ignore[attr-defined,unused-ignore]
     CONTROL_PAGEDRESULTS,
     FILTER_ERROR,
     INAPPROPRIATE_AUTH,
@@ -62,7 +63,7 @@ from ldap import (  # type: ignore[attr-defined]  # dynamic attributes
     SIZELIMIT_EXCEEDED,
     TIMEOUT,
 )
-from ldap.controls import SimplePagedResultsControl
+from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped,unused-ignore]
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
@@ -216,10 +217,12 @@ LDAPUserSpec = dict[str, list[str]]
 
 
 def _get_ad_locator():
-    import activedirectory
-    from activedirectory.protocol import netlogon
+    # "unused-ignore" is needed because rules_mypy and the IDEs behave differently
+    # See https://tribe29.slack.com/archives/C01EA6ZBG58/p1753888028549459
+    import activedirectory  # type: ignore[import-untyped,unused-ignore]
+    from activedirectory.protocol import netlogon  # type: ignore[import-untyped,unused-ignore]
 
-    class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc, name-defined]
+    class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc,name-defined,unused-ignore]
         @override
         def _detect_site(self, domain):
             """Detect our site using the netlogon protocol.

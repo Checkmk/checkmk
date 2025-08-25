@@ -468,23 +468,27 @@ class PerformanceDb:
             - Each metric is inserted as a separate row in the 'metrics' table.
         """
         with self.cursor() as cursor:
+            data = []
             for measurement in measurements:
                 assert isinstance(measurement, dict)
                 for metric_name in measurement:
                     if metric_name == "time":
                         continue
-                    cursor.execute(
-                        """
-                        INSERT INTO metrics (
-                            test_id,
-                            metric_name,
-                            measured_value,
-                            measured_at
-                        )
-                        VALUES (%s,%s,%s,%s)
-                        """,
-                        (test_id, metric_name, measurement[metric_name], measurement["time"]),
+                    data.append(
+                        (test_id, metric_name, measurement[metric_name], measurement["time"])
                     )
+            cursor.executemany(
+                """
+                INSERT INTO metrics (
+                    test_id,
+                    metric_name,
+                    measured_value,
+                    measured_at
+                )
+                VALUES (%s,%s,%s,%s)
+                """,
+                data,
+            )
 
     def write_benchmark_statistics(self, test_id: int, benchmark_statistics: Measurements) -> None:
         """

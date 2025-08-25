@@ -408,11 +408,14 @@ def _sync_existing_user(
     users: Users,
     sync_user_result: SyncUsersResult,
     ldap_user_connector: LDAPUserConnector,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
     if only_username and checkmk_user_id != only_username:
         return
 
-    ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, checkmk_user_copy)
+    ldap_user_connector.execute_active_sync_plugins(
+        checkmk_user_id, ldap_user, checkmk_user_copy, user_attributes
+    )
 
     if checkmk_user_copy == users[checkmk_user_id]:
         return
@@ -449,6 +452,7 @@ def _sync_new_user(
     sync_user_result: SyncUsersResult,
     ldap_user_connector: LDAPUserConnector,
     ldap_user_connector_logger: Logger,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
     if ldap_user_connector.create_users_only_on_login():
         ldap_user_connector_logger.info(
@@ -461,7 +465,9 @@ def _sync_new_user(
     if only_username and checkmk_user_id != only_username:
         return
 
-    ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, new_checkmk_user)
+    ldap_user_connector.execute_active_sync_plugins(
+        checkmk_user_id, ldap_user, new_checkmk_user, user_attributes
+    )
 
     users[checkmk_user_id] = new_checkmk_user
 
@@ -487,6 +493,7 @@ def _sync_ldap_user(
     only_username: UserId | None,
     ldap_user: LDAPUserSpec,
     sync_users_result: SyncUsersResult,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
     """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it
     will attempt to create a new one. If it can't find or create a user spec, we just log a
@@ -507,6 +514,7 @@ def _sync_ldap_user(
             users=users,
             sync_user_result=sync_users_result,
             ldap_user_connector=ldap_user_connector,
+            user_attributes=user_attributes,
         )
         return
 
@@ -527,6 +535,7 @@ def _sync_ldap_user(
             sync_user_result=sync_users_result,
             ldap_user_connector=ldap_user_connector,
             ldap_user_connector_logger=ldap_user_connector_logger,
+            user_attributes=user_attributes,
         )
         return
 
@@ -1472,7 +1481,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         return ldap.dn.dn2str(base_dn)
 
-    def create_ldap_user_on_login(self, userid: UserId, existing_users: Users) -> None:
+    def _create_ldap_user_on_login(
+        self,
+        userid: UserId,
+        existing_users: Users,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+    ) -> None:
         new_user = _create_checkmk_user_for_this_ldap_connection(
             new_user_id=userid,
             existing_users=existing_users,
@@ -1480,7 +1494,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ldap_connector_customer_id=self.customer_id,
         )
         existing_users[userid] = new_user
-        user_attributes = get_user_attributes(active_config.wato_user_attrs)
         save_users(existing_users, user_attributes, datetime.now())
 
         try:
@@ -1515,14 +1528,18 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         except Exception as e:
             _show_exception(self.id, _("Error during sync"), e)
 
-    def get_matching_user_profile(self, user_id: UserId) -> UserId | None:
+    def _get_matching_user_profile(
+        self,
+        user_id: UserId,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+    ) -> UserId | None:
         """This function will try to match an existing user profile, or create a new one if
         it doesn't exist yet. If no user_id can be matched/created, return None."""
         existing_users = load_users(lock=True)
 
         def get_user_id_create_user_if_neccessary(user_id_to_check: UserId) -> UserId | None:
             if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
-                self.create_ldap_user_on_login(user_id_to_check, existing_users)
+                self._create_ldap_user_on_login(user_id_to_check, existing_users, user_attributes)
                 return user_id_to_check
             return user_id_to_check if user_from_config.get("connector") == self.id else None
 
@@ -1585,7 +1602,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password.raw))
-            userid = self.get_matching_user_profile(UserId(ldap_user_id))
+            userid = self._get_matching_user_profile(
+                UserId(ldap_user_id), get_user_attributes(active_config.wato_user_attrs)
+            )
             result: CheckCredentialsResult = False if userid is None else userid
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
@@ -1706,6 +1725,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 only_username=only_username,
                 ldap_user=ldap_user,
                 sync_users_result=sync_users_result,
+                user_attributes=user_attributes,
             )
 
         try:
@@ -1730,21 +1750,23 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         )
 
         if sync_users_result.changes or sync_users_result.has_changed_passwords:
-            save_users_func(
-                users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
-            )
+            save_users_func(users, user_attributes, datetime.now())
         else:
             release_users_lock()
 
         self._set_last_sync_time()
 
     def execute_active_sync_plugins(
-        self, user_id: UserId, ldap_user: LDAPUserSpec, user: UserSpec
+        self,
+        user_id: UserId,
+        ldap_user: LDAPUserSpec,
+        user: UserSpec,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> None:
         for _key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, params, user_id, ldap_user, user))  # type: ignore[typeddict-item]
+            user.update(plugin.sync_func(self, params, user_id, ldap_user, user, user_attributes))  # type: ignore[typeddict-item]
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1892,6 +1914,7 @@ class LDAPAttributePlugin:
         _user_id: UserId,
         _ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict:
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
@@ -1957,6 +1980,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict:
         attr = self.needed_attributes(connection, params)[0]
         if attr in ldap_user:
@@ -2164,6 +2188,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         mail = ""
@@ -2236,6 +2261,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()
@@ -2324,6 +2350,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict:
         sync_attribute = cast(SyncAttribute, params)
         # Special handling for active directory: Is the user enabled / disabled?
@@ -2431,6 +2458,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()
@@ -2498,6 +2526,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, list[str]]:
         groups_to_contactgroups = cast(GroupsToContactGroups, params)
         cg_names = list(load_contact_group_information().keys())
@@ -2572,6 +2601,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: UserSpec,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict:
         groups_to_attributes = cast(GroupsToAttributes, params)
         # Which groups need to be checked whether or not the user is a member?
@@ -2592,7 +2622,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
 
         # First clean all previously set values from attributes to be synced where
         # user is not a member of
-        user_attrs = dict(get_user_attributes(active_config.wato_user_attrs))
+        user_attrs = dict(user_attributes)
         for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] not in groups and attr_name in user and attr_name in user_attrs:
@@ -2708,6 +2738,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: UserSpec,
+        _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[Literal["roles"], list[str]]:
         groups_to_roles = cast(GroupsToRoles, params)
         ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, groups_to_roles)

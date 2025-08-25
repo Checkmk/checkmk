@@ -6,7 +6,7 @@
 
 import abc
 import re
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Sequence
 from datetime import datetime
 from typing import Generic, TypeVar
 
@@ -116,7 +116,9 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(self, *, pprint_value: bool) -> None:
+    def _update_config(
+        self, custom_attributes: Sequence[_T_CustomAttrSpec], *, pprint_value: bool
+    ) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -217,7 +219,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         self._add_extra_attrs_from_html_vars()
 
         save_custom_attrs_to_mk_file(self._all_attrs)
-        self._update_config(pprint_value=config.wato_pprint_config)
+        self._update_config(self._attrs, pprint_value=config.wato_pprint_config)
 
         return redirect(mode_url(self._type + "_attrs"))
 
@@ -329,8 +331,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     def _macro_label(self) -> str:
         return _("Make this variable available in notifications")
 
-    def _update_config(self, *, pprint_value: bool) -> None:
-        update_user_custom_attrs(datetime.now())
+    def _update_config(
+        self, custom_attributes: Sequence[CustomUserAttrSpec], *, pprint_value: bool
+    ) -> None:
+        update_user_custom_attrs(get_user_attributes(custom_attributes), datetime.now())
 
     def _show_in_table_option(self) -> None:
         self._render_table_option(
@@ -415,7 +419,9 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
             "Make this custom attribute available to check commands, notifications and the status GUI"
         )
 
-    def _update_config(self, *, pprint_value: bool) -> None:
+    def _update_config(
+        self, custom_attributes: Sequence[CustomHostAttrSpec], *, pprint_value: bool
+    ) -> None:
         update_host_custom_attrs(pprint_value=pprint_value)
 
     def _show_in_table_option(self) -> None:
@@ -457,7 +463,9 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(self, *, pprint_value: bool) -> None:
+    def _update_config(
+        self, custom_attributes: Sequence[_T_CustomAttrSpec], *, pprint_value: bool
+    ) -> None:
         raise NotImplementedError()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -524,7 +532,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             get_user_attributes(config.wato_user_attrs),
             use_git=config.wato_use_git,
         )
-        self._update_config(pprint_value=config.wato_pprint_config)
+        self._update_config(self._attrs, pprint_value=config.wato_pprint_config)
         _changes.add_change(
             action_name="edit-%sattrs" % self._type,
             text=_("Deleted attribute %s") % (delname),
@@ -579,8 +587,10 @@ class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     def _attrs(self) -> list[CustomUserAttrSpec]:
         return self._all_attrs["user"]
 
-    def _update_config(self, *, pprint_value: bool) -> None:
-        update_user_custom_attrs(datetime.now())
+    def _update_config(
+        self, custom_attributes: Sequence[CustomUserAttrSpec], *, pprint_value: bool
+    ) -> None:
+        update_user_custom_attrs(get_user_attributes(custom_attributes), datetime.now())
 
     def title(self) -> str:
         return _("Custom user attributes")
@@ -616,7 +626,9 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     def _attrs(self) -> list[CustomHostAttrSpec]:
         return self._all_attrs["host"]
 
-    def _update_config(self, *, pprint_value: bool) -> None:
+    def _update_config(
+        self, custom_attributes: Sequence[CustomHostAttrSpec], *, pprint_value: bool
+    ) -> None:
         update_host_custom_attrs(pprint_value=pprint_value)
 
     def title(self) -> str:

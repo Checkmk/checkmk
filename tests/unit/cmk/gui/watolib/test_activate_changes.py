@@ -22,6 +22,7 @@ import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.http import Request
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import (
     ActivationCleanupJob,
@@ -919,6 +920,7 @@ class TestAutomationReceiveConfigSync:
                     ),
                     user_sync="all",
                 ),
+                user_attributes=get_user_attributes([]),
             )
         )
 
@@ -977,15 +979,15 @@ class TestAutomationReceiveConfigSync:
                 )
             }
         )
-        assert activate_changes.AutomationReceiveConfigSync().get_request(
-            config, request
-        ) == activate_changes.ReceiveConfigSyncRequest(
-            site_id=SiteId("NO_SITE"),
-            sync_archive=b"some data",
-            to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
-            config_generation=123,
-            use_git=False,
-            site_config=config.sites[SiteId("NO_SITE")],
+        r = activate_changes.AutomationReceiveConfigSync().get_request(config, request)
+        assert r.site_id == SiteId("NO_SITE")
+        assert r.sync_archive == b"some data"
+        assert r.to_delete == ["x/y/z.txt", "abc.ending", "/ä/☃/☕"]
+        assert r.config_generation == 123
+        assert r.use_git is False
+        assert r.site_config == config.sites[SiteId("NO_SITE")]
+        assert sorted([e[0] for e in r.user_attributes]) == sorted(
+            [e[0] for e in get_user_attributes(config.wato_user_attrs)]
         )
 
 

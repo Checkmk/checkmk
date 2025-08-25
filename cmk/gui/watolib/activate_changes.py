@@ -85,7 +85,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_config
+from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_config, UserAttribute
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
@@ -3422,6 +3422,7 @@ class ReceiveConfigSyncRequest(NamedTuple):
     config_generation: int
     use_git: bool
     site_config: SiteConfiguration
+    user_attributes: Sequence[tuple[str, UserAttribute]]
 
 
 class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
@@ -3446,6 +3447,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             request.get_integer_input_mandatory("config_generation"),
             config.wato_use_git,
             config.sites[site_id],
+            get_user_attributes(config.wato_user_attrs),
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
@@ -3465,6 +3467,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
                 api_request.to_delete,
                 api_request.site_id,
                 api_request.site_config,
+                api_request.user_attributes,
             )
 
             logger.debug("Executing post sync actions")
@@ -3485,6 +3488,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         to_delete: list[str],
         site_id: SiteId,
         site_config: SiteConfiguration,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
@@ -3524,10 +3528,14 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             _unpack_sync_archive(sync_archive, base_dir)
         finally:
             if keep_local_users:
-                _reintegrate_site_local_users(current_users, active_connectors)
+                _reintegrate_site_local_users(current_users, active_connectors, user_attributes)
 
 
-def _reintegrate_site_local_users(old_users: Users, active_connectors: list[str]) -> None:
+def _reintegrate_site_local_users(
+    old_users: Users,
+    active_connectors: list[str],
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> None:
     """
     Fixes missing user files after a new snapshot got applied
     The remote site already ignores ~/var/check_mk/web folders which are only known
@@ -3554,7 +3562,7 @@ def _reintegrate_site_local_users(old_users: Users, active_connectors: list[str]
             # This user is only known on the remote site, keep it
             local_site_users[username] = settings
     new_users.update(local_site_users)
-    save_users(new_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
+    save_users(new_users, user_attributes, datetime.now())
 
 
 @dataclass

@@ -1034,7 +1034,7 @@ def test_openapi_new_user_with_non_existing_role(clients: ClientRegistry) -> Non
 def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
     try:
         save_custom_attrs_to_mk_file({"user": attrs, "host": []})
-        update_user_custom_attrs(datetime.datetime.today())
+        update_user_custom_attrs(get_user_attributes(attrs), datetime.datetime.today())
         yield
     finally:
         save_custom_attrs_to_mk_file({"user": attrs, "host": []})

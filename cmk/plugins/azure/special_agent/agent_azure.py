@@ -1200,10 +1200,10 @@ async def process_virtual_net_gw(
     return section
 
 
-async def process_redis(resource: AzureResource) -> AzureSection:
+async def process_redis(resource: AzureResource, subscription: AzureSubscription) -> AzureSection:
     section = AzureSection(
         FetchedResource.redis.section,
-        [resource.info["name"]],
+        [subscription.get_resource_hostname(resource.info["name"])],
     )
     section.add(resource.dumpinfo())
 
@@ -1938,6 +1938,7 @@ async def process_virtual_machines(
     args: Args,
     group_labels: GroupLabels,
     monitored_resources_by_id: Mapping[str, AzureResource],
+    subcription: AzureSubscription,
 ) -> Sequence[AzureSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
@@ -1974,7 +1975,9 @@ async def process_virtual_machines(
 
         section = AzureSection(
             FetchedResource.virtual_machines.section,
-            [resource.info["name"] if args.piggyback_vms == "self" else resource.info["group"]],
+            [subcription.get_resource_hostname(resource.info["name"])]
+            if args.piggyback_vms == "self"
+            else resource.piggytargets,
         )
         section.add(resource.dumpinfo())
         sections.append(section)
@@ -2105,10 +2108,13 @@ def get_bulk_tasks(
     group_labels: GroupLabels,
     monitored_services: set[str],
     monitored_resources_by_id: Mapping[str, AzureResource],
+    subscription: AzureSubscription,
 ) -> Iterator[asyncio.Task]:
     if FetchedResource.virtual_machines.type in monitored_services:
         yield asyncio.create_task(
-            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
+            process_virtual_machines(
+                mgmt_client, args, group_labels, monitored_resources_by_id, subscription
+            )
         )
     if FetchedResource.app_gateways.type in monitored_services:
         yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources_by_id))
@@ -2135,7 +2141,7 @@ async def process_single_resources(
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
         elif resource_type == FetchedResource.redis.type:
-            tasks.add(process_redis(resource))
+            tasks.add(process_redis(resource, subscription))
         else:
             # simple sections without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
@@ -2183,6 +2189,7 @@ async def process_resources(
             group_labels,
             monitored_services,
             monitored_resources_by_id,
+            subscription,
         ),
         process_single_resources(mgmt_client, args, subscription, monitored_resources_by_id),
     }

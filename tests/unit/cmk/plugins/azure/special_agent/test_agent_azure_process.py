@@ -518,7 +518,7 @@ async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None
         mock_azure_subscription,
     )
 
-    result_section = await process_redis(resource)
+    result_section = await process_redis(resource, mock_azure_subscription)
 
     expected_section = MockAzureSection(
         "redis",

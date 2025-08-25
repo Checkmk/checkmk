@@ -54,12 +54,19 @@ def main() {
             mount_credentials: true,
             privileged: true,
         ) {
-            test_jenkins_helper.execute_test([
-                name: make_target,
-                cmd: "make -C tests ${make_target}",
-                // output_file: "test-performance.txt",
-                container_name: "this-distro-container",
-            ]);
+            withCredentials([
+                string(
+                    credentialsId: 'JIRA_API_TOKEN_QA_ALERTS',
+                    variable: 'JIRA_API_TOKEN_QA_ALERTS'
+                ),
+            ]) {
+                test_jenkins_helper.execute_test([
+                    name: make_target,
+                    cmd: "make -C tests ${make_target}",
+                    // output_file: "test-performance.txt",
+                    container_name: "this-distro-container",
+                ]);
+            }
         }
 
         stage("Archive / process test reports") {

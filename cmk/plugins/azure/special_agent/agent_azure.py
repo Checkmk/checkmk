@@ -2257,27 +2257,33 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
         LOGGER.info("No subscriptions selected")
         return set()
 
-    async with BaseAsyncApiClient(
-        get_mgmt_authority_urls(args.authority, ""),
-        deserialize_http_proxy_config(args.proxy),
-        args.tenant,
-        args.client,
-        args.secret,
-    ) as api_client:
-        response = await api_client.request_async(
-            method="GET",
-            full_uri="https://management.azure.com/subscriptions",
-            params={"api-version": "2022-12-01"},
-        )
-        subscriptions = {
-            item["subscriptionId"]: AzureSubscription(
-                id=item["subscriptionId"],
-                name=item["displayName"],
-                tags=item.get("tags", {}),
-                safe_hostnames=args.safe_hostnames,
+    try:
+        async with BaseAsyncApiClient(
+            get_mgmt_authority_urls(args.authority, ""),
+            deserialize_http_proxy_config(args.proxy),
+            args.tenant,
+            args.client,
+            args.secret,
+        ) as api_client:
+            response = await api_client.request_async(
+                method="GET",
+                full_uri="https://management.azure.com/subscriptions",
+                params={"api-version": "2022-12-01"},
             )
-            for item in response.get("value", [])
-        }
+            subscriptions = {
+                item["subscriptionId"]: AzureSubscription(
+                    id=item["subscriptionId"],
+                    name=item["displayName"],
+                    tags=item.get("tags", {}),
+                    safe_hostnames=args.safe_hostnames,
+                )
+                for item in response.get("value", [])
+            }
+    except Exception as exc:
+        if args.debug:
+            raise
+        write_exception_to_agent_info_section(exc, "Management client - get subscriptions")
+        return set()
 
     if args.all_subscriptions:
         LOGGER.info("Using all subscriptions from API: %s", ",".join(subscriptions.keys()))

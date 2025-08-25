@@ -248,6 +248,9 @@ def _migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
 
+    if "safe_hostnames" not in value:
+        value["safe_hostnames"] = False
+
     if "subscription" not in value:
         value["subscription"] = ("no_subscriptions", None)
     elif isinstance(value["subscription"], str):

@@ -43,8 +43,8 @@ class TaskCreateResponse(BaseModel, frozen=True):
 
 class TaskResponse(TaskCreateRequest):
     status: TaskStatus
-    result_type: ResultType
-    result_payload: str
+    result_type: ResultType | None
+    result_payload: str | None
     creation_timestamp: datetime
     update_timestamp: datetime
     id: UUID4

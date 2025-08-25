@@ -5,9 +5,24 @@
 
 import dataclasses
 import logging
+from dataclasses import dataclass
+from enum import StrEnum
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.relay_protocols.tasks import TaskResponse
+
+
+class TaskStatus(StrEnum):
+    PENDING = "PENDING"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
+
+
+@dataclass(frozen=True)
+class Task:
+    id: str
+    status: TaskStatus
+    version: int = 1
+
 
 # Persistence layer is not thread safe yet.
 # Note: Since we are using async endpoints in the agent-receiver
@@ -15,12 +30,12 @@ from cmk.relay_protocols.tasks import TaskResponse
 # The persistence layer is for now an in memory dict so we won't need
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
-GLOBAL_TASKS: dict[RelayID, list[TaskResponse]] = {}
+GLOBAL_TASKS: dict[RelayID, list[Task]] = {}
 
 
 @dataclasses.dataclass
 class TasksRepository:
-    def get_tasks(self, relay_id: RelayID) -> list[TaskResponse]:
+    def get_tasks(self, relay_id: RelayID) -> list[Task]:
         try:
             tasks = GLOBAL_TASKS[relay_id]
         except KeyError:

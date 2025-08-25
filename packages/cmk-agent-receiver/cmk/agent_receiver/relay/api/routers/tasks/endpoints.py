@@ -14,15 +14,12 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTasksHandler,
     RelayNotFoundError,
 )
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.relay_protocols.tasks import (
-    TaskCreateRequest,
-    TaskCreateResponse,
-    TaskListResponse,
-    TaskResponse,
-    TaskStatus,
-    TaskUpdateRequest,
+from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskStatus
+from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
+    TaskListResponseSerializer,
 )
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.relay_protocols import tasks as tasks_protocol
 
 router = fastapi.APIRouter()
 
@@ -31,10 +28,12 @@ router = fastapi.APIRouter()
     "/{relay_id}/tasks/",
     status_code=fastapi.status.HTTP_202_ACCEPTED,
     responses={
-        202: {"model": TaskCreateResponse},
+        202: {"model": tasks_protocol.TaskCreateResponse},
     },
 )
-async def create_task(relay_id: str, request: TaskCreateRequest) -> TaskCreateResponse:
+async def create_task(
+    relay_id: str, request: tasks_protocol.TaskCreateRequest
+) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
 
     This endpoint allows clients to POST new tasks to be assigned to a specific relay.
@@ -73,10 +72,12 @@ async def create_task(relay_id: str, request: TaskCreateRequest) -> TaskCreateRe
     "/{relay_id}/tasks/{task_id}",
     status_code=fastapi.status.HTTP_202_ACCEPTED,
     responses={
-        202: {"model": TaskResponse},
+        202: {"model": tasks_protocol.TaskResponse},
     },
 )
-async def update_task(relay_id: str, task_id: str, request: TaskUpdateRequest) -> TaskResponse:
+async def update_task(
+    relay_id: str, task_id: str, request: tasks_protocol.TaskUpdateRequest
+) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
     This endpoint allows relays to PATCH tasks with their execution results.
@@ -118,8 +119,10 @@ async def update_task(relay_id: str, task_id: str, request: TaskUpdateRequest) -
 async def get_tasks(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    status: TaskStatus | None = fastapi.Query(None, description="Filter tasks by status"),
-) -> TaskListResponse:
+    status: tasks_protocol.TaskStatus | None = fastapi.Query(
+        None, description="Filter tasks by status"
+    ),
+) -> tasks_protocol.TaskListResponse:
     """Get tasks for a relay, optionally filtered by status.
 
     This endpoint allows clients (especially relays) to GET tasks assigned to them.
@@ -146,9 +149,9 @@ async def get_tasks(
     #         instead of having a separate cleanup task
     # - Return filtered task list
     try:
-        tasks = handler.process(RelayID(relay_id), status)
+        tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
     except RelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND, detail="Relay not found"
         ) from None
-    return tasks
+    return TaskListResponseSerializer.serialize(tasks)

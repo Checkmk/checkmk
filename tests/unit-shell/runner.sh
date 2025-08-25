@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-_REPO="$(git rev-parse --show-toplevel)"
-UNIT_SH_SHUNIT2="${_REPO}/tests/unit-shell/shunit2"
-UNIT_SH_AGENTS_DIR="${_REPO}/agents"
+UNIT_SH_REPO_PATH="$(git rev-parse --show-toplevel)"
+UNIT_SH_SHUNIT2="${UNIT_SH_REPO_PATH}/tests/unit-shell/shunit2"
+UNIT_SH_AGENTS_DIR="${UNIT_SH_REPO_PATH}/agents"
 UNIT_SH_PLUGINS_DIR="${UNIT_SH_AGENTS_DIR}/plugins"
 
-export UNIT_SH_SHUNIT2 UNIT_SH_AGENTS_DIR UNIT_SH_PLUGINS_DIR
+export UNIT_SH_REPO_PATH UNIT_SH_SHUNIT2 UNIT_SH_AGENTS_DIR UNIT_SH_PLUGINS_DIR
 
 run_file() {
     bname="${1##.*tests/unit-shell/}"
@@ -39,4 +39,4 @@ run_files() {
 # tests/unit-shell/runner.sh tests/unit-shell/agents/test_bourne_shell.sh
 PATTERN="$(basename "${1:-test_*.sh}")"
 # watch out! make sure a failure is reflected in the exit code
-find "${_REPO}/tests/unit-shell" -name "${PATTERN}" | run_files
+find "${UNIT_SH_REPO_PATH}/tests/unit-shell" -name "${PATTERN}" | run_files

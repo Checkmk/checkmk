@@ -33,7 +33,7 @@ from tests.testlib.site import (
     SiteFactory,
     tracing_config_from_env,
 )
-from tests.testlib.utils import run
+from tests.testlib.utils import is_cleanup_enabled, run
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +244,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
         test_site.reschedule_services(host_name, 3, strict=False)
 
     yield dump_path_to_host_name_dict
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         logger.info("Clean up: delete the host(s) and the rule")
         test_site.openapi.hosts.bulk_delete(created_hosts_list)
         test_site.openapi.rules.delete(rule_id)

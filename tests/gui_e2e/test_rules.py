@@ -5,7 +5,6 @@
 
 import json
 import logging
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
@@ -38,7 +37,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.predictive_level_helpers import 
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import makedirs
+from tests.testlib.utils import is_cleanup_enabled, makedirs
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +139,7 @@ def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
     # set up a host group
     host_group_name = "test-rules"
     test_site.openapi.host_groups.create(host_group_name, host_group_name)
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         with test_site.backup_and_restore_files(
             files=[
                 Path("etc/check_mk/multisite.d/wato/global.mk"),

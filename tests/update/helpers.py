@@ -16,6 +16,7 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     get_services_with_status,
     get_supported_distros,
+    is_cleanup_enabled,
     parse_files,
     ServiceInfo,
     version_spec_from_env,
@@ -166,7 +167,7 @@ def inject_rules(site: Site) -> None:
 
 
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
-    if os.getenv("CLEANUP", "1") == "1" and not request.config.getoption(name="--skip-uninstall"):
+    if is_cleanup_enabled() and not request.config.getoption(name="--skip-uninstall"):
         site.uninstall_cmk()
 
 

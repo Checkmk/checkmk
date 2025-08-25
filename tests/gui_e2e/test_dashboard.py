@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import re
 from collections.abc import Iterator
 
@@ -24,6 +23,7 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
 )
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def cloned_linux_hosts_dashboard(
     cloned_linux_hosts_dashboard.leave_layout_mode()
     yield cloned_linux_hosts_dashboard
     # Cleanup: delete the cloned dashboard after the test
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         cloned_linux_hosts_dashboard.delete()
 
 
@@ -486,5 +486,5 @@ def test_create_new_dashboard(dashboard_page: Dashboard, linux_hosts: list[str])
             )
 
     finally:
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             custom_dashboard.delete()

@@ -55,6 +55,7 @@ from tests.testlib.utils import (
     check_output,
     execute,
     get_processes_by_cmdline,
+    is_cleanup_enabled,
     is_containerized,
     makedirs,
     PExpectDialog,
@@ -2009,7 +2010,7 @@ class SiteFactory:
             yield site_copy
 
         finally:
-            if os.getenv("CLEANUP", "1") == "1":
+            if is_cleanup_enabled():
                 logger.info("Removing site '%s'...", site_copy.id)
                 site_copy.rm()
 
@@ -2598,7 +2599,7 @@ def connection(
         logger.info("Connection from '%s' to '%s' established", central_site.id, remote_site.id)
         yield
     finally:
-        if os.environ.get("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
             logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
             logger.info("Delete remote site connection '%s'", remote_site.id)

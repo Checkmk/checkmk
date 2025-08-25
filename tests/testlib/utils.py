@@ -634,3 +634,8 @@ def check_permissions(file_path: Path, expected_permissions: str) -> None:
     assert actual_permissions == expected_permissions, (
         f"Unexpected permissions for {file_path}: {actual_permissions}"
     )
+
+
+def is_cleanup_enabled() -> bool:
+    """Check if cleanup is enabled."""
+    return os.getenv("CLEANUP", "1") == "1"

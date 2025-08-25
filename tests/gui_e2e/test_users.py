@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
 from collections.abc import Iterator
 
 import pytest
@@ -18,6 +17,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.roles_and_permissions import Rol
 from tests.gui_e2e.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
 from tests.gui_e2e.testlib.playwright.pom.setup.users import Users
 from tests.testlib.site import Site
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def create_new_role_by_cloning(
     edit_role_page.alias_text_field.fill(role_data.alias)
     edit_role_page.save_button.click()
     yield role_data
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         roles_and_permissions_page.navigate()
         roles_and_permissions_page.delete_role(role_data.role_id, test_site.openapi.user_role)
         roles_and_permissions_page.activate_changes(test_site)
@@ -79,7 +79,7 @@ def create_new_user(
     add_user_page.fill_users_data(user_data)
     add_user_page.save_button.click()
     yield user_data
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         users_page = Users(dashboard_page.page)
         users_page.delete_user(user_data.user_id, test_site.openapi.users)
         users_page.activate_changes(test_site)

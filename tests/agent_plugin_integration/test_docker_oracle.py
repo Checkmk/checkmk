@@ -26,6 +26,7 @@ from tests.testlib.docker import (
     get_container_ip,
     resolve_image_alias,
 )
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger()
 
@@ -413,7 +414,7 @@ class OracleDatabase:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             self.container.stop(timeout=30)
             self.container.remove(force=True)
 

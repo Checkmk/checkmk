@@ -5,7 +5,6 @@
 
 """This test module verifies the distributed monitoring setup through the GUI."""
 
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -23,6 +22,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.distributed_monitoring import (
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import is_cleanup_enabled
 
 
 @contextmanager
@@ -136,7 +136,7 @@ def test_remote_host_configuring(
             )
 
     finally:
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             distributed_monitoring_page.navigate()
             if distributed_monitoring_page.clean_all_site_connections() > 0:
                 distributed_monitoring_page.activate_changes(test_site)

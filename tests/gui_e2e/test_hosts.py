@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import re
 from collections.abc import Iterator
 from urllib.parse import quote_plus
@@ -19,6 +18,7 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties, SetupHost
 from tests.testlib.site import Site
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def fixture_host(dashboard_page: Dashboard, test_site: Site) -> Iterator[HostPro
         HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
     )
     yield _host
-    if int(os.getenv("CLEANUP", "1")) == 1:
+    if is_cleanup_enabled():
         _host.navigate()
         _host.delete_host(test_site)
 

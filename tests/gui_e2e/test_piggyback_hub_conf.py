@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import logging
-import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import assert_never, Final
+from typing import assert_never
 
 import pytest
 
@@ -21,9 +20,9 @@ from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import (
 )
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
-CLEANUP: Final[bool] = os.getenv("CLEANUP", "1") == "1"
 
 
 SITE_SPECIFIC_SETTINGS_REL_PATH = Path("etc/check_mk/multisite.d/sites.mk")
@@ -160,7 +159,6 @@ def _setup_settings(
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
     central_site: Site,
     remote_sites: list[Site],
-    cleanup: bool = True,
 ) -> Iterator[None]:
     """Backup all relevant site-specific settings.
 
@@ -183,7 +181,7 @@ def _setup_settings(
     try:
         yield
     finally:
-        if cleanup:
+        if is_cleanup_enabled():
             logger.info("Restore settings within: '%s'", list_of_files)
             for path in setting_files:
                 if path in backed_settings:
@@ -232,9 +230,7 @@ def test_disabled_on_central__enable_on_remote__error(
 ) -> None:
     """Test that enabling the piggyback-hub site-specific for a remote site fails if it is not enabled for the central site"""
     # given
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_settings = test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)[
             "sites"
         ][remote_site.id]
@@ -288,9 +284,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub site-specific for a remote site works if it is enabled for the central site"""
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
@@ -343,9 +337,7 @@ def test_enabled_on_remote__disable_on_remote__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for a remote site works in general"""
     # given
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
@@ -396,9 +388,7 @@ def test_enabled_on_remote__disable_on_central__error(
     disable_action: HubDisableActions,
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site fails if it is enabled for a remote site"""
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_settings = (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
                 remote_site.id
@@ -441,7 +431,6 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
         },
         test_site,
         [remote_site],
-        CLEANUP,
     ):
         original_settings = test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)[
             "sites"
@@ -506,9 +495,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site works if it is not enabled for any remote sites"""
     # given
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
@@ -546,7 +533,6 @@ def test_enabled_on_remote__disable_globally__error(
         {"gui_e2e_remote": {"site_piggyback_hub": True}},
         test_site,
         [remote_site],
-        CLEANUP,
     ):
         original_settings = test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH)
 
@@ -596,9 +582,7 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub globally works if it is not enabled for any remote sites or it is enabled for the central site"""
     # given
-    with _setup_settings(
-        global_settings, site_specific_settings, test_site, [remote_site], CLEANUP
-    ):
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
 
         # when
@@ -628,11 +612,7 @@ def test_disabled_on_central__enable_globally__error(
     """Test that enabling the piggyback-hub globally fails if it is disabled for the central site"""
     # given
     with _setup_settings(
-        None,
-        {"gui_e2e_central": {"site_piggyback_hub": False}},
-        test_site,
-        [remote_site],
-        CLEANUP,
+        None, {"gui_e2e_central": {"site_piggyback_hub": False}}, test_site, [remote_site]
     ):
         original_settings = test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH)
 
@@ -663,7 +643,7 @@ def test_unset_on_central_and_remote__enable_globally__no_error(
 ) -> None:
     """Test that enabling the piggyback-hub globally works if it is not disabled for the central site"""
     # given
-    with _setup_settings(None, None, test_site, [remote_site], CLEANUP):
+    with _setup_settings(None, None, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
 
         # when

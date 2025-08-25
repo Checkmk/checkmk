@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 from collections.abc import Iterator
 
 import pytest
@@ -31,6 +30,7 @@ from tests.testlib.opentelemetry import (
     wait_for_opentelemetry_data,
 )
 from tests.testlib.site import Site
+from tests.testlib.utils import is_cleanup_enabled
 
 pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 
@@ -96,7 +96,7 @@ def delete_created_objects(
     rule_id: str | None = None,
     cleanup_ec: bool = False,
 ) -> None:
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         logger.info("Cleaning up created resources")
         site.openapi.otel_collector.delete(collector_id)
         if host_name:

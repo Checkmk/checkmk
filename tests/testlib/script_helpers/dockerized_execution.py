@@ -31,7 +31,7 @@ from docker.models.images import Image  # type: ignore[import-untyped]
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.package_manager import DISTRO_CODES
-from tests.testlib.utils import get_cmk_download_credentials
+from tests.testlib.utils import get_cmk_download_credentials, is_cleanup_enabled
 from tests.testlib.version import CMKPackageInfo, CMKVersion, package_hash_path
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -577,7 +577,7 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
         yield c
     finally:
         # Do not leave inactive containers and anonymous volumes behind
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             c.stop()
             c.remove(v=True, force=True)
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -22,7 +21,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.passwords import Passwords
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.site import Site
-from tests.testlib.utils import run
+from tests.testlib.utils import is_cleanup_enabled, run
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def fixture_fake_gcp_dump(test_site: Site) -> Iterator[None]:
     run(["cp", str(gcp_agent), backup_agent], sudo=True)
     run(["cp", str(fake_agent_gcp), str(gcp_agent)], sudo=True)
     yield
-    if os.getenv("CLEANUP", "1") == "1":
+    if is_cleanup_enabled():
         run(["cp", str(backup_agent), str(gcp_agent)], sudo=True)
         run(["rm", str(backup_agent)], sudo=True)
 

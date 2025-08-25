@@ -9,12 +9,12 @@ So as to reduce the time it takes to execute the tests.
 """
 
 import logging
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.testlib.site import Site
+from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
 LOCALHOST_IPV4 = "127.0.0.1"
@@ -37,7 +37,7 @@ def create_and_delete_hosts(
         )
         yield
     finally:
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             logger.info("Delete all hosts via API")
             for host_detail in host_details:
                 logger.debug("Delete host: '%s' via API", host_detail.name)

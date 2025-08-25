@@ -37,6 +37,7 @@ from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
+from tests.testlib.utils import is_cleanup_enabled
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 logger = logging.getLogger()
@@ -409,7 +410,7 @@ class CheckmkApp:
         return c
 
     def _teardown(self) -> None:
-        if os.getenv("CLEANUP", "1") == "1":
+        if is_cleanup_enabled():
             self.container.stop()
             self.container.remove(force=True)
             self._remove_volumes()

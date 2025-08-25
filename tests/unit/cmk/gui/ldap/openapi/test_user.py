@@ -13,6 +13,7 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.watolib.users import create_user, default_sites
 from cmk.utils import paths
@@ -117,7 +118,7 @@ def test_edit_ldap_user_with_locked_attributes(
         "disable_notifications": {},
     }
     with SuperUserContext():
-        create_user(name, user_object, default_sites, use_git=False)
+        create_user(name, user_object, default_sites, get_user_attributes([]), use_git=False)
 
     clients.User.edit(
         username=name,

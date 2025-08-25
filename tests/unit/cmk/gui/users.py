@@ -75,11 +75,13 @@ def create_and_destroy_user(
 
     # Load the config so that superuser's roles are available
     config.load_config()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     with SuperUserContext():
         create_user(
             user_id,
             _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs),
             user_features_registry.features().sites,
+            user_attributes,
             use_git=False,
         )
 
@@ -118,7 +120,7 @@ def create_and_destroy_user(
                 del users[user_id]
                 save_users(
                     profiles=users,
-                    user_attributes=get_user_attributes(active_config.wato_user_attrs),
+                    user_attributes=user_attributes,
                     now=datetime.now(),
                 )
 

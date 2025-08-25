@@ -155,6 +155,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
         username,
         internal_attrs,
         user_features_registry.features().sites,
+        get_user_attributes(active_config.wato_user_attrs),
         use_git=active_config.wato_use_git,
     )
     return serve_user(username)

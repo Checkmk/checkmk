@@ -15,12 +15,11 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import site_config, userdb
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, Users, UserSpec
-from cmk.gui.userdb import add_internal_attributes, get_user_attributes, UserAttribute
+from cmk.gui.userdb import add_internal_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
@@ -182,7 +181,12 @@ def edit_users(
 
 
 def create_user(
-    user_id: UserId, new_user: UserSpec, sites: _UserAssociatedSitesFn, *, use_git: bool
+    user_id: UserId,
+    new_user: UserSpec,
+    sites: _UserAssociatedSitesFn,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    *,
+    use_git: bool,
 ) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
@@ -195,7 +199,7 @@ def create_user(
     if user_id in all_users:
         raise MKUserError("user_id", _("This username is already being used by another user."))
 
-    _validate_user_attributes(user_id, new_user, get_user_attributes(active_config.wato_user_attrs))
+    _validate_user_attributes(user_id, new_user, user_attributes)
 
     add_internal_attributes(new_user)
 
@@ -230,7 +234,7 @@ def create_user(
     )
 
     all_users[user_id] = new_user
-    userdb.save_users(all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
+    userdb.save_users(all_users, user_attributes, datetime.now())
 
 
 def remove_custom_attribute_from_all_users(

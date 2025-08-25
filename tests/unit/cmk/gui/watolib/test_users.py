@@ -132,7 +132,7 @@ def test_only_affected_sites_require_activation_when_adding_users(
 ) -> None:
     for added_user in added_users:
         user_id, userspec = added_user
-        create_user(user_id, userspec, default_sites, use_git=False)
+        create_user(user_id, userspec, default_sites, get_user_attributes([]), use_git=False)
     all_users = userdb.load_users()
     assert user_id in all_users
     assert expected_changed_sites == _changed_sites(sites)
@@ -145,6 +145,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         USER1_ID,
         UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1]}),
         default_sites,
+        get_user_attributes([]),
         use_git=False,
     )
     _reset_site_changes(ALL_SITES)
@@ -190,12 +191,14 @@ def test_only_affected_sites_require_activation_when_deleting_users(
         USER1_ID,
         UserSpec({"alias": "user1", "locked": False}),
         default_sites,
+        get_user_attributes([]),
         use_git=False,
     )
     create_user(
         USER2_ID,
         UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE2]}),
         default_sites,
+        get_user_attributes([]),
         use_git=False,
     )
     _reset_site_changes(ALL_SITES)

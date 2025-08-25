@@ -864,6 +864,7 @@ class ModeEditUser(WatoMode):
                 self._user_id,
                 user_attrs,
                 user_features_registry.features().sites,
+                user_attributes,
                 use_git=config.wato_use_git,
             )
         else:

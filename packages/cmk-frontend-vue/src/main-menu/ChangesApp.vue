@@ -170,6 +170,14 @@ function setSelectedSites() {
     .map((site: Site) => site.siteId)
 }
 
+function clearCacheForRemovedSites(sites: Site[]): void {
+  /** Remove cached activation status for sites that no longer exist.*/
+  const siteids = sites.map((site) => site.siteId)
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith('lastActivationStatus-') && !siteids.includes(key.slice(21)))
+    .forEach((key) => localStorage.removeItem(key))
+}
+
 async function fetchPendingChangesAjax(): Promise<void> {
   try {
     const dataAsJson = (await ajaxCall.get(
@@ -202,6 +210,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
     }
 
     setSelectedSites()
+    clearCacheForRemovedSites(dataAsJson.sites)
   } catch (error) {
     throw new Error(`fetchPendingChangesAjax failed: ${error}`)
   }

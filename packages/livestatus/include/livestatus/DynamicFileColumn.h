@@ -60,7 +60,8 @@ template <typename T>
 
 template <typename T>
 std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
-    const std::string &name, const std::string &arguments, const ICore &core) {
+    const std::string &name, const std::string &arguments,
+    const ICore & /*core*/) {
     // Arguments contains a path relative to basepath and possibly escaped.
     if (arguments.empty()) {
         throw std::runtime_error("invalid arguments for column '" + _name +
@@ -69,7 +70,7 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
     const std::filesystem::path f{mk::unescape_filename(arguments)};
     return std::make_unique<BlobColumn<T>>(
         name, _description, _offsets,
-        BlobFileReader<T>{[this, &core, f](const T &r) {
+        BlobFileReader<T>{[this, f](const T &r, const ICore &core) {
             const auto basepath = this->basepath(r, core);
             const auto filepath = _filepath(f);
             const auto path = filepath.empty() ? basepath : basepath / filepath;

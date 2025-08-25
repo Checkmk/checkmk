@@ -672,22 +672,25 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW Inventory", offsets,
-        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
-            return try_json(core.paths()->inventory_directory() / row.name(),
-                            "");
-        }}));
+        BlobFileReader<row_type>{
+            [&try_json](const row_type &row, const ICore &core) {
+                return try_json(
+                    core.paths()->inventory_directory() / row.name(), "");
+            }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW Inventory", offsets,
-        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
-            return try_json(core.paths()->inventory_directory() / row.name(),
-                            ".gz");
-        }}));
+        BlobFileReader<row_type>{
+            [&try_json](const row_type &row, const ICore &core) {
+                return try_json(
+                    core.paths()->inventory_directory() / row.name(), ".gz");
+            }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW Inventory",
         offsets,
-        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
+        BlobFileReader<row_type>{[&try_json](const row_type &row,
+                                             const ICore &core) {
             return try_json(
                 core.paths()->structured_status_directory() / row.name(), "");
         }}));

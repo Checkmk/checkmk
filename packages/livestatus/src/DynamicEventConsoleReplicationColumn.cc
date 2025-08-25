@@ -66,8 +66,8 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     // DynamicEventConsoleReplicationColumn should really be a template.
     return std::make_unique<BlobColumn<TableEventConsoleReplication>>(
         name, "replication value", _offsets,
-        [result =
-             std::move(result)](const TableEventConsoleReplication & /*r*/) {
+        [result = std::move(result)](const TableEventConsoleReplication & /*r*/,
+                                     const ICore & /*core*/) {
             return std::vector<char>{std::begin(result), std::end(result)};
         });
 }

@@ -12,10 +12,13 @@
 #include <string_view>
 #include <vector>
 
+#include "DummyMonitoringCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/BlobColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+
+class ICore;
 
 namespace {
 constexpr std::string_view content{"file\ncontent\n"};
@@ -49,6 +52,7 @@ struct DummyRow : Row {
 struct DummyValue {};
 
 TEST_F(FileFixture, BlobColumnReadFile) {
+    auto core = DummyMonitoringCore{};
     auto val = DummyValue{};
     auto row = DummyRow{&val};
     auto col = BlobColumn<DummyRow>{
@@ -56,10 +60,12 @@ TEST_F(FileFixture, BlobColumnReadFile) {
         "description",
         {},
         BlobFileReader<DummyRow>{
-            [](const DummyRow & /*row*/) { return basepath() / filename; },
+            [](const DummyRow & /*row*/, const ICore & /*core*/) {
+                return basepath() / filename;
+            },
         }};
 
-    ASSERT_NE(nullptr, col.getValue(row));
-    EXPECT_FALSE(col.getValue(row)->empty());
-    EXPECT_EQ(as_chars(content), *col.getValue(row));
+    ASSERT_NE(nullptr, col.getValue(row, core));
+    EXPECT_FALSE(col.getValue(row, core)->empty());
+    EXPECT_EQ(as_chars(content), *col.getValue(row, core));
 }

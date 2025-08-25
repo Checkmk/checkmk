@@ -81,14 +81,15 @@ void TableServices::addColumns(Table *table, const ICore &core,
         [](const row_type &row) { return row.check_command_expanded(); }));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
-        offsets, BlobFileReader<row_type>{[&core](const row_type &row) {
+        offsets,
+        BlobFileReader<row_type>{[](const row_type &row, const ICore &core) {
             return core.paths()->robotmk_html_log_directory() /
                    row.robotmk_dir() / "suite_last_log.html";
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
-        BlobFileReader<row_type>{[&core](const row_type &row) {
+        BlobFileReader<row_type>{[](const row_type &row, const ICore &core) {
             return core.paths()->robotmk_html_log_directory() /
                    row.robotmk_dir() / "suite_last_log.html.gz";
             ;
@@ -96,14 +97,14 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
-        BlobFileReader<row_type>{[&core](const row_type &row) {
+        BlobFileReader<row_type>{[](const row_type &row, const ICore &core) {
             return core.paths()->robotmk_html_log_directory() /
                    row.robotmk_dir() / "suite_last_error_log.html";
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
-        BlobFileReader<row_type>{[&core](const row_type &row) {
+        BlobFileReader<row_type>{[](const row_type &row, const ICore &core) {
             return core.paths()->robotmk_html_log_directory() /
                    row.robotmk_dir() / "suite_last_error_log.html.gz";
             ;

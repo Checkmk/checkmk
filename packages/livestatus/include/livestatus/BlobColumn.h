@@ -33,15 +33,15 @@ class BlobColumn : public Column {
 public:
     BlobColumn(const std::string &name, const std::string &description,
                const ColumnOffsets &offsets,
-               std::function<std::vector<char>(const T &)> f)
+               std::function<std::vector<char>(const T &, const ICore &)> f)
         : Column{name, description, offsets}, f_{std::move(f)} {}
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::blob; }
 
     void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds /*timezone_offset*/,
-                const ICore & /*core*/) const override {
-        if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
+                const ICore &core) const override {
+        if (std::unique_ptr<std::vector<char>> blob = getValue(row, core)) {
             r.output(*blob);
         } else {
             r.output(Null());
@@ -66,25 +66,26 @@ public:
                                  "' not supported");
     }
 
-    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(Row row) const {
+    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
+        Row row, const ICore &core) const {
         const T *data = columnData<T>(row);
         return std::make_unique<std::vector<char>>(
-            data == nullptr ? std::vector<char>{} : f_(*data));
+            data == nullptr ? std::vector<char>{} : f_(*data, core));
     }
 
 private:
-    const std::function<std::vector<char>(const T &)> f_;
+    const std::function<std::vector<char>(const T &, const ICore &)> f_;
 };
 
 template <typename T>
 class BlobFileReader {
 public:
     explicit BlobFileReader(
-        std::function<std::filesystem::path(const T &)> path)
+        std::function<std::filesystem::path(const T &, const ICore &)> path)
         : _path{std::move(path)}, _logger{"cmk.livestatus"} {}
 
-    std::vector<char> operator()(const T &data) const {
-        const auto path = _path(data);
+    std::vector<char> operator()(const T &data, const ICore &core) const {
+        const auto path = _path(data, core);
         if (!std::filesystem::exists(path)) {
             // The path is not configured.
             return {};
@@ -114,7 +115,7 @@ public:
     Logger *logger() const { return &_logger; }
 
 private:
-    const std::function<std::filesystem::path(const T &)> _path;
+    const std::function<std::filesystem::path(const T &, const ICore &)> _path;
     mutable ThreadNameLogger _logger;
 };
 

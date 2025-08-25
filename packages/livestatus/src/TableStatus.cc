@@ -320,9 +320,10 @@ TableStatus::TableStatus() {
         }));
     addColumn(std::make_unique<BlobColumn<row_type>>(
         "license_usage_history", "Historic license usage information", offsets,
-        BlobFileReader<row_type>{[](const row_type &row) {
-            return row.paths()->license_usage_history_file();
-        }}));
+        BlobFileReader<row_type>{
+            [](const row_type &row, const ICore & /*core*/) {
+                return row.paths()->license_usage_history_file();
+            }}));
     addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",

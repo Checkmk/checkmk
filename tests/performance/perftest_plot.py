@@ -1040,11 +1040,16 @@ class PerftestPlot:
         Returns:
             list[str]: A sorted list of valid job names found on disk or in the database.
         """
-        job_names_on_disk = [
-            job.name
-            for job in Path(self.root_dir).iterdir()
-            if job.is_dir() and self.job_file_path(job.name).exists()
-        ]
+        if self.root_dir.is_dir():
+            print(f'Scanning root dir "{self.root_dir}" for reports...')
+            job_names_on_disk = [
+                job.name
+                for job in self.root_dir.iterdir()
+                if job.is_dir() and self.job_file_path(job.name).exists()
+            ]
+        else:
+            print(f'Skipping root dir "{self.root_dir}": Folder not found!')
+            job_names_on_disk = []
         return sorted(
             [
                 job_name
@@ -1621,7 +1626,7 @@ def main():
 
     if len(app.jobs) == 0:
         print(
-            "Please provide one or more performance test benchmark jobs!\n\n"
+            "Please provide one or more valid performance test benchmark jobs!\n\n"
             f'Run "{Path(__file__).name} --help" for more details.'
         )
         sys_exit()

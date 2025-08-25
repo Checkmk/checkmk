@@ -5,6 +5,8 @@
 
 from typing import Annotated
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
@@ -57,6 +59,14 @@ class SiteConnectionEdit(SiteConnectionBaseModel):
         description="The basic connection attributes",
     )
 
+    def to_internal(self) -> SiteConfiguration:
+        site_configuration = self.base_to_internal()
+        site_configuration["id"] = self.basic_settings.site_id
+        site_configuration["alias"] = self.basic_settings.alias
+        if isinstance(self.basic_settings.customer, str):
+            site_configuration["customer"] = self.basic_settings.customer
+        return site_configuration
+
 
 @api_model
 class SiteConnectionEditModel:
@@ -82,6 +92,14 @@ class SiteConnectionCreate(SiteConnectionBaseModel):
     basic_settings: BasicSettingsCreateModel = api_field(
         description="The basic connection attributes",
     )
+
+    def to_internal(self) -> SiteConfiguration:
+        site_configuration = self.base_to_internal()
+        site_configuration["id"] = self.basic_settings.site_id
+        site_configuration["alias"] = self.basic_settings.alias
+        if isinstance(self.basic_settings.customer, str):
+            site_configuration["customer"] = self.basic_settings.customer
+        return site_configuration
 
 
 @api_model

@@ -31,7 +31,6 @@ from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .internal_to_response import from_internal
 from .models.request_models import SiteConnectionEditModel
 from .models.response_models import SiteConnectionModel
-from .request_to_internal import to_internal
 from .utils import PERMISSIONS
 
 
@@ -47,7 +46,7 @@ def edit_site_connection_v1(
     """Edit a site connection"""
     user.need_permission("wato.sites")
 
-    site_config_spec_from_request = to_internal(body.site_config)
+    site_config_spec_from_request = body.site_config.to_internal()
     body.site_config.basic_settings.site_id = site_id
 
     try:

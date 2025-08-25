@@ -26,7 +26,6 @@ from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .internal_to_response import from_internal
 from .models.request_models import SiteConnectionCreateModel
 from .models.response_models import SiteConnectionModel
-from .request_to_internal import to_internal
 from .utils import PERMISSIONS
 
 
@@ -38,7 +37,7 @@ def create_site_connection_v1(
     user.need_permission("wato.sites")
 
     site_id = body.site_config.basic_settings.site_id
-    new_site_config_spec = to_internal(body.site_config)
+    new_site_config_spec = body.site_config.to_internal()
 
     try:
         sites_to_update = SitesApiMgr().get_connected_sites_to_update(

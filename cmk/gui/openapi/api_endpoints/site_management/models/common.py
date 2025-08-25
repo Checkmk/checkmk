@@ -8,6 +8,19 @@ from typing import Annotated, Literal
 from annotated_types import Ge, Interval
 from pydantic import Discriminator, PlainSerializer, WithJsonSchema
 
+from livestatus import (
+    LocalSocketInfo,
+    NetworkSocketDetails,
+    NetworkSocketInfo,
+    ProxyConfig,
+    ProxyConfigParams,
+    ProxyConfigTcp,
+    SiteConfiguration,
+    TLSParams,
+    UnixSocketDetails,
+    UnixSocketInfo,
+)
+
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -54,6 +67,22 @@ class IP4Socket(IPSocketAttributes):
         example="127.0.0.1",
     )
 
+    def to_internal(self) -> NetworkSocketInfo:
+        return (
+            "tcp",
+            NetworkSocketDetails(
+                address=(str(self.host), self.port),
+                tls=(
+                    "encrypted" if self.encrypted else "plain_text",
+                    (
+                        TLSParams(verify=self.verify)
+                        if isinstance(self.verify, bool)
+                        else TLSParams()
+                    ),
+                ),
+            ),
+        )
+
 
 @api_model
 class IP6Socket(IPSocketAttributes):
@@ -70,6 +99,22 @@ class IP6Socket(IPSocketAttributes):
         example="5402:1db8:95a3:0000:0000:9a2e:0480:8334",
     )
 
+    def to_internal(self) -> NetworkSocketInfo:
+        return (
+            "tcp6",
+            NetworkSocketDetails(
+                address=(str(self.host), self.port),
+                tls=(
+                    "encrypted" if self.encrypted else "plain_text",
+                    (
+                        TLSParams(verify=self.verify)
+                        if isinstance(self.verify, bool)
+                        else TLSParams()
+                    ),
+                ),
+            ),
+        )
+
 
 @api_model
 class UnixSocket:
@@ -82,6 +127,9 @@ class UnixSocket:
         example="/path/to/your/unix_socket",
     )
 
+    def to_internal(self) -> UnixSocketInfo:
+        return ("unix", UnixSocketDetails(path=self.path))
+
 
 @api_model
 class LocalSocket:
@@ -89,6 +137,9 @@ class LocalSocket:
         description="The local socket type",
         example="local",
     )
+
+    def to_internal(self) -> LocalSocketInfo:
+        return ("local", None)
 
 
 @api_model
@@ -190,6 +241,46 @@ class UseProxy:
         default_factory=ApiOmitted,
     )
 
+    def to_internal(self) -> ProxyConfig:
+        proxyconfig = ProxyConfig()
+        if isinstance(self.tcp, ProxyTcpModel):
+            proxyconfig["tcp"] = ProxyConfigTcp(
+                port=self.tcp.port,
+                only_from=[str(ha) for ha in self.tcp.only_from],
+            )
+            if isinstance(self.tcp.tls, bool):
+                proxyconfig["tcp"]["tls"] = self.tcp.tls
+
+        if isinstance(self.params, ProxyParamsModel):
+            params = ProxyConfigParams()
+            if isinstance(self.params.channels, int):
+                params["channels"] = self.params.channels
+
+            if isinstance(self.params.heartbeat, HeartbeatModel):
+                interval = self.params.heartbeat.interval
+                timeout = self.params.heartbeat.timeout
+                if isinstance(interval, int) and isinstance(timeout, float):
+                    params["heartbeat"] = (interval, timeout)
+
+            if isinstance(self.params.channel_timeout, float):
+                params["channel_timeout"] = self.params.channel_timeout
+
+            if isinstance(self.params.query_timeout, float):
+                params["query_timeout"] = self.params.query_timeout
+
+            if isinstance(self.params.connect_retry, float):
+                params["connect_retry"] = self.params.connect_retry
+
+            if isinstance(self.params.cache, bool):
+                params["cache"] = self.params.cache
+
+            proxyconfig["params"] = params
+
+        if self.global_settings:
+            proxyconfig["params"] = None
+
+        return proxyconfig
+
 
 @api_model
 class StatusHostDisabled:
@@ -220,6 +311,9 @@ class StatusHostEnabled:
         description="The host name of the status host.",
         example="host_1",
     )
+
+    def to_internal(self) -> tuple[SiteId, str]:
+        return self.site, self.host.name()
 
 
 @api_model
@@ -293,6 +387,9 @@ class UserSyncWithLdapModel:
         example=["LDAP_1", "LDAP_2"],
     )
 
+    def to_internal(self) -> tuple[Literal["list"], list[str]]:
+        return ("list", self.ldap_connections)
+
 
 @api_model
 class UserSyncAllModel:
@@ -301,6 +398,9 @@ class UserSyncAllModel:
         example="all",
     )
 
+    def to_internal(self) -> Literal["all"]:
+        return "all"
+
 
 @api_model
 class UserSyncDisabledModel:
@@ -308,6 +408,9 @@ class UserSyncDisabledModel:
         description="Sync with disabled connections.",
         example="disabled",
     )
+
+    def to_internal(self) -> None:
+        return None
 
 
 @api_model
@@ -395,3 +498,65 @@ class SiteConnectionBaseModel:
         example="secret",
         default_factory=ApiOmitted,
     )
+
+    def base_to_internal(self) -> SiteConfiguration:
+        # TODO: These three fields should have default values but currently blocked
+        # by a pydantic limitation.
+        persistent_connection = self.status_connection.persistent_connection
+        disable_in_status_gui = self.status_connection.disable_in_status_gui
+        url_prefix = self.status_connection.url_prefix
+
+        site_configuration = SiteConfiguration(
+            id=SiteId(""),
+            alias="",
+            status_host=None,
+            socket=self.status_connection.connection.to_internal(),
+            proxy=None,
+            disabled=False
+            if not isinstance(disable_in_status_gui, bool)
+            else disable_in_status_gui,
+            timeout=self.status_connection.connect_timeout,
+            persist=False if not isinstance(persistent_connection, bool) else persistent_connection,
+            url_prefix="" if not isinstance(url_prefix, str) else url_prefix,
+            replication=None,
+            multisiteurl="",
+            disable_wato=True,
+            insecure=False,
+            user_login=True,
+            user_sync=None,
+            replicate_ec=True,
+            replicate_mkps=True,
+            message_broker_port=5672,
+        )
+
+        if isinstance(self.secret, str):
+            site_configuration["secret"] = self.secret
+
+        if isinstance(self.status_connection.status_host, StatusHostEnabled):
+            site_configuration["status_host"] = self.status_connection.status_host.to_internal()
+
+        if isinstance(self.status_connection.proxy, UseProxy):
+            site_configuration["proxy"] = self.status_connection.proxy.to_internal()
+
+        if isinstance(self.configuration_connection, ConnectionWithReplicationModel):
+            site_configuration["replication"] = "slave"
+            site_configuration["multisiteurl"] = self.configuration_connection.url_of_remote_site
+            site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
+            site_configuration["user_sync"] = self.configuration_connection.user_sync.to_internal()
+            site_configuration["disable_wato"] = (
+                self.configuration_connection.disable_remote_configuration
+            )
+            site_configuration["user_login"] = (
+                self.configuration_connection.direct_login_to_web_gui_allowed
+            )
+            site_configuration["replicate_ec"] = (
+                self.configuration_connection.replicate_event_console
+            )
+            site_configuration["replicate_mkps"] = (
+                self.configuration_connection.replicate_extensions
+            )
+            site_configuration["message_broker_port"] = (
+                self.configuration_connection.message_broker_port
+            )
+
+        return site_configuration

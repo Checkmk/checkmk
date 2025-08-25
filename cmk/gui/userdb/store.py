@@ -104,7 +104,7 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
 
 
 def rewrite_users(now: datetime) -> None:
-    save_users(load_users(lock=True), now)
+    save_users(load_users(lock=True), get_user_attributes(active_config.wato_user_attrs), now)
 
 
 def _root_dir() -> Path:
@@ -388,10 +388,10 @@ def _update_users(
     hooks.call("users-saved", all_users_with_custom_macros)
 
 
-def save_users(profiles: Users, now: datetime) -> None:
-    _update_users(
-        list(profiles.keys()), profiles, get_user_attributes(active_config.wato_user_attrs), now
-    )
+def save_users(
+    profiles: Users, user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime
+) -> None:
+    _update_users(list(profiles.keys()), profiles, user_attributes, now)
 
 
 def update_user(
@@ -661,7 +661,12 @@ def _save_auth_serials(updated_profiles: Users) -> None:
 
 
 def create_cmk_automation_user(
-    now: datetime, name: str, alias: str, role: str, store_secret: bool
+    now: datetime,
+    name: str,
+    alias: str,
+    role: str,
+    store_secret: bool,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
@@ -681,7 +686,7 @@ def create_cmk_automation_user(
         "language": "en",
         "connector": "htpasswd",
     }
-    save_users(users, now)
+    save_users(users, user_attributes, now)
 
 
 def _save_cached_profile(

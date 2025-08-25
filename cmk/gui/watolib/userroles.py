@@ -8,11 +8,13 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import NewType
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.userdb import (
+    get_user_attributes,
     is_two_factor_login_enabled,
     load_roles,
     load_users,
@@ -118,7 +120,7 @@ def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
             user["roles"].remove(role_id)
             if new_role_id:
                 user["roles"].append(new_role_id)
-    save_users(users, datetime.now())
+    save_users(users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
 
 
 def validate_new_alias(old_alias: str, new_alias: str) -> None:
@@ -182,4 +184,4 @@ def logout_users_with_role(role_id: RoleID) -> None:
     for user_id, user in users.items():
         if role_id in user["roles"] and not is_two_factor_login_enabled(user_id):
             user["serial"] = user.get("serial", 0) + 1
-    save_users(users, datetime.now())
+    save_users(users, get_user_attributes(active_config.wato_user_attrs), datetime.now())

@@ -28,7 +28,8 @@ from cmk.gui.site_config import (
     is_wato_slave_site,
 )
 from cmk.gui.sites import SiteStatus
-from cmk.gui.type_defs import UserSpec, VisualTypeName
+from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec, VisualTypeName
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -243,6 +244,7 @@ def _push_user_profiles_to_site(
 class PushUserProfilesRequest(NamedTuple):
     user_profiles: Mapping[UserId, UserSpec]
     user_visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None
+    custom_user_attributes: Sequence[CustomUserAttrSpec]
 
 
 class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
@@ -253,6 +255,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
         return PushUserProfilesRequest(
             ast.literal_eval(request.get_str_input_mandatory("profiles")),
             ast.literal_eval(request.get_str_input_mandatory("visuals", None)),
+            config.wato_user_attrs,
         )
 
     def execute(self, api_request: PushUserProfilesRequest) -> Literal[True]:
@@ -265,7 +268,9 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
         users = userdb.load_users(lock=True)
         for user_id, profile in user_profiles.items():
             users[user_id] = profile
-        userdb.save_users(users, datetime.now())
+        userdb.save_users(
+            users, get_user_attributes(api_request.custom_user_attributes), datetime.now()
+        )
 
         if visuals_by_user:
             for user_id, visuals_by_type in visuals_by_user.items():

@@ -110,7 +110,9 @@ def delete_users(
             sites=None if affected_sites == "all" else list(affected_sites),
             use_git=use_git,
         )
-        userdb.save_users(all_users, datetime.now())
+        userdb.save_users(
+            all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
+        )
 
 
 def edit_users(
@@ -173,7 +175,7 @@ def edit_users(
             use_git=use_git,
         )
 
-    userdb.save_users(all_users, datetime.now())
+    userdb.save_users(all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
 
 
 def create_user(
@@ -225,7 +227,7 @@ def create_user(
     )
 
     all_users[user_id] = new_user
-    userdb.save_users(all_users, datetime.now())
+    userdb.save_users(all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
 
 
 def remove_custom_attribute_from_all_users(

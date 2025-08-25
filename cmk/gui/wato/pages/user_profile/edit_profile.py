@@ -69,8 +69,9 @@ class UserProfile(Page):
         localize(user.language)
 
         # Custom attributes
+        user_attributes = get_user_attributes(config.wato_user_attrs)
         if user.may("general.edit_user_attributes"):
-            for name, attr in get_user_attributes(config.wato_user_attrs):
+            for name, attr in user_attributes:
                 if not attr.user_editable():
                     continue
 
@@ -83,7 +84,7 @@ class UserProfile(Page):
                 vs.validate_value(value, "ua_" + name)
                 user_spec[name] = value  # type: ignore[literal-required]
 
-        userdb.save_users(users, datetime.now())
+        userdb.save_users(users, user_attributes, datetime.now())
 
         flash(_("Successfully updated user profile."))
 

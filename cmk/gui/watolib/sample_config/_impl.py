@@ -15,7 +15,7 @@ from cmk.ccc import store
 from cmk.ccc.site import omd_site, url_prefix
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
-from cmk.gui.userdb import create_cmk_automation_user
+from cmk.gui.userdb import create_cmk_automation_user, get_user_attributes
 from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
     SampleConfigGenerator,
@@ -303,5 +303,10 @@ class ConfigGeneratorRegistrationUser(SampleConfigGenerator):
 
     def generate(self) -> None:
         create_cmk_automation_user(
-            datetime.now(), name=self.name, role=self.role, alias=self.alias, store_secret=True
+            datetime.now(),
+            name=self.name,
+            role=self.role,
+            alias=self.alias,
+            store_secret=True,
+            user_attributes=get_user_attributes([]),
         )

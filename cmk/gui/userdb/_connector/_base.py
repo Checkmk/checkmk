@@ -12,6 +12,8 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.type_defs import Users, UserSpec
 
+from .._user_attribute import UserAttribute
+
 CheckCredentialsResult = UserId | None | Literal[False]
 
 
@@ -79,7 +81,7 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
         add_to_changelog: bool,
         only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
+        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:
         pass
 

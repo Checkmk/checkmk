@@ -20,6 +20,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import Users
+from cmk.gui.userdb import UserAttribute
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 
 
@@ -190,7 +191,11 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         "alice": {"connector": connector.id},
     }
 
-    def assert_expected_users(users_to_save: Users, _now: datetime.datetime) -> None:
+    def assert_expected_users(
+        users_to_save: Users,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        _now: datetime.datetime,
+    ) -> None:
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
         assert UserId("bob") not in users_to_save

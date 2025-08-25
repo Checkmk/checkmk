@@ -23,7 +23,7 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui import userdb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -31,6 +31,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -262,7 +263,7 @@ class PageAutomation(AjaxPage):
 
         users = userdb.load_users(lock=True)
         users[user_id] = watolib_utils.mk_eval(profile)
-        userdb.save_users(users, datetime.now())
+        userdb.save_users(users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
 
         return True
 

@@ -257,7 +257,9 @@ class ModeUserMigrate(WatoMode):
 
             users_migrated.append(username)
 
-        userdb.save_users(all_users, datetime.now())
+        userdb.save_users(
+            all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
+        )
 
         return users_with_warning, users_migrated
 

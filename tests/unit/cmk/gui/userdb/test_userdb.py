@@ -26,6 +26,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.ldap import ldap_connector as ldap
 from cmk.gui.session import session
 from cmk.gui.type_defs import SessionInfo, TotpCredential, TwoFactorCredentials, WebAuthnCredential
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
@@ -589,7 +590,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
-    save_users(users, now)
+    save_users(users, get_user_attributes([]), now)
 
     with pytest.raises(MKUserError, match="User is locked"):
         userdb.check_credentials(user_id, Password(password), now)
@@ -617,7 +618,7 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    save_users(users, now)
+    save_users(users, get_user_attributes([]), now)
     assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
@@ -628,7 +629,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "test-customer"
-    save_users(users, now)
+    save_users(users, get_user_attributes([]), now)
     assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
@@ -641,7 +642,7 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "wrong-customer"
-    save_users(users, now)
+    save_users(users, get_user_attributes([]), now)
     assert userdb.check_credentials(user_id, Password(password), now) is False
 
 

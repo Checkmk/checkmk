@@ -2475,7 +2475,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
             del self._rules[nr]
-            userdb.save_users(self._users, now)
+            userdb.save_users(self._users, userdb.get_user_attributes(config.wato_user_attrs), now)
             self._add_change(
                 action_name="notification-delete-user-rule",
                 text=_("Deleted notification rule %d of user %s") % (nr, self._user_id()),
@@ -2489,7 +2489,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             rule = self._rules[from_pos]
             del self._rules[from_pos]  # make to_pos now match!
             self._rules[to_pos:to_pos] = [rule]
-            userdb.save_users(self._users, now)
+            userdb.save_users(self._users, userdb.get_user_attributes(config.wato_user_attrs), now)
 
             self._add_change(
                 action_name="notification-move-user-rule",
@@ -3373,7 +3373,9 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
     def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
-        userdb.save_users(self._users, datetime.now())
+        userdb.save_users(
+            self._users, userdb.get_user_attributes(active_config.wato_user_attrs), datetime.now()
+        )
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
@@ -3448,7 +3450,9 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
     def _save_rules(self, rules: list[EventRule], pprint_value: bool) -> None:
-        userdb.save_users(self._users, datetime.now())
+        userdb.save_users(
+            self._users, userdb.get_user_attributes(active_config.wato_user_attrs), datetime.now()
+        )
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())

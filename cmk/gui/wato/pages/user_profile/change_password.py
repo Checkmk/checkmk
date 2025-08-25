@@ -19,6 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -99,7 +100,7 @@ class UserChangePasswordPage(Page):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users, now)
+        userdb.save_users(users, get_user_attributes(config.wato_user_attrs), now)
         connection_id = user_spec.get("connector", None)
         connection = get_connection(connection_id)
         log_security_event(

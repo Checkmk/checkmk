@@ -85,7 +85,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.userdb import load_users, user_sync_default_config
+from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_config
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
@@ -3554,7 +3554,7 @@ def _reintegrate_site_local_users(old_users: Users, active_connectors: list[str]
             # This user is only known on the remote site, keep it
             local_site_users[username] = settings
     new_users.update(local_site_users)
-    save_users(new_users, datetime.now())
+    save_users(new_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
 
 
 @dataclass

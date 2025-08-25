@@ -98,7 +98,7 @@ from cmk.gui.userdb._connector import (
     UserConnectorRegistry,
 )
 from cmk.gui.userdb._roles import load_roles
-from cmk.gui.userdb._user_attribute import get_user_attributes
+from cmk.gui.userdb._user_attribute import get_user_attributes, UserAttribute
 from cmk.gui.userdb._user_spec import add_internal_attributes, new_user_template
 from cmk.gui.userdb._user_sync_config import user_sync_config
 from cmk.gui.userdb.store import load_cached_profile, load_users, release_users_lock, save_users
@@ -1477,7 +1477,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ldap_connector_customer_id=self.customer_id,
         )
         existing_users[userid] = new_user
-        save_users(existing_users, datetime.now())
+        save_users(
+            existing_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
+        )
 
         try:
             # logged_in_user_id() can return None when a user is created on login
@@ -1661,7 +1663,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         add_to_changelog: bool,  # unused
         only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
+        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
@@ -1724,7 +1726,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         )
 
         if sync_users_result.changes or sync_users_result.has_changed_passwords:
-            save_users_func(users, datetime.now())
+            save_users_func(
+                users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
+            )
         else:
             release_users_lock()
 

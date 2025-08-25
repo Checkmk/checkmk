@@ -14,8 +14,10 @@ import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui import config
+from cmk.gui.config import active_config
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.store import load_users, save_users
 from cmk.gui.watolib.users import create_user, user_features_registry
 
@@ -114,7 +116,11 @@ def create_and_destroy_user(
             users = load_users()
             if user_id in users:
                 del users[user_id]
-                save_users(profiles=users, now=datetime.now())
+                save_users(
+                    profiles=users,
+                    user_attributes=get_user_attributes(active_config.wato_user_attrs),
+                    now=datetime.now(),
+                )
 
             # User directories are not deleted by WATO by default. Clean it up here!
             shutil.rmtree(str(profile_path))

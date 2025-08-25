@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from logging import Logger
 
@@ -29,6 +29,7 @@ from cmk.gui.type_defs import Users
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
+from ._user_attribute import UserAttribute
 from ._user_sync_config import user_sync_config
 from .store import general_userdb_job, load_users, save_users
 
@@ -134,7 +135,7 @@ class UserSyncBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         args: UserSyncArgs,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
+        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:
         logger = job_interface.get_logger()
         with job_interface.gui_context():
@@ -159,7 +160,7 @@ class UserSyncBackgroundJob(BackgroundJob):
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, datetime], None],
+        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
         now: datetime,
     ) -> bool:
         for connection_id, connection in active_connections():

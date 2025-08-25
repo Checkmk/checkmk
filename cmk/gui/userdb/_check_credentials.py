@@ -23,6 +23,7 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.utils.log.security_event import log_security_event
 
 from ._connections import active_connections, get_connection
+from ._user_attribute import get_user_attributes
 from ._user_spec import new_user_template
 from .store import load_user, load_users, save_users
 
@@ -90,7 +91,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
     users[username].setdefault("alias", username)
-    save_users(users, now)
+    save_users(users, get_user_attributes(active_config.wato_user_attrs), now)
 
     # Call the sync function for this new user
     connection = get_connection(connection_id)

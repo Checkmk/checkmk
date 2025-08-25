@@ -143,9 +143,6 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
     this could have been a easy glob, but we do not care for hidden files here:
     https://bugs.python.org/issue26096"""
     for sub_path in basepath.iterdir():
-        # TODO: remove after CMK-20852 is finished
-        if sub_path == repo_path() / "packages/cmk-shared-typing":
-            continue
         # the following paths may contain python files and should not be scanned
         if sub_path.name == "container_shadow_workspace_local":
             continue
@@ -173,6 +170,7 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "tests",
+        basepath / "packages/cmk-shared-typing/utils",  # only build time dependencies
     ]
     if is_enterprise_repo():
         # Not deployed with the Checkmk site Python environment, but required by tests in the

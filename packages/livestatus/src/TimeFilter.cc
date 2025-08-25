@@ -57,7 +57,8 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 }  // namespace
 
 bool TimeFilter::accepts(Row row, const User & /*user*/,
-                         std::chrono::seconds timezone_offset) const {
+                         std::chrono::seconds timezone_offset,
+                         const ICore & /*core*/) const {
     return eval(
         // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         std::chrono::system_clock::to_time_t(_getValue(row, timezone_offset)),

@@ -46,7 +46,8 @@ ListFilter::ListFilter(Kind kind, std::string columnName,
     , _regExp{makeRegExpFor(relOpForElement(relOp), value)} {}
 
 bool ListFilter::accepts(Row row, const User &user,
-                         std::chrono::seconds timezone_offset) const {
+                         std::chrono::seconds timezone_offset,
+                         const ICore & /*core*/) const {
     switch (oper()) {
         case RelationalOperator::equal:
             if (!value().empty()) {

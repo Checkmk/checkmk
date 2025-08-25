@@ -52,7 +52,8 @@ public:
     ObjectBlacklist(const Query &query, const User &user);
     // TODO(sp) Fix the signature mismatch below: The key can be derived from
     // the state. When this is done, insert() can be merged into accepts().
-    [[nodiscard]] bool accepts(const HostServiceState &hss) const;
+    [[nodiscard]] bool accepts(const HostServiceState &hss,
+                               const ICore &core) const;
     [[nodiscard]] bool contains(HostServiceKey key) const;
     void insert(HostServiceKey key);
 

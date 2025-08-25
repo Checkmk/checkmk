@@ -23,7 +23,8 @@ public:
         : _aggregation(factory()), _getValue{std::move(getValue)} {}
 
     void consume(Row row, const User & /*user*/,
-                 std::chrono::seconds timezone_offset) override {
+                 std::chrono::seconds timezone_offset,
+                 const ICore & /*core*/) override {
         _aggregation->update(double(std::chrono::system_clock::to_time_t(
             _getValue(row, timezone_offset))));
     }

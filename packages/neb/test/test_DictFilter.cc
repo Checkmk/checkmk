@@ -60,7 +60,7 @@ struct DictFilterTest : public ::testing::Test {
                            "raw",
                            {}};
         NebHost h{test_host, core};
-        return filter.accepts(Row{&h}, NoAuthUser{}, {});
+        return filter.accepts(Row{&h}, NoAuthUser{}, {}, core);
     }
 
     TestHost test_host{

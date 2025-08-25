@@ -77,7 +77,8 @@ DictStrValueFilter::DictStrValueFilter(Kind kind, std::string columnName,
 }
 
 bool DictStrValueFilter::accepts(Row row, const User &user,
-                                 std::chrono::seconds timezone_offset) const {
+                                 std::chrono::seconds timezone_offset,
+                                 const ICore &core) const {
     auto filter = StringFilter{
         kind(),
         columnName(),
@@ -89,7 +90,7 @@ bool DictStrValueFilter::accepts(Row row, const User &user,
         oper(),
         ref_string_,
     };
-    return filter.accepts(row, user, timezone_offset);
+    return filter.accepts(row, user, timezone_offset, core);
 }
 
 std::unique_ptr<Filter> DictStrValueFilter::copy() const {
@@ -119,8 +120,9 @@ DictDoubleValueFilter::DictDoubleValueFilter(Kind kind, std::string columnName,
                                     : rest.substr(pos2);
 }
 
-bool DictDoubleValueFilter::accepts(
-    Row row, const User &user, std::chrono::seconds timezone_offset) const {
+bool DictDoubleValueFilter::accepts(Row row, const User &user,
+                                    std::chrono::seconds timezone_offset,
+                                    const ICore &core) const {
     auto filter = DoubleFilter{kind(),
                                columnName(),
                                [this](Row row) {
@@ -131,7 +133,7 @@ bool DictDoubleValueFilter::accepts(
                                oper(),
                                ref_value_,
                                logger()};
-    return filter.accepts(row, user, timezone_offset);
+    return filter.accepts(row, user, timezone_offset, core);
 }
 
 std::unique_ptr<Filter> DictDoubleValueFilter::copy() const {

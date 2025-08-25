@@ -28,9 +28,9 @@ class DictStrValueFilter : public ColumnFilter {
 public:
     DictStrValueFilter(Kind kind, std::string columnName, function_type f,
                        RelationalOperator relOp, const std::string &value);
-    [[nodiscard]] bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(Row row, const User &user,
+                               std::chrono::seconds timezone_offset,
+                               const ICore &core) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
@@ -51,9 +51,9 @@ public:
     DictDoubleValueFilter(Kind kind, std::string columnName, function_type f,
                           RelationalOperator relOp, const std::string &value,
                           Logger *logger);
-    [[nodiscard]] bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(Row row, const User &user,
+                               std::chrono::seconds timezone_offset,
+                               const ICore &core) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
     [[nodiscard]] Logger *logger() const { return logger_; }

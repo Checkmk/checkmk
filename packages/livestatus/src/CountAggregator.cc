@@ -10,8 +10,9 @@
 #include "livestatus/Row.h"
 
 void CountAggregator::consume(Row row, const User &user,
-                              std::chrono::seconds timezone_offset) {
-    if (_filter->accepts(row, user, timezone_offset)) {
+                              std::chrono::seconds timezone_offset,
+                              const ICore &core) {
+    if (_filter->accepts(row, user, timezone_offset, core)) {
         _count++;
     }
 }

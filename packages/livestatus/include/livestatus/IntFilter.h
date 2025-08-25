@@ -27,9 +27,9 @@ public:
     IntFilter(Kind kind, std::string columnName, function_type,
               RelationalOperator relOp, const std::string &value);
 
-    [[nodiscard]] bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(Row row, const User &user,
+                               std::chrono::seconds timezone_offset,
+                               const ICore &core) const override;
 
     [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,

@@ -20,9 +20,9 @@ class OringFilter : public Filter {
 
 public:
     static std::unique_ptr<Filter> make(Kind kind, const Filters &subfilters);
-    [[nodiscard]] bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(Row row, const User &user,
+                               std::chrono::seconds timezone_offset,
+                               const ICore &core) const override;
     [[nodiscard]] std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(

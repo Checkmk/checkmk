@@ -11,6 +11,8 @@
 
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+
+class ICore;
 class Query;
 class User;
 
@@ -25,7 +27,8 @@ class Aggregator {
 public:
     virtual ~Aggregator() = default;
     virtual void consume(Row row, const User &user,
-                         std::chrono::seconds timezone_offset) = 0;
+                         std::chrono::seconds timezone_offset,
+                         const ICore &core) = 0;
     virtual void output(RowRenderer &r) const = 0;
 };
 

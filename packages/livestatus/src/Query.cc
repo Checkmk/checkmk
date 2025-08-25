@@ -146,7 +146,7 @@ bool Query::processDataset(Row row) {
     }
 
     if (!parsed_query_.filter->accepts(row, *user_,
-                                       parsed_query_.timezone_offset)) {
+                                       parsed_query_.timezone_offset, core_)) {
         return true;
     }
 
@@ -164,7 +164,8 @@ bool Query::processDataset(Row row) {
 
     if (doStats()) {
         for (const auto &aggregator : getAggregatorsFor(row)) {
-            aggregator->consume(row, *user_, parsed_query_.timezone_offset);
+            aggregator->consume(row, *user_, parsed_query_.timezone_offset,
+                                core_);
         }
     } else if (hasOrderBy()) {
         // Query::getAggregatorsFor(Row)
@@ -370,6 +371,6 @@ void Query::doWait() {
                               parsed_query_.wait_timeout, [this, &wait_object] {
                                   return parsed_query_.wait_condition->accepts(
                                       wait_object, *user_,
-                                      parsed_query_.timezone_offset);
+                                      parsed_query_.timezone_offset, core_);
                               });
 }

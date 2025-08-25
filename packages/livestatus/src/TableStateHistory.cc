@@ -492,7 +492,7 @@ HostServiceState *TableStateHistory::get_state_for_entry(
         if (!hss->_is_host) {
             // NOTE: The filter is only allowed to inspect those fields of state
             // which are set by now, see createPartialFilter()!
-            if (!blacklist.accepts(*hss)) {
+            if (!blacklist.accepts(*hss, core)) {
                 blacklist.insert(key);
                 return nullptr;
             }
@@ -837,8 +837,9 @@ ObjectBlacklist::ObjectBlacklist(const Query &query, const User &user)
                   columnName == "service_description");
           })} {}
 
-bool ObjectBlacklist::accepts(const HostServiceState &hss) const {
-    return filter_->accepts(Row{&hss}, *user_, query_->timezoneOffset());
+bool ObjectBlacklist::accepts(const HostServiceState &hss,
+                              const ICore &core) const {
+    return filter_->accepts(Row{&hss}, *user_, query_->timezoneOffset(), core);
 }
 
 bool ObjectBlacklist::contains(HostServiceKey key) const {

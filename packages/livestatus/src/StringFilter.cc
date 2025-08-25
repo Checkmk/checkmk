@@ -21,7 +21,8 @@ StringFilter::StringFilter(Kind kind, std::string columnName,
     , _regExp(makeRegExpFor(relOp, value)) {}
 
 bool StringFilter::accepts(Row row, const User & /*user*/,
-                           std::chrono::seconds /*timezone_offset*/) const {
+                           std::chrono::seconds /*timezone_offset*/,
+                           const ICore & /*core*/) const {
     const std::string act_string = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:

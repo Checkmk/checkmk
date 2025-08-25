@@ -14,7 +14,8 @@
 #include "livestatus/Row.h"
 
 void PerfdataAggregator::consume(Row row, const User & /*user*/,
-                                 std::chrono::seconds /*timezone_offset*/) {
+                                 std::chrono::seconds /*timezone_offset*/,
+                                 const ICore & /*core*/) {
     std::istringstream iss(_getValue(row));
     const std::istream_iterator<std::string> end;
     for (auto it = std::istream_iterator<std::string>(iss); it != end; ++it) {

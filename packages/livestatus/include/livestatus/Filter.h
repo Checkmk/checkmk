@@ -18,6 +18,7 @@
 
 class ColumnFilter;
 class Filter;
+class ICore;
 class Row;
 class User;
 
@@ -33,9 +34,9 @@ public:
     explicit Filter(Kind kind) : _kind(kind) {}
     virtual ~Filter() = default;
     [[nodiscard]] Kind kind() const { return _kind; }
-    [[nodiscard]] virtual bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const = 0;
+    [[nodiscard]] virtual bool accepts(Row row, const User &user,
+                                       std::chrono::seconds timezone_offset,
+                                       const ICore &core) const = 0;
     [[nodiscard]] virtual std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const = 0;
 

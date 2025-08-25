@@ -36,9 +36,9 @@ class ListFilter : public ColumnFilter {
 public:
     ListFilter(Kind kind, std::string columnName, function_type,
                RelationalOperator relOp, const std::string &value, Logger *);
-    [[nodiscard]] bool accepts(
-        Row row, const User &user,
-        std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(Row row, const User &user,
+                               std::chrono::seconds timezone_offset,
+                               const ICore &core) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;

@@ -34,9 +34,10 @@ std::unique_ptr<Filter> AndingFilter::make(Kind kind,
 }
 
 bool AndingFilter::accepts(Row row, const User &user,
-                           std::chrono::seconds timezone_offset) const {
+                           std::chrono::seconds timezone_offset,
+                           const ICore &core) const {
     return std::ranges::all_of(_subfilters, [&](const auto &filter) {
-        return filter->accepts(row, user, timezone_offset);
+        return filter->accepts(row, user, timezone_offset, core);
     });
 }
 

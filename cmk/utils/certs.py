@@ -313,6 +313,8 @@ class CertManagementEvent(SecurityEvent):
         "site certificate authority",
         "agent certificate authority",
         "site certificate",
+        "broker certificate authority",
+        "broker certificate",
     ]
 
     def __init__(
@@ -355,7 +357,11 @@ class SiteBrokerCertificate:
 
     @classmethod
     def create_bundle(
-        cls, site_name: str, issuer: CertificateWithPrivateKey
+        cls,
+        site_name: str,
+        issuer: CertificateWithPrivateKey,
+        expiry: relativedelta = relativedelta(years=2),
+        key_size: int = 4096,
     ) -> CertificateWithPrivateKey:
         """Have the site's certificate issued by the given CA.
 
@@ -363,14 +369,12 @@ class SiteBrokerCertificate:
         to create certificates for remote sites.
         """
         organization = f"Checkmk Site {site_name}"
-        expires = relativedelta(years=2)
         is_ca = False
-        key_size = 4096
 
         return issuer.issue_new_certificate(
             common_name=site_name,
             organization=organization,
-            expiry=expires,
+            expiry=expiry,
             key_size=key_size,
             is_ca=is_ca,
         )
@@ -401,17 +405,17 @@ class SiteBrokerCA:
         self.cert_path: Final = cert_path
         self.key_path: Final = key_path
 
-    def create_and_persist(self, site_name: str) -> PersistedCertificateWithPrivateKey:
+    def create_and_persist(
+        self, site_name: str, expiry: relativedelta = relativedelta(years=5), key_size: int = 4096
+    ) -> PersistedCertificateWithPrivateKey:
         common_name = f"Site '{site_name}' broker CA"
         organization = f"Checkmk Site {site_name}"
-        expires = relativedelta(years=5)
-        key_size = 4096
         is_ca = True
 
         cert = CertificateWithPrivateKey.generate_self_signed(
             common_name=common_name,
             organization=organization,
-            expiry=expires,
+            expiry=expiry,
             key_size=key_size,
             is_ca=is_ca,
         )
@@ -425,6 +429,13 @@ class SiteBrokerCA:
     def delete(self) -> None:
         self.cert_path.unlink(missing_ok=True)
         self.key_path.unlink(missing_ok=True)
+
+    def write_trusted_cas(self, trusted_cas_file: Path) -> None:
+        if not self.cert_path.is_file():
+            raise FileNotFoundError(
+                f"Site Broker CA certificate file {self.cert_path} does not exist"
+            )
+        trusted_cas_file.write_bytes(self.cert_path.read_bytes())
 
 
 class CustomerBrokerCA:

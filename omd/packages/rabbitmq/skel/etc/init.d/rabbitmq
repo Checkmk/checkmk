@@ -15,7 +15,7 @@ RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
 RABBITMQ_PORT="${CONFIG_RABBITMQ_PORT:?}"
 RABBITMQ_DIAGNOSTICS="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-diagnostics"
 RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
-BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
+BROKER_CERTIFICATES="${OMD_ROOT}/bin/cmk-cert"
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
 # Control number of Erlang schedulers and amount of memory allocated for constant data
@@ -96,7 +96,8 @@ ensure_broker_certs() {
     printf "Ensuring broker certificates presence...\n"
     if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
         printf "Creating broker certificates...\n"
-        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "${OMD_SITE}"
+        "${BROKER_CERTIFICATES}" "broker-ca" "--replace"
+        "${BROKER_CERTIFICATES}" "broker" "--replace"
     fi
 }
 

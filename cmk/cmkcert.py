@@ -6,7 +6,6 @@
 
 import argparse
 import os
-import shutil
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -16,11 +15,20 @@ from typing import Literal
 from dateutil.relativedelta import relativedelta
 
 import cmk.utils.paths
+from cmk import messaging
 from cmk.ccc.site import SiteId
-from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
+from cmk.utils.certs import (
+    agent_root_ca_path,
+    cert_dir,
+    CertManagementEvent,
+    RootCA,
+    SiteBrokerCA,
+    SiteBrokerCertificate,
+    SiteCA,
+)
 from cmk.utils.log.security_event import log_security_event
 
-CertificateType = Literal["site", "site-ca", "agent-ca"]
+CertificateType = Literal["site", "site-ca", "agent-ca", "broker-ca", "broker"]
 
 
 @dataclass
@@ -34,7 +42,7 @@ def _parse_args(args: Sequence[str]) -> Args:
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
         "target_certificate",
-        choices=["site", "site-ca", "agent-ca"],
+        choices=["site", "site-ca", "agent-ca", "broker-ca", "broker"],
         help="specify which certificate to create",
     )
     parser.add_argument(
@@ -59,19 +67,33 @@ def _parse_args(args: Sequence[str]) -> Args:
     )
 
 
-def _certificate_path(
+def _certificate_paths(
     target_certificate: CertificateType,
     site_id: SiteId,
     omd_root: Path,
-) -> Path:
-    if target_certificate == "site":
-        return SiteCA.site_certificate_path(cert_dir=cert_dir(omd_root), site_id=site_id)
-    if target_certificate == "site-ca":
-        return SiteCA.root_ca_path(cert_dir=cert_dir(omd_root))
-    if target_certificate == "agent-ca":
-        return agent_root_ca_path(site_root_dir=omd_root)
+) -> list[Path]:
+    match target_certificate:
+        case "site":
+            return [SiteCA.site_certificate_path(cert_dir=cert_dir(omd_root), site_id=site_id)]
 
-    raise ValueError(f"Unknown certificate type: {target_certificate}")
+        case "site-ca":
+            return [SiteCA.root_ca_path(cert_dir=cert_dir(omd_root))]
+
+        case "agent-ca":
+            return [agent_root_ca_path(site_root_dir=omd_root)]
+
+        case "broker-ca":
+            return [
+                messaging.cacert_file(omd_root),
+                messaging.ca_key_file(omd_root),
+                messaging.trusted_cas_file(omd_root),
+            ]
+
+        case "broker":
+            return [messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)]
+
+        case _:
+            raise ValueError(f"Unknown certificate type: {target_certificate}")
 
 
 def replace_site_certificate(
@@ -148,6 +170,68 @@ def replace_agent_ca(
     )
 
 
+def replace_broker_ca(
+    site_id: SiteId,
+    omd_root: Path,
+    expiry: relativedelta,
+    key_size: int = 4096,
+) -> None:
+    ca = SiteBrokerCA(messaging.cacert_file(omd_root), messaging.ca_key_file(omd_root))
+    ca_cert_bundle = ca.create_and_persist(site_name=site_id, expiry=expiry, key_size=key_size)
+
+    ca.write_trusted_cas(messaging.trusted_cas_file(omd_root))
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="broker certificate authority",
+            actor="cmk-cert",
+            cert=ca_cert_bundle.certificate,
+        )
+    )
+
+
+def replace_broker_certificate(
+    site_id: SiteId,
+    omd_root: Path,
+    expiry: relativedelta,
+    key_size: int = 4096,
+) -> None:
+    ca = SiteBrokerCA(messaging.cacert_file(omd_root), messaging.ca_key_file(omd_root))
+    ca_cert_bundle = ca.load()
+
+    site_broker_cert = SiteBrokerCertificate(
+        messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
+    )
+    site_broker_cert_bundle = site_broker_cert.create_bundle(
+        site_id, ca_cert_bundle, expiry=expiry, key_size=key_size
+    )
+    site_broker_cert.persist(site_broker_cert_bundle)
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="broker certificate",
+            actor="cmk-cert",
+            cert=site_broker_cert_bundle.certificate,
+        )
+    )
+
+
+def _cert_files_exist(
+    target_certificate: CertificateType,
+    site_id: SiteId,
+    omd_root: Path,
+) -> bool:
+    target_certificate_paths = _certificate_paths(
+        target_certificate=target_certificate,
+        site_id=site_id,
+        omd_root=omd_root,
+    )
+
+    return any(certificate_path.is_file() for certificate_path in target_certificate_paths)
+
+
 def _run_cmkcert(
     omd_root: Path,
     site_id: SiteId,
@@ -155,22 +239,16 @@ def _run_cmkcert(
     expiry: int,
     replace: bool,
 ) -> None:
-    target_certificate_path = _certificate_path(
-        target_certificate=target_certificate,
-        site_id=site_id,
-        omd_root=omd_root,
-    )
-
-    if target_certificate_path.is_file() and not replace:
+    if (
+        _cert_files_exist(
+            target_certificate=target_certificate,
+            site_id=site_id,
+            omd_root=omd_root,
+        )
+        and not replace
+    ):
         raise ValueError(
             f"{target_certificate} certificate already exists but '--replace' not given"
-        )
-
-    if target_certificate_path.is_file():
-        shutil.move(target_certificate_path, target_certificate_path.with_suffix(".bak"))
-        sys.stdout.write(
-            f"cmk-cert: Backed up existing {target_certificate} certificate to "
-            f"{target_certificate_path.with_suffix('.bak')}\n"
         )
 
     match target_certificate:
@@ -193,6 +271,14 @@ def _run_cmkcert(
                 site_id=site_id,
                 certificate_directory=cert_dir(omd_root),
                 expiry=relativedelta(days=expiry),
+            )
+
+        case "broker-ca":
+            replace_broker_ca(site_id=site_id, omd_root=omd_root, expiry=relativedelta(days=expiry))
+
+        case "broker":
+            replace_broker_certificate(
+                site_id=site_id, omd_root=omd_root, expiry=relativedelta(days=expiry)
             )
 
         case _:

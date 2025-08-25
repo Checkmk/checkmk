@@ -257,6 +257,7 @@ def _create_message_broker_certs() -> CertificateWithPrivateKey:
     These might be replaced by the "store-broker-certs" automation.
     """
 
+    # TODO use cmkcert.py
     ca = SiteBrokerCA(messaging.cacert_file(paths.omd_root), messaging.ca_key_file(paths.omd_root))
     ca_bundle = ca.create_and_persist(omd_site())
     MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root)).write(

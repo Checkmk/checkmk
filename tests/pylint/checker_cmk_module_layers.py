@@ -927,6 +927,7 @@ _COMPONENTS = (
         _allow(
             "cmk.agent_based.v1",
             "cmk.agent_based.v2",
+            "cmk.bakery.v2_unstable",
             "cmk.graphing.v1",
             "cmk.inventory_ui.v1_alpha",
             "cmk.rulesets.v1",

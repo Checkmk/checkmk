@@ -197,17 +197,19 @@ class PerformanceTest:
     ) -> None:
         """Scenario: DCD piggyback host discovery
 
-        Create a source host with 100 piggybacked hosts.
+        Create a source host with 1000 piggybacked hosts.
         Wait for piggyback host discovery.
         """
         source_host_name = "test-performance-dcd"
         pb_host_count = self.object_count
+        dcd_max_count = 60
+        dcd_interval = 10
         with piggyback_host_from_dummy_generator(
             self.central_site,
             source_host_name,
             pb_host_count=pb_host_count,
-            dcd_max_count=60,
-            dcd_interval=5,
+            dcd_max_count=dcd_max_count,
+            dcd_interval=dcd_interval,
         ) as piggyback_info:
             assert (
                 len(self.central_site.openapi.hosts.get_all_names(ignore=[source_host_name]))
@@ -224,8 +226,8 @@ class PerformanceTest:
                 execute_dcd_cycle(
                     self.central_site,
                     expected_pb_hosts=0,
-                    max_count=60,
-                    interval=5,
+                    max_count=dcd_max_count,
+                    interval=dcd_interval,
                 )
 
     def scenario_performance_ui_response(self) -> None:
@@ -333,7 +335,6 @@ def test_performance_services(
     )
 
 
-@pytest.mark.skip(reason="Flaky scenario; investigating")
 def test_performance_piggyback(
     perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
 ) -> None:

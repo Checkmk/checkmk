@@ -21,7 +21,13 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
+from cmk.plugins.lib.temperature import (
+    check_temperature,
+    render_temp,
+    temp_unitsym,
+    TempParamDict,
+    TempParamType,
+)
 
 
 class SensorStatus(IntEnum):
@@ -41,11 +47,37 @@ class TemperatureSensor(NamedTuple):
     name: str
     status: str
     cur: float
-    max: float
     min: float
+    max: float
+
+
+class SensorWarnTemp:
+    PHY = 80
+    INLET = 30
+    ASIC = 80
+    CPU = 80
+    DDR = 60
+    DDR_INLET = 40
+    MAINBOARD = 35
+    INTERNAL = 45
+
+
+class SensorCritTemp:
+    PHY = 90
+    INLET = 40
+    ASIC = 90
+    CPU = 90
+    DDR = 70
+    DDR_INLET = 45
+    MAINBOARD = 40
+    INTERNAL = 50
 
 
 Section = Mapping[str, TemperatureSensor]
+
+aruba_sw_temp_check_default_parameters = TempParamDict(
+    input_unit="c",
+)
 
 
 def parse_aruba_sw_temp(string_table: StringTable) -> Section:
@@ -71,9 +103,29 @@ def check_aruba_sw_temp(
     params: TempParamType,
     section: Section,
 ) -> CheckResult:
+    def get_aruba_default_temp(name: str) -> tuple[float, float]:
+        if "CPU" in name:
+            return (SensorWarnTemp.CPU, SensorCritTemp.CPU)
+        if "ASIC" in name:
+            return (SensorWarnTemp.ASIC, SensorCritTemp.ASIC)
+        if "DDR" in name:
+            if "Inlet" in name:
+                return (SensorWarnTemp.DDR_INLET, SensorCritTemp.DDR_INLET)
+            return (SensorWarnTemp.DDR, SensorCritTemp.DDR)
+        if "Inlet" in name:
+            return (SensorWarnTemp.INLET, SensorCritTemp.INLET)
+        if "PHY" in name:
+            return (SensorWarnTemp.PHY, SensorCritTemp.PHY)
+        if "Internal" in name:
+            return (SensorWarnTemp.INTERNAL, SensorCritTemp.INTERNAL)
+
+        return (SensorWarnTemp.MAINBOARD, SensorCritTemp.MAINBOARD)
+
     temp = section.get(item)
     if not temp:
         return
+
+    warn, crit = get_aruba_default_temp(temp.name)
 
     if SensorStatus[temp.status] != SensorStatus.fault:
         yield from check_temperature(
@@ -81,13 +133,26 @@ def check_aruba_sw_temp(
             params=params,
             unique_name=item,
             value_store=get_value_store(),
-            dev_levels=(temp.max * 0.95, temp.max),
-            dev_levels_lower=(temp.min * 1.05, temp.min),
+            dev_levels=(warn, crit),
         )
 
     yield Result(
         state=SensorStateMapping[SensorStatus[temp.status]],
         summary=f"Device status: {temp.status}",
+    )
+
+    yield Result(
+        state=State.OK,
+        summary=f"Min temperature: {
+            render_temp(temp.min, aruba_sw_temp_check_default_parameters['input_unit'])
+        } {temp_unitsym[aruba_sw_temp_check_default_parameters['input_unit']]}",
+    )
+
+    yield Result(
+        state=State.OK,
+        summary=f"Max temperature: {
+            render_temp(temp.max, aruba_sw_temp_check_default_parameters['input_unit'])
+        } {temp_unitsym[aruba_sw_temp_check_default_parameters['input_unit']]}",
     )
 
 
@@ -106,11 +171,6 @@ snmp_section_aruba_sw_temp_status = SimpleSNMPSection(
             "9",  # sensorMaxTemp
         ],
     ),
-)
-
-aruba_sw_temp_check_default_parameters = TempParamDict(
-    input_unit="c",
-    device_levels_handling="usrdefault",
 )
 
 

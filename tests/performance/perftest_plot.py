@@ -741,7 +741,7 @@ class PerftestPlot:
                 print(
                     f'Could not connect to database "{self.args.dbname}"; switching to filesystem mode!',
                 )
-            self.read_from_database = self.write_to_database = False
+                self.read_from_database = self.write_to_database = False
         else:
             self.read_from_database = self.write_to_database = False
 

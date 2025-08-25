@@ -67,6 +67,7 @@ def read_config():
         "address": "",
         "interval": "",
         "timeout": "",
+        "max_hops": "30",
     }
     if not os.path.exists(config_filename):
         if debug:
@@ -306,6 +307,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     address = config.get(host, "address")
     interval = config.get(host, "interval")
     timeout = config.get(host, "timeout")
+    max_hops = config.get(host, "max_hops")
 
     if "running" in status[host].keys():
         if debug:
@@ -366,6 +368,9 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     if timeout:
         options.append("--timeout")
         options.append(str(timeout))
+    if max_hops:
+        options.append("-m")
+        options.append(str(max_hops))
 
     options.append(str(host))
     if debug:

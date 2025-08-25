@@ -17,19 +17,19 @@ CREATE TABLE IF NOT EXISTS scenarios(
 );
 CREATE TABLE IF NOT EXISTS tests(
     test_id SERIAL PRIMARY KEY,
-    job_id INTEGER REFERENCES jobs(job_id),
-    scenario_id INTEGER REFERENCES scenarios(scenario_id),
+    job_id INTEGER REFERENCES jobs(job_id) ON DELETE CASCADE,
+    scenario_id INTEGER REFERENCES scenarios(scenario_id) ON DELETE CASCADE,
     start_timestamp TIMESTAMPTZ NOT NULL,
     end_timestamp TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS benchmarks(
-    test_id INTEGER REFERENCES tests(test_id),
+    test_id INTEGER REFERENCES tests(test_id) ON DELETE CASCADE,
     metric_name TEXT NOT NULL,
     measured_value       DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (test_id, metric_name)
 );
 CREATE TABLE IF NOT EXISTS metrics(
-    test_id INTEGER REFERENCES tests(test_id),
+    test_id INTEGER REFERENCES tests(test_id) ON DELETE CASCADE,
     measured_at   TIMESTAMPTZ NOT NULL,
     metric_name TEXT NOT NULL,
     measured_value       DOUBLE PRECISION NOT NULL,

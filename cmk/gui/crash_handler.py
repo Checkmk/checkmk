@@ -96,11 +96,29 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
                 request_method="unknown",
             )
 
+        if details is None:
+            return cls(
+                omd_root=omd_root,
+                crash_info=cls.make_crash_info(
+                    version_info,
+                    GUIDetails(
+                        page=request_details["page"],
+                        vars=request_details["vars"],
+                        username=request_details["username"],
+                        user_agent=request_details["user_agent"],
+                        referer=request_details["referer"],
+                        is_mobile=request_details["is_mobile"],
+                        is_ssl_request=request_details["is_ssl_request"],
+                        language=request_details["language"],
+                        request_method=request_details["request_method"],
+                    ),
+                ),
+            )
         return cls(
             omd_root=omd_root,
             crash_info=cls.make_crash_info(
                 version_info,
-                GUIDetails(**{**(details or {}), **request_details}),  # type: ignore[typeddict-item]
+                GUIDetails(**{**details, **request_details}),
             ),
         )
 

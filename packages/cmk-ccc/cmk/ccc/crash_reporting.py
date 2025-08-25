@@ -22,7 +22,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, NotRequired, TypedDict
+from typing import Any, Final, NotRequired, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -30,6 +30,9 @@ from cmk.ccc import store
 SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 
 REDACTED_STRING: Final = "redacted"
+
+
+TDetails = TypeVar("TDetails", bound=dict[str, object] | None)
 
 
 class BaseDetails(TypedDict):
@@ -52,12 +55,12 @@ class ContactDetails(TypedDict):
     email: NotRequired[str]
 
 
-class CrashInfo[T](VersionInfo):
+class CrashInfo[TDetails](VersionInfo):
     exc_type: str | None
     crash_type: str
     exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]
     local_vars: str
-    details: T
+    details: TDetails
     exc_value: str
     contact: NotRequired[ContactDetails]
     id: str
@@ -97,7 +100,7 @@ class CrashReportStore:
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
     @staticmethod
-    def dump_crash_info(crash_info: CrashInfo[object] | bytes) -> str:
+    def dump_crash_info(crash_info: CrashInfo[TDetails] | bytes) -> str:
         return json.dumps(
             CrashReportStore._dump_crash_info(crash_info),
             cls=RobustJSONEncoder,
@@ -150,18 +153,18 @@ class CrashReportStore:
                 crash_dir.rmdir()
 
 
-class SerializedCrashReport(TypedDict):
-    crash_info: CrashInfo[object]
+class SerializedCrashReport[T](TypedDict):
+    crash_info: CrashInfo[T]
 
 
 def crash_dir(omd_root: Path) -> Path:
     return omd_root / "var/check_mk/crashes"
 
 
-class ABCCrashReport[T](abc.ABC):
+class ABCCrashReport[TDetails](abc.ABC):
     """Base class for the component specific crash report types"""
 
-    def __init__(self, *, omd_root: Path, crash_info: CrashInfo[T]) -> None:
+    def __init__(self, *, omd_root: Path, crash_info: CrashInfo[TDetails]) -> None:
         super().__init__()
         self.crashdir: Final = crash_dir(omd_root)
         self.crash_info = crash_info
@@ -175,8 +178,8 @@ class ABCCrashReport[T](abc.ABC):
     def make_crash_info(
         cls,
         version_info: VersionInfo,
-        details: T,
-    ) -> CrashInfo[T]:
+        details: TDetails,
+    ) -> CrashInfo[TDetails]:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -190,16 +193,16 @@ class ABCCrashReport[T](abc.ABC):
         *,
         omd_root: Path,
         serialized: SerializedCrashReport,
-    ) -> ABCCrashReport[object]:
+    ) -> ABCCrashReport[TDetails]:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return class_(omd_root=omd_root, **serialized)
+        return class_(omd_root=omd_root, crash_info=serialized["crash_info"])
 
-    def _serialize_attributes(self) -> dict[str, CrashInfo[T] | bytes]:
+    def _serialize_attributes(self) -> dict[str, CrashInfo[TDetails] | bytes]:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
 
-    def serialize(self) -> dict[str, CrashInfo[T] | bytes]:
+    def serialize(self) -> dict[str, CrashInfo[TDetails] | bytes]:
         """Serialize the object
 
         Nested structures are allowed. Only objects that can be handled by
@@ -244,11 +247,11 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
     )
 
 
-def _get_generic_crash_info[T](
+def _get_generic_crash_info[TDetails](
     type_name: str,
     version_info: VersionInfo,
-    details: T,
-) -> CrashInfo[T]:
+    details: TDetails,
+) -> CrashInfo:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -343,8 +346,8 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     return val
 
 
-class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport[Any]]]):
-    def plugin_name(self, instance: type[ABCCrashReport[Any]]) -> str:
+class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport]]):
+    def plugin_name(self, instance: type[ABCCrashReport]) -> str:
         return instance.type()
 
 

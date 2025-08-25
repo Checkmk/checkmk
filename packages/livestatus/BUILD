@@ -112,7 +112,10 @@ pkg_tar(
 cc_test(
     name = "test",
     size = "small",
-    srcs = glob(["test/*.cc"]),
+    srcs = glob([
+        "test/*.cc",
+        "test/*.h",
+    ]),
     copts = ["-std=c++20"],
     deps = [
         ":livestatus_base",

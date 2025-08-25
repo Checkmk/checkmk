@@ -57,7 +57,7 @@ _ADDED_IMPORTS = (
     ),
     (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
-        "HostAndItemCondition, CheckParameters, EnforcedService, DiscoveryParameters"
+        "HostAndItemCondition, CheckParameters, EnforcedService, DiscoveryParameters, AgentConfig"
     ),
 )
 
@@ -443,6 +443,8 @@ class RegistrationTransformer(cst.CSTTransformer):
             return self._construct_special_agent(old_ruleset.args)
         if rule_type == "HostRulespec" and group == "ActiveChecks":
             return self._construct_active_check(old_ruleset.args)
+        if rule_type == "HostRulespec" and group == "AgentConfig":
+            return self._construct_agent_config(old_ruleset.args)
         if rule_type == "HostRulespec":
             # a guess, but most of the time it's a discovery rule
             return self._construct_discovery_parameters(group, old_ruleset.args)
@@ -496,6 +498,28 @@ class RegistrationTransformer(cst.CSTTransformer):
                     targets=(cst.AssignTarget(cst.Name(f"rule_spec_{name}")),),
                     value=cst.Call(
                         func=cst.Name("DiscoveryParameters"),
+                        args=(
+                            cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
+                            *_extract("title", old),
+                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(form_spec, cst.Name("parameter_form")),
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    def _construct_agent_config(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
+        args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
+        name = self._extract_string(cst.ensure_type(args["name"], cst.Call).args[0].value)
+        form_spec = args["valuespec"]
+
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name(f"rule_spec_agent_config_{name}")),),
+                    value=cst.Call(
+                        func=cst.Name("AgentConfig"),
                         args=(
                             cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
                             *_extract("title", old),

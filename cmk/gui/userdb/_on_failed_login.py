@@ -10,8 +10,10 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb.store import load_users, update_user
 from cmk.gui.utils import roles
+
+from ._user_attribute import get_user_attributes
+from .store import load_users, update_user
 
 auth_logger = gui_logger.getChild("auth")
 
@@ -21,7 +23,7 @@ def on_failed_login(username: UserId, now: datetime) -> None:
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user)
-        update_user(username, all_users, now)
+        update_user(username, all_users, get_user_attributes(), now)
 
     if active_config.log_logon_failures:
         if user:

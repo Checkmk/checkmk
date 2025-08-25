@@ -50,7 +50,7 @@ from cmk.utils.paths import htpasswd_file, var_dir
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
-from ._user_attribute import get_user_attributes
+from ._user_attribute import get_user_attributes, UserAttribute
 from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
@@ -352,7 +352,12 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def _update_users(changed_users: Sequence[UserId], all_users: Users, now: datetime) -> None:
+def _update_users(
+    changed_users: Sequence[UserId],
+    all_users: Users,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    now: datetime,
+) -> None:
     logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(all_users))}")
 
     write_contacts_and_users_file(all_users)
@@ -360,7 +365,7 @@ def _update_users(changed_users: Sequence[UserId], all_users: Users, now: dateti
     # Execute user connector save hooks
     hook_save(all_users)
 
-    all_users_with_custom_macros = _add_custom_macro_attributes(all_users)
+    all_users_with_custom_macros = _add_custom_macro_attributes(user_attributes, all_users)
 
     _save_auth_serials(all_users_with_custom_macros)
     changed_users_with_custom_macros = {
@@ -384,24 +389,27 @@ def _update_users(changed_users: Sequence[UserId], all_users: Users, now: dateti
 
 
 def save_users(profiles: Users, now: datetime) -> None:
-    _update_users(list(profiles.keys()), profiles, now)
+    _update_users(list(profiles.keys()), profiles, get_user_attributes(), now)
 
 
-def update_user(changed_user: UserId, all_users: Users, now: datetime) -> None:
-    _update_users([changed_user], all_users, now)
+def update_user(
+    changed_user: UserId,
+    all_users: Users,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    now: datetime,
+) -> None:
+    _update_users([changed_user], all_users, user_attributes, now)
 
 
 # TODO: Isn't this needed only while generating the contacts.mk?
 #       Check this and move it to the right place
-def _add_custom_macro_attributes(profiles: Users) -> Users:
+def _add_custom_macro_attributes(
+    user_attributes: Sequence[tuple[str, UserAttribute]], profiles: Users
+) -> Users:
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
-    core_custom_macros = {
-        name
-        for name, attr in get_user_attributes()
-        if attr.add_custom_macro()  #
-    }
+    core_custom_macros = {name for name, attr in user_attributes if attr.add_custom_macro()}
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
@@ -417,8 +425,9 @@ def _save_user_profiles(
     updated_profiles: Users,
     now: datetime,
 ) -> None:
-    non_contact_keys = _non_contact_keys()
-    multisite_keys = _multisite_keys()
+    user_attributes = get_user_attributes()
+    non_contact_keys = _non_contact_keys(user_attributes)
+    multisite_keys = _multisite_keys(user_attributes)
 
     for user_id, user in updated_profiles.items():
         (cmk.utils.paths.profile_dir / user_id).mkdir(mode=0o770, exist_ok=True)
@@ -512,9 +521,10 @@ def write_contacts_and_users_file(
     profiles: Users,
     custom_default_config_dir: str | None = None,
 ) -> None:
-    non_contact_keys = _non_contact_keys()
-    multisite_keys = _multisite_keys()
-    updated_profiles = _add_custom_macro_attributes(profiles)
+    user_attributes = get_user_attributes()
+    non_contact_keys = _non_contact_keys(user_attributes)
+    multisite_keys = _multisite_keys(user_attributes)
+    updated_profiles = _add_custom_macro_attributes(user_attributes, profiles)
 
     if custom_default_config_dir:
         check_mk_config_dir = Path(custom_default_config_dir) / "conf.d/wato"
@@ -597,7 +607,7 @@ def _get_attributes(
     return selector(connection) if connection else []
 
 
-def _non_contact_keys() -> list[str]:
+def _non_contact_keys(user_attributes: Sequence[tuple[str, UserAttribute]]) -> list[str]:
     """User attributes not to put into contact definitions for Check_MK"""
     return [
         "automation_secret",
@@ -613,14 +623,14 @@ def _non_contact_keys() -> list[str]:
         "serial",
         "session_info",
         "two_factor_credentials",
-    ] + _get_multisite_custom_variable_names()
+    ] + _get_multisite_custom_variable_names(user_attributes)
 
 
-def _multisite_keys() -> list[str]:
+def _multisite_keys(user_attributes: Sequence[tuple[str, UserAttribute]]) -> list[str]:
     """User attributes to put into multisite configuration"""
     multisite_variables = [
         var
-        for var in _get_multisite_custom_variable_names()
+        for var in _get_multisite_custom_variable_names(user_attributes)
         if var
         not in ("start_url", "ui_theme", "ui_sidebar_position", "ui_saas_onboarding_button_toggle")
     ]
@@ -633,8 +643,10 @@ def _multisite_keys() -> list[str]:
     ] + multisite_variables
 
 
-def _get_multisite_custom_variable_names() -> list[str]:
-    return [name for name, attr in get_user_attributes() if attr.domain() == "multisite"]  #
+def _get_multisite_custom_variable_names(
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> list[str]:
+    return [name for name, attr in user_attributes if attr.domain() == "multisite"]
 
 
 def _save_auth_serials(updated_profiles: Users) -> None:

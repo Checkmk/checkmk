@@ -10,15 +10,27 @@ import pytest
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import load_pem_x509_certificate
 
-from tests.testlib.site import Site
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.site import Site, SiteFactory
 
 
-@pytest.fixture(name="ca_certificate_path", scope="session")
-def get_site_ca_certificate_path(site: Site) -> Iterator[str]:
+@pytest.fixture(name="otel_site", scope="package")
+def get_site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Iterator[Site]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from site_factory.get_test_site(
+            name="otel_test",
+            auto_restart_httpd=True,
+        )
+
+
+@pytest.fixture(name="ca_certificate_path")
+def get_site_ca_certificate_path(otel_site: Site) -> Iterator[str]:
     """Extracts the site's CA certificate from etc/ssl/ca.pem,
     writes it to a temporary file, and returns the file path.
     """
-    ca_pem_bytes = site.read_file("etc/ssl/ca.pem").encode("utf-8")
+    ca_pem_bytes = otel_site.read_file("etc/ssl/ca.pem").encode("utf-8")
     temp_dir = tempfile.mkdtemp()
     cert_path = os.path.join(temp_dir, "ca.pem")
     with open(cert_path, "wb") as f:

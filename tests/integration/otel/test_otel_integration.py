@@ -74,19 +74,19 @@ HTTP_CONFIG = {
 
 
 @pytest.fixture(scope="module")
-def otel_site(site: Site) -> Iterator[Site]:
+def otel_enabled_site(otel_site: Site) -> Iterator[Site]:
     """Fixture to enable OpenTelemetry collector"""
-    site.stop()
-    site.set_config("OPENTELEMETRY_COLLECTOR", "on")
-    site.set_config("MKEVENTD_SYSLOG", "on")
-    site.set_config("MKEVENTD_SYSLOG_TCP", "on")
-    site.start()
-    yield site
-    site.stop()
-    site.set_config("OPENTELEMETRY_COLLECTOR", "off")
-    site.set_config("MKEVENTD_SYSLOG", "off")
-    site.set_config("MKEVENTD_SYSLOG_TCP", "off")
-    site.start()
+    otel_site.stop()
+    otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on")
+    otel_site.set_config("MKEVENTD_SYSLOG", "on")
+    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "on")
+    otel_site.start()
+    yield otel_site
+    otel_site.stop()
+    otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off")
+    otel_site.set_config("MKEVENTD_SYSLOG", "off")
+    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "off")
+    otel_site.start()
 
 
 def delete_created_objects(
@@ -133,7 +133,7 @@ def delete_created_objects(
     ],
 )
 def test_otel_collector_with_receiver_config(
-    otel_site: Site,
+    otel_enabled_site: Site,
     ca_certificate_path: str,
     receiver_type: str,
     receiver_config: dict,
@@ -149,7 +149,7 @@ def test_otel_collector_with_receiver_config(
     triggered. Finally, it checks that the host received expected OpenTelemetry data.
 
     Args:
-        otel_site: The site where the OpenTelemetry collector is enabled.
+        otel_enabled_site: The site where the OpenTelemetry collector is enabled.
         ca_certificate_path: Path to the CA certificate file of the site.
         receiver_type: Type of the receiver, either 'grpc' or 'http'.
         receiver_config: OpenTelemetry receiver configuration.
@@ -163,12 +163,12 @@ def test_otel_collector_with_receiver_config(
     try:
         if receiver_type == "grpc":
             logger.info("Creating OpenTelemetry collector with GRPC receiver")
-            otel_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create(
                 collector_id, "Test collector", False, receiver_protocol_grpc=receiver_config
             )
         elif receiver_type == "http":
             logger.info("Creating OpenTelemetry collector with HTTP receiver")
-            otel_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create(
                 collector_id, "Test collector", False, receiver_protocol_http=receiver_config
             )
         else:
@@ -177,7 +177,7 @@ def test_otel_collector_with_receiver_config(
         logger.info(
             "Creating a new host with the name expected from the otel host name computation"
         )
-        otel_site.openapi.hosts.create(
+        otel_enabled_site.openapi.hosts.create(
             host_name,
             attributes={
                 "tag_address_family": "no-ip",
@@ -188,34 +188,39 @@ def test_otel_collector_with_receiver_config(
         )
 
         logger.info("Adding a rule for OpenTelemetry special agent")
-        rule_id = otel_site.openapi.rules.create(
+        rule_id = otel_enabled_site.openapi.rules.create(
             ruleset_name="special_agents:otel",
             value={"include_self_monitoring": False},
         )
-        otel_site.openapi.changes.activate_and_wait_for_completion()
+        otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
         if receiver_config["endpoint"]["encryption"]:
-            additional_args = [f"--cert-path={ca_certificate_path}", f"--site-name={otel_site.id}"]
+            additional_args = [
+                f"--cert-path={ca_certificate_path}",
+                f"--site-name={otel_enabled_site.id}",
+            ]
         else:
             additional_args = None
 
         with opentelemetry_app(script_file_name, additional_args):
-            wait_for_opentelemetry_data(otel_site, host_name)
+            wait_for_opentelemetry_data(otel_enabled_site, host_name)
 
             logger.info("Running service discovery and activating changes")
-            otel_site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
-            otel_site.openapi.changes.activate_and_wait_for_completion()
+            otel_enabled_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+                host_name
+            )
+            otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
             logger.info("Checking OTel service is created and has expected state")
-            services = otel_site.get_host_services(host_name)
+            services = otel_enabled_site.get_host_services(host_name)
             otel_service_name = f"OTel metric {metric_name}"
             assert otel_service_name in services, "OTel service was not found in host services"
             assert services[otel_service_name].state == 0, "OTel service is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_site, collector_id, host_name, rule_id)
+        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
 
 
-def test_otel_collector_with_prometheus_scrape_config(otel_site: Site) -> None:
+def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -> None:
     """Test that OpenTelemetry collector works as expected when configured using 'Prometheus' option.
 
     This test creates a collector with a Prometheus scrape configuration that uses the
@@ -240,7 +245,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_site: Site) -> None:
 
     try:
         logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
-        otel_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create(
             collector_id,
             "Test collector",
             False,
@@ -250,7 +255,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_site: Site) -> None:
         logger.info(
             "Creating a new host with the name expected from the otel host name computation"
         )
-        otel_site.openapi.hosts.create(
+        otel_enabled_site.openapi.hosts.create(
             host_name,
             attributes={
                 "tag_address_family": "no-ip",
@@ -261,21 +266,23 @@ def test_otel_collector_with_prometheus_scrape_config(otel_site: Site) -> None:
         )
 
         logger.info("Adding a rule for OpenTelemetry special agent")
-        rule_id = otel_site.openapi.rules.create(
+        rule_id = otel_enabled_site.openapi.rules.create(
             ruleset_name="special_agents:otel",
             value={"include_self_monitoring": False},
         )
-        otel_site.openapi.changes.activate_and_wait_for_completion()
+        otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
         with opentelemetry_app(ScriptFileName.PROMETHEUS):
-            wait_for_opentelemetry_data(otel_site, host_name)
+            wait_for_opentelemetry_data(otel_enabled_site, host_name)
 
             logger.info("Running service discovery and activating changes")
-            otel_site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
-            otel_site.openapi.changes.activate_and_wait_for_completion()
+            otel_enabled_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+                host_name
+            )
+            otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
             logger.info("Checking OTel services are created and have expected states")
-            services = otel_site.get_host_services(host_name)
+            services = otel_enabled_site.get_host_services(host_name)
             assert len(services) == EXPECTED_PROMETHEUS_SERVICE_COUNT, (
                 f"Unexpected number of services discovered: {services}"
             )
@@ -283,7 +290,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_site: Site) -> None:
                 if service_name.startswith("OTel metric "):
                     assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_site, collector_id, host_name, rule_id)
+        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
 
 
 def wait_for_event_console_events(
@@ -298,7 +305,7 @@ def wait_for_event_console_events(
     )
 
 
-def test_otel_logs_received_by_event_console(otel_site: Site) -> None:
+def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
     """Test that OpenTelemetry logs are received by the Event Console.
 
     This test creates an OpenTelemetry collector with 'Send log messages to event console' option
@@ -319,22 +326,22 @@ def test_otel_logs_received_by_event_console(otel_site: Site) -> None:
         logger.info(
             "Creating OpenTelemetry collector with 'Send log messages to EC' option enabled"
         )
-        otel_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create(
             collector_id, "Test collector", False, receiver_protocol_http=receiver_config
         )
-        otel_site.openapi.changes.activate_and_wait_for_completion()
+        otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
         logger.info("Adding a rule to Event Console rule pack to capture logs")
         # temporary solution until a corresponding api endpoint is created
         _write_ec_rule(
-            otel_site,
+            otel_enabled_site,
             _get_ec_rule_packs(title="", rule_id="rule_id", state=-1, match=".*", limit=3),
         )
-        _activate_ec_changes(otel_site)
+        _activate_ec_changes(otel_enabled_site)
 
         with opentelemetry_app(ScriptFileName.OTEL_HTTP, additional_args=["--enable-logs"]):
-            wait_for_event_console_events(otel_site, expected_event_count)
-            events = otel_site.openapi.event_console.get_all()
+            wait_for_event_console_events(otel_enabled_site, expected_event_count)
+            events = otel_enabled_site.openapi.event_console.get_all()
             # Sort events by timestamp to ensure correct order
             events = sorted(events, key=lambda e: e.get("first", 0))
 
@@ -351,4 +358,4 @@ def test_otel_logs_received_by_event_console(otel_site: Site) -> None:
                 )
 
     finally:
-        delete_created_objects(otel_site, collector_id, cleanup_ec=True)
+        delete_created_objects(otel_enabled_site, collector_id, cleanup_ec=True)

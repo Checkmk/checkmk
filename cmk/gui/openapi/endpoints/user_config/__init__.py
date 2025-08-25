@@ -30,6 +30,7 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import (
     ConnectorType,
+    get_user_attributes,
     htpasswd,
     load_connection_config,
     load_users,
@@ -173,6 +174,7 @@ def delete_user(params: Mapping[str, Any]) -> Response:
     delete_users(
         [username],
         user_features_registry.features().sites,
+        user_attributes=get_user_attributes(active_config.wato_user_attrs),
         use_git=active_config.wato_use_git,
     )
     return Response(status=204)
@@ -224,6 +226,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     edit_users(
         {username: internal_attrs},
         user_features_registry.features().sites,
+        get_user_attributes(active_config.wato_user_attrs),
         use_git=active_config.wato_use_git,
     )
     return serve_user(username)

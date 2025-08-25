@@ -13,6 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.users import create_user, default_sites, delete_users, edit_users
@@ -152,6 +153,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
     edit_users(
         {USER1_ID: UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE2]})},
         default_sites,
+        get_user_attributes([]),
         use_git=False,
     )
 
@@ -199,7 +201,7 @@ def test_only_affected_sites_require_activation_when_deleting_users(
     _reset_site_changes(ALL_SITES)
 
     # WHEN
-    delete_users(users_to_delete, default_sites, use_git=False)
+    delete_users(users_to_delete, default_sites, get_user_attributes([]), use_git=False)
 
     # THEN
     all_users = userdb.load_users()

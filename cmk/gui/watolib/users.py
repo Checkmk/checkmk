@@ -20,7 +20,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, Users, UserSpec
-from cmk.gui.userdb import add_internal_attributes, get_user_attributes
+from cmk.gui.userdb import add_internal_attributes, get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
@@ -64,7 +64,11 @@ def _update_affected_sites(
 
 
 def delete_users(
-    users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesFn, *, use_git: bool
+    users_to_delete: Sequence[UserId],
+    sites: _UserAssociatedSitesFn,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    *,
+    use_git: bool,
 ) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
@@ -110,14 +114,13 @@ def delete_users(
             sites=None if affected_sites == "all" else list(affected_sites),
             use_git=use_git,
         )
-        userdb.save_users(
-            all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
-        )
+        userdb.save_users(all_users, user_attributes, datetime.now())
 
 
 def edit_users(
     changed_users: dict[UserId, UserSpec],
     sites: _UserAssociatedSitesFn,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
     use_git: bool,
 ) -> None:
@@ -133,7 +136,7 @@ def edit_users(
         if (old_user_attrs := all_users.get(user_id)) is None:
             raise MKUserError(None, _("The user you are trying to edit does not exist."))
 
-        _validate_user_attributes(user_id, changed_user_attrs)
+        _validate_user_attributes(user_id, changed_user_attrs, user_attributes)
 
         affected_sites = _update_affected_sites(affected_sites, sites(changed_user_attrs))
         affected_sites = _update_affected_sites(affected_sites, sites(old_user_attrs))
@@ -175,7 +178,7 @@ def edit_users(
             use_git=use_git,
         )
 
-    userdb.save_users(all_users, get_user_attributes(active_config.wato_user_attrs), datetime.now())
+    userdb.save_users(all_users, user_attributes, datetime.now())
 
 
 def create_user(
@@ -192,7 +195,7 @@ def create_user(
     if user_id in all_users:
         raise MKUserError("user_id", _("This username is already being used by another user."))
 
-    _validate_user_attributes(user_id, new_user)
+    _validate_user_attributes(user_id, new_user, get_user_attributes(active_config.wato_user_attrs))
 
     add_internal_attributes(new_user)
 
@@ -231,7 +234,11 @@ def create_user(
 
 
 def remove_custom_attribute_from_all_users(
-    custom_attribute_name: str, sites: _UserAssociatedSitesFn, *, use_git: bool
+    custom_attribute_name: str,
+    sites: _UserAssociatedSitesFn,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    *,
+    use_git: bool,
 ) -> None:
     edit_users(
         {
@@ -241,6 +248,7 @@ def remove_custom_attribute_from_all_users(
             for user_id, settings in userdb.load_users(lock=True).items()
         },
         sites,
+        user_attributes,
         use_git=use_git,
     )
 
@@ -274,6 +282,7 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
 def _validate_user_attributes(
     user_id: UserId,
     user_attrs: UserSpec,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
     # Full name
     alias = user_attrs.get("alias")
@@ -319,7 +328,7 @@ def _validate_user_attributes(
         )
 
     # Custom user attributes
-    for name, attr in get_user_attributes(active_config.wato_user_attrs):
+    for name, attr in user_attributes:
         value = user_attrs.get(name)
         attr.valuespec().validate_value(value, "ua_" + name)
 

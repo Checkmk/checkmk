@@ -37,6 +37,7 @@ from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     PermissionName,
 )
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
@@ -518,7 +519,10 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
         remove_custom_attribute_from_all_users(
-            delname, user_features_registry.features().sites, use_git=config.wato_use_git
+            delname,
+            user_features_registry.features().sites,
+            get_user_attributes(config.wato_user_attrs),
+            use_git=config.wato_use_git,
         )
         self._update_config(pprint_value=config.wato_pprint_config)
         _changes.add_change(

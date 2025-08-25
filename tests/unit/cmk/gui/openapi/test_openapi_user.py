@@ -30,7 +30,7 @@ from cmk.gui.openapi.endpoints.user_config import (
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
-from cmk.gui.userdb import ConnectorType, UserRole
+from cmk.gui.userdb import ConnectorType, get_user_attributes, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import create_user, default_sites, edit_users
@@ -548,6 +548,7 @@ def test_openapi_user_internal_auth_handling(
             edit_users(
                 {name: updated_internal_attributes},
                 default_sites,
+                get_user_attributes([]),
                 use_git=False,
             )
 
@@ -582,6 +583,7 @@ def test_openapi_user_internal_auth_handling(
             edit_users(
                 {name: updated_internal_attributes},
                 default_sites,
+                get_user_attributes([]),
                 use_git=False,
             )
     assert _load_internal_attributes(name) == {

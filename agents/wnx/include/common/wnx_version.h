@@ -1,4 +1,4 @@
-#define CMK_WIN_AGENT_VERSION "2.3.0p36"
+#define CMK_WIN_AGENT_VERSION "2.3.0p37"
 
 // DO NOT CHANGE the structure of the first line
 // First line is part of the build script

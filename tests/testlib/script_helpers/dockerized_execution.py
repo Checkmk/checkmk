@@ -531,7 +531,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
 def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
     # In addition to the ones defined here, some environment vars, like "DISTRO" are added through
     # the docker image
-    return {
+    env = {
         "LANG": "C",
         "VERSION": package_info.version.version_spec,
         "EDITION": package_info.edition.short,
@@ -547,7 +547,11 @@ def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
         "OTEL_SDK_DISABLED": os.environ.get("OTEL_SDK_DISABLED", "true"),
         "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+        "JIRA_API_TOKEN_QA_ALERTS": os.environ.get("JIRA_API_TOKEN_QA_ALERTS", ""),
     }
+    # Add all variables prefixed with QA_
+    env.update({var: val for var, val in os.environ.items() if var.startswith("QA_")})
+    return env
 
 
 # pep-0692 is not yet finished in mypy...

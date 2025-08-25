@@ -59,8 +59,14 @@ def main() {
                 ),
                 certificate(
                     credentialsId: 'QA_POSTGRES_CERT',
-                    aliasVariable: 'POSTGRES_KEYSTORE_ALIAS',
-                    keystoreVariable: 'POSTGRES_KEY',
+                    aliasVariable: 'QA_POSTGRES_CERT',
+                    keystoreVariable: 'QA_POSTGRES_KEY',
+                    passwordVariable: ''
+                ),
+                certificate(
+                    credentialsId: 'QA_ROOT_CERT',
+                    aliasVariable: 'QA_ROOT_CERT',
+                    keystoreVariable: 'QA_ROOT_KEY',
                     passwordVariable: ''
                 ),
             ]) {

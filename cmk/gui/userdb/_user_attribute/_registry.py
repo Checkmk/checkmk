@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.config import active_config
 from cmk.gui.type_defs import CustomUserAttrSpec
 
 from ._base import UserAttribute
@@ -34,10 +33,12 @@ def all_user_attributes(
     ]
 
 
-def get_user_attributes() -> list[tuple[str, UserAttribute]]:
+def get_user_attributes(
+    custom_user_attributes: Sequence[CustomUserAttrSpec],
+) -> list[tuple[str, UserAttribute]]:
     return [
         (name, attribute_class())
-        for name, attribute_class in all_user_attributes(active_config.wato_user_attrs)
+        for name, attribute_class in all_user_attributes(custom_user_attributes)
     ]
 
 

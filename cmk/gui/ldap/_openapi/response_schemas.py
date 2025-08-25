@@ -10,6 +10,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 from cmk.gui.userdb import get_user_attributes, UserRolesConfigFile
@@ -701,7 +702,11 @@ class LDAPSyncPlugins(BaseSchema):
         if not original_data:
             return result_data
 
-        custom_attributes = [name for name, attr in get_user_attributes() if attr.is_custom()]
+        custom_attributes = [
+            name
+            for name, attr in get_user_attributes(active_config.wato_user_attrs)
+            if attr.is_custom()
+        ]
         for field, value in original_data.items():
             if field in custom_attributes:
                 result_data[field] = value

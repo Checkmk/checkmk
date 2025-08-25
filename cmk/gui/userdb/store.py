@@ -389,7 +389,9 @@ def _update_users(
 
 
 def save_users(profiles: Users, now: datetime) -> None:
-    _update_users(list(profiles.keys()), profiles, get_user_attributes(), now)
+    _update_users(
+        list(profiles.keys()), profiles, get_user_attributes(active_config.wato_user_attrs), now
+    )
 
 
 def update_user(
@@ -425,7 +427,7 @@ def _save_user_profiles(
     updated_profiles: Users,
     now: datetime,
 ) -> None:
-    user_attributes = get_user_attributes()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     non_contact_keys = _non_contact_keys(user_attributes)
     multisite_keys = _multisite_keys(user_attributes)
 
@@ -521,7 +523,7 @@ def write_contacts_and_users_file(
     profiles: Users,
     custom_default_config_dir: str | None = None,
 ) -> None:
-    user_attributes = get_user_attributes()
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     non_contact_keys = _non_contact_keys(user_attributes)
     multisite_keys = _multisite_keys(user_attributes)
     updated_profiles = _add_custom_macro_attributes(user_attributes, profiles)

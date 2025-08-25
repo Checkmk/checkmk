@@ -2009,7 +2009,7 @@ def config_based_custom_user_attribute_sync_plugins() -> list[tuple[str, LDAPAtt
                 help_text=attr.valuespec().help(),
             ),
         )
-        for name, attr in get_user_attributes()
+        for name, attr in get_user_attributes(active_config.wato_user_attrs)
     ]
 
 
@@ -2584,7 +2584,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
 
         # First clean all previously set values from attributes to be synced where
         # user is not a member of
-        user_attrs = dict(get_user_attributes())
+        user_attrs = dict(get_user_attributes(active_config.wato_user_attrs))
         for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] not in groups and attr_name in user and attr_name in user_attrs:
@@ -2649,7 +2649,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
     def _get_user_attribute_choices(self) -> Sequence[CascadingDropdownChoice]:
         return [
             (name, title, attr.valuespec())
-            for name, attr in get_user_attributes()
+            for name, attr in get_user_attributes(active_config.wato_user_attrs)
             if (title := attr.valuespec().title()) is not None  # TODO: Hmmm...
         ]
 

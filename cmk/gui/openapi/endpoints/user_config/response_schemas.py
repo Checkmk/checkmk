@@ -12,6 +12,7 @@ from marshmallow import post_load
 from cmk import fields
 from cmk.fields import base
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.definitions import ensure_string
@@ -231,7 +232,7 @@ class CustomUserAttributes(ValueTypedDictSchema):
         # because our own data can be inherently inconsistent.
 
         # use the user_attribute_registry directly?
-        db_user_attributes = dict(get_user_attributes())
+        db_user_attributes = dict(get_user_attributes(active_config.wato_user_attrs))
         for name, value in user_attributes.items():
             try:
                 attribute = db_user_attributes[name].valuespec()

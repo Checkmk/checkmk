@@ -373,7 +373,9 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
         with html.form_context("bulk_delete_form", method="POST"):
-            self._show_user_list(users, user_online_maxage=config.user_online_maxage)
+            self._show_user_list(
+                users, config.wato_user_attrs, user_online_maxage=config.user_online_maxage
+            )
         self._show_user_list_footer(users)
 
     def _job_details_link(self):
@@ -401,9 +403,17 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self, users: Mapping[UserId, UserSpec], *, user_online_maxage: int) -> None:
+    def _show_user_list(
+        self,
+        users: Mapping[UserId, UserSpec],
+        custom_user_attributes: Sequence[CustomUserAttrSpec],
+        *,
+        user_online_maxage: int,
+    ) -> None:
         visible_custom_attrs = [
-            (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
+            (name, attr)
+            for name, attr in get_user_attributes(custom_user_attributes)
+            if attr.show_in_table()
         ]
         entries = list(users.items())
         roles = load_roles()
@@ -830,7 +840,7 @@ class ModeEditUser(WatoMode):
         user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
 
         # Custom user attributes
-        for name, attr in get_user_attributes():
+        for name, attr in get_user_attributes(config.wato_user_attrs):
             value = attr.valuespec().from_html_vars("ua_" + name)
             # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
             user_attrs[name] = value  # type: ignore[literal-required]

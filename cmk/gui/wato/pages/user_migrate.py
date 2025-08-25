@@ -10,7 +10,7 @@ from datetime import datetime
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -273,7 +273,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     ]
 
     builtin_attribute_choices: list[tuple[str, str]] = []
-    for name, attr in get_user_attributes():
+    for name, attr in get_user_attributes(active_config.wato_user_attrs):
         builtin_attribute_choices.append((name, attr.valuespec().title() or attr.name()))
 
     return default_choices + builtin_attribute_choices

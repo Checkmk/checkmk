@@ -70,7 +70,7 @@ class UserProfile(Page):
 
         # Custom attributes
         if user.may("general.edit_user_attributes"):
-            for name, attr in get_user_attributes():
+            for name, attr in get_user_attributes(config.wato_user_attrs):
                 if not attr.user_editable():
                     continue
 

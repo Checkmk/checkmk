@@ -15,6 +15,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import site_config, userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
@@ -316,7 +317,7 @@ def _validate_user_attributes(
         )
 
     # Custom user attributes
-    for name, attr in get_user_attributes():
+    for name, attr in get_user_attributes(active_config.wato_user_attrs):
         value = user_attrs.get(name)
         attr.valuespec().validate_value(value, "ua_" + name)
 

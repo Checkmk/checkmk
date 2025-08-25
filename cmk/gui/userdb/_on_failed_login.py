@@ -23,7 +23,7 @@ def on_failed_login(username: UserId, now: datetime) -> None:
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user)
-        update_user(username, all_users, get_user_attributes(), now)
+        update_user(username, all_users, get_user_attributes(active_config.wato_user_attrs), now)
 
     if active_config.log_logon_failures:
         if user:

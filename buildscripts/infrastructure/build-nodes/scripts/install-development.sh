@@ -228,11 +228,6 @@ prepare_gplusplus_sources_list() {
     fi
 }
 
-strip_for_rust() {
-    # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
-}
-
 install_for_python_dev() {
     print_green "Installing everything for Python development ..."
 
@@ -341,24 +336,6 @@ install_cmk_package_dependencies() {
     print_green "Installation for CMK development done"
 }
 
-install_for_rust_dev() {
-    print_green "Installing everything for Rust development ..."
-
-    export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-rust-cargo.sh
-
-    if [[ $STRIP_LATER -eq 1 ]]; then
-        print_blue "strip_binaries during Rust setup"
-        strip_for_rust
-        "${SCRIPT_DIR}"/install-rust-cargo.sh link-only
-    fi
-
-    print_green "Installation for Rust development done"
-
-    IMPORTANT_MESSAGES+=("Don't forget to call: export RUSTUP_HOME=${INSTALL_PATH}/rust/rustup")
-    print_red "${IMPORTANT_MESSAGES[${#IMPORTANT_MESSAGES[@]} - 1]}"
-}
-
 install_for_frontend_dev() {
     print_green "Installing everything for Frontend development ..."
 
@@ -445,7 +422,6 @@ print_debug "PROFILE_ARGS    = ${PROFILE_ARGS[*]}"
 REQUIRES_NEXUS=0
 INSTALL_FOR_PYTHON=0
 INSTALL_FOR_CPP=0
-INSTALL_FOR_RUST=0
 INSTALL_FOR_FRONTEND=0
 INSTALL_FOR_LOCALIZE=0
 INSTALL_FOR_BAZEL=0
@@ -458,7 +434,6 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             ((REQUIRES_NEXUS += 1))
             INSTALL_FOR_PYTHON=1
             INSTALL_FOR_CPP=1
-            INSTALL_FOR_RUST=1
             INSTALL_FOR_FRONTEND=1
             INSTALL_FOR_LOCALIZE=1
             INSTALL_FOR_BAZEL=1
@@ -474,11 +449,6 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_CPP=1
             ((STRIP_LATER += 1))
             ;;
-        rust)
-            ((REQUIRES_NEXUS += 1))
-            INSTALL_FOR_RUST=1
-            ((STRIP_LATER += 1))
-            ;;
         frontend)
             INSTALL_FOR_FRONTEND=1
             ;;
@@ -491,14 +461,13 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             ;;
         *)
             print_red "Unknown installation profile $INSTALL_PROFILE"
-            print_debug "Choose from 'all', 'python', 'cpp', 'rust', 'frontend', 'localize', 'bazel'"
+            print_debug "Choose from 'all', 'python', 'cpp', 'frontend', 'localize', 'bazel'"
             exit 1
             ;;
     esac
 done
 print_debug "INSTALL_FOR_PYTHON   = ${INSTALL_FOR_PYTHON}"
 print_debug "INSTALL_FOR_CPP      = ${INSTALL_FOR_CPP}"
-print_debug "INSTALL_FOR_RUST     = ${INSTALL_FOR_RUST}"
 print_debug "INSTALL_FOR_FRONTEND = ${INSTALL_FOR_FRONTEND}"
 print_debug "INSTALL_FOR_LOCALIZE = ${INSTALL_FOR_LOCALIZE}"
 print_debug "INSTALL_FOR_BAZEL    = ${INSTALL_FOR_BAZEL}"
@@ -533,9 +502,6 @@ fi
 if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
     install_for_python_dev
 fi
-if [[ $INSTALL_FOR_RUST -eq 1 ]]; then
-    install_for_rust_dev
-fi
 if [[ $INSTALL_FOR_FRONTEND -eq 1 ]]; then
     install_for_frontend_dev
 fi
@@ -550,12 +516,6 @@ if [[ $STRIP_LATER -gt 1 ]]; then
         print_debug "Link Python"
         strip_for_python
         "${SCRIPT_DIR}"/install-python.sh link-only
-    fi
-
-    if [[ $INSTALL_FOR_RUST -eq 1 ]]; then
-        print_debug "Link Rust"
-        strip_for_rust
-        "${SCRIPT_DIR}"/install-rust-cargo.sh link-only
     fi
 fi
 

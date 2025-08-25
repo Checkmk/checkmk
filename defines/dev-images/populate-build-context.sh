@@ -29,7 +29,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-patchelf.sh \
         install-protobuf-cpp.sh \
         install-python.sh \
-        install-rust-cargo.sh \
         install-valgrind.sh \
         ci.bazelrc \
         "${TARGET_DIR}"

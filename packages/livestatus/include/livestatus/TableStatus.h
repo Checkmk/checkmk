@@ -16,7 +16,7 @@ class ICore;
 
 class TableStatus : public Table {
 public:
-    explicit TableStatus(ICore *mc);
+    TableStatus();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

@@ -1120,7 +1120,7 @@ ColumnDefinitions status_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableStatus) {
     EXPECT_EQ(status_columns(),  //
-              ColumnDefinitions(TableStatus{&mc_}));
+              ColumnDefinitions(TableStatus{}));
 }
 
 namespace {

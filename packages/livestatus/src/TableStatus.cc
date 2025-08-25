@@ -26,7 +26,7 @@
 
 using row_type = ICore;
 
-TableStatus::TableStatus(ICore *mc) {
+TableStatus::TableStatus() {
     const ColumnOffsets offsets{};
     addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
                       Counter::neb_callbacks);
@@ -220,12 +220,14 @@ TableStatus::TableStatus(ICore *mc) {
         [](const row_type &row) { return row.externalCommandBufferMax(); }));
 
     // Livestatus' own status
-    // TODO(sp) Use "r" instead of "mc" when numCachedLogMessages is const
     addColumn(std::make_unique<IntColumn<row_type>>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        offsets, [mc](const row_type & /*row*/) {
-            return static_cast<int32_t>(mc->numCachedLogMessages());
+        offsets, [](const row_type &row) {
+            return static_cast<int32_t>(
+                // TODO(sp): Reconsider the mutability/visibility of the cache
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+                const_cast<ICore &>(row).numCachedLogMessages());
         }));
     addColumn(std::make_unique<StringColumn<row_type>>(
         "livestatus_version", "The version of the MK Livestatus module",
@@ -318,8 +320,8 @@ TableStatus::TableStatus(ICore *mc) {
         }));
     addColumn(std::make_unique<BlobColumn<row_type>>(
         "license_usage_history", "Historic license usage information", offsets,
-        BlobFileReader<row_type>{[mc](const row_type & /*row*/) {
-            return mc->paths()->license_usage_history_file();
+        BlobFileReader<row_type>{[](const row_type &row) {
+            return row.paths()->license_usage_history_file();
         }}));
     addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_runnable_jobs_fetcher",

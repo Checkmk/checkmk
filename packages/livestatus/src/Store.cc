@@ -29,8 +29,7 @@ Store::Store(ICore *mc)
     , _table_services{mc}
     , _table_servicesbygroup{mc}
     , _table_servicesbyhostgroup{mc}
-    , _table_statehistory{mc, &_log_cache}
-    , _table_status{mc} {
+    , _table_statehistory{mc, &_log_cache} {
     addTable(_table_columns);
     addTable(_table_commands);
     addTable(_table_comments);

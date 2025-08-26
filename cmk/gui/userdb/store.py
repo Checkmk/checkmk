@@ -50,7 +50,7 @@ from cmk.utils.paths import htpasswd_file, var_dir
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
-from ._user_attribute import get_user_attributes, UserAttribute
+from ._user_attribute import UserAttribute
 from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
@@ -103,8 +103,8 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def rewrite_users(now: datetime) -> None:
-    save_users(load_users(lock=True), get_user_attributes(active_config.wato_user_attrs), now)
+def rewrite_users(user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime) -> None:
+    save_users(load_users(lock=True), user_attributes, now)
 
 
 def _root_dir() -> Path:
@@ -360,7 +360,7 @@ def _update_users(
 ) -> None:
     logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(all_users))}")
 
-    write_contacts_and_users_file(all_users)
+    write_contacts_and_users_file(all_users, user_attributes)
 
     # Execute user connector save hooks
     hook_save(all_users)
@@ -372,7 +372,7 @@ def _update_users(
         changed_user: all_users_with_custom_macros[changed_user] for changed_user in changed_users
     }
     # profiles are saved per user, so we need to save the changed users only
-    _save_user_profiles(changed_users_with_custom_macros, now)
+    _save_user_profiles(changed_users_with_custom_macros, user_attributes, now)
     _cleanup_old_user_profiles(all_users_with_custom_macros)
 
     # Release the lock to make other threads access possible again asap
@@ -425,9 +425,9 @@ def _add_custom_macro_attributes(
 # Write user specific files
 def _save_user_profiles(
     updated_profiles: Users,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
     now: datetime,
 ) -> None:
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     non_contact_keys = _non_contact_keys(user_attributes)
     multisite_keys = _multisite_keys(user_attributes)
 
@@ -521,9 +521,9 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 def write_contacts_and_users_file(
     profiles: Users,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
     custom_default_config_dir: str | None = None,
 ) -> None:
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     non_contact_keys = _non_contact_keys(user_attributes)
     multisite_keys = _multisite_keys(user_attributes)
     updated_profiles = _add_custom_macro_attributes(user_attributes, profiles)
@@ -777,7 +777,7 @@ def hook_save(users: Users) -> None:
             show_exception(connection_id, _("Error during saving"), e)
 
 
-def general_userdb_job(now: datetime) -> None:
+def general_userdb_job(user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime) -> None:
     """This function registers general stuff, which is independet of the single
     connectors to each page load. It is exectued AFTER all other connections jobs."""
 
@@ -786,7 +786,7 @@ def general_userdb_job(now: datetime) -> None:
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = htpasswd_file.with_name("auth.serials")
     if not serials_file.exists() or serials_file.stat().st_size == 0:
-        rewrite_users(now)
+        rewrite_users(user_attributes, now)
 
 
 def convert_session_info(value: str) -> dict[str, SessionInfo]:

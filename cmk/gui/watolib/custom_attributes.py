@@ -8,8 +8,9 @@ from typing import TypedDict
 
 from cmk.ccc import store
 from cmk.gui import userdb
-from cmk.gui.config import load_config
+from cmk.gui.config import active_config, load_config
 from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
@@ -21,7 +22,7 @@ class CustomAttrSpecs(TypedDict):
 
 
 def update_user_custom_attrs(now: datetime) -> None:
-    userdb.rewrite_users(now)
+    userdb.rewrite_users(get_user_attributes(active_config.wato_user_attrs), now)
 
 
 def update_host_custom_attrs(*, pprint_value: bool) -> None:

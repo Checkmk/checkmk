@@ -80,6 +80,7 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
         *,
         add_to_changelog: bool,
         only_username: UserId | None,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:

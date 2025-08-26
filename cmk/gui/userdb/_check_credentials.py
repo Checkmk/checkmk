@@ -121,6 +121,7 @@ def _create_non_existing_user(
         connection.do_sync(
             add_to_changelog=False,
             only_username=username,
+            user_attributes=user_attributes,
             load_users_func=load_users,
             save_users_func=save_users,
         )

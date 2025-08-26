@@ -20,7 +20,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import Users
-from cmk.gui.userdb import UserAttribute
+from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 
 
@@ -211,6 +211,7 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     connector.do_sync(
         add_to_changelog=True,
         only_username=None,
+        user_attributes=get_user_attributes([]),
         load_users_func=lambda _: loaded_users,
         save_users_func=assert_expected_users,
     )

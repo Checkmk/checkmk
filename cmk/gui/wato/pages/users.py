@@ -301,7 +301,11 @@ class ModeUsers(WatoMode):
                     result := job.start(
                         JobTarget(
                             callable=sync_entry_point,
-                            args=UserSyncArgs(add_to_changelog=True, enforce_sync=True),
+                            args=UserSyncArgs(
+                                add_to_changelog=True,
+                                enforce_sync=True,
+                                custom_user_attributes=config.wato_user_attrs,
+                            ),
                         ),
                         background_job.InitialStatusArgs(
                             title=job.gui_title(),

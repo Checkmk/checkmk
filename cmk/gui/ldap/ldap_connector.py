@@ -1480,9 +1480,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ldap_connector_customer_id=self.customer_id,
         )
         existing_users[userid] = new_user
-        save_users(
-            existing_users, get_user_attributes(active_config.wato_user_attrs), datetime.now()
-        )
+        user_attributes = get_user_attributes(active_config.wato_user_attrs)
+        save_users(existing_users, user_attributes, datetime.now())
 
         try:
             # logged_in_user_id() can return None when a user is created on login
@@ -1500,6 +1499,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self.do_sync(
                 add_to_changelog=False,
                 only_username=userid,
+                user_attributes=user_attributes,
                 load_users_func=load_users,
                 save_users_func=save_users,
             )
@@ -1665,6 +1665,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         *,
         add_to_changelog: bool,  # unused
         only_username: UserId | None,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:

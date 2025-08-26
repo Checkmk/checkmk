@@ -16,10 +16,8 @@
 #include "livestatus/opids.h"
 
 TimeFilter::TimeFilter(Kind kind, std::string columnName,
-                       std::function<std::chrono::system_clock::time_point(
-                           Row, std::chrono::seconds)>
-                           getValue,
-                       RelationalOperator relOp, const std::string &value)
+                       function_type getValue, RelationalOperator relOp,
+                       const std::string &value)
     : ColumnFilter(kind, std::move(columnName), relOp, value)
     , _getValue{std::move(getValue)}
     , _ref_value(atoi(value.c_str())) {}
@@ -58,10 +56,11 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 
 bool TimeFilter::accepts(Row row, const User & /*user*/,
                          std::chrono::seconds timezone_offset,
-                         const ICore & /*core*/) const {
+                         const ICore &core) const {
     return eval(
         // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-        std::chrono::system_clock::to_time_t(_getValue(row, timezone_offset)),
+        std::chrono::system_clock::to_time_t(
+            _getValue(row, timezone_offset, core)),
         oper(), _ref_value);
 }
 

@@ -4,9 +4,9 @@
 // source code package.
 
 #include <chrono>
-#include <functional>
 #include <string>
 
+#include "DummyMonitoringCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
@@ -25,6 +25,7 @@ struct DummyValue {};
 TEST(TimeColumn, GetValueLambda) {
     const auto v = Clock::now();
     const auto tz = 1h;
+    const DummyMonitoringCore core{};
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
     const auto col = TimeColumn<DummyRow>{
@@ -32,18 +33,20 @@ TEST(TimeColumn, GetValueLambda) {
             return v;
         }};
 
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
+    EXPECT_EQ(v + tz, col.getValue(row, tz, core));
 }
 
 TEST(TimeColumn, GetValueDefault) {
     const auto v = Clock::now();
     const auto tz = 1h;
+    const DummyMonitoringCore core{};
     const auto row = DummyRow{nullptr};
     const auto col = TimeColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
-    EXPECT_NE(v + tz, col.getValue(row, tz));
-    EXPECT_EQ(TimeColumn<DummyRow>::value_type{} + tz, col.getValue(row, tz));
+    EXPECT_NE(v + tz, col.getValue(row, tz, core));
+    EXPECT_EQ(TimeColumn<DummyRow>::value_type{} + tz,
+              col.getValue(row, tz, core));
 }

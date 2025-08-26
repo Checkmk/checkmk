@@ -15,9 +15,10 @@
 
 class TimeFilter : public ColumnFilter {
 public:
-    TimeFilter(Kind kind, std::string columnName,
-               std::function<std::chrono::system_clock::time_point(
-                   Row, std::chrono::seconds)>,
+    using function_type = std::function<std::chrono::system_clock::time_point(
+        Row, std::chrono::seconds, const ICore &)>;
+
+    TimeFilter(Kind kind, std::string columnName, function_type getValue,
                RelationalOperator relOp, const std::string &value);
 
     [[nodiscard]] bool accepts(Row row, const User &user,
@@ -40,9 +41,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const std::function<std::chrono::system_clock::time_point(
-        Row, std::chrono::seconds)>
-        _getValue;
+    const function_type _getValue;
     const int32_t _ref_value;
 };
 

@@ -16,17 +16,17 @@ class RowRenderer;
 
 class TimeAggregator : public Aggregator {
 public:
-    TimeAggregator(const AggregationFactory &factory,
-                   std::function<std::chrono::system_clock::time_point(
-                       Row, std::chrono::seconds)>
-                       getValue)
+    using function_type = std::function<std::chrono::system_clock::time_point(
+        Row, std::chrono::seconds, const ICore &)>;
+
+    TimeAggregator(const AggregationFactory &factory, function_type getValue)
         : _aggregation(factory()), _getValue{std::move(getValue)} {}
 
     void consume(Row row, const User & /*user*/,
                  std::chrono::seconds timezone_offset,
-                 const ICore & /*core*/) override {
+                 const ICore &core) override {
         _aggregation->update(double(std::chrono::system_clock::to_time_t(
-            _getValue(row, timezone_offset))));
+            _getValue(row, timezone_offset, core))));
     }
 
     void output(RowRenderer &r) const override {
@@ -35,9 +35,7 @@ public:
 
 private:
     std::unique_ptr<Aggregation> _aggregation;
-    const std::function<std::chrono::system_clock::time_point(
-        Row, std::chrono::seconds)>
-        _getValue;
+    const function_type _getValue;
 };
 
 #endif  // TimeAggregator_h

@@ -83,7 +83,7 @@ std::string TableHosts::name() const { return "hosts"; }
 std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, const ICore &core,
+void TableHosts::addColumns(Table *table, const ICore & /*core*/,
                             const std::string &prefix,
                             const ColumnOffsets &offsets,
                             LockComments lock_comments,
@@ -667,7 +667,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present",
-        offsets, [&core, &try_json](const row_type &row) {
+        offsets, [&try_json](const row_type &row, const ICore &core) {
             return mk_inventory_last(
                 try_json(core.paths()->inventory_directory() / row.name(), ""));
         }));

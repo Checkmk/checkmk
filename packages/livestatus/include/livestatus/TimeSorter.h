@@ -19,15 +19,17 @@ class User;
 
 class TimeSorter : public Sorter {
     using callback_t = std::function<std::chrono::system_clock::time_point(
-        Row, const std::optional<std::string> &, std::chrono::seconds)>;
+        Row, const std::optional<std::string> &, std::chrono::seconds,
+        const ICore &)>;
 
 public:
     explicit TimeSorter(callback_t getValue) : getValue_{std::move(getValue)} {}
-    [[nodiscard]] Sorter::key_type getKey(
-        Row row, const std::optional<std::string> &key, const User & /*user*/,
-        std::chrono::seconds timezone_offset,
-        const ICore & /*core*/) const override {
-        return getValue_(row, key, timezone_offset);
+    [[nodiscard]] Sorter::key_type getKey(Row row,
+                                          const std::optional<std::string> &key,
+                                          const User & /*user*/,
+                                          std::chrono::seconds timezone_offset,
+                                          const ICore &core) const override {
+        return getValue_(row, key, timezone_offset, core);
     }
 
 private:

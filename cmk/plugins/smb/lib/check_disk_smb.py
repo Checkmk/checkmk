@@ -312,6 +312,10 @@ def _extract_data_from_not_matching_lines(
     ErrorResult(state=2, summary='Connection to 192.168.0.11 failed')
     >>> _extract_data_from_not_matching_lines(["tree connect failed: NT_STATUS_BAD_NETWORK_NAME"], "hostname", "share")
     ErrorResult(state=2, summary='Invalid share name \\\\\\\\hostname\\\\share')
+    >>> _extract_data_from_not_matching_lines(["session setup failed: NT_STATUS_NO_LOGON_SERVERS"], "hostname", "share")
+    ErrorResult(state=2, summary='No logon server')
+    >>> _extract_data_from_not_matching_lines(["session setup failed: NT_STATUS_IO_TIMEOUT"], "hostname", "share")
+    ErrorResult(state=2, summary='Timeout')
     >>> _extract_data_from_not_matching_lines(["some other error"], "hostname", "share")
     ErrorResult(state=3, summary='Result from smbclient not suitable')
     """
@@ -330,6 +334,14 @@ def _extract_data_from_not_matching_lines(
         # invalid share name
         if re.search(r"(You specified an invalid share name|NT_STATUS_BAD_NETWORK_NAME)", line):
             return ErrorResult(2, f"Invalid share name \\\\{hostname}\\{share}")
+
+        # no logon server
+        if re.search(r"(No logon servers|NT_STATUS_NO_LOGON_SERVERS)", line):
+            return ErrorResult(2, "No logon server")
+
+        # time out
+        if re.search(r"(Timeout|NT_STATUS_IO_TIMEOUT)", line):
+            return ErrorResult(2, "Timeout")
 
     return ErrorResult(state, summary)
 

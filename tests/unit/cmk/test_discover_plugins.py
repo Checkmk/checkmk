@@ -109,6 +109,11 @@ class MyTestPlugin:
 
 
 @dataclass
+class MyTestSubclassedPlugin(MyTestPlugin):
+    name: str
+
+
+@dataclass
 class MyOtherPlugin:
     name: str
 
@@ -128,6 +133,10 @@ class TestCollector:
                 return _make_module("my_other_type", [], my_plugin_2=MyOtherPlugin("herta"))
             case "my_collision":
                 return _make_module("my_collision", [], my_plugin_3=MyTestPlugin("herta"))
+            case "my_subclassed_type":
+                return _make_module(
+                    "my_subclassed_type", [], my_plugin_4=MyTestSubclassedPlugin("kevin")
+                )
             case "your_module":
                 return _make_module("your_module", [], your_plugin_1=MyOtherPlugin("herbert"))
 
@@ -149,6 +158,15 @@ class TestCollector:
         collector.add_from_module("nonexistant", self._importer)
         assert not collector.errors
         assert not collector.plugins
+
+    def test_subclass_ok_case(self) -> None:
+        """Load a plugin"""
+        collector = Collector({MyTestPlugin: "my_"}, raise_errors=False)
+        collector.add_from_module("my_subclassed_type", self._importer)
+        assert not collector.errors
+        assert collector.plugins == {
+            PluginLocation("my_subclassed_type", "my_plugin_4"): MyTestSubclassedPlugin("kevin"),
+        }
 
     def test_unknown_name_ignored(self) -> None:
         """Do not load a plug-in with name prefix missmatch"""

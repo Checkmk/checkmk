@@ -34,7 +34,10 @@ class Dict2CatalogConverter:
                         use_headers.append((Title(header[0]), list(header[1])))  # pylint: disable=localization-of-non-literal-string
                     elif len(header) == 3:
                         use_headers.append((Title(header[0]), list(header[2])))  # pylint: disable=localization-of-non-literal-string
-                raise MKGeneralException(f"Invalid header type for catalog {headers}")
+                    else:
+                        raise MKGeneralException(f"Invalid header type for catalog {headers}")
+                else:
+                    raise MKGeneralException(f"Invalid header type for catalog {headers}")
 
         return cls._build_from_formspec_dictionary(dictionary, use_headers)
 

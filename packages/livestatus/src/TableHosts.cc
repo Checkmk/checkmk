@@ -414,7 +414,8 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         prefix + "contacts", "A list of all contacts of this object", offsets,
         [](const row_type &row) { return row.contacts(); }));
 
-    auto get_downtimes = [&core, lock_downtimes](const row_type &row) {
+    auto get_downtimes = [lock_downtimes](const row_type &row,
+                                          const ICore &core) {
         return lock_downtimes == LockDowntimes::yes
                    ? core.downtimes(row)
                    : core.downtimes_unlocked(row);
@@ -440,7 +441,8 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [&core, lock_comments](const row_type &row) {
+    auto get_comments = [lock_comments](const row_type &row,
+                                        const ICore &core) {
         return lock_comments == LockComments::yes ? core.comments(row)
                                                   : core.comments_unlocked(row);
     };
@@ -697,7 +699,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
-        [&core](const row_type &row, const Column &col) {
+        [](const row_type &row, const Column &col, const ICore &core) {
             const auto logwatch_directory = core.paths()->logwatch_directory();
             auto dir = logwatch_directory.empty() || row.name().empty()
                            ? std::filesystem::path()
@@ -775,7 +777,9 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        offsets, [&core](const row_type &row) { return core.metrics(row); }));
+        offsets, [](const row_type &row, const ICore &core) {
+            return core.metrics(row);
+        }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "smartping_timeout",
         "Maximum expected time between two received packets in ms", offsets,

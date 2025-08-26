@@ -57,10 +57,12 @@ template <typename T, typename U = std::string>
 class ListColumn : public Column {
 public:
     using f0_t = std::function<std::vector<U>(const T &)>;
-    using f1_t = std::function<std::vector<U>(const T &, const Column &)>;
+    using f1_t =
+        std::function<std::vector<U>(const T &, const Column &, const ICore &)>;
     using f2_t = std::function<std::vector<U>(const T &, const User &)>;
     using f3_t = std::function<std::vector<U>(const T &, std::chrono::seconds)>;
-    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
+    using f4_t = std::function<std::vector<U>(const T &, const ICore &)>;
+    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t, f4_t>;
     using value_type = std::vector<std::string>;
 
     ListColumn(const std::string &name, const std::string &description,
@@ -79,9 +81,9 @@ public:
 
     void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds timezone_offset,
-                const ICore & /*core*/) const override {
+                const ICore &core) const override {
         ListRenderer l{r};
-        for (const auto &val : getRawValue(row, user, timezone_offset)) {
+        for (const auto &val : getRawValue(row, user, timezone_offset, core)) {
             renderer_->output(l, val);
         }
     }
@@ -92,8 +94,8 @@ public:
         return std::make_unique<ListFilter>(
             kind, name(),
             [this](Row row, const User &user,
-                   std::chrono::seconds timezone_offset) {
-                return getValue(row, user, timezone_offset);
+                   std::chrono::seconds timezone_offset, const ICore &core) {
+                return getValue(row, user, timezone_offset, core);
             },
             relOp, value, logger());
     }
@@ -112,8 +114,9 @@ public:
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
     value_type getValue(Row row, const User &user,
-                        std::chrono::seconds timezone_offset) const {
-        auto raw_value = getRawValue(row, user, timezone_offset);
+                        std::chrono::seconds timezone_offset,
+                        const ICore &core) const {
+        auto raw_value = getRawValue(row, user, timezone_offset, core);
         std::vector<std::string> values;
         std::transform(raw_value.begin(), raw_value.end(),
                        std::back_inserter(values),
@@ -123,7 +126,8 @@ public:
 
 private:
     [[nodiscard]] std::vector<U> getRawValue(
-        Row row, const User &user, std::chrono::seconds timezone_offset) const {
+        Row row, const User &user, std::chrono::seconds timezone_offset,
+        const ICore &core) const {
         const T *data = ListColumn<T, U>::template columnData<T>(row);
         if (data == nullptr) {
             return {};
@@ -132,13 +136,16 @@ private:
             return std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
-            return std::get<f1_t>(f_)(*data, *this);
+            return std::get<f1_t>(f_)(*data, *this, core);
         }
         if (std::holds_alternative<f2_t>(f_)) {
             return std::get<f2_t>(f_)(*data, user);
         }
         if (std::holds_alternative<f3_t>(f_)) {
             return std::get<f3_t>(f_)(*data, timezone_offset);
+        }
+        if (std::holds_alternative<f4_t>(f_)) {
+            return std::get<f4_t>(f_)(*data, core);
         }
         throw std::runtime_error("unreachable");
     }

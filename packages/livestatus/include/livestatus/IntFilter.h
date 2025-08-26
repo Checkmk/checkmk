@@ -21,7 +21,8 @@ class User;
 class IntFilter : public ColumnFilter {
     using f0_t = std::function<int(Row)>;
     using f1_t = std::function<int(Row, const User &)>;
-    using function_type = std::variant<f0_t, f1_t>;
+    using f2_t = std::function<int(Row, const ICore &)>;
+    using function_type = std::variant<f0_t, f1_t, f2_t>;
 
 public:
     IntFilter(Kind kind, std::string columnName, function_type,

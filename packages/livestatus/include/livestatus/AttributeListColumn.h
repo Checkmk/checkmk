@@ -49,10 +49,10 @@ public:
         const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, this->name(),
-            [this](Row row) {
+            [this](Row row, const ICore &core) {
                 return column::attribute_list::decode(
                     column::attribute_list::encode(
-                        this->getValue(row, NoAuthUser{}, {})));
+                        this->getValue(row, NoAuthUser{}, {}, core)));
             },
             relOp, column::attribute_list::refValueFor(value, this->logger()));
     }

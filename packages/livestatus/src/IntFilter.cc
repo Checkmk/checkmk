@@ -55,12 +55,15 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 
 bool IntFilter::accepts(Row row, const User &user,
                         std::chrono::seconds /*timezone_offset*/,
-                        const ICore & /*core*/) const {
+                        const ICore &core) const {
     if (std::holds_alternative<f0_t>(f_)) {
         return eval(std::get<f0_t>(f_)(row), oper(), _ref_value);
     }
     if (std::holds_alternative<f1_t>(f_)) {
         return eval(std::get<f1_t>(f_)(row, user), oper(), _ref_value);
+    }
+    if (std::holds_alternative<f2_t>(f_)) {
+        return eval(std::get<f2_t>(f_)(row, core), oper(), _ref_value);
     }
     throw std::runtime_error("unreachable");
 }

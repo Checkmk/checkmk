@@ -400,7 +400,8 @@ void TableServices::addColumns(Table *table, const ICore &core,
         prefix + "contacts", "A list of all contacts of this object", offsets,
         [](const row_type &row) { return row.contacts(); }));
 
-    auto get_downtimes = [&core, lock_downtimes](const row_type &s) {
+    auto get_downtimes = [lock_downtimes](const row_type &s,
+                                          const ICore &core) {
         return lock_downtimes == LockDowntimes::yes
                    ? core.downtimes(s)
                    : core.downtimes_unlocked(s);
@@ -426,7 +427,7 @@ void TableServices::addColumns(Table *table, const ICore &core,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [&core, lock_comments](const row_type &s) {
+    auto get_comments = [lock_comments](const row_type &s, const ICore &core) {
         return lock_comments == LockComments::yes ? core.comments(s)
                                                   : core.comments_unlocked(s);
     };
@@ -556,7 +557,9 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        offsets, [&core](const row_type &row) { return core.metrics(row); }));
+        offsets, [](const row_type &row, const ICore &core) {
+            return core.metrics(row);
+        }));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<ListColumn<
                                 row_type, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
@@ -609,7 +612,8 @@ void TableServices::addColumns(Table *table, const ICore &core,
         [](const std::string &args) { return std::filesystem::path{args}; }));
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "prediction_files", "List currently available predictions",
-        offsets, [&core](const row_type &row, const Column & /* col */) {
+        offsets,
+        [](const row_type &row, const Column & /* col */, const ICore &core) {
             auto out = std::vector<std::string>{};
             const auto path = core.paths()->prediction_directory() /
                               pnp_cleanup(row.host_name()) /

@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 
+#include "DummyMonitoringCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/ListColumn.h"
@@ -22,6 +23,7 @@ struct DummyRow : Row {
 struct DummyValue {};
 
 TEST(ListColumn, GetValueLambda) {
+    const DummyMonitoringCore core{};
     using value_type = ListColumn<DummyRow>::value_type;
     value_type v{"hello"s, "world"s};  // NOLINT(misc-const-correctness)
 
@@ -32,10 +34,11 @@ TEST(ListColumn, GetValueLambda) {
             return v;
         }};
 
-    EXPECT_EQ(v, col.getValue(row, NoAuthUser{}, 0s));
+    EXPECT_EQ(v, col.getValue(row, NoAuthUser{}, 0s, core));
 }
 
 TEST(ListColumn, GetValueDefault) {
+    const DummyMonitoringCore core{};
     using value_type = ListColumn<DummyRow>::value_type;
     value_type v{"hello"s, "world"s};  // NOLINT(misc-const-correctness)
 
@@ -45,6 +48,6 @@ TEST(ListColumn, GetValueDefault) {
             return v;
         }};
 
-    EXPECT_NE(v, col.getValue(row, NoAuthUser{}, 0s));
-    EXPECT_EQ(value_type{}, col.getValue(row, NoAuthUser{}, 0s));
+    EXPECT_NE(v, col.getValue(row, NoAuthUser{}, 0s, core));
+    EXPECT_EQ(value_type{}, col.getValue(row, NoAuthUser{}, 0s, core));
 }

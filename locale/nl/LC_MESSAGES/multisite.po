@@ -31549,6 +31549,9 @@ msgstr "IBM SVC-schijf"
 msgid "IBM SVC licenses"
 msgstr "IBM SVC-licenties"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -46286,6 +46289,10 @@ msgid "Number of tables"
 msgstr "Aantal tabellen"
 
 #, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Aantal veranderingen sinds laatste dump"
+
+#, fuzzy
 msgid "Number of tasks"
 msgstr "Aantal tabellen"
 
@@ -53671,6 +53678,10 @@ msgstr "Fysieke poort toestanden om te ontdekken"
 msgid "Redirect URL (has to be https)"
 msgstr "Redirect URL (moet https zijn)"
 
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Redis cliënten"
+
 msgid "Redis clients"
 msgstr "Redis cliënten"
 
@@ -56952,6 +56963,9 @@ msgstr "Score"
 #, fuzzy
 msgid "Scrape interval"
 msgstr "Scan interval"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (beperkte ondersteuning, zie inline help)"

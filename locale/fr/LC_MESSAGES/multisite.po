@@ -31797,6 +31797,9 @@ msgstr "Disque IBM SVC"
 msgid "IBM SVC licenses"
 msgstr "Licences IBM SVC"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -46632,6 +46635,10 @@ msgid "Number of tables"
 msgstr "Nombre de tables"
 
 #, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Nombre de changements depuis la dernière vidange"
+
+#, fuzzy
 msgid "Number of tasks"
 msgstr "Nombre de tables"
 
@@ -54085,6 +54092,10 @@ msgstr "États des ports physiques à découvrir"
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirection (doit être https)"
 
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Clients Redis"
+
 msgid "Redis clients"
 msgstr "Clients Redis"
 
@@ -57420,6 +57431,9 @@ msgstr "Score"
 #, fuzzy
 msgid "Scrape interval"
 msgstr "Intervalle de balayage"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (support limité, voir l'aide en ligne)"

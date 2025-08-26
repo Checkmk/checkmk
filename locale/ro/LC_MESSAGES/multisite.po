@@ -31603,6 +31603,9 @@ msgstr "Discul IBM SVC"
 msgid "IBM SVC licenses"
 msgstr "Licențe IBM SVC"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -46376,6 +46379,10 @@ msgid "Number of tables"
 msgstr "Număr de mese"
 
 #, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Numărul de modificări de la ultima descărcare de gestiune"
+
+#, fuzzy
 msgid "Number of tasks"
 msgstr "Număr de mese"
 
@@ -53757,6 +53764,10 @@ msgstr "Stări de port fizic de descoperit"
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirecționare (trebuie să fie https)"
 
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Clienți Redis"
+
 msgid "Redis clients"
 msgstr "Clienți Redis"
 
@@ -57040,6 +57051,9 @@ msgstr "Scor"
 #, fuzzy
 msgid "Scrape interval"
 msgstr "Interval de scanare"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (suport limitat, consultați ajutorul în linie)"

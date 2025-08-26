@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-20 19:35+0000\n"
+"PO-Revision-Date: 2025-08-25 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -4362,9 +4362,8 @@ msgstr "Neue Zustandskonfiguration hinzufügen"
 msgid "Add stored report"
 msgstr "Gespeicherten Bericht hinzufügen"
 
-#, fuzzy
 msgid "Add subscription tag"
-msgstr "Subskriptionszustand"
+msgstr "Subskriptionsmerkmal anfügen"
 
 msgid "Add tag"
 msgstr "Merkmal hinzufügen"
@@ -4401,11 +4400,17 @@ msgid ""
 "Add the tags you want to use to filter the resources. Only resources with "
 "every tags matching, will be monitored."
 msgstr ""
+"Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Ressourcen verwenden "
+"möchten. Es werden nur Ressourcen überwacht, bei denen alle Merkmale "
+"übereinstimmen."
 
 msgid ""
 "Add the tags you want to use to filter the subscriptions. Only subscriptions "
 "with every tags matching, will be monitored."
 msgstr ""
+"Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Subskriptionen "
+"verwenden möchten. Es werden nur Subskriptionen überwacht, bei denen alle "
+"Merkmale übereinstimmen."
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -22169,9 +22174,8 @@ msgstr "Replikation von einer Zentralinstanz aktivieren"
 msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
 
-#, fuzzy
 msgid "Enable safe host names"
-msgstr "Host-Namen übersetzen"
+msgstr "Sichere Host-Namen aktivieren"
 
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
@@ -27265,7 +27269,7 @@ msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
 
 msgid "Healthy"
-msgstr ""
+msgstr "Gesund"
 
 msgid "Healthy hosts"
 msgstr "Gesunde Hosts"
@@ -30296,6 +30300,9 @@ msgstr "IBM SVC Platte"
 
 msgid "IBM SVC licenses"
 msgstr "IBM SVC Lizenzen"
+
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
 
 msgid "ICMP"
 msgstr "ICMP"
@@ -41333,13 +41340,13 @@ msgstr ""
 "Regel %s von Position #%d nach #%d im Regelsatz \"%s\" im Ordner \"%s\" "
 "verschoben"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
 "\"%s\""
 msgstr ""
-"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
-"den Anfang des Ordners \"%s\""
+"Regel %s des Regelsatzes \"%s\" aus dem Ordner \"%s\" an die Position #%d im "
+"Ordner \"%s\" verschoben"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -44517,6 +44524,10 @@ msgstr "Anzahl der hängengebliebenen Aufgaben"
 
 msgid "Number of tables"
 msgstr "Anzahl von Tabellen"
+
+#, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
 msgid "Number of tasks"
 msgstr "Anzahl von Aufgaben"
@@ -51412,6 +51423,10 @@ msgstr "Physikalische Port-Erkennung für Redfish"
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Redis-Clients"
+
 msgid "Redis clients"
 msgstr "Redis-Clients"
 
@@ -54549,6 +54564,9 @@ msgstr "Punktzahl"
 
 msgid "Scrape interval"
 msgstr "Scrape-Intervall"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Skript (Eingeschränkte Unterstützung, siehe Inline-Hilfe)"
@@ -60934,9 +60952,8 @@ msgstr "Subskription"
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
 
-#, fuzzy
 msgid "Subscriptions matching tag based criteria"
-msgstr "Ressourcen, die den merkmalbasierten Kriterien entsprechen"
+msgstr "Subskriptionen, die den merkmalsbasierten Kriterien entsprechen"
 
 msgid "Subscriptions to monitor"
 msgstr "Zu überwachende Subskriptionen"
@@ -61732,9 +61749,8 @@ msgstr "Merkmalsgruppen"
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Merkmal-Gruppen mit nur einer Auswahl müssen eine Merkmal-ID haben."
 
-#, fuzzy
 msgid "Tag matching subscriptions"
-msgstr "Ereignis-Subskriptionen"
+msgstr "Subskriptionen, auf welche die Merkmale zutreffen"
 
 msgid "Tag usage"
 msgstr "Merkmalnutzung"
@@ -66880,9 +66896,8 @@ msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
 
-#, fuzzy
 msgid "The subscription tag"
-msgstr "Ereignis-Subskriptionen"
+msgstr "Das Subskriptionsmerkmal"
 
 #, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -78942,6 +78957,11 @@ msgid ""
 "names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
 "resources or resource groups with the same name."
 msgstr ""
+"Mit dieser Option erstellt Checkmk sichere Hostnamen für Piggyback-Hosts, um "
+"Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt den "
+"Hostnamen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
+"Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
+"Ressourcen oder Ressourcengruppen mit demselben Namen haben."
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "

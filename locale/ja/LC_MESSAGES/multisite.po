@@ -29506,6 +29506,9 @@ msgstr "IBM SVC ディスク"
 msgid "IBM SVC licenses"
 msgstr "IBM SVC ライセンス"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -43388,6 +43391,10 @@ msgstr "スタックしたタスクの数"
 msgid "Number of tables"
 msgstr "テーブルの数"
 
+#, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "最後のダンプ以降の変更の数"
+
 msgid "Number of tasks"
 msgstr "タスクの数"
 
@@ -50133,6 +50140,10 @@ msgstr "Redfish 物理ポート検出"
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
 
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Redisクライアント"
+
 msgid "Redis clients"
 msgstr "Redisクライアント"
 
@@ -53232,6 +53243,9 @@ msgstr "スコア"
 
 msgid "Scrape interval"
 msgstr "スクレイピング間隔"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"

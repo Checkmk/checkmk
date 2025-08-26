@@ -74,6 +74,7 @@ defineEmits(['click'])
 
 .cmk-button--variant-primary,
 .cmk-button--variant-success {
+  color: var(--black);
   background-color: var(--success-dimmed);
 }
 

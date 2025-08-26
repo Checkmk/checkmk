@@ -4,13 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkButton from '../CmkButton.vue'
+import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon.vue'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 import usei18n from '@/lib/i18n.ts'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButton, { type ButtonVariants } from '../CmkButton.vue'
 
 export interface CmkWizardButtonProps {
-  type: 'next' | 'previous' | 'finish'
+  type: 'next' | 'previous' | 'finish' | 'other'
   iconName?: string
   iconRotate?: number
   overrideLabel?: string
@@ -42,6 +42,8 @@ function getLabel() {
       return _t('Previous step')
     case 'finish':
       return _t('Finish')
+    default:
+      return ''
   }
 }
 
@@ -50,34 +52,54 @@ function getButtonConfig(
   iconName: string = '',
   iconRotate: number = 0
 ): {
+  variant?: ButtonVariants['variant']
   icon: { name: string; rotate: number }
+  iconSize?: CmkIconVariants['size']
 } {
+  let icon = { name: '', rotate: 0 }
+
   if (iconName) {
-    return { icon: { name: iconName, rotate: iconRotate } }
+    icon = { name: iconName, rotate: iconRotate }
   }
 
   switch (variant) {
+    case 'other':
+      return {
+        variant: 'secondary',
+        icon
+      }
     case 'previous':
-      return { icon: { name: 'continue', rotate: -90 } }
-
+      return {
+        icon: { name: 'continue', rotate: -90 }
+      }
     case 'next':
       return {
+        variant: 'secondary',
         icon: { name: 'continue', rotate: 90 }
       }
     case 'finish':
       return {
-        icon: { name: 'checkmark', rotate: 0 }
+        variant: 'primary',
+        icon: { name: 'check', rotate: 0 },
+        iconSize: 'small'
       }
   }
-  return { icon: { name: '', rotate: 0 } }
+  return {
+    icon
+  }
 }
 
 const buttonConfig = getButtonConfig(props.type, props.iconName, props.iconRotate)
 </script>
 
 <template>
-  <CmkButton class="cmk-wizard-button" @click="onClick">
-    <CmkIcon :name="buttonConfig.icon.name" :rotate="buttonConfig.icon.rotate" variant="inline" />
+  <CmkButton class="cmk-wizard-button" :variant="buttonConfig.variant" @click="onClick">
+    <CmkIcon
+      :name="buttonConfig.icon.name"
+      :size="buttonConfig.iconSize"
+      :rotate="buttonConfig.icon.rotate"
+      variant="inline"
+    />
     {{ getLabel() }}
   </CmkButton>
 </template>

@@ -44,7 +44,7 @@ function onClickGoTo() {
   display: flex;
   gap: var(--dimension-6);
   --wizard-step-number-badge-width: var(--dimension-8);
-  --wizard-progress-bar-width: var(--dimension-3);
+  --wizard-progress-bar-width: var(--dimension-2);
 
   &:not(:last-child) {
     padding-bottom: 1rem;
@@ -63,24 +63,27 @@ function onClickGoTo() {
     flex: 0 0 var(--wizard-step-number-badge-width);
     height: var(--wizard-step-number-badge-width);
     border-radius: 50%;
-    color: var(--color-conference-grey-100);
-    background-color: var(--wizard-progress-bar-background-color, rgb(211, 211, 211));
+    color: var(--wizard-progress-bar-background-color);
+    border: var(--wizard-progress-bar-width) solid var(--wizard-progress-bar-background-color);
+    background-color: transparent;
+    box-sizing: border-box;
   }
 
   /* Connecting line between badges */
   &:not(:last-child):after {
     content: '';
     position: absolute;
-    left: calc(var(--wizard-step-number-badge-width) / 2 - var(--wizard-progress-bar-width) / 2);
-    top: 0;
+    left: calc(var(--wizard-step-number-badge-width) / 2 - 1px);
+    top: var(--wizard-step-number-badge-width);
     bottom: 0;
     width: var(--wizard-progress-bar-width);
-    background-color: var(--wizard-progress-bar-background-color, rgb(211, 211, 211));
+    background-color: var(--wizard-progress-bar-background-color);
   }
 
   &.wizard-step--active:before,
   &.wizard-step--complete:before {
     background-color: var(--success-dimmed);
+    border-color: var(--success-dimmed);
   }
 
   &.wizard-step--active:after {

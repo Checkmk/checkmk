@@ -8,9 +8,11 @@ from typing import Annotated
 import fastapi
 
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
+    get_create_task_handler,
     get_relay_tasks_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    CreateTaskHandler,
     GetRelayTasksHandler,
     RelayNotFoundError,
 )
@@ -26,13 +28,15 @@ router = fastapi.APIRouter()
 
 @router.post(
     "/{relay_id}/tasks/",
-    status_code=fastapi.status.HTTP_202_ACCEPTED,
+    status_code=fastapi.status.HTTP_200_OK,
     responses={
-        202: {"model": tasks_protocol.TaskCreateResponse},
+        200: {"model": tasks_protocol.TaskCreateResponse},
     },
 )
 async def create_task(
-    relay_id: str, request: tasks_protocol.TaskCreateRequest
+    relay_id: str,
+    request: tasks_protocol.TaskCreateRequest,
+    handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
 

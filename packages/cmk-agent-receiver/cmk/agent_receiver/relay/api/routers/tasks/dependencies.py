@@ -9,6 +9,7 @@ import fastapi
 
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    CreateTaskHandler,
     GetRelayTasksHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
@@ -27,3 +28,9 @@ def get_relay_tasks_handler(
         tasks_repository=tasks_repository,
         relay_repository=relays_repository,
     )
+
+
+def get_create_task_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+) -> CreateTaskHandler:
+    return CreateTaskHandler(tasks_repository=tasks_repository)

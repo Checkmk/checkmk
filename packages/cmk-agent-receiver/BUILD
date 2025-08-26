@@ -36,6 +36,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/tasks/dependencies.py",
         "cmk/agent_receiver/relay/api/routers/tasks/endpoints.py",
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/__init__.py",
+        "cmk/agent_receiver/relay/api/routers/tasks/handlers/create_task.py",
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/get_tasks.py",
         "cmk/agent_receiver/relay/api/routers/tasks/libs/tasks_repository.py",
         "cmk/agent_receiver/relay/api/routers/tasks/serializers.py",

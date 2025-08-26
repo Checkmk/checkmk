@@ -155,7 +155,7 @@ class DiagnosticsDump:
         self.tarfile_created = False
 
     def _get_fixed_elements(self) -> list[ABCDiagnosticsElement]:
-        return [
+        fixed_elements = [
             GeneralDiagnosticsElement(),
             PerfDataDiagnosticsElement(),
             HWDiagnosticsElement(),
@@ -168,6 +168,11 @@ class DiagnosticsDump:
             RpmCSVDiagnosticsElement(),
             CMAJSONDiagnosticsElement(),
         ]
+
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+            fixed_elements.append(DCDDiagnosticsElement())
+
+        return fixed_elements
 
     def _get_optional_elements(
         self, parameters: DiagnosticsOptionalParameters | None
@@ -1274,3 +1279,46 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 f.write(output)
 
             yield filepath
+
+
+class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):
+    @property
+    def ident(self) -> str:
+        return "dcd"
+
+    @property
+    def title(self) -> str:
+        return _("DCD cycles and batches.")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Returns the current state of DCD cycles and batches. "
+            "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
+        )
+
+    def _collect_infos(self) -> str:
+        if not (cmk_dcd_binary := shutil.which("cmk-dcd")):
+            return ""
+
+        parameters = {
+            "Batches": "-Bv",
+            "Cycles": "-Cv",
+        }
+
+        output = []
+
+        for what, parameter in parameters.items():
+            try:
+                output.append("[%s]" % what)
+                output.append(
+                    subprocess.check_output(
+                        [cmk_dcd_binary, parameter],
+                        text=True,
+                        stderr=subprocess.STDOUT,
+                    )
+                )
+            except subprocess.CalledProcessError:
+                output.append("Unable to determine %s" % what)
+
+        return "\n".join(output)

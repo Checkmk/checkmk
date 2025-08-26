@@ -157,6 +157,7 @@ const provideri18n: Record<QueryProvider, string> = {
   height: 100%;
   border-top-left-radius: var(--border-radius);
   border-bottom-left-radius: var(--border-radius);
+
   &:hover {
     background: var(--ux-theme-6);
   }
@@ -169,7 +170,6 @@ const provideri18n: Record<QueryProvider, string> = {
     align-items: center;
     margin: 0;
     background: transparent;
-    border: 0;
     font-weight: var(--font-weight-default);
     border: 1px solid transparent;
 

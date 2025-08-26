@@ -83,7 +83,8 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 }
 
 .cmk-accordion-item-content {
-  margin: 20px 60px 8px 60px;
+  margin: 20px 60px 8px;
+
   &:focus-within {
     position: relative;
     z-index: 1;
@@ -103,6 +104,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
     opacity: 0;
     height: 0;
   }
+
   to {
     opacity: 1;
     height: var(--radix-accordion-content-height);
@@ -114,6 +116,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
     opacity: 1;
     height: var(--radix-accordion-content-height);
   }
+
   to {
     opacity: 0;
     height: 0;

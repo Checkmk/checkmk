@@ -59,7 +59,7 @@ function setSelectedOption(value: string) {
 }
 
 .toggle_option:hover:not(.selected) {
-  background-color: rgb(from var(--default-form-element-bg-color) r g b / 0.6);
+  background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
 }
 
 .selected {

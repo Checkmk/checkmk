@@ -78,9 +78,10 @@ const componentId = useId()
 .form-string__button-clear-x {
   width: 13px;
 }
+
 .cmk-form-string--dropdown {
   display: block;
-  float: left; /* align nicely with clear button*/
+  float: left; /* align nicely with clear button */
   margin-right: 1px;
 }
 </style>

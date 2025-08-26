@@ -54,6 +54,7 @@ defineProps<CmkTabProps>()
     background: var(--ux-theme-7);
     font-weight: var(--font-weight-bold);
   }
+
   &[data-disabled] {
     opacity: 0.6;
     cursor: default;

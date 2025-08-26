@@ -29,11 +29,9 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
     padding: var(--spacing);
     margin: 0;
     text-decoration: none;
-    display: flex;
-    flex-direction: row;
     justify-content: space-between;
     border: 0;
-    border-radius: 0px;
+    border-radius: 0;
     display: flex;
     flex-direction: row;
     box-sizing: border-box;

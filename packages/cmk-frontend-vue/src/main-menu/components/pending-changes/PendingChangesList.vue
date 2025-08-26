@@ -156,13 +156,14 @@ const changesSideTitle = computed(() => {
 .cmk-div-pending-changes-container {
   display: flex;
   width: 100%;
-  padding: 0px;
+  padding: 0;
   flex-direction: column;
   align-items: flex-start;
 }
 
 .cmk-indent-pending-change-container {
   --margin-left: var(--dimension-4);
+
   display: flex;
   padding: 0 0 0 var(--dimension-4) !important;
   flex-direction: column;

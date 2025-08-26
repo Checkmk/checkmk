@@ -25,18 +25,22 @@ defineProps<{
   &:first-child {
     margin-left: 0;
   }
+
   &.form-labels-label--null {
     background-color: var(--tag-color);
     color: var(--black);
   }
+
   &.form-labels-label--discovered {
     background-color: var(--tag-discovered-color);
     color: var(--black);
   }
+
   &.form-labels-label--explicit {
     background-color: var(--tag-explicit-color);
     color: var(--white);
   }
+
   &.form-labels-label--ruleset {
     background-color: var(--tag-ruleset-color);
     color: var(--white);

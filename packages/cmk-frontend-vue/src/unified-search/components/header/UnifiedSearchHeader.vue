@@ -232,7 +232,7 @@ const getSearchInputPlaceholder = computed(() => {
   background: var(--color-yellow-80);
   border-radius: var(--border-radius);
   height: 20px;
-  padding: 0px var(--spacing-half);
+  padding: 0 var(--spacing-half);
   margin-right: var(--spacing-half);
 
   .unified-search-input-tag-dismiss {
@@ -295,7 +295,7 @@ const getSearchInputPlaceholder = computed(() => {
 
 .unified-search-filter-suggestions-list {
   position: relative;
-  padding: 0 8px 16px 8px;
+  padding: 0 8px 16px;
 }
 
 .unified-search-icon {

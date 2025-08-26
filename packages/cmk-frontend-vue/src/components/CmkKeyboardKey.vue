@@ -97,6 +97,7 @@ function getKeyClass(): string {
   color: var(--white);
   display: inline-flex;
   justify-content: center;
+
   span {
     margin: 1px 0;
   }
@@ -129,7 +130,7 @@ function getKeyClass(): string {
 
   span {
     position: relative;
-    margin: 0 0 2px 0;
+    margin: 0 0 2px;
   }
 
   &.cmk-keyboard-key-size-small {

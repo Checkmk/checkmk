@@ -20,6 +20,7 @@ defineProps<{ num: number }>()
   &.even {
     --default-bg-color: var(--ux-theme-3);
   }
+
   &.odd {
     --default-bg-color: var(--ux-theme-2);
   }

@@ -69,7 +69,7 @@ const onClickGoTo = computed(() =>
     padding-bottom: 1rem;
   }
 
-  &:before {
+  &::before {
     counter-increment: stage-index;
     content: counter(stage-index);
     align-content: center;
@@ -85,7 +85,7 @@ const onClickGoTo = computed(() =>
     background-color: var(--qs-stage-line-color);
   }
 
-  &:not(:last-child):after {
+  &:not(:last-child)::after {
     content: '';
     position: absolute;
     left: -1px;
@@ -96,12 +96,12 @@ const onClickGoTo = computed(() =>
     background-color: var(--qs-stage-line-color);
   }
 
-  &.qs-stage--active:before,
-  &.qs-stage--complete:before {
+  &.qs-stage--active::before,
+  &.qs-stage--complete::before {
     background-color: var(--success-dimmed);
   }
 
-  &.qs-stage--active:after {
+  &.qs-stage--active::after {
     background: linear-gradient(
       to bottom,
       var(--success-dimmed) 50px,
@@ -110,14 +110,14 @@ const onClickGoTo = computed(() =>
   }
 
   &.qs-stage--complete {
-    &:before {
+    &::before {
       background-image: var(--icon-check);
       background-repeat: no-repeat;
       background-position: center;
       content: '';
     }
 
-    &:after {
+    &::after {
       background-color: var(--success-dimmed);
     }
   }

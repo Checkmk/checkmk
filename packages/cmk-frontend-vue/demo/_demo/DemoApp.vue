@@ -147,11 +147,13 @@ immediateWatch(
 .demo {
   padding: 10px 10px 10px 0;
 }
+
 .demo ul.breadcrumbs > li {
   display: inline;
   margin: 0;
   padding: 0;
 }
+
 .demo ul.breadcrumbs > li > a {
   padding: 0;
   padding-right: 0.3em;
@@ -167,29 +169,37 @@ immediateWatch(
     h1 {
       color: inherit;
     }
+
     height: fit-content;
+
     .demo-area {
       padding: 1em;
       border: 2px solid var(--default-form-element-bg-color);
       background-color: var(--default-component-bg-color);
     }
   }
+
   nav {
     margin: 0 1em 0 0;
+
     ul {
       list-style: none;
       padding: 0;
+
       li {
         margin: 0.2em 0;
       }
     }
+
     a {
       color: inherit;
     }
+
     a.page.router-link-exact-active {
       font-weight: bold;
     }
   }
+
   fieldset {
     :deep(button) {
       min-width: 50px;

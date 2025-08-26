@@ -636,12 +636,12 @@ export default defineComponent({
 }
 
 table.form-readonly__table {
-  margin-top: 0px;
+  margin-top: 0;
   border-collapse: collapse;
 
   td {
     vertical-align: top;
-    padding: 0px 5px 0px 0px;
+    padding: 0 5px 0 0;
   }
 
   table {
@@ -655,7 +655,7 @@ table.form-readonly__table {
         & > td {
           display: inline-block !important;
           vertical-align: top;
-          padding: 0px 5px 0px 0px;
+          padding: 0 5px 0 0;
         }
       }
 
@@ -677,7 +677,7 @@ table.form-readonly__table {
 
 .form-readonly__dictionary {
   display: inline-table;
-  border-spacing: 0px;
+  border-spacing: 0;
 
   > tr {
     > td.dict_title {
@@ -713,29 +713,30 @@ table.form-readonly__table {
   > td > .form-readonly__multiple-choice span {
     display: block;
 
-    &:before {
+    &::before {
       content: '';
     }
   }
 }
 
 .form-readonly__multiple-choice span {
-  &:not(:first-child):before {
+  &:not(:first-child)::before {
     content: ', ';
   }
 
-  &.form-readonly__multiple-choice__max-entries:before {
+  &.form-readonly__multiple-choice__max-entries::before {
     content: '';
   }
 }
 
 .form-readonly__list {
-  padding-left: 0px !important;
+  padding-left: 0 !important;
   list-style-position: inside;
   list-style-type: circle;
+
   > li {
     display: flex;
-    padding-left: 0px !important;
+    padding-left: 0 !important;
 
     ul {
       margin-left: 5px;
@@ -749,16 +750,16 @@ table.form-readonly__table {
 
 .form-readonly__labels {
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   justify-content: start;
   align-items: center;
-  flex-wrap: wrap;
   gap: 5px 0;
 }
 
 .form-readonly__cascading-single-choice__layout-horizontal {
   margin-bottom: 4px;
 }
+
 .form-readonly__cascading-single-choice__layout-horizontal > div {
   margin-right: var(--spacing-half);
   display: inline-block;

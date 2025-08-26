@@ -46,6 +46,7 @@ defineProps<CmkSpaceProps>()
   &.cmk-space--size-medium {
     width: var(--spacing);
   }
+
   &.cmk-space--size-small {
     width: var(--spacing-half);
   }

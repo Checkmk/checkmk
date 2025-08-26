@@ -77,6 +77,7 @@ td.group_title {
   min-width: 240px;
   max-width: 240px;
   vertical-align: top;
+
   span.fixed_content_width {
     width: 230px;
     display: inline-block;

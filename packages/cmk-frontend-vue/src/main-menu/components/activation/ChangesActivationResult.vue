@@ -30,7 +30,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
 <style scoped>
 .cmk-changes-activation-result {
   display: flex;
-  padding: 0px 29px;
+  padding: 0 29px;
   flex-direction: column;
   justify-content: center;
   align-items: center;

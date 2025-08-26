@@ -192,6 +192,7 @@ const truncatedButtonLabel = computed(() =>
 
   .cmk-dropdown--arrow {
     width: 0.7em;
+
     /* This replicates the dropdown in checkmk, which useses select2 which
        uses #888 as color by default. The color is not themed there, so we
        also don't theme it. */

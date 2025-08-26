@@ -287,7 +287,7 @@ defineExpose({
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-6);
   box-sizing: border-box;
-  border-radius: 0px;
+  border-radius: 0;
   min-width: 100%;
   max-width: 512px;
   margin: 0;
@@ -321,15 +321,18 @@ defineExpose({
     &.selectable {
       cursor: pointer;
       color: var(--font-color);
+
       &.selected {
         color: var(--default-select-focus-color);
       }
+
       &:hover {
         color: var(--default-select-hover-color);
       }
     }
   }
 }
+
 .cmk-suggestions--error {
   background-color: var(--error-msg-bg-color);
 }

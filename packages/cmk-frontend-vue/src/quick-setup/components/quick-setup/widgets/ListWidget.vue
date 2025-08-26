@@ -37,7 +37,7 @@ const getBullet = (): string => {
 <style scoped>
 .qs-list-widget {
   margin-bottom: var(--spacing);
-  padding-left: 0px;
+  padding-left: 0;
   line-height: 18px;
   list-style-type: v-bind('getBullet()');
   list-style-position: inside;

@@ -91,14 +91,14 @@ defineEmits(['toggleOpen'])
   &.cmk-collapsible-title__chevron--bottom {
     padding-left: 3px;
 
-    &:before {
+    &::before {
       top: 2px;
       transform: rotate(135deg);
       transition: transform 100ms linear;
     }
   }
 
-  &.cmk-collapsible-title__chevron--right:before {
+  &.cmk-collapsible-title__chevron--right::before {
     top: 4px;
     left: 0;
     transform: rotate(45deg);

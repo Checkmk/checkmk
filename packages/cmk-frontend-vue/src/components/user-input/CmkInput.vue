@@ -82,12 +82,12 @@ immediateWatch(
 <style scoped>
 input.cmk-input--number::-webkit-outer-spin-button,
 input.cmk-input--number::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 input.cmk-input--number {
   width: 5.8ex;
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>

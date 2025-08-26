@@ -47,5 +47,5 @@ const { ErrorBoundary } = useErrorBoundary()
 </template>
 
 <style>
-@import './variables.css';
+@import url('./variables.css');
 </style>

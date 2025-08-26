@@ -20,6 +20,7 @@ const LINE_OVERHANG = '5px'
 <style scoped>
 .cmk-indent {
   --line-overhang: v-bind(LINE_OVERHANG);
+
   float: none;
   margin-left: 6px;
   padding-top: var(--line-overhang);

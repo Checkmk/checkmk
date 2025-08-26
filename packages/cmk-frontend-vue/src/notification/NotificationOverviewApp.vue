@@ -77,7 +77,7 @@ function toggleContent() {
 }
 
 .notification-overview__header {
-  margin: 0 0 12px 0;
+  margin: 0 0 12px;
   font-size: var(--font-size-normal);
   cursor: pointer;
 }

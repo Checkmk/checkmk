@@ -160,6 +160,7 @@ const toggleExpansion = () => {
     background: var(--code-background-color);
     max-width: 100%;
     min-width: 0;
+
     --scroll-bar-thickness: 20px;
 
     .code_scroll_container {
@@ -210,7 +211,7 @@ const toggleExpansion = () => {
 
     .toggle_button {
       font-size: var(--font-size-normal);
-      padding: 0px var(--dimension-4);
+      padding: 0 var(--dimension-4);
       border-color: var(--font-color);
       color: var(--font-color);
       display: inline-flex;

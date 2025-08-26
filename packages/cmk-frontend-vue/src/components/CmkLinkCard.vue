@@ -58,9 +58,11 @@ const classes = computed(() => [
   background-color: var(--ux-theme-1);
   border: var(--dimension-1) solid var(--ux-theme-6);
 }
+
 .cmk-link-card--borderless {
   background-color: var(--ux-theme-2);
 }
+
 .cmk-link-card {
   display: flex;
   align-items: center;
@@ -71,22 +73,27 @@ const classes = computed(() => [
   &:hover {
     background-color: var(--ux-theme-5);
   }
+
   &:focus,
   &:focus-visible {
     outline: var(--default-border-color-green) auto 1px;
   }
+
   &.disabled {
-    opacity: 50%;
+    opacity: 0.5;
     pointer-events: none;
     cursor: default;
   }
 }
+
 .cmk-link-card__icon {
   margin-right: var(--dimension-7);
 }
+
 .cmk-link-card__subtitle {
   color: var(--font-color-dimmed);
 }
+
 .cmk-link-card__export-icon {
   margin-left: auto;
 }

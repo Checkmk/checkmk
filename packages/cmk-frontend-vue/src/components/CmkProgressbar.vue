@@ -124,6 +124,7 @@ const cmkProgressbaId = useId()
   from {
     transform: translateX(-201%);
   }
+
   to {
     transform: translateX(201%);
   }

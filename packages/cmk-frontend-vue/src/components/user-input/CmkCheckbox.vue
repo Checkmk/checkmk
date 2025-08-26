@@ -71,6 +71,7 @@ span {
   &.cmk-checkbox__pad_top {
     padding-top: 2px;
   }
+
   &.cmk-checkbox__pad_bottom {
     padding-bottom: 2px;
   }
@@ -90,7 +91,6 @@ span {
     border-radius: 2px;
     height: 14.5px;
     width: 14.5px;
-
     box-shadow: none; /* disable active/focus style of button */
     padding: 0;
     margin: 0;

@@ -17,7 +17,7 @@ defineProps<{
 .cmk-dropdown-indicator {
   width: 16px;
 
-  &:after {
+  &::after {
     border-color: var(--help-text-font-color);
     border-style: solid;
     border-width: 2px 2px 0 0;
@@ -35,7 +35,7 @@ defineProps<{
 }
 
 .active {
-  &:after {
+  &::after {
     transform: rotate(-45deg);
     top: 3px;
     transition:

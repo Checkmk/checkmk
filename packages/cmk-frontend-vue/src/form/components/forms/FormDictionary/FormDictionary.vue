@@ -198,6 +198,7 @@ tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
 .form-dictionary__group-elems {
   flex-direction: row;
   gap: 0.5em;
+
   &.horizontal_groups {
     display: flex;
   }

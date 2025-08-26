@@ -459,7 +459,7 @@ onMounted(() => {
 
 .cmk-div-activation-result-container {
   display: flex;
-  padding: 20px 0px;
+  padding: 20px 0;
   flex-direction: column;
   align-items: flex-start;
   gap: 13px;
@@ -472,7 +472,7 @@ onMounted(() => {
 
 .cmk-div-activation-result {
   display: flex;
-  padding: 0px 29px;
+  padding: 0 29px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -510,6 +510,7 @@ onMounted(() => {
 .display-none {
   display: none;
 }
+
 .add-flex {
   flex: 2;
 }
@@ -540,8 +541,8 @@ onMounted(() => {
 .cmk-indent {
   box-sizing: border-box;
   background-color: var(--default-bg-color);
-  margin: 0px !important;
-  border-left: 0px !important;
+  margin: 0 !important;
+  border-left: 0 !important;
 
   &:not(:last-of-type) {
     border-bottom: 2px solid var(--ux-theme-1);

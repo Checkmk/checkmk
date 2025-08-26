@@ -101,11 +101,13 @@ const { data: data2, addElement: addElement2, deleteElement: deleteElement2 } = 
 code {
   white-space: pre-line;
 }
+
 dt {
-  margin: 0 0 2em 0;
+  margin: 0 0 2em;
 }
+
 dd {
-  margin: 0 0 2em 0;
+  margin: 0 0 2em;
   padding: 0;
 }
 </style>

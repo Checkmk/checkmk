@@ -174,7 +174,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
 .additional-div {
   background: red;
   padding: 16px;
-  margin: 0 0 16px 0;
+  margin: 0 0 16px;
 }
 
 div:has(> label) {

@@ -80,7 +80,7 @@ defineExpose({
 .cmk-dropdown-button {
   height: var(--form-field-height);
   margin: 0;
-  padding: 3px 6px 4px 6px;
+  padding: 3px 6px 4px;
   vertical-align: baseline;
   background-color: var(--default-form-element-bg-color);
   border: none;
@@ -99,6 +99,7 @@ defineExpose({
   &.disabled {
     cursor: auto;
     color: var(--font-color-dimmed);
+
     &:hover {
       background-color: var(--default-form-element-bg-color);
     }
@@ -114,9 +115,11 @@ defineExpose({
 
   &.no_choices {
     cursor: auto;
+
     &:hover {
       background-color: var(--default-form-element-bg-color);
     }
+
     > .cmk-dropdown-button_arrow {
       opacity: 0.4;
     }

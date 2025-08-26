@@ -119,7 +119,7 @@ const toneSuggestions = [
   height: auto;
   display: flex;
   justify-content: center;
-  padding: 40px 0 0 0;
+  padding: 40px 0 0;
   box-sizing: border-box;
 }
 

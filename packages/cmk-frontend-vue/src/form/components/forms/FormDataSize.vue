@@ -64,7 +64,7 @@ const magnitudeOptions = computed(() => {
 <style scoped>
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
@@ -73,6 +73,6 @@ input.number {
 }
 
 .no-spinner[type='number'] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>

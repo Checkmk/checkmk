@@ -159,11 +159,11 @@ const emit = defineEmits<{
 }
 
 .cmk-div-site-activate-error {
-  background: rgba(234, 57, 8, 0.15);
+  background: rgb(234 57 8 / 15%);
 }
 
 .cmk-div-site-activate-warning {
-  background: rgba(255, 202, 40, 0.15); /* TODO: add var */
+  background: rgb(255 202 40 / 15%); /* TODO: add var */
 }
 
 .cmk-div-site-activate-warning,

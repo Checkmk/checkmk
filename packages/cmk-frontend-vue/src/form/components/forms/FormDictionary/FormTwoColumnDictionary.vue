@@ -161,7 +161,7 @@ tr:first-of-type > td > .form-dictionary__group-title {
   margin: 0;
   padding-top: 0;
   font-weight: bold;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   white-space: normal;
   min-height: 21px;
 

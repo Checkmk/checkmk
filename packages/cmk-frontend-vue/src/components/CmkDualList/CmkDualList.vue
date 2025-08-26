@@ -175,14 +175,17 @@ const elementCounter = computed(() => props.elements.length)
   flex-direction: column;
   gap: 1rem;
 }
+
 .cmk-dual-list-body {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
+
 .cmk-dual-list-single-list {
   flex: 1;
 }
+
 .cmk-dual-list-action-buttons {
   display: flex;
   flex-direction: column;
@@ -192,10 +195,12 @@ const elementCounter = computed(() => props.elements.length)
   width: 100%;
   max-width: 51px;
 }
+
 .cmk-dual-list-action-button {
   margin: 5px;
   width: 100%;
 }
+
 .cmk-dual-list-action-button button {
   width: 100%;
 }

@@ -175,7 +175,7 @@ table.nform input {
 .error {
   margin: 0;
   padding: 5px;
-  background-color: rgb(247, 65, 65);
+  background-color: rgb(247 65 65);
   color: var(--font-color);
   display: block;
 }

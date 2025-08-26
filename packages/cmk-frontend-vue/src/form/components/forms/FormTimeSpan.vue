@@ -113,17 +113,19 @@ const localValidation = ref<Array<string>>([])
 <style scoped>
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 .no-spinner[type='number'] {
   appearance: textfield;
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
+
 input {
   width: 4.8ex;
 }
+
 label {
   margin-right: 0.5em;
 }

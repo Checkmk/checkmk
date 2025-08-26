@@ -101,8 +101,6 @@ immediateWatch(
 }
 
 button {
-  border: 0;
-  background: 0;
   font-weight: normal;
   background: transparent;
   margin-right: 0;

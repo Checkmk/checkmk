@@ -75,6 +75,7 @@ li {
     > span {
       font-weight: normal;
     }
+
     > span:first-of-type {
       display: inline-block;
       width: 45px;

@@ -135,25 +135,30 @@ watch(
   display: flex;
   flex-direction: column;
 }
+
 .cmk-searchable-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .cmk-searchable-list-header .cmk-searchable-list-title {
   font-weight: bold;
 }
+
 .cmk-searchable-list-search-input-wrapper {
   position: relative;
   display: flex;
   margin: 0;
   padding: 0;
 }
+
 .cmk-searchable-list-search-input-wrapper .icon {
   position: absolute;
   top: 0;
   right: 0;
 }
+
 .cmk-searchable-list-search-input-wrapper .icon img {
   content: var(--icon-search);
   cursor: pointer;
@@ -162,11 +167,13 @@ watch(
   padding: 4px;
   border-radius: 2px;
 }
+
 .cmk-searchable-list select {
   width: 100%;
   min-height: 150px;
   box-sizing: border-box;
 }
+
 .cmk-searchable-list-no-element-in-select {
   display: flex;
   justify-content: center;

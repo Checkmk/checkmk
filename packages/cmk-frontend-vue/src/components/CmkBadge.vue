@@ -118,6 +118,7 @@ defineProps<CmkBadgeProps>()
 
 .cmk-badge-outline {
   background: transparent;
+
   &.cmk-badge-default {
     color: var(--custom-scroll-bar-thumb-color);
   }

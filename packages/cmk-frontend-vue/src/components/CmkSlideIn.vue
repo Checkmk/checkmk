@@ -71,7 +71,7 @@ watch(
 }
 
 /* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
-@media screen and (max-width: 1024px) {
+@media screen and (width <= 1024px) {
   .slide-in__container {
     width: 100%;
     max-width: 100%;
@@ -83,6 +83,7 @@ watch(
     opacity: 0;
     transform: translate(50%, 0%);
   }
+
   to {
     opacity: 1;
     transform: translate(0%, 0%);
@@ -94,6 +95,7 @@ watch(
     opacity: 1;
     transform: translate(0%, 0%);
   }
+
   to {
     opacity: 0;
     transform: translate(50%, 0%);
@@ -111,6 +113,7 @@ watch(
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

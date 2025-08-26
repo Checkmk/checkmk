@@ -48,10 +48,7 @@ defineProps<{ type?: SkeletonType | undefined }>()
 
   &::after {
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    inset: 0;
     transform: translateX(-100%);
     background: linear-gradient(
       90deg,
@@ -81,15 +78,19 @@ defineProps<{ type?: SkeletonType | undefined }>()
   &.h1 {
     height: var(--font-size-xxlarge);
   }
+
   &.h2 {
     height: var(--font-size-xlarge);
   }
+
   &.h3 {
     height: var(--font-size-large);
   }
+
   &.text {
     height: var(--font-size-normal);
   }
+
   &.info-text {
     height: var(--font-size-small);
   }
@@ -103,30 +104,37 @@ defineProps<{ type?: SkeletonType | undefined }>()
   &.icon-xxxlarge {
     border-radius: 99px;
   }
+
   &.icon-xsmall {
     width: 10px;
     height: 10px;
   }
+
   &.icon-small {
     width: 12px;
     height: 12px;
   }
+
   &.icon-medium {
     width: 15px;
     height: 15px;
   }
+
   &.icon-large {
     width: 18px;
     height: 18px;
   }
+
   &.icon-xlarge {
     width: 20px;
     height: 20px;
   }
+
   &.icon-xxlarge {
     width: 32px;
     height: 32px;
   }
+
   &.icon-xxxlarge {
     width: 77px;
     height: 77px;

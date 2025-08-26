@@ -42,16 +42,20 @@ function getIconName(status: DNSStatus): string {
 .cmk-icon {
   display: inline-block;
 }
+
 .status-box {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
+
   &.ok {
     background-color: rgb(from var(--success) r g b / 15%);
   }
+
   &.warn {
     background-color: rgb(from var(--color-warning) r g b / 15%);
   }
+
   &.crit {
     background-color: rgb(from var(--color-danger) r g b / 15%);
   }

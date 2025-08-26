@@ -48,7 +48,6 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 <style scoped>
 .steps-progress-bar {
   display: flex;
-  align-items: center;
   gap: 4px;
   flex-direction: column;
   align-items: start;

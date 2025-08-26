@@ -109,14 +109,12 @@ body.inline_help_as_text .help-text__icon {
 .help-text__content {
   background-color: var(--default-tooltip-background-color);
   border-radius: var(--border-radius);
-
   min-width: 200px;
   max-width: 600px;
-
   color: var(--default-tooltip-text-color);
   box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 2px 4px rgba(0, 0, 0, 0.06);
+    0 4px 6px rgb(0 0 0 / 10%),
+    0 2px 4px rgb(0 0 0 / 6%);
   padding: 16px;
 
   .text {

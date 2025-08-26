@@ -147,7 +147,6 @@ function toggleOperatorOptions() {
 
 <style scoped>
 .unified-search-operator-switch {
-  border: 0;
   border-radius: var(--border-radius);
   border: 1px solid transparent;
   height: 27px;
@@ -165,7 +164,6 @@ function toggleOperatorOptions() {
     align-items: center;
     margin: 0;
     background: transparent;
-    border: 0;
     font-weight: var(--font-weight-default);
     border: 1px solid transparent;
 

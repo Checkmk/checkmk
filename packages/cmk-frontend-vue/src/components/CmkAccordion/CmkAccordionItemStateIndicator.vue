@@ -27,7 +27,8 @@ defineProps<{
   align-items: center;
   width: 16px;
   height: 16px;
-  &:after {
+
+  &::after {
     border-color: var(--help-text-font-color);
     border-style: solid;
     border-width: 2px 2px 0 0;
@@ -45,7 +46,7 @@ defineProps<{
 }
 
 .open {
-  &:after {
+  &::after {
     transform: rotate(135deg);
     top: -1px;
     transition:

@@ -84,6 +84,7 @@ const completed = completedSteps === totalSteps
   display: flex;
   flex-direction: column;
 }
+
 .welcome-snapin-continue {
   display: flex;
   height: var(--dimension-10);

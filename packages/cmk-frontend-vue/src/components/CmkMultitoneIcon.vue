@@ -118,6 +118,7 @@ immediateWatch(
   width: v-bind('getSize()');
   height: v-bind('getSize()');
   transform: v-bind('getTransformRotate()');
+
   --icon-primary-color: var(--color-corporate-green-60);
   --icon-secondary-color: var(--color-corporate-green-60);
   --icon-tertiary-color: var(--color-corporate-green-60);

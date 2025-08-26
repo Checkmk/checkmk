@@ -60,21 +60,26 @@ const completedSteps = props.stage_information.finished.length
   padding-right: 10px;
   padding-bottom: 10px;
 }
+
 .welcome-app__banner {
   margin-top: 32px;
 }
+
 .welcome-app__panels {
   display: flex;
   margin-top: var(--spacing);
 }
+
 .welcome-app__panel-left {
   margin-right: var(--spacing);
   flex: 2;
 }
+
 .welcome-app__panel-right {
   margin-left: auto;
   flex: 1;
 }
+
 .welcome-app__footer {
   margin-top: auto;
 }

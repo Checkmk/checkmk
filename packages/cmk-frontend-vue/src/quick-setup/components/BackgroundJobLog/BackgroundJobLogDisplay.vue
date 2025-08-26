@@ -46,11 +46,12 @@ const getIcon = (step: LogStep) => {
 .qs-background-job-log-display__list {
   padding-top: 7px;
   min-height: 40px;
-  padding-left: 0px;
+  padding-left: 0;
   line-height: 18px;
   list-style-position: inside;
   list-style-type: none;
 }
+
 .qs-background-job-log-display__list li {
   padding-top: 5px;
 }

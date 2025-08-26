@@ -185,12 +185,9 @@ onBeforeUnmount(() => {
     margin: 0;
     background: var(--default-bg-color);
     text-decoration: none;
-    display: flex;
-    flex-direction: row;
     justify-content: space-between;
     outline-color: var(--success);
-    border: 0;
-    border-radius: 0px;
+    border-radius: 0;
     display: flex;
     flex-direction: row;
     box-sizing: content-box;
@@ -242,6 +239,7 @@ onBeforeUnmount(() => {
   &::first-letter {
     text-transform: capitalize;
   }
+
   font-weight: bold;
 }
 

@@ -11,22 +11,21 @@
   --success: var(--color-corporate-green-50);
   --success-dimmed: rgb(17 188 122);
   --success-dimmed-2: rgb(13 141 91);
-
-  --white: rgb(255, 255, 255);
-  --white-dimmed: rgba(255, 255, 255, 0.5);
-  --black: rgb(0, 0, 0);
-  --grey-4: rgb(51, 51, 51);
-  --grey-4-dimmed: rgba(51, 51, 51, 0.8);
-  --error-msg-bg-color: rgba(200, 50, 50, 0.15);
-  --form-readonly-error-bg-color: rgb(252, 85, 85);
-  --tag-added-color-light: rgb(6, 103, 193);
-  --tag-color: rgb(0, 168, 181);
-  --tag-explicit-color: rgb(119, 72, 152);
-  --tag-discovered-color: rgba(243, 174, 75);
-  --tag-ruleset-color: rgba(222, 67, 131);
-  --default-help-icon-bg-color: rgb(6, 103, 193);
-  --default-help-icon-bg-color-hover: rgb(56, 133, 205);
-  --scrollbar-color: rgb(78, 93, 105);
+  --white: rgb(255 255 255);
+  --white-dimmed: rgb(255 255 255 / 50%);
+  --black: rgb(0 0 0);
+  --grey-4: rgb(51 51 51);
+  --grey-4-dimmed: rgb(51 51 51 / 80%);
+  --error-msg-bg-color: rgb(200 50 50 / 15%);
+  --form-readonly-error-bg-color: rgb(252 85 85);
+  --tag-added-color-light: rgb(6 103 193);
+  --tag-color: rgb(0 168 181);
+  --tag-explicit-color: rgb(119 72 152);
+  --tag-discovered-color: rgb(243 174 75);
+  --tag-ruleset-color: rgb(222 67 131);
+  --default-help-icon-bg-color: rgb(6 103 193);
+  --default-help-icon-bg-color-hover: rgb(56 133 205);
+  --scrollbar-color: rgb(78 93 105);
 
   /* Fonts */
   --font-size-xxlarge: 18px;
@@ -80,7 +79,8 @@
   --icon-main-setup-active: url('~cmk-frontend/themes/facelift/images/icon_main_setup_active.svg');
   --icon-main-monitoring-active: url('~cmk-frontend/themes/facelift/images/icon_main_monitoring_active.svg');
   --icon-main-customize-active: url('~cmk-frontend/themes/facelift/images/icon_main_customize_active.svg');
-  /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
+
+  /* TODO: remove icno-info and replace it with icon-help-new (icon-help later) */
   --icon-info: url('~cmk-frontend/themes/facelift/images/icon_info.svg');
   --icon-external: url('~cmk-frontend/themes/facelift/images/icon_external.svg');
   --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');
@@ -88,11 +88,9 @@
   --icon-load-graph: url('~cmk-frontend/themes/facelift/images/load_graph.png');
   --icon-filter: url('~cmk-frontend/themes/facelift/images/icon_filter.svg');
   --icon-toggle-on: url('~cmk-frontend/themes/facelift/images/icon_toggle_on.svg');
-
   --icon-help-activated: url('~cmk-frontend/themes/facelift/images/icon_help_activated.svg');
   --icon-connection-tests: url('~cmk-frontend/themes/facelift/images/icon_connection_tests.svg');
   --icon-validation-error: url('~cmk-frontend/themes/facelift/images/icon_validation_error.png');
-
   --icon-checkmk-logo-min: url('~cmk-frontend/themes/facelift/images/icon_checkmk_logo_min.svg');
   --icon-rulesets: url('~cmk-frontend/themes/facelift/images/icon_rulesets.svg');
   --icon-users: url('~cmk-frontend/themes/facelift/images/icon_users.svg');
@@ -122,7 +120,6 @@
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
   --icon-global-settings: url('~cmk-frontend/themes/facelift/images/icon_global_settings.svg');
-
   --icon-topic-administration: url('~cmk-frontend/themes/facelift/images/icon_topic_administration.png');
   --icon-topic-agents: url('~cmk-frontend/themes/facelift/images/icon_topic_agents.png');
   --icon-topic-analyze: url('~cmk-frontend/themes/facelift/images/icon_topic_analyze.png');
@@ -173,14 +170,12 @@
     --ux-theme-8: var(--color-daylight-grey-80);
     --ux-theme-9: var(--color-daylight-grey-90);
     --ux-theme-10: var(--color-daylight-grey-100);
-
     --color-skeleton: var(--color-conference-grey-10);
-    --color-skeleton-shimmer-0: rgba(30, 38, 46, 0);
-    --color-skeleton-shimmer-1: rgba(30, 38, 46, 0.02);
-    --color-skeleton-shimmer-2: rgba(30, 38, 46, 0.06);
-
-    --color-warning: rgb(255, 208, 0);
-    --color-danger: rgb(229, 63, 63);
+    --color-skeleton-shimmer-0: rgb(30 38 46 / 0%);
+    --color-skeleton-shimmer-1: rgb(30 38 46 / 2%);
+    --color-skeleton-shimmer-2: rgb(30 38 46 / 6%);
+    --color-warning: rgb(255 208 0);
+    --color-danger: rgb(229 63 63);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -193,7 +188,6 @@
     --icon-close: url('~cmk-frontend/themes/facelift/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/themes/facelift/images/icon_folder_blue.svg');
     --icon-drag: url('~cmk-frontend/themes/facelift/images/icon_drag.svg');
-
     --icon-info-circle: url('~cmk-frontend/themes/facelift/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/themes/facelift/images/tree_closed.svg');
     --icon-search: url('~cmk-frontend/themes/facelift/images/icon_search_action.svg');
@@ -209,21 +203,21 @@
     --default-table-th-color: rgb(232 232 238);
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-6);
-    --default-form-element-border-color: rgb(183, 180, 180);
-    --default-form-element-placeholder-color: rgba(30, 38, 46, 0.5);
+    --default-form-element-border-color: rgb(183 180 180);
+    --default-form-element-placeholder-color: rgb(30 38 46 / 50%);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
-    --default-button-emphasis-color: rgb(13, 141, 91);
-    --default-border-color-green: rgb(21, 209, 160);
-    --default-tooltip-icon-color: rgb(233, 233, 233);
-    --default-tooltip-background-color: rgb(233, 233, 233);
-    --default-tooltip-text-color: rgb(17, 24, 29);
-    --custom-scroll-bar-thumb-border-color: rgb(234, 234, 234);
-    --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
+    --default-button-emphasis-color: rgb(13 141 91);
+    --default-border-color-green: rgb(21 209 160);
+    --default-tooltip-icon-color: rgb(233 233 233);
+    --default-tooltip-background-color: rgb(233 233 233);
+    --default-tooltip-text-color: rgb(17 24 29);
+    --custom-scroll-bar-thumb-border-color: rgb(234 234 234);
+    --custom-scroll-bar-thumb-color: rgb(88 88 88);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
-    --default-component-bg-color: rgb(240, 240, 240);
+    --default-component-bg-color: rgb(240 240 240);
     --help-text-bg-color: var(--ux-theme-5);
-    --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
+    --help-text-font-color: rgb(51 51 51); /* $grey-4 */
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
@@ -243,14 +237,12 @@
     --ux-theme-8: var(--color-midnight-grey-20);
     --ux-theme-9: var(--color-midnight-grey-10);
     --ux-theme-10: var(--color-midnight-grey-0);
-
     --color-skeleton: var(--color-white-0);
-    --color-skeleton-shimmer-0: rgba(255, 255, 255, 0);
-    --color-skeleton-shimmer-1: rgba(255, 255, 255, 0.02);
-    --color-skeleton-shimmer-2: rgba(255, 255, 255, 0.06);
-
-    --color-warning: rgb(255, 215, 3);
-    --color-danger: rgb(180, 45, 45);
+    --color-skeleton-shimmer-0: rgb(255 255 255 / 0%);
+    --color-skeleton-shimmer-1: rgb(255 255 255 / 2%);
+    --color-skeleton-shimmer-2: rgb(255 255 255 / 6%);
+    --color-warning: rgb(255 215 3);
+    --color-danger: rgb(180 45 45);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -264,7 +256,6 @@
     --icon-folder-blue: url('~cmk-frontend/themes/modern-dark/images/icon_folder_blue.svg');
     --icon-drag: url('~cmk-frontend/themes/modern-dark/images/icon_drag.svg');
     --icon-toggle-off: url('~cmk-frontend/themes/modern-dark/images/icon_toggle_off.svg');
-
     --icon-info-circle: url('~cmk-frontend/themes/modern-dark/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/themes/modern-dark/images/tree_closed.svg');
     --icon-search: url('~cmk-frontend/themes/modern-dark/images/icon_search_action.svg');
@@ -283,18 +274,18 @@
     --default-form-element-bg-color: var(--color-midnight-grey-50);
     --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: var(--color-mid-grey-60);
-    --default-form-element-placeholder-color: rgba(255, 255, 255, 0.5);
+    --default-form-element-placeholder-color: rgb(255 255 255 / 50%);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
-    --default-button-emphasis-color: rgb(19, 211, 137);
-    --default-border-color-green: rgb(21, 209, 160);
-    --default-tooltip-icon-color: rgb(83, 83, 83);
-    --default-tooltip-background-color: rgb(17, 24, 29);
+    --default-button-emphasis-color: rgb(19 211 137);
+    --default-border-color-green: rgb(21 209 160);
+    --default-tooltip-icon-color: rgb(83 83 83);
+    --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
     --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
-    --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
+    --custom-scroll-bar-thumb-color: rgb(224 224 228);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
-    --default-component-bg-color: rgb(46, 44, 44);
+    --default-component-bg-color: rgb(46 44 44);
     --default-dialog-bg-color: var(--ux-theme-5);
     --default-dialog-font-color: var(--white);
     --form-element-required-color: var(--success);

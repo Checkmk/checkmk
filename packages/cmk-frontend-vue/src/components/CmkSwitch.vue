@@ -35,16 +35,13 @@ const data = defineModel('data', { type: Boolean, default: false })
 .cmk-switch__slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: #ccc;
-  -webkit-transition: 0.4s;
+  transition: 0.4s;
   transition: 0.4s;
   border-radius: 5px; /* Rounded sliders */
 
-  &:before {
+  &::before {
     position: absolute;
     content: '';
     height: 8px;
@@ -52,7 +49,7 @@ const data = defineModel('data', { type: Boolean, default: false })
     left: 1px;
     bottom: 1px;
     background-color: white;
-    -webkit-transition: 0.4s;
+    transition: 0.4s;
     transition: 0.4s;
     border-radius: 50%; /* Rounded sliders */
   }
@@ -61,9 +58,9 @@ const data = defineModel('data', { type: Boolean, default: false })
 input:checked + .cmk-switch__slider {
   background-color: #13d389;
 
-  &:before {
-    -webkit-transform: translateX(8px);
-    -ms-transform: translateX(8px);
+  &::before {
+    transform: translateX(8px);
+    transform: translateX(8px);
     transform: translateX(8px);
   }
 }

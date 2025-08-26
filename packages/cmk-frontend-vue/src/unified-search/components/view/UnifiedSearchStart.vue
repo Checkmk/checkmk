@@ -160,8 +160,6 @@ onBeforeUnmount(() => {
 }
 
 button {
-  border: 0;
-  background: 0;
   font-weight: var(--font-weight-default);
   background: transparent;
   margin-right: 0;

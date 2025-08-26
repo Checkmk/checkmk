@@ -130,6 +130,7 @@ const components: Array<[unknown, string]> = [
 table {
   border-collapse: collapse;
 }
+
 table td {
   padding: 5px;
   border: 1px solid black;

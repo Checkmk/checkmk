@@ -54,7 +54,6 @@ def fixture_browser_storage_stage() -> StorageState:
 
 
 @pytest.fixture
-@pytest.mark.browser_context_args
 def cmk_page(
     new_context: CreateContextCallback, browser_storage_state: StorageState
 ) -> Iterator[Page]:

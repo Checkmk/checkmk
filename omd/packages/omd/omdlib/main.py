@@ -68,6 +68,7 @@ from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.options import (
     Arguments,
     Command,
+    CommandOptions,
     get_command,
     is_root,
     main_help,
@@ -97,7 +98,7 @@ from omdlib.tmpfs import (
     tmpfs_mounted,
     unmount_tmpfs,
 )
-from omdlib.type_defs import CommandOptions, Config, ConfigChoiceHasError, Replacements
+from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements
 from omdlib.update import ManageUpdate
 from omdlib.update_check import determine_update_config
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes

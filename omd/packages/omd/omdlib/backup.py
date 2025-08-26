@@ -21,8 +21,8 @@ from typing import override
 
 from omdlib.contexts import SiteContext
 from omdlib.global_options import GlobalOptions
+from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
-from omdlib.type_defs import CommandOptions
 
 from cmk.utils.paths import mkbackup_lock_dir
 

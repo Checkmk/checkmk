@@ -7,8 +7,7 @@ import os
 import sys
 from typing import Final, NamedTuple
 
-from omdlib.type_defs import CommandOptions
-
+CommandOptions = dict[str, str | None]
 Arguments = list[str]
 
 

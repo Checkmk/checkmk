@@ -9,7 +9,6 @@ import cmk.ccc.resulttype as result
 
 Config = dict[str, str]
 Replacements = dict[str, str]
-CommandOptions = dict[str, str | None]
 
 
 class ConfigChoiceHasError(ABC):

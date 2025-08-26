@@ -238,6 +238,7 @@ def _allowed_for_base_cee(
     return any(
         (
             _allowed_for_base(imported=imported, component=component),
+            imported.in_component(Component("cmk.base")),
             imported.in_component(Component("cmk.cee.robotmk.licensing")),
             imported.in_component(Component("cmk.cee.robotmk.html_log_dir")),
             imported.in_component(Component("cmk.cee.robotmk.bakery.core_bakelets")),
@@ -811,8 +812,9 @@ _COMPONENTS = (
             "cmk.utils",
         ),
     ),
-    (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
+    (Component("cmk.base.core.cee"), _allowed_for_base_cee),
+    (Component("cmk.base"), _allowed_for_base),
     (Component("cmk.cmkcert"), _allow_for_cmkcert),
     (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),
     (Component("cmk.checkengine.value_store"), _allow("cmk.utils", "cmk.ccc")),

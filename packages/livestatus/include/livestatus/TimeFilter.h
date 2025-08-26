@@ -13,9 +13,6 @@
 
 #include "livestatus/ColumnFilter.h"
 
-enum class RelationalOperator;
-class Row;
-
 class TimeFilter : public ColumnFilter {
 public:
     TimeFilter(Kind kind, std::string columnName,

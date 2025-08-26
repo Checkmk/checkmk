@@ -50,7 +50,7 @@ public:
         const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, name(),
-            [this](Row row, const User &user) {
+            [this](Row row, const User &user, const ICore & /*core*/) {
                 return this->getValue(row, user);
             },
             relOp, value);

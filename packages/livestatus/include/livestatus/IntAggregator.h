@@ -9,11 +9,11 @@
 #include <chrono>
 #include <functional>
 #include <utility>
-#include <variant>
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/Column.h"
 #include "livestatus/User.h"
+
 class Row;
 class RowRenderer;
 class User;

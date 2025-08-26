@@ -17,12 +17,8 @@
 
 class Logger;
 class RegExp;
-enum class RelationalOperator;
-class Row;
 
 class DictStrValueFilter : public ColumnFilter {
-    // Elsewhere, `function_type` is a std::variant of functions but we
-    // currently have a single element, so we skip that entirely.
     using function_type = std::function<Attributes(Row)>;
 
 public:
@@ -42,8 +38,6 @@ private:
 };
 
 class DictDoubleValueFilter : public ColumnFilter {
-    // Elsewhere, `function_type` is a std::variant of functions but we
-    // currently have a single element, so we skip that entirely.
     using function_type =
         std::function<std::unordered_map<std::string, double>(Row)>;
 

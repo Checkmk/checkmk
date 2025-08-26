@@ -37,27 +37,27 @@
                 {% for element in data.PARAMETER_ELEMENTSS.split(' ') %}
                     {% if element =="ack_author" %}
                         {% if service_notification %}
-                            {{ additional_tr(data, "Acknowledgment author", "data.SERVICEACKAUTHOR") }}
+                            {{ additional_tr(data, "Acknowledgment author", "SERVICEACKAUTHOR") }}
                         {% else %}
-                            {{ additional_tr(data, "Acknowledgment author", "data.HOSTACKAUTHOR") }}
+                            {{ additional_tr(data, "Acknowledgment author", "HOSTACKAUTHOR") }}
                         {% endif %}
                     {% elif element == "ack_comment" %}
                         {% if service_notification %}
-                            {{ additional_tr(data, "Acknowledgment comment", "data.SERVICEACKCOMMENT") }}
+                            {{ additional_tr(data, "Acknowledgment comment", "SERVICEACKCOMMENT") }}
                         {% else %}
-                            {{ additional_tr(data, "Acknowledgment comment", "data.HOSTACKCOMMENT") }}
+                            {{ additional_tr(data, "Acknowledgment comment", "HOSTACKCOMMENT") }}
                         {% endif %}
                     {% elif element == "notification_author" %}
                         {% if service_notification %}
-                            {{ additional_tr(data, "Notification author", "data.SERVICEACKAUTHOR") }}
+                            {{ additional_tr(data, "Notification author", "SERVICEACKAUTHOR") }}
                         {% else %}
-                            {{ additional_tr(data, "Notification author", "data.HOSTACKAUTHOR") }}
+                            {{ additional_tr(data, "Notification author", "HOSTACKAUTHOR") }}
                         {% endif %}
                     {% elif element == "notification_comment" %}
                         {% if service_notification %}
-                            {{ additional_tr(data, "Notification comment", "data.SERVICEACKCOMMENT") }}
+                            {{ additional_tr(data, "Notification comment", "SERVICEACKCOMMENT") }}
                         {% else %}
-                            {{ additional_tr(data, "Notification comment", "data.HOSTACKCOMMENT") }}
+                            {{ additional_tr(data, "Notification comment", "HOSTACKCOMMENT") }}
                         {% endif %}
                     {% elif element == "omdsite" %}
                         {{ additional_tr(data, "Site", "OMD_SITE") }}

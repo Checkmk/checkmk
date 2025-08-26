@@ -20,7 +20,8 @@ export default [
       '**/dist-ssr/**',
       '**/coverage/**',
       'demo/public/mockServiceWorker.js',
-      'src/lib/rest-api-client/openapi_internal.d.ts'
+      'src/lib/rest-api-client/openapi_internal.d.ts',
+      '.stylelintrc.js'
     ]
   },
 

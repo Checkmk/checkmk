@@ -39,6 +39,7 @@ FILES_IGNORED = {
     Path(".gitattributes"),
     Path(".prettierignore"),
     Path(".prettierrc.json"),
+    Path(".stylelintrc.js"),
     Path(".npmrc"),
     Path("README.md"),
     Path("index.html"),

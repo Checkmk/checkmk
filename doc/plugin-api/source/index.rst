@@ -62,7 +62,7 @@ Each plugin expects a different prefix in the variable name:
 .. toctree::
    :glob:
 
-   cmk.*/index
+   **/index
 
 Indices and tables
 ==================

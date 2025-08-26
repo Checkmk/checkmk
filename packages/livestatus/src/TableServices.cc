@@ -49,8 +49,8 @@ using namespace std::string_literals;
 
 using row_type = IService;
 
-TableServices::TableServices(ICore *mc) {
-    addColumns(this, *mc, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
+TableServices::TableServices() {
+    addColumns(this, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
                LockDowntimes::yes);
 }
 
@@ -59,8 +59,7 @@ std::string TableServices::name() const { return "services"; }
 std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
-void TableServices::addColumns(Table *table, const ICore &core,
-                               const std::string &prefix,
+void TableServices::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets, AddHosts add_hosts,
                                LockComments lock_comments,
                                LockDowntimes lock_downtimes) {
@@ -453,7 +452,7 @@ void TableServices::addColumns(Table *table, const ICore &core,
         get_comments));
 
     if (add_hosts == AddHosts::yes) {
-        TableHosts::addColumns(table, core, "host_", offsets.add([](Row r) {
+        TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
             return &r.rawData<row_type>()->host();
         }),
                                LockComments::yes, LockDowntimes::yes);

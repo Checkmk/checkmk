@@ -26,12 +26,11 @@ struct host_and_group {
 
 using row_type = host_and_group;
 
-TableHostsByGroup::TableHostsByGroup(ICore *mc) {
+TableHostsByGroup::TableHostsByGroup() {
     const ColumnOffsets offsets{};
-    TableHosts::addColumns(this, *mc, "", offsets.add([](Row r) {
-        return r.rawData<row_type>()->hst;
-    }),
-                           LockComments::yes, LockDowntimes::yes);
+    TableHosts::addColumns(
+        this, "", offsets.add([](Row r) { return r.rawData<row_type>()->hst; }),
+        LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
         return r.rawData<row_type>()->group;
     }));

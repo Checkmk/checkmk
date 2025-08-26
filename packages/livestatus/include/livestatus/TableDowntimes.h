@@ -13,7 +13,7 @@ class ICore;
 
 class TableDowntimes : public Table {
 public:
-    explicit TableDowntimes(ICore *mc);
+    TableDowntimes();
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query &query, const User &user,

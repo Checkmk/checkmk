@@ -73,8 +73,8 @@ std::vector<::column::service_list::Entry> getServices(const row_type &row,
 }
 }  // namespace
 
-TableHosts::TableHosts(ICore *mc) {
-    addColumns(this, *mc, "", ColumnOffsets{}, LockComments::yes,
+TableHosts::TableHosts() {
+    addColumns(this, "", ColumnOffsets{}, LockComments::yes,
                LockDowntimes::yes);
 }
 
@@ -83,8 +83,7 @@ std::string TableHosts::name() const { return "hosts"; }
 std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, const ICore & /*core*/,
-                            const std::string &prefix,
+void TableHosts::addColumns(Table *table, const std::string &prefix,
                             const ColumnOffsets &offsets,
                             LockComments lock_comments,
                             LockDowntimes lock_downtimes) {

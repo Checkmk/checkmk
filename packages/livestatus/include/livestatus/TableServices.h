@@ -16,9 +16,8 @@ class TableServices : public Table {
 public:
     enum class AddHosts { no, yes };
 
-    explicit TableServices(ICore *mc);
-    static void addColumns(Table *table, const ICore &core,
-                           const std::string &prefix,
+    TableServices();
+    static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets, AddHosts add_hosts,
                            LockComments lock_comments,
                            LockDowntimes lock_downtimes);

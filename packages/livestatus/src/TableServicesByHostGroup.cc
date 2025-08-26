@@ -25,11 +25,10 @@ struct service_and_group {
 
 using row_type = service_and_group;
 
-TableServicesByHostGroup::TableServicesByHostGroup(ICore *mc) {
+TableServicesByHostGroup::TableServicesByHostGroup() {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
-        this, *mc, "",
-        offsets.add([](Row r) { return r.rawData<row_type>()->svc; }),
+        this, "", offsets.add([](Row r) { return r.rawData<row_type>()->svc; }),
         TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
         return r.rawData<row_type>()->group;

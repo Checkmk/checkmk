@@ -13,7 +13,7 @@ class ICore;
 
 class TableHostsByGroup : public Table {
 public:
-    explicit TableHostsByGroup(ICore *mc);
+    TableHostsByGroup();
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query &query, const User &user,

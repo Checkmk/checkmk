@@ -27,7 +27,7 @@ using row_type = IDowntime;
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDowntimes::TableDowntimes(ICore *mc) {
+TableDowntimes::TableDowntimes() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
         "author", "The contact that scheduled the downtime", offsets,
@@ -81,12 +81,12 @@ TableDowntimes::TableDowntimes(ICore *mc) {
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
         offsets, [](const row_type &row) { return row.pending(); }));
-    TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return &r.rawData<row_type>()->host();
     }),
                            LockComments::yes, LockDowntimes::no);
     TableServices::addColumns(
-        this, *mc, "service_",
+        this, "service_",
         offsets.add([](Row r) { return r.rawData<row_type>()->service(); }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::no);
 }

@@ -14,7 +14,7 @@ class LogCache;
 
 class TableLog : public Table {
 public:
-    TableLog(ICore *mc, LogCache *log_cache);
+    explicit TableLog(LogCache *log_cache);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

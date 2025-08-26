@@ -34,14 +34,13 @@ using row_type = HostServiceState;
 
 using namespace std::chrono_literals;
 
-TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
+TableStateHistory::TableStateHistory(LogCache *log_cache)
     : log_cache_{log_cache}, abort_query_{false} {
-    addColumns(this, *mc, "", ColumnOffsets{});
+    addColumns(this, "", ColumnOffsets{});
 }
 
 // static
-void TableStateHistory::addColumns(Table *table, const ICore &core,
-                                   const std::string &prefix,
+void TableStateHistory::addColumns(Table *table, const std::string &prefix,
                                    const ColumnOffsets &offsets) {
     table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "time", "Time of the log event (seconds since 1/1/1970)",
@@ -169,11 +168,11 @@ void TableStateHistory::addColumns(Table *table, const ICore &core,
 
     // join host and service tables
     TableHosts::addColumns(
-        table, core, prefix + "current_host_",
+        table, prefix + "current_host_",
         offsets.add([](Row r) { return r.rawData<row_type>()->_host; }),
         LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        table, core, prefix + "current_service_",
+        table, prefix + "current_service_",
         offsets.add([](Row r) { return r.rawData<row_type>()->_service; }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
 }

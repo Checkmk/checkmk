@@ -193,7 +193,7 @@ TEST_F(ColumnNamesAndTypesTest, TableComments) {
     EXPECT_EQ(comments_columns() +                 //
                   "host_" / all_hosts_columns() +  //
                   "service_" / all_services_columns(),
-              ColumnDefinitions(TableComments{&mc_}));
+              ColumnDefinitions(TableComments{}));
 }
 
 namespace {
@@ -293,7 +293,7 @@ TEST_F(ColumnNamesAndTypesTest, TableDowntimes) {
     EXPECT_EQ(downtimes_columns() +                //
                   "host_" / all_hosts_columns() +  //
                   "service_" / all_services_columns(),
-              ColumnDefinitions(TableDowntimes{&mc_}));
+              ColumnDefinitions(TableDowntimes{}));
 }
 
 namespace {
@@ -331,7 +331,7 @@ ColumnDefinitions event_console_events_columns() {
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleEvents) {
     EXPECT_EQ(event_console_events_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableEventConsoleEvents{&mc_}));
+              ColumnDefinitions(TableEventConsoleEvents{}));
 }
 
 namespace {
@@ -350,7 +350,7 @@ TEST_F(ColumnNamesAndTypesTest, TableEventConsoleHistory) {
     EXPECT_EQ(event_console_history_columns() +     //
                   event_console_events_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableEventConsoleHistory{&mc_}));
+              ColumnDefinitions(TableEventConsoleHistory{}));
 }
 
 namespace {
@@ -612,14 +612,14 @@ ColumnDefinitions hosts_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableHosts) {
     EXPECT_EQ(all_hosts_columns(),  //
-              ColumnDefinitions(TableHosts{&mc_}));
+              ColumnDefinitions(TableHosts{}));
 }
 
 TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
     EXPECT_EQ(all_hosts_columns() +  //
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
-              ColumnDefinitions(TableHostsByGroup{&mc_}));
+              ColumnDefinitions(TableHostsByGroup{}));
 }
 
 namespace {
@@ -666,7 +666,7 @@ TEST_F(ColumnNamesAndTypesTest, TableLog) {
                   "current_service_" / all_services_columns() +
                   "current_contact_" / contacts_columns() +
                   "current_command_" / commands_columns(),
-              ColumnDefinitions(TableLog{&mc_, &log_cache_}));
+              ColumnDefinitions(TableLog{&log_cache_}));
 }
 
 TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
@@ -700,14 +700,14 @@ ColumnDefinitions services_columns() {
 TEST_F(ColumnNamesAndTypesTest, TableServices) {
     EXPECT_EQ(all_services_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableServices{&mc_}));
+              ColumnDefinitions(TableServices{}));
 }
 
 TEST_F(ColumnNamesAndTypesTest, TableServicesByGroup) {
     EXPECT_EQ(all_services_columns() +  //
                   "host_" / all_hosts_columns() +
                   "servicegroup_" / service_groups_columns(),
-              ColumnDefinitions(TableServicesByGroup{&mc_}));
+              ColumnDefinitions(TableServicesByGroup{}));
 }
 
 TEST_F(ColumnNamesAndTypesTest, TableServicesByHostGroup) {
@@ -715,7 +715,7 @@ TEST_F(ColumnNamesAndTypesTest, TableServicesByHostGroup) {
                   "host_" / all_hosts_columns() +
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
-              ColumnDefinitions(TableServicesByHostGroup{&mc_}));
+              ColumnDefinitions(TableServicesByHostGroup{}));
 }
 
 namespace {
@@ -757,7 +757,7 @@ ColumnDefinitions state_history_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableStateHistory) {
     EXPECT_EQ(all_state_history_columns(),
-              ColumnDefinitions(TableStateHistory{&mc_, &log_cache_}));
+              ColumnDefinitions(TableStateHistory{&log_cache_}));
 }
 
 namespace {

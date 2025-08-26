@@ -57,7 +57,7 @@ public:
 
 using row_type = LogRow;
 
-TableLog::TableLog(ICore *mc, LogCache *log_cache) : log_cache_{log_cache} {
+TableLog::TableLog(LogCache *log_cache) : log_cache_{log_cache} {
     const ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<row_type>()->entry; })};
@@ -125,12 +125,12 @@ TableLog::TableLog(ICore *mc, LogCache *log_cache) : log_cache_{log_cache} {
         offsets_entry, [](const LogEntry &r) { return r.command_name(); }));
 
     // join host and service tables
-    TableHosts::addColumns(this, *mc, "current_host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
         return r.rawData<row_type>()->hst;
     }),
                            LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        this, *mc, "current_service_",
+        this, "current_service_",
         offsets.add([](Row r) { return r.rawData<row_type>()->svc; }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {

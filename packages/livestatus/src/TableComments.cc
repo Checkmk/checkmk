@@ -24,7 +24,7 @@
 
 using row_type = IComment;
 
-TableComments::TableComments(ICore *mc) {
+TableComments::TableComments() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
         "author", "The contact that entered the comment", offsets,
@@ -68,12 +68,12 @@ TableComments::TableComments(ICore *mc) {
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         offsets, [](const row_type &row) { return row.expire_time(); }));
 
-    TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return &r.rawData<row_type>()->host();
     }),
                            LockComments::no, LockDowntimes::yes);
     TableServices::addColumns(
-        this, *mc, "service_",
+        this, "service_",
         offsets.add([](Row r) { return r.rawData<row_type>()->service(); }),
         TableServices::AddHosts::no, LockComments::no, LockDowntimes::yes);
 }

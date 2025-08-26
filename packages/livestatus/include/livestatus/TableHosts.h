@@ -9,14 +9,14 @@
 #include <string>
 
 #include "livestatus/Table.h"
+
 class ColumnOffsets;
 class ICore;
 
 class TableHosts : public Table {
 public:
-    explicit TableHosts(ICore *mc);
-    static void addColumns(Table *table, const ICore &core,
-                           const std::string &prefix,
+    TableHosts();
+    static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets,
                            LockComments lock_comments,
                            LockDowntimes lock_downtimes);

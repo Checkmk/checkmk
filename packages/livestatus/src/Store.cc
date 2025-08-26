@@ -17,17 +17,8 @@
 Store::Store(ICore *mc)
     : _mc{mc}
     , _log_cache{mc}
-    , _table_comments{mc}
-    , _table_downtimes{mc}
-    , _table_eventconsoleevents{mc}
-    , _table_eventconsolehistory{mc}
-    , _table_hosts{mc}
-    , _table_hostsbygroup{mc}
-    , _table_log{mc, &_log_cache}
-    , _table_services{mc}
-    , _table_servicesbygroup{mc}
-    , _table_servicesbyhostgroup{mc}
-    , _table_statehistory{mc, &_log_cache} {
+    , _table_log{&_log_cache}
+    , _table_statehistory{&_log_cache} {
     addTable(_table_columns);
     addTable(_table_commands);
     addTable(_table_comments);

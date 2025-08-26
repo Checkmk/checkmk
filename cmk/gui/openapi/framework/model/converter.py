@@ -15,6 +15,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.customer import customer_api
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -383,4 +384,18 @@ class LDAPConnectionIDConverter:
         ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
         if value in ldap_connection_ids:
             raise ValueError(f"The LDAP connection {value!r} should not exist but it does.")
+        return value
+
+
+@dataclass(slots=True)
+class CustomerConverter:
+    allow_global: bool = True
+
+    def should_exist(self, value: str) -> str:
+        if self.allow_global and value == "global":
+            return value
+
+        if value not in customer_api().customer_collection():
+            raise ValueError(f"Customer '{value}' does not exist.")
+
         return value

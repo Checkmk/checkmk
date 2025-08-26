@@ -9,7 +9,6 @@ from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition
-from cmk.gui.customer import customer_api
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
@@ -55,11 +54,12 @@ class BasicSettingsModel:
 
     @classmethod
     def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
-        model = cls(site_id=site_configuration["id"], alias=site_configuration["alias"])
+        model = cls(
+            site_id=site_configuration["id"],
+            alias=site_configuration["alias"],
+        )
         if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
-            model.customer = site_configuration.get(
-                "customer", customer_api().default_customer_id()
-            )
+            model.customer = site_configuration.get("customer", "global")
         return model
 
 

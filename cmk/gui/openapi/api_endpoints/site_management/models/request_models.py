@@ -5,6 +5,8 @@
 
 from typing import Annotated
 
+from pydantic import AfterValidator
+
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
@@ -12,6 +14,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
+    CustomerConverter,
     SiteIdConverter,
     TypedPlainValidator,
 )
@@ -28,7 +31,7 @@ class BasicSettingsBaseModel:
         example="Site Alias",
     )
     customer: Annotated[
-        str | ApiOmitted,
+        Annotated[str, AfterValidator(CustomerConverter().should_exist)] | ApiOmitted,
         RestrictEditions(supported_editions={Edition.CME}, required_if_supported=True),
     ] = api_field(
         example="provider",
@@ -40,6 +43,11 @@ class BasicSettingsBaseModel:
         ),
         default_factory=ApiOmitted,
     )
+
+    def customer_to_internal(self) -> str | None:
+        if isinstance(self.customer, str) and self.customer != "global":
+            return self.customer
+        return None
 
 
 @api_model
@@ -63,8 +71,8 @@ class SiteConnectionEdit(SiteConnectionBaseModel):
         site_configuration = self.base_to_internal()
         site_configuration["id"] = self.basic_settings.site_id
         site_configuration["alias"] = self.basic_settings.alias
-        if isinstance(self.basic_settings.customer, str):
-            site_configuration["customer"] = self.basic_settings.customer
+        if (customer := self.basic_settings.customer_to_internal()) is not None:
+            site_configuration["customer"] = customer
         return site_configuration
 
 
@@ -97,8 +105,8 @@ class SiteConnectionCreate(SiteConnectionBaseModel):
         site_configuration = self.base_to_internal()
         site_configuration["id"] = self.basic_settings.site_id
         site_configuration["alias"] = self.basic_settings.alias
-        if isinstance(self.basic_settings.customer, str):
-            site_configuration["customer"] = self.basic_settings.customer
+        if (customer := self.basic_settings.customer_to_internal()) is not None:
+            site_configuration["customer"] = customer
         return site_configuration
 
 

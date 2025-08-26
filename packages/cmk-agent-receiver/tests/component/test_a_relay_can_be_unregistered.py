@@ -7,6 +7,8 @@ import uuid
 
 from fastapi.testclient import TestClient
 
+from .test_lib.relays import register_relay, unregister_relay
+
 
 def test_a_relay_can_be_unregistered(
     site_name: str, agent_receiver_test_client: TestClient
@@ -24,38 +26,12 @@ def test_a_relay_can_be_unregistered(
     """
 
     relay_id_A = str(uuid.uuid4())
+    register_relay(relay_id_A, site_name, agent_receiver_test_client)
+
     relay_id_B = str(uuid.uuid4())
+    register_relay(relay_id_B, site_name, agent_receiver_test_client)
 
-    response_A = agent_receiver_test_client.post(
-        f"/{site_name}/agent-receiver/relays",
-        json={
-            "relay_id": relay_id_A,
-            "relay_name": "Relay A",
-            "csr": "CSR for Relay A",
-            "auth_token": "auth-token-A",
-        },
-    )
-    print(f"Response A: {response_A}")
-    assert response_A.status_code == 200, f"Failed to register relay A: {response_A.text}"
-
-    response_B = agent_receiver_test_client.post(
-        f"/{site_name}/agent-receiver/relays",
-        json={
-            "relay_id": relay_id_B,
-            "relay_name": "Relay B",
-            "csr": "CSR for Relay B",
-            "auth_token": "auth-token-B",
-        },
-    )
-    assert response_B.status_code == 200, f"Failed to register relay B: {response_B.text}"
-
-    # Delete relay A
-    response_delete = agent_receiver_test_client.delete(
-        f"/{site_name}/agent-receiver/relays/{relay_id_A}"
-    )
-    assert response_delete.status_code == 200, (
-        f"Failed to unregister relay A: {response_delete.text}"
-    )
+    unregister_relay(relay_id_A, site_name, agent_receiver_test_client)
 
     # Verify relay B have tasks queue
     response_B_tasks = agent_receiver_test_client.get(

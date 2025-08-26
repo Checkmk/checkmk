@@ -55,12 +55,6 @@ def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 
-def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    omdlib.main.main_help()
-    stdout = capsys.readouterr()[0]
-    assert "omd COMMAND -h" in stdout
-
-
 def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(

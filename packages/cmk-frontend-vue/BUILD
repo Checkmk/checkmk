@@ -4,6 +4,7 @@ load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm_cmk_frontend_vue//:defs.bzl", "npm_link_all_packages")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:prettier/package_json.bzl", prettier_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:stylelint/package_json.bzl", stylelint_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
@@ -68,6 +69,7 @@ SRCS = [
     ".prettierrc.json",
     "env.d.ts",
     "weaki18nString.d.ts",
+    ".stylelintrc.js",
     "eslint.config.js",
     "index.html",
     "package.json",
@@ -81,6 +83,9 @@ SRCS = [
     "demo/index.html",
     "//packages/cmk-frontend:dist",
     ":compile_i18n",
+    ":node_modules/stylelint",
+    ":node_modules/postcss-html",
+    ":node_modules/stylelint-config-standard",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@trivago/prettier-plugin-sort-imports",
@@ -232,6 +237,15 @@ eslint_bin.eslint_test(
     ],
     chdir = package_name(),
     data = SRCS_AND_TESTS,
+)
+
+stylelint_bin.stylelint_test(
+    name = "stylelint",
+    args = [
+        "**/*.{vue,css}",
+    ],
+    chdir = package_name(),
+    data = SRCS,
 )
 
 pkg_files(

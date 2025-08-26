@@ -112,7 +112,7 @@ def discover_modules(
     modules: Iterable[ModuleType] | None = None,
     ls: Callable[[str], Iterable[str]] = _ls_defensive,
 ) -> Iterable[str]:
-    """Discover all potetial plug-in modules blow `modules`.
+    """Discover all potential plug-in modules below `modules`.
 
     Returned iterable should be deduplicated.
     """

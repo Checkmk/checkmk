@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Annotated
+from uuid import UUID
 
 import fastapi
 
@@ -27,7 +28,7 @@ router = fastapi.APIRouter()
 
 
 @router.post(
-    "/{relay_id}/tasks/",
+    "/{relay_id}/tasks",
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         200: {"model": tasks_protocol.TaskCreateResponse},
@@ -35,7 +36,7 @@ router = fastapi.APIRouter()
 )
 async def create_task(
     relay_id: str,
-    request: tasks_protocol.TaskCreateRequest,
+    _request: tasks_protocol.TaskCreateRequest,  # TODO: Remove underscore when using it
     handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
@@ -69,7 +70,14 @@ async def create_task(
     #   - Set status to PENDING
     # - Store task in database
 
-    raise NotImplementedError("Task creation business logic not implemented")
+    try:
+        task_id = handler.process(RelayID(relay_id))
+    except RelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay with ID {relay_id} not found",
+        )
+    return tasks_protocol.TaskCreateResponse(task_id=UUID(task_id))
 
 
 @router.patch(

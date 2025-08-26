@@ -5,8 +5,10 @@
 
 import dataclasses
 import logging
+import uuid
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import NewType
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
@@ -17,11 +19,13 @@ class TaskStatus(StrEnum):
     FAILED = "FAILED"
 
 
+TaskID = NewType("TaskID", str)
+
+
 @dataclass(frozen=True)
 class Task:
-    id: str
-    status: TaskStatus
-    version: int = 1
+    status: TaskStatus = TaskStatus.PENDING
+    id: TaskID = dataclasses.field(default_factory=lambda: TaskID(str(uuid.uuid4())))
 
 
 # Persistence layer is not thread safe yet.
@@ -30,7 +34,7 @@ class Task:
 # The persistence layer is for now an in memory dict so we won't need
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
-GLOBAL_TASKS: dict[RelayID, list[Task]] = {}
+GLOBAL_TASKS: dict[RelayID, dict[TaskID, Task]] = {}
 
 
 @dataclasses.dataclass
@@ -41,4 +45,10 @@ class TasksRepository:
         except KeyError:
             logging.warning(f"Relay with ID {relay_id} not found")
             return []
-        return tasks
+        return list(tasks.values())
+
+    def store_task(self, relay_id: RelayID, task: Task) -> Task:
+        if relay_id not in GLOBAL_TASKS:
+            GLOBAL_TASKS[relay_id] = {}
+        GLOBAL_TASKS[relay_id][task.id] = task
+        return task

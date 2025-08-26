@@ -25,7 +25,6 @@ class TaskResponseSerializer:
             creation_timestamp=datetime.now(),  # TODO: placeholder
             update_timestamp=datetime.now(),  # TODO: placeholder
             payload="any_payload",  # TODO: placeholder
-            version=task.version,
         )
 
 

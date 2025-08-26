@@ -6,12 +6,30 @@
 
 import dataclasses
 
-from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
+from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    Task,
+    TaskID,
+    TasksRepository,
+)
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
+
+
+class RelayNotFoundError(Exception):
+    pass
 
 
 @dataclasses.dataclass
 class CreateTaskHandler:
     tasks_repository: TasksRepository
+    relays_repository: RelaysRepository
 
-    def process(self) -> None:
-        pass
+    def process(self, relay_id: RelayID) -> TaskID:
+        task = Task()  # Still very dummy task at this point
+        return self._store_task(relay_id, task)
+
+    def _store_task(self, relay_id: RelayID, task: Task) -> TaskID:
+        if not self.relays_repository.has_relay(relay_id):
+            raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
+        task_created = self.tasks_repository.store_task(relay_id, task)
+        return task_created.id

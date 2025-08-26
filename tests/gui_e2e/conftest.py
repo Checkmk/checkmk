@@ -129,7 +129,6 @@ def _navigate_to_dashboard(
 
 
 @pytest.fixture(name="new_browser_context_and_page")
-@pytest.mark.browser_context_args
 def fixture_new_browser_context_and_page(
     context: BrowserContext,
 ) -> Iterator[tuple[BrowserContext, Page]]:

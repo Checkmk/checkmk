@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
+
 import CmkHtml from '@/components/CmkHtml.vue'
-import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import HelpText from '@/components/HelpText.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 defineOptions({ inheritAttrs: false })
 

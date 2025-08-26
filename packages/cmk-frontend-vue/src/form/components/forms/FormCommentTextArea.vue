@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormMultilineText from './FormMultilineText.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import { type ValidationMessages } from '@/form/components/utils/validation'
+
+import FormMultilineText from './FormMultilineText.vue'
 
 const props = defineProps<{
   spec: FormSpec.CommentTextArea

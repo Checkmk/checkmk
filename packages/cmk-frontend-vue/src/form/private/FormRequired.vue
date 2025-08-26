@@ -4,8 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+
 import { required } from './requiredValidator'
 
 const { spec, space = null } = defineProps<{

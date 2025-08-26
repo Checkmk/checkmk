@@ -4,14 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, ref, watch } from 'vue'
-import { useFormEditDispatcher } from '@/form/private'
 import type { ListOfStrings } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { onBeforeMount, ref, watch } from 'vue'
+
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
 import {
-  groupIndexedValidations,
-  type ValidationMessages
+  type ValidationMessages,
+  groupIndexedValidations
 } from '@/form/components/utils/validation'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: ListOfStrings

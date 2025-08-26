@@ -5,16 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import usei18n from '@/lib/i18n'
 import { computed, onMounted, ref } from 'vue'
-import DefaultPopup from './DefaultPopup.vue'
+
+import { Api } from '@/lib/api-client'
+import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import { Api } from '@/lib/api-client'
+
 import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
@@ -22,7 +23,7 @@ import type {
   Site,
   SitesAndChanges
 } from './ChangesInterfaces'
-
+import DefaultPopup from './DefaultPopup.vue'
 import ChangesActivating from './components/activation/ChangesActivating.vue'
 import ChangesActivationResult from './components/activation/ChangesActivationResult.vue'
 import PendingChangesList from './components/pending-changes/PendingChangesList.vue'

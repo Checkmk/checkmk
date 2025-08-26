@@ -4,12 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import type * as vue_formspec_components from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormReadonly from '@/form/components/FormReadonly.vue'
-import FormEdit from '@/form/components/FormEdit.vue'
+import { computed, ref } from 'vue'
+
 import CmkSpace from '@/components/CmkSpace.vue'
+
+import FormEdit from '@/form/components/FormEdit.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

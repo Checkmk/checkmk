@@ -5,12 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as NotificationTypes from 'cmk-shared-typing/typescript/notifications'
-import NotificationStats from '@/notification/components/NotificationStats.vue'
-import NotificationCoreStats from '@/notification/components/NotificationCoreStats.vue'
-import NotificationRules from '@/notification/components/NotificationRules.vue'
-import NotificationFallbackWarning from '@/notification/components/NotificationFallbackWarning.vue'
+import { onMounted, ref } from 'vue'
+
 import CmkIconButton from '@/components/CmkIconButton.vue'
-import { ref, onMounted } from 'vue'
+
+import NotificationCoreStats from '@/notification/components/NotificationCoreStats.vue'
+import NotificationFallbackWarning from '@/notification/components/NotificationFallbackWarning.vue'
+import NotificationRules from '@/notification/components/NotificationRules.vue'
+import NotificationStats from '@/notification/components/NotificationStats.vue'
 
 const props = defineProps<{
   overview_title_i18n: string

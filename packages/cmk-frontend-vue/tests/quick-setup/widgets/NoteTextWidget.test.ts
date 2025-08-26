@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 import { render, screen } from '@testing-library/vue'
+
 import NoteTextWidget from '@/quick-setup/components/quick-setup/widgets/NoteTextWidget.vue'
 
 test('NoteTextWidget renders value', async () => {

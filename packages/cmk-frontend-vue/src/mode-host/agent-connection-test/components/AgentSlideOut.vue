@@ -5,23 +5,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkCode from '@/components/CmkCode.vue'
+import CmkDialog from '@/components/CmkDialog.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import CmkCode from '@/components/CmkCode.vue'
-import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
+import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
 export interface AgentSlideOutTabs {
   id: string

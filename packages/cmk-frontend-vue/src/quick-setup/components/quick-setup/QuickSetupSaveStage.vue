@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { QuickSetupSaveStageProps } from '@/quick-setup/components/quick-setup/quick_setup_types'
+
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 
 defineProps<QuickSetupSaveStageProps>()

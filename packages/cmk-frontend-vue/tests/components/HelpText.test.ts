@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+
 import HelpText from '@/components/HelpText.vue'
 
 describe('HelpText', () => {

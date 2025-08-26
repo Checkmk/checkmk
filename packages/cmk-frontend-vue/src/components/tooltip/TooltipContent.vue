@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue'
 import { TooltipContent, TooltipPortal, useForwardPropsEmits } from 'radix-vue'
+import { type HTMLAttributes, computed } from 'vue'
 
 defineOptions({
   inheritAttrs: false

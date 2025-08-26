@@ -4,8 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormInteger from '@/form/components/forms/FormInteger.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import FormInteger from '@/form/components/forms/FormInteger.vue'
+
 import { renderFormWithData } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [

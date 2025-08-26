@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed, inject } from 'vue'
+
+import ConditionalNotificationStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationStageWidget.vue'
 import type { ConditionalNotificationDialogWidgetProps } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types.ts'
-import { inject, computed } from 'vue'
 import { formDataKey } from '@/quick-setup/keys.ts'
-import ConditionalNotificationStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationStageWidget.vue'
 
 const props = defineProps<ConditionalNotificationDialogWidgetProps>()
 

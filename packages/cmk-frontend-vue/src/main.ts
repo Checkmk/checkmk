@@ -4,20 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import defineCmkComponent from '@/lib/defineCmkComponent'
-import AgentDownload from './setup/AgentDownloadApp.vue'
-import QuickSetup from './quick-setup/QuickSetupApp.vue'
-import NotificationOverview from './notification/NotificationOverviewApp.vue'
+
 import { FormApp } from '@/form'
-import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
-import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
-import ModeHostApp from '@/mode-host/ModeHostApp.vue'
-import WelcomeApp from './welcome/WelcomeApp.vue'
-import ChangesApp from './main-menu/ChangesApp.vue'
 
 import '@/assets/variables.css'
-import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
-import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
+import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+import ModeHostApp from '@/mode-host/ModeHostApp.vue'
+import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
+
+import ChangesApp from './main-menu/ChangesApp.vue'
+import NotificationOverview from './notification/NotificationOverviewApp.vue'
+import QuickSetup from './quick-setup/QuickSetupApp.vue'
+import AgentDownload from './setup/AgentDownloadApp.vue'
+import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
+import WelcomeApp from './welcome/WelcomeApp.vue'
+import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)

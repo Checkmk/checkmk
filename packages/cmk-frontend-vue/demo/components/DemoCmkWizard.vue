@@ -5,13 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import CmkWizardModeToggle from '@/components/CmkWizard/CmkWizardModeToggle.vue'
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import { ref } from 'vue'
-import CmkWizardModeToggle from '@/components/CmkWizard/CmkWizardModeToggle.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 const currentStep = ref(1)

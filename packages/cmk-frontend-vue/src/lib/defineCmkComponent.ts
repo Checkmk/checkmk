@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { defineCustomElement, type Component, h } from 'vue'
+import { type Component, defineCustomElement, h } from 'vue'
+
 import { createi18n } from './i18n'
 
 let appCount = 0

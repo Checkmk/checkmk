@@ -4,24 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, watch, toRaw } from 'vue'
-
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { useFormEditDispatcher } from '@/form/private'
-import { useId } from '@/form/utils'
+import { computed, ref, toRaw, watch } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
-import FormLabel from '@/form/private/FormLabel.vue'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import FormIndent from '@/components/CmkIndent.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import HelpText from '@/components/HelpText.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages, validateValue } from '@/form/components/utils/validation'
+import { useFormEditDispatcher } from '@/form/private'
+import FormLabel from '@/form/private/FormLabel.vue'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: CascadingSingleChoice

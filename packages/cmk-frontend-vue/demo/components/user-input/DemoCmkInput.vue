@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, type ComponentInstance } from 'vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
+import { type ComponentInstance, ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 const data = ref('')

@@ -4,15 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkList from '@/components/CmkList'
-import ConditionChoice from './ConditionChoice.vue'
 import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
 import { computed, ref } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkList from '@/components/CmkList'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages, validateValue } from '@/form/components/utils/validation'
 import { required } from '@/form/private/requiredValidator'
+
+import ConditionChoice from './ConditionChoice.vue'
 
 const props = defineProps<{
   spec: typing.ConditionChoices

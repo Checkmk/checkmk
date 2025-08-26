@@ -5,6 +5,7 @@
  */
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import FormEdit from '@/form/components/FormEdit.vue'
 
 const stringSpec1: FormSpec.String = {

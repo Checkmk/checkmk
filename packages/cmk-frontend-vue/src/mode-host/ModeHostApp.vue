@@ -5,17 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import {
-  type ModeHostFormKeys,
-  type ModeHostSite,
-  type ModeHostAgentConnectionMode,
-  type I18NPingHost
-} from 'cmk-shared-typing/typescript/mode_host'
-import PingHost from '@/mode-host/ping-host/PingHost.vue'
-import { onMounted, ref, type Ref } from 'vue'
-import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnectionTest.vue'
-
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+import {
+  type I18NPingHost,
+  type ModeHostAgentConnectionMode,
+  type ModeHostFormKeys,
+  type ModeHostSite
+} from 'cmk-shared-typing/typescript/mode_host'
+import { type Ref, onMounted, ref } from 'vue'
+
+import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnectionTest.vue'
+import PingHost from '@/mode-host/ping-host/PingHost.vue'
 
 const props = defineProps<{
   i18n_ping_host: I18NPingHost

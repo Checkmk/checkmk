@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 import { render } from '@testing-library/vue'
 import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
+
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
 async function fakeGraphRenderer(

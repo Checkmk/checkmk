@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { mount } from '@vue/test-utils'
+import { type Component, defineComponent, h, onErrorCaptured } from 'vue'
 
-import { h, onErrorCaptured, defineComponent, type Component } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 function wrapWithErrorCapture(component: Component) {

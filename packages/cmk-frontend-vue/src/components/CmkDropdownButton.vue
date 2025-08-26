@@ -9,9 +9,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { useTemplateRef } from 'vue'
-import CmkButton from './CmkButton.vue'
 import { type VariantProps, cva } from 'class-variance-authority'
+import { useTemplateRef } from 'vue'
+
+import CmkButton from './CmkButton.vue'
 
 export interface ButtonProps {
   group?: ButtonVariants['group']

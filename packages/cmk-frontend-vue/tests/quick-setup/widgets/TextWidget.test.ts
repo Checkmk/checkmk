@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+
 import TextWidget from '@/quick-setup/components/quick-setup/widgets/TextWidget.vue'
 
 test('TextWidget renders value', async () => {

@@ -3,11 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Metric, Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { Response } from '@/components/suggestions'
-import FormMetric from '@/form/components/forms/FormMetric.vue'
 import { fireEvent, render, screen } from '@testing-library/vue'
+import type { Metric, Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { vi } from 'vitest'
+
+import { Response } from '@/components/suggestions'
+
+import FormMetric from '@/form/components/forms/FormMetric.vue'
+
 import { renderFormWithData } from '../cmk-form-helper'
 
 vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {

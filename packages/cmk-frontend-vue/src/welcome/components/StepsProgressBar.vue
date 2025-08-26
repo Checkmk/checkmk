@@ -6,9 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
+
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
 import { type Sizes } from '../../components/CmkProgressbar.vue'
 
 const { _t } = usei18n()

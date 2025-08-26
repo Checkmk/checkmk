@@ -5,15 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+
 import usei18n from '@/lib/i18n'
-import {
-  type QuickSetupStageContent,
-  type DetailedError,
-  isDetailedError
-} from './quick_setup_types'
+
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
+
+import {
+  type DetailedError,
+  type QuickSetupStageContent,
+  isDetailedError
+} from './quick_setup_types'
 
 const { _t } = usei18n()
 

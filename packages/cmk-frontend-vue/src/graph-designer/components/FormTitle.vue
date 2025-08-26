@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import FormEdit from '@/form/components/FormEdit.vue'
-import { makeString } from '@/graph-designer/specs'
 import { type ValidationMessages } from '@/form'
+import FormEdit from '@/form/components/FormEdit.vue'
+
+import { makeString } from '@/graph-designer/specs'
 
 const data = defineModel('data', { type: String, default: '' })
 const spec = makeString('', '', null)

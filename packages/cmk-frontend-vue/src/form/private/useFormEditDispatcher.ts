@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import { h, inject, type Component } from 'vue'
+import { type Component, h, inject } from 'vue'
 import type { InjectionKey } from 'vue'
 
 export const dispatcherKey = Symbol() as InjectionKey<Component>

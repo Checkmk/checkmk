@@ -5,15 +5,39 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import {
+  type GraphLine,
+  type GraphLines,
+  type GraphOptions,
+  type I18N,
+  type Operation,
+  type Transformation
+} from 'cmk-shared-typing/typescript/graph_designer'
+import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+import useDragging from '@/lib/useDragging'
+
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
-import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import { type ValidationMessages } from '@/form'
 import FormEdit from '@/form/components/FormEdit.vue'
+
+import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
 import FormLineType from '@/graph-designer/components/FormLineType.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
+import {
+  convertFromExplicitVerticalRange,
+  convertFromUnit,
+  convertToExplicitVerticalRange,
+  convertToUnit
+} from '@/graph-designer/converters'
+import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
+import { type GraphRenderer } from '@/graph-designer/graph'
 import {
   makeBooleanChoice,
   makeCascadingSingleChoice,
@@ -23,27 +47,7 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { computed, onMounted, onBeforeUnmount, ref, type Ref, watch } from 'vue'
-import {
-  convertFromExplicitVerticalRange,
-  convertFromUnit,
-  convertToExplicitVerticalRange,
-  convertToUnit
-} from '@/graph-designer/converters'
-import {
-  type GraphLine,
-  type GraphLines,
-  type GraphOptions,
-  type I18N,
-  type Operation,
-  type Transformation
-} from 'cmk-shared-typing/typescript/graph_designer'
 import { type SpecLineType, type Topic } from '@/graph-designer/type_defs'
-import { type ValidationMessages } from '@/form'
-import useDragging from '@/lib/useDragging'
-import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
-import { type GraphRenderer } from '@/graph-designer/graph'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
   graph_id: string

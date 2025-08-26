@@ -9,15 +9,18 @@ import type {
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, toRaw } from 'vue'
+
+import { immediateWatch } from '@/lib/watch'
+
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
-import { immediateWatch } from '@/lib/watch'
+
 import { useFormEditDispatcher } from '@/form/private'
-import CmkDialog from '@/components/CmkDialog.vue'
 
 export type Payload = Record<string, unknown>
 

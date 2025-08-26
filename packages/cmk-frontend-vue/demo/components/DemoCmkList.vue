@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { type Ref, ref } from 'vue'
+
 import CmkList from '@/components/CmkList'
-import { ref, type Ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

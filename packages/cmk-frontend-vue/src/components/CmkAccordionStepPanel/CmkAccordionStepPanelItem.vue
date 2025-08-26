@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkBadge from '../CmkBadge.vue'
-import CmkIcon from '../CmkIcon.vue'
-import CmkChip from '../CmkChip.vue'
-import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import { computed } from 'vue'
+
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
+import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
+import CmkBadge from '../CmkBadge.vue'
+import CmkChip from '../CmkChip.vue'
+import CmkIcon from '../CmkIcon.vue'
 import CmkHeading from '../typography/CmkHeading.vue'
 
 export interface CmkAccordionStepPanelItemProps {

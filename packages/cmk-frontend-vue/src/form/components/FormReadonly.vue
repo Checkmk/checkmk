@@ -4,51 +4,53 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { h, type VNode, defineComponent, type PropType } from 'vue'
 import type {
-  Components,
-  Dictionary,
-  FormSpec,
-  List,
-  TimeSpan,
-  SingleChoice,
-  SingleChoiceElement,
-  CascadingSingleChoice,
-  LegacyValuespec,
-  FixedValue,
   BooleanChoice,
-  MultilineText,
-  Password,
-  Tuple,
-  OptionalChoice,
-  ListOfStrings,
-  DualListChoice,
+  CascadingSingleChoice,
   CheckboxListChoice,
-  Labels,
+  Components,
   ConditionChoices,
   ConditionChoicesValue,
   ConditionGroup,
-  TimeSpecific,
-  FileUpload,
+  Dictionary,
   DictionaryElement,
   DictionaryGroup,
+  DualListChoice,
+  FileUpload,
+  FixedValue,
+  FormSpec,
+  Labels,
+  LegacyValuespec,
+  List,
+  ListOfStrings,
+  MultilineText,
   MultipleChoiceElement,
+  OptionalChoice,
+  Password,
+  SingleChoice,
+  SingleChoiceElement,
+  TimeSpan,
+  TimeSpecific,
+  Tuple,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import {
-  groupNestedValidations,
-  groupIndexedValidations,
-  type ValidationMessages
-} from '@/form/components/utils/validation'
-import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
-import {
-  translateOperator,
-  type Operator,
-  type OperatorI18n
-} from './forms/FormConditionChoices/utils'
-import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
+import { type PropType, type VNode, defineComponent, h } from 'vue'
+
 import type { CheckboxListChoiceElement } from '@/form/components/forms/FormCheckboxListChoice.vue'
+import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
 import FormLabelsLabel from '@/form/components/forms/FormLabelsLabel.vue'
+import {
+  type ValidationMessages,
+  groupIndexedValidations,
+  groupNestedValidations
+} from '@/form/components/utils/validation'
+
+import {
+  type Operator,
+  type OperatorI18n,
+  translateOperator
+} from './forms/FormConditionChoices/utils'
+import { ALL_MAGNITUDES, getSelectedMagnitudes, splitToUnits } from './utils/timeSpan'
 
 function renderForm(
   formSpec: FormSpec,

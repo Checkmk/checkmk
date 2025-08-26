@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
-import usei18n from '@/lib/i18n'
-import { computed, ref } from 'vue'
+
 import type { PendingChanges } from '../../ChangesInterfaces'
 import PendingChangeItemText from './PendingChangeItemText.vue'
 

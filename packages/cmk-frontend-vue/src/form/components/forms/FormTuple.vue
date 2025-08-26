@@ -5,15 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import {
-  groupIndexedValidations,
-  type ValidationMessages
-} from '@/form/components/utils/validation'
 import { ref, watch } from 'vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import HelpText from '@/components/HelpText.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
+
 import { capitalizeFirstLetter } from '@/lib/utils'
+
+import CmkSpace from '@/components/CmkSpace.vue'
+import HelpText from '@/components/HelpText.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import {
+  type ValidationMessages,
+  groupIndexedValidations
+} from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import FormLabel from '@/form/private/FormLabel.vue'
 

@@ -4,23 +4,25 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+import {
+  type ModeHostAgentConnectionMode,
+  type ModeHostSite
+} from 'cmk-shared-typing/typescript/mode_host'
+import { computed, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+
+import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
+
 defineOptions({
   inheritAttrs: false
 })
-
-import { ref, onMounted, computed } from 'vue'
-import type { Ref } from 'vue'
-import usei18n from '@/lib/i18n'
-import CmkButton from '@/components/CmkButton.vue'
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
-import {
-  type ModeHostSite,
-  type ModeHostAgentConnectionMode
-} from 'cmk-shared-typing/typescript/mode_host'
-
-import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 
 const { _t } = usei18n()
 

@@ -4,14 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
+import { computed, ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
-import CmkButton from '@/components/CmkButton.vue'
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/tooltip'
-import usei18n from '@/lib/i18n'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
 

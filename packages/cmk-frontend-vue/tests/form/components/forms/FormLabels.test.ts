@@ -3,12 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, within, findByRole, waitFor } from '@testing-library/vue'
-import FormLabel from '@/form/components/forms/FormLabels.vue'
-import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { renderFormWithData } from '../cmk-form-helper'
 import userEvent from '@testing-library/user-event'
+import { findByRole, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import { Response } from '@/components/suggestions'
+
+import FormLabel from '@/form/components/forms/FormLabels.vue'
+
+import { renderFormWithData } from '../cmk-form-helper'
 
 const EXISTING_LABEL_KEY = 'existing_key'
 const EXISTING_LABEL_VALUE = 'existing_value'

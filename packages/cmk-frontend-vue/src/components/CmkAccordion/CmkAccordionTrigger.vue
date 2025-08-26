@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import { getIsItemExpandedCallback, getInjectedTriggerItem } from './trigger-item'
+
+import { getInjectedTriggerItem, getIsItemExpandedCallback } from './trigger-item'
+
 const { _t } = usei18n()
 
 const toggleItem = getInjectedTriggerItem()

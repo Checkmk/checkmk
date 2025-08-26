@@ -5,11 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import axios from 'axios'
+import { ref, watch } from 'vue'
+
 import usei18n from '@/lib/i18n'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 const props = defineProps<{
   is_start_url: boolean

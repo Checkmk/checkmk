@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fetchRestAPI } from '@/lib/cmkFetch'
+
 import { API_ROOT } from './constants'
 
 const DISMISS_WARNING_API = `${API_ROOT}/domain-types/user_config/actions/dismiss-warning/invoke`

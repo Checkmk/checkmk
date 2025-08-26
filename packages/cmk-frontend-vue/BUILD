@@ -81,6 +81,7 @@ SRCS = [
     ":compile_i18n",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
+    ":node_modules/@trivago/prettier-plugin-sort-imports",
     ":node_modules/@tsconfig",
     ":node_modules/@typescript-eslint",
     ":node_modules/@vitejs",
@@ -180,7 +181,10 @@ vitest_bin.vitest_binary(
 
 prettier_bin.prettier_binary(
     name = "prettier",
-    data = [":.prettierrc.json"],
+    data = [
+        ":.prettierrc.json",
+        ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
     # Allow the binary to be run outside bazel
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [

@@ -3,10 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, defineComponent } from 'vue'
 import { userEvent } from '@testing-library/user-event'
-import CmkInput from '@/components/user-input/CmkInput.vue'
 import { render, screen } from '@testing-library/vue'
+import { defineComponent, ref } from 'vue'
+
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 test('CmkInput can be labelled on component', async () => {
   render(

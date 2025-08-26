@@ -7,12 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { type RouteRecordNormalized } from 'vue-router'
-import { immediateWatch } from '@/lib/watch'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import CmkButton from '@/components/CmkButton.vue'
-import router from './router'
-
 import { useRoute, useRouter } from 'vue-router'
+
+import { immediateWatch } from '@/lib/watch'
+
+import CmkButton from '@/components/CmkButton.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+
+import router from './router'
 
 const routes = ref<Array<RouteRecordNormalized>>([])
 const crumbs = ref<Array<RouteRecordNormalized>>([])

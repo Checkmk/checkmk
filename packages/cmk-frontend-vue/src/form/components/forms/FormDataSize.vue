@@ -5,13 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DataSize } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import { useId } from '@/form/utils'
+import { computed } from 'vue'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import { computed } from 'vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
 import FormLabel from '@/form/private/FormLabel.vue'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: DataSize

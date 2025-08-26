@@ -4,9 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { immediateWatch } from '@/lib/watch'
 import { useTemplateRef } from 'vue'
+
+import { immediateWatch } from '@/lib/watch'
+
 import CmkChip from '@/components/CmkChip.vue'
+
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
 export interface FilterOptemProps {

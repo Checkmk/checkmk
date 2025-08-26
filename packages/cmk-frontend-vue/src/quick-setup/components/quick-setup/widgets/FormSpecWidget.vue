@@ -5,10 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
-import { type FormSpecWidgetProps } from './widget_types'
-import type { ValidationMessages } from '@/form'
+
 import HelpText from '@/components/HelpText.vue'
+
+import type { ValidationMessages } from '@/form'
+import FormEdit from '@/form/components/FormEdit.vue'
+
+import { type FormSpecWidgetProps } from './widget_types'
 
 const props = defineProps<FormSpecWidgetProps>()
 const emit = defineEmits(['update'])

@@ -4,20 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, useTemplateRef, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
+
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
+
+import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+
 import CmkDropdownButton from './CmkDropdownButton.vue'
 import CmkSuggestions from './CmkSuggestions.vue'
 import { type Suggestions } from './CmkSuggestions.vue'
-import ArrowDown from '@/components/graphics/ArrowDown.vue'
+import { ErrorResponse } from './suggestions'
 
 export interface DropdownOption {
   name: string
   title: string
 }
-import { ErrorResponse } from './suggestions'
 
 const {
   inputHint = '',

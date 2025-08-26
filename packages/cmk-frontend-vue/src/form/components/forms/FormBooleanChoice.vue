@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { BooleanChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: BooleanChoice

@@ -4,12 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import { DialogClose, DialogTitle } from 'radix-vue'
+
+import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkHeading from './typography/CmkHeading.vue'
-import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
+
+import CmkScrollContainer from './CmkScrollContainer.vue'
+import CmkHeading from './typography/CmkHeading.vue'
 
 const { _t } = usei18n()
 

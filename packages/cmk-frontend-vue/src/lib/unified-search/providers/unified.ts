@@ -4,8 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { CmkIconProps } from '@/components/CmkIcon.vue'
-import { SearchProvider, type SearchProviderResult } from '../unified-search'
+
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
+
+import { SearchProvider, type SearchProviderResult } from '../unified-search'
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
 

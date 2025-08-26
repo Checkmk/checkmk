@@ -5,22 +5,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { cva } from 'class-variance-authority'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
-import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
-import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
-import FormHelp from '@/form/private/FormHelp.vue'
-import { useId } from '@/form/utils'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
 import CmkHtml from '@/components/CmkHtml.vue'
-import FormRequired from '@/form/private/FormRequired.vue'
-import FormReadonly from '@/form/components/FormReadonly.vue'
-import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { getElementsInGroupsFromProps, toggleElement, titleRequired } from './_groups'
+import FormReadonly from '@/form/components/FormReadonly.vue'
+import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
+import { useFormEditDispatcher } from '@/form/private'
+import FormHelp from '@/form/private/FormHelp.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
+import { useId } from '@/form/utils'
+
+import { getElementsInGroupsFromProps, titleRequired, toggleElement } from './_groups'
 
 const dictionaryVariants = cva('', {
   variants: {

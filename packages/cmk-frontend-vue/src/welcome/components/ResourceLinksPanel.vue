@@ -5,12 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+
+import usei18n from '@/lib/i18n'
+
+import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkLinkCardContainer from '@/components/CmkLinkCardContainer.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
 defineProps<{

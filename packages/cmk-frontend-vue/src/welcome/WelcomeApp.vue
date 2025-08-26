@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+
+import NextSteps from '@/welcome/components/NextSteps.vue'
+import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
+import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
+
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
-import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
-import NextSteps from '@/welcome/components/NextSteps.vue'
-import type { WelcomeUrls, StageInformation } from 'cmk-shared-typing/typescript/welcome'
-import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import { totalSteps } from './components/steps/stepComponents'
 
 const props = defineProps<{

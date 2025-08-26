@@ -6,18 +6,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { Ref } from 'vue'
+
 import usei18n from '@/lib/i18n.ts'
+import usePersistentRef from '@/lib/usePersistentRef.ts'
+
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import { markStepAsComplete, type StepId } from '@/welcome/components/steps/utils.ts'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import usePersistentRef from '@/lib/usePersistentRef.ts'
-import type { Ref } from 'vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
+import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
+import { type StepId, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
 
 const { _t } = usei18n()
 

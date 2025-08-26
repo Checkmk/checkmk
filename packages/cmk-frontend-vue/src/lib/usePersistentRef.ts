@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import { storageHandler } from './utils'
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
+
+import { storageHandler } from './utils'
 
 const usePersistentRef = <T>(key: string, defaultValue: T, storageOpt?: 'session' | 'local') => {
   const storage = storageOpt === 'session' ? sessionStorage : localStorage

@@ -3,18 +3,19 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import TextWidget from './TextWidget.vue'
-import NoteTextWidget from './NoteTextWidget.vue'
-import DialogWidget from './DialogWidget.vue'
-import ListWidget from './ListWidget.vue'
-import NoneWidget from './NoneWidget.vue'
-import FormSpecWidget from './FormSpecWidget.vue'
-import CollapsibleWidget from './CollapsibleWidget.vue'
-import FormSpecRecapWidget from './FormSpecRecapWidget.vue'
-import type { ComponentSpec, FormSpecWidgetProps } from './widget_types'
+import ConditionalNotificationDialogWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationDialogWidget.vue'
 import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
 import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
-import ConditionalNotificationDialogWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationDialogWidget.vue'
+
+import CollapsibleWidget from './CollapsibleWidget.vue'
+import DialogWidget from './DialogWidget.vue'
+import FormSpecRecapWidget from './FormSpecRecapWidget.vue'
+import FormSpecWidget from './FormSpecWidget.vue'
+import ListWidget from './ListWidget.vue'
+import NoneWidget from './NoneWidget.vue'
+import NoteTextWidget from './NoteTextWidget.vue'
+import TextWidget from './TextWidget.vue'
+import type { ComponentSpec, FormSpecWidgetProps } from './widget_types'
 
 export const getWidget = (widgetType: string): unknown => {
   //<component :is="getWidget(widgetType)" v-bind="widget_props" @update="update_data" />

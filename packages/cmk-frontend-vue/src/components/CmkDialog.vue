@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
+import { onMounted, ref } from 'vue'
+
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
 import usePersistentRef from '@/lib/usePersistentRef'
 import { isWarningDismissed } from '@/lib/userConfig'
-import { onMounted, ref } from 'vue'
+
+import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
   title?: string

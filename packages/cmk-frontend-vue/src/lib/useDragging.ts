@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, type Ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 export default function useDragging(): {
   trContainerRef: Ref<HTMLTableElement | null>

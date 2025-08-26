@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 import { Page } from '@demo/_demo/page'
+
 import DemoCmkStepPanel from './DemoAccordionCmkStepPanel.vue'
 
 export const pages = [new Page('CmkAccordionStepPanel', DemoCmkStepPanel)]

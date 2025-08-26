@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+
 import { CmkSimpleError } from '@/lib/error'
 import { argumentError } from '@/lib/rest-api-client/errors'
-import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 const MULTIPLE_QUICK_SETUP_ACTIONS_RUNNING_ERROR = {
   title: 'Cannot start action',

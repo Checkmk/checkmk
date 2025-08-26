@@ -3,10 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 
 import { cmkFetch } from '@/lib/cmkFetch'
+
 import { AjaxResponseError, type MaybeApiError } from '@/graph-designer/fetch_metric_color'
-import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 
 // Copied from cmk-frontend/src/js/modules/graphs.ts
 

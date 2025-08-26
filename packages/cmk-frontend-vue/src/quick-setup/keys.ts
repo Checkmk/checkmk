@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { InjectionKey, Ref } from 'vue'
+
 import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 
 export const formDataKey: InjectionKey<Ref<{ [key: number]: StageData }>> = Symbol('formData')

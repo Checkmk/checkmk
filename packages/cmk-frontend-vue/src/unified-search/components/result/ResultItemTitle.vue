@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { defineComponent, h, type PropType } from 'vue'
+import { type PropType, defineComponent, h } from 'vue'
 
 export default defineComponent({
   props: {

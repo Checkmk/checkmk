@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { readonly, ref, type Ref } from 'vue'
+import { type Ref, readonly, ref } from 'vue'
 
 export type WizardMode = 'guided' | 'overview'
 export interface WizardHook {

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import CmkIcon from '@/components/CmkIcon.vue'
 
 type AlertType = 'error' | 'warning' | 'success' | 'info'

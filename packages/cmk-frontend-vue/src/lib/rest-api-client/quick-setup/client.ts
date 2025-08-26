@@ -6,21 +6,20 @@
 /**
  * Get guided stages or overview stages
  */
-
 import axios, { isAxiosError } from 'axios'
+
+import type { BackgroundJobSpawnResponse } from '../background-job/response_schemas'
 import { API_ROOT } from '../constants'
+import { argumentError } from '../errors'
+import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_schemas'
 import {
   QuickSetupCompleteActionValidationResponse,
-  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupCompleteResponse,
   type QuickSetupResponse,
+  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupStageActionResponse,
   type QuickSetupStageStructure
 } from './response_schemas'
-import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_schemas'
-import type { BackgroundJobSpawnResponse } from '../background-job/response_schemas'
-
-import { argumentError } from '../errors'
 
 const API_DOMAIN = 'quick_setup'
 const OVERVIEW_MODE = 'overview'

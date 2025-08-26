@@ -5,11 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
+
 import usei18n from '@/lib/i18n'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import CmkButton from '@/components/CmkButton.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

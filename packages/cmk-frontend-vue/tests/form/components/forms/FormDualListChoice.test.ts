@@ -5,6 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import FormDualListChoiceComponent from '@/form/components/forms/FormDualListChoice.vue'
 
 const spec: FormSpec.DualListChoice = {

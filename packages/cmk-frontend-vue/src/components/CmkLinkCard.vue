@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const cmkLinkCardVariants = cva('', {
   variants: {

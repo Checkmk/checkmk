@@ -3,8 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, type Ref, type Plugin, computed } from 'vue'
-import { createGettext, useGettext, type Translations } from 'vue3-gettext'
+import { type Plugin, type Ref, computed, ref } from 'vue'
+import { type Translations, createGettext, useGettext } from 'vue3-gettext'
+
 import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
 
 const AVAILABLE_LANGUAGES: Record<string, string> = {

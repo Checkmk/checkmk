@@ -3,16 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { getWidget } from '@/quick-setup/components/quick-setup/widgets/utils'
-import TextWidget from '@/quick-setup/components/quick-setup/widgets/TextWidget.vue'
-import NoteTextWidget from '@/quick-setup/components/quick-setup/widgets/NoteTextWidget.vue'
+import CollapsibleWidget from '@/quick-setup/components/quick-setup/widgets/CollapsibleWidget.vue'
+import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
+import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
+import FormSpecRecapWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecRecapWidget.vue'
+import FormSpecWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecWidget.vue'
 import ListWidget from '@/quick-setup/components/quick-setup/widgets/ListWidget.vue'
 import NoneWidget from '@/quick-setup/components/quick-setup/widgets/NoneWidget.vue'
-import FormSpecWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecWidget.vue'
-import CollapsibleWidget from '@/quick-setup/components/quick-setup/widgets/CollapsibleWidget.vue'
-import FormSpecRecapWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecRecapWidget.vue'
-import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
-import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
+import NoteTextWidget from '@/quick-setup/components/quick-setup/widgets/NoteTextWidget.vue'
+import TextWidget from '@/quick-setup/components/quick-setup/widgets/TextWidget.vue'
+import { getWidget } from '@/quick-setup/components/quick-setup/widgets/utils'
 
 test('getWidget returns NoneWidget when widget_type is unknown', async () => {
   expect(getWidget('i_do_not_exist')).toBe(NoneWidget)

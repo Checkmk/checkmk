@@ -4,33 +4,36 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue'
-import {
-  UnifiedSearch,
-  type SearchProviderResult,
-  type UnifiedSearchResult
-} from '@/lib/unified-search/unified-search'
 import { type Providers } from 'cmk-shared-typing/typescript/unified_search'
+import { inject, onMounted, ref } from 'vue'
+
+import { Api } from '@/lib/api-client'
 import {
   SearchHistorySearchProvider,
   type SearchHistorySearchResult
 } from '@/lib/unified-search/providers/history'
-import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
-import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
-import UnifiedSearchFooter from './UnifiedSearchFooter.vue'
-import { apiServiceProvider } from './providers/api'
-import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
-import { Api } from '@/lib/api-client'
-import DefaultPopup from '@/main-menu/DefaultPopup.vue'
-import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
-import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import {
   UnifiedSearchProvider,
   type UnifiedSearchProviderIdentifier,
   type UnifiedSearchResultResponse
 } from '@/lib/unified-search/providers/unified'
-import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
+import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
+import {
+  type SearchProviderResult,
+  UnifiedSearch,
+  type UnifiedSearchResult
+} from '@/lib/unified-search/unified-search'
+
+import DefaultPopup from '@/main-menu/DefaultPopup.vue'
+
+import UnifiedSearchFooter from './UnifiedSearchFooter.vue'
+import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
+import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
+import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
 import UnifiedSearchWaitForResults from './components/view/UnifiedSearchWaitForResults.vue'
+import { apiServiceProvider } from './providers/api'
+import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
+import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any

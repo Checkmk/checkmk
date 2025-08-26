@@ -5,10 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue'
 import axios from 'axios'
-import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
 import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
+import { type Ref, onMounted, ref } from 'vue'
+
+import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
 
 const props = defineProps<{
   i18n: I18NPingHost

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { type UserFrontendConfig } from 'cmk-shared-typing/typescript/user_frontend_config'
+
 import { CmkSimpleError } from './error'
 
 const CONFIG_COOKIE = 'user_frontend_config'

@@ -4,15 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type {
+  SingleChoice,
+  String,
+  Tuple
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
+
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
-
-import type {
-  Tuple,
-  String,
-  SingleChoice
-} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 

@@ -7,11 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import type { QuickSetupStageProps } from './quick_setup_types'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const props = defineProps<QuickSetupStageProps>()
 

@@ -3,12 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CmkError, CmkSimpleError } from '@/lib/error.ts'
 import type { AxiosError } from 'axios'
 import axios from 'axios'
 
+import { CmkError, CmkSimpleError } from '@/lib/error.ts'
 import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from '@/lib/types'
+
 // import type { Errors, StageErrors } from '@lib/rest./response_types'
 
 export class QuickSetupAxiosError extends CmkError<AxiosError> {

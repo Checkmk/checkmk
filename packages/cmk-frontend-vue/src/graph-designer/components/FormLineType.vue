@@ -5,10 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import FormEdit from '@/form/components/FormEdit.vue'
-import { type SpecLineType } from '@/graph-designer/type_defs'
 import { type ValidationMessages } from '@/form'
+import FormEdit from '@/form/components/FormEdit.vue'
+
 import { makeSingleChoice } from '@/graph-designer/specs'
+import { type SpecLineType } from '@/graph-designer/type_defs'
 
 const props = defineProps<{
   spec: SpecLineType

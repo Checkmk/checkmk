@@ -3,27 +3,26 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { StageData } from '../components/quick-setup/widgets/widget_types'
-
-import { wait } from '@/lib/utils'
+import {
+  backgroundJob as backgroundJobClient,
+  quickSetup as quickSetupClient
+} from '@/lib/rest-api-client'
+import type { BackgroundJobSpawnResponse } from '@/lib/rest-api-client/background-job/response_schemas'
+import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
 import {
   QuickSetupCompleteActionValidationResponse,
-  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupCompleteResponse,
   type QuickSetupGuidedResponse,
   type QuickSetupOverviewResponse,
   type QuickSetupResponse,
+  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupStageActionResponse,
   type QuickSetupStageStructure
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
+import { wait } from '@/lib/utils'
 
-import {
-  quickSetup as quickSetupClient,
-  backgroundJob as backgroundJobClient
-} from '@/lib/rest-api-client'
-import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
-import type { BackgroundJobSpawnResponse } from '@/lib/rest-api-client/background-job/response_schemas'
 import type { LogUpdate } from '../components/BackgroundJobLog/useBackgroundJobLog'
+import type { StageData } from '../components/quick-setup/widgets/widget_types'
 
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds between checks */
 export const BACKGROUND_JOB_CHECK_INTERVAL = 1000

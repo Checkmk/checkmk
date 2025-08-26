@@ -4,17 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
-import CmkSpace from '@/components/CmkSpace.vue'
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { onMounted, ref, toRaw } from 'vue'
-import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
-import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import { type Payload, configEntityAPI } from '@/form/components/utils/configuration_entity'
+import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
+
 import FormButton from './FormButton.vue'
 
 const props = defineProps<{

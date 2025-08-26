@@ -5,12 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import CmkButton from '@/components/CmkButton.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import type {
   Catalog,
   Dictionary,
@@ -19,8 +13,16 @@ import type {
   Topic,
   TopicElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+
+import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

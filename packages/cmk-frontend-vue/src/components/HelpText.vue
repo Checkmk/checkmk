@@ -4,16 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { ref } from 'vue'
+
+import { getUserFrontendConfig } from '@/lib/userConfig'
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+
+import CmkHtml from './CmkHtml.vue'
+import CmkIconButton from './CmkIconButton.vue'
+import CmkScrollContainer from './CmkScrollContainer.vue'
+
 defineOptions({
   inheritAttrs: false
 })
-
-import { ref } from 'vue'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
-import CmkIconButton from './CmkIconButton.vue'
-import CmkHtml from './CmkHtml.vue'
-import CmkScrollContainer from './CmkScrollContainer.vue'
-import { getUserFrontendConfig } from '@/lib/userConfig'
 
 const props = defineProps<{
   help: string

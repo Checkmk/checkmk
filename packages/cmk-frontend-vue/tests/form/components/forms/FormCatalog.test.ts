@@ -4,13 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
 import type {
-  String as StringSpec,
-  Dictionary as DictionarySpec,
+  Catalog,
   DictionaryElement,
-  Catalog
+  Dictionary as DictionarySpec,
+  String as StringSpec
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
+
 import { renderFormWithData } from '../cmk-form-helper'
 
 type PartialExcept<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>

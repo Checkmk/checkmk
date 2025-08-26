@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import path from 'node:path'
-import { defineConfig, type PluginOption } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'node:path'
+import { defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/

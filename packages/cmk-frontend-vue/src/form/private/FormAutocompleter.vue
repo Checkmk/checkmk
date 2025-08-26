@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkDropdown from '@/components/CmkDropdown.vue'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { type Suggestion, ErrorResponse, Response } from '@/components/suggestions'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import { ErrorResponse, Response, type Suggestion } from '@/components/suggestions'
+
 import { fetchSuggestions } from '@/form/components/utils/autocompleter'
 
 const props = defineProps<{

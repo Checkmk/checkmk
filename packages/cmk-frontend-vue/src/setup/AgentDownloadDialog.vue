@@ -4,12 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+import { TooltipArrow } from 'radix-vue'
 import { ref } from 'vue'
+
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
-import { TooltipArrow } from 'radix-vue'
-import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
 interface Props {

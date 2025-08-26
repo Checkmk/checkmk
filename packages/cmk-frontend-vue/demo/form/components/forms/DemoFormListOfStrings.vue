@@ -4,12 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 import type { ListOfStrings, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
-
-import { http, HttpResponse } from 'msw'
+import { HttpResponse, http } from 'msw'
 import { setupWorker } from 'msw/browser'
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+
+import FormEdit from '@/form/components/FormEdit.vue'
 
 async function interceptor({ request }: { request: Request }) {
   const jsonData = (await request.formData()).get('request')

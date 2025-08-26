@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import { getSearchUtils } from './providers/search-utils'
+
 import ToggleButtonGroup, { type ToggleButtonOption } from '@/components/ToggleButtonGroup.vue'
+
+import { getSearchUtils } from './providers/search-utils'
 
 const { _t } = usei18n()
 

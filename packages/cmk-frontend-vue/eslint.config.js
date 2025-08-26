@@ -1,9 +1,8 @@
-import pluginVue from 'eslint-plugin-vue'
-import vueTsEslintConfig from '@vue/eslint-config-typescript'
+import { default as eslint, default as js } from '@eslint/js'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
-import eslint from '@eslint/js'
+import vueTsEslintConfig from '@vue/eslint-config-typescript'
+import pluginVue from 'eslint-plugin-vue'
 import tseslint from 'typescript-eslint'
-import js from '@eslint/js'
 
 export default [
   {

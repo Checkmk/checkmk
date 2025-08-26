@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import { ref } from 'vue'
+
+import CmkColorPicker from '@/components/CmkColorPicker.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

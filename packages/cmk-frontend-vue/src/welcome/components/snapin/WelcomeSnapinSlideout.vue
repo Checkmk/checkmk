@@ -6,14 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
-import { totalSteps } from '../steps/stepComponents'
-import usei18n from '@/lib/i18n'
-import CmkIcon from '@/components/CmkIcon.vue'
-import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import { onMounted, ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
 import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+
 import NextSteps from '@/welcome/components/NextSteps.vue'
+import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
+
+import { totalSteps } from '../steps/stepComponents'
 
 const { _t } = usei18n()
 

@@ -4,14 +4,17 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
+
+import type { UnifiedSearchResultElementInlineButton } from '@/lib/unified-search/providers/unified'
+import { immediateWatch } from '@/lib/watch'
+
 import type { CmkIconProps } from '@/components/CmkIcon.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import { immediateWatch } from '@/lib/watch'
-import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
-import ResultItemTitle from './ResultItemTitle.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
-import type { UnifiedSearchResultElementInlineButton } from '@/lib/unified-search/providers/unified'
+
 import { getSearchUtils } from '../../providers/search-utils'
+import ResultItemTitle from './ResultItemTitle.vue'
 
 export interface ResultItemProps {
   idx: number

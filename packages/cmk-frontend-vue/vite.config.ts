@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { type RollupLog } from 'rollup'
-import { defineConfig, type UserConfig, type PluginOption } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { type UserConfig, defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/

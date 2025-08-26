@@ -4,9 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+
+import { quickSetupGetWidgetKey } from '@/quick-setup/components/quick-setup/utils'
 import ListWidget from '@/quick-setup/components/quick-setup/widgets/ListWidget.vue'
 import { getWidget } from '@/quick-setup/components/quick-setup/widgets/utils'
-import { quickSetupGetWidgetKey } from '@/quick-setup/components/quick-setup/utils'
 
 describe('ListWidget', () => {
   it('renders items', async () => {

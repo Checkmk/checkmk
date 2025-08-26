@@ -11,11 +11,14 @@ import type {
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
-import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
+
 import CmkSpace from '@/components/CmkSpace.vue'
-import TopicUngrouped from '@/form/components/forms/form_catalog/TopicUngrouped.vue'
+
 import TopicGrouped from '@/form/components/forms/form_catalog/TopicGrouped.vue'
+import TopicUngrouped from '@/form/components/forms/form_catalog/TopicUngrouped.vue'
+import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: Catalog

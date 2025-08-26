@@ -4,15 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-import ResultList from '../result/ResultList.vue'
-import ResultItem from '../result/ResultItem.vue'
 import { ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
-import { getSearchUtils } from '../../providers/search-utils'
-import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
+
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+import { getSearchUtils } from '../../providers/search-utils'
+import ResultItem from '../result/ResultItem.vue'
+import ResultList from '../result/ResultList.vue'
 
 const { _t } = usei18n()
 

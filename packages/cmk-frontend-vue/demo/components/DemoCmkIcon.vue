@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
+import { type Ref, ref } from 'vue'
+
 import CmkIcon from '@/components/CmkIcon.vue'
 import { type CmkIconVariants } from '@/components/CmkIcon.vue'
 

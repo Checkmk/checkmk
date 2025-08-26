@@ -10,8 +10,9 @@ import {
   type GraphOptions,
   type I18N
 } from 'cmk-shared-typing/typescript/graph_designer'
-import { graphRenderer } from '@/graph-designer/graph'
+
 import GraphDesigner from '@/graph-designer/GraphDesigner.vue'
+import { graphRenderer } from '@/graph-designer/graph'
 
 defineProps<{
   graph_id: string

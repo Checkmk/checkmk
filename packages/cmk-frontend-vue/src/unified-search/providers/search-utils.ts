@@ -3,15 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { inject, provide, type InjectionKey, ref } from 'vue'
-import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
+import { type InjectionKey, inject, provide, ref } from 'vue'
+
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
 import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
+import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
+
 import type { CmkIconProps } from '@/components/CmkIcon.vue'
-import { topicIconMapping } from './topic-icon-mapping'
+
 import type {
   FilterOption,
   ProviderOption,
@@ -19,6 +20,7 @@ import type {
   SearchProviderKeys,
   UnifiedSearchQueryLike
 } from './search-utils.types'
+import { topicIconMapping } from './topic-icon-mapping'
 
 const queryInput = ref<string>('')
 const queryProvider = ref<QueryProvider>('all')

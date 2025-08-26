@@ -3,40 +3,40 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import { type Component } from 'vue'
 import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { type Component } from 'vue'
 
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
-import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
-import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
-import FormMetric from '../components/forms/FormMetric.vue'
+import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
+import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
 import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 import FormLegacyValueSpec from '@/form/components/forms/FormLegacyValueSpec.vue'
 import FormList from '@/form/components/forms/FormList.vue'
-import FormListUniqueSelection from '@/form/components/forms/FormListUniqueSelection.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
+import FormListUniqueSelection from '@/form/components/forms/FormListUniqueSelection.vue'
 import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 import FormPassword from '@/form/components/forms/FormPassword.vue'
 import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
-import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
+import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
-import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
-import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
+import FormTuple from '@/form/components/forms/FormTuple.vue'
+import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
+
 import FormTwoColumnDictionary from '../components/forms/FormDictionary/FormTwoColumnDictionary.vue'
+import FormMetric from '../components/forms/FormMetric.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {

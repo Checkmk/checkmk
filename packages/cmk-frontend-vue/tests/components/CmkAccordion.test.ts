@@ -3,10 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { render, screen } from '@testing-library/vue'
+import { type Ref, defineComponent, ref } from 'vue'
+
 import CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
-import { screen, render } from '@testing-library/vue'
-import { type Ref, defineComponent, ref } from 'vue'
 
 const createAccordionComponent = (
   items: number,

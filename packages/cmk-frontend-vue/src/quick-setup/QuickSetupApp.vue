@@ -4,11 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { onBeforeMount, onUnmounted } from 'vue'
+
 import CmkIcon from '@/components/CmkIcon.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
+
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
-import { onUnmounted, onBeforeMount } from 'vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 defineProps<QuickSetupAppProps>()
 

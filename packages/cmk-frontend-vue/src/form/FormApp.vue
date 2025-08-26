@@ -4,14 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import FormEdit from './components/FormEdit.vue'
-import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import { computed, ref } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
+
 import HelpText from '@/components/HelpText.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
+
+import FormReadonly from '@/form/components/FormReadonly.vue'
+import type { ValidationMessages } from '@/form/components/utils/validation'
+
+import FormEdit from './components/FormEdit.vue'
 
 const props = defineProps<{
   id: string

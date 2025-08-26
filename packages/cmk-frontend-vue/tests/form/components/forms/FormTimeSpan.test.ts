@@ -4,8 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
+
 import { renderFormWithData } from '../cmk-form-helper'
 
 function getSpec(

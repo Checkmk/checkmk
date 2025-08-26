@@ -4,18 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref } from 'vue'
-import { useValidation, type ValidationMessages } from '../utils/validation'
-import { computed, onMounted, ref, useTemplateRef } from 'vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import type {
   DualListChoice,
   MultipleChoiceElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { type Ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { useId } from '@/form/utils'
+
 import { fetchData } from '../utils/autocompleters/ajax'
+import { type ValidationMessages, useValidation } from '../utils/validation'
 
 const props = defineProps<{
   spec: DualListChoice

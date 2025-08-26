@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
+import { nextTick, ref, watch } from 'vue'
 
 export interface CmkSlideInProps {
   open: boolean

@@ -6,10 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
 import StepsProgressBar, { type StepsProgressBarProps } from './StepsProgressBar.vue'
+
 const { _t } = usei18n()
 
 const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps>()

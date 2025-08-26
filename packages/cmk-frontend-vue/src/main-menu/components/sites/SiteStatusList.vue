@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch'
+
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
-import usei18n from '@/lib/i18n'
-import { immediateWatch } from '@/lib/watch'
-import { ref } from 'vue'
+
 import type { Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'
 

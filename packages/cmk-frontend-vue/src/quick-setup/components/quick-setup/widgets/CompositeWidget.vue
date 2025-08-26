@@ -4,8 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type CompositeWidgetProps } from './widget_types'
 import { getGetWidget } from '@/quick-setup/components/quick-setup/utils'
+
+import { type CompositeWidgetProps } from './widget_types'
+
 const getWidget = getGetWidget()
 
 const props = defineProps<CompositeWidgetProps>()

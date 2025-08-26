@@ -6,8 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { defineComponent } from 'vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+
 import { CmkError } from '@/lib/error.ts'
+
+import { useErrorBoundary } from '@/components/useErrorBoundary'
+
 const props = defineProps<{ screenshotMode: boolean }>()
 
 class DemoError<T extends Error> extends CmkError<T> {

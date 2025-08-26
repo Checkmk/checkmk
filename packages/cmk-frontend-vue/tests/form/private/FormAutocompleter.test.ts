@@ -3,11 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
+
+import { Response } from '@/components/suggestions'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
-import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
-import { Response } from '@/components/suggestions'
-import userEvent from '@testing-library/user-event'
 
 vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred

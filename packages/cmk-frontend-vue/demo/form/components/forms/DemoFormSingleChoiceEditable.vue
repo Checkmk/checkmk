@@ -4,15 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { provide, onBeforeUnmount, onBeforeMount, ref } from 'vue'
-import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { configEntityAPI } from '@/form/components/utils/configuration_entity'
-
-import { passthrough, bypass, http, HttpResponse } from 'msw'
+import { HttpResponse, bypass, http, passthrough } from 'msw'
 import { setupWorker } from 'msw/browser'
+import { onBeforeMount, onBeforeUnmount, provide, ref } from 'vue'
 
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
+import { configEntityAPI } from '@/form/components/utils/configuration_entity'
 import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()

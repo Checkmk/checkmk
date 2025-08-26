@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen, render } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
+
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 
 function getRandomProgressValues(): { max: number; value: number } {

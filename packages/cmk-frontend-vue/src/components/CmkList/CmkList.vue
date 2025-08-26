@@ -6,12 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup generic="ItemsProps extends Record<string, unknown[]>" lang="ts">
 import { ref } from 'vue'
 
-import CmkSpace from '@/components/CmkSpace.vue'
+import { type UnpackedArray } from '@/lib/typeUtils'
 import useDragging from '@/lib/useDragging'
 import { immediateWatch } from '@/lib/watch'
-import { type UnpackedArray } from '@/lib/typeUtils'
-import CmkListItem from './CmkListItem.vue'
+
+import CmkSpace from '@/components/CmkSpace.vue'
+
 import CmkListAddButton from './CmkListAddButton.vue'
+import CmkListItem from './CmkListItem.vue'
 
 type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 

@@ -4,16 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { h, markRaw } from 'vue'
+
+import type { Action } from '@/lib/rest-api-client/quick-setup/response_schemas'
+
 import CompositeWidget from '@/quick-setup/components/quick-setup/widgets/CompositeWidget.vue'
-import QuickSetupStageWidgetContent from './QuickSetupStageWidgetContent.vue'
 import type {
   AllValidationMessages,
   ComponentSpec,
   StageData
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
-import type { QuickSetupStageAction, VnodeOrNull } from './components/quick-setup/quick_setup_types'
-import type { Action } from '@/lib/rest-api-client/quick-setup/response_schemas'
+
+import QuickSetupStageWidgetContent from './QuickSetupStageWidgetContent.vue'
 import type { LogStep } from './components/BackgroundJobLog/useBackgroundJobLog'
+import type { QuickSetupStageAction, VnodeOrNull } from './components/quick-setup/quick_setup_types'
 
 export type UpdateCallback = (value: StageData) => void
 

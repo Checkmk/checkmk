@@ -4,14 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { nextTick, useTemplateRef, computed, ref, type Ref } from 'vue'
+import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
+
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 
-import { type Suggestion, ErrorResponse, Response } from './suggestions'
+import CmkScrollContainer from './CmkScrollContainer.vue'
+import { ErrorResponse, Response, type Suggestion } from './suggestions'
 
 const { _t } = usei18n()
 

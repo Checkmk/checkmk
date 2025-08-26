@@ -4,17 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import {
+  type Condition,
+  type ConditionChoicesValue,
+  type ConditionGroup
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { computed, ref, watch } from 'vue'
+
+import { immediateWatch } from '@/lib/watch'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkList from '@/components/CmkList'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import {
-  type ConditionChoicesValue,
-  type ConditionGroup,
-  type Condition
-} from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { immediateWatch } from '@/lib/watch'
-import { computed, ref, watch } from 'vue'
-import { type OperatorI18n, type Operator } from './utils'
+
+import { type Operator, type OperatorI18n } from './utils'
 
 const props = defineProps<{
   data: ConditionChoicesValue

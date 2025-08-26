@@ -4,20 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import { onBeforeUnmount, ref } from 'vue'
-import ResultList from '../result/ResultList.vue'
-import ResultItem from '../result/ResultItem.vue'
-import { immediateWatch } from '@/lib/watch'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-import { getSearchUtils } from '../../providers/search-utils'
+
+import usei18n from '@/lib/i18n'
 import {
   type UnifiedSearchResultElement,
   type UnifiedSearchResultResponse
 } from '@/lib/unified-search/providers/unified'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
-import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
+import { immediateWatch } from '@/lib/watch'
+
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+import { getSearchUtils } from '../../providers/search-utils'
+import ResultItem from '../result/ResultItem.vue'
+import ResultList from '../result/ResultList.vue'
+import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
 
 const { _t } = usei18n()
 

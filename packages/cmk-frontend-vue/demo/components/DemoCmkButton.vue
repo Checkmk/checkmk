@@ -6,9 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>

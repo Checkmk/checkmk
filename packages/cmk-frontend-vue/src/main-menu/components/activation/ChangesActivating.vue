@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import usei18n from '@/lib/i18n'
+
+import CmkProgressbar from '@/components/CmkProgressbar.vue'
 
 const { _t } = usei18n()
 

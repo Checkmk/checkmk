@@ -1,2 +1,5 @@
 demo/public/mockServiceWorker.js
 dist-dev/
+pnpm-lock.yaml
+node_modules/
+*.md

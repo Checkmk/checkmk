@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { BackgroundJobLogDisplay } from '@/quick-setup/components/BackgroundJobLog'
+import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+
 import CompositeWidget from './components/quick-setup/widgets/CompositeWidget.vue'
 import type { QuickSetupStageWidgetContentProps } from './types'
-import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
-import { BackgroundJobLogDisplay } from '@/quick-setup/components/BackgroundJobLog'
 
 const props = defineProps<QuickSetupStageWidgetContentProps>()
 const emit = defineEmits(['update'])

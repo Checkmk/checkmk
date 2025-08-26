@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { dummyT, dummyTn, dummyTp, dummyTnp } from '@/lib/i18nDummy'
+import { dummyT, dummyTn, dummyTnp, dummyTp } from '@/lib/i18nDummy'
 
 test('i18n: dummyT function', () => {
   expect(dummyT('Hello')).toBe('Hello')

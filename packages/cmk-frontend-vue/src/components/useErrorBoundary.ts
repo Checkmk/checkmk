@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, onErrorCaptured, h, type Component, type Ref } from 'vue'
+import { type Component, type Ref, h, onErrorCaptured, ref } from 'vue'
+
 import ErrorBoundary from './private/ErrorBoundary.vue'
 
 /**

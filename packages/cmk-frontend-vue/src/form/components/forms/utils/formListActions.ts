@@ -3,11 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { Ref } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 import { groupIndexedValidations, validateValue } from '@/form/components/utils/validation'
-import type { Ref } from 'vue'
-import type { Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 export default function formListActions(
   props: {

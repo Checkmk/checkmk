@@ -4,12 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkButton from '@/components/CmkButton.vue'
-import { getSearchUtils } from '../../providers/search-utils'
-import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+
+import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 
 const maxRecentlyViewed = 5

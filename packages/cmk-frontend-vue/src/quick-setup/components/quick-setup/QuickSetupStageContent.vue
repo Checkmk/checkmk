@@ -5,10 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+
 import CmkButton from '@/components/CmkButton.vue'
-import type { QuickSetupStageContent } from './quick_setup_types'
+import CmkIcon from '@/components/CmkIcon.vue'
+
 import QuickSetupStageContentError from './QuickSetupStageContentError.vue'
+import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()
 

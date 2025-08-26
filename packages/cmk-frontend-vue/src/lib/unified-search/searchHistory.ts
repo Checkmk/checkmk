@@ -4,9 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Ref } from 'vue'
+
+import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
+
 import usePersistentRef from '../usePersistentRef'
 import type { UnifiedSearchResultElement } from './providers/unified'
-import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export class HistoryEntry {
   public hitCount = 1

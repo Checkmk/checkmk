@@ -4,13 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 import type { String } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
+import { HttpResponse, http, passthrough } from 'msw'
+import { setupWorker } from 'msw/browser'
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import { passthrough, http, HttpResponse } from 'msw'
-import { setupWorker } from 'msw/browser'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 const apiReturnsError = ref<boolean>(false)
 

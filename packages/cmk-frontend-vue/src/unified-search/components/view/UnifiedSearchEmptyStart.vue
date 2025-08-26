@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import usei18n from '@/lib/i18n'
 
 const { _t } = usei18n()
 </script>

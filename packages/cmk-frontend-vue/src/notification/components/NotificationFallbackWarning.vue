@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { NotificationFallbackWarning } from 'cmk-shared-typing/typescript/notifications'
+
 import CmkDialog from '@/components/CmkDialog.vue'
 
 const WARNING_KEY = 'notification_fallback'

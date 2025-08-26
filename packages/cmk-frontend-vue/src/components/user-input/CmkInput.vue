@@ -4,11 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="T extends 'text' | 'number' = 'text'">
+import { type VariantProps, cva } from 'class-variance-authority'
 import { ref, watch } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
-import { cva, type VariantProps } from 'class-variance-authority'
+
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
+
 import { inputSizes } from './sizes'
 
 defineOptions({ inheritAttrs: false })

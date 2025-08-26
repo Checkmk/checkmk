@@ -4,15 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkButton from '@/components/CmkButton.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { type ValidationMessages } from '@/form/components/utils/validation'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
-import HelpText from '@/components/HelpText.vue'
-import { useFormEditDispatcher } from '@/form/private'
+
+import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import HelpText from '@/components/HelpText.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages } from '@/form/components/utils/validation'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: FormSpec.TimeSpecific

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { inject, type InjectionKey } from 'vue'
+import { type InjectionKey, inject } from 'vue'
 
 export const triggerItemKey = Symbol() as InjectionKey<(id: string) => void>
 

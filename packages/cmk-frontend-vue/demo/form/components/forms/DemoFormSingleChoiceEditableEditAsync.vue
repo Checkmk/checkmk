@@ -4,22 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, toRaw, provide } from 'vue'
-import type {
-  API,
-  SetDataResult
-} from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   Dictionary,
   FormSpec,
   String,
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { provide, ref, toRaw } from 'vue'
+
+import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import type {
+  API,
+  SetDataResult
+} from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()
-import { dispatcherKey } from '@/form/private'
 
 // demo stuff
 

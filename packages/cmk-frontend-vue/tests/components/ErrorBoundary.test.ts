@@ -3,11 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent } from 'vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+
 import { CmkError } from '@/lib/error.ts'
+
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 test('ErrorBoundary shows full stack', async () => {
   class DemoError<T extends Error> extends CmkError<T> {

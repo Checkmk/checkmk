@@ -4,8 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
+
 import { renderFormWithData } from '../cmk-form-helper'
 
 const spec: FormSpec.SingleChoice = {

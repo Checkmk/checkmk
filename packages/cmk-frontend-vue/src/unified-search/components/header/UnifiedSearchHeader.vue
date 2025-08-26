@@ -4,17 +4,21 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
-import usei18n from '@/lib/i18n'
 import { computed, useTemplateRef } from 'vue'
-import { getSearchUtils } from '../../providers/search-utils'
-import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
-import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
-import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
-import type { FilterOption } from '@/unified-search/providers/search-utils.types'
+
+import usei18n from '@/lib/i18n'
 import { staticAssertNever } from '@/lib/typeUtils'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
+
+import CmkIcon from '@/components/CmkIcon.vue'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
+
+import type { FilterOption } from '@/unified-search/providers/search-utils.types'
+
+import { getSearchUtils } from '../../providers/search-utils'
+import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
+import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
+import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
 
 interface CmkWindow extends Window {
   main: Window

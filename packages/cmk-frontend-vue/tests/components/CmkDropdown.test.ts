@@ -3,12 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { defineComponent, ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import { Response } from '@/components/suggestions'
-import userEvent from '@testing-library/user-event'
-import { render, screen, fireEvent, waitFor } from '@testing-library/vue'
-import { defineComponent, ref } from 'vue'
 
 test('dropdown shows options', async () => {
   render(CmkDropdown, {

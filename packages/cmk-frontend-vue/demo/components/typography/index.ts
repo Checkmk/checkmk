@@ -3,11 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import DemoTypography from './DemoTypography.vue'
-import DemoI18n from './DemoI18n.vue'
-
 import { type Folder, Page } from '@demo/_demo/page'
+
+import DemoI18n from './DemoI18n.vue'
+import DemoTypography from './DemoTypography.vue'
 
 export const pages: Array<Folder | Page> = [
   new Page('typography', DemoTypography),

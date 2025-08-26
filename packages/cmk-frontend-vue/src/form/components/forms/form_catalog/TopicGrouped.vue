@@ -9,9 +9,10 @@ import type {
   DictionaryElement,
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import { type ValidationMessages } from '@/form/components/utils/validation'
-import { useId } from '@/form/utils'
 import { useFormEditDispatcher } from '@/form/private'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   elements: TopicGroup[]

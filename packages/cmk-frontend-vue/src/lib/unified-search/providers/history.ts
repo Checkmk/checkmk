@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import { SearchProvider, type SearchProviderResult } from '../unified-search'
-import type { HistoryEntry, SearchHistoryService } from '../searchHistory'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
+
+import type { HistoryEntry, SearchHistoryService } from '../searchHistory'
+import { SearchProvider, type SearchProviderResult } from '../unified-search'
 
 export type SearchHistorySearchResult = SearchProviderResult<{
   entries: HistoryEntry[]

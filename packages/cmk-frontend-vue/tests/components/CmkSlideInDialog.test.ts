@@ -3,10 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
-import userEvent from '@testing-library/user-event'
+
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import HelpText from '@/components/HelpText.vue'
 
 const helpTextComp = `<HelpText :help="'some help'" />`

@@ -3,16 +3,19 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Ref } from 'vue'
+
+import type { WizardMode } from '@/quick-setup/components/quick-setup/useWizard'
 import type {
   AllValidationMessages,
   ComponentSpec,
   StageData
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
-import type { WizardMode } from '@/quick-setup/components/quick-setup/useWizard'
+
 import type { LogStep } from './components/BackgroundJobLog/useBackgroundJobLog'
-import type { Ref } from 'vue'
 import type { BackgroundJobLog } from './components/BackgroundJobLog/useBackgroundJobLog'
 import type { QuickSetupStageAction } from './components/quick-setup/quick_setup_types'
+
 /**
  * Quick setup application
  */

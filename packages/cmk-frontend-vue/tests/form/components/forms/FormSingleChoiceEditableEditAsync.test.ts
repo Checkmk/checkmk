@@ -3,16 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { render, screen } from '@testing-library/vue'
 import type {
-  FormSpec,
   Dictionary,
+  FormSpec,
   String
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import { dispatcherKey } from '@/form/private'
-import { screen, render } from '@testing-library/vue'
 
 test('FormSingleChoiceEditableEditAsync renders form', async () => {
   type Data = Record<string, unknown>

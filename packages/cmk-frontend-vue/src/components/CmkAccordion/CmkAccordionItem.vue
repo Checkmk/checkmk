@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { AccordionContent, AccordionHeader, AccordionItem } from 'radix-vue'
+
 import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
 export interface CmkAccordionItemProps {

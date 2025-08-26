@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
-import type { LogStep, LogStepStatus } from './useBackgroundJobLog'
 import CmkLoading from '@/components/CmkLoading.vue'
+
+import type { LogStep, LogStepStatus } from './useBackgroundJobLog'
 
 interface BackgroundJobLogDisplayProps {
   /** @property {LogStep} steps - List of steps*/

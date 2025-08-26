@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import {
   type AgentInstallCmds,
   type AgentRegistrationCmds
 } from 'cmk-shared-typing/typescript/agent_slideout'
+
+import usei18n from '@/lib/i18n'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'

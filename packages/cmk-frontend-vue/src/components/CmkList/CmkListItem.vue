@@ -4,11 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import { type VariantProps, cva } from 'class-variance-authority'
+
+import usei18n from '@/lib/i18n'
+
+import CmkIcon from '@/components/CmkIcon.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
 
 const { _t } = usei18n()
 

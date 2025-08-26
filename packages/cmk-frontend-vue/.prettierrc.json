@@ -4,5 +4,16 @@
   "tabWidth": 2,
   "singleQuote": true,
   "printWidth": 100,
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "plugins": ["./node_modules/@trivago/prettier-plugin-sort-imports/lib/src/index.js"],
+  "importOrder": [
+    "^[a-zA-z1-9@]{2, }$",
+    "^@\/lib.*$",
+    "^@\/components.*$",
+    "^@\/form.*$",
+    "^@\/.*$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }

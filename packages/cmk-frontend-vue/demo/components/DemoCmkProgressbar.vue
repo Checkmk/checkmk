@@ -5,10 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import { nextTick, onMounted, ref } from 'vue'
+
 import CmkButton from '@/components/CmkButton.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
-import { nextTick, onMounted, ref } from 'vue'
+import CmkProgressbar from '@/components/CmkProgressbar.vue'
+
 defineProps<{ screenshotMode: boolean }>()
 const value = defineModel<number>('value', { default: 30 })
 const max = defineModel<number>('max', { default: 100 })

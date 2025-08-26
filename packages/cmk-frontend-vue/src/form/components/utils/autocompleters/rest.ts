@@ -3,16 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 import type {
   Autocompleter,
   AutocompleterData
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import { ErrorResponse, Response } from '@/components/suggestions'
-import { API_ROOT } from '@/lib/rest-api-client/constants'
 import { fetchRestAPI } from '@/lib/cmkFetch'
 import type { CmkError } from '@/lib/error'
+import { API_ROOT } from '@/lib/rest-api-client/constants'
+
+import { ErrorResponse, Response } from '@/components/suggestions'
 
 const AUTOCOMPLETER_API = `${API_ROOT}/objects/autocomplete/{autocompleter}`
 

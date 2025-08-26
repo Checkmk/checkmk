@@ -5,14 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
-import { useId } from '@/form/utils'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import { onMounted, ref, watch } from 'vue'
+
 import { immediateWatch } from '@/lib/watch'
+
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   elements: TopicElement[]

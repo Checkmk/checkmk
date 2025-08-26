@@ -5,51 +5,55 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import {
-  computed,
-  ref,
-  toValue,
   type Ref,
-  watch,
-  provide,
-  readonly,
+  computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
-  nextTick
+  provide,
+  readonly,
+  ref,
+  toValue,
+  watch
 } from 'vue'
-import QuickSetup from './components/quick-setup/QuickSetup.vue'
+
 import { CmkError, CmkSimpleError, formatError } from '@/lib/error.ts'
 import {
-  getOverview,
-  getAllStages,
-  validateAndRecapStage,
-  getStageStructure,
-  saveOrEditQuickSetup
-} from './rest-api/api'
-import { formDataKey } from './keys'
-import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
-import { ActionType, processActionData, renderContent, renderRecap } from './render_utils'
-import type {
-  QuickSetupSaveStageSpec,
-  QuickSetupStageAction,
-  QuickSetupStageSpec,
-  DetailedError
-} from './components/quick-setup/quick_setup_types'
-import { type QuickSetupAppProps, type QSStageStore } from './types'
-import { asStringArray } from './utils'
-import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import usePersistentRef from '@/lib/usePersistentRef'
-import {
-  QuickSetupCompleteActionValidationResponse,
-  QuickSetupStageActionErrorValidationResponse,
   type Action,
+  QuickSetupCompleteActionValidationResponse,
   type QuickSetupGuidedResponse,
+  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupStageStructure
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
+import usePersistentRef from '@/lib/usePersistentRef'
+
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+
+import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+
 import {
-  useBackgroundJobLog,
-  type LogUpdate
+  type LogUpdate,
+  useBackgroundJobLog
 } from './components/BackgroundJobLog/useBackgroundJobLog'
+import QuickSetup from './components/quick-setup/QuickSetup.vue'
+import type {
+  DetailedError,
+  QuickSetupSaveStageSpec,
+  QuickSetupStageAction,
+  QuickSetupStageSpec
+} from './components/quick-setup/quick_setup_types'
+import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
+import { formDataKey } from './keys'
+import { ActionType, processActionData, renderContent, renderRecap } from './render_utils'
+import {
+  getAllStages,
+  getOverview,
+  getStageStructure,
+  saveOrEditQuickSetup,
+  validateAndRecapStage
+} from './rest-api/api'
+import { type QSStageStore, type QuickSetupAppProps } from './types'
+import { asStringArray } from './utils'
 
 const GUIDED_MODE = 'guided'
 const OVERVIEW_MODE = 'overview'

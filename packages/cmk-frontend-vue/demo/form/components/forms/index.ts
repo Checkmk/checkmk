@@ -3,22 +3,21 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
-import DemoFormList from './DemoFormList.vue'
-import DemoFormMetric from './DemoFormMetric.vue'
-import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
-import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
-import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
-import DemoFormDictionary from './DemoFormDictionary.vue'
-import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
-import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
-import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
-import DemoFormTuple from './DemoFormTuple.vue'
-import DemoFormLabels from './DemoFormLabels.vue'
-
 import { Page } from '@demo/_demo/page'
 import type { Folder } from '@demo/_demo/page'
+
+import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
+import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
+import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
+import DemoFormDictionary from './DemoFormDictionary.vue'
+import DemoFormLabels from './DemoFormLabels.vue'
+import DemoFormList from './DemoFormList.vue'
+import DemoFormMetric from './DemoFormMetric.vue'
+import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
+import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
+import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
+import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
+import DemoFormTuple from './DemoFormTuple.vue'
 
 export const pages: Array<Folder | Page> = [
   new Page('FormSingleChoiceEditable', DemoFormSingleChoiceEditable),

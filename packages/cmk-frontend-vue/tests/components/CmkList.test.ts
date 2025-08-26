@@ -3,8 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent } from 'vue'
-import { screen, render, fireEvent } from '@testing-library/vue'
+
 import CmkList from '@/components/CmkList/CmkList.vue'
 
 test('CmkList does not submit form when clicking drag button', async () => {

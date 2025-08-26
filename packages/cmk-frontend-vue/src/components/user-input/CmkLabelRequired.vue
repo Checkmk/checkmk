@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
+
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const { _t } = usei18n()

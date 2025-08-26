@@ -3,37 +3,35 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import DemoEmpty from '@demo/_demo/DemoEmpty.vue'
+import { Folder, Page } from '@demo/_demo/page'
+import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
 
+import { pages as CmkAccordionPages } from './CmkAccordion'
+import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'
+import { pages as CmkTabPages } from './CmkTabs'
 import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
+import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
+import DemoCmkChip from './DemoCmkChip.vue'
+import DemoCmkCode from './DemoCmkCode.vue'
+import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
+import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
+import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
+import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
+import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
-import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
-import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
-
-import DemoEmpty from '@demo/_demo/DemoEmpty.vue'
-import { Page, Folder } from '@demo/_demo/page'
-
-import { pages as userInputPages } from './user-input'
 import { pages as typographyPages } from './typography'
-import { pages as CmkAccordionPages } from './CmkAccordion'
-import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'
-import { pages as CmkTabPages } from './CmkTabs'
-import DemoCmkBadge from './DemoCmkBadge.vue'
-import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
-import DemoCmkChip from './DemoCmkChip.vue'
-import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
-import DemoCmkCode from './DemoCmkCode.vue'
-import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
-import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
-import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
+import { pages as userInputPages } from './user-input'
 
 export const pages = [
   new Folder('user-input', DemoEmpty, userInputPages),

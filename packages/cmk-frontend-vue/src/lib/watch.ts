@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { watch, onBeforeMount, type WatchOptions } from 'vue'
+import { type WatchOptions, onBeforeMount, watch } from 'vue'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isAsyncFunction<T, A extends any[]>(

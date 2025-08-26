@@ -5,12 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import usei18n from '@/lib/i18n'
+
 import type { Site } from '../../ChangesInterfaces'
 
 const { _t } = usei18n()

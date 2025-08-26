@@ -4,11 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, watch, type Ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
+
 import CollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+
+import FormHelp from '@/form/private/FormHelp.vue'
+
 import CompositeWidget from './CompositeWidget.vue'
 import { type CollapsibleWidgetProps } from './widget_types'
-import FormHelp from '@/form/private/FormHelp.vue'
 
 const props = defineProps<CollapsibleWidgetProps>()
 const emits = defineEmits(['update'])

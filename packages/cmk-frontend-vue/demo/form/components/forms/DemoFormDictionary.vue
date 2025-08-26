@@ -4,15 +4,17 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import type {
   Dictionary,
   String,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
+import { computed, ref } from 'vue'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import usei18n from '@/lib/i18n.ts'
+
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
 const { _t } = usei18n()
 const currentMode = defineModel<string>({ required: true })

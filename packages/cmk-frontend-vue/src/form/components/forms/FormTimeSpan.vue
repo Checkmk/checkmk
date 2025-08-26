@@ -4,10 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue'
 import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
+import { ref, watch, watchEffect } from 'vue'
+
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
+
 import {
   getSelectedMagnitudes,
   joinToSeconds,

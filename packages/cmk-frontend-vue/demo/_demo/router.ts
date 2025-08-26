@@ -3,17 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import { createRouter, createWebHistory, type RouteLocation } from 'vue-router'
-
-import DemoHome from './DemoHome.vue'
-import DemoEmpty from './DemoEmpty.vue'
 //
 import { pages as componentsPages } from '@demo/components/'
 import { pages as formPages } from '@demo/form/'
+import { type RouteLocation, createRouter, createWebHistory } from 'vue-router'
 
-import type { Route, RRSVMetaFolder } from './types'
+import DemoEmpty from './DemoEmpty.vue'
+import DemoHome from './DemoHome.vue'
 import { Folder, Page, RootFolder } from './page'
+import type { RRSVMetaFolder, Route } from './types'
 
 const root: RootFolder = new RootFolder(DemoHome, [
   new Folder('components', DemoEmpty, componentsPages),

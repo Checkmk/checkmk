@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import { render, screen } from '@testing-library/vue'
 import { defineComponent } from 'vue'
+
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 test('CmkCheckbox can be appended with standard props', async () => {
   render(

@@ -4,9 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
-import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 
-import { fetchRestAPI, type CmkFetchResponse } from '@/lib/cmkFetch'
+import { type CmkFetchResponse, fetchRestAPI } from '@/lib/cmkFetch'
+
+import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 
 export interface EntityDescription {
   ident: string

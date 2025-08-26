@@ -172,7 +172,7 @@ type AnnotatedFolder = Annotated[
     PlainSerializer(_FolderValidation.serialize, return_type=str),
 ]
 
-type _PositiveInt = Annotated[int, Ge(0)]
+type _ZeroOrPositiveInt = Annotated[int, Ge(0)]
 
 
 @api_model
@@ -206,19 +206,19 @@ class _TimerangeAge(_BaseTimerangeValue):
     timerange_type: Literal["age"] = api_field(
         serialization_alias="type", description="Manually define a relative timerange."
     )
-    days: _PositiveInt | ApiOmitted = api_field(
+    days: _ZeroOrPositiveInt | ApiOmitted = api_field(
         description="The number of days to look back.",
         default_factory=ApiOmitted,
     )
-    hours: _PositiveInt | ApiOmitted = api_field(
+    hours: _ZeroOrPositiveInt | ApiOmitted = api_field(
         description="The number of hours to look back.",
         default_factory=ApiOmitted,
     )
-    minutes: _PositiveInt | ApiOmitted = api_field(
+    minutes: _ZeroOrPositiveInt | ApiOmitted = api_field(
         description="The number of minutes to look back.",
         default_factory=ApiOmitted,
     )
-    seconds: _PositiveInt | ApiOmitted = api_field(
+    seconds: _ZeroOrPositiveInt | ApiOmitted = api_field(
         description="The number of seconds to look back.",
         default_factory=ApiOmitted,
     )

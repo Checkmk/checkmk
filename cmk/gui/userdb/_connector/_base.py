@@ -98,13 +98,19 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
 
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in Setup.
-    def locked_attributes(self) -> Sequence[str]:
+    def locked_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> Sequence[str]:
         return []
 
-    def multisite_attributes(self) -> Sequence[str]:
+    def multisite_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> Sequence[str]:
         return []
 
-    def non_contact_attributes(self) -> Sequence[str]:
+    def non_contact_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> Sequence[str]:
         return []
 
 

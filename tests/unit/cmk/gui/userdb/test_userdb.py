@@ -25,7 +25,13 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.ldap import ldap_connector as ldap
 from cmk.gui.session import session
-from cmk.gui.type_defs import SessionInfo, TotpCredential, TwoFactorCredentials, WebAuthnCredential
+from cmk.gui.type_defs import (
+    CustomUserAttrSpec,
+    SessionInfo,
+    TotpCredential,
+    TwoFactorCredentials,
+    WebAuthnCredential,
+)
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
@@ -469,93 +475,89 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
     assert "session_info" in user
 
 
-@pytest.mark.usefixtures("request_context")
-def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
-    # Need to use a new context here to patch the config initialized by request_context
-    with monkeypatch.context() as m:
-        m.setattr(
-            active_config,
-            "wato_user_attrs",
-            [
-                {
-                    "add_custom_macro": False,
-                    "help": "VIP attribute",
-                    "name": "vip",
-                    "show_in_table": False,
-                    "title": "VIP",
-                    "topic": "ident",
-                    "type": "TextAscii",
-                    "user_editable": True,
-                }
-            ],
+def test_user_attribute_sync_plugins() -> None:
+    attrs = [
+        CustomUserAttrSpec(
+            {
+                "add_custom_macro": False,
+                "help": "VIP attribute",
+                "name": "vip",
+                "show_in_table": False,
+                "title": "VIP",
+                "topic": "ident",
+                "type": "TextAscii",
+                "user_editable": True,
+            }
         )
+    ]
 
-        connection = ldap.LDAPUserConnector(
-            LDAPUserConnectionConfig(
-                id="ldp",
-                description="",
-                comment="",
-                docu_url="",
-                disabled=False,
-                directory_type=(
-                    "ad",
-                    LDAPConnectionConfigFixed(
-                        connect_to=(
-                            "fixed_list",
-                            Fixed(server="127.0.0.1"),
+    connection = ldap.LDAPUserConnector(
+        LDAPUserConnectionConfig(
+            id="ldp",
+            description="",
+            comment="",
+            docu_url="",
+            disabled=False,
+            directory_type=(
+                "ad",
+                LDAPConnectionConfigFixed(
+                    connect_to=(
+                        "fixed_list",
+                        Fixed(server="127.0.0.1"),
+                    )
+                ),
+            ),
+            bind=(
+                "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+                ("store", "AD_svc_checkmk"),
+            ),
+            port=636,
+            use_ssl=True,
+            user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+            user_scope="sub",
+            user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+            user_id_umlauts="keep",
+            group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+            group_scope="sub",
+            active_plugins={
+                "alias": {},
+                "auth_expire": {},
+                "groups_to_contactgroups": {"nested": True},
+                "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
+                "email": {"attr": "mail"},
+                "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
+                "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
+                "pager": {"attr": "mobile"},
+                "groups_to_roles": {
+                    "admin": [
+                        (
+                            "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                            None,
                         )
-                    ),
-                ),
-                bind=(
-                    "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
-                    ("store", "AD_svc_checkmk"),
-                ),
-                port=636,
-                use_ssl=True,
-                user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
-                user_scope="sub",
-                user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
-                user_id_umlauts="keep",
-                group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
-                group_scope="sub",
-                active_plugins={
-                    "alias": {},
-                    "auth_expire": {},
-                    "groups_to_contactgroups": {"nested": True},
-                    "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
-                    "email": {"attr": "mail"},
-                    "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
-                    "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
-                    "pager": {"attr": "mobile"},
-                    "groups_to_roles": {
-                        "admin": [
-                            (
-                                "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
-                                None,
-                            )
-                        ]
-                    },
-                    "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
-                    "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
-                    "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
-                    "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
-                    "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
-                    "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+                    ]
                 },
-                cache_livetime=300,
-                type="ldap",
-            )
+                "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
+                "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
+                "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
+                "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
+                "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
+                "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+            },
+            cache_livetime=300,
+            type="ldap",
         )
+    )
 
-        plugins = dict(ldap.all_attribute_plugins())
-        ldap_plugin = plugins["vip"]
-        assert ldap_plugin.title == "VIP"
-        assert ldap_plugin.help == "VIP attribute"
-        assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
-        assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
-        assert isinstance(ldap_plugin.parameters(connection), Dictionary)
+    user_attributes = get_user_attributes(attrs)
+    plugins = dict(ldap.all_attribute_plugins(user_attributes))
+    ldap_plugin = plugins["vip"]
+    assert ldap_plugin.title == "VIP"
+    assert ldap_plugin.help == "VIP attribute"
+    assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
+    assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
+    assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
-        assert "vip" in dict(ldap.ldap_attribute_plugins_elements(connection)).keys()
+    assert "vip" in dict(ldap.ldap_attribute_plugins_elements(connection, user_attributes)).keys()
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:

@@ -16,7 +16,7 @@ from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -427,10 +427,9 @@ class ModeUsers(WatoMode):
         *,
         user_online_maxage: int,
     ) -> None:
+        user_attributes = get_user_attributes(custom_user_attributes)
         visible_custom_attrs = [
-            (name, attr)
-            for name, attr in get_user_attributes(custom_user_attributes)
-            if attr.show_in_table()
+            (name, attr) for name, attr in user_attributes if attr.show_in_table()
         ]
         entries = list(users.items())
         roles = load_roles()
@@ -540,7 +539,9 @@ class ModeUsers(WatoMode):
                     table.cell(
                         _("Connection"), f"{connection.short_title()} ({user_connection_id})"
                     )
-                    locked_attributes = userdb.locked_attributes(user_connection_id)
+                    locked_attributes = userdb.locked_attributes(
+                        user_connection_id, user_attributes
+                    )
                 else:
                     table.cell(
                         _("Connection"),
@@ -738,7 +739,10 @@ class ModeEditUser(WatoMode):
         else:
             self._user = new_user
 
-        self._locked_attributes = userdb.locked_attributes(self._user.get("connector"))
+        # TODO: Move out of constructor to get rid of active_config dependency
+        self._locked_attributes = userdb.locked_attributes(
+            self._user.get("connector"), get_user_attributes(active_config.wato_user_attrs)
+        )
 
     def title(self) -> str:
         if self._is_new_user:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Sequence
 from datetime import datetime
 
 from cmk.crypto.password import Password, PasswordPolicy
@@ -19,7 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session
-from cmk.gui.userdb import get_user_attributes
+from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -155,9 +156,9 @@ class UserChangePasswordPage(Page):
 
         html.show_user_errors()
 
-        self._show_form()
+        self._show_form(get_user_attributes(config.wato_user_attrs))
 
-    def _show_form(self) -> None:
+    def _show_form(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> None:
         assert user.id is not None
 
         users = userdb.load_users()
@@ -175,7 +176,7 @@ class UserChangePasswordPage(Page):
             html.footer()
             return
 
-        locked_attributes = userdb.locked_attributes(user_spec.get("connector"))
+        locked_attributes = userdb.locked_attributes(user_spec.get("connector"), user_attributes)
         if "password" in locked_attributes:
             raise MKUserError(
                 "cur_password",

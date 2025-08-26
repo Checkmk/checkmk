@@ -37,6 +37,7 @@ from cmk.gui.userdb import (
     ACTIVE_DIR,
     get_connection,
     get_ldap_connections,
+    get_user_attributes,
     LDAPUserConnectionConfig,
     load_connection_config,
     UserConnectionConfigFile,
@@ -611,7 +612,9 @@ class LDAPConnectionValuespec(Dictionary):
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),
-                    elements=lambda: ldap_attribute_plugins_elements(self._connection),
+                    elements=lambda: ldap_attribute_plugins_elements(
+                        self._connection, get_user_attributes(active_config.wato_user_attrs)
+                    ),
                     default_keys=["email", "alias", "auth_expire"],
                 ),
             ),
@@ -999,7 +1002,7 @@ class ModeEditLDAPConnection(WatoMode):
             return (False, _("The User Base DN is not configured."))
         connection.connect(enforce_new=True, enforce_server=address)
         try:
-            ldap_users = connection.get_users()
+            ldap_users = connection.get_users(get_user_attributes(active_config.wato_user_attrs))
             msg = _("Found no user object for synchronization. Please check your filter settings.")
         except Exception as e:
             ldap_users = None

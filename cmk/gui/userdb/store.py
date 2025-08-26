@@ -540,9 +540,13 @@ def write_contacts_and_users_file(
     for user_settings in updated_profiles.values():
         connector = user_settings.get("connector")
         if connector not in non_contact_attributes_cache:
-            non_contact_attributes_cache[connector] = non_contact_attributes(connector)
+            non_contact_attributes_cache[connector] = _non_contact_attributes(
+                connector, user_attributes
+            )
         if connector not in multisite_attributes_cache:
-            multisite_attributes_cache[connector] = multisite_attributes(connector)
+            multisite_attributes_cache[connector] = _multisite_attributes(
+                connector, user_attributes
+            )
 
     # Remove multisite keys in contacts.
     # TODO: Clean this up. Just improved the performance, but still have no idea what its actually doing...
@@ -592,14 +596,25 @@ def write_contacts_and_users_file(
     )
 
 
-def non_contact_attributes(connection_id: str | None) -> Sequence[str]:
+def _non_contact_attributes(
+    connection_id: str | None, user_attributes: Sequence[tuple[str, UserAttribute]]
+) -> Sequence[str]:
     """Returns a list of connection specific non contact attributes"""
-    return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
+    return _get_attributes(connection_id, lambda c: c.non_contact_attributes(user_attributes))
 
 
-def multisite_attributes(connection_id: str | None) -> Sequence[str]:
+def _multisite_attributes(
+    connection_id: str | None, user_attributes: Sequence[tuple[str, UserAttribute]]
+) -> Sequence[str]:
     """Returns a list of connection specific multisite attributes"""
-    return _get_attributes(connection_id, lambda c: c.multisite_attributes())
+    return _get_attributes(connection_id, lambda c: c.multisite_attributes(user_attributes))
+
+
+def locked_attributes(
+    connection_id: str | None, user_attributes: Sequence[tuple[str, UserAttribute]]
+) -> Sequence[str]:
+    """Returns a list of connection specific locked attributes"""
+    return _get_attributes(connection_id, lambda c: c.locked_attributes(user_attributes))
 
 
 def _get_attributes(

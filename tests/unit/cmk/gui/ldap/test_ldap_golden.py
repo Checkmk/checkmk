@@ -153,7 +153,7 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
 
     _mock_needed_attributes(mocker, connector)
     _mock_result3(mocker, connector, ldap_result)
-    result = connector.get_users(add_filter=add_filter)
+    result = connector.get_users(get_user_attributes([]), add_filter=add_filter)
 
     assert expected_result == result
     connector._ldap_obj.search_ext.assert_called_once_with(

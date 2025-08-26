@@ -84,7 +84,7 @@ def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFix
 
     return mocker.patch(
         "cmk.gui.openapi.endpoints.user_config.locked_attributes",
-        return_value=LDAPUserConnector(ldap_config).locked_attributes(),
+        return_value=LDAPUserConnector(ldap_config).locked_attributes(get_user_attributes([])),
     )
 
 

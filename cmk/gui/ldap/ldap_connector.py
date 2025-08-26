@@ -846,8 +846,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def active_plugins(self) -> ActivePlugins:
         return self._config["active_plugins"]
 
-    def _active_sync_plugins(self) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
-        plugins = dict(all_attribute_plugins())
+    def _active_sync_plugins(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
+        plugins = dict(all_attribute_plugins(user_attributes))
         for key, params in self.active_plugins().items():
             try:
                 plugin = plugins[key]
@@ -919,10 +921,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             LDAPUserConnector.connection_suffixes[suffix] = self.id
 
-    def _needed_attributes(self) -> list[str]:
+    def _needed_attributes(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> list[str]:
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
         attrs: set[str] = set()
-        for _key, params, plugin in self._active_sync_plugins():
+        for _key, params, plugin in self._active_sync_plugins(user_attributes):
             attrs.update(plugin.needed_attributes(self, params))
         return list(attrs)
 
@@ -1184,12 +1186,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return (dn, user_id)
         return (dn.replace("\\", "\\\\"), user_id)
 
-    def get_users(self, add_filter: str = "") -> dict[UserId, LDAPUserSpec]:
+    def get_users(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]], add_filter: str = ""
+    ) -> dict[UserId, LDAPUserSpec]:
         user_id_attr = self._user_id_attr()
 
         columns = [
             user_id_attr,  # needed in all cases as uniq id
-        ] + self._needed_attributes()
+        ] + self._needed_attributes(user_attributes)
 
         filt = self._ldap_filter("users")
 
@@ -1706,7 +1710,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         start_time = time.time()
 
-        ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
+        ldap_users: dict[UserId, LDAPUserSpec] = self.get_users(user_attributes)
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         sync_users_result = SyncUsersResult(
@@ -1763,7 +1767,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         user: UserSpec,
         user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> None:
-        for _key, params, plugin in self._active_sync_plugins():
+        for _key, params, plugin in self._active_sync_plugins(user_attributes):
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
             user.update(plugin.sync_func(self, params, user_id, ldap_user, user, user_attributes))  # type: ignore[typeddict-item]
@@ -1803,27 +1807,33 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
     @override
-    def locked_attributes(self) -> Sequence[str]:
+    def locked_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> Sequence[str]:
         locked = {"password"}  # This attributes are locked in all cases!
-        for _key, params, plugin in self._active_sync_plugins():
+        for _key, params, plugin in self._active_sync_plugins(user_attributes):
             locked.update(plugin.lock_attributes(params))
         return list(locked)
 
     # Calculates the attributes added in this connector which shall be written to
     # the multisites users.mk
     @override
-    def multisite_attributes(self) -> list[str]:
+    def multisite_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> list[str]:
         attrs: set[str] = set()
-        for _key, _params, plugin in self._active_sync_plugins():
+        for _key, _params, plugin in self._active_sync_plugins(user_attributes):
             attrs.update(plugin.multisite_attributes)
         return list(attrs)
 
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
     @override
-    def non_contact_attributes(self) -> list[str]:
+    def non_contact_attributes(
+        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> list[str]:
         attrs: set[str] = set()
-        for _key, _params, plugin in self._active_sync_plugins():
+        for _key, _params, plugin in self._active_sync_plugins(user_attributes):
             attrs.update(plugin.non_contact_attributes)
         return list(attrs)
 
@@ -2014,24 +2024,29 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
 ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
 
 
-def all_attribute_plugins() -> list[tuple[str, LDAPAttributePlugin]]:
+def all_attribute_plugins(
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> list[tuple[str, LDAPAttributePlugin]]:
     return [
         *ldap_attribute_plugin_registry.items(),
-        *config_based_custom_user_attribute_sync_plugins(),
+        *_config_based_custom_user_attribute_sync_plugins(user_attributes),
     ]
 
 
 def ldap_attribute_plugins_elements(
     connection: LDAPUserConnector | None,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> list[tuple[str, FixedValue | Dictionary]]:
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     return [
         (key, plugin.parameters(connection))
-        for key, plugin in sorted(all_attribute_plugins(), key=lambda x: x[1].title)
+        for key, plugin in sorted(all_attribute_plugins(user_attributes), key=lambda x: x[1].title)
     ]
 
 
-def config_based_custom_user_attribute_sync_plugins() -> list[tuple[str, LDAPAttributePlugin]]:
+def _config_based_custom_user_attribute_sync_plugins(
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+) -> list[tuple[str, LDAPAttributePlugin]]:
     return [
         (
             name,
@@ -2041,7 +2056,7 @@ def config_based_custom_user_attribute_sync_plugins() -> list[tuple[str, LDAPAtt
                 help_text=attr.valuespec().help(),
             ),
         )
-        for name, attr in get_user_attributes(active_config.wato_user_attrs)
+        for name, attr in user_attributes
     ]
 
 

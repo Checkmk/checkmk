@@ -212,8 +212,9 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         ),
     )
 
+    user_attributes = get_user_attributes(active_config.wato_user_attrs)
     if connector_id := internal_attrs.get("connector"):
-        user_locked_attributes = set(locked_attributes(connector_id))
+        user_locked_attributes = set(locked_attributes(connector_id, user_attributes))
         if user_locked_attributes:
             modified_attrs = _identify_modified_attrs(current_attrs, internal_attrs)
             locked_changes = user_locked_attributes.intersection(modified_attrs)
@@ -227,7 +228,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     edit_users(
         {username: internal_attrs},
         user_features_registry.features().sites,
-        get_user_attributes(active_config.wato_user_attrs),
+        user_attributes,
         use_git=active_config.wato_use_git,
     )
     return serve_user(username)

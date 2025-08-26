@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast, Literal, NewType, NotRequired, override, TypedDict
 
@@ -311,28 +311,6 @@ def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
         for saml_id, saml_connection in get_saml_connections().items()
         if not saml_connection["disabled"]
     }
-
-
-def locked_attributes(connection_id: str | None) -> Sequence[str]:
-    """Returns a list of connection specific locked attributes"""
-    return _get_attributes(connection_id, lambda c: c.locked_attributes())
-
-
-def multisite_attributes(connection_id: str | None) -> Sequence[str]:
-    """Returns a list of connection specific multisite attributes"""
-    return _get_attributes(connection_id, lambda c: c.multisite_attributes())
-
-
-def non_contact_attributes(connection_id: str | None) -> Sequence[str]:
-    """Returns a list of connection specific non contact attributes"""
-    return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
-
-
-def _get_attributes(
-    connection_id: str | None, selector: Callable[[UserConnector], Sequence[str]]
-) -> Sequence[str]:
-    connection = get_connection(connection_id)
-    return selector(connection) if connection else []
 
 
 UserConnections = list[ConfigurableUserConnectionSpec] | Sequence[ConfigurableUserConnectionSpec]

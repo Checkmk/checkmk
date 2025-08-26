@@ -545,11 +545,23 @@ def _validate_service_metrics(value: Sequence[Mapping[str, object]]) -> None:
 def _migrate(value: object) -> dict[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
-    if "verify_cert" in value:
-        return value
+
     migrated_rule = value.copy()
-    verify_cert = migrated_rule.pop("verify-cert")
-    return migrated_rule | {"verify_cert": verify_cert}
+
+    if "verify-cert" in migrated_rule:
+        verify_cert = migrated_rule.pop("verify-cert")
+        migrated_rule["verify_cert"] = verify_cert
+
+    if "connection" in migrated_rule:
+        connection_value = migrated_rule["connection"]
+        if isinstance(connection_value, tuple) and len(connection_value) == 2:
+            connection_type, connection_data = connection_value
+            if connection_type == "url_custom" and isinstance(connection_data, dict):
+                migrated_rule["connection"] = connection_data.get("url_address", "")
+            else:
+                migrated_rule["connection"] = ""
+
+    return migrated_rule
 
 
 def _migrate_entities(value: object) -> list[str]:

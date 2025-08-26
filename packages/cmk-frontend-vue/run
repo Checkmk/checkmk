@@ -21,6 +21,7 @@ usage() {
     echo "  -F, --check-format         run format check"
     echo "  -T, --tsc                  run type checker"
     echo "  -E, --eslint               run linter"
+    echo "  -S, --stylelint            run stylelint"
     echo "  -f, --format               format sources"
     echo "  -a, --all                  shortcut for -b -B -t -F -T -E -d"
     echo "  -h, --help                 show this help"
@@ -35,9 +36,10 @@ parse_options() {
     RUN_CHECK_FORMAT=no
     RUN_TSC=no
     RUN_ESLINT=no
+    RUN_STYLELINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'bBtdFTEafh' --long 'build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'bBtdFTEafhS' --long 'build,build-dev,tests,check-format,tsc,stylelint,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -81,6 +83,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-S' | '--stylelint')
+                RUN_STYLELINT=yes
+                shift
+                continue
+                ;;
             '-a' | '--all')
                 RUN_BUILD=yes
                 RUN_BUILD_DEMO=yes
@@ -88,6 +95,7 @@ parse_options() {
                 RUN_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_TSC=yes
+                RUN_STYLELINT=yes
                 RUN_ESLINT=yes
                 shift
                 continue
@@ -110,7 +118,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_BUILD_DEMO RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
+    readonly RUN_BUILD RUN_BUILD_DEMO RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_STYLELINT RUN_FORMAT
 }
 
 setup_venv() {
@@ -159,6 +167,10 @@ run_eslint() {
     bazel test :eslint
 }
 
+run_stylelint() {
+    bazel test :stylelint
+}
+
 run_format() {
     bazel lint \
         --aspect:interactive=false \
@@ -182,6 +194,7 @@ main() {
     test ${RUN_TESTS} = yes && run_tests
     test ${RUN_TSC} = yes && run_tsc
     test ${RUN_ESLINT} = yes && run_eslint
+    test ${RUN_STYLELINT} = yes && run_stylelint
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_BUILD_DEV} = yes && run_build_dev
     test ${RUN_CHECK_FORMAT} = yes && run_check_format

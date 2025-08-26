@@ -21,7 +21,6 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
-from .internal_to_response import from_internal
 from .models.response_models import SiteConnectionModel
 from .utils import PERMISSIONS
 
@@ -35,7 +34,7 @@ def show_site_connection_v1(
 ) -> SiteConnectionModel:
     """Show a site connection"""
     user.need_permission("wato.sites")
-    return from_internal(SitesApiMgr().get_a_site(site_id))
+    return SiteConnectionModel.from_internal(SitesApiMgr().get_a_site(site_id))
 
 
 ENDPOINT_SHOW_SITE_CONNECTION = VersionedEndpoint(

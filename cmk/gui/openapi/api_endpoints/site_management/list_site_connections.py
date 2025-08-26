@@ -20,7 +20,6 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
-from .internal_to_response import from_internal
 from .models.config_example import default_config_example
 from .models.response_models import SiteConnectionModel
 from .utils import PERMISSIONS
@@ -54,7 +53,10 @@ def list_sites_connections_v1() -> SiteManagementCollectionModel:
     return SiteManagementCollectionModel(
         id="site_connection",
         domainType="site_connection",
-        value=[from_internal(site) for site in SitesApiMgr().get_all_sites().values()],
+        value=[
+            SiteConnectionModel.from_internal(site)
+            for site in SitesApiMgr().get_all_sites().values()
+        ],
         links=[LinkModel.create("self", collection_href("site_connection"))],
         extensions={},
     )

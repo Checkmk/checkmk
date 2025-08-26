@@ -23,7 +23,6 @@ from cmk.gui.watolib.site_management import (
 )
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
-from .internal_to_response import from_internal
 from .models.request_models import SiteConnectionCreateModel
 from .models.response_models import SiteConnectionModel
 from .utils import PERMISSIONS
@@ -68,7 +67,7 @@ def create_site_connection_v1(
         use_git=api_context.config.wato_use_git,
     )
 
-    return from_internal(new_site_config_spec)
+    return SiteConnectionModel.from_internal(new_site_config_spec)
 
 
 ENDPOINT_CREATE_SITE_CONNECTION = VersionedEndpoint(

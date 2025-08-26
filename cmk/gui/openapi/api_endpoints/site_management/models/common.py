@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval
 from pydantic import Discriminator, PlainSerializer, WithJsonSchema
@@ -21,7 +21,7 @@ from livestatus import (
     UnixSocketInfo,
 )
 
-from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -188,6 +188,36 @@ class ProxyParamsModel:
         default_factory=ApiOmitted,
     )
 
+    @classmethod
+    def from_internal(cls, params: ProxyConfigParams | None) -> Self | ApiOmitted:
+        if params is None:
+            return ApiOmitted()
+
+        params_model = cls()
+
+        if "channels" in params:
+            params_model.channels = params["channels"]
+
+        if "heartbeat" in params:
+            params_model.heartbeat = HeartbeatModel(
+                interval=params["heartbeat"][0],
+                timeout=params["heartbeat"][1],
+            )
+
+        if "channel_timeout" in params:
+            params_model.channel_timeout = params["channel_timeout"]
+
+        if "query_timeout" in params:
+            params_model.query_timeout = params["query_timeout"]
+
+        if "connect_retry" in params:
+            params_model.connect_retry = params["connect_retry"]
+
+        if "cache" in params:
+            params_model.cache = params["cache"]
+
+        return params_model
+
 
 @api_model
 class ProxyTcpModel:
@@ -211,6 +241,16 @@ class ProxyTcpModel:
         example=False,
         default_factory=ApiOmitted,
     )
+
+    @classmethod
+    def from_internal(cls, tcp: ProxyConfigTcp | None) -> Self | ApiOmitted:
+        if tcp is not None and "port" in tcp:
+            return cls(
+                port=tcp["port"],
+                only_from=[HostAddress(host) for host in tcp.get("only_from", [])],
+                tls=tcp.get("tls", False),
+            )
+        return ApiOmitted()
 
 
 @api_model
@@ -240,6 +280,15 @@ class UseProxy:
         description="The live status proxy daemon parameters.",
         default_factory=ApiOmitted,
     )
+
+    @classmethod
+    def from_internal(cls, proxy: ProxyConfig) -> Self:
+        return cls(
+            use_livestatus_daemon="with_proxy",
+            global_settings=bool(proxy.get("params") is None),
+            params=ProxyParamsModel.from_internal(proxy.get("params")),
+            tcp=ProxyTcpModel.from_internal(proxy.get("tcp")),
+        )
 
     def to_internal(self) -> ProxyConfig:
         proxyconfig = ProxyConfig()
@@ -362,6 +411,73 @@ class StatusConnectionModel:
         example=False,
         default_factory=ApiOmitted,
     )
+
+    @classmethod
+    def from_internal(cls, status_connection: SiteConfiguration) -> Self:
+        def _socket_from_internal(
+            socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo,
+        ) -> LocalSocket | IP4Socket | IP6Socket | UnixSocket:
+            if isinstance(socket, str):
+                return LocalSocket(socket_type="local")
+
+            if socket[0] == "unix":
+                return UnixSocket(
+                    socket_type="unix",
+                    path=socket[1]["path"],
+                )
+
+            if socket[0] == "tcp":
+                tls = socket[1]["tls"]
+                ip4_socket = IP4Socket(
+                    socket_type="tcp",
+                    host=HostAddress(socket[1]["address"][0]),
+                    port=socket[1]["address"][1],
+                    encrypted=tls[0] == "encrypted",
+                )
+
+                if "verify" in tls[1]:
+                    ip4_socket.verify = tls[1]["verify"]
+
+                return ip4_socket
+
+            if socket[0] == "tcp6":
+                tls = socket[1]["tls"]
+                ip6_socket = IP6Socket(
+                    socket_type="tcp6",
+                    host=HostAddress(socket[1]["address"][0]),
+                    port=socket[1]["address"][1],
+                    encrypted=tls[0] == "encrypted",
+                )
+                if "verify" in tls[1]:
+                    ip6_socket.verify = tls[1]["verify"]
+
+                return ip6_socket
+
+            return LocalSocket(socket_type="local")
+
+        def _status_host_from_internal(
+            status_host: tuple[SiteId, str] | None,
+        ) -> StatusHostDisabled | StatusHostEnabled:
+            if status_host is None:
+                return StatusHostDisabled(status_host_set="disabled")
+
+            host = Host.host(HostName(status_host[1]))
+            assert host is not None
+            return StatusHostEnabled(status_host_set="enabled", site=status_host[0], host=host)
+
+        return cls(
+            connection=_socket_from_internal(status_connection["socket"]),
+            proxy=(
+                Direct(use_livestatus_daemon="direct")
+                if status_connection["proxy"] is None
+                else UseProxy.from_internal(status_connection["proxy"])
+            ),
+            connect_timeout=status_connection["timeout"],
+            persistent_connection=status_connection["persist"],
+            url_prefix=status_connection["url_prefix"],
+            status_host=_status_host_from_internal(status_connection["status_host"]),
+            disable_in_status_gui=status_connection["disabled"],
+        )
 
 
 @api_model

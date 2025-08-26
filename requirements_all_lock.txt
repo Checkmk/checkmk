@@ -2270,9 +2270,7 @@ pathspec==0.12.1 \
 pbr==7.0.1 \
     --hash=sha256:32df5156fbeccb6f8a858d1ebc4e465dcf47d6cc7a4895d5df9aa951c712fc35 \
     --hash=sha256:3ecbcb11d2b8551588ec816b3756b1eb4394186c3b689b17e04850dfc20f7e57
-    # via
-    #   python-jenkins
-    #   stevedore
+    # via python-jenkins
 pexpect==4.9.0 \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
     --hash=sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f
@@ -3858,9 +3856,9 @@ starlette-testclient==0.4.1 \
     --hash=sha256:9e993ffe12fab45606116257813986612262fe15c1bb6dc9e39cc68693ac1fc5 \
     --hash=sha256:dcf0eb237dc47f062ef5925f98330af46f67e547cb587119c9ae78c17ae6c1d1
     # via schemathesis
-stevedore==5.4.1 \
-    --hash=sha256:3135b5ae50fe12816ef291baff420acb727fcd356106e3e9cbfa9e5985cd6f4b \
-    --hash=sha256:d10a31c7b86cba16c1f6e8d15416955fc797052351a56af15e608ad20811fcfe
+stevedore==5.5.0 \
+    --hash=sha256:18363d4d268181e8e8452e71a38cd77630f345b2ef6b4a8d5614dac5ee0d18cf \
+    --hash=sha256:d31496a4f4df9825e1a1e4f1f74d19abb0154aff311c3b376fcc89dae8fccd73
     # via bandit
 svglib==1.5.1 \
     --hash=sha256:3ae765d3a9409ee60c0fb4d24c2deb6a80617aa927054f5bcd7fc98f0695e587
@@ -4125,9 +4123,9 @@ types-simplejson==3.19.0.20240801 \
     --hash=sha256:37f1b33c8626d7f072ea87737629310674845d54d187f12387fe33d31c938288 \
     --hash=sha256:ef90cc81dd915f26c452fa2b5e0cbd3a36af81074ae63878fcf8a477e7594e4d
     # via -r requirements_dev.txt
-typing-extensions==4.14.1 \
-    --hash=sha256:38b39f4aeeab64884ce9f74c94263ef78f3c22467c8724005483154c26648d36 \
-    --hash=sha256:d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76
+typing-extensions==4.15.0 \
+    --hash=sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466 \
+    --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
     #   -r requirements_all.txt
     #   aiosignal

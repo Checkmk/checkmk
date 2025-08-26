@@ -2331,7 +2331,10 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
 
         monitored_subscriptions.add(subscriptions[subscription])
 
-    LOGGER.info("Using requested subscriptions %s", subscriptions)
+    LOGGER.info(
+        "Using requested subscriptions %s",
+        ",".join(subscription.id for subscription in monitored_subscriptions),
+    )
 
     return monitored_subscriptions
 

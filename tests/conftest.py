@@ -35,6 +35,7 @@ from tests.testlib.utils import (  # noqa: E402
 )
 from tests.testlib.version import (  # noqa: E402
     CMKEdition,
+    CMKVersion,
     edition_from_env,
     TypeCMKEdition,
 )
@@ -50,7 +51,7 @@ PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 ARG_EDITION_CMK: Final[str] = "--cmk-edition"
 ARG_VERSION_CMK: Final[str] = "--cmk-version"
 ARG_REUSE: Final[str] = "--reuse"
-ARG_CLEANUP: Final[str] = "--cleanup"
+ARG_NO_CLEANUP: Final[str] = "--no-cleanup"
 
 
 class EditionMarker(StrEnum):
@@ -261,10 +262,10 @@ def pytest_addoption(parser):
         type=str,
         metavar="2.X.0[pZ|-YYYY.MM.DD]",
         help=(
-            "Select version of the Checkmk site under test, by default '2.X.0-<daily-timestamp>'."
-            "Please use environment variable `VERSION`. "
-            "Example, `VERSION=2.5.0-2025.05.25 pytest ...`."
+            "Select version of the Checkmk site under test. If not set, value of environment "
+            "variable 'VERSION' is used, if available. If neither is set, 'daily' is used."
         ),
+        default=os.getenv("VERSION", CMKVersion.DAILY),
     )
     parser.addoption(
         ARG_EDITION_CMK,
@@ -278,30 +279,27 @@ def pytest_addoption(parser):
         ],
         type=str,
         help=(
-            "Select edition of the Checkmk site under test, by default 'cee'. "
-            "Please use environment variable `EDITION`. Example, `EDITION=cce pytest ...`."
+            "Select edition of the Checkmk site under test. If not set, value of environment "
+            "variable 'EDITION' is used, if available. If neither is set, 'cee' is used."
         ),
+        default=os.getenv("EDITION", CMKEdition.CEE.short),
     )
     parser.addoption(
         ARG_REUSE,
-        action="store",
-        choices=["on", "off"],
-        # default="off",
-        type=str,
+        action="store_true",
+        default=False,
         help=(
-            "Reuse an existing site to perform the tests, by default `off`. "
-            "Please use environment variable `REUSE`. Example, `REUSE=1 pytest ...`."
+            "Reuse an existing site to perform the tests. If not set, value of environment "
+            "variable 'REUSE' is used, if available. If neither is set, reuse is disabled."
         ),
     )
     parser.addoption(
-        ARG_CLEANUP,
-        action="store",
-        choices=["on", "off"],
-        type=str,
-        # default="on",
+        ARG_NO_CLEANUP,
+        action="store_true",
+        default=False,
         help=(
-            "Cleanup the test-environment after a test-run, by default `on`. "
-            "Please use environment variable `CLEANUP`. Example, `CLEANUP=0 pytest ...`."
+            "Avoid cleanup the test-environment after a test-run. If not set, value of environment "
+            "variable 'CLEANUP' is used, if available. If neither is set, cleanup is enabled."
         ),
     )
 
@@ -309,14 +307,14 @@ def pytest_addoption(parser):
 def pytest_configure(config: pytest.Config) -> None:
     """Add important environment variables to the report and register custom pytest markers"""
 
-    if any(
-        map(config.getoption, args := [ARG_EDITION_CMK, ARG_VERSION_CMK, ARG_REUSE, ARG_CLEANUP])
-    ):
-        raise NotImplementedError(
-            "TODO: CMK-24368 interface with test-framework! "
-            f"Following CLI arguments\n{args}\n, are not yet functional! "
-            "Please refer to `pytest tests --help` for more information."
-        )
+    if config.getoption(ARG_REUSE):
+        os.environ["REUSE"] = "1"
+
+    if config.getoption(ARG_NO_CLEANUP):
+        os.environ["CLEANUP"] = "0"
+
+    os.environ["EDITION"] = config.getoption(ARG_EDITION_CMK)
+    os.environ["VERSION"] = config.getoption(ARG_VERSION_CMK)
 
     env_vars = {
         "BRANCH": current_base_branch_name(),

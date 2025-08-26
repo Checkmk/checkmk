@@ -24,6 +24,7 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
 MAX_CHARS := 1500000
+EDITION ?= cee
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded
 # variable assignment to get a new time zone on every access.
@@ -282,12 +283,12 @@ test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
 test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
-	EDITION=cee $(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
+	$(PYTEST) --cmk-edition cee --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
 	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/) --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee) --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e/cee) --numprocesses=1
 
 test-gui-e2e-cce:
 	EDITION=cce $(MAKE) test-gui-e2e-non-free
@@ -319,35 +320,35 @@ test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cre:
-	EDITION=cre $(PYTEST) $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition cre $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cee:
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cce:
-	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition cce $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cme:
-	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition cme $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cse:
-	EDITION=cse $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
+	$(PYTEST) --cmk-edition cse $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
 test-update-cross-edition-cee-to-cce: # from CEE to CCE
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
+	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cee-to-cme: # from CEE to CME
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
+	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cee: # from CRE to CEE
-	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) --cmk-edition cre $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cce: # from CRE to CCE
-	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) --cmk-edition cre $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:

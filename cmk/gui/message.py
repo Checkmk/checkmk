@@ -393,7 +393,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
 
 def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too-many-branches
     msg = Message(
-        text=MessageText(content_type="text", content=msg_from_vs["text"]),
+        text=MessageText(content_type="text", content=msg_from_vs["text"].replace("\n", "\r\n")),
         dest=msg_from_vs["dest"],
         methods=msg_from_vs["methods"],
         valid_till=msg_from_vs["valid_till"],
@@ -509,7 +509,7 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
     body = _("""Greetings %s,\n\n%s sent you a message: \n\n---\n%s\n---""") % (
         recipient_name,
         sender_name,
-        msg["text"],
+        msg["text"]["content"],
     )
 
     if valid_till := msg.get("valid_till"):

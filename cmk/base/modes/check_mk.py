@@ -35,6 +35,7 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -3010,8 +3011,15 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
             short_help="Pack content of 'etc/omd/site.conf'",
         ),
         Option(
+            long_option=OPT_CHECKMK_CRASH_REPORTS,
+            short_help="Pack the latest crash reports.",
+        ),
+        Option(
             long_option=OPT_CHECKMK_OVERVIEW,
             short_help="Pack HW/SW Inventory node 'Software > Applications > Checkmk'",
+            argument=True,
+            argument_optional=True,
+            argument_descr="HOST",
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,
@@ -3034,6 +3042,9 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
                 short_help=(
                     "Pack performance graphs like CPU load and utilization of Checkmk Server"
                 ),
+                argument=True,
+                argument_optional=True,
+                argument_descr="HOST",
             )
         )
     return sub_options

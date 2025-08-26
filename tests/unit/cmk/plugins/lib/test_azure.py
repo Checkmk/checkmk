@@ -9,6 +9,9 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import (
+    check_levels as check_levels_v2,
+)
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
@@ -664,3 +667,36 @@ def test_create_check_azure_metrics_function_single_error() -> None:
     )
     with pytest.raises(IgnoreResultsError, match="Only one resource expected"):
         list(check_func({}, MULTIPLE_RESOURCE_SECTION))
+
+
+@pytest.mark.parametrize(
+    "section,expected_result",
+    [
+        pytest.param(
+            PARSED_RESOURCES,
+            [
+                Result(state=State.OK, summary="Storage: 2.95%"),
+                Metric("storage_percent", 2.95),
+            ],
+            id="one resource",
+        ),
+        pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
+    ],
+)
+def test_create_check_azure_metrics_function_single_specified_check_levels(
+    section: Section, expected_result: CheckResult
+) -> None:
+    check_func = create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_storage_percent",
+                "storage_percent",
+                "Storage",
+                render.percent,
+                upper_levels_param="storage",
+            ),
+        ],
+        suppress_error=True,
+        check_levels=check_levels_v2,
+    )
+    assert list(check_func({}, section)) == expected_result

@@ -316,7 +316,9 @@ def create_check_metrics_function(
 
 
 def create_check_metrics_function_single(
-    metrics_data: Sequence[MetricData], suppress_error: bool = False
+    metrics_data: Sequence[MetricData],
+    suppress_error: bool = False,
+    check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> Callable[[Mapping[str, Any], Section], CheckResult]:
     def check_metric(params: Mapping[str, Any], section: Section) -> CheckResult:
         if len(section) != 1:
@@ -325,7 +327,9 @@ def create_check_metrics_function_single(
             raise IgnoreResultsError("Only one resource expected")
 
         resource = list(section.values())[0]
-        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
+        yield from check_resource_metrics(
+            resource, params, metrics_data, suppress_error, check_levels
+        )
 
     return check_metric
 

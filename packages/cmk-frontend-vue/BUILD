@@ -95,6 +95,7 @@ SRCS = [
     "env.d.ts",
     "weaki18nString.d.ts",
     ".stylelintrc.js",
+    "scripts/stylelint-vue-bem-naming-convention.js",
     "eslint.config.js",
     "index.html",
     "package.json",

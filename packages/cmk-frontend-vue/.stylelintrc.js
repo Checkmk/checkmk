@@ -1,7 +1,10 @@
 /** @type {import('stylelint').Config} */
 export default {
   extends: 'stylelint-config-standard',
-  rules: {},
+  rules: {
+    'selector-class-pattern': null
+  },
+  plugins: ['./scripts/stylelint-vue-bem-naming-convention.js'],
   overrides: [
     {
       files: ['*.css', '**/*.css'],
@@ -21,7 +24,6 @@ export default {
       customSyntax: 'postcss-html',
       extends: ['stylelint-config-standard'],
       rules: {
-        'selector-class-pattern': ['^([a-z][a-z0-9]*)((-|_|--|__)[a-z0-9]+)*$'],
         'keyframes-name-pattern': ['^([a-z][a-z0-9]*)((-|_|--|__)[a-z0-9]+)*$'],
         // https://github.com/ota-meshi/stylelint-config-recommended-vue/blob/main/lib/vue-specific-rules.js
         'declaration-property-value-no-unknown': [
@@ -35,7 +37,8 @@ export default {
           {
             ignoreFunctions: ['v-bind']
           }
-        ]
+        ],
+        'checkmk/vue-bem-naming-convention': true
       }
     }
   ]

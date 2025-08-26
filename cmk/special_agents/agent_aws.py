@@ -1256,7 +1256,8 @@ class EC2Limits(AWSSectionLimits):
         EC2InstFamiliesquotas = {
             q["QuotaName"]: q["Value"]
             for q in quotas
-            if q["QuotaName"] in AWSEC2InstFamilies.values()
+            if q["QuotaName"]
+            in {name.localize(lambda x: x) for name in AWSEC2InstFamilies.values()}
         }
 
         self._add_instance_limits(

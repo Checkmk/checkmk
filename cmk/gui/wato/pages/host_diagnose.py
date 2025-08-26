@@ -42,6 +42,7 @@ from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
@@ -213,6 +214,42 @@ class ModeDiagHost(WatoMode):
         html.open_table()
         html.open_tr()
         html.open_td()
+        all_rulesets = AllRulesets.load_all_rulesets()
+        agent_ports_ruleset = all_rulesets.get("agent_ports")
+        tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
+        snmp_timing_ruleset = all_rulesets.get("snmp_timing")
+        agent_port: int | None = None
+        match agent_ports_ruleset.analyse_ruleset(
+            hostname=self._hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            service_labels={},
+            debug=config.debug,
+        ):
+            case int() as agent_port, _:
+                pass
+
+        tcp_connect_timeout: float | None = None
+        match tcp_connect_timeouts_ruleset.analyse_ruleset(
+            hostname=self._hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            service_labels={},
+            debug=config.debug,
+        ):
+            case float() as tcp_connect_timeout, _:
+                pass
+
+        snmp_timing: dict[str, int] = {}
+        match snmp_timing_ruleset.analyse_ruleset(
+            hostname=self._hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            service_labels={},
+            debug=config.debug,
+        ):
+            case dict() as snmp_timing, _:
+                pass
 
         with html.form_context("diag_host", method="POST"):
             html.prevent_password_auto_completion()
@@ -244,7 +281,12 @@ class ModeDiagHost(WatoMode):
 
             value = {}
             forms.section(legend=False)
-            vs_rules = self._vs_rules()
+            vs_rules = self._vs_rules(
+                agent_port=agent_port,
+                tcp_connect_timeout=tcp_connect_timeout,
+                snmp_timeout=snmp_timing.get("timeout"),
+                snmp_retries=snmp_timing.get("retries"),
+            )
             vs_rules.render_input("vs_rules", value)
             html.help(vs_rules.help())
             forms.end()
@@ -348,7 +390,13 @@ class ModeDiagHost(WatoMode):
             ],
         )
 
-    def _vs_rules(self):
+    def _vs_rules(
+        self,
+        agent_port: int | None = None,
+        tcp_connect_timeout: float | None = None,
+        snmp_timeout: int | None = None,
+        snmp_retries: int | None = None,
+    ) -> Dictionary:
         return Dictionary(
             optional_keys=False,
             elements=[
@@ -357,7 +405,7 @@ class ModeDiagHost(WatoMode):
                     Integer(
                         minvalue=1,
                         maxvalue=65535,
-                        default_value=6556,
+                        default_value=agent_port if agent_port is not None else 6556,
                         title=_('Checkmk Agent Port (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "agent_ports")]
@@ -372,7 +420,9 @@ class ModeDiagHost(WatoMode):
                     "tcp_connect_timeout",
                     Float(
                         minvalue=1.0,
-                        default_value=5.0,
+                        default_value=tcp_connect_timeout
+                        if tcp_connect_timeout is not None
+                        else 5.0,
                         unit=_("sec"),
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
@@ -398,7 +448,7 @@ class ModeDiagHost(WatoMode):
                             "After a request is sent to the remote SNMP agent we will wait up to this "
                             "number of seconds until assuming the answer get lost and retrying."
                         ),
-                        default_value=1,
+                        default_value=snmp_timeout if snmp_timeout is not None else 1,
                         minvalue=1,
                         maxvalue=60,
                         unit=_("sec"),
@@ -411,7 +461,7 @@ class ModeDiagHost(WatoMode):
                         % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
-                        default_value=5,
+                        default_value=snmp_retries if snmp_retries is not None else 5,
                         minvalue=0,
                         maxvalue=50,
                     ),

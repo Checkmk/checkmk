@@ -131,7 +131,7 @@ def main() {
                     ) {
                         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                             image.push();
-                            if (safe_branch_name ==~ /master|\d\.\d\.\d/) {
+                            if ((safe_branch_name ==~ /master|\d\.\d\.\d/) && ("${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}" == "")) {
                                 image.push("${safe_branch_name}-latest");
                             }
                         }

@@ -139,6 +139,14 @@ class SetupHost(CmkPage):
             message=f"Host '{host_name}' is still present in the list after deletion.",
         ).not_to_be_visible()
 
+    def delete_host(self, host_name: str) -> None:
+        host_link = self.main_area.locator("a", has_text="localhost")
+        host_row = self.main_area.locator("table.data tr", has=host_link)
+        host_row.get_by_role("link", name="Delete").click()
+        self.main_area.get_confirmation_popup_button("Yes, delete host").click()
+        self.check_host_not_present(host_name)
+        self.activate_changes()
+
 
 class AddHost(CmkPage):
     """Represents page `setup -> Hosts -> Add host`."""
@@ -199,6 +207,9 @@ class AddHost(CmkPage):
     @property
     def ipv4_address_text_field(self) -> Locator:
         return self.main_area.get_input("ipaddress")
+
+    def save_and_run_discovery(self) -> None:
+        self.main_area.get_suggestion("Save & run service discovery").click()
 
     @override
     def validate_page(self) -> None:

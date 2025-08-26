@@ -16,7 +16,7 @@ from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegra
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
-from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties, SetupHost
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, HostProperties, SetupHost
 from tests.testlib.site import Site
 from tests.testlib.utils import is_cleanup_enabled
 
@@ -168,23 +168,21 @@ def test_delete_host_row(
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
-def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_agent_connection_test(dashboard_page: Dashboard) -> None:
     """Validate agent connection test of a host."""
-    setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area
-    main_area_locator = setup_host.main_area.locator()
-    setup_host.add_host.click()
+    add_host = AddHost(dashboard_page.page)
+    main_area = add_host.main_area
+    main_area_locator = main_area.locator()
 
     agent_test_button_default_tag = main_area.locator("#attr_default_tag_agent > button")
     agent_test_button_entry_tag = main_area.locator("#attr_entry_tag_agent > button")
     expect(agent_test_button_default_tag).to_be_disabled()
 
-    host_input = main_area.locator("input.text[name='host']")
-    host_input.fill("localhost")
+    add_host.host_name_text_field.fill("localhost")
     expect(agent_test_button_default_tag).not_to_be_disabled()
 
     agent_test_button_default_tag.click()
-    warning_container = main_area.locator(".warn-container")
+    warning_container = add_host.main_area.locator(".warn-container")
     expect(warning_container).to_be_visible()
 
     agent_download_button = main_area.locator("div.warn-button-container > button:nth-child(1)")
@@ -195,11 +193,11 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
     slidout_close_button = main_area.locator(".slide-in__close")
     slidout_close_button.click()
 
-    host_input.fill("")
+    add_host.host_name_text_field.fill("")
     expect(agent_test_button_default_tag).to_be_visible()
     expect(agent_test_button_default_tag).to_be_disabled()
 
-    host_input.fill("localhost")
+    add_host.host_name_text_field.fill("localhost")
 
     datasource_checkbox = main_area_locator.get_by_role("cell", name="Checkmk agent / API").locator(
         "label"
@@ -230,67 +228,64 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
     expect(agent_test_button_default_tag).not_to_be_disabled()
 
 
-def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_agent_test(dashboard_page: Dashboard) -> None:
     """Validate agent download slideout when creating a host."""
-    setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area
-    setup_host.add_host.click()
+    host_name = "localhost"
+    add_host = AddHost(dashboard_page.page)
+    add_host.host_name_text_field.fill(host_name)
+    add_host.save_and_run_discovery()
 
-    host_input = main_area.locator("input.text[name='host']")
-    host_input.fill("localhost")
+    try:
+        agent_download_dialog = dashboard_page.main_area.locator(".agent-download-dialog__dialog")
+        expect(agent_download_dialog).to_be_visible()
 
-    main_area.locator("#suggestions > td > div:nth-child(1) > a").click()
+        agent_download_button = dashboard_page.main_area.locator(
+            "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-info"
+        )
+        agent_download_button.click()
 
-    agent_download_dialog = main_area.locator(".agent-download-dialog__dialog")
-    expect(agent_download_dialog).to_be_visible()
+        slideout = dashboard_page.main_area.locator("div.cmk-vue-app.slide-in__container")
+        expect(slideout).to_be_visible()
 
-    agent_download_button = main_area.locator(
-        "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-info"
-    )
-    agent_download_button.click()
+        slideout_close_button = dashboard_page.main_area.locator(".slide-in__close")
+        slideout_close_button.click()
 
-    slideout = main_area.locator("div.cmk-vue-app.slide-in__container")
-    expect(slideout).to_be_visible()
+        with dashboard_page.page.expect_popup() as popup_info:
+            dashboard_page.main_area.locator(
+                "button.cmk-button:has-text('Read Checkmk user guide')"
+            ).click()
 
-    slideout_close_button = main_area.locator(".slide-in__close")
-    slideout_close_button.click()
+        docs_page = popup_info.value
 
-    with setup_host.page.expect_popup() as popup_info:
-        main_area.locator("button.cmk-button:has-text('Read Checkmk user guide')").click()
-
-    docs_page = popup_info.value
-
-    expect(docs_page).to_have_url(
-        "https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents"
-    )
+        expect(docs_page).to_have_url(
+            "https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents"
+        )
+    finally:
+        if is_cleanup_enabled():
+            SetupHost(dashboard_page.page).delete_host(host_name)
 
 
-def test_ping_host(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_ping_host(dashboard_page: Dashboard) -> None:
     """Validate pinging of a host."""
-    setup_host = SetupHost(dashboard_page.page)
-    main_area = setup_host.main_area
-    setup_host.add_host.click()
+    add_host = AddHost(dashboard_page.page)
 
-    host_name_input_field = main_area.locator("input.text[name='host']")
-    ip_v4_address_input_field = main_area.locator("input.text[name='ipaddress']")
-    ip_v4_address_checkbox = main_area.locator("label[for='cb_host_change_ipaddress']")
-    status_loading = main_area.locator("div.status-box.loading").get_by_role("img")
-    status_invalid = main_area.locator("div.status-box.warn").get_by_role("img")
-    status_valid = main_area.locator("div.status-box.ok").get_by_role("img")
+    status_loading = add_host.main_area.locator("div.status-box.loading").get_by_role("img")
+    status_invalid = add_host.main_area.locator("div.status-box.warn").get_by_role("img")
+    status_valid = add_host.main_area.locator("div.status-box.ok").get_by_role("img")
 
-    host_name_input_field.fill("foo")
+    add_host.host_name_text_field.fill("foo")
     expect(status_loading).to_be_visible()
     expect(status_invalid).to_be_visible()
 
-    host_name_input_field.fill("localhost")
+    add_host.host_name_text_field.fill("localhost")
     expect(status_loading).to_be_visible()
     expect(status_valid).to_be_visible()
 
-    ip_v4_address_checkbox.click()
-    ip_v4_address_input_field.fill("foo")
+    add_host.ipv4_address_checkbox.click()
+    add_host.ipv4_address_text_field.fill("foo")
     expect(status_loading).to_be_visible()
     expect(status_invalid).to_be_visible()
 
-    ip_v4_address_input_field.fill("127.0.0.1")
+    add_host.ipv4_address_text_field.fill("127.0.0.1")
     expect(status_loading).to_be_visible()
     expect(status_valid).to_be_visible()

@@ -30,7 +30,8 @@ class IntColumn : public Column {
 public:
     using value_type = int32_t;
     using f0_t = std::function<value_type(const T &)>;
-    using f1_t = std::function<value_type(const T &, const User &)>;
+    using f1_t =
+        std::function<value_type(const T &, const User &, const ICore &)>;
     using function_type = std::variant<f0_t, f1_t>;
 
     IntColumn(const std::string &name, const std::string &description,
@@ -41,8 +42,8 @@ public:
 
     void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds /*timezone_offset*/,
-                const ICore & /*core*/) const override {
-        r.output(getValue(row, user));
+                const ICore &core) const override {
+        r.output(getValue(row, user, core));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
@@ -50,8 +51,8 @@ public:
         const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, name(),
-            [this](Row row, const User &user, const ICore & /*core*/) {
-                return this->getValue(row, user);
+            [this](Row row, const User &user, const ICore &core) {
+                return this->getValue(row, user, core);
             },
             relOp, value);
     }
@@ -59,20 +60,21 @@ public:
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<IntAggregator>(
-            factory,
-            [this](Row row, const User &user) { return getValue(row, user); });
+            factory, [this](Row row, const User &user, const ICore &core) {
+                return getValue(row, user, core);
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
         return std::make_unique<IntSorter>(
             [this](Row row, const std::optional<std::string> &key,
-                   const User &user) {
+                   const User &user, const ICore &core) {
                 if (key) {
                     throw std::runtime_error("int column '" + name() +
                                              "' does not expect key '" +
                                              (*key) + "'");
                 }
-                return getValue(row, user);
+                return getValue(row, user, core);
             });
     }
 
@@ -81,13 +83,15 @@ public:
     // aggregate values for hosts/services, but they should do this only for
     // "allowed" hosts/services. Find a better design than this parameter
     // passing hell..
-    [[nodiscard]] value_type getValue(Row row, const User &user) const {
+    [[nodiscard]] value_type getValue(Row row, const User &user,
+                                      const ICore &core) const {
         const T *data = IntColumn<T, Default>::template columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
-            return data == nullptr ? Default : std::get<f1_t>(f_)(*data, user);
+            return data == nullptr ? Default
+                                   : std::get<f1_t>(f_)(*data, user, core);
         }
         throw std::runtime_error("unreachable");
     }
@@ -108,6 +112,16 @@ public:
         : IntColumn<T, column::detail::toInt32(Default)>{
               name, description, offsets, [f = std::move(f)](const T &t) {
                   return column::detail::toInt32(f(t));
+              }} {}
+
+    BoolColumn(const std::string &name, const std::string &description,
+               const ColumnOffsets &offsets,
+               std::function<bool(const T &, const ICore &)> f)
+        : IntColumn<T, column::detail::toInt32(Default)>{
+              name, description, offsets,
+              [f = std::move(f)](const T &t, const User & /*user*/,
+                                 const ICore &core) {
+                  return column::detail::toInt32(f(t, core));
               }} {}
 };
 

@@ -11,9 +11,9 @@
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/Column.h"
+
 class Row;
 class RowRenderer;
-class User;
 
 class DoubleAggregator : public Aggregator {
 public:

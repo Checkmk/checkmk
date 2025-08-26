@@ -8,6 +8,7 @@
 
 #include <cstdint>
 
+class ICore;
 class IHost;
 class IService;
 class IServiceGroup;
@@ -36,8 +37,10 @@ public:
 
     explicit ServiceListState(Type type) : type_{type} {}
 
-    int32_t operator()(const IHost &hst, const User &user) const;
-    int32_t operator()(const IServiceGroup &g, const User &user) const;
+    int32_t operator()(const IHost &hst, const User &user,
+                       const ICore &core) const;
+    int32_t operator()(const IServiceGroup &g, const User &user,
+                       const ICore &core) const;
 
 private:
     const Type type_;

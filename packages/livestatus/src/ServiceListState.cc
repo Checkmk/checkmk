@@ -11,7 +11,8 @@
 #include "livestatus/LogEntry.h"
 #include "livestatus/User.h"
 
-int32_t ServiceListState::operator()(const IHost &hst, const User &user) const {
+int32_t ServiceListState::operator()(const IHost &hst, const User &user,
+                                     const ICore & /*core*/) const {
     int32_t result{0};
     hst.all_of_services([this, &user, &result](const IService &svc) {
         update(svc, user, result);
@@ -21,7 +22,8 @@ int32_t ServiceListState::operator()(const IHost &hst, const User &user) const {
 }
 
 int32_t ServiceListState::operator()(const IServiceGroup &group,
-                                     const User &user) const {
+                                     const User &user,
+                                     const ICore & /*core*/) const {
     int32_t result{0};
     group.all([this, &user, &result](const IService &svc) {
         update(svc, user, result);

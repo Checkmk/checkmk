@@ -6,6 +6,7 @@
 #include <initializer_list>
 #include <string>
 
+#include "DummyMonitoringCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
@@ -21,6 +22,7 @@ struct DummyRow : Row {
 };
 
 TEST(IntColumn, GetValueLambda) {
+    const DummyMonitoringCore core{};
     const DummyValue val{};
     const DummyRow row{&val};
     for (const auto v : {-42, 0, 1337}) {
@@ -29,11 +31,12 @@ TEST(IntColumn, GetValueLambda) {
                 return v;
             }};
 
-        EXPECT_EQ(v, col.getValue(row, NoAuthUser{}));
+        EXPECT_EQ(v, col.getValue(row, NoAuthUser{}, core));
     }
 }
 
 TEST(IntColumn, GetValueDefault) {
+    const DummyMonitoringCore core{};
     const DummyRow row{nullptr};
     for (const auto v : {-42, 0, 1337}) {
         const IntColumn<DummyRow, 123> col{
@@ -41,6 +44,6 @@ TEST(IntColumn, GetValueDefault) {
                 return v;
             }};
 
-        EXPECT_EQ(123, col.getValue(row, NoAuthUser{}));
+        EXPECT_EQ(123, col.getValue(row, NoAuthUser{}, core));
     }
 }

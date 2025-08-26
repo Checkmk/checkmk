@@ -649,8 +649,9 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
-        offsets,
-        [&core](const row_type &row) { return core.isPnpGraphPresent(row); }));
+        offsets, [](const row_type &row, const ICore &core) {
+            return core.isPnpGraphPresent(row);
+        }));
 
     // TODO CMK-23408
     const auto add_extension = [](std::filesystem::path p,

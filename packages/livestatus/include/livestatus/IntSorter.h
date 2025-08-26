@@ -16,15 +16,15 @@ class User;
 
 class IntSorter : public Sorter {
     using callback_t = std::function<int(
-        Row, const std::optional<std::string> &, const User &)>;
+        Row, const std::optional<std::string> &, const User &, const ICore &)>;
 
 public:
     explicit IntSorter(callback_t getValue) : getValue_{std::move(getValue)} {}
     [[nodiscard]] Sorter::key_type getKey(
         Row row, const std::optional<std::string> &key, const User &user,
         std::chrono::seconds /*timezone_offset*/,
-        const ICore & /*core*/) const override {
-        return getValue_(row, key, user);
+        const ICore &core) const override {
+        return getValue_(row, key, user, core);
     }
 
 private:

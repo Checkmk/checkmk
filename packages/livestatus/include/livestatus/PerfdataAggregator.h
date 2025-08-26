@@ -15,6 +15,7 @@
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/Column.h"
+
 class Row;
 
 class PerfdataAggregator : public Aggregator {

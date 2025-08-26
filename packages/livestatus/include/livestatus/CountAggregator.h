@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "livestatus/Aggregator.h"
+
 class Filter;
 
 class CountAggregator : public Aggregator {

@@ -338,11 +338,12 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "hard_state", "The effective hard state of this object",
         offsets, [](const row_type &row) { return row.hard_state(); }));
-    table->addColumn(std::make_unique<IntColumn<row_type>>(
+    table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
-        offsets,
-        [&core](const row_type &row) { return core.isPnpGraphPresent(row); }));
+        offsets, [](const row_type &row, const ICore &core) {
+            return core.isPnpGraphPresent(row);
+        }));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleColumn<row_type>>(

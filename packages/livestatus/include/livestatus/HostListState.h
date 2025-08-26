@@ -8,6 +8,7 @@
 
 #include <cstdint>
 
+class ICore;
 class IHost;
 class IHostGroup;
 class User;
@@ -45,12 +46,14 @@ public:
 
     explicit HostListState(Type type) : type_(type) {}
 
-    int32_t operator()(const IHostGroup &group, const User &user) const;
+    int32_t operator()(const IHostGroup &group, const User &user,
+                       const ICore &core) const;
 
 private:
     const Type type_;
 
-    void update(const IHost &hst, const User &user, int32_t &result) const;
+    void update(const IHost &hst, const User &user, const ICore &core,
+                int32_t &result) const;
 };
 
 #endif  // HostListState_h

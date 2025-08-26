@@ -10,9 +10,9 @@
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/Column.h"
+
 class Row;
 class RowRenderer;
-class User;
 
 class TimeAggregator : public Aggregator {
 public:

@@ -982,7 +982,9 @@ def main(argv=None):
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):
             _write_section_replica(None)
-        return
+        # Fixed: Only return if there is truly no primary
+        if "primary" in repl_info and not repl_info.get("primary"):
+            return
 
     piggyhost = repl_info.get("setName") if repl_info else None
     if piggyhost:

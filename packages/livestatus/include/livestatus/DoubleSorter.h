@@ -26,7 +26,8 @@ public:
         : getValue_{std::move(getValue)} {}
     [[nodiscard]] Sorter::key_type getKey(
         Row row, const std::optional<std::string> &key, const User & /*user*/,
-        std::chrono::seconds /*timezone_offset*/) const override {
+        std::chrono::seconds /*timezone_offset*/,
+        const ICore & /*core*/) const override {
         return getValue_(row, key);
     }
 

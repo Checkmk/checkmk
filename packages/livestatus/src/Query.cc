@@ -180,8 +180,9 @@ bool Query::processDataset(Row row) {
         const auto order_by = orderBy();
         try {
             const auto sorter = order_by.column->createSorter();
-            const auto key = sorter->getKey(row, order_by.key, *user_,
-                                            parsed_query_.timezone_offset);
+            const auto key =
+                sorter->getKey(row, order_by.key, *user_,
+                               parsed_query_.timezone_offset, core_);
 
             sorted_rows_.emplace_back(key, row_fragment);
         } catch (const std::runtime_error &e) {

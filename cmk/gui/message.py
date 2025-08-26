@@ -526,7 +526,7 @@ def _message_mail(user_id: UserId, msg: Message) -> bool:
     body = _("""Greetings %s,\n\n%s sent you a message: \n\n---\n%s\n---""") % (
         recipient_name,
         sender_name,
-        msg["text"],
+        msg["text"]["content"],
     )
 
     if valid_till := msg["valid_till"]:

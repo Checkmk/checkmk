@@ -1385,6 +1385,10 @@ div.swal2-popup {
     color: $font-color;
   }
 
+  div.swal2-html-container {
+    white-space: pre-line;
+  }
+
   button.swal2-confirm {
     background-color: $success-dimmed;
   }

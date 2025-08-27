@@ -218,7 +218,13 @@ def _check_auth_by_header(
 
     # At this point: invalid credentials. Could be user, password or both.
     # on_failed_login wants to be informed about non-existing users as well.
-    userdb.on_failed_login(user_id, user_attributes, datetime.now())
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=datetime.now(),
+        lock_on_logon_failures=active_config.lock_on_logon_failures,
+        log_logon_failures=active_config.log_logon_failures,
+    )
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 

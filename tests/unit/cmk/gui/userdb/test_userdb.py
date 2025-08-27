@@ -112,28 +112,44 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     assert _load_failed_logins(user_id) == 0
 
 
-@pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
     now = datetime.now()
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
+    user_attributes = get_user_attributes([])
     assert active_config.lock_on_logon_failures == 10
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, user_attributes, now)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=10,
+        log_logon_failures=True,
+    )
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, user_attributes, now)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=10,
+        log_logon_failures=True,
+    )
     assert _load_failed_logins(user_id) == 2
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, user_attributes, now)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=10,
+        log_logon_failures=True,
+    )
     assert _load_failed_logins(user_id) == 3
     assert not userdb.user_locked(user_id)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
     now = datetime.now()
     user_attributes = get_user_attributes(active_config.wato_user_attrs)
@@ -141,7 +157,13 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, user_attributes, now)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=10,
+        log_logon_failures=True,
+    )
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
@@ -150,28 +172,41 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     assert not userdb.user_locked(user_id)
 
 
-@pytest.mark.usefixtures("request_context")
-def test_on_failed_login_with_locking(
-    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
-) -> None:
+def test_on_failed_login_with_locking(user_id: UserId) -> None:
     now = datetime.now()
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
-    with set_config(lock_on_logon_failures=3):
-        assert active_config.lock_on_logon_failures == 3
-        assert _load_failed_logins(user_id) == 0
-        assert not userdb.user_locked(user_id)
+    user_attributes = get_user_attributes([])
+    assert _load_failed_logins(user_id) == 0
+    assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, user_attributes, now)
-        assert _load_failed_logins(user_id) == 1
-        assert not userdb.user_locked(user_id)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=3,
+        log_logon_failures=True,
+    )
+    assert _load_failed_logins(user_id) == 1
+    assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, user_attributes, now)
-        assert _load_failed_logins(user_id) == 2
-        assert not userdb.user_locked(user_id)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=3,
+        log_logon_failures=True,
+    )
+    assert _load_failed_logins(user_id) == 2
+    assert not userdb.user_locked(user_id)
 
-        userdb.on_failed_login(user_id, user_attributes, now)
-        assert _load_failed_logins(user_id) == 3
-        assert userdb.user_locked(user_id)
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        now=now,
+        lock_on_logon_failures=3,
+        log_logon_failures=True,
+    )
+    assert _load_failed_logins(user_id) == 3
+    assert userdb.user_locked(user_id)
 
 
 def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
@@ -364,12 +399,10 @@ def test_ensure_user_can_not_init_with_previous_session(single_auth_request: Sin
         userdb.session.ensure_user_can_init_session(user_id, now)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_active_sessions_no_existing() -> None:
     assert userdb.session.active_sessions({}, datetime.now()) == {}
 
 
-@pytest.mark.usefixtures("request_context")
 def test_active_sessions_remove_outdated() -> None:
     now = datetime.now()
     assert list(
@@ -393,7 +426,6 @@ def test_active_sessions_remove_outdated() -> None:
     ) == ["keep"]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_active_sessions_too_many() -> None:
     now = datetime.now()
     sessions = {

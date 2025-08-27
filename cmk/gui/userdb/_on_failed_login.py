@@ -7,7 +7,6 @@ from collections.abc import Sequence
 from datetime import datetime
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
@@ -20,20 +19,23 @@ auth_logger = gui_logger.getChild("auth")
 
 
 def on_failed_login(
-    username: UserId, user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime
+    username: UserId,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    *,
+    now: datetime,
+    lock_on_logon_failures: int | None,
+    log_logon_failures: bool,
 ) -> None:
     all_users = load_users(lock=True)
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
-        _increment_failed_logins_and_lock(user)
+        _increment_failed_logins_and_lock(user, lock_on_logon_failures)
         update_user(username, all_users, user_attributes, now)
 
-    if active_config.log_logon_failures:
+    if log_logon_failures:
         if user:
             existing = "Yes"
-            log_msg_until_locked = str(
-                bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
-            )
+            log_msg_until_locked = str(bool(lock_on_logon_failures) - user["num_failed_logins"])
             if not user["locked"]:
                 log_msg_locked = "No"
             elif log_msg_until_locked == "0":
@@ -54,12 +56,9 @@ def on_failed_login(
         )
 
 
-def _increment_failed_logins_and_lock(user: UserSpec) -> None:
+def _increment_failed_logins_and_lock(user: UserSpec, lock_on_logon_failures: int | None) -> None:
     """Increment the number of failed logins for the user and lock the user if necessary."""
     user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
 
-    if (
-        active_config.lock_on_logon_failures
-        and user["num_failed_logins"] >= active_config.lock_on_logon_failures
-    ):
+    if lock_on_logon_failures and user["num_failed_logins"] >= lock_on_logon_failures:
         user["locked"] = True

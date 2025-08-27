@@ -144,9 +144,18 @@ def _log_event_auth(two_factor_method: str) -> None:
 
 
 def _handle_failed_auth(
-    user_id: UserId, user_attributes: Sequence[tuple[str, UserAttribute]]
+    user_id: UserId,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    lock_on_logon_failures: int | None,
+    log_logon_failures: bool,
 ) -> None:
-    on_failed_login(user_id, user_attributes, datetime.datetime.now())
+    on_failed_login(
+        user_id,
+        user_attributes,
+        now=datetime.datetime.now(),
+        lock_on_logon_failures=lock_on_logon_failures,
+        log_logon_failures=log_logon_failures,
+    )
     if user_locked(user_id):
         session.invalidate()
         session.persist()
@@ -1261,6 +1270,8 @@ class UserLoginTwoFactor(Page):
         credentials: TwoFactorCredentials,
         site_configs: SiteConfigurations,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        lock_on_logon_failures: int | None,
+        log_logon_failures: bool,
     ) -> None:
         assert user.id is not None
         if "totp_credentials" in available_methods:
@@ -1275,7 +1286,12 @@ class UserLoginTwoFactor(Page):
                         _handle_success_auth(user.id)
                         raise redirect(request.get_url_input("_origtarget", "index.py"))
                 _log_event_auth("Authenticator application (TOTP)")
-                _handle_failed_auth(user.id, user_attributes)
+                _handle_failed_auth(
+                    user.id,
+                    user_attributes,
+                    lock_on_logon_failures,
+                    log_logon_failures,
+                )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
         if "backup_codes" in available_methods:
@@ -1294,7 +1310,12 @@ class UserLoginTwoFactor(Page):
                         )
                     raise redirect(request.get_url_input("_origtarget", "index.py"))
                 _log_event_auth("Backup code")
-                _handle_failed_auth(user.id, user_attributes)
+                _handle_failed_auth(
+                    user.id,
+                    user_attributes,
+                    lock_on_logon_failures,
+                    log_logon_failures,
+                )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     def page(self, config: Config) -> None:
@@ -1347,6 +1368,8 @@ class UserLoginTwoFactor(Page):
             credentials,
             config.sites,
             get_user_attributes(config.wato_user_attrs),
+            config.lock_on_logon_failures,
+            config.log_logon_failures,
         )
 
         if user_errors:
@@ -1405,7 +1428,12 @@ class UserWebAuthnLoginComplete(JsonPage):
             )
         except BaseException:
             _log_event_auth("Webauthn")
-            _handle_failed_auth(user.id, get_user_attributes(config.wato_user_attrs))
+            _handle_failed_auth(
+                user.id,
+                get_user_attributes(config.wato_user_attrs),
+                config.lock_on_logon_failures,
+                config.log_logon_failures,
+            )
             raise
 
         session.session_info.webauthn_action_state = None

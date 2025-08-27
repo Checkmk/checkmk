@@ -268,7 +268,13 @@ class LoginPage(Page):
 
                 raise HTTPRedirect(origtarget)
 
-            userdb.on_failed_login(username, user_attributes, now)
+            userdb.on_failed_login(
+                username,
+                user_attributes,
+                now=now,
+                lock_on_logon_failures=config.lock_on_logon_failures,
+                log_logon_failures=config.log_logon_failures,
+            )
             raise MKUserError(self._password_varname, self._default_login_error_msg)
 
         except MKUserError as e:

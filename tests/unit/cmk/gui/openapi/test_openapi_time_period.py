@@ -805,6 +805,18 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
             id="Reject empty data",
         ),
         pytest.param(
+            {
+                "alias": "test",
+            },
+            True,
+            id="Support empty time period",
+        ),
+        pytest.param(
+            {"alias": "test", "exclude": [], "2025-01-01": [("00:00", "24:00")]},
+            True,
+            id="Support date-only",
+        ),
+        pytest.param(
             {"alias": "test", "exclude": [], "monday": [("00:00", "24:00")]},
             True,
             id="Support 24:00",
@@ -868,13 +880,6 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
             },
             False,
             id="Reject strange fields",
-        ),
-        pytest.param(
-            {
-                "alias": "test",
-            },
-            False,
-            id="Reject when no time periods specified",
         ),
         pytest.param(
             {

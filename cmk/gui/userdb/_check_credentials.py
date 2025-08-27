@@ -42,7 +42,9 @@ def check_credentials(
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed
-        result = connection.check_credentials(username, password)
+        result = connection.check_credentials(
+            username, password, user_attributes, active_config.default_user_profile
+        )
 
         if result is False:
             return False
@@ -124,6 +126,7 @@ def _create_non_existing_user(
             user_attributes=user_attributes,
             load_users_func=load_users,
             save_users_func=save_users,
+            default_user_profile=active_config.default_user_profile,
         )
     except Exception as e:
         _show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)

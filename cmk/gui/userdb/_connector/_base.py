@@ -70,7 +70,13 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
     #     '<user_id>' -> Login succeeded
     #     False       -> Login failed
     #     None        -> Unknown user
-    def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
+    def check_credentials(
+        self,
+        user_id: UserId,
+        password: Password,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        default_user_profile: UserSpec,
+    ) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed
@@ -83,6 +89,7 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        default_user_profile: UserSpec,
     ) -> None:
         pass
 

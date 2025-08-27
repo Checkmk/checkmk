@@ -305,6 +305,7 @@ class ModeUsers(WatoMode):
                                 add_to_changelog=True,
                                 enforce_sync=True,
                                 custom_user_attributes=config.wato_user_attrs,
+                                default_user_profile=config.default_user_profile,
                             ),
                         ),
                         background_job.InitialStatusArgs(

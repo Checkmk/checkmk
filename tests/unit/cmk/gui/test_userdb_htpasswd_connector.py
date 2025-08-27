@@ -79,7 +79,7 @@ def test_user_connector_verify_password(
                 "id": "htpasswd",
                 "disabled": False,
             }
-        ).check_credentials(uid, password)
+        ).check_credentials(uid, password, [], default_user_profile={})
         == expect
     )
 
@@ -102,4 +102,4 @@ def test_user_connector_verify_password_locked_users(
                 "id": "htpasswd",
                 "disabled": False,
             }
-        ).check_credentials(uid, password)
+        ).check_credentials(uid, password, [], default_user_profile={})

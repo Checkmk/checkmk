@@ -31,7 +31,7 @@ from cmk.gui.site_config import (
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
 )
-from cmk.gui.userdb import htpasswd
+from cmk.gui.userdb import get_user_attributes, htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
@@ -478,7 +478,12 @@ class ACTestOldDefaultCredentials(ACTest):
                     "id": "htpasswd",
                     "disabled": False,
                 }
-            ).check_credentials(UserId("omdadmin"), Password("omd"))
+            ).check_credentials(
+                UserId("omdadmin"),
+                Password("omd"),
+                get_user_attributes(config.wato_user_attrs),
+                config.default_user_profile,
+            )
             == "omdadmin"
         ):
             yield ACSingleResult(

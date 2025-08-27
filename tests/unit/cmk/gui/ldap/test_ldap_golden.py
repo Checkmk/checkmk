@@ -214,6 +214,7 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         user_attributes=get_user_attributes([]),
         load_users_func=lambda _: loaded_users,
         save_users_func=assert_expected_users,
+        default_user_profile={},
     )
 
 
@@ -225,13 +226,18 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
 
         _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
 
-        result = connector.check_credentials(UserId("carol"), Password("hunter2"))
+        result = connector.check_credentials(
+            UserId("carol"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            default_user_profile={},
+        )
 
         connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
         assert result == UserId("carol_id")
 
 
-def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
+def test_check_credentials_invalid(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -239,7 +245,15 @@ def test_check_credentials_invalid(mocker: MockerFixture, request_context: None)
 
         _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
         _mock_simple_bind_s(mocker, connector)
-        assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
+        assert (
+            connector.check_credentials(
+                UserId("carol"),
+                Password("hunter2"),
+                get_user_attributes([]),
+                default_user_profile={},
+            )
+            is False
+        )
 
 
 def test_check_credentials_not_found(mocker: MockerFixture) -> None:
@@ -249,7 +263,15 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     assert connector._ldap_obj
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
-    assert connector.check_credentials(UserId("alice"), Password("hunter2")) is None
+    assert (
+        connector.check_credentials(
+            UserId("alice"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            default_user_profile={},
+        )
+        is None
+    )
 
 
 def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:

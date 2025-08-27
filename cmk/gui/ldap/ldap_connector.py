@@ -314,13 +314,14 @@ def _create_checkmk_user_for_this_ldap_connection(
     existing_users: Users,
     ldap_connector_id: str,
     ldap_connector_customer_id: str | None,
+    default_user_profile: UserSpec,
 ) -> UserSpec:
     if new_user_id in existing_users:
         raise MKUserError(
             None,
             _("The user id '%s' already exists") % new_user_id,
         )
-    new_user_spec = new_user_template(ldap_connector_id, active_config.default_user_profile)
+    new_user_spec = new_user_template(ldap_connector_id, default_user_profile)
     _set_customer_for_user(user=new_user_spec, customer_id=ldap_connector_customer_id)
     new_user_spec.setdefault("alias", new_user_id)
     add_internal_attributes(new_user_spec)
@@ -331,6 +332,7 @@ def _create_new_user_spec(
     ldap_user_id: UserId,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
+    default_user_profile: UserSpec,
 ) -> tuple[UserId, UserSpec] | None:
     """Will first attempt to create a new user spec using the user_id passed in. If this
     user_id is already taken and if a suffix is configured, we then attempt to create a
@@ -343,6 +345,7 @@ def _create_new_user_spec(
             existing_users=users,
             ldap_connector_id=ldap_user_connector.id,
             ldap_connector_customer_id=ldap_user_connector.customer_id,
+            default_user_profile=default_user_profile,
         )
 
     user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_id)
@@ -354,6 +357,7 @@ def _create_new_user_spec(
                 existing_users=users,
                 ldap_connector_id=ldap_user_connector.id,
                 ldap_connector_customer_id=ldap_user_connector.customer_id,
+                default_user_profile=default_user_profile,
             ),
         )
 
@@ -494,6 +498,7 @@ def _sync_ldap_user(
     ldap_user: LDAPUserSpec,
     sync_users_result: SyncUsersResult,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    default_user_profile: UserSpec,
 ) -> None:
     """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it
     will attempt to create a new one. If it can't find or create a user spec, we just log a
@@ -523,6 +528,7 @@ def _sync_ldap_user(
             ldap_user_id=ldap_user_id,
             users=users,
             ldap_user_connector=ldap_user_connector,
+            default_user_profile=default_user_profile,
         )
     ) is not None:
         new_user_id, new_user_spec = userid_and_new_user
@@ -1490,12 +1496,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         userid: UserId,
         existing_users: Users,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        default_user_profile: UserSpec,
     ) -> None:
         new_user = _create_checkmk_user_for_this_ldap_connection(
             new_user_id=userid,
             existing_users=existing_users,
             ldap_connector_id=self.id,
             ldap_connector_customer_id=self.customer_id,
+            default_user_profile=default_user_profile,
         )
         existing_users[userid] = new_user
         save_users(existing_users, user_attributes, datetime.now())
@@ -1519,6 +1527,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 user_attributes=user_attributes,
                 load_users_func=load_users,
                 save_users_func=save_users,
+                default_user_profile=default_user_profile,
             )
 
             # When a user is created on login via the REST-API, the user may or may not
@@ -1536,6 +1545,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self,
         user_id: UserId,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        default_user_profile: UserSpec,
     ) -> UserId | None:
         """This function will try to match an existing user profile, or create a new one if
         it doesn't exist yet. If no user_id can be matched/created, return None."""
@@ -1543,7 +1553,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         def get_user_id_create_user_if_neccessary(user_id_to_check: UserId) -> UserId | None:
             if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
-                self._create_ldap_user_on_login(user_id_to_check, existing_users, user_attributes)
+                self._create_ldap_user_on_login(
+                    user_id_to_check, existing_users, user_attributes, default_user_profile
+                )
                 return user_id_to_check
             return user_id_to_check if user_from_config.get("connector") == self.id else None
 
@@ -1557,9 +1569,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # USERDB API METHODS
     #
 
-    # This function only validates credentials, no locked checking or similar
     @override
-    def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
+    def check_credentials(
+        self,
+        user_id: UserId,
+        password: Password,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        default_user_profile: UserSpec,
+    ) -> CheckCredentialsResult:
+        """This function only validates credentials, no locked checking or similar"""
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
@@ -1607,7 +1625,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             self._bind(user_dn, ("password", password.raw))
             userid = self._get_matching_user_profile(
-                UserId(ldap_user_id), get_user_attributes(active_config.wato_user_attrs)
+                UserId(ldap_user_id), user_attributes, default_user_profile
             )
             result: CheckCredentialsResult = False if userid is None else userid
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
@@ -1691,6 +1709,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        default_user_profile: UserSpec,
     ) -> None:
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
@@ -1730,6 +1749,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 ldap_user=ldap_user,
                 sync_users_result=sync_users_result,
                 user_attributes=user_attributes,
+                default_user_profile=default_user_profile,
             )
 
         try:

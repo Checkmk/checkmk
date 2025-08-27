@@ -25,7 +25,11 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import CustomUserAttrSpec, Users
+from cmk.gui.type_defs import (
+    CustomUserAttrSpec,
+    Users,
+    UserSpec,
+)
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
@@ -55,6 +59,7 @@ def execute_userdb_job(config: Config) -> None:
                     add_to_changelog=False,
                     enforce_sync=False,
                     custom_user_attributes=config.wato_user_attrs,
+                    default_user_profile=config.default_user_profile,
                 ),
             ),
             InitialStatusArgs(
@@ -71,13 +76,13 @@ class UserSyncArgs(BaseModel, frozen=True):
     add_to_changelog: bool
     enforce_sync: bool
     custom_user_attributes: Sequence[CustomUserAttrSpec]
+    default_user_profile: UserSpec
 
 
 def sync_entry_point(job_interface: BackgroundProcessInterface, args: UserSyncArgs) -> None:
     UserSyncBackgroundJob().do_sync(
         job_interface,
         args,
-        get_user_attributes(args.custom_user_attributes),
         load_users_func=load_users,
         save_users_func=save_users,
     )
@@ -106,6 +111,7 @@ def ajax_sync(config: Config) -> None:
                         add_to_changelog=False,
                         enforce_sync=True,
                         custom_user_attributes=config.wato_user_attrs,
+                        default_user_profile=config.default_user_profile,
                     ),
                 ),
                 InitialStatusArgs(
@@ -147,7 +153,6 @@ class UserSyncBackgroundJob(BackgroundJob):
         self,
         job_interface: BackgroundProcessInterface,
         args: UserSyncArgs,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
     ) -> None:
@@ -158,9 +163,10 @@ class UserSyncBackgroundJob(BackgroundJob):
                 logger,
                 args.add_to_changelog,
                 args.enforce_sync,
-                user_attributes,
+                get_user_attributes(args.custom_user_attributes),
                 load_users_func,
                 save_users_func,
+                args.default_user_profile,
                 datetime.now(),
             ):
                 job_interface.send_result_message(
@@ -177,6 +183,7 @@ class UserSyncBackgroundJob(BackgroundJob):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        default_user_profile: UserSpec,
         now: datetime,
     ) -> bool:
         for connection_id, connection in active_connections():
@@ -191,6 +198,7 @@ class UserSyncBackgroundJob(BackgroundJob):
                     user_attributes=user_attributes,
                     load_users_func=load_users,
                     save_users_func=save_users,
+                    default_user_profile=default_user_profile,
                 )
                 logger.info(_("[%s] Finished sync for connection") % connection_id)
             except Exception as e:

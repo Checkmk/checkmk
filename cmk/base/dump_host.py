@@ -23,9 +23,10 @@ from cmk.base.sources import Source
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
+from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.fetchers import (
     IPMIFetcher,
     NoSelectedSNMPSections,

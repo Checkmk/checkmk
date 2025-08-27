@@ -18,7 +18,7 @@ from cmk.automations.results import (
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automations import LocalAutomationConfig
@@ -36,7 +36,6 @@ from cmk.gui.watolib.services import (
 )
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(

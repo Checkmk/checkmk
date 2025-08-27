@@ -12,6 +12,7 @@ from typing import NamedTuple
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Result
+from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
 from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
@@ -21,12 +22,10 @@ from cmk.checkengine.inventory import (
 )
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
-    AggregatedResult,
-    CheckerPlugin,
     CheckPluginName,
-    ConfiguredService,
     InventoryPlugin,
     InventoryPluginName,
+    SectionName,
 )
 from cmk.checkengine.sectionparser import (
     make_providers,
@@ -42,7 +41,6 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import (
     InventoryStore,
@@ -81,7 +79,7 @@ def execute_checkmk_checks(
     ],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: SectionMap[SectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],

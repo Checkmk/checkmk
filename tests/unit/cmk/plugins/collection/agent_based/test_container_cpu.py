@@ -6,8 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-from cmk.utils.sectionname import SectionName
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75% `stress-ng -c2 -l75`

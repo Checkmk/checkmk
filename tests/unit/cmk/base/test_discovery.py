@@ -59,9 +59,15 @@ from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFil
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
-from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPluginName, ServiceID
-from cmk.checkengine.sectionparser import (
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    AutocheckEntry,
+    CheckPluginName,
     ParsedSectionName,
+    SectionName,
+    ServiceID,
+)
+from cmk.checkengine.sectionparser import (
     ParsedSectionsResolver,
     Provider,
     SectionPlugin,
@@ -79,7 +85,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
 from tests.testlib.common.repo import is_enterprise_repo
 from tests.testlib.unit.base_configuration_scenario import Scenario
 

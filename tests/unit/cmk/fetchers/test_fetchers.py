@@ -21,6 +21,7 @@ import cmk.ccc.resulttype as result
 import cmk.fetchers._snmp as snmp
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.plugins import SectionName
 from cmk.fetchers import (
     Fetcher,
     IPMIFetcher,
@@ -59,7 +60,6 @@ from cmk.snmplib import (
 )
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.paths import omd_root
-from cmk.utils.sectionname import SectionName
 
 # TODO(ml): This is way too complicated for a unit test.
 PLUGIN_STORE = SNMPPluginStore(

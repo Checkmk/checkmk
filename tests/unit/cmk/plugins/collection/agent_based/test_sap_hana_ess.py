@@ -17,8 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-from cmk.utils.sectionname import SectionName
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
 
 
 @pytest.mark.parametrize(

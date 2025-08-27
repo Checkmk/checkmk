@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (
     check_mssql_blocked_sessions,
     cluster_check_mssql_blocked_sessions,
@@ -17,7 +16,6 @@ from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (
     Params,
     parse_mssql_blocked_sessions,
 )
-from cmk.utils.sectionname import SectionName
 
 INFO_0 = [
     ["INST_ID0", "Blocked _Sessions"],
@@ -53,19 +51,12 @@ def default_parameters(
     return params
 
 
-def test_mssql_blocked_sessions_default(
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    parse_function = agent_based_plugins.agent_sections[
-        SectionName("mssql_blocked_sessions")
-    ].parse_function
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin
+def test_mssql_blocked_sessions_default() -> None:
     assert list(
-        plugin.check_function(
-            params=DEFAULT_PARAMETERS,
-            item="INST_ID1",
-            section=parse_function(INFO_0),
+        check_mssql_blocked_sessions(
+            "INST_ID1",
+            DEFAULT_PARAMETERS,
+            parse_mssql_blocked_sessions(INFO_0),
         )
     ) == [
         Result(state=State.CRIT, summary="Summary: 119 blocked by 1 ID(s), 76 blocked by 1 ID(s)"),
@@ -80,26 +71,19 @@ def test_mssql_blocked_sessions_default(
     ]
 
 
-def test_mssql_blocked_sessions_no_blocking_sessions(
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    parse_function = agent_based_plugins.agent_sections[
-        SectionName("mssql_blocked_sessions")
-    ].parse_function
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin
+def test_mssql_blocked_sessions_no_blocking_sessions() -> None:
     assert list(
-        plugin.check_function(
-            params=DEFAULT_PARAMETERS,
-            item="INST_ID1",
-            section=parse_function(INFO_1),
+        check_mssql_blocked_sessions(
+            "INST_ID1",
+            DEFAULT_PARAMETERS,
+            parse_mssql_blocked_sessions(INFO_1),
         )
     ) == [
         Result(state=State.OK, summary="No blocking sessions"),
     ]
 
 
-def test_mssql_blocked_sessions_waittime(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_mssql_blocked_sessions_waittime() -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="INST_ID1",
@@ -124,7 +108,7 @@ def test_mssql_blocked_sessions_waittime(agent_based_plugins: AgentBasedPlugins)
     ]
 
 
-def test_mssql_blocked_sessions_ignore_waittype(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_mssql_blocked_sessions_ignore_waittype() -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="INST_ID1",
@@ -149,7 +133,7 @@ def test_mssql_blocked_sessions_ignore_waittype(agent_based_plugins: AgentBasedP
     ]
 
 
-def test_mssql_blocked_sessions_parsing(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_mssql_blocked_sessions_parsing() -> None:
     assert not parse_mssql_blocked_sessions([["ERROR: asd"]])
     assert parse_mssql_blocked_sessions([["INST_ID1", "No blocking sessions"]]) == {"INST_ID1": []}
     assert parse_mssql_blocked_sessions(
@@ -305,7 +289,6 @@ DATA_GENERIC_1 = [
     ],
 )
 def test_mssql_blocked_sessions_generic(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     params: Params,
     item: str,
@@ -336,7 +319,6 @@ def test_mssql_blocked_sessions_generic(
     ],
 )
 def test_mssql_blocked_sessions_generic_discover(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     discovery_result: list[Service],
 ) -> None:
@@ -346,7 +328,7 @@ def test_mssql_blocked_sessions_generic_discover(
     )
 
 
-def test_mssql_blocked_sessions_generic_cluster(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_mssql_blocked_sessions_generic_cluster() -> None:
     assert list(
         cluster_check_mssql_blocked_sessions(
             item="ID 1",

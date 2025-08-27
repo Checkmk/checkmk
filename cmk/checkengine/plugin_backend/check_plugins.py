@@ -16,8 +16,8 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     DiscoveryFunction,
     LegacyPluginLocation,
+    ParsedSectionName,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.rulesets import RuleSetName
 

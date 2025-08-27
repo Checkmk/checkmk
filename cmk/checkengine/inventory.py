@@ -25,9 +25,9 @@ import cmk.utils.paths
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.plugins import SectionName
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.log import console, section
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
     MutableTree,
@@ -45,10 +45,9 @@ from cmk.utils.structured_data import (
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
 from .parser import group_by_host, HostSections, ParserFunction
-from .plugins import InventoryPlugin, InventoryPluginName
+from .plugins import InventoryPlugin, InventoryPluginName, ParsedSectionName
 from .sectionparser import (
     make_providers,
-    ParsedSectionName,
     Provider,
     ResolvedResult,
     SectionPlugin,
@@ -125,7 +124,7 @@ def inventorize_host(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
-    section_plugins: SectionMap[SectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,

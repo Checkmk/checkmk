@@ -14,8 +14,8 @@ from cmk.checkengine.plugins import (
     CheckFunction,
     CheckPlugin,
     CheckPluginName,
+    SectionName,
 )
-from cmk.utils.sectionname import SectionName
 
 check_name = "megaraid_bbu"
 

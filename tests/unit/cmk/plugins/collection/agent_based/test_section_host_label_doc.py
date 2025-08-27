@@ -17,10 +17,10 @@ import cmk.ccc.version as cmk_version
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
+    SectionName,
     SNMPSectionPlugin,
 )
 from cmk.utils import paths
-from cmk.utils.sectionname import SectionName
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",

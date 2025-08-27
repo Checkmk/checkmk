@@ -19,8 +19,8 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
     InventoryPluginName,
+    ParsedSectionName,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.discover_plugins import PluginLocation
 
 

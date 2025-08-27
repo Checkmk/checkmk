@@ -44,6 +44,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
@@ -54,10 +55,10 @@ from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
-    ConfiguredService,
     InventoryPlugin,
     InventoryPluginName,
     LegacyPluginLocation,
+    SectionName,
     ServiceID,
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
@@ -69,7 +70,6 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
-from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 

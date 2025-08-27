@@ -44,6 +44,7 @@ from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
 from cmk.checkengine.checking import cluster_mode
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
@@ -63,17 +64,20 @@ from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
-    AggregatedResult,
     AutocheckEntry,
-    CheckerPlugin,
     CheckPluginName,
-    ConfiguredService,
     DiscoveryPlugin,
+    ParsedSectionName,
+    SectionName,
 )
 from cmk.checkengine.plugins import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.plugins import SNMPSectionPlugin as SNMPSectionPluginAPI
-from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
+from cmk.checkengine.sectionparser import (
+    Provider,
+    ResolvedResult,
+    SectionPlugin,
+)
 from cmk.checkengine.sectionparserutils import (
     get_cache_info,
     get_section_cluster_kwargs,
@@ -103,7 +107,6 @@ from cmk.utils.ip_lookup import (
 from cmk.utils.log import console
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -490,7 +493,7 @@ class CMKFetcher:
         )
 
 
-class SectionPluginMapper(SectionMap[SectionPlugin]):
+class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
     def __init__(
         self,
         sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
@@ -534,7 +537,7 @@ def _make_parameters_getter(
     return get_parameters
 
 
-class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
+class HostLabelPluginMapper(Mapping[SectionName, HostLabelPlugin]):
     def __init__(
         self,
         *,

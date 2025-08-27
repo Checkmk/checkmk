@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, MutableMapping
 
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import HostKey
-from cmk.utils.sectionname import MutableSectionMap
+from cmk.checkengine.plugins import SectionName
 
 from ._parser import HostSections
 
@@ -20,8 +20,8 @@ __all__ = ["group_by_host"]
 def group_by_host(
     host_sections: Iterable[tuple[HostKey, HostSections]], log: Callable[[str], None]
 ) -> Mapping[HostKey, HostSections]:
-    out_sections: dict[HostKey, MutableSectionMap[list]] = defaultdict(dict)
-    out_cache_info: dict[HostKey, MutableSectionMap[tuple[int, int]]] = defaultdict(dict)
+    out_sections: dict[HostKey, MutableMapping[SectionName, list]] = defaultdict(dict)
+    out_cache_info: dict[HostKey, MutableMapping[SectionName, tuple[int, int]]] = defaultdict(dict)
     out_piggybacked_raw_data: dict[HostKey, dict[HostName, list[bytes]]] = defaultdict(dict)
     host_keys: list[HostKey] = []
 

@@ -30,10 +30,10 @@ from cmk.base.config import ConfigCache, FilterMode, save_packed_config
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
-    ConfiguredService,
     InventoryPlugin,
     LegacyPluginLocation,
     SectionPlugin,

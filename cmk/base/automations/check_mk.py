@@ -131,6 +131,7 @@ from cmk.ccc.exceptions import (
 )
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.version import edition_supports_nagvis
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
     autodiscovery,
@@ -154,8 +155,9 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
+    SectionName,
+    ServiceID,
 )
-from cmk.checkengine.plugins._check import ConfiguredService, ServiceID
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
@@ -227,7 +229,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
 )
-from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import load_timeperiods, timeperiod_active

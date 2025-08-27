@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress
+from cmk.checkengine.checkerplugin import AggregatedResult, ConfiguredService
 from cmk.checkengine.checking import (
     ABCCheckingConfig,
     check_plugins_missing_data,
@@ -16,13 +17,7 @@ from cmk.checkengine.checking import (
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.plugins import (
-    AggregatedResult,
-    CheckPlugin,
-    CheckPluginName,
-    ConfiguredService,
-    ServiceID,
-)
+from cmk.checkengine.plugins import CheckPlugin, CheckPluginName, ServiceID
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName

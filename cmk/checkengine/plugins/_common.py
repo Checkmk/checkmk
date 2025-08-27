@@ -5,9 +5,11 @@
 
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, NewType
 
 type RuleSetTypeName = Literal["merged", "all"]
+
+SectionName = NewType("SectionName", str)
 
 
 @dataclass(frozen=True)

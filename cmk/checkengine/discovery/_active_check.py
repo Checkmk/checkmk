@@ -15,8 +15,18 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
-from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, DiscoveryPlugin, ServiceID
-from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
+from cmk.checkengine.plugins import (
+    AutocheckEntry,
+    CheckPluginName,
+    DiscoveryPlugin,
+    SectionName,
+    ServiceID,
+)
+from cmk.checkengine.sectionparser import (
+    make_providers,
+    SectionPlugin,
+    store_piggybacked_sections,
+)
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.snmplib import SNMPRawData
@@ -24,7 +34,6 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
 from ._autochecks import (
@@ -84,8 +93,8 @@ def execute_check_discovery(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: SectionMap[SectionPlugin],
-    host_label_plugins: SectionMap[HostLabelPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     autochecks_config: AutochecksConfig,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],

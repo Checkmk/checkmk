@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.plugins import SectionName
 from cmk.utils.labels import (
     _Label,
     DiscoveredHostLabelsStore,
@@ -18,7 +19,6 @@ from cmk.utils.labels import (
     HostLabelValueDict,
     ServiceLabel,
 )
-from cmk.utils.sectionname import SectionName
 
 
 class TestServiceLabel:

@@ -25,9 +25,9 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
+from cmk.checkengine.plugins import SectionName
 from cmk.utils import paths
 from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
 
 
 def test_result_type_registry_completeness() -> None:

@@ -10,12 +10,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
-    ConfiguredService,
     ServiceID,
 )
 from cmk.utils.parameters import merge_parameters

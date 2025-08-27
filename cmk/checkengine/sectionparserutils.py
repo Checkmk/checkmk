@@ -8,7 +8,8 @@ from typing import Final, NamedTuple
 
 from .checkresults import ActiveCheckResult
 from .fetcher import HostKey
-from .sectionparser import ParsedSectionContent, ParsedSectionName, Provider
+from .plugins import ParsedSectionName
+from .sectionparser import ParsedSectionContent, Provider
 from .submitters import ServiceState
 
 _SectionKwargs = Mapping[str, ParsedSectionContent | None]

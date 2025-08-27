@@ -90,6 +90,7 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPlugin,
     InventoryPluginName,
+    SectionName,
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
@@ -132,7 +133,6 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -3235,7 +3235,7 @@ def execute_active_check_inventory(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: SectionMap[SectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,

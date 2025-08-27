@@ -13,8 +13,8 @@ from typing import Final, final, NamedTuple
 
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.plugins import SectionName
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
 
 from ._markers import PiggybackMarker, SectionMarker
@@ -533,8 +533,8 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
 
         def decode_sections(
             sections: ImmutableSection,
-        ) -> MutableSectionMap[list[AgentRawDataSectionElem]]:
-            out: MutableSectionMap[list[AgentRawDataSectionElem]] = {}
+        ) -> MutableMapping[SectionName, list[AgentRawDataSectionElem]]:
+            out: MutableMapping[SectionName, list[AgentRawDataSectionElem]] = {}
             for header, content in sections:
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out

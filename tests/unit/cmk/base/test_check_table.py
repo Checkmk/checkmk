@@ -11,6 +11,7 @@ import pytest
 from cmk.base.config import EnforcedServicesTable, FilterMode, HostCheckTable
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
@@ -18,7 +19,6 @@ from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
     CheckPluginName,
-    ConfiguredService,
     ServiceID,
 )
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher

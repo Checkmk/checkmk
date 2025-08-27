@@ -43,12 +43,12 @@ from cmk.base.core.shared import (
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugin_backend import plugin_index
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     CheckPluginName,
-    ConfiguredService,
     ServiceID,
 )
 from cmk.server_side_calls_backend import ActiveServiceData

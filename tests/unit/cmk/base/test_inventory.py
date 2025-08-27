@@ -25,11 +25,11 @@ from cmk.checkengine.inventory import (
     ItemsOfInventoryPlugin,
 )
 from cmk.checkengine.parser import HostSections
-from cmk.checkengine.sectionparser import ParsedSectionName, SectionPlugin
+from cmk.checkengine.plugins import ParsedSectionName, SectionName
+from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.snmplib import SNMPRawData
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     _serialize_retention_interval,
     deserialize_tree,
@@ -1237,7 +1237,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         def parse(
             header: AgentRawData | SNMPRawData,
-        ) -> SectionMap[str]:
+        ) -> Mapping[SectionName, str]:
             assert isinstance(header, bytes)
             txt = header.decode()
             return {SectionName(txt[3:-3]): txt}

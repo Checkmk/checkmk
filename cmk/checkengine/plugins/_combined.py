@@ -9,9 +9,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Self
 
-from cmk.utils.sectionname import SectionName
-
 from ._check import CheckPlugin, CheckPluginName
+from ._common import SectionName
 from ._inventory import InventoryPlugin, InventoryPluginName
 from ._sections import AgentSectionPlugin, SNMPSectionPlugin
 

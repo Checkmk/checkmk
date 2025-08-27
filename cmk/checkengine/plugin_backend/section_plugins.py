@@ -20,16 +20,16 @@ from cmk.checkengine.plugins import (
     AgentSectionPlugin,
     HostLabelFunction,
     LegacyPluginLocation,
+    ParsedSectionName,
+    SectionName,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.discover_plugins import PluginLocation
 from cmk.snmplib import SNMPDetectBaseType
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
 
 from .utils import (
     validate_default_parameters,

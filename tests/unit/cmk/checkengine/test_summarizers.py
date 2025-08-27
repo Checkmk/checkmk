@@ -13,9 +13,9 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import HostSections
+from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
 from cmk.piggyback.backend import PiggybackMetaData
-from cmk.utils.sectionname import SectionName
 
 
 class TestAgentSummarizer:

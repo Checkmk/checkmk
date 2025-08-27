@@ -15,12 +15,12 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPlugin,
     InventoryPluginName,
+    ParsedSectionName,
+    SectionName,
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 

@@ -11,9 +11,9 @@ from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     CheckPluginName,
+    SectionName,
     SNMPSectionPlugin,
 )
-from cmk.utils.sectionname import SectionName
 
 
 @pytest.fixture(name="check_plugin")

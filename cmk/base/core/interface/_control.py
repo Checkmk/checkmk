@@ -23,7 +23,8 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
-from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService, ServiceID
+from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels

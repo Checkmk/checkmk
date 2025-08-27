@@ -7,8 +7,8 @@ from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
+    ParsedSectionName,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
 
 
 def test_no_plugins_with_trivial_sections(agent_based_plugins: AgentBasedPlugins) -> None:

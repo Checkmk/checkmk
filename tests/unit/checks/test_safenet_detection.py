@@ -7,11 +7,10 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, SectionName
 
 # pylint: disable=cmk-module-layer-violation
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
-from cmk.utils.sectionname import SectionName
 
 
 @pytest.mark.parametrize(

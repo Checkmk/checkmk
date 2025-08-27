@@ -15,7 +15,7 @@ from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
-from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin
+from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin, SectionName
 from cmk.checkengine.sectionparser import (
     make_providers,
     Provider,
@@ -25,7 +25,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.sectionname import SectionMap, SectionName
 
 from ._autochecks import AutochecksStore
 from ._host_labels import discover_host_labels, HostLabelPlugin
@@ -41,9 +40,9 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     clear_ruleset_matcher_caches: Callable[[], object],
-    section_plugins: SectionMap[SectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
-    host_label_plugins: SectionMap[HostLabelPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
@@ -96,7 +95,7 @@ def commandline_discovery(
 def _commandline_discovery_on_host(
     *,
     real_host_name: HostName,
-    host_label_plugins: SectionMap[HostLabelPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     clear_ruleset_matcher_caches: Callable[[], object],
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],

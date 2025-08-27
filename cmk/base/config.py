@@ -56,6 +56,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import omd_site, SiteId
+from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import (
     merge_enforced_services,
     ServiceConfigurer,
@@ -81,8 +82,8 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
-    ConfiguredService,
     InventoryPlugin,
+    SectionName,
     ServiceID,
     SNMPSectionPlugin,
 )
@@ -151,7 +152,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     SingleHostRulesetMatcherMerge,
     SingleServiceRulesetMatcherFirst,
 )
-from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID

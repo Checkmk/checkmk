@@ -14,9 +14,9 @@ from typing import Final, Generic, Protocol, TypeVar
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.plugins import SectionName
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.sectionname import SectionMap, SectionName
 
 __all__ = [
     "AgentRawDataSection",
@@ -31,13 +31,13 @@ __all__ = [
 ]
 
 _Tin = TypeVar("_Tin")
-_Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
+_Tout = TypeVar("_Tout", bound=Mapping[SectionName, Sequence])
 
 # Note that the inner Sequence[str] to AgentRawDataSectionElem
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
 AgentRawDataSectionElem = Sequence[str]
-AgentRawDataSection = SectionMap[Sequence[AgentRawDataSectionElem]]
+AgentRawDataSection = Mapping[SectionName, Sequence[AgentRawDataSectionElem]]
 
 type SNMPParsedData = Mapping[SectionName, SNMPRawDataElem]
 
@@ -49,7 +49,7 @@ class HostSections(Generic[_Tout]):
         self,
         sections: _Tout,
         *,
-        cache_info: SectionMap[tuple[int, int]] | None = None,
+        cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:

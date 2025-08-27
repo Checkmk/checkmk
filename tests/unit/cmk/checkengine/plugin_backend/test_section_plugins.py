@@ -19,10 +19,13 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.checkengine.plugin_backend import section_plugins
-from cmk.checkengine.plugins import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.checkengine.sectionparser import ParsedSectionName
+from cmk.checkengine.plugins import (
+    AgentSectionPlugin,
+    ParsedSectionName,
+    SectionName,
+    SNMPSectionPlugin,
+)
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.sectionname import SectionName
 
 
 def _generator_function():

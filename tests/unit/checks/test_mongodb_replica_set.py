@@ -10,8 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-from cmk.utils.sectionname import SectionName
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName, SectionName
 
 _STRING_TABLE = [
     [

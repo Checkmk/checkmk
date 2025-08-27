@@ -13,8 +13,8 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
     DiscoveryFunction,
+    SectionName,
 )
-from cmk.utils.sectionname import SectionName
 
 _PLUGIN = CheckPluginName("fireeye_mailq")
 

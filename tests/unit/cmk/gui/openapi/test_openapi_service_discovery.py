@@ -19,10 +19,9 @@ from cmk.automations.results import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
-from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.utils.labels import HostLabel
-from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import WebTestAppForCMK

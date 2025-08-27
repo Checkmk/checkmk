@@ -68,16 +68,20 @@ def _diff(before: dict[str, Info], after: dict[str, Info]) -> str:
     updated = {(v.name, v.version) for v in after.values() if v.name not in added} - {
         (v.name, v.version) for v in before.values()
     }
-    return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
+    if deleted:
+        return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
+
+    # no updates seems unreasonable
     for lib, to_version in sorted(updated):
         before_version = before[lib].version
         return_value += f"{lib} updated from {before_version} to {to_version}\n"
-
     return_value += "\n"
-    return_value += "\n".join(
-        f"{added_dep.name} {added_dep.version} added"
-        for added_dep in sorted(a for a in after.values() if a.name in added)
-    )
+
+    if added:
+        return_value += "\n".join(
+            f"{added_dep.name} {added_dep.version} added"
+            for added_dep in sorted(a for a in after.values() if a.name in added)
+        )
     return return_value
 
 
@@ -105,7 +109,7 @@ def _main() -> None:
     # Relocking would work like this:
     # echo > omd/requirements_lock.txt; bazel run //omd:requirements_lock
     with open(".git-commit-msg", "w") as f:
-        f.write("Update Python libraries\n")
+        f.write("Update Python libraries\n\n")
         f.write(_diff(before.info, after.info))
     print("git commit -F .git-commit-msg")
 

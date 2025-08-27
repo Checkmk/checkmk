@@ -48,13 +48,13 @@ class Section(TypedDict):
 
 
 def _check_values(key: str, label: str, section: Section, params: CheckParamT) -> CheckResult:
-    events = section[key]  # type:ignore[literal-required]
+    events = section[key]  # type: ignore[literal-required]
 
     yield from check_levels(
         events,
         label=label,
         metric_name=key,
-        levels_upper=params[key],  # type:ignore[literal-required]
+        levels_upper=params[key],  # type: ignore[literal-required]
         render_func=lambda v: f"{v} {label} since last reset",
     )
 
@@ -62,14 +62,14 @@ def _check_values(key: str, label: str, section: Section, params: CheckParamT) -
 def _check_rates(
     metric_name: str, param_name: str, label: str, now: float, section: Section, params: CheckParamT
 ) -> CheckResult:
-    events = section[metric_name]  # type:ignore[literal-required]
+    events = section[metric_name]  # type: ignore[literal-required]
     event_rate = get_rate(get_value_store(), param_name, now, events, raise_overflow=True)
 
     yield from check_levels(
         event_rate,
         label=label,
         metric_name=metric_name,
-        levels_upper=params[param_name],  # type:ignore[literal-required]
+        levels_upper=params[param_name],  # type: ignore[literal-required]
         render_func=lambda v: f"{v:.2f} {label}/s",
     )
 

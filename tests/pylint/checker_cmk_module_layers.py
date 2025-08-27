@@ -858,6 +858,7 @@ _COMPONENTS = (
             "cmk.utils.agentdatatype",
             "cmk.utils.agent_registration",
             "cmk.utils.certs",
+            "cmk.utils.paths",
         ),
     ),
     (

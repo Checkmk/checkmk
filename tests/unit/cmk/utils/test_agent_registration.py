@@ -49,6 +49,7 @@ def test_uuid_link_manager_create_pull_link() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
 
@@ -69,6 +70,7 @@ def test_uuid_link_manager_create_push_link() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=True)
 
@@ -89,6 +91,7 @@ def test_uuid_link_manager_create_existing_link() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     # second time should be no-op, at least not fail
@@ -103,6 +106,7 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), push_configured=False)
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), push_configured=False)
@@ -126,6 +130,7 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
@@ -148,6 +153,7 @@ def test_uuid_link_manager_update_links_no_links_yet() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.update_links({})
 
@@ -162,6 +168,7 @@ def test_uuid_link_manager_update_links_no_host() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
@@ -176,6 +183,7 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({hostname: {}})
@@ -213,6 +221,7 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
@@ -232,6 +241,7 @@ def test_uuid_link_manager_unlink_sources() -> None:
     uuid_link_manager = UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
     )
     uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), push_configured=False)
     uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), push_configured=False)

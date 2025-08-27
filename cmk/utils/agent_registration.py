@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 
 
@@ -25,13 +24,6 @@ def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
     return folder.joinpath(f"{uuid}.json")
 
 
-def get_uuid_link_manager() -> UUIDLinkManager:
-    return UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-    )
-
-
 def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostAgentConnectionMode:
     return HostAgentConnectionMode(
         host_config.get(
@@ -42,15 +34,18 @@ def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostA
 
 
 class UUIDLinkManager:
-    def __init__(self, *, received_outputs_dir: Path, data_source_dir: Path) -> None:
-        self._received_outputs_dir = received_outputs_dir
-        self._data_source_dir = data_source_dir
+    def __init__(
+        self, *, received_outputs_dir: Path, data_source_dir: Path, r4r_discoverable_dir: Path
+    ) -> None:
+        self.received_outputs_dir: Final = received_outputs_dir
+        self.data_source_dir: Final = data_source_dir
+        self.r4r_discoverable_dir: Final = r4r_discoverable_dir
 
     def __iter__(self) -> Generator[_UUIDLink]:
-        if not self._received_outputs_dir.exists():
+        if not self.received_outputs_dir.exists():
             return
 
-        for source in self._received_outputs_dir.iterdir():
+        for source in self.received_outputs_dir.iterdir():
             try:
                 yield _UUIDLink(source=source, target=source.readlink())
             except FileNotFoundError:
@@ -106,7 +101,7 @@ class UUIDLinkManager:
 
             link.unlink()
             self.create_link(
-                new_name, link.uuid, push_configured=link.target.parent == self._data_source_dir
+                new_name, link.uuid, push_configured=link.target.parent == self.data_source_dir
             )
             renamed.append((old_name, new_name))
 
@@ -132,17 +127,16 @@ class UUIDLinkManager:
         self._create_link(existing_link.uuid, target_dir)
 
     def _target_dir(self, hostname: HostName, is_push_host: bool) -> Path:
-        return self._data_source_dir / (f"{hostname}" if is_push_host else f"inactive/{hostname}")
+        return self.data_source_dir / (f"{hostname}" if is_push_host else f"inactive/{hostname}")
 
     def _create_link(self, uuid: UUID, target_dir: Path) -> None:
-        self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
-        source = self._received_outputs_dir / f"{uuid}"
+        self.received_outputs_dir.mkdir(parents=True, exist_ok=True)
+        source = self.received_outputs_dir / f"{uuid}"
         source.unlink(missing_ok=True)
-        source.symlink_to(relpath(target_dir, self._received_outputs_dir))
+        source.symlink_to(relpath(target_dir, self.received_outputs_dir))
 
-    @staticmethod
-    def _is_discoverable(uuid: UUID) -> bool:
-        return get_r4r_filepath(cmk.utils.paths.r4r_discoverable_dir, uuid).exists()
+    def _is_discoverable(self, uuid: UUID) -> bool:
+        return get_r4r_filepath(self.r4r_discoverable_dir, uuid).exists()
 
 
 class _UUIDLink:

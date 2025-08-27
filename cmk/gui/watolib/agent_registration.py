@@ -6,6 +6,7 @@
 import json
 from collections.abc import Sequence
 
+import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
@@ -17,7 +18,7 @@ from cmk.gui.watolib.automations import (
     LocalAutomationConfig,
     RemoteAutomationConfig,
 )
-from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.agent_registration import UUIDLinkManager
 
 
 def remove_tls_registration(
@@ -69,4 +70,8 @@ class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
-    get_uuid_link_manager().unlink(host_names)
+    UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+        r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+    ).unlink(host_names)

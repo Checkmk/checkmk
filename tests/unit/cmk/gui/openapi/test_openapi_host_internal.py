@@ -13,7 +13,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.exceptions import MKAuthException
 from cmk.utils.agent_registration import UUIDLinkManager
-from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
+from cmk.utils.paths import data_source_push_agent_dir, r4r_discoverable_dir, received_outputs_dir
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 _API_BASE = "/NO_SITE/check_mk/api/1.0/"
@@ -72,6 +72,7 @@ def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
         UUIDLinkManager(
             received_outputs_dir=received_outputs_dir,
             data_source_dir=data_source_push_agent_dir,
+            r4r_discoverable_dir=r4r_discoverable_dir,
         ).get_uuid(HostName("example.com"))
         == uuid
     )
@@ -157,6 +158,7 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         UUIDLinkManager(
             received_outputs_dir=received_outputs_dir,
             data_source_dir=data_source_push_agent_dir,
+            r4r_discoverable_dir=r4r_discoverable_dir,
         ).get_uuid(HostName("example.com"))
         == uuid
     )

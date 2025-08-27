@@ -33,7 +33,7 @@ from cmk.gui.watolib.automations import (
     LocalAutomationConfig,
     make_automation_config,
 )
-from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 
@@ -471,7 +471,13 @@ def _rename_host_in_uuid_link_manager(
     for site_id, renamings in renamings_by_site.items():
         automation_config = make_automation_config(site_configs[site_id])
         if isinstance(automation_config, LocalAutomationConfig):
-            n_relinked += len(get_uuid_link_manager().rename(renamings))
+            n_relinked += len(
+                UUIDLinkManager(
+                    received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+                    data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+                    r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+                ).rename(renamings)
+            )
         else:
             n_relinked += int(
                 str(
@@ -500,7 +506,13 @@ class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkReques
         return "rename-hosts-uuid-link"
 
     def execute(self, api_request: _RenameHostsUUIDLinkRequest) -> int:
-        return len(get_uuid_link_manager().rename(api_request.renamings))
+        return len(
+            UUIDLinkManager(
+                received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+                data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+                r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+            ).rename(api_request.renamings)
+        )
 
     def get_request(self, config: Config, request: Request) -> _RenameHostsUUIDLinkRequest:
         return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))

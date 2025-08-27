@@ -2804,7 +2804,11 @@ def _add_extensions_for_license_usage():
 
 
 def _update_links_for_agent_receiver() -> None:
-    uuid_link_manager = agent_registration.get_uuid_link_manager()
+    uuid_link_manager = agent_registration.UUIDLinkManager(
+        received_outputs_dir=paths.received_outputs_dir,
+        data_source_dir=paths.data_source_push_agent_dir,
+        r4r_discoverable_dir=paths.r4r_discoverable_dir,
+    )
     uuid_link_manager.update_links(collect_all_hosts())
 
 

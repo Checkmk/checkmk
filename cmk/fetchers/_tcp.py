@@ -13,9 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import cmk.utils.paths
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
 
@@ -179,7 +180,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
         if sock is None:
             raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
-        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+        controller_uuid = UUIDLinkManager(
+            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+            r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+        ).get_uuid(self.host_name)
         agent_data = self._get_agent_data(
             sock, str(controller_uuid) if controller_uuid is not None else None
         )

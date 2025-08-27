@@ -24,8 +24,8 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.parser._agent import ParserState
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 from cmk.checkengine.plugins import SectionName
+from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPRawData, SNMPSectionMarker
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.translations import TranslationOptions
 
 StringTable = list[list[str]]

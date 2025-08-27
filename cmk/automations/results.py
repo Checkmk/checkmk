@@ -22,7 +22,7 @@ from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import AutocheckEntry
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
-from cmk.utils.agentdatatype import AgentRawData
+from cmk.helper_interface import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.ip_lookup import IPStackConfig

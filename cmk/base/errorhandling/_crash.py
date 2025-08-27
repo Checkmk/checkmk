@@ -17,9 +17,9 @@ from cmk.ccc import crash_reporting
 from cmk.ccc.crash_reporting import CrashInfo
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import CheckPluginName, SectionName
+from cmk.helper_interface import AgentRawData
 from cmk.piggyback.backend import get_messages_for
 from cmk.snmplib import SNMPBackendEnum
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.servicename import ServiceName
 
 CrashReportStore = crash_reporting.CrashReportStore

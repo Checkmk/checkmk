@@ -21,7 +21,7 @@ from cmk.gui.wato.pages.fetch_agent_output import (
 )
 from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.utils.agentdatatype import AgentRawData
+from cmk.helper_interface import AgentRawData
 from tests.testlib.common.repo import repo_path
 
 

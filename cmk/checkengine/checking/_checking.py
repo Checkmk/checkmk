@@ -36,8 +36,8 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
+from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPRawData
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 from cmk.utils.regex import regex

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from cmk.utils.agentdatatype import AgentRawData
+from cmk.helper_interface import AgentRawData
 
 from ._cache import FileCache
 

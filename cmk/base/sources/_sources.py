@@ -32,8 +32,8 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
+from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPRawData
-from cmk.utils.agentdatatype import AgentRawData
 
 from ._api import Source
 

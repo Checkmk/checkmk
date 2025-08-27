@@ -5,7 +5,4 @@
 
 from typing import NewType
 
-# TODO(ml): We may try to move the `Agent*` type to the fetchers or the
-#           checkengine once the layering between these two packages has
-#           been clarified.
 AgentRawData = NewType("AgentRawData", bytes)

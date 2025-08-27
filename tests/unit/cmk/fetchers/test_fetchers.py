@@ -46,6 +46,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
+from cmk.helper_interface import AgentRawData
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
@@ -58,7 +59,6 @@ from cmk.snmplib import (
     SNMPTable,
     SNMPVersion,
 )
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.paths import omd_root
 
 # TODO(ml): This is way too complicated for a unit test.

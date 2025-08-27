@@ -217,13 +217,6 @@ def _allowed_for_base(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    """
-    Allow import of `cmk.checkengine`, `cmk.snmplib` and `cmk.cee.bakery`.
-
-    Warning:
-        Refactor to depend on `cmk.checkengine` only.
-
-    """
     return any(
         (
             _allow_default_plus_fetchers_checkers_and_snmplib(
@@ -233,6 +226,7 @@ def _allowed_for_base(
             imported.in_component(Component("cmk.cee.helpers")),
             imported.in_component(Component("cmk.cee.bakery")),
             imported.in_component(Component("cmk.server_side_calls_backend")),
+            imported.in_component(Component("cmk.helper_interface")),
         )
     )
 
@@ -835,7 +829,7 @@ COMPONENTS = (
             "cmk.piggyback.backend",
             "cmk.snmplib",
             "cmk.trace",
-            "cmk.utils.agentdatatype",
+            "cmk.helper_interface",
             "cmk.utils.auto_queue",
             "cmk.utils.check_utils",
             "cmk.utils.encoding",
@@ -860,9 +854,9 @@ COMPONENTS = (
             "cmk.ccc",
             "cmk.checkengine",
             "cmk.crypto.deprecated",
+            "cmk.helper_interface",
             "cmk.piggyback.backend",
             "cmk.snmplib",
-            "cmk.utils.agentdatatype",
         ),
     ),
     (
@@ -871,6 +865,7 @@ COMPONENTS = (
             "cmk.ccc",
             "cmk.checkengine",
             "cmk.fetchers",
+            "cmk.helper_interface",
             "cmk.snmplib",
             "cmk.utils.config_path",
             "cmk.utils.observer",
@@ -883,7 +878,7 @@ COMPONENTS = (
         _allow(
             "cmk.ccc",
             "cmk.checkengine",
-            "cmk.utils.agentdatatype",
+            "cmk.helper_interface",
             "cmk.utils.check_utils",
             "cmk.utils.config_warnings",
             "cmk.utils.ip_lookup",
@@ -907,6 +902,7 @@ COMPONENTS = (
     (Component("cmk.gui.cme"), _allow_for_gui_cme),
     (Component("cmk.gui.cse"), _allow_for_gui_cse),
     (Component("cmk.gui"), _allow_for_gui),
+    (Component("cmk.helper_interface"), _allow()),  # should become a package
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.piggyback.hub"), _allow_for_cmk_piggyback_hub),

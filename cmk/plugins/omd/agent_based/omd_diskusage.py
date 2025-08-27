@@ -48,6 +48,7 @@ SPECS: Final = {
         metric_name="omd_inventory_size",
         label="Inventory",
     ),
+    "/var/check_mk/crashes": Spec(metric_name="omd_crashes_size", label="Crashes"),
 }
 
 

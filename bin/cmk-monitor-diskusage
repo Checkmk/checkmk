@@ -30,3 +30,4 @@ _du_no_errors ~/var/check_mk/agents/
 _du_no_errors ~/var/mkeventd/history/
 _du_no_errors ~/var/check_mk/core/
 _du_no_errors ~/var/check_mk/inventory_archive/
+_du_no_errors ~/var/check_mk/crashes/

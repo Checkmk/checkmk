@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-25 19:35+0000\n"
+"PO-Revision-Date: 2025-08-26 18:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -30302,7 +30302,7 @@ msgid "IBM SVC licenses"
 msgstr "IBM SVC Lizenzen"
 
 msgid "IBM TSM: number of tapes in scratch pool"
-msgstr ""
+msgstr "IBM TSM: Anzahl der Bänder im Scratch-Pool"
 
 msgid "ICMP"
 msgstr "ICMP"
@@ -32371,6 +32371,14 @@ msgstr ""
 "Prozesse, die Lesezugriff auf diese Datei haben, können die graphische "
 "Benutzeroberfläche (GUI) ohne weitere Konfiguration als Webdienst nutzen."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Wenn Sie Checkmk weiterhin nutzen möchten, kontaktieren Sie das Checkmk-"
+"Verkaufsteam unter %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -32380,14 +32388,6 @@ msgstr ""
 "Wenn Sie Checkmk weiterhin uneingeschränkt nutzen möchten, kontaktieren Sie "
 "bitte das Checkmk-Verkaufsteam unter %s und erneuern Sie Ihre Lizenz. Wenn "
 "Sie Ihre Lizenz über %s erworben haben, kontaktieren Sie diesen."
-
-#, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Wenn Sie Checkmk weiterhin nutzen möchten, kontaktieren Sie das Checkmk-"
-"Verkaufsteam unter %s."
 
 #, python-format
 msgid ""
@@ -36660,11 +36660,6 @@ msgstr ""
 "Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die Löschung "
 "der Instanz zu vermeiden."
 
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr ""
-"Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die "
-"Aktivierung von Änderungen wieder freizuschalten."
-
 msgid "License key list"
 msgstr "Liste der Lizenzschlüssel"
 
@@ -36688,6 +36683,14 @@ msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
 
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam."
+
+#, fuzzy, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
+msgstr ""
+"Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die Löschung "
+"der Instanz zu vermeiden."
 
 msgid "License usage"
 msgstr "Lizenznutzung"
@@ -41779,6 +41782,10 @@ msgstr "Name der Gruppe"
 msgid "Name of group in service name"
 msgstr "Name der Gruppe in Service-Name"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Name der Gruppe"
+
 msgid "Name of indice"
 msgstr "Name des Indexes"
 
@@ -42072,6 +42079,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Negative Werte sind nicht erlaubt"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
@@ -44525,9 +44536,8 @@ msgstr "Anzahl der hängengebliebenen Aufgaben"
 msgid "Number of tables"
 msgstr "Anzahl von Tabellen"
 
-#, fuzzy
 msgid "Number of tapes in the scratch pool"
-msgstr "Anzahl der Änderungen seit dem letzten Dump"
+msgstr "Anzahl der Bänder im Scratch-Pool"
 
 msgid "Number of tasks"
 msgstr "Anzahl von Aufgaben"
@@ -51423,9 +51433,8 @@ msgstr "Physikalische Port-Erkennung für Redfish"
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 
-#, fuzzy
 msgid "Redis Caches"
-msgstr "Redis-Clients"
+msgstr "Redis Caches"
 
 msgid "Redis clients"
 msgstr "Redis-Clients"
@@ -54566,7 +54575,7 @@ msgid "Scrape interval"
 msgstr "Scrape-Intervall"
 
 msgid "Scratch Pool"
-msgstr ""
+msgstr "Scratch-Pool"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Skript (Eingeschränkte Unterstützung, siehe Inline-Hilfe)"
@@ -64262,6 +64271,11 @@ msgid ""
 msgstr ""
 "Die Datei %s muss manuell erstellt und gepflegt werden.<br>Mit dieser Regel "
 "bereitgestellte Konfigurationseinträge werden ignoriert."
+
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
 
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
@@ -84139,6 +84153,10 @@ msgstr ""
 "Sie haben %d Nutzer konfiguriert. Bitte prüfen Sie die Anzahl der Nutzer von "
 "Checkmk."
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -84807,6 +84825,10 @@ msgstr ""
 "Ihre Eingabe ist nicht gültig. Sie müssen einen regulären Ausdruck (Regex) "
 "angeben. Zum Beispiel müssen Sie \\\\ statt \\ verwenden, wenn Sie nach "
 "einem einzelnen Backslash suchen möchten."
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "Ihre Lizenz ist am %s abgelaufen. "
 
 #, python-format
 msgid ""
@@ -87257,6 +87279,11 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr ""
+#~ "Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die "
+#~ "Aktivierung von Änderungen wieder freizuschalten."
+
 #~ msgid "Add custom icon or action"
 #~ msgstr "Benutzersymbol oder -aktion hinzufügen"
 
@@ -87295,14 +87322,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "Fehler beim Einlesen Ihrer MIB-Datei (%s): %s"
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "Name der Gruppe"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Negative Werte sind nicht erlaubt"
 
 #~ msgid "HW/SW Inventory housekeeping"
 #~ msgstr "Bereinigung der HW-/SW-Inventur"

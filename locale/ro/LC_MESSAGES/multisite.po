@@ -33701,6 +33701,14 @@ msgstr ""
 "fișier local. Procesele cu acces de citire la acel fișier vor putea utiliza "
 "Multisite ca serviciu web fără alte configurări."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Dacă doriți să continuați să folosiți Checkmk, vă rugăm să achiziționați o "
+"licență de suport %s sau să contactați echipa de vânzări Checkmk la %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33711,14 +33719,6 @@ msgstr ""
 "contactați echipa de vânzări Checkmk la %s și să vă reînnoiți licența. Dacă "
 "v-ați achiziționat licența prin intermediul unui %s, vă rugăm să îl "
 "contactați."
-
-#, fuzzy, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Dacă doriți să continuați să folosiți Checkmk, vă rugăm să achiziționați o "
-"licență de suport %s sau să contactați echipa de vânzări Checkmk la %s."
 
 #, python-format
 msgid ""
@@ -38165,10 +38165,6 @@ msgid "License expired: Renew license now to avoid site deletion."
 msgstr "Licența a expirat: Reînnoiți licența acum"
 
 #, fuzzy
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr "Licența a expirat: Reînnoiți licența acum"
-
-#, fuzzy
 msgid "License key list"
 msgstr "Detalii licență"
 
@@ -38194,6 +38190,12 @@ msgstr "Licență suspendată: Contactați acum echipa de vânzări Checkmk"
 #, fuzzy
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licență suspendată: Contactați acum echipa de vânzări Checkmk"
+
+#, fuzzy, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
+msgstr "Licența a expirat: Reînnoiți licența acum"
 
 msgid "License usage"
 msgstr "Utilizarea licenței"
@@ -43511,6 +43513,10 @@ msgstr "Denumirea grupului"
 msgid "Name of group in service name"
 msgstr "Denumirea grupului în descrierea serviciului"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Denumirea grupului"
+
 msgid "Name of indice"
 msgstr "Denumirea indicelui"
 
@@ -43801,6 +43807,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Aici nu este permisă o valoare goală."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Potrivire negativă (Excludeți gazdele corespunzătoare din set)"
@@ -66999,6 +67009,11 @@ msgstr ""
 "Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
 "furnizate cu această regulă vor fi ignorate."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Fișierul nu conține text XML"
 
@@ -87544,6 +87559,10 @@ msgstr ""
 "Aveți configurați utilizatori %d. Vă rugăm să revizuiți numărul de "
 "utilizatori pe care l-ați configurat în Checkmk."
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -88186,6 +88205,10 @@ msgstr ""
 "Declarația dvs. de căutare nu este valabilă. Trebuie să furnizați o expresie "
 "regulată (regex). De exemplu, trebuie să utilizați <tt>\\\\</tt> în loc de "
 "<tt>\\</tt> dacă doriți să căutați o singură backslash."
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "Licența dvs. a expirat pe %s."
 
 #, python-format
 msgid ""
@@ -90701,6 +90724,10 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#, fuzzy
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr "Licența a expirat: Reînnoiți licența acum"
+
 #~ msgid "Add custom icon or action"
 #~ msgstr "Adăugați o pictogramă sau o acțiune personalizată"
 
@@ -90743,14 +90770,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "Nu a reușit să proceseze fișierul MIB (%s): %s."
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "Denumirea grupului"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Aici nu este permisă o valoare goală."
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

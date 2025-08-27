@@ -33630,6 +33630,14 @@ msgstr ""
 "zullen in staat zijn om Multisite als een webservice te gebruiken zonder "
 "verdere configuratie."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Als u Checkmk wilt blijven gebruiken, koop dan een licentie die %s "
+"ondersteunt of neem contact op met het Checkmk-verkoopteam op %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33639,14 +33647,6 @@ msgstr ""
 "Als u Checkmk zonder beperkingen wilt blijven gebruiken, neem dan contact op "
 "met het Checkmk-verkoopteam op %s en vernieuw uw licentie. Als u uw licentie "
 "hebt gekocht via een %s, neem dan contact met hen op."
-
-#, fuzzy, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Als u Checkmk wilt blijven gebruiken, koop dan een licentie die %s "
-"ondersteunt of neem contact op met het Checkmk-verkoopteam op %s."
 
 #, python-format
 msgid ""
@@ -38081,10 +38081,6 @@ msgid "License expired: Renew license now to avoid site deletion."
 msgstr "Licentie verlopen: Licentie nu vernieuwen"
 
 #, fuzzy
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr "Licentie verlopen: Licentie nu vernieuwen"
-
-#, fuzzy
 msgid "License key list"
 msgstr "Licentiegegevens"
 
@@ -38111,6 +38107,12 @@ msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
 #, fuzzy
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
+
+#, fuzzy, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
+msgstr "Licentie verlopen: Licentie nu vernieuwen"
 
 msgid "License usage"
 msgstr "Licentiegebruik"
@@ -43427,6 +43429,10 @@ msgstr "Naam van de groep"
 msgid "Name of group in service name"
 msgstr "Naam van groep in dienstbeschrijving"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Naam van de groep"
+
 msgid "Name of indice"
 msgstr "Naam van het streepje"
 
@@ -43708,6 +43714,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negeren: zoek hosts <b>die dit pakket niet</b> hebben"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Een lege waarde is hier niet toegestaan."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Negatieve overeenkomst (sluit overeenkomende hosts uit van de set)"
@@ -66828,6 +66838,11 @@ msgstr ""
 "Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij deze "
 "regel verstrekte configuratie-items worden genegeerd."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Het bestand bevat geen XML-tekst"
 
@@ -87352,6 +87367,10 @@ msgstr ""
 "U hebt %d gebruikers geconfigureerd. Controleer het aantal gebruikers dat u "
 "hebt geconfigureerd in Checkmk."
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -87985,6 +88004,10 @@ msgstr ""
 "Uw zoekopdracht is ongeldig. U moet een reguliere expressie (regex) opgeven. "
 "U moet bijvoorbeeld <tt></tt> gebruiken in plaats van <tt></tt> als u naar "
 "een enkele backslash wilt zoeken."
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "Uw %s is opgeslagen."
 
 #, python-format
 msgid ""
@@ -90483,6 +90506,10 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#, fuzzy
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr "Licentie verlopen: Licentie nu vernieuwen"
+
 #~ msgid "Add custom icon or action"
 #~ msgstr "Aangepast pictogram of actie toevoegen"
 
@@ -90526,14 +90553,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "Verwerking van uw MIB-bestand mislukt (%s): %s"
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "Naam van de groep"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Een lege waarde is hier niet toegestaan."
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

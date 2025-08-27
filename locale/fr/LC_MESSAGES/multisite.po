@@ -33898,6 +33898,14 @@ msgstr ""
 "local. Les processus ayant un accès en lecture à ce fichier seront en mesure "
 "d'utiliser Multisite comme un webservice sans autre configuration."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Si vous souhaitez continuer à utiliser Checkmk, veuillez contacter l'équipe "
+"de vente de Checkmk à %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33908,14 +33916,6 @@ msgstr ""
 "contacter l'équipe de vente de Checkmk à %s et renouveler votre licence. Si "
 "vous avez acheté votre licence par l'intermédiaire d'un %s, veuillez le "
 "contacter."
-
-#, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Si vous souhaitez continuer à utiliser Checkmk, veuillez contacter l'équipe "
-"de vente de Checkmk à %s."
 
 #, python-format
 msgid ""
@@ -38373,9 +38373,6 @@ msgstr ""
 msgid "License expired: Renew license now to avoid site deletion."
 msgstr ""
 
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr ""
-
 #, fuzzy
 msgid "License key list"
 msgstr "Détails de la licence"
@@ -38400,6 +38397,12 @@ msgid "License suspended: Contact Checkmk sales team now"
 msgstr ""
 
 msgid "License suspended: Contact Checkmk sales team now."
+msgstr ""
+
+#, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
 msgstr ""
 
 msgid "License usage"
@@ -43758,6 +43761,10 @@ msgstr "Nom du groupe"
 msgid "Name of group in service name"
 msgstr "Nom du groupe dans la description du service"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Nom du groupe"
+
 msgid "Name of indice"
 msgstr "Nom de l'indice"
 
@@ -44037,6 +44044,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate : trouver les hôtes <b>non</b> ayant ce paquet"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Une valeur vide n'est pas autorisée ici"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
@@ -67392,6 +67403,11 @@ msgstr ""
 "Le fichier %s doit être créé et maintenu manuellement.<br>Les entrées de "
 "configuration fournies avec cette règle seront ignorées."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "Le fichier ne contient pas de texte XML"
 
@@ -88156,6 +88172,10 @@ msgstr ""
 "Vous avez %d utilisateurs configurés. Veuillez vérifier le nombre "
 "d'utilisateurs que vous avez configurés dans Checkmk."
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -88803,6 +88823,10 @@ msgstr ""
 "expression régulière (regex). Par exemple, vous devez utiliser <tt>\\\\\\\\</"
 "tt> au lieu de <tt>\\</tt> si vous souhaitez rechercher une seule barre "
 "oblique inversée."
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "Votre licence a expiré le %s. "
 
 #, python-format
 msgid ""
@@ -91339,14 +91363,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "Échec du traitement de votre fichier MIB (%s) : %s"
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "Nom du groupe"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Une valeur vide n'est pas autorisée ici"
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

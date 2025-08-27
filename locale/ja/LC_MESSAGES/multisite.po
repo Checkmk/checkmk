@@ -31466,6 +31466,14 @@ msgstr ""
 "サービスとしてグラフィカルユーザーインターフェース(GUI)を使用できるようになり"
 "ます。"
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Checkmkのご利用を継続される場合は、Checkmk営業チーム（%s ）までご連絡くださ"
+"い。"
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -31475,14 +31483,6 @@ msgstr ""
 "Checkmkを制限なく使用し続けたい場合は、%sのCheckmk販売チームに連絡し、ライセ"
 "ンスを更新してください。ライセンスを%sで購入した場合は、そちらに連絡してくだ"
 "さい。"
-
-#, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Checkmkのご利用を継続される場合は、Checkmk営業チーム（%s ）までご連絡くださ"
-"い。"
 
 #, python-format
 msgid ""
@@ -35670,9 +35670,6 @@ msgstr ""
 "ライセンスの有効期限切れ：サイトの削除を避けるために、今すぐライセンスを更新"
 "してください。"
 
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください。"
-
 msgid "License key list"
 msgstr "ライセンスキーリスト"
 
@@ -35696,6 +35693,14 @@ msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連�
 
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください。"
+
+#, fuzzy, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
+msgstr ""
+"ライセンスの有効期限切れ：サイトの削除を避けるために、今すぐライセンスを更新"
+"してください。"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
@@ -40710,6 +40715,10 @@ msgstr "グループ名"
 msgid "Name of group in service name"
 msgstr "サービス名にあるグループの名前"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "グループ名"
+
 msgid "Name of indice"
 msgstr "インデックスの名前"
 
@@ -40992,6 +41001,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "負の値は不可"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "否定一致(一致するホストをセットから除外)"
@@ -62595,6 +62608,11 @@ msgstr ""
 "ファイル %s は、手動で作成および保守する必要があります。<br>このルールで指定"
 "された設定項目は無視されます。"
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "ファイルにXMLテキストが含まれていません"
 
@@ -81608,6 +81626,10 @@ msgstr ""
 "%d ユーザーが構成されています。Checkmkで構成したユーザーの数を確認してくださ"
 "い。"
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -82243,6 +82265,10 @@ msgstr ""
 "入力が有効ではありません。正規表現（regex）を入力する必要があります。例えば、"
 "バックスラッシュを１つだけ検索したい場合は<tt>\\</tt>の代わりに<tt>\\\\</tt>"
 "を使用する必要があります。"
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "あなたのライセンスは%sで失効しました。 "
 
 #, python-format
 msgid ""
@@ -84660,6 +84686,9 @@ msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
 
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください。"
+
 #~ msgid "Add custom icon or action"
 #~ msgstr "カスタムアイコンまたはアクションを追加する"
 
@@ -84698,14 +84727,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "MIBファイル( %s ) : %s の処理に失敗しました"
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "グループ名"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "負の値は不可"
 
 #~ msgid "HW/SW Inventory housekeeping"
 #~ msgstr "HW/SWインベントリ ハウスキーピング"

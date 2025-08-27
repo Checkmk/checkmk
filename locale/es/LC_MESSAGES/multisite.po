@@ -33883,6 +33883,14 @@ msgstr ""
 "lectura a ese archivo podrán utilizar Multisite como un webservice sin "
 "ninguna otra configuración."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Si desea seguir utilizando Checkmk, adquiera una licencia compatible con %s "
+"o póngase en contacto con el equipo de ventas de Checkmk en %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33892,14 +33900,6 @@ msgstr ""
 "Si desea seguir utilizando Checkmk sin restricciones, póngase en contacto "
 "con el equipo de ventas de Checkmk en %s y renueve su licencia. Si adquirió "
 "su licencia a través de %s, póngase en contacto con ellos."
-
-#, fuzzy, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Si desea seguir utilizando Checkmk, adquiera una licencia compatible con %s "
-"o póngase en contacto con el equipo de ventas de Checkmk en %s."
 
 #, python-format
 msgid ""
@@ -38363,10 +38363,6 @@ msgid "License expired: Renew license now to avoid site deletion."
 msgstr "Licencia expirada: Renovar licencia ahora"
 
 #, fuzzy
-msgid "License expired: Renew license now to reactivate change activation."
-msgstr "Licencia expirada: Renovar licencia ahora"
-
-#, fuzzy
 msgid "License key list"
 msgstr "Detalles de la licencia"
 
@@ -38393,6 +38389,12 @@ msgstr "Licencia suspendida: Contacta con el equipo de ventas de Checkmk"
 #, fuzzy
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licencia suspendida: Contacta con el equipo de ventas de Checkmk"
+
+#, fuzzy, python-format
+msgid ""
+"License terminated. Your license expires in %d days. Renew license now to "
+"avoid site deletion."
+msgstr "Licencia expirada: Renovar licencia ahora"
 
 msgid "License usage"
 msgstr "Uso de la licencia"
@@ -43773,6 +43775,10 @@ msgstr "Nombre del grupo"
 msgid "Name of group in service name"
 msgstr "Nombre del grupo en la descripción del servicio"
 
+#, fuzzy
+msgid "Name of group2"
+msgstr "Nombre del grupo"
+
 msgid "Name of indice"
 msgstr "Nombre del índice"
 
@@ -44050,6 +44056,10 @@ msgstr ""
 
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negar: encontrar hosts <b>que no tengan este paquete</b>"
+
+#, fuzzy
+msgid "Negative age tolerance"
+msgstr "Aquí no se permite un valor vacío."
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr "Coincidencia negativa (excluir del conjunto los hosts coincidentes)"
@@ -67398,6 +67408,11 @@ msgstr ""
 "El archivo %s necesita ser creado y mantenido manualmente.<br>Las entradas "
 "de configuración proporcionadas con esta regla serán ignoradas."
 
+msgid ""
+"The file age of files with creation time from the future will be set to 0 if "
+"the creation time is within the tolerance period."
+msgstr ""
+
 msgid "The file does not contain XML text"
 msgstr "El fichero no contiene texto XML"
 
@@ -88041,6 +88056,10 @@ msgstr ""
 "Tiene %d usuarios configurados. Por favor, revise el número de usuarios que "
 "ha configurado en Checkmk."
 
+#, python-format
+msgid "You have a grace period of %d days before your site is deleted. "
+msgstr ""
+
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -88683,6 +88702,10 @@ msgstr ""
 "Su declaración de búsqueda no es válida. Necesita proporcionar una expresión "
 "regular (regex). Por ejemplo, tiene que utilizar <tt>\\año</tt> en lugar de "
 "<tt>\\año</tt> si quiere buscar una sola barra invertida."
+
+#, fuzzy, python-format
+msgid "Your license expires on %s. "
+msgstr "Tu %s ha sido guardado."
 
 #, python-format
 msgid ""
@@ -91204,6 +91227,10 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+#, fuzzy
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr "Licencia expirada: Renovar licencia ahora"
+
 #~ msgid "Add custom icon or action"
 #~ msgstr "Añadir un icono o una acción personalizada"
 
@@ -91247,14 +91274,6 @@ msgstr ""
 #, python-format
 #~ msgid "Failed to process your MIB file (%s): %s"
 #~ msgstr "Fallo al procesar su archivo MIB (%s): %s"
-
-#, fuzzy
-#~ msgid "Name of group2"
-#~ msgstr "Nombre del grupo"
-
-#, fuzzy
-#~ msgid "Negative age tolerance"
-#~ msgstr "Aquí no se permite un valor vacío."
 
 #, fuzzy
 #~ msgid "HW/SW Inventory housekeeping"

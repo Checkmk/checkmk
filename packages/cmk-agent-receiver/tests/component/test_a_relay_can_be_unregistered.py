@@ -7,6 +7,7 @@ import uuid
 
 from .test_lib.relay_proxy import RelayProxy
 from .test_lib.relays import register_relay, unregister_relay
+from .test_lib.tasks import get_all_relay_tasks
 
 
 def test_a_relay_can_be_unregistered(relay_proxy: RelayProxy) -> None:
@@ -31,19 +32,12 @@ def test_a_relay_can_be_unregistered(relay_proxy: RelayProxy) -> None:
     unregister_relay(relay_id_A, relay_proxy)
 
     # Verify relay B have tasks queue
-    response_B_tasks = relay_proxy.client.get(
-        f"/{relay_proxy.site_name}/agent-receiver/relays/{relay_id_B}/tasks"
-    )
-    assert response_B_tasks.status_code == 200, (
-        f"Failed to get tasks for relay B: {response_B_tasks.text}"
-    )
+    tasks_B = get_all_relay_tasks(relay_proxy, relay_id_B)
+    assert len(tasks_B.tasks) == 0
 
-    response_A_tasks = relay_proxy.client.get(
-        f"/{relay_proxy.site_name}/agent-receiver/relays/{relay_id_A}/tasks"
-    )
-    assert response_A_tasks.status_code == 404, (
-        f"Failed, getting tasks for relay A was not expected: {response_A_tasks.text}"
-    )
-    assert "Relay not found" in response_A_tasks.text, (
-        f"Expected 'Relay not found' in response: {response_A_tasks.text}"
+    get_all_relay_tasks(
+        relay_proxy,
+        relay_id_A,
+        expected_status_code=404,
+        expected_error_message="Relay not found",
     )

@@ -7,6 +7,7 @@ import uuid
 
 from .test_lib.relay_proxy import RelayProxy
 from .test_lib.relays import register_relay
+from .test_lib.tasks import get_all_relay_tasks
 
 
 def test_a_relay_can_be_registered(relay_proxy: RelayProxy) -> None:
@@ -26,17 +27,8 @@ def test_a_relay_can_be_registered(relay_proxy: RelayProxy) -> None:
     register_relay(relay_id_B, relay_proxy)
 
     # Verify both relays have tasks queue
-    # TODO: Extend the agent receiver test proxy in a next commit
-    response_A_tasks = relay_proxy.client.get(
-        f"/{relay_proxy.site_name}/agent-receiver/relays/{relay_id_A}/tasks"
-    )
-    assert response_A_tasks.status_code == 200, (
-        f"Failed to get tasks for relay A: {response_A_tasks.text}"
-    )
+    tasks_A = get_all_relay_tasks(relay_proxy, relay_id_A)
+    assert len(tasks_A.tasks) == 0
 
-    response_B_tasks = relay_proxy.client.get(
-        f"/{relay_proxy.site_name}/agent-receiver/relays/{relay_id_B}/tasks"
-    )
-    assert response_B_tasks.status_code == 200, (
-        f"Failed to get tasks for relay B: {response_B_tasks.text}"
-    )
+    tasks_B = get_all_relay_tasks(relay_proxy, relay_id_B)
+    assert len(tasks_B.tasks) == 0

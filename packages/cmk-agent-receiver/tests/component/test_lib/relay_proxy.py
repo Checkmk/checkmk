@@ -38,3 +38,6 @@ class RelayProxy:
                 "payload": task_payload,
             },
         )
+
+    def get_all_relay_tasks(self, relay_id: str) -> httpx.Response:
+        return self.client.get(f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks")

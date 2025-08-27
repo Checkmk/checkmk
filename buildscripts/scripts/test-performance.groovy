@@ -23,16 +23,14 @@ def main() {
 
     def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
-    stage("Prepare workspace") {
-        dir("${checkout_dir}") {
+    dir("${checkout_dir}") {
+        stage("Prepare workspace") {
             sh("""
                 rm -rf "${result_dir}"
                 mkdir -p "${result_dir}"
             """);
         }
-    }
 
-    dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
                 edition: edition,
@@ -73,11 +71,13 @@ def main() {
                     container_name: "this-distro-container",
                 ]);
             }
+        }
+    }
 
-            stage("Archive / process test reports") {
-                show_duration("archiveArtifacts") {
-                    archiveArtifacts("${result_dir}/**");
-                }
+    dir("${result_dir}") {
+        stage("Archive / process test reports") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts("**");
             }
         }
     }

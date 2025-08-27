@@ -13,10 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
 
@@ -102,6 +100,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         host_name: HostName,
         encryption_handling: TCPEncryptionHandling,
         pre_shared_secret: str | None,
+        uuid_file: Path,
         tls_config: TLSConfig,
     ) -> None:
         super().__init__()
@@ -110,6 +109,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling
+        self.uuid_file: Final = uuid_file
         self.pre_shared_secret: Final = pre_shared_secret
         self.tls_config: Final = tls_config
         self._logger: Final = logging.getLogger("cmk.helper.tcp")
@@ -124,6 +124,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
                     f"timeout={self.timeout!r}",
                     f"host_name={self.host_name!r}",
                     f"encryption_handling={self.encryption_handling!r}",
+                    f"uuid_file={self.uuid_file!r}",
                     f"pre_shared_secret={self.pre_shared_secret!r}",
                 )
             )
@@ -180,17 +181,15 @@ class TCPFetcher(Fetcher[AgentRawData]):
         if sock is None:
             raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
-        # TODO: configure the file and read it directly
-        controller_uuid = UUIDLinkManager(
-            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-            r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-            uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-        ).uuid_store.get(self.host_name)
-        agent_data = self._get_agent_data(
-            sock, str(controller_uuid) if controller_uuid is not None else None
-        )
+        agent_data = self._get_agent_data(sock, self._get_uuid_as_expected_server_name())
         return agent_data
+
+    def _get_uuid_as_expected_server_name(self) -> str | None:
+        try:
+            return str(self.uuid_file.readlink())
+        except FileNotFoundError:
+            # so we have no registration. This might be fine.
+            return None
 
     def _from_tls(
         self, sock: socket.socket, server_hostname: str

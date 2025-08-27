@@ -3819,6 +3819,7 @@ class FetcherFactory:
             family=host_ip_family,
             timeout=self._tcp_fetcher_config.connect_timeout(host_name),
             encryption_handling=self._tcp_fetcher_config.parsed_encryption_handling(host_name),
+            uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
             pre_shared_secret=self._tcp_fetcher_config.symmetric_agent_encryption(host_name),
             tls_config=tls_config,
         )

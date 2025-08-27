@@ -849,6 +849,7 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(
                 cas_dir=tmp_path,
@@ -875,6 +876,7 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(
                 cas_dir=tmp_path,
@@ -900,6 +902,7 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(
                 cas_dir=tmp_path,

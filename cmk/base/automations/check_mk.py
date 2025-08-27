@@ -3181,6 +3181,7 @@ class AutomationDiagCmkAgent(Automation):
                 timeout=float(diag_cmk_agent_input.timeout),
                 host_name=host_name,
                 encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+                uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
                 pre_shared_secret=None,
                 tls_config=tls_config,
             ),
@@ -3491,6 +3492,7 @@ class AutomationDiagHost(Automation):
                     timeout=timeout,
                     host_name=fetcher.host_name,
                     encryption_handling=fetcher.encryption_handling,
+                    uuid_file=cmk.utils.paths.uuid_lookup_dir / fetcher.host_name,
                     pre_shared_secret=fetcher.pre_shared_secret,
                     tls_config=tls_config,
                 )

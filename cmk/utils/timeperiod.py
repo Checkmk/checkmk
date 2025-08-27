@@ -277,17 +277,12 @@ def validate_timeperiod_exceptions(timeperiod: TimeperiodSpec) -> None:
 
 def validate_day_time_ranges(timeperiod: TimeperiodSpec) -> None:
     day_names = weekday_ids()
-    has_day_fields = False
     for name in day_names:
         if name not in timeperiod:
             continue
 
-        has_day_fields = True
         for time_range in timeperiod[name]:
             _validate_time_range(time_range)
-
-    if not has_day_fields:
-        raise ValueError("Missing time periods")
 
 
 def _validate_time_range(time_range: DayTimeFrame) -> None:

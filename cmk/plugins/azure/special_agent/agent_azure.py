@@ -21,7 +21,7 @@ import string
 import sys
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from enum import Enum
+from enum import auto, Enum, StrEnum
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Final, Literal, Required, TypedDict, TypeVar
@@ -275,20 +275,12 @@ class AzureSubscription:
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
         self._name: Final[str] = name
-        self._valid_hostname: Final[str] = HostAddress.project_valid(name)
+        self.hostname: Final[str] = HostAddress.project_valid(name)
 
         self._safe_name_suffix: Final[str] = self.id[-8:]
         self._safe_hostnames: Final[bool] = safe_hostnames
 
-    @property
-    def hostname(self) -> str:
-        return (
-            f"azr-{self._valid_hostname}-{self._safe_name_suffix}"
-            if self._safe_hostnames
-            else self._valid_hostname
-        )
-
-    def get_resource_hostname(self, resource_name: str) -> str:
+    def get_safe_hostname(self, resource_name: str) -> str:
         return (
             f"azr-{resource_name}-{self._safe_name_suffix}"
             if self._safe_hostnames
@@ -647,14 +639,48 @@ class Section:
 
 class AzureSection(Section):
     def __init__(
-        self, name: str, piggytargets: Iterable[str] = ("",), separator: int = 124
+        self,
+        name: str,
+        piggytargets: Iterable[str] | None = None,
+        separator: int = 124,
+        subscription: AzureSubscription | None = None,
     ) -> None:
-        super().__init__("azure_%s" % name, piggytargets, separator=separator, options=[])
+        if piggytargets is not None:
+            if subscription is None:
+                raise ValueError("subscription is required if piggytargets are given")
+
+            piggytargets = [
+                subscription.get_safe_hostname(piggytarget) for piggytarget in piggytargets
+            ]
+
+        super().__init__("azure_%s" % name, piggytargets or ("",), separator=separator, options=[])
 
 
-class LabelsSection(Section):
-    def __init__(self, piggytarget: str) -> None:
-        super().__init__("azure_labels", [piggytarget], separator=0, options=[])
+class AzureLabelsSection(AzureSection):
+    def __init__(
+        self,
+        piggytarget: str,
+        subscription: AzureSubscription,
+    ) -> None:
+        super().__init__("labels", [piggytarget], separator=0, subscription=subscription)
+
+
+class HostTarget(StrEnum):
+    RESOURCE_NAME = auto()
+    PIGGYTARGETS = auto()
+
+
+class AzureResourceSection(AzureSection):
+    def __init__(
+        self, resource: AzureResource, host_target: HostTarget = HostTarget.PIGGYTARGETS
+    ) -> None:
+        super().__init__(
+            resource.section,
+            resource.piggytargets
+            if host_target == HostTarget.PIGGYTARGETS
+            else [resource.info["name"]],
+            subscription=resource.subscription,
+        )
 
 
 class IssueCollector:
@@ -733,12 +759,13 @@ class AzureResource:
         self.tags = self._filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {**info, "tags": self.tags}
         self.info.update(get_attrs_from_uri(info["id"]))
+        self.subscription = subscription
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
         if group := self.info.get("group"):
             self.info["group"] = group.lower()
-            self.piggytargets.append(subscription.get_resource_hostname(group.lower()))
+            self.piggytargets.append(group.lower())
         self.metrics: list = []
 
     def dumpinfo(self) -> Sequence[tuple]:
@@ -911,14 +938,14 @@ async def _collect_app_gateways_resources(
 async def process_app_gateways(
     mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
-) -> Sequence[AzureSection]:
+) -> Sequence[AzureResourceSection]:
     applications_gateways = await _collect_app_gateways_resources(
         mgmt_client, monitored_resources_by_id
     )
 
     sections = []
     for resource in applications_gateways:
-        section = AzureSection(resource.section, resource.piggytargets)
+        section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         sections.append(section)
 
@@ -977,12 +1004,12 @@ async def _collect_load_balancers_resources(
 async def process_load_balancers(
     mgmt_client: BaseAsyncApiClient,
     monitored_resources_by_id: Mapping[str, AzureResource],
-) -> Sequence[AzureSection]:
+) -> Sequence[AzureResourceSection]:
     load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources_by_id)
 
     sections = []
     for resource in load_balancers:
-        section = AzureSection(resource.section, resource.piggytargets)
+        section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         sections.append(section)
 
@@ -1163,7 +1190,7 @@ async def get_vnet_gw_health(
 
 async def process_virtual_net_gw(
     api_client: BaseAsyncApiClient, resource: AzureResource
-) -> AzureSection:
+) -> AzureResourceSection:
     gw_keys = (
         "bgpSettings",
         "disableIPSecReplayProtection",
@@ -1191,20 +1218,14 @@ async def process_virtual_net_gw(
         "health": vnet_health,
     }
 
-    section = AzureSection(
-        FetchedResource.virtual_network_gateways.section,
-        resource.piggytargets,
-    )
+    section = AzureResourceSection(resource)
     section.add(resource.dumpinfo())
 
     return section
 
 
-async def process_redis(resource: AzureResource, subscription: AzureSubscription) -> AzureSection:
-    section = AzureSection(
-        FetchedResource.redis.section,
-        [subscription.get_resource_hostname(resource.info["name"])],
-    )
+async def process_redis(resource: AzureResource) -> AzureResourceSection:
+    section = AzureResourceSection(resource, HostTarget.RESOURCE_NAME)
     section.add(resource.dumpinfo())
 
     return section
@@ -1626,7 +1647,9 @@ async def _gather_metrics(
     return err
 
 
-def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> LabelsSection:
+def get_vm_labels_section(
+    vm: AzureResource, group_labels: GroupLabels, subscription: AzureSubscription
+) -> AzureLabelsSection:
     group_name = vm.info["group"]
     vm_labels = dict(vm.tags)
 
@@ -1634,7 +1657,7 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
         if tag_name not in vm.tags:
             vm_labels[tag_name] = tag_value
 
-    labels_section = LabelsSection(vm.info["name"])
+    labels_section = AzureLabelsSection(vm.info["name"], subscription=subscription)
     labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
     labels_section.add((json.dumps(vm_labels),))
     return labels_section
@@ -1672,16 +1695,16 @@ async def get_group_labels(
 def write_group_info(
     monitored_groups: Sequence[str],
     monitored_resources: Sequence[AzureResource],
-    subcription: AzureSubscription,
+    subscription: AzureSubscription,
     group_labels: GroupLabels,
 ) -> None:
     for group_name, tags in group_labels.items():
-        labels_section = LabelsSection(subcription.get_resource_hostname(group_name))
+        labels_section = AzureLabelsSection(group_name, subscription)
         labels_section.add((json.dumps({"group_name": group_name}),))
         labels_section.add((json.dumps(tags),))
         labels_section.write()
 
-    section = AzureSection("agent_info", [subcription.hostname])
+    section = AzureSection("agent_info", [subscription.hostname], subscription=subscription)
     section.add(("monitored-groups", json.dumps(monitored_groups)))
     section.add(
         (
@@ -1693,25 +1716,30 @@ def write_group_info(
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
     AzureSection(
-        "agent_info",
-        [
-            *(subcription.get_resource_hostname(group) for group in monitored_groups),
-            subcription.hostname,
-        ],
+        "agent_info", [*monitored_groups, subscription.hostname], subscription=subscription
     ).write()
 
 
-def write_subscription_info(subcription: AzureSubscription) -> None:
-    labels_section = LabelsSection(subcription.hostname)
+def write_subscription_info(subscription: AzureSubscription) -> None:
+    labels_section = AzureLabelsSection(subscription.hostname, subscription)
     labels_section.add(
-        (json.dumps({"subscription": subcription.hostname, "entity_subscription": "yes"}),)
+        (
+            json.dumps(
+                {
+                    "subscription": subscription.get_safe_hostname(subscription.hostname),
+                    "entity_subscription": "yes",
+                }
+            ),
+        )
     )
-    labels_section.add((json.dumps(subcription.tags),))
+    labels_section.add((json.dumps(subscription.tags),))
     labels_section.write()
 
 
-def write_remaining_reads(rate_limit: int | None, subscription: str) -> None:
-    agent_info_section = AzureSection("agent_info", [subscription])
+def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscription) -> None:
+    agent_info_section = AzureSection(
+        "agent_info", [subscription.hostname], subscription=subscription
+    )
     agent_info_section.add(("remaining-reads", rate_limit))
     agent_info_section.write()
 
@@ -1720,7 +1748,9 @@ def write_to_agent_info_section(
     message: str, subscription: AzureSubscription | None, component: str, status: int
 ) -> None:
     value = json.dumps((status, f"{component}: {message}"))
-    section = AzureSection("agent_info", [subscription.hostname if subscription else ""])
+    section = AzureSection(
+        "agent_info", [subscription.hostname if subscription else ""], subscription=subscription
+    )
     section.add(("agent-bailout", value))
     section.write()
 
@@ -1843,9 +1873,9 @@ def write_usage_section(
     """
 
     if not usage_data:
-        AzureSection("usagedetails", monitored_groups + [subscription.hostname]).write(
-            write_empty=True
-        )
+        AzureSection(
+            "usagedetails", [*monitored_groups, subscription.hostname], subscription=subscription
+        ).write(write_empty=True)
 
     for usage in usage_data:
         # fill "resource" mandatory information
@@ -1857,7 +1887,7 @@ def write_usage_section(
             subscription.hostname
         ]
 
-        section = AzureSection(usage_resource.section, piggytargets)
+        section = AzureSection(usage_resource.section, piggytargets, subscription=subscription)
         section.add(usage_resource.dumpinfo())
         section.write()
 
@@ -1929,7 +1959,7 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(health_values, monitored_resources_by_id)
+    return _get_resource_health_sections(health_values, monitored_resources_by_id, subscription)
 
 
 # TODO: test
@@ -1938,8 +1968,8 @@ async def process_virtual_machines(
     args: Args,
     group_labels: GroupLabels,
     monitored_resources_by_id: Mapping[str, AzureResource],
-    subcription: AzureSubscription,
-) -> Sequence[AzureSection]:
+    subscription: AzureSubscription,
+) -> Sequence[AzureResourceSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
         params={
@@ -1970,14 +2000,12 @@ async def process_virtual_machines(
     sections = []
     for resource in virtual_machines:
         if args.piggyback_vms == "self":
-            labels_section = get_vm_labels_section(resource, group_labels)
+            labels_section = get_vm_labels_section(resource, group_labels, subscription)
             labels_section.write()
 
-        section = AzureSection(
-            FetchedResource.virtual_machines.section,
-            [subcription.get_resource_hostname(resource.info["name"])]
-            if args.piggyback_vms == "self"
-            else resource.piggytargets,
+        section = AzureResourceSection(
+            resource,
+            HostTarget.RESOURCE_NAME if args.piggyback_vms == "self" else HostTarget.PIGGYTARGETS,
         )
         section.add(resource.dumpinfo())
         sections.append(section)
@@ -1990,7 +2018,7 @@ async def process_vault(
     api_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     resource: AzureResource,
-) -> AzureSection:
+) -> AzureResourceSection:
     vault_properties = (
         "friendlyName",
         "backupManagementType",
@@ -2022,10 +2050,7 @@ async def process_vault(
     resource.info["properties"] = {}
     resource.info["properties"]["backup_containers"] = [properties]
 
-    section = AzureSection(
-        FetchedResource.vaults.section,
-        resource.piggytargets,
-    )
+    section = AzureResourceSection(resource)
     section.add(resource.dumpinfo())
 
     return section
@@ -2039,6 +2064,7 @@ class ResourceHealth(TypedDict, total=False):
 def _get_resource_health_sections(
     resource_health_view: Sequence[ResourceHealth],
     resources_by_id: Mapping[str, AzureResource],
+    subscription: AzureSubscription,
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2066,7 +2092,7 @@ def _get_resource_health_sections(
 
     sections = []
     for group, values in health_section.items():
-        section = AzureSection("resource_health", resource.piggytargets)
+        section = AzureSection("resource_health", resource.piggytargets, subscription=subscription)
         for value in values:
             section.add([value])
         sections.append(section)
@@ -2129,7 +2155,7 @@ async def process_single_resources(
     subscription: AzureSubscription,
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[Section]:
-    sections = []
+    sections: list[AzureSection] = []
     tasks = set()
     for _resource_id, resource in monitored_resources_by_id.items():
         resource_type = resource.info["type"]
@@ -2141,13 +2167,13 @@ async def process_single_resources(
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
         elif resource_type == FetchedResource.redis.type:
-            tasks.add(process_redis(resource, subscription))
+            tasks.add(process_redis(resource))
         else:
             # simple sections without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
                 resource.section = "servers"  # use the same section as for single servers
 
-            section = AzureSection(resource.section, resource.piggytargets)
+            section = AzureResourceSection(resource)
             section.add(resource.dumpinfo())
             sections.append(section)
 
@@ -2264,7 +2290,7 @@ async def main_subscription(
             tasks.discard(None)
             await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
-            write_remaining_reads(mgmt_client.ratelimit, subscription.hostname)
+            write_remaining_reads(mgmt_client.ratelimit, subscription)
 
     except Exception as exc:
         if args.debug:

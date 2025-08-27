@@ -46,7 +46,7 @@ class MockAzureSection(AzureSection):
         piggytargets: Iterable[str] = ("",),
         separator: int = 124,
     ) -> None:
-        super().__init__(name, piggytargets, separator)
+        super().__init__(name, piggytargets, separator, fake_azure_subscription())
         self._cont = content
 
 
@@ -88,9 +88,12 @@ class MockAzureSection(AzureSection):
     ],
 )
 def test_get_vm_labels_section(
-    vm: AzureResource, group_tags: GroupLabels, expected_result: tuple[Sequence[str], Sequence[str]]
+    vm: AzureResource,
+    group_tags: GroupLabels,
+    expected_result: tuple[Sequence[str], Sequence[str]],
+    mock_azure_subscription: AzureSubscription,
 ) -> None:
-    labels_section = get_vm_labels_section(vm, group_tags)
+    labels_section = get_vm_labels_section(vm, group_tags, mock_azure_subscription)
 
     assert labels_section._cont == expected_result[0]
     assert labels_section._piggytargets == expected_result[1]
@@ -307,12 +310,10 @@ async def test_get_resource_health_sections(
     monitored_resources: Mapping[str, AzureResource],
     resource_health: Sequence[ResourceHealth],
     expected_sections: Sequence[MockAzureSection],
+    mock_azure_subscription: AzureSubscription,
 ) -> None:
     sections = list(
-        _get_resource_health_sections(
-            resource_health,
-            monitored_resources,
-        )
+        _get_resource_health_sections(resource_health, monitored_resources, mock_azure_subscription)
     )
 
     assert sections == expected_sections, "Sections not as expected"
@@ -323,20 +324,23 @@ async def test_get_resource_health_sections(
     [
         (
             10000,
-            "<<<<subscription_id>>>>\n"
+            "<<<<mock_subscription_name>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
         ),
         (
             None,
-            "<<<<subscription_id>>>>\n"
+            "<<<<mock_subscription_name>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
         ),
     ],
 )
 def test_write_remaining_reads(
-    capsys: pytest.CaptureFixture[str], rate_limit: int | None, expected_output: str
+    capsys: pytest.CaptureFixture[str],
+    rate_limit: int | None,
+    expected_output: str,
+    mock_azure_subscription: AzureSubscription,
 ) -> None:
-    write_remaining_reads(rate_limit, "subscription_id")
+    write_remaining_reads(rate_limit, mock_azure_subscription)
 
     captured = capsys.readouterr()
     assert captured.out == expected_output
@@ -518,7 +522,7 @@ async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None
         mock_azure_subscription,
     )
 
-    result_section = await process_redis(resource, mock_azure_subscription)
+    result_section = await process_redis(resource)
 
     expected_section = MockAzureSection(
         "redis",

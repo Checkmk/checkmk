@@ -15,7 +15,7 @@ Args = argparse.Namespace
 
 
 @pytest.mark.parametrize(
-    "azure_subscription, expected_hostname",
+    "azure_subscription, expected_hostname, expected_safe_hostname",
     [
         (
             AzureSubscription(
@@ -25,6 +25,7 @@ Args = argparse.Namespace
                 safe_hostnames=False,
             ),
             "subscription_name",
+            "resource_name",
         ),
         (
             AzureSubscription(
@@ -33,14 +34,16 @@ Args = argparse.Namespace
                 tags={},
                 safe_hostnames=True,
             ),
-            "azr-subscription_name-12345678",
+            "subscription_name",
+            "azr-resource_name-12345678",
         ),
     ],
 )
 def test_azuresubscription_hostname(
-    azure_subscription: AzureSubscription, expected_hostname: str
+    azure_subscription: AzureSubscription, expected_hostname: str, expected_safe_hostname: str
 ) -> None:
     assert azure_subscription.hostname == expected_hostname
+    assert azure_subscription.get_safe_hostname("resource_name") == expected_safe_hostname
 
 
 @pytest.mark.parametrize(
@@ -71,7 +74,7 @@ def test_azuresubscription_hostname(
 def test_resource_hostname(
     azure_subscription: AzureSubscription, resource_name: str, expected_resource_hostname: str
 ) -> None:
-    assert azure_subscription.get_resource_hostname(resource_name) == expected_resource_hostname
+    assert azure_subscription.get_safe_hostname(resource_name) == expected_resource_hostname
 
 
 RESOURCE_GROUPS_RESPONSE = {

@@ -672,7 +672,7 @@ class HostTarget(StrEnum):
 
 class AzureResourceSection(AzureSection):
     def __init__(
-        self, resource: AzureResource, host_target: HostTarget = HostTarget.PIGGYTARGETS
+        self, resource: AzureResource, host_target: HostTarget = HostTarget.RESOURCE_NAME
     ) -> None:
         super().__init__(
             resource.section,
@@ -1225,7 +1225,7 @@ async def process_virtual_net_gw(
 
 
 async def process_redis(resource: AzureResource) -> AzureResourceSection:
-    section = AzureResourceSection(resource, HostTarget.RESOURCE_NAME)
+    section = AzureResourceSection(resource)
     section.add(resource.dumpinfo())
 
     return section

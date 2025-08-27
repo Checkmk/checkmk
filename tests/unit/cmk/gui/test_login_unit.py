@@ -16,7 +16,7 @@ from werkzeug.test import create_environ
 
 from cmk.ccc.user import UserId
 from cmk.gui import auth, http, login
-from cmk.gui.config import load_config
+from cmk.gui.config import active_config, load_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.session import session
@@ -49,7 +49,7 @@ def test_login_two_factor_redirect(
             "totp_credentials": {},
         },
     }
-    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+    with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
         assert resp.status_code == 302
         assert resp.location.startswith("user_login_two_factor.py")
@@ -61,7 +61,7 @@ def test_login_forced_password_change(
     custom_attrs: UserSpec = {
         "enforce_pw_change": True,
     }
-    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+    with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
         assert resp.status_code == 302
         assert resp.location.startswith("user_change_pw.py")
@@ -84,7 +84,7 @@ def test_login_two_factor_has_precedence_over_password_change(
             "totp_credentials": {},
         },
     }
-    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+    with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
         assert resp.status_code == 302
         assert resp.location.startswith("user_login_two_factor.py")

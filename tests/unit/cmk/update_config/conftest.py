@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.gui import login
+from cmk.gui.config import Config
 from tests.unit.cmk.gui.common_fixtures import (
     create_flask_app,
     create_wsgi_app,
@@ -41,7 +42,7 @@ def gui_cleanup_after_test(
 
 
 @pytest.fixture()
-def load_config(request_context: None) -> Iterator[None]:
+def load_config(request_context: None) -> Iterator[Config]:
     yield from perform_load_config()
 
 
@@ -57,8 +58,8 @@ def request_context(flask_app: Flask) -> Iterator[None]:
 
 
 @pytest.fixture()
-def with_admin(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="admin") as user:
+def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=False, role="admin", config=load_config) as user:
         yield user
 
 
@@ -70,8 +71,8 @@ def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
 
 
 @pytest.fixture()
-def with_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="user") as user:
+def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=False, role="user", config=load_config) as user:
         yield user
 
 

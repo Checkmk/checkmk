@@ -321,7 +321,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     assert builtin_role_ids == ["user", "admin", "guest", "agent_registration", "no_permissions"]
     assert "test" not in active_config.admin_users
 
-    with create_and_destroy_user(username="test") as user:
+    with create_and_destroy_user(username="test", config=active_config) as user:
         yield LoggedInUser(user[0])
 
 

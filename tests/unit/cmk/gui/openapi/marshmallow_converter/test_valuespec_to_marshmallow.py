@@ -7,6 +7,7 @@ from collections.abc import Iterator
 import pytest
 
 import cmk.utils.paths
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
 from cmk.gui.session import UserContext
@@ -20,7 +21,7 @@ def fixture_fake_user() -> Iterator[LoggedInUser]:
     user_dir = cmk.utils.paths.profile_dir / "fake_user"
     user_dir.mkdir(parents=True)
 
-    with create_and_destroy_user(username="fake_user") as user:
+    with create_and_destroy_user(username="fake_user", config=active_config) as user:
         yield LoggedInUser(user[0])
 
 

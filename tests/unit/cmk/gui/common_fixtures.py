@@ -100,10 +100,11 @@ def perform_gui_cleanup_after_test(
     hooks.call("request-end")
 
 
-def perform_load_config() -> Iterator[None]:
+def perform_load_config() -> Iterator[config_module.Config]:
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
+    # Next step is to return the config object here
     config_module.initialize()
-    yield
+    yield config_module.active_config
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 

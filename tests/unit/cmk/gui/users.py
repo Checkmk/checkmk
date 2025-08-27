@@ -13,8 +13,7 @@ from datetime import datetime
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
-from cmk.gui import config
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
@@ -67,31 +66,33 @@ def create_and_destroy_user(
     role: str = "user",
     username: str | None = None,
     custom_attrs: UserSpec | None = None,
+    config: Config,
 ) -> Iterator[tuple[UserId, str]]:
     if username is None:
         username = "test123-" + "".join(random.choices(string.ascii_lowercase, k=5))
     password = "Ischbinwischtisch"
     user_id = UserId(username)
-    del username
 
-    # Load the config so that superuser's roles are available
-    config.load_config()
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
+    if user_id in config.multisite_users:
+        raise ValueError(f"User {user_id} already exists!")
+
+    user_attributes = get_user_attributes(config.wato_user_attrs)
     with SuperUserContext():
         create_user(
             user_id,
-            _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs),
+            (user := _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs)),
             user_features_registry.features().sites,
             user_attributes,
             use_git=False,
         )
 
-    # Load the config with the newly created user
-    config.load_config()
+    config.multisite_users[user_id] = user
 
     try:
         yield user_id, password
     finally:
+        config.multisite_users.pop(user_id, None)
+
         with SuperUserContext():
             users = load_users()
             if user_id in users:

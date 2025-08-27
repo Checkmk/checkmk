@@ -13,6 +13,7 @@ from pytest_mock import MockerFixture
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
@@ -349,7 +350,7 @@ class TestHostConverter:
 
     def test_exists_setup_write_edit_hosts(self, sample_host: str) -> None:
         # write also requires read permissions, could be changed in the future
-        with create_and_destroy_user() as (user_id, _password):
+        with create_and_destroy_user(config=active_config) as (user_id, _password):
             with UserContext(
                 user_id, explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"}
             ):

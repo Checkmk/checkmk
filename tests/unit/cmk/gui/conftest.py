@@ -27,7 +27,7 @@ from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui import http, login, userdb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session
 from cmk.gui.type_defs import SessionInfo
@@ -138,7 +138,7 @@ def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
 
 
 @pytest.fixture()
-def load_config(request_context: None) -> Iterator[None]:
+def load_config(request_context: None) -> Iterator[Config]:
     yield from perform_load_config()
 
 
@@ -189,14 +189,14 @@ def load_plugins() -> None:
 
 
 @pytest.fixture()
-def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
+def ui_context(load_plugins: None, load_config: Config) -> Iterator[None]:
     """Some helper fixture to provide a initialized UI context to tests outside of tests/unit/cmk/gui"""
     yield
 
 
 @pytest.fixture()
-def with_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="user") as user:
+def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=False, role="user", config=load_config) as user:
         yield user
 
 
@@ -208,8 +208,8 @@ def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
 
 
 @pytest.fixture()
-def with_admin(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="admin") as user:
+def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=False, role="admin", config=load_config) as user:
         yield user
 
 
@@ -314,8 +314,8 @@ def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def with_automation_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=True, role="admin") as user:
+def with_automation_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=True, role="admin", config=load_config) as user:
         yield user
 
 

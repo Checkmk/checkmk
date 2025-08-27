@@ -1966,7 +1966,6 @@ async def process_virtual_machines(
     args: Args,
     group_labels: GroupLabels,
     monitored_resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
 ) -> Sequence[AzureResourceSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
@@ -1998,7 +1997,7 @@ async def process_virtual_machines(
     sections = []
     for resource in virtual_machines:
         if args.piggyback_vms == "self":
-            labels_section = get_vm_labels_section(resource, group_labels, subscription)
+            labels_section = get_vm_labels_section(resource, group_labels, resource.subscription)
             labels_section.write()
 
         section = AzureResourceSection(
@@ -2014,7 +2013,6 @@ async def process_virtual_machines(
 # TODO: test
 async def process_vault(
     api_client: BaseAsyncApiClient,
-    subscription: AzureSubscription,
     resource: AzureResource,
 ) -> AzureResourceSection:
     vault_properties = (
@@ -2041,7 +2039,7 @@ async def process_vault(
         properties = filter_keys(response[0]["properties"], vault_properties)
     except KeyError:
         write_exception_to_agent_info_section(
-            ApiErrorMissingData("Vault properties must be present"), "Vaults", subscription
+            ApiErrorMissingData("Vault properties must be present"), "Vaults", resource.subscription
         )
         raise ApiErrorMissingData("Vault properties must be present")
 
@@ -2132,13 +2130,10 @@ def get_bulk_tasks(
     group_labels: GroupLabels,
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
 ) -> Iterator[asyncio.Task]:
     if FetchedResource.virtual_machines.type in monitored_services:
         yield asyncio.create_task(
-            process_virtual_machines(
-                mgmt_client, args, group_labels, monitored_resources, subscription
-            )
+            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources)
         )
     if FetchedResource.app_gateways.type in monitored_services:
         yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources))
@@ -2161,7 +2156,7 @@ async def process_single_resources(
             continue
 
         if resource_type == FetchedResource.vaults.type:
-            tasks.add(process_vault(mgmt_client, subscription, resource))
+            tasks.add(process_vault(mgmt_client, resource))
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
         elif resource_type == FetchedResource.redis.type:
@@ -2217,7 +2212,6 @@ async def process_resources(
             group_labels,
             monitored_services,
             monitored_resources_by_id,
-            subscription,
         ),
         process_single_resources(mgmt_client, args, subscription, monitored_resources_by_id),
     }

@@ -53,6 +53,7 @@ DomainType = Literal[
     "otel_collector_config",
     "password",
     "parent_scan",
+    "relay",
     "rule",
     "ruleset",
     "saml_connection",

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-08-26 00:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -30091,6 +30091,9 @@ msgstr "IBM SVC Platte"
 msgid "IBM SVC licenses"
 msgstr "IBM SVC Lizenzen"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -44070,6 +44073,10 @@ msgstr "Anzahl der hängengebliebenen Aufgaben"
 msgid "Number of tables"
 msgstr "Anzahl von Tabellen"
 
+#, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Anzahl der Änderungen seit dem letzten Dump"
+
 msgid "Number of tasks"
 msgstr "Anzahl von Aufgaben"
 
@@ -54049,6 +54056,9 @@ msgstr "Punktzahl"
 
 msgid "Scrape interval"
 msgstr "Scrape-Intervall"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Skript (Eingeschränkte Unterstützung, siehe Inline-Hilfe)"

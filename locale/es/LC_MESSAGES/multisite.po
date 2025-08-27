@@ -31532,6 +31532,9 @@ msgstr "Disco IBM SVC"
 msgid "IBM SVC licenses"
 msgstr "Licencias de IBM SVC"
 
+msgid "IBM TSM: number of tapes in scratch pool"
+msgstr ""
+
 msgid "ICMP"
 msgstr "ICMP"
 
@@ -46059,6 +46062,10 @@ msgid "Number of tables"
 msgstr "Número de mesas"
 
 #, fuzzy
+msgid "Number of tapes in the scratch pool"
+msgstr "Número de cambios desde el último volcado"
+
+#, fuzzy
 msgid "Number of tasks"
 msgstr "Número de mesas"
 
@@ -56732,6 +56739,9 @@ msgstr "Puntuación"
 #, fuzzy
 msgid "Scrape interval"
 msgstr "Intervalo de exploración"
+
+msgid "Scratch Pool"
+msgstr ""
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (soporte limitado, ver ayuda en línea)"

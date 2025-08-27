@@ -37,6 +37,8 @@ Options:
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --log-level              Set the log level for the application.
+    --branch-version         Set the default branch-version.
+    --edition                Set the default edition.
     job_names                List of job names to process.
 
 Example:
@@ -50,6 +52,7 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime as Datetime
+from datetime import timedelta
 from os import getenv
 from pathlib import Path
 from statistics import fmean
@@ -736,6 +739,8 @@ class PerftestPlotArgs(argparse.Namespace):
     jira_url: str
     jira_token_var: str
     jira_token_path: Path
+    branch_version: str
+    edition: str
     log_level: str
 
 
@@ -1109,7 +1114,6 @@ class PerftestPlot:
                     )
                     xmax = int(durations[-1]) if durations[-1] > xmax else xmax
                     average = fmean(values or [0])
-                    # total_duration = datetime.timedelta(seconds=durations[-1])
                     pg = subplot.plot(
                         durations,
                         values,
@@ -1141,6 +1145,17 @@ class PerftestPlot:
         Returns:
             list[str]: A sorted list of valid job names found on disk or in the database.
         """
+
+        def weekly_jobs() -> list[str]:
+            return [
+                (Datetime.today() - timedelta(days=i)).strftime(
+                    f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
+                )
+                for i in range(5, -1, -1)
+            ]
+
+        job_names = sorted(list(set(self.args.job_names))) if self.args.job_names else weekly_jobs()
+
         if self.root_dir.is_dir():
             print(f'Scanning root dir "{self.root_dir}" for reports...')
             job_names_on_disk = [
@@ -1154,7 +1169,7 @@ class PerftestPlot:
         return sorted(
             [
                 job_name
-                for job_name in self.args.job_names
+                for job_name in job_names
                 if job_name in job_names_on_disk
                 or (self.read_from_database and self.database.check_job(job_name))
             ]
@@ -1741,6 +1756,20 @@ def parse_args() -> PerftestPlotArgs:
         type=Path,
         default=None,
         help="The path to the Jira token file (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--branch-version",
+        dest="branch_version",
+        type=str,
+        default="2.5.0",
+        help="The default branch version for jobs (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--edition",
+        dest="edition",
+        type=str,
+        default="cee",
+        help="The default edition for jobs (default: %(default)s).",
     )
     parser.add_argument(
         "--log-level",

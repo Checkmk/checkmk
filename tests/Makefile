@@ -258,14 +258,18 @@ test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-performance:
-	RELEASE="$$(make --no-print-directory --file=../defines.make print-BRANCH_VERSION)-$$(date '+%Y.%m.%d').cee" ; \
-	BENCHMARK_DIR=$(or $(RESULT_PATH),"../results")/performance/$$RELEASE ; \
-	mkdir -p "$$BENCHMARK_DIR" ; \
-	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
-	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
-	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
-	--self-contained-html --ignore-running-procs ; \
-	$(UVENV) $(realpath performance)/raise_alerts.sh
+	BRANCH=$(shell make --no-print-directory --file="../defines.make" print-BRANCH_VERSION) ; \
+	EDITION=cee ; \
+	RELEASE="$${BRANCH}-$$(date '+%Y.%m.%d').$${EDITION}" ; \
+	ROOT_DIR=$(or $(RESULT_PATH),"$(REPO_PATH)/results")/performance ; \
+	BENCHMARK_DIR=$${ROOT_DIR}/$${RELEASE} ; \
+  	$(PYTEST) "$(realpath performance)" $(PYTEST_SYSTEM_TEST_ARGS) \
+  	--benchmark-json="$${BENCHMARK_DIR}/benchmark.json" \
+  	--benchmark-verbose --html="$${BENCHMARK_DIR}/report.htm" \
+  	--self-contained-html --ignore-running-procs ; \
+ 	$(UVENV) "$(realpath performance)/perftest_plot.py" \
+ 	--root-dir="$${ROOT_DIR}" \
+ 	--dbhost=qa.lan.checkmk.net --validate-baselines --alert-on-failure
 
 test-performance-docker:
 	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

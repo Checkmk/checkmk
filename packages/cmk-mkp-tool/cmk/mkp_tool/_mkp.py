@@ -144,7 +144,7 @@ def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
     except Exception:
         # Do not make broken files / packages fail the whole mechanism
-        _logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
+        _logger.error("[%s]: Failed to read package manifest", pkg_path, exc_info=True)
     return None
 
 

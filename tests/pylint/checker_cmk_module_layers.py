@@ -856,7 +856,6 @@ _COMPONENTS = (
             "cmk.piggyback.backend",
             "cmk.snmplib",
             "cmk.utils.agentdatatype",
-            "cmk.utils.certs",
         ),
     ),
     (

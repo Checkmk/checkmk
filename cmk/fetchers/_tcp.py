@@ -16,7 +16,6 @@ from typing import Final
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.certs import write_cert_store
 
 from ._abstract import Fetcher, Mode
 from ._agentprtcl import (
@@ -56,12 +55,16 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
 
 
 def wrap_tls(sock: socket.socket, server_hostname: str, *, tls_config: TLSConfig) -> ssl.SSLSocket:
-    if not tls_config.ca_store.exists():
-        # agent cert store should be written on agent receiver startup.
-        # However, if it's missing for some reason, we have to write it.
-        write_cert_store(source_dir=tls_config.cas_dir, store_path=tls_config.ca_store)
+    # Create a helpful error message if CA store is missing. Avoid silently falling back to the system's.
     try:
-        ctx = ssl.create_default_context(cafile=str(tls_config.ca_store))
+        cadata = tls_config.ca_store.read_text()
+    except FileNotFoundError as exc:
+        raise MKFetcherError(
+            f"Error establishing TLS connection: no CA store at {tls_config.ca_store}"
+        ) from exc
+
+    try:
+        ctx = ssl.create_default_context(cadata=cadata)
         ctx.load_cert_chain(certfile=tls_config.site_crt)
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:

@@ -143,7 +143,7 @@ from cmk.checkengine.discovery import (
     get_check_preview,
     set_autochecks_for_effective_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
+from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.plugin_backend import (
@@ -175,7 +175,7 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (

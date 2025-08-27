@@ -21,9 +21,10 @@ from cmk.base import checkers
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
-from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import CheckPluginName
+from cmk.helper_interface import SourceType
 from cmk.utils.servicename import ServiceName
 
 

@@ -26,6 +26,7 @@ from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import SectionName
+from cmk.helper_interface import SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
@@ -43,7 +44,7 @@ from cmk.utils.structured_data import (
 )
 
 from .checkresults import ActiveCheckResult
-from .fetcher import FetcherFunction, HostKey, SourceType
+from .fetcher import FetcherFunction, HostKey
 from .parser import group_by_host, HostSections, ParserFunction
 from .plugins import InventoryPlugin, InventoryPluginName, ParsedSectionName
 from .sectionparser import (

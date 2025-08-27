@@ -21,8 +21,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.utils.everythingtype import EVERYTHING
 from tests.plugins_siteless.helpers import (
     BasicSubmitter,

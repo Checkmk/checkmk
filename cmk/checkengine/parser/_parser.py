@@ -13,9 +13,8 @@ from typing import Final, Generic, Protocol, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.plugins import SectionName
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, SourceInfo
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 
 __all__ = [

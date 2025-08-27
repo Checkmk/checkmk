@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.fetcher import HostKey, SourceInfo
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,
@@ -29,7 +29,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, SourceInfo
 from cmk.snmplib import SNMPRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

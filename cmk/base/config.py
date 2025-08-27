@@ -69,7 +69,6 @@ from cmk.checkengine.discovery import (
     merge_cluster_autochecks,
 )
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
@@ -106,6 +105,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
+from cmk.helper_interface import SourceType
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (

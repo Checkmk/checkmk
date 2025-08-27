@@ -59,7 +59,7 @@ from cmk.checkengine.discovery import (
     get_plugin_parameters,
     HostLabelPlugin,
 )
-from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
 from cmk.checkengine.plugins import (
@@ -94,7 +94,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, SourceInfo, SourceType
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils import password_store

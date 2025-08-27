@@ -71,7 +71,7 @@ from cmk.checkengine.discovery import (
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
+from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -102,6 +102,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
 from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.helper_interface import FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import load_active_checks

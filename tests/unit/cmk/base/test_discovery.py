@@ -57,7 +57,7 @@ from cmk.checkengine.discovery._autodiscovery import (
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -75,6 +75,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.fetchers import Mode, NoSelectedSNMPSections, PlainFetcherTrigger, SNMPFetcherConfig
 from cmk.fetchers.filecache import FileCacheOptions
+from cmk.helper_interface import SourceType
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
 from cmk.plugins.collection.agent_based.labels import agent_section_labels

@@ -765,7 +765,6 @@ COMPONENTS = (
         Component("cmk.fetchers"),
         _allow(
             "cmk.ccc",
-            "cmk.checkengine",
             "cmk.crypto.deprecated",
             "cmk.helper_interface",
             "cmk.piggyback.backend",
@@ -815,7 +814,7 @@ COMPONENTS = (
     (Component("cmk.gui.cme"), _allow_for_gui_cme),
     (Component("cmk.gui.cse"), _allow_for_gui_cse),
     (Component("cmk.gui"), _allow_for_gui),
-    (Component("cmk.helper_interface"), _allow()),  # should become a package
+    (Component("cmk.helper_interface"), _allow("cmk.ccc")),  # should become a package
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.piggyback.hub"), _allow_for_cmk_piggyback_hub),

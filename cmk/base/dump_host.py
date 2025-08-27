@@ -24,7 +24,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.fetchers import (
@@ -39,6 +38,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.helper_interface import SourceType
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.paths import tmp_dir

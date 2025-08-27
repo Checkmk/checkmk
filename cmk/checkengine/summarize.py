@@ -22,9 +22,9 @@ from cmk.ccc.exceptions import (
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 from cmk.checkengine.plugins import SectionName
+from cmk.helper_interface import FetcherType, SourceInfo
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
 

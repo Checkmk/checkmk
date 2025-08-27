@@ -6,9 +6,10 @@
 from typing import TypeAlias
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, group_by_host, HostSections
 from cmk.checkengine.plugins import SectionName
+from cmk.helper_interface import SourceType
 
 HS: TypeAlias = HostSections[AgentRawDataSection]
 TRAW: TypeAlias = list[tuple[str, str]]

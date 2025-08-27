@@ -4,3 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._agentdatatype import AgentRawData as AgentRawData
+from ._source_info import FetcherType as FetcherType
+from ._source_info import SourceInfo as SourceInfo
+from ._source_info import SourceType as SourceType

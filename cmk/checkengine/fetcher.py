@@ -6,46 +6,16 @@
 from __future__ import annotations
 
 import dataclasses
-import enum
 from collections.abc import Sequence
 from typing import Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, SourceInfo, SourceType
 from cmk.snmplib import SNMPRawData
 
-__all__ = ["FetcherFunction", "FetcherType", "HostKey", "SourceInfo", "SourceType"]
-
-
-class SourceType(enum.Enum):
-    """Classification of management sources vs regular hosts"""
-
-    HOST = enum.auto()
-    MANAGEMENT = enum.auto()
-
-
-class FetcherType(enum.Enum):
-    # TODO(ml): That's too concrete for the engine.  The enum is misplaced.
-    #           We'll need a better solution later.  See also CMK-15979.
-    NONE = enum.auto()
-    PUSH_AGENT = enum.auto()
-    IPMI = enum.auto()
-    PIGGYBACK = enum.auto()
-    PROGRAM = enum.auto()
-    SPECIAL_AGENT = enum.auto()
-    SNMP = enum.auto()
-    TCP = enum.auto()
-
-
-@dataclasses.dataclass(frozen=True)
-class SourceInfo:
-    hostname: HostName
-    ipaddress: HostAddress | None
-    ident: str
-    fetcher_type: FetcherType
-    source_type: SourceType
+__all__ = ["FetcherFunction", "HostKey"]
 
 
 @dataclasses.dataclass(frozen=True)

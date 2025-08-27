@@ -15,13 +15,18 @@ def push_task(
     relay_id: str,
     task_type: TaskType,
     task_payload: str,
-) -> TaskCreateResponse:
+    expected_status_code: int = HTTP_200_OK,
+    expected_error_message: str | None = None,
+) -> TaskCreateResponse | None:
     response = relay_proxy.push_task(
         relay_id=relay_id,
         task_type=task_type,
         task_payload=task_payload,
     )
-    assert response.status_code == 200, response.text
+    assert response.status_code == expected_status_code, response.text
+    if expected_error_message:
+        assert expected_error_message in response.text, response.text
+        return None
     return TaskCreateResponse.model_validate(response.json())
 
 

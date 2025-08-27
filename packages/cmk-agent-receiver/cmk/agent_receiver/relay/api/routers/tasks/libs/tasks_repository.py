@@ -7,6 +7,7 @@ import dataclasses
 import logging
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import NewType
 
@@ -22,8 +23,16 @@ class TaskStatus(StrEnum):
 TaskID = NewType("TaskID", str)
 
 
+class TaskType(StrEnum):
+    RELAY_CONFIG = "RELAY_CONFIG"
+    FETCH_AD_HOC = "FETCH_AD_HOC"
+
+
 @dataclass(frozen=True)
 class Task:
+    type: TaskType
+    payload: str
+    creation_timestamp: datetime
     status: TaskStatus = TaskStatus.PENDING
     id: TaskID = dataclasses.field(default_factory=lambda: TaskID(str(uuid.uuid4())))
 

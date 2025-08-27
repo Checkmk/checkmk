@@ -13,6 +13,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
+    TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import (
     RelaysRepository,
@@ -45,17 +46,28 @@ def create_task_handler(
 def test_process_create_task(
     create_task_handler: CreateTaskHandler,
     relays_repository: RelaysRepository,
+    tasks_repository: TasksRepository,
 ) -> None:
     # arrange
+    # some task parameters
+    task_type = TaskType.FETCH_AD_HOC
+    task_payload = '{"url": "http://example.com/data"}'
 
     # Let's register a relay
     relay_id = RelayID(str(uuid.uuid4()))
     relays_repository.add_relay(relay_id)
 
     # act
-    create_task_handler.process(relay_id=relay_id)
+    task_id = create_task_handler.process(
+        relay_id=relay_id, task_type=task_type, task_payload=task_payload
+    )
 
-    # assert (no exception expected)
+    # assert
+    tasks_enqueued = tasks_repository.get_tasks(relay_id)
+    assert len(tasks_enqueued) == 1
+    assert tasks_enqueued[0].id == task_id
+    assert tasks_enqueued[0].type == task_type
+    assert tasks_enqueued[0].payload == task_payload
 
 
 def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskHandler) -> None:
@@ -64,4 +76,6 @@ def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskH
 
     # act
     with pytest.raises(RelayNotFoundError):
-        create_task_handler.process(relay_id=relay_id)
+        create_task_handler.process(
+            relay_id=relay_id, task_type=TaskType.FETCH_AD_HOC, task_payload="any payload"
+        )

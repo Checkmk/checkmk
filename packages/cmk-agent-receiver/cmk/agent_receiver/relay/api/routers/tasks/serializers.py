@@ -18,13 +18,13 @@ class TaskResponseSerializer:
         # development let's have some placeholders that will be removed later.
         return TaskResponse(
             id=UUID(task.id),
-            type=TaskType.FETCH_AD_HOC,  # TODO: placeholder
+            type=TaskType(task.type.value),
             status=TaskStatus(task.status.value),
             result_type=None,  # TODO: placeholder
             result_payload=None,  # TODO: placeholder
-            creation_timestamp=datetime.now(),  # TODO: placeholder
+            creation_timestamp=task.creation_timestamp,
             update_timestamp=datetime.now(),  # TODO: placeholder
-            payload="any_payload",  # TODO: placeholder
+            payload=task.payload,
         )
 
 

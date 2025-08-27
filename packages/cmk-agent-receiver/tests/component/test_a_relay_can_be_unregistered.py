@@ -39,5 +39,5 @@ def test_a_relay_can_be_unregistered(relay_proxy: RelayProxy) -> None:
         relay_proxy,
         relay_id_A,
         expected_status_code=404,
-        expected_error_message="Relay not found",
+        expected_error_message=f"Relay with ID {relay_id_A} not found",
     )

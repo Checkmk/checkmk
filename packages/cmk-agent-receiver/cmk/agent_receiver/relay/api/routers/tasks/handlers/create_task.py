@@ -5,11 +5,13 @@
 
 
 import dataclasses
+from datetime import datetime
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
     TaskID,
     TasksRepository,
+    TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
@@ -24,8 +26,8 @@ class CreateTaskHandler:
     tasks_repository: TasksRepository
     relays_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID) -> TaskID:
-        task = Task()  # Still very dummy task at this point
+    def process(self, relay_id: RelayID, task_type: TaskType, task_payload: str) -> TaskID:
+        task = Task(type=task_type, payload=task_payload, creation_timestamp=datetime.now())
         return self._store_task(relay_id, task)
 
     def _store_task(self, relay_id: RelayID, task: Task) -> TaskID:

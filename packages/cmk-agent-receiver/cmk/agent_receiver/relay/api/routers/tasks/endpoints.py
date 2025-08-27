@@ -14,10 +14,11 @@ from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
+    CreateTaskRelayNotFoundError,
     GetRelayTasksHandler,
-    RelayNotFoundError,
+    GetTasksRelayNotFoundError,
 )
-from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskStatus
+from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskStatus, TaskType
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
 )
@@ -34,9 +35,9 @@ router = fastapi.APIRouter()
         200: {"model": tasks_protocol.TaskCreateResponse},
     },
 )
-async def create_task(
+async def create_task_endpoint(
     relay_id: str,
-    _request: tasks_protocol.TaskCreateRequest,  # TODO: Remove underscore when using it
+    request: tasks_protocol.TaskCreateRequest,
     handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
@@ -71,8 +72,8 @@ async def create_task(
     # - Store task in database
 
     try:
-        task_id = handler.process(RelayID(relay_id))
-    except RelayNotFoundError:
+        task_id = handler.process(RelayID(relay_id), TaskType(request.type), request.payload)
+    except CreateTaskRelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
             detail=f"Relay with ID {relay_id} not found",
@@ -128,7 +129,7 @@ async def update_task(
 
 
 @router.get("/{relay_id}/tasks")
-async def get_tasks(
+async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
     status: tasks_protocol.TaskStatus | None = fastapi.Query(
@@ -162,8 +163,9 @@ async def get_tasks(
     # - Return filtered task list
     try:
         tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
-    except RelayNotFoundError:
+    except GetTasksRelayNotFoundError:
         raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND, detail="Relay not found"
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay with ID {relay_id} not found",
         ) from None
     return TaskListResponseSerializer.serialize(tasks)

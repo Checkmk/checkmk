@@ -16,6 +16,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     _get_resource_health_sections,
     AzureResource,
     AzureSubscription,
+    filter_tags,
     get_group_labels,
     get_vm_labels_section,
     GroupLabels,
@@ -149,6 +150,47 @@ async def test_get_group_labels(
 
     group_tags = await get_group_labels(mock_api_client, monitored_groups, tag_key_pattern)
     assert group_tags == expected_result
+
+
+TAGS = {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"}
+
+
+@pytest.mark.parametrize(
+    "tags, tag_key_pattern, expected_tags",
+    [
+        pytest.param(
+            TAGS,
+            TagsImportPatternOption.import_all,
+            {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            id="Import all tags",
+        ),
+        pytest.param(
+            TAGS,
+            TagsImportPatternOption.ignore_all,
+            {},
+            id="Ignore all tags",
+        ),
+        pytest.param(
+            TAGS,
+            "key_1",
+            {"tag_key_1": "tag_value_1"},
+            id="Regex pattern tags 1",
+        ),
+        pytest.param(
+            TAGS,
+            "tag_",
+            {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            id="Regex pattern tags 2",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_filter_tags(
+    tags: Mapping[str, str],
+    tag_key_pattern: TagsOption,
+    expected_tags: Mapping[str, str],
+) -> None:
+    assert filter_tags(tags, tag_key_pattern) == expected_tags
 
 
 @pytest.mark.parametrize(

@@ -764,12 +764,20 @@ def get_attrs_from_uri(uri: str) -> Mapping[str, str]:
     return attrs
 
 
+def filter_tags(tags: Mapping[str, str], pattern: TagsOption) -> Mapping[str, str]:
+    if pattern == TagsImportPatternOption.import_all:
+        return tags
+    if pattern == TagsImportPatternOption.ignore_all:
+        return {}
+    return {key: value for key, value in tags.items() if re.search(pattern, key)}
+
+
 class AzureResource:
     def __init__(
         self, info: Mapping[str, Any], tag_key_pattern: TagsOption, subscription: AzureSubscription
     ) -> None:
         super().__init__()
-        self.tags = self._filter_tags(info.get("tags", {}), tag_key_pattern)
+        self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {**info, "tags": self.tags}
         self.info.update(get_attrs_from_uri(info["id"]))
         self.subscription = subscription
@@ -788,13 +796,6 @@ class AzureResource:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
         return lines
-
-    def _filter_tags(self, tags: dict[str, str], tag_key_pattern: TagsOption) -> dict[str, str]:
-        if tag_key_pattern == TagsImportPatternOption.import_all:
-            return tags
-        if tag_key_pattern == TagsImportPatternOption.ignore_all:
-            return {}
-        return {key: value for key, value in tags.items() if re.search(tag_key_pattern, key)}
 
 
 def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
@@ -1670,6 +1671,7 @@ def get_vm_labels_section(
     labels_section = AzureLabelsSection(vm.info["name"], subscription=subscription)
     labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
     labels_section.add((json.dumps(vm_labels),))
+
     return labels_section
 
 
@@ -1678,26 +1680,15 @@ async def get_group_labels(
     monitored_groups: Sequence[str],
     tag_key_pattern: TagsOption,
 ) -> GroupLabels:
-    group_labels: dict[str, dict[str, str]] = {}
-
     resource_groups = await mgmt_client.get_async(
         "resourcegroups", key="value", params={"api-version": "2019-05-01"}
     )
 
-    for group in resource_groups:
-        name = group["name"].lower()
-
-        if tag_key_pattern == TagsImportPatternOption.ignore_all:
-            tags = {}
-        else:
-            tags = group.get("tags", {})
-            if tag_key_pattern != TagsImportPatternOption.import_all:
-                tags = {
-                    key: value for key, value in tags.items() if re.search(tag_key_pattern, key)
-                }
-
-        if name in monitored_groups:
-            group_labels[name] = tags
+    group_labels = {
+        name: filter_tags(group.get("tags", {}), tag_key_pattern)
+        for group in resource_groups
+        if (name := group["name"].lower()) and name in monitored_groups
+    }
 
     return group_labels
 

@@ -150,20 +150,6 @@ def _is_default_allowed_import(
     return _is_allowed_import(imported) or imported.in_component(component)
 
 
-def _allow_default_plus_checkers(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    """`cmk.checkengine` is the generic (library) part to the check engine."""
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.checkengine")),
-        )
-    )
-
-
 def _allow_default_plus_fetchers_and_snmplib(
     *,
     imported: ModuleName,
@@ -399,32 +385,6 @@ def _allow_default_plus_gui_and_base(
     )
 
 
-def _allow_for_cmk_update_config(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    """
-    Allow import of `cmk.gui`, `cmk.base` and `cmk.cee.bakery`.
-
-    The `gui`, `base` and `bakery` are different components, but for specific cases, like `cmk_update_config`
-    and `post_rename_site` it is allowed to import both.
-    """
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-            imported.in_component(Component("cmk.base")),
-            imported.in_component(Component("cmk.gui")),
-            imported.in_component(Component("cmk.cee.robotmk")),
-            imported.in_component(Component("cmk.diskspace.config")),
-            imported.in_component(Component("cmk.validate_config")),
-        )
-    )
-
-
 def _is_allowed_for_diskspace(
     *,
     imported: ModuleName,
@@ -434,56 +394,6 @@ def _is_allowed_for_diskspace(
         (
             imported.in_component(Component("cmk.diskspace")),
             imported.in_component(Component("cmk.ccc")),
-        )
-    )
-
-
-def _is_allowed_for_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.agent_based.v1")),
-            imported.in_component(Component("cmk.agent_based.v2")),
-            imported.in_component(Component("cmk.graphing.v1")),
-            imported.in_component(Component("cmk.rulesets.v1")),
-            imported.in_component(Component("cmk.server_side_calls.v1")),
-            imported.in_component(Component("cmk.special_agents.v0_unstable")),
-            imported.in_component(Component("cmk.plugins")),
-            imported.in_component(Component("cmk.utils")),
-            imported.in_component(Component("cmk.ccc")),
-            imported.in_component(Component("cmk.inventory_ui.v1_alpha")),
-        )
-    )
-
-
-def _is_allowed_for_robotmk_agent_based_cee_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return imported.in_component(Component("cmk.cee.robotmk.checking.agent_based"))
-
-
-def _is_allowed_for_robotmk_graphing_cee_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return imported.in_component(Component("cmk.cee.robotmk.checking.graphing"))
-
-
-def _is_allowed_for_robotmk_rulesets_cee_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.cee.robotmk.checking.rulesets")),
-            imported.in_component(Component("cmk.cee.robotmk.bakery.rulesets")),
         )
     )
 

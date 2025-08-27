@@ -264,7 +264,7 @@ test-performance:
 	$(PYTEST) $(realpath performance) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--benchmark-json=$$BENCHMARK_DIR/benchmark.json \
 	--benchmark-verbose --html=$$BENCHMARK_DIR/report.htm \
-	--self-contained-html --ignore-running-procs ; 
+	--self-contained-html --ignore-running-procs ; \
 	$(UVENV) $(realpath performance)/raise_alerts.sh
 
 test-performance-docker:

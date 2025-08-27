@@ -17,7 +17,6 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 Labels = Mapping[str, str]
@@ -78,7 +77,7 @@ class HostLabel(_Label):
             plugin_name=(
                 None
                 if (raw_plugin_name := raw.get("plugin_name")) is None
-                else SectionName(raw_plugin_name)
+                else str(raw_plugin_name)
             ),
         )
 
@@ -89,7 +88,7 @@ class HostLabel(_Label):
         assert isinstance(value, str)
 
         raw_name = dict_label["plugin_name"]
-        plugin_name = None if raw_name is None else SectionName(raw_name)
+        plugin_name = None if raw_name is None else str(raw_name)
 
         return cls(name, value, plugin_name)
 
@@ -97,7 +96,7 @@ class HostLabel(_Label):
         self,
         name: str,
         value: str,
-        plugin_name: SectionName | None = None,
+        plugin_name: str | None = None,
     ) -> None:
         super().__init__(name, value)
         self.plugin_name: Final = plugin_name
@@ -112,7 +111,7 @@ class HostLabel(_Label):
             else {
                 "name": self.name,
                 "value": self.value,
-                "plugin_name": str(self.plugin_name),
+                "plugin_name": self.plugin_name,
             }
         )
 
@@ -184,7 +183,7 @@ class DiscoveredHostLabelsStore:
             HostLabel(
                 name,
                 raw["value"],
-                None if (raw_name := raw["plugin_name"]) is None else SectionName(raw_name),
+                None if (raw_name := raw["plugin_name"]) is None else str(raw_name),
             )
             for name, raw in self._store.read_obj(default={}).items()
         ]

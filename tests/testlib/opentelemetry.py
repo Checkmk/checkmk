@@ -94,3 +94,20 @@ def delete_opentelemetry_data(site: Site) -> None:
     autocompleter_data_path = OPENTELEMETRY_DIR_AUTOCOMPLETE / "autocompleter"
     for file in site.listdir(autocompleter_data_path):
         site.delete_file(autocompleter_data_path / file)
+
+
+def wait_for_otel_collector_conf(
+    site: Site, host_name: str, timeout: int = 90, interval: int = 5
+) -> None:
+    """Wait until the OTel collector configuration is applied and services are created."""
+
+    def _check_config():
+        logger.info("Running service discovery and activating changes")
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+        logger.info("Checking OTel services are created and have expected states")
+        services = site.get_host_services(host_name)
+        return len(services) > 10
+
+    wait_until(_check_config, timeout=timeout, interval=interval)

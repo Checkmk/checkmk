@@ -1564,10 +1564,10 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 async def process_metrics(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
-    resources: Sequence[AzureResource],
+    monitored_resources_by_id: Mapping[str, AzureResource],
     args: Args,
 ) -> None:
-    errors = await _gather_metrics(mgmt_client, subscription, resources, args)
+    errors = await _gather_metrics(mgmt_client, subscription, monitored_resources_by_id, args)
 
     if not errors:
         return
@@ -1581,24 +1581,23 @@ async def process_metrics(
 async def _gather_metrics(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
-    all_resources: Sequence[AzureResource],
+    monitored_resources: Mapping[str, AzureResource],
     args: Args,
 ) -> IssueCollector:
     """
-    Gather metrics for all resources. Metrics are collected per resource type, region, metric
-    aggregation and time resolution. One query collects metrics of all resources of a given type.
+    Gather metrics for all monitored resources.
+
+    Metrics are collected per resource type, location, metric aggregation and time resolution.
+    One query collects metrics of all resources of a given type/location.
     """
-    resource_dict = {resource.info["id"]: resource for resource in all_resources}
     err = IssueCollector()
 
     grouped_resource_ids = defaultdict(list)
-    for resource in all_resources:
-        grouped_resource_ids[(resource.info["type"], resource.info["location"])].append(
-            resource.info["id"]
-        )
+    for resource_id, resource in monitored_resources.items():
+        grouped_resource_ids[(resource.info["type"], resource.info["location"])].append(resource_id)
 
     tasks = set()
-    for (resource_type, resource_region), resource_ids in grouped_resource_ids.items():
+    for (resource_type, resource_location), resource_ids in grouped_resource_ids.items():
         if resource_type == FetchedResource.virtual_machines.type:
             if args.piggyback_vms != "self":
                 continue
@@ -1608,7 +1607,7 @@ async def _gather_metrics(
             cache = MetricCache(
                 metric_definition=metric_definition,
                 resource_type=resource_type,
-                region=resource_region,
+                region=resource_location,
                 subscription=subscription.id,
                 cache_id=args.cache_id,
                 ref_time=NOW,
@@ -1618,7 +1617,7 @@ async def _gather_metrics(
             tasks.add(
                 cache.get_data(
                     mgmt_client,
-                    resource_region,
+                    resource_location,
                     resource_ids,
                     resource_type,
                     err,
@@ -1636,7 +1635,7 @@ async def _gather_metrics(
             continue
 
         for resource_id, metrics in result.items():
-            if (resource_metric := resource_dict.get(resource_id)) is not None:
+            if (resource_metric := monitored_resources.get(resource_id)) is not None:
                 resource_metric.metrics += metrics
             else:
                 LOGGER.info(
@@ -2205,6 +2204,10 @@ async def process_resources(
         r.info["id"].lower(): r for r in selected_resources if r.info["type"] in monitored_services
     }
 
+    # metrics must be gathered before the actual section writing
+    # (which happens in the concurrent tasks below)
+    await process_metrics(mgmt_client, subscription, monitored_resources_by_id, args)
+
     tasks = {
         process_resource_health(
             mgmt_client, subscription, monitored_resources_by_id, monitored_groups, args.debug
@@ -2270,8 +2273,6 @@ async def main_subscription(
             )
             write_group_info(monitored_groups, selected_resources, subscription, group_labels)
             write_subscription_info(subscription)
-
-            await process_metrics(mgmt_client, subscription, selected_resources, args)
 
             tasks = {
                 process_usage_details(mgmt_client, subscription, monitored_groups, args)

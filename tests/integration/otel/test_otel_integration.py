@@ -7,6 +7,7 @@ import os
 from collections.abc import Iterator
 
 import pytest
+import yaml
 
 from tests.integration.cmk.ec.test_ec import (
     _activate_ec_changes,
@@ -20,6 +21,7 @@ from tests.testlib.opentelemetry import (
     opentelemetry_app,
     ScriptFileName,
     wait_for_opentelemetry_data,
+    wait_for_otel_collector_conf,
 )
 from tests.testlib.site import Site
 
@@ -274,6 +276,88 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
             otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
             logger.info("Checking OTel services are created and have expected states")
+            services = otel_enabled_site.get_host_services(host_name)
+            assert (
+                len(services) == EXPECTED_PROMETHEUS_SERVICE_COUNT
+            ), f"Unexpected number of services discovered: {services}"
+            for service_name, service in services.items():
+                if service_name.startswith("OTel metric "):
+                    assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
+    finally:
+        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+
+
+def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Site) -> None:
+    """Test that OpenTelemetry collector works as expected when configured using 'Prometheus' option.
+
+    This test creates a collector with a Prometheus scrape configuration that uses the
+    'host name/IP address' for host name computation. It also creates a host with the name expected
+    by the collector configuration and a rule for OpenTelemetry special agent. Then the script
+    which creates a Prometheus server is started and after some time service discovery
+    for the created host is triggered. Finally, it checks that the host received expected
+    OpenTelemetry data. This test uses TLS encryption for the Prometheus scrape config.
+    """
+    collector_id = "opentelemetry_collector"
+    prometheus_config = {
+        "job_name": "test_job",
+        "scrape_interval": 30,
+        "metrics_path": "",
+        "targets": [{"address": "localhost", "port": 9090}],
+        "host_name_rules": [{"type": "service_instance_id"}],
+        "encryption": True,
+    }
+    # This is the expected host name based on the rules defined in grpc_config
+    host_name = "localhost"
+    rule_id = None
+
+    try:
+        logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
+        otel_enabled_site.openapi.otel_collector.create(
+            collector_id,
+            "Test collector",
+            False,
+            prometheus_scrape_configs=[prometheus_config],
+        )
+
+        logger.info(
+            "Creating a new host with the name expected from the otel host name computation"
+        )
+        otel_enabled_site.openapi.hosts.create(
+            host_name,
+            attributes={
+                "tag_address_family": "no-ip",
+                "tag_agent": "special-agents",
+                "tag_piggyback": "no-piggyback",
+            },
+            folder="/",
+        )
+
+        logger.info("Adding a rule for OpenTelemetry special agent")
+        rule_id = otel_enabled_site.openapi.rules.create(
+            ruleset_name="special_agents:otel",
+            value={"include_self_monitoring": False},
+        )
+        otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
+
+        with opentelemetry_app(ScriptFileName.PROMETHEUS, additional_args=["--enable-tls"]):
+            # The OTEL collector should expose 5 Prometheus metrics by default once ready
+            wait_for_opentelemetry_data(otel_enabled_site, host_name)
+
+            # Modify the collector config to skip TLS verification for testing purposes.
+            file_content = otel_enabled_site.read_file("etc/otel-collector/setup.yaml")
+            data = yaml.safe_load(file_content)
+            data["receivers"]["prometheus/scrape_0"]["config"]["scrape_configs"][0]["tls_config"][
+                "insecure_skip_verify"
+            ] = True
+            otel_enabled_site.write_file(
+                "etc/otel-collector/setup.yaml",
+                yaml.dump(data, default_flow_style=False, sort_keys=False),
+            )
+
+            otel_enabled_site.omd("restart", "otel-collector")
+            otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
+
+            wait_for_otel_collector_conf(otel_enabled_site, host_name)
             services = otel_enabled_site.get_host_services(host_name)
             assert (
                 len(services) == EXPECTED_PROMETHEUS_SERVICE_COUNT

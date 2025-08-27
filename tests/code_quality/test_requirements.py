@@ -396,6 +396,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/test_fake_fetcher.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_run_engine.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/unit/schedulers/test_poll.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),
     },

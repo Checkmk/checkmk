@@ -225,6 +225,8 @@ def _allowed_for_base(
             ),
             imported.in_component(Component("cmk.cee.helpers")),
             imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.ec.export")),
+            imported.in_component(Component("cmk.rrd.config")),
             imported.in_component(Component("cmk.server_side_calls_backend")),
             imported.in_component(Component("cmk.helper_interface")),
         )
@@ -243,6 +245,7 @@ def _allowed_for_base_cee(
             imported.in_component(Component("cmk.cee.robotmk.licensing")),
             imported.in_component(Component("cmk.cee.robotmk.html_log_dir")),
             imported.in_component(Component("cmk.cee.robotmk.bakery.core_bakelets")),
+            imported.in_component(Component("cmk.rrd.config")),
         )
     )
 

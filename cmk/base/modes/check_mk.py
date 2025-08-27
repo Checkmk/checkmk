@@ -24,7 +24,7 @@ import cmk.base.parent_scan
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec
 import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths

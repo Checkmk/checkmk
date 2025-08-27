@@ -15,7 +15,7 @@ import cmk.utils
 import cmk.utils.tags
 from cmk.base.default_config.cmc import RealTimeChecks
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.rrd.config import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
+from cmk.rrd.config import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec

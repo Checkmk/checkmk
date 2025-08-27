@@ -1622,7 +1622,7 @@ def parse_args() -> PerftestPlotArgs:
         dest="log_level",
         type=str,
         default="WARNING",
-        help="The log level for the application (default: %(default)d).",
+        help="The log level for the application (default: %(default)s).",
     )
     return parser.parse_args(namespace=PerftestPlotArgs())
 

@@ -23,6 +23,7 @@ from cmk.utils.paths import (
     r4r_new_dir,
     r4r_pending_dir,
     received_outputs_dir,
+    uuid_lookup_dir,
 )
 
 
@@ -50,6 +51,7 @@ def test_uuid_link_manager_create_pull_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
 
@@ -71,6 +73,7 @@ def test_uuid_link_manager_create_push_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=True)
 
@@ -92,6 +95,7 @@ def test_uuid_link_manager_create_existing_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     # second time should be no-op, at least not fail
@@ -107,6 +111,7 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), push_configured=False)
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), push_configured=False)
@@ -131,6 +136,7 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
@@ -154,6 +160,7 @@ def test_uuid_link_manager_update_links_no_links_yet() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.update_links({})
 
@@ -169,6 +176,7 @@ def test_uuid_link_manager_update_links_no_host() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
@@ -184,6 +192,7 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({hostname: {}})
@@ -222,6 +231,7 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
@@ -242,6 +252,7 @@ def test_uuid_link_manager_unlink_sources() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
     )
     uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), push_configured=False)
     uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), push_configured=False)
@@ -249,3 +260,59 @@ def test_uuid_link_manager_unlink_sources() -> None:
     uuid_link_manager.unlink([hostname_1])
 
     assert [s.name for s in received_outputs_dir.iterdir()] == [raw_uuid_2]
+
+
+def test_uuid_link_manager_create_uuid_lookup() -> None:
+    hostname = HostName("my-hostname")
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+    uuid_link_manager.create_link(hostname, uuid, push_configured=False)
+
+    assert str((uuid_lookup_dir / hostname).readlink()) == str(uuid)
+    assert uuid_link_manager.uuid_store.get(hostname) == uuid
+
+
+def test_uuid_link_manager_update_uuid_lookup() -> None:
+    hostname = HostName("my-hostname")
+    uuid_old = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    uuid_new = UUID("db1ea77f-330e-4fb5-b59e-925f55290533")
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+
+    uuid_link_manager.create_link(hostname, uuid_old, push_configured=False)
+    assert uuid_link_manager.uuid_store.get(hostname) == uuid_old
+
+    uuid_link_manager.create_link(hostname, uuid_new, push_configured=False)
+    assert uuid_link_manager.uuid_store.get(hostname) == uuid_new
+
+
+def test_uuid_link_manager_unlink_remove_lookup() -> None:
+    hostname_1 = HostName("my-hostname-1")
+    uuid_1 = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    hostname_2 = HostName("my-hostname-2")
+    uuid_2 = UUID("db1ea77f-330e-4fb5-b59e-925f55290533")
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+    uuid_link_manager.create_link(hostname_1, uuid_1, push_configured=False)
+    uuid_link_manager.create_link(hostname_2, uuid_2, push_configured=False)
+
+    uuid_link_manager.unlink([hostname_1])
+
+    assert uuid_link_manager.uuid_store.get(hostname_1) is None
+    assert uuid_link_manager.uuid_store.get(hostname_2) == uuid_2

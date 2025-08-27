@@ -148,6 +148,7 @@ licensing_dir = var_dir / "licensing"
 
 # Agent registration paths
 received_outputs_dir = omd_root / "var/agent-receiver/received-outputs"
+uuid_lookup_dir = omd_root / "var/agent-receiver/uuid-lookup"
 data_source_push_agent_dir = data_source_cache_dir / "push-agent"
 _r4r_base_dir = var_dir / "wato/requests-for-registration"
 r4r_new_dir = _r4r_base_dir.joinpath("NEW")

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import enum
-from collections.abc import Container, Generator, Iterable, Mapping
+from collections.abc import Collection, Generator, Iterable, Mapping
 from os.path import relpath
 from pathlib import Path
 from typing import Final
@@ -33,13 +33,44 @@ def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostA
     )
 
 
+class UUIDStore:
+    """Maintain a lookup for host names to UUIDs.
+
+    This is needed because the fetchers are supposed to notice changes in the
+    the hosts UUID right away, not only after activation.
+    """
+
+    def __init__(self, uuid_lookup_dir: Path) -> None:
+        self.uuid_lookup_dir = uuid_lookup_dir
+
+    def get(self, host_name: HostName) -> UUID | None:
+        try:
+            return UUID(str((self.uuid_lookup_dir / str(host_name)).readlink()))
+        except FileNotFoundError:
+            return None
+
+    def set(self, host_name: HostName, uuid: UUID) -> None:
+        self.uuid_lookup_dir.mkdir(parents=True, exist_ok=True)
+        self.delete(host_name)
+        (self.uuid_lookup_dir / str(host_name)).symlink_to(str(uuid))
+
+    def delete(self, host_name: HostName) -> None:
+        (self.uuid_lookup_dir / str(host_name)).unlink(missing_ok=True)
+
+
 class UUIDLinkManager:
     def __init__(
-        self, *, received_outputs_dir: Path, data_source_dir: Path, r4r_discoverable_dir: Path
+        self,
+        *,
+        received_outputs_dir: Path,
+        data_source_dir: Path,
+        r4r_discoverable_dir: Path,
+        uuid_lookup_dir: Path,
     ) -> None:
         self.received_outputs_dir: Final = received_outputs_dir
         self.data_source_dir: Final = data_source_dir
         self.r4r_discoverable_dir: Final = r4r_discoverable_dir
+        self.uuid_store = UUIDStore(uuid_lookup_dir)
 
     def __iter__(self) -> Generator[_UUIDLink]:
         if not self.received_outputs_dir.exists():
@@ -51,16 +82,11 @@ class UUIDLinkManager:
             except FileNotFoundError:
                 continue
 
-    def unlink(self, host_names: Container[HostName]) -> None:
+    def unlink(self, host_names: Collection[HostName]) -> None:
         for link in self:
             if link.hostname in host_names:
                 link.unlink()
-
-    def get_uuid(self, host_name: HostName) -> UUID | None:
-        for link in self:
-            if link.hostname == host_name:
-                return link.uuid
-        return None
+                self.uuid_store.delete(link.hostname)
 
     def create_link(self, hostname: HostName, uuid: UUID, *, push_configured: bool) -> None:
         """Create a link for encryption or push agent
@@ -70,11 +96,12 @@ class UUIDLinkManager:
 
         For push agents we need to create the target dir; otherwise not.
         """
+
         if existing_link := self._find_and_cleanup_existing_links(hostname, uuid):
             self._update_link_target_if_necessary(existing_link, push_configured)
             return
 
-        self._create_link(uuid, self._target_dir(hostname, push_configured))
+        self._create_link(uuid, hostname, self._target_dir(hostname, push_configured))
 
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, object]]) -> None:
         for link in self:
@@ -83,6 +110,7 @@ class UUIDLinkManager:
                     # Host may not be synced yet, thus we check if UUID is in DISCOVERABLE folder.
                     continue
                 link.unlink()
+                self.uuid_store.delete(link.hostname)
             else:
                 self._update_link_target_if_necessary(
                     link,
@@ -124,12 +152,13 @@ class UUIDLinkManager:
         target_dir = self._target_dir(existing_link.hostname, is_push_host)
         if existing_link.target == target_dir:
             return
-        self._create_link(existing_link.uuid, target_dir)
+        self._create_link(existing_link.uuid, existing_link.hostname, target_dir)
 
     def _target_dir(self, hostname: HostName, is_push_host: bool) -> Path:
         return self.data_source_dir / (f"{hostname}" if is_push_host else f"inactive/{hostname}")
 
-    def _create_link(self, uuid: UUID, target_dir: Path) -> None:
+    def _create_link(self, uuid: UUID, host_name: HostName, target_dir: Path) -> None:
+        self.uuid_store.set(host_name, uuid)
         self.received_outputs_dir.mkdir(parents=True, exist_ok=True)
         source = self.received_outputs_dir / f"{uuid}"
         source.unlink(missing_ok=True)

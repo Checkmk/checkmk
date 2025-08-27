@@ -2808,7 +2808,9 @@ def _update_links_for_agent_receiver() -> None:
         received_outputs_dir=paths.received_outputs_dir,
         data_source_dir=paths.data_source_push_agent_dir,
         r4r_discoverable_dir=paths.r4r_discoverable_dir,
+        uuid_lookup_dir=paths.uuid_lookup_dir,
     )
+
     uuid_link_manager.update_links(collect_all_hosts())
 
 

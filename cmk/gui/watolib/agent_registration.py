@@ -74,4 +74,5 @@ def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
         received_outputs_dir=cmk.utils.paths.received_outputs_dir,
         data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
         r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+        uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
     ).unlink(host_names)

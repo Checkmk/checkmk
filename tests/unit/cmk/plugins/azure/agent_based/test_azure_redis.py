@@ -3,42 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_redis import check_plugin_azure_redis
-from cmk.plugins.lib.azure import Resource, Section
+from cmk.plugins.azure.agent_based import azure_redis
+from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+
+AZURE_REDIS_WITH_METRICS = {
+    "az-redis-test": Resource(
+        id=(
+            "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/test-rg/"
+            "providers/Microsoft.Cache/Redis/az-redis-test"
+        ),
+        name="az-redis-test",
+        type="Microsoft.Cache/Redis",
+        group="test-rg",
+        kind=None,
+        location="germanywestcentral",
+        tags={},
+        properties={},
+        specific_info={},
+        metrics={
+            "maximum_allconnectedclients": AzureMetric(
+                name="allconnectedclients",
+                aggregation="maximum",
+                value=3,
+                unit="count",
+            ),
+            "maximum_allConnectionsCreatedPerSecond": AzureMetric(
+                name="allConnectionsCreatedPerSecond",
+                aggregation="maximum",
+                value=2,
+                unit="countpersecond",
+            ),
+            "maximum_allConnectionsClosedPerSecond": AzureMetric(
+                name="allConnectionsClosedPerSecond",
+                aggregation="maximum",
+                value=2,
+                unit="countpersecond",
+            ),
+        },
+        subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
+    ),
+}
 
 
 @pytest.mark.parametrize(
     "section, item, expected_result",
     [
         pytest.param(
-            {
-                "rickcmktest": Resource(
-                    id=(
-                        "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/"
-                        "providers/Microsoft.Cache/Redis/rickcmktest"
-                    ),
-                    name="rickcmktest",
-                    type="Microsoft.Cache/Redis",
-                    group="gemdev",
-                    kind=None,
-                    location="centralus",
-                    tags={},
-                    properties={},
-                    specific_info={},
-                    metrics={},
-                    subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
-                )
-            },
-            "rickcmktest",
+            AZURE_REDIS_WITH_METRICS,
+            "az-redis-test",
             [
                 Result(
                     state=State.OK,
-                    summary="Location: centralus",
+                    summary="Location: germanywestcentral",
                 ),
             ],
             id="generic service",
@@ -50,4 +72,32 @@ def test_check_azure_redis(
     item: str,
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_plugin_azure_redis.check_function(item, section)) == expected_result
+    check_function = azure_redis.check_plugin_azure_redis.check_function
+    assert list(check_function(item, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, params, expected_result",
+    [
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {},
+            [
+                Result(state=State.OK, summary="Connected clients: 3"),
+                Metric("azure_redis_clients_connected", 3.0),
+                Result(state=State.OK, summary="Created: 2/s"),
+                Metric("azure_redis_created_connection_rate", 2.0),
+                Result(state=State.OK, summary="Closed: 2/s"),
+                Metric("azure_redis_closed_connection_rate", 2.0),
+            ],
+            id="redis connections",
+        ),
+    ],
+)
+def test_check_azure_redis_connections(
+    section: Section,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    check_function = azure_redis.check_plugin_azure_redis_connections.check_function
+    assert list(check_function(params, section)) == expected_result

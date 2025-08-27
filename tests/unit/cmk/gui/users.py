@@ -47,6 +47,7 @@ def _mk_user_obj(
         "roles": [role],
         "serial": 0,
         "locked": False,
+        "contactgroups": ["all"],
     }
 
     if automation:
@@ -87,31 +88,8 @@ def create_and_destroy_user(
 
     # Load the config with the newly created user
     config.load_config()
-    profile_path = cmk.utils.paths.omd_root / "var/check_mk/web" / user_id
 
     try:
-        profile_path.joinpath("cached_profile.mk").write_text(
-            str(
-                repr(
-                    {
-                        "alias": "Test user",
-                        "contactgroups": ["all"],
-                        "disable_notifications": {},
-                        "email": "test_user_%s@checkmk.com" % user_id,
-                        "fallback_contact": False,
-                        "force_authuser": False,
-                        "locked": False,
-                        "language": "de",
-                        "pager": "",
-                        "roles": [role],
-                        "start_url": None,
-                        "ui_theme": "modern-dark",
-                        **(custom_attrs or {}),
-                    }
-                )
-            )
-        )
-
         yield user_id, password
     finally:
         with SuperUserContext():
@@ -125,4 +103,4 @@ def create_and_destroy_user(
                 )
 
             # User directories are not deleted by WATO by default. Clean it up here!
-            shutil.rmtree(str(profile_path))
+            shutil.rmtree(str(cmk.utils.paths.omd_root.joinpath("var/check_mk/web", user_id)))

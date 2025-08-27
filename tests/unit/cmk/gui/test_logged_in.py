@@ -335,9 +335,9 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
     assert monitoring_user.role_ids == ["user"]
     assert monitoring_user.get_attribute("roles") == ["user"]
 
-    assert monitoring_user.get_attribute("ui_theme") == "modern-dark"
+    assert monitoring_user.get_attribute("ui_theme") is None
 
-    assert monitoring_user.language == "de"
+    assert monitoring_user.language == "en"
     assert monitoring_user.customer_id is None
     assert monitoring_user.contact_groups == ["all"]
 

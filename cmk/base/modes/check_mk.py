@@ -3016,10 +3016,12 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
         Option(
             long_option=OPT_CHECKMK_OVERVIEW,
-            short_help="Pack HW/SW Inventory node 'Software > Applications > Checkmk'",
+            short_help=(
+                "Pack HW/SW Inventory node 'Software > Applications > Checkmk'. "
+                "The parameter H is the name of the Checkmk server in Checkmk itself."
+            ),
             argument=True,
-            argument_optional=True,
-            argument_descr="HOST",
+            argument_descr="H",
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,
@@ -3040,11 +3042,11 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
             Option(
                 long_option=OPT_PERFORMANCE_GRAPHS,
                 short_help=(
-                    "Pack performance graphs like CPU load and utilization of Checkmk Server"
+                    "Pack performance graphs like CPU load and utilization of Checkmk Server. "
+                    "The parameter H is the name of the Checkmk server in Checkmk itself."
                 ),
                 argument=True,
-                argument_optional=True,
-                argument_descr="HOST",
+                argument_descr="H",
             )
         )
     return sub_options

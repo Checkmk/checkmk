@@ -19,7 +19,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagsImportPatternOption,
 )
 
-from .conftest import fake_azure_subscription
+from .lib import fake_azure_subscription
 
 Args = argparse.Namespace
 

@@ -5,9 +5,8 @@
 
 
 import argparse
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -16,7 +15,6 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     _collect_resources,
     _get_resource_health_sections,
     AzureResource,
-    AzureSection,
     AzureSubscription,
     get_group_labels,
     get_vm_labels_section,
@@ -33,21 +31,9 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     write_remaining_reads,
 )
 
-from .conftest import fake_azure_subscription
+from .lib import fake_azure_subscription, MockAzureSection
 
 Args = argparse.Namespace
-
-
-class MockAzureSection(AzureSection):
-    def __init__(
-        self,
-        name: str,
-        content: list[Any] = [],
-        piggytargets: Iterable[str] = ("",),
-        separator: int = 124,
-    ) -> None:
-        super().__init__(name, piggytargets, separator, fake_azure_subscription())
-        self._cont = content
 
 
 @pytest.mark.parametrize(

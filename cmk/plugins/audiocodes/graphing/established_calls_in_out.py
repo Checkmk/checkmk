@@ -5,10 +5,7 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""))
-UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
-UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
 
 
 metric_audiocodes_established_calls_in = metrics.Metric(

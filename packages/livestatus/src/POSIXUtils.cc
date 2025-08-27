@@ -73,7 +73,6 @@ int createUnixDomainSocket(const std::filesystem::path &path, Logger *logger,
         const generic_error ge("cannot set close-exec bit on socket");
         Alert(logger) << ge;
         ::close(result);
-        result = -1;
         return -1;
     }
 

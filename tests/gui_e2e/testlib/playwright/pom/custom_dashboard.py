@@ -17,21 +17,9 @@ logger = logging.getLogger(__name__)
 class CustomDashboard(BaseDashboard):
     """Represents a custom dashboard."""
 
-    def __init__(
-        self,
-        page: Page,
-        page_title: str,
-        navigate_to_page: bool = True,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
-    ):
+    def __init__(self, page: Page, page_title: str, navigate_to_page: bool = True):
         self.page_title = page_title
-        super().__init__(
-            page,
-            navigate_to_page,
-            timeout_assertions,
-            timeout_navigation,
-        )
+        super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:

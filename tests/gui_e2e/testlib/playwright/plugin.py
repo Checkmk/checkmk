@@ -12,14 +12,30 @@ See: https://github.com/microsoft/playwright-pytest
 
 import logging
 import typing as t
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import pytest
 from playwright._impl._api_structures import StorageState
-from playwright.sync_api import Page
+from playwright.sync_api import BrowserContext, expect, Page
 from pytest_playwright import CreateContextCallback
 
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES
+
 logger = logging.getLogger(__name__)
+
+CLI_ARGUMENT_LOCALE = "--locale"
+CLI_ARGUMENT_LOCAL_RUN = "--local-run"
+CLI_ARGUMENT_GUI_TIMEOUT = "--gui-timeout"
+
+
+PageGetter: t.TypeAlias = Callable[[BrowserContext], Page]
+
+
+def positive_integer(value: str) -> int:
+    integer_value = int(value)
+    if integer_value <= 0:
+        raise ValueError
+    return integer_value
 
 
 @pytest.fixture(scope="session")
@@ -32,13 +48,13 @@ def browser_context_args(
     """
     _viewport = (
         {"width": 1600, "height": 900}
-        if pytestconfig.getoption("--local-run")
+        if pytestconfig.getoption(CLI_ARGUMENT_LOCAL_RUN)
         else {"width": 1920, "height": 1080}
     )
 
     return {
         **browser_context_args,
-        "locale": pytestconfig.getoption("--locale"),
+        "locale": pytestconfig.getoption(CLI_ARGUMENT_LOCALE),
         "viewport": _viewport,
     }
 
@@ -53,9 +69,27 @@ def fixture_browser_storage_stage() -> StorageState:
     return StorageState()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def get_new_page(pytestconfig: pytest.Config) -> PageGetter:
+    """Return a callable that creates a new page with the specified timeout."""
+    timeout_value = pytestconfig.getoption(CLI_ARGUMENT_GUI_TIMEOUT) * 1000
+
+    expect.set_options(timeout=timeout_value)
+
+    def _get_new_page(_context: BrowserContext) -> Page:
+        page = _context.new_page()
+        page.set_default_timeout(timeout_value)
+        page.set_default_navigation_timeout(timeout_value)
+        return page
+
+    return _get_new_page
+
+
 @pytest.fixture
 def cmk_page(
-    new_context: CreateContextCallback, browser_storage_state: StorageState
+    new_context: CreateContextCallback,
+    browser_storage_state: StorageState,
+    get_new_page: PageGetter,
 ) -> Iterator[Page]:
     """Create a new browser context and page for each test.
 
@@ -65,7 +99,7 @@ def cmk_page(
     """
     context = new_context(storage_state=browser_storage_state)
 
-    yield context.new_page()
+    yield get_new_page(context)
 
     browser_storage_state.update(context.storage_state())
 
@@ -89,12 +123,21 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom CLI arguments to GUI end to end testing framework."""
     group = parser.getgroup("playwright", "Playwright")
     group.addoption(
-        "--locale",
+        CLI_ARGUMENT_LOCALE,
         default="en-US",
         help="The default locale of the browser.",
     )
     group.addoption(
-        "--local-run",
+        CLI_ARGUMENT_LOCAL_RUN,
         action="store_true",
         help="Adapt certain settings for running testsuite locally.\n+ viewport size: 1600 x 900",
+    )
+    group.addoption(
+        CLI_ARGUMENT_GUI_TIMEOUT,
+        type=positive_integer,
+        default=TIMEOUT_ACTIVATE_CHANGES,
+        help=(
+            "Set the timeout for Playwright actions (in seconds)."
+            f" Default is {TIMEOUT_ACTIVATE_CHANGES}."
+        ),
     )

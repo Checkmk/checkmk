@@ -26,20 +26,8 @@ class BaseDashboard(CmkPage):
     page_title: str
     dropdown_buttons: list[str] = ["Dashboard", "Add", "Dashboards", "Display", "Help"]
 
-    def __init__(
-        self,
-        page: Page,
-        navigate_to_page: bool = True,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
-    ) -> None:
-        super().__init__(
-            page,
-            navigate_to_page=navigate_to_page,
-            contain_filter_sidebar=True,
-            timeout_assertions=timeout_assertions,
-            timeout_navigation=timeout_navigation,
-        )
+    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
+        super().__init__(page, navigate_to_page=navigate_to_page, contain_filter_sidebar=True)
 
     @override
     def navigate(self) -> None:

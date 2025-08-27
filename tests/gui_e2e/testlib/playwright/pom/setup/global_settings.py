@@ -142,13 +142,9 @@ class SiteSpecificGlobalSettings(CmkPage):
         site_id: str,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ):
         self._site_id = site_id
-        super().__init__(
-            page, navigate_to_page, contain_filter_sidebar, timeout_assertions, timeout_navigation
-        )
+        super().__init__(page, navigate_to_page, contain_filter_sidebar)
 
     @property
     def page_title(self) -> str:
@@ -208,13 +204,9 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
         site_id: str,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ):
         self._site_id = site_id
-        super().__init__(
-            page, navigate_to_page, contain_filter_sidebar, timeout_assertions, timeout_navigation
-        )
+        super().__init__(page, navigate_to_page, contain_filter_sidebar)
 
     @property
     def page_title(self) -> str:
@@ -265,18 +257,9 @@ class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):
         site_id: str,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ):
         self._site_id = site_id
-        super().__init__(
-            page,
-            site_id,
-            navigate_to_page,
-            contain_filter_sidebar,
-            timeout_assertions,
-            timeout_navigation,
-        )
+        super().__init__(page, site_id, navigate_to_page, contain_filter_sidebar)
 
     @override
     def navigate(self) -> None:

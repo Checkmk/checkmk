@@ -16,27 +16,11 @@ from typing import Any, NamedTuple
 from playwright.sync_api import Error, expect, Frame, FrameLocator, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
-
 
 class LocatorHelper(ABC):
     """Base class for helper classes for certain page elements"""
 
-    def __init__(
-        self,
-        page: Page,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
-    ) -> None:
-        # default timeout
-        if timeout_assertions is None:
-            timeout_assertions = TIMEOUT_ASSERTIONS
-        if timeout_navigation is None:
-            timeout_navigation = TIMEOUT_NAVIGATION
-        # explicitly set all default timeouts
-        page.set_default_timeout(timeout_navigation)
-        page.set_default_navigation_timeout(timeout_navigation)
-        expect.set_options(timeout=timeout_assertions)
+    def __init__(self, page: Page) -> None:
         self.page = page
 
     def _build_locator_kwargs(

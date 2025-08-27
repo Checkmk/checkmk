@@ -9,10 +9,10 @@ from contextlib import contextmanager
 
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-# timeout for playwright assertions (millseconds)
-TIMEOUT_ACTIVATE_CHANGES_MS = 120_000
-# timeout for playwright interactions (millseconds)
-TIMEOUT_ASSERTIONS = TIMEOUT_NAVIGATION = TIMEOUT_ACTIVATE_CHANGES_MS
+# timeout for playwright assertions
+TIMEOUT_ACTIVATE_CHANGES = 120
+TIMEOUT_ACTIVATE_CHANGES_MS = TIMEOUT_ACTIVATE_CHANGES * 1000
+# timeout for ui animations
 ANIMATION_TIMEOUT = 1000  # 750 ms (animation) + 250 ms (buffer)
 
 

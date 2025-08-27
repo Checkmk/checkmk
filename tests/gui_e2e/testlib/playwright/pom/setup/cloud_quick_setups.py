@@ -127,15 +127,11 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
         folder_details: FolderDetails,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ) -> None:
         super().__init__(
             page=page,
             navigate_to_page=navigate_to_page,
             contain_filter_sidebar=contain_filter_sidebar,
-            timeout_assertions=timeout_assertions,
-            timeout_navigation=timeout_navigation,
         )
         self.configuration_name: Final[str] = configuration_name
         self.folder_details: Final[BaseQuickSetupAddNewConfiguration.FolderDetails] = folder_details

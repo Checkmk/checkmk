@@ -12,7 +12,7 @@ from urllib.parse import quote_plus, urljoin
 from playwright.sync_api import expect, Locator, Page, Response
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
-from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -22,14 +22,9 @@ class CmkPage(LocatorHelper):
     """Parent object representing a Checkmk GUI page."""
 
     def __init__(
-        self,
-        page: Page,
-        navigate_to_page: bool = True,
-        contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
+        self, page: Page, navigate_to_page: bool = True, contain_filter_sidebar: bool = False
     ) -> None:
-        super().__init__(page, timeout_assertions, timeout_navigation)
+        super().__init__(page)
         self._navigate_to_page = navigate_to_page
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page, self._dropdown_list_name_to_id())
@@ -157,7 +152,7 @@ class CmkPage(LocatorHelper):
         with self.page.expect_event(event) as _:
             self.page.goto(url)
 
-    def check_no_errors(self, timeout: float = TIMEOUT_ASSERTIONS / 4) -> None:
+    def check_no_errors(self, timeout: float = TIMEOUT_ACTIVATE_CHANGES_MS / 4) -> None:
         """Check that no errors are present on the page."""
         expect(self.locator("div.error"), "Some errors are present on the page").not_to_be_visible(
             timeout=timeout
@@ -396,10 +391,8 @@ class MainArea(LocatorHelper):
         self,
         page: Page,
         dropdown_list_name_to_id: DropdownListNameToID,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ) -> None:
-        super().__init__(page, timeout_assertions, timeout_navigation)
+        super().__init__(page)
         self._dropdown_list_name_to_id = dropdown_list_name_to_id
 
     @override

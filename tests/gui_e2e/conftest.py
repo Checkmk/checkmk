@@ -18,6 +18,7 @@ from playwright.sync_api import BrowserContext, Page
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
+from tests.gui_e2e.testlib.playwright.plugin import PageGetter
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
@@ -130,15 +131,15 @@ def _navigate_to_dashboard(
 
 @pytest.fixture(name="new_browser_context_and_page")
 def fixture_new_browser_context_and_page(
-    context: BrowserContext,
-) -> Iterator[tuple[BrowserContext, Page]]:
+    context: BrowserContext, get_new_page: PageGetter
+) -> tuple[BrowserContext, Page]:
     """Create a new browser context from the existing browser session and return a new page.
 
     In the case a fresh browser context is required, use this fixture.
 
     NOTE: fresh context requires a login to the Checkmk site. Refer to `LoginPage` for details.
     """
-    yield context, context.new_page()
+    return context, get_new_page(context)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

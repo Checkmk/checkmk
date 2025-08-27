@@ -297,23 +297,12 @@ class HostProperties(CmkPage):
     ]
 
     def __init__(
-        self,
-        page: Page,
-        host: HostDetails,
-        exists: bool = False,
-        navigate_to_page: bool = True,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
+        self, page: Page, host: HostDetails, exists: bool = False, navigate_to_page: bool = True
     ) -> None:
         self.details = host
         self._exists = exists
         self.page_title = f"Properties of host {host.name}"
-        super().__init__(
-            page=page,
-            navigate_to_page=navigate_to_page,
-            timeout_assertions=timeout_assertions,
-            timeout_navigation=timeout_navigation,
-        )
+        super().__init__(page=page, navigate_to_page=navigate_to_page)
 
     @override
     def navigate(self) -> None:

@@ -67,17 +67,9 @@ class EditDashboard(DashboardProperties):
         dashboard: BaseDashboard,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
     ) -> None:
         self.dashboard = dashboard
-        super().__init__(
-            dashboard.page,
-            navigate_to_page,
-            contain_filter_sidebar,
-            timeout_assertions,
-            timeout_navigation,
-        )
+        super().__init__(dashboard.page, navigate_to_page, contain_filter_sidebar)
 
     @override
     def navigate(self) -> None:
@@ -103,18 +95,10 @@ class CreateDashboard(DashboardProperties):
         page: Page,
         navigate_to_page: bool = True,
         contain_filter_sidebar: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
         specific_object_type: SpecificObjectType | None = None,
     ) -> None:
         self.specific_object_type = specific_object_type
-        super().__init__(
-            page,
-            navigate_to_page,
-            contain_filter_sidebar,
-            timeout_assertions,
-            timeout_navigation,
-        )
+        super().__init__(page, navigate_to_page, contain_filter_sidebar)
 
     @override
     def navigate(self) -> None:

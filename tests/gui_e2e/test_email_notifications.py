@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
+from tests.gui_e2e.testlib.playwright.plugin import PageGetter
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.email import EmailPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
@@ -72,6 +73,7 @@ def test_filesystem_email_notifications(
     email_manager: EmailManager,
     test_site: Site,
     tmp_path: Path,
+    get_new_page: PageGetter,
 ) -> None:
     """Test that email notification is sent and contain expected data.
 
@@ -159,7 +161,7 @@ def test_filesystem_email_notifications(
         notification_configuration_page.check_total_sent_notifications_has_changed(total_sent)
         notification_configuration_page.check_failed_notifications_has_not_changed(total_failures)
 
-        new_page = dashboard_page.page.context.new_page()
+        new_page = get_new_page(dashboard_page.page.context)
         email_page = EmailPage(new_page, html_file_path)
         email_page.check_table_content(expected_content)
         new_page.close()

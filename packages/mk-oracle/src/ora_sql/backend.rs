@@ -138,8 +138,13 @@ fn row_to_vector(row: &oracle::Result<oracle::Row>) -> Vec<String> {
     if let Ok(r) = row {
         r.sql_values()
             .iter()
-            .map(|s| String::from_sql(s))
-            .map(|s| s.unwrap_or_else(|e| format!("Error: {}", e)))
+            .map(|val| {
+                if val.is_null().unwrap_or(false) {
+                    "".to_string()
+                } else {
+                    String::from_sql(val).unwrap_or_else(|e| format!("Error: {}", e))
+                }
+            })
             .collect::<Vec<String>>()
     } else {
         vec![format!("Error: {}", row.as_ref().err().unwrap())]

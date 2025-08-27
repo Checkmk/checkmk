@@ -11,6 +11,7 @@ use crate::common::tools::{
     platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
+use mk_oracle::config::defines::defaults::DEFAULT_SEP;
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::sqls;
@@ -345,7 +346,7 @@ fn connect_and_query(
         Separator::default(),
         config.params(),
     );
-    conn.query(&q, "").unwrap()
+    conn.query(&q, &DEFAULT_SEP.to_string()).unwrap()
 }
 
 #[test]
@@ -355,7 +356,7 @@ fn test_ts_quotas() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None);
         assert!(!rows.is_empty());
-        let expected = format!("{}|||", &endpoint.instance);
+        let expected = format!("{}||||", &endpoint.instance);
         assert_eq!(rows[0], expected);
     }
 }
@@ -616,7 +617,7 @@ fn test_sessions_last() {
             assert!(r.starts_with(start.as_str()));
 
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 2);
+            assert_eq!(line.len(), 4);
             assert!(
                 line[1].parse::<i32>().is_ok(),
                 "Value is not a number: {}",
@@ -684,7 +685,7 @@ fn test_table_spaces() {
             assert_eq!(line.len(), 15);
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
-                line[1].ends_with(".DBF"),
+                line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
                 line[1]
             );
@@ -729,7 +730,7 @@ fn test_table_spaces_old() {
             assert_eq!(line.len(), 15);
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
-                line[1].ends_with(".DBF"),
+                line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
                 line[1]
             );

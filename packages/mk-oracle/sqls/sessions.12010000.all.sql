@@ -1,25 +1,34 @@
 -- Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 -- This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 -- conditions defined in the file COPYING, which is part of this source code package.
--- Section sessions
-SELECT UPPER(vp.name)
-           || '|' || LTRIM(COUNT(1))
-           || DECODE(vp.con_id, 0, '|' || LTRIM(RTRIM(LIMIT_VALUE)) || '|-1')
-    FROM (
-        SELECT vp.con_id, i.instance_name || '.' || vp.name name
-            FROM v$containers vp
-            JOIN v$instance i
-                ON 1 = 1
-            JOIN v$database d
-                ON 1 = 1
-            WHERE d.cdb = 'YES' AND vp.con_id <> 2
-        UNION ALL
-        SELECT 0, instance_name
-            FROM v$instance
-    ) vp
-    JOIN v$resource_limit rl
-        ON RESOURCE_NAME = 'sessions'
-    LEFT OUTER JOIN v$session vs
-        ON vp.con_id = vs.con_id
-    GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE
-    ORDER BY 1
+
+-- Section sessions: retrieves session usage statistics per container (CDB / PDB)
+SELECT UPPER(vp.name)            AS instance_name,    -- CDB / PDB name (uppercased)
+       LTRIM(COUNT(1))           AS current_sessions, -- Number of currently active sessions
+       LTRIM(RTRIM(LIMIT_VALUE)) AS limit_sessions,   -- Configured session limit
+       LTRIM(RTRIM(MAX_UTILIZATION))                  -- Peak session usage so far
+FROM (
+         -- Step 1: Build container list
+         SELECT vp.con_id,
+                i.instance_name || '.' || vp.name name -- Instance + PDB name
+         FROM v$containers vp
+                  JOIN v$instance i ON 1 = 1
+                  JOIN v$database d ON 1 = 1
+         WHERE d.cdb = 'YES'  -- Only if running in multitenant mode
+           AND vp.con_id <> 2 -- Exclude seed PDB (PDB$SEED)
+
+         UNION ALL
+
+         -- Include root container (CDB) as con_id = 0
+         SELECT 0, instance_name
+         FROM v$instance
+     ) vp
+         -- Step 2: Join with resource limits
+         JOIN v$resource_limit rl
+              ON RESOURCE_NAME = 'sessions' -- Only look at session resource limit
+
+         -- Step 3: Count active sessions per container
+         LEFT OUTER JOIN v$session vs
+                         ON vp.con_id = vs.con_id -- Map sessions to each container
+GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE, rl.MAX_UTILIZATION
+ORDER BY vp.name DESC -- Sort results by container name (desc)

@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::defines::defaults::DEFAULT_SEP;
 use derive_more::{Display, From, Into};
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, From, Into)]
@@ -161,17 +160,12 @@ pub struct Credentials {
     pub password: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, From)]
+#[derive(Debug, Clone, PartialEq, Eq, From, Default)]
 pub enum Separator {
     No,
+    #[default]
     Comma,
     Decorated(char),
-}
-
-impl Default for Separator {
-    fn default() -> Self {
-        Separator::Decorated(DEFAULT_SEP)
-    }
 }
 
 pub type SqlBindParam = (String, u8);
@@ -273,7 +267,7 @@ mod tests {
         );
         assert_eq!(
             SqlQuery::new("a {sep} b", Separator::default(), &[]).as_str(),
-            "a || '|' || b"
+            "a , b"
         );
         assert_eq!(
             SqlQuery::new("a {sep} b", Separator::Decorated('x'), &[]).as_str(),

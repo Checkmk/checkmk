@@ -12,6 +12,8 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.main import main_app
 
+from .test_lib.relay_proxy import RelayProxy
+
 
 @pytest.fixture()
 def site_name() -> str:
@@ -32,3 +34,8 @@ def agent_receiver_test_client(site_name: str, tmp_path: pathlib.Path) -> TestCl
     app = main_app()
     client = TestClient(app)
     return client
+
+
+@pytest.fixture()
+def relay_proxy(agent_receiver_test_client: TestClient, site_name: str) -> RelayProxy:
+    return RelayProxy(agent_receiver_test_client, site_name)

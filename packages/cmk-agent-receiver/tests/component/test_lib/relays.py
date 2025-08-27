@@ -3,22 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from fastapi.testclient import TestClient
+from starlette.status import HTTP_200_OK
+
+from .relay_proxy import RelayProxy
 
 
-def register_relay(relay_id: str, site_name: str, agent_receiver_test_client: TestClient) -> None:
-    response = agent_receiver_test_client.post(
-        f"/{site_name}/agent-receiver/relays",
-        json={
-            "relay_id": relay_id,
-            "relay_name": "Relay A",  # TODO: Remove still unused create relay fields
-            "csr": "CSR for Relay A",
-            "auth_token": "auth-token-A",
-        },
-    )
-    assert response.status_code == 200, response.text
+def register_relay(
+    relay_id: str,
+    relay_proxy: RelayProxy,
+    expected_status_code: int = HTTP_200_OK,
+) -> None:
+    response = relay_proxy.register_relay(relay_id)
+    assert response.status_code == expected_status_code, response.text
 
 
-def unregister_relay(relay_id: str, site_name: str, agent_receiver_test_client: TestClient) -> None:
-    response = agent_receiver_test_client.delete(f"/{site_name}/agent-receiver/relays/{relay_id}")
-    assert response.status_code == 200, response.text
+def unregister_relay(
+    relay_id: str,
+    relay_proxy: RelayProxy,
+    expected_status_code: int = HTTP_200_OK,
+) -> None:
+    response = relay_proxy.unregister_relay(relay_id)
+    assert response.status_code == expected_status_code, response.text

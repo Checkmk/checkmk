@@ -547,7 +547,6 @@ def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
         "OTEL_SDK_DISABLED": os.environ.get("OTEL_SDK_DISABLED", "true"),
         "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
-        "JIRA_API_TOKEN_QA_ALERTS": os.environ.get("JIRA_API_TOKEN_QA_ALERTS", ""),
     }
     # Add all variables prefixed with QA_
     env.update({var: val for var, val in os.environ.items() if var.startswith("QA_")})

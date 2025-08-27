@@ -55,7 +55,7 @@ def main() {
             withCredentials([
                 string(
                     credentialsId: 'JIRA_API_TOKEN_QA_ALERTS',
-                    variable: 'JIRA_API_TOKEN_QA_ALERTS'
+                    variable: 'QA_JIRA_API_TOKEN'
                 ),
                 certificate(
                     credentialsId: 'QA_POSTGRES_CERT',

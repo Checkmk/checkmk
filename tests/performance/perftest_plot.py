@@ -787,13 +787,7 @@ class PerftestPlot:
             self.args.skip_graph_generation or self.args.skip_filesystem_writes
         )
         self.jira_url = self.args.jira_url
-        try:
-            self.jira_token: str | None = (
-                getenv(self.args.jira_token_var)
-                or Path(self.args.jira_token_path).read_text().split("\n")[0]
-            )
-        except (OSError, TypeError):
-            self.jira_token = None
+        self.jira_token = self.read_jira_token()
         self.alert_on_failure = self.args.alert_on_failure and self.jira_url and self.jira_token
         self.validate_baselines = self.args.validate_baselines or self.alert_on_failure
         self.job_names = self.read_job_names()
@@ -844,6 +838,27 @@ class PerftestPlot:
             Path: The path to the benchmark.json file.
         """
         return self.root_dir / f"{job_name}/benchmark.json"
+
+    def read_jira_token(self) -> str | None:
+        """
+        Read JIRA authentication token from environment variable or file.
+
+        Attempts to retrieve the JIRA token first from an environment variable
+        specified by self.args.jira_token_var, and if not found, reads it from
+        a file specified by self.args.jira_token_path (taking the first line).
+
+        Returns:
+            str | None: The JIRA token string if successfully retrieved,
+                       None if the token cannot be read due to OSError or TypeError.
+        """
+        try:
+            jira_token: str | None = (
+                getenv(self.args.jira_token_var)
+                or Path(self.args.jira_token_path).read_text().split("\n")[0]
+            )
+        except (OSError, TypeError):
+            jira_token = None
+        return jira_token
 
     def scenario_file_path(self, job_name: str, scenario_name: str) -> Path:
         """
@@ -1717,7 +1732,7 @@ def parse_args() -> PerftestPlotArgs:
         "--jira-token-var",
         dest="jira_token_var",
         type=str,
-        default="JIRA_API_TOKEN_QA_ALERTS",
+        default="QA_JIRA_API_TOKEN",
         help="The name of the Jira token variable (default: %(default)s).",
     )
     parser.add_argument(

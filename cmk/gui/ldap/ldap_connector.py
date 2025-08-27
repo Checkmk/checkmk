@@ -320,7 +320,7 @@ def _create_checkmk_user_for_this_ldap_connection(
             None,
             _("The user id '%s' already exists") % new_user_id,
         )
-    new_user_spec = new_user_template(ldap_connector_id)
+    new_user_spec = new_user_template(ldap_connector_id, active_config.default_user_profile)
     _set_customer_for_user(user=new_user_spec, customer_id=ldap_connector_customer_id)
     new_user_spec.setdefault("alias", new_user_id)
     add_internal_attributes(new_user_spec)

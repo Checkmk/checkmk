@@ -730,7 +730,7 @@ class ModeEditUser(WatoMode):
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user: bool = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
-        new_user = new_user_template("htpasswd")
+        new_user = new_user_template("htpasswd", active_config.default_user_profile)
 
         if self._user_id is not None:
             self._user = self._users.get(self._user_id, new_user)

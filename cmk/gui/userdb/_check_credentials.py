@@ -98,7 +98,7 @@ def _create_non_existing_user(
         return  # User exists. Nothing to do...
 
     users = load_users(lock=True)
-    users[username] = new_user_template(connection_id)
+    users[username] = new_user_template(connection_id, active_config.default_user_profile)
     users[username].setdefault("alias", username)
     save_users(users, user_attributes, now)
 

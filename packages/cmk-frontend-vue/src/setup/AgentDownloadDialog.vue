@@ -88,6 +88,8 @@ const tooltipOpen = ref(true)
       :legacy-agent-url="agentSlideout.legacy_agent_url"
       :close-button-title="closeButtonTitle"
       :save-host="agentSlideout.save_host"
+      :host-exists="agentSlideout.host_exists ?? false"
+      :setup-error="false"
       :agent-installed="isNotRegistered"
       :is-push-mode="false"
       @close="((slideInOpen = false), (tooltipOpen = false))"

@@ -23,6 +23,8 @@ const props = defineProps<{
   agentRegistrationCmds: AgentRegistrationCmds
   closeButtonTitle: TranslatedString
   saveHost: boolean
+  hostExists: boolean
+  setupError: boolean
   agentInstalled: boolean
   isPushMode: boolean
 }>()
@@ -139,6 +141,8 @@ const tabs: AgentSlideOutTabs[] = [
     :all-agents-url="allAgentsUrl"
     :close-button-title="closeButtonTitle"
     :save-host="saveHost"
+    :host-exists="hostExists"
+    :setup-error="setupError"
     :agent-installed="agentInstalled"
     :host-name="hostName"
     :is-push-mode="isPushMode"

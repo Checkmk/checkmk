@@ -53,6 +53,8 @@ const props = defineProps<{
   allAgentsUrl: string
   closeButtonTitle: TranslatedString
   saveHost: boolean
+  hostExists?: boolean
+  setupError?: boolean
   agentInstalled: boolean
   isPushMode: boolean
   hostName: string
@@ -151,7 +153,17 @@ function getInitStep() {
                   }}
                 </CmkParagraph>
               </div>
-              <div v-if="!saveHost" class="save_host__div">
+              <div v-if="setupError" class="save_host__div">
+                <CmkParagraph class="agent_slideout__paragraph_host_exists">
+                  <CmkIcon name="cross" />
+                  {{
+                    _t(
+                      `Could not save host "${hostName}". Close the slideout and review your input.`
+                    )
+                  }}
+                </CmkParagraph>
+              </div>
+              <div v-else-if="!saveHost && hostExists" class="save_host__div">
                 <CmkParagraph class="agent_slideout__paragraph_host_exists">
                   <CmkIcon name="checkmark" />
                   {{ _t(`Host "${hostName}" exists`) }}
@@ -159,13 +171,17 @@ function getInitStep() {
               </div>
             </template>
             <template #actions>
+              <CmkButton v-if="setupError" :title="_t('Close and revise form')" @click="close">
+                <CmkIcon name="edit" />
+                {{ _t('Close & review') }}
+              </CmkButton>
               <CmkWizardButton
-                v-if="saveHost"
+                v-if="saveHost && !setupError"
                 :override-label="_t('Save host & next step')"
                 type="next"
                 @click="saveHostAction"
               />
-              <CmkWizardButton v-else-if="currentStep === 1" type="next" />
+              <CmkWizardButton v-else-if="currentStep === 1 && !setupError" type="next" />
             </template>
           </CmkWizardStep>
 

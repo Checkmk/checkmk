@@ -40,6 +40,7 @@ interface Props {
   sites: Array<ModeHostSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
   agentSlideout: AgentSlideout
+  setupError: boolean
 }
 
 const props = defineProps<Props>()
@@ -72,14 +73,15 @@ const ipV6 = ref(props.ipv6InputElement.value || '')
 const targetElement = ref<HTMLElement>(
   props.changeTagAgent.checked ? (props.tagAgent.parentNode as HTMLElement) : props.tagAgentDefault
 )
+const setupErrorActive = ref(props.setupError)
 
 onMounted(() => {
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     void startAjax().then(() => {
-      if (!props.agentSlideout.save_host) {
+      if (!props.setupError) {
         slideInOpen.value = true
-        sessionStorage.removeItem('reopenSlideIn')
       }
+      sessionStorage.removeItem('reopenSlideIn')
     })
   }
   props.formElement.addEventListener('change', (e: Event) => {
@@ -103,6 +105,9 @@ onMounted(() => {
       isLoading.value = false
       isSuccess.value = false
       isError.value = false
+      if (props.setupError) {
+        setupErrorActive.value = false
+      }
     })
   }
 
@@ -248,7 +253,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
   if (errorDetails.value.includes('[Errno 111]')) {
     header = _t('Failed to connect to the Checkmk agent')
     txt = _t('This may be because the agent is not installed or not running on the target system.')
-    buttonOneTitle = _t('Download % install agent')
+    buttonOneTitle = _t('Download & install agent')
     buttonOneButton = _t('Download Checkmk agent')
     buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
@@ -366,6 +371,8 @@ function onClose() {
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"
         :save-host="agentSlideout.save_host"
+        :host-exists="agentSlideout.host_exists ?? false"
+        :setup-error="setupErrorActive"
         :close-button-title="isPushMode ? _t('Close slideout') : _t('Close & test connection')"
         :agent-installed="isNotRegistered"
         :is-push-mode="isPushMode"

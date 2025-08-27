@@ -26,6 +26,7 @@ const props = defineProps<{
   host_name: string
 }>()
 
+const setupError: Ref<boolean> = ref(!!document.querySelector('.wato .error'))
 const formElement: Ref<HTMLFormElement | null> = ref(null)
 const hostnameInputElement: Ref<HTMLInputElement | null> = ref(null)
 const siteSelectElement: Ref<HTMLSelectElement | null> = ref(null)
@@ -145,6 +146,7 @@ function getElementBySelector<T>(selector: string): T {
     :sites="sites"
     :agent-connection-modes="agent_connection_modes"
     :agent-slideout="agent_slideout"
+    :setup-error="setupError"
   ></AgentConnectionTest>
 </template>
 

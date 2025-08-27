@@ -10,7 +10,8 @@
         "host_name": { "type": "string" },
         "all_agents_url": { "type": "string" },
         "legacy_agent_url": { "type": "string" },
-        "save_host": { "type": "boolean" }
+        "save_host": { "type": "boolean" },
+        "host_exists": { "type": "boolean" }
     },
     "required": [
         "agent_install_cmds",

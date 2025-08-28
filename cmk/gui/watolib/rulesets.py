@@ -22,14 +22,12 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import RenderMode
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.automations import (
@@ -1187,22 +1185,7 @@ class Ruleset:
 
 class Rule:
     @classmethod
-    def from_ruleset_defaults(cls, folder: Folder, ruleset: Ruleset) -> Rule:
-        rendering_mode = active_config.vue_experimental_features.get(
-            "rule_render_mode", RenderMode.FRONTEND.value
-        )
-
-        try:
-            if rendering_mode == RenderMode.BACKEND.value:
-                default_value = ruleset.valuespec().default_value()
-            else:
-                default_value = get_visitor(
-                    ruleset.rulespec.form_spec,
-                    VisitorOptions(migrate_values=False, mask_values=False),
-                ).to_disk(DEFAULT_VALUE)
-        except FormSpecNotImplementedError:
-            default_value = ruleset.valuespec().default_value()
-
+    def from_ruleset(cls, folder: Folder, ruleset: Ruleset, value: object) -> Rule:
         return Rule(
             utils.gen_id(),
             folder,
@@ -1215,7 +1198,7 @@ class Rule:
                 docu_url="",
                 predefined_condition_id=None,
             ),
-            default_value,
+            value,
         )
 
     def __init__(
@@ -1741,7 +1724,7 @@ class EnabledDisabledServicesEditor:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = Rule.from_ruleset_defaults(folder, ruleset)
+            rule = Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value())
             conditions = RuleConditions(
                 folder.path(),
                 host_name=[self._host.name()],

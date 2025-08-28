@@ -3256,15 +3256,20 @@ class ModeNewRule(ABCEditRuleMode):
                 if item is not None:
                     service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
-        self._rule = Rule.from_ruleset_defaults(self._folder, self._ruleset)
         try:
             # If the rulespec already uses the new form spec, use the DEFAULT_VALUE sentinel
             # instead of an auto-generated valuespec:default_value()
             if _get_rule_render_mode() == RenderMode.FRONTEND:
                 _tmp = self._ruleset.rulespec.form_spec
-                self._rule.value = DEFAULT_VALUE
+                default_value = DEFAULT_VALUE
+            else:
+                # Using legacy render mode
+                default_value = self._ruleset.valuespec().default_value()
         except FormSpecNotImplementedError:
-            pass
+            # Unconverted valuespec
+            default_value = self._ruleset.valuespec().default_value()
+
+        self._rule = Rule.from_ruleset(self._folder, self._ruleset, default_value)
         self._rule.update_conditions(
             RuleConditions(
                 host_folder=self._folder.path(),

@@ -23,7 +23,7 @@ def _make_ruleset_collection_with_preexisting_rule(id_: str) -> RulesetCollectio
     # add some rule, but not quite one of ours:
     ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
     folder = folder_tree().root_folder()
-    rule = Rule.from_ruleset_defaults(folder, ruleset)
+    rule = Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value())
     rule.id = id_
     ruleset.append_rule(folder, rule)
     return RulesetCollection({ruleset.name: ruleset})

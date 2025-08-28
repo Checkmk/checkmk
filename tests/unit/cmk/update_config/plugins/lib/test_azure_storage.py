@@ -79,7 +79,7 @@ def test_migrate(
             old_ruleset.delete_rule(rule, create_change=True, use_git=False)
 
         folder = Folder.load(tree=FolderTree(), name="Main", parent_folder=None)
-        old_rule = Rule.from_ruleset_defaults(folder, old_ruleset)
+        old_rule = Rule.from_ruleset(folder, old_ruleset, old_ruleset.valuespec().default_value())
         old_rule.value = value
         old_ruleset.append_rule(folder, old_rule)
 

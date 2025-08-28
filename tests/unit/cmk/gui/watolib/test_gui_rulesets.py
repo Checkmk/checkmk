@@ -80,7 +80,9 @@ def test_rule_from_ruleset_defaults(
     ruleset_name: str, default_value: RuleValue, is_binary: bool
 ) -> None:
     ruleset = _ruleset(ruleset_name)
-    rule = rulesets.Rule.from_ruleset_defaults(folder_tree().root_folder(), ruleset)
+    rule = rulesets.Rule.from_ruleset(
+        folder_tree().root_folder(), ruleset, ruleset.valuespec().default_value()
+    )
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == RuleOptions(
         disabled=False,
@@ -1002,22 +1004,40 @@ def test_rules_grouped_by_folder() -> None:
 
     root: Folder = tree.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts")
-    rules: list[tuple[Folder, int, Rule]] = [(root, 0, Rule.from_ruleset_defaults(root, ruleset))]
+    rules: list[tuple[Folder, int, Rule]] = [
+        (root, 0, Rule.from_ruleset(root, ruleset, ruleset.valuespec().default_value()))
+    ]
 
     for nr in range(1, 3):
         folder = Folder.new(tree=tree, name="folder%d" % nr, parent_folder=root)
-        rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+        rules.append(
+            (folder, 0, Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()))
+        )
         for x in range(1, 3):
             subfolder = Folder.new(tree=tree, name="folder%d" % x, parent_folder=folder)
-            rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+            rules.append(
+                (
+                    subfolder,
+                    0,
+                    Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()),
+                )
+            )
             for y in range(1, 3):
                 sub_subfolder = Folder.new(tree=tree, name="folder%d" % y, parent_folder=subfolder)
-                rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+                rules.append(
+                    (
+                        sub_subfolder,
+                        0,
+                        Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()),
+                    )
+                )
 
     # Also test renamed folder
     folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
     folder4._title = "abc"
-    rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
+    rules.append(
+        (folder4, 0, Rule.from_ruleset(folder4, ruleset, ruleset.valuespec().default_value()))
+    )
 
     sorted_rules = sorted(
         rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True

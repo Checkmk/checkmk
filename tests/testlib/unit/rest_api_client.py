@@ -3400,6 +3400,69 @@ class ConstantClient(RestApiClient):
         )
 
 
+class RelayClient(RestApiClient):
+    domain: DomainType = "relay"
+
+    def get(self, relay_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{relay_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, relay_data: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=relay_data,
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        relay_id: str,
+        relay_data: dict[str, Any],
+        expect_ok: bool = True,
+        with_etag: bool = True,
+    ) -> Response:
+        headers = None
+        if with_etag:
+            headers = {
+                "If-Match": self.get(relay_id).headers["ETag"],
+                "Accept": "application/json",
+            }
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{relay_id}",
+            body=relay_data,
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, relay_id: str, expect_ok: bool = True, with_etag: bool = True) -> Response:
+        headers = None
+        if with_etag:
+            headers = {
+                "If-Match": self.get(relay_id).headers["ETag"],
+                "Accept": "application/json",
+            }
+
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{relay_id}",
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3456,6 +3519,7 @@ class ClientRegistry:
     VisualFilterClient: VisualFilterClient
     DashboardClient: DashboardClient
     ConstantClient: ConstantClient
+    RelayClient: RelayClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3504,4 +3568,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
         ConstantClient=ConstantClient(request_handler, url_prefix),
+        RelayClient=RelayClient(request_handler, url_prefix),
     )

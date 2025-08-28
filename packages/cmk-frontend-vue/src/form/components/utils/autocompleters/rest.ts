@@ -10,6 +10,7 @@ import type {
 
 import { fetchRestAPI } from '@/lib/cmkFetch'
 import type { CmkError } from '@/lib/error'
+import { untranslated } from '@/lib/i18n'
 import { API_ROOT } from '@/lib/rest-api-client/constants'
 
 import { ErrorResponse, Response } from '@/components/suggestions'
@@ -51,7 +52,9 @@ export async function fetchSuggestions(
 
   try {
     const result = await fetchtData(query, autocompleter.data)
-    return new Response(result.map((element) => ({ name: element.id, title: element.value })))
+    return new Response(
+      result.map((element) => ({ name: element.id, title: untranslated(element.value) }))
+    )
   } catch (e: unknown) {
     const errorDescription = (e as CmkError)?.message || 'unknown error'
     return new ErrorResponse(errorDescription)

@@ -35,7 +35,7 @@ const magnitudeOptions = computed(() => {
   return props.spec.displayed_magnitudes.map((element: string) => {
     return {
       name: element,
-      title: element
+      title: untranslated(element)
     }
   })
 })

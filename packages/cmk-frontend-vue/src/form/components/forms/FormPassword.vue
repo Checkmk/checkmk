@@ -74,11 +74,11 @@ const passwordTypeOptions = computed(() => {
   return [
     {
       name: 'explicit_password',
-      title: props.spec.i18n.explicit_password
+      title: untranslated(props.spec.i18n.explicit_password)
     },
     {
       name: 'stored_password',
-      title: props.spec.i18n.password_store
+      title: untranslated(props.spec.i18n.password_store)
     }
   ]
 })
@@ -88,7 +88,7 @@ const passwordStoreOptions = computed(() => {
   return props.spec.password_store_choices.map(({ password_id, name }) => {
     return {
       name: password_id,
-      title: name
+      title: untranslated(name)
     }
   })
 })

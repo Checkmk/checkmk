@@ -108,7 +108,10 @@ const elementRequired = computed(() => {
     v-model:selected-option="selectedConditionGroup"
     :options="{
       type: remainingGroups.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
-      suggestions: remainingGroups.map(([name, value]) => ({ name, title: value.title }))
+      suggestions: remainingGroups.map(([name, value]) => ({
+        name,
+        title: untranslated(value.title)
+      }))
     }"
     :input-hint="untranslated(spec.i18n.select_condition_group_to_add)"
     :required="elementRequired"

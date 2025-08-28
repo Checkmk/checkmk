@@ -9,6 +9,7 @@ import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_form
 import { onMounted, ref, toRaw } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
@@ -37,8 +38,11 @@ const [validation, selectedObjectId] = useValidation<string | null>(
   () => props.backendValidation
 )
 
-const choices = ref<Array<{ title: string; name: string }>>(
-  structuredClone(toRaw(props.spec.elements))
+const choices = ref<Array<{ title: TranslatedString; name: string }>>(
+  structuredClone(toRaw(props.spec.elements)).map((element) => ({
+    title: untranslated(element.title),
+    name: element.name
+  }))
 )
 
 const slideInObjectId = ref<OptionId | null>(null)
@@ -51,7 +55,7 @@ onMounted(async () => {
   )
   choices.value = entities.map((entity) => ({
     name: entity.ident,
-    title: entity.description
+    title: untranslated(entity.description)
   }))
 })
 
@@ -99,11 +103,13 @@ const slideInAPI = {
 function slideInSubmitted(event: { ident: string; description: string }) {
   data.value = event.ident
   if (choices.value.find((object) => object.name === event.ident) === undefined) {
-    choices.value.push({ title: event.description, name: event.ident })
+    choices.value.push({ title: untranslated(event.description), name: event.ident })
   } else {
     choices.value = choices.value.map((choice) =>
       // Update description of existing object
-      choice.name === event.ident ? { title: event.description, name: event.ident } : choice
+      choice.name === event.ident
+        ? { title: untranslated(event.description), name: event.ident }
+        : choice
     )
   }
   closeSlideIn()

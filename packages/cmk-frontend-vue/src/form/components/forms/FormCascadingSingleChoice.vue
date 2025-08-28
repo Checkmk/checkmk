@@ -147,7 +147,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           :component-id="componentId"
           :options="{
             type: spec.elements.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
-            suggestions: spec.elements
+            suggestions: spec.elements.map((element) => ({
+              name: element.name,
+              title: untranslated(element.title)
+            }))
           }"
           :no-elements-text="untranslated(spec.no_elements_text)"
           :input-hint="untranslated(props.spec.input_hint || '')"

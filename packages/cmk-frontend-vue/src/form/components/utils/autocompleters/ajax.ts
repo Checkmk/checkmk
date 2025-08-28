@@ -10,6 +10,7 @@ import type {
 
 import { cmkFetch } from '@/lib/cmkFetch'
 import { CmkError } from '@/lib/error'
+import { untranslated } from '@/lib/i18n'
 
 import { ErrorResponse, Response } from '@/components/suggestions'
 
@@ -78,7 +79,9 @@ export async function fetchSuggestions(
 
   try {
     const result = await fetchData(query, autocompleter.data)
-    return new Response(result.choices.map((element) => ({ name: element[0], title: element[1] })))
+    return new Response(
+      result.choices.map((element) => ({ name: element[0], title: untranslated(element[1]) }))
+    )
   } catch (e: unknown) {
     const errorDescription = (e as AutoCompleterResponseError).response?.result
     return new ErrorResponse(errorDescription || 'unknown error')

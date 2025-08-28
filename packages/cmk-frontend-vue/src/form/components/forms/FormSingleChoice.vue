@@ -40,7 +40,10 @@ const componentId = useId()
       v-model:selected-option="value"
       :options="{
         type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
-        suggestions: props.spec.elements
+        suggestions: props.spec.elements.map((element) => ({
+          name: element.name,
+          title: untranslated(element.title)
+        }))
       }"
       :input-hint="untranslated(spec.input_hint || '')"
       :disabled="spec.frozen"

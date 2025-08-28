@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -29,7 +30,7 @@ type SuggestionsFiltered = {
 type SuggestionsCallbackFiltered = {
   type: 'callback-filtered'
   querySuggestions: (query: string) => Promise<ErrorResponse | Response>
-  getTitle?: (name: string) => Promise<ErrorResponse | string>
+  getTitle?: (name: string) => Promise<ErrorResponse | TranslatedString>
 }
 
 export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered

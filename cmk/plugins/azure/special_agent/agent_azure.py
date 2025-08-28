@@ -50,6 +50,7 @@ from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
 GroupLabels = Mapping[str, Mapping[str, str]]
+type ResourceId = str
 
 LOGGER = logging.getLogger("agent_azure")
 
@@ -871,7 +872,7 @@ def _get_http_listeners(http_listeners: Mapping) -> Mapping[str, Mapping]:
 
 async def _collect_app_gateways_resources(
     mgmt_client: BaseAsyncApiClient,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureResource]:
     app_gateways = await mgmt_client.get_async(
         "providers/Microsoft.Network/applicationGateways",
@@ -882,7 +883,7 @@ async def _collect_app_gateways_resources(
     applications_gateways: list[AzureResource] = []
     for app_gateway in app_gateways:
         try:
-            resource = monitored_resources_by_id[app_gateway["id"].lower()]
+            resource = monitored_resources[app_gateway["id"].lower()]
         except KeyError:
             # this can happen because the resource has been filtered out
             # (for example because it is not in the monitored group configured via --explicit-config)
@@ -937,11 +938,9 @@ async def _collect_app_gateways_resources(
 # TODO: test
 async def process_app_gateways(
     mgmt_client: BaseAsyncApiClient,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureResourceSection]:
-    applications_gateways = await _collect_app_gateways_resources(
-        mgmt_client, monitored_resources_by_id
-    )
+    applications_gateways = await _collect_app_gateways_resources(mgmt_client, monitored_resources)
 
     sections = []
     for resource in applications_gateways:
@@ -954,7 +953,7 @@ async def process_app_gateways(
 
 async def _collect_load_balancers_resources(
     mgmt_client: BaseAsyncApiClient,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureResource]:
     load_balancers_response = await mgmt_client.get_async(
         "providers/Microsoft.Network/loadBalancers",
@@ -965,7 +964,7 @@ async def _collect_load_balancers_resources(
     load_balancers_resources: list[AzureResource] = []
     for load_balancer in load_balancers_response:
         try:
-            resource = monitored_resources_by_id[load_balancer["id"].lower()]
+            resource = monitored_resources[load_balancer["id"].lower()]
         except KeyError:
             # this can happen because the resource has been filtered out
             # (for example because it is not in the monitored group configured via --explicit-config)
@@ -1003,9 +1002,9 @@ async def _collect_load_balancers_resources(
 # TODO: test
 async def process_load_balancers(
     mgmt_client: BaseAsyncApiClient,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureResourceSection]:
-    load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources_by_id)
+    load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources)
 
     sections = []
     for resource in load_balancers:
@@ -1564,10 +1563,10 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
 async def process_metrics(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
     args: Args,
 ) -> None:
-    errors = await _gather_metrics(mgmt_client, subscription, monitored_resources_by_id, args)
+    errors = await _gather_metrics(mgmt_client, subscription, monitored_resources, args)
 
     if not errors:
         return
@@ -1930,7 +1929,7 @@ async def process_usage_details(
 async def process_resource_health(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
     monitored_groups: Sequence[str],
     debug: bool,
 ) -> Sequence[AzureSection]:
@@ -1958,7 +1957,7 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(health_values, monitored_resources_by_id, subscription)
+    return _get_resource_health_sections(health_values, monitored_resources, subscription)
 
 
 # TODO: test
@@ -1966,7 +1965,7 @@ async def process_virtual_machines(
     api_client: BaseAsyncApiClient,
     args: Args,
     group_labels: GroupLabels,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
 ) -> Sequence[AzureResourceSection]:
     response = await api_client.get_async(
@@ -1981,7 +1980,7 @@ async def process_virtual_machines(
     virtual_machines: list[AzureResource] = []
     for vm in response:
         try:
-            resource = monitored_resources_by_id[vm["id"].lower()]
+            resource = monitored_resources[vm["id"].lower()]
         except KeyError:
             # this can happen because the resource has been filtered out
             # (for example because it is not in the monitored group configured via --explicit-config)
@@ -2062,7 +2061,7 @@ class ResourceHealth(TypedDict, total=False):
 
 def _get_resource_health_sections(
     resource_health_view: Sequence[ResourceHealth],
-    resources_by_id: Mapping[str, AzureResource],
+    resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
@@ -2073,7 +2072,7 @@ def _get_resource_health_sections(
         resource_id = "/".join(health_id.split("/")[:-4])
 
         try:
-            resource = resources_by_id[resource_id.lower()]
+            resource = resources[resource_id.lower()]
         except KeyError:
             continue
 
@@ -2132,19 +2131,19 @@ def get_bulk_tasks(
     args: Args,
     group_labels: GroupLabels,
     monitored_services: set[str],
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
 ) -> Iterator[asyncio.Task]:
     if FetchedResource.virtual_machines.type in monitored_services:
         yield asyncio.create_task(
             process_virtual_machines(
-                mgmt_client, args, group_labels, monitored_resources_by_id, subscription
+                mgmt_client, args, group_labels, monitored_resources, subscription
             )
         )
     if FetchedResource.app_gateways.type in monitored_services:
-        yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources_by_id))
+        yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources))
     if FetchedResource.load_balancers.type in monitored_services:
-        yield asyncio.create_task(process_load_balancers(mgmt_client, monitored_resources_by_id))
+        yield asyncio.create_task(process_load_balancers(mgmt_client, monitored_resources))
 
 
 # TODO: test
@@ -2152,11 +2151,11 @@ async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
     args: Args,
     subscription: AzureSubscription,
-    monitored_resources_by_id: Mapping[str, AzureResource],
+    monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[Section]:
     sections: list[AzureSection] = []
     tasks = set()
-    for _resource_id, resource in monitored_resources_by_id.items():
+    for _resource_id, resource in monitored_resources.items():
         resource_type = resource.info["type"]
         if resource_type in BULK_QUERIED_RESOURCES:
             continue

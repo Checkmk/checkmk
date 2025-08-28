@@ -92,7 +92,7 @@ check_plugin_azure_redis_connections = CheckPlugin(
 )
 
 
-check_plugin_azure_cpu_utilization = CheckPlugin(
+check_plugin_azure_redis_cpu_utilization = CheckPlugin(
     name="azure_redis_cpu_utilization",
     sections=["azure_redis"],
     service_name="Azure/Redis CPU utilization",

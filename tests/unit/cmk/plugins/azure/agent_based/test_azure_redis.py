@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import CheckPlugin, Metric, Result, State
 from cmk.plugins.azure.agent_based import azure_redis
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
@@ -45,6 +45,12 @@ AZURE_REDIS_WITH_METRICS = {
                 value=2,
                 unit="countpersecond",
             ),
+            "maximum_allpercentprocessortime": AzureMetric(
+                name="allpercentprocessortime",
+                aggregation="maximum",
+                value=25,
+                unit="percent",
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
@@ -77,11 +83,12 @@ def test_check_azure_redis(
 
 
 @pytest.mark.parametrize(
-    "section, params, expected_result",
+    "section, params, check_plugin, expected_result",
     [
         pytest.param(
             AZURE_REDIS_WITH_METRICS,
             {},
+            azure_redis.check_plugin_azure_redis_connections,
             [
                 Result(state=State.OK, summary="Connected clients: 3"),
                 Metric("azure_redis_clients_connected", 3.0),
@@ -92,12 +99,23 @@ def test_check_azure_redis(
             ],
             id="redis connections",
         ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {},
+            azure_redis.check_plugin_azure_redis_cpu_utilization,
+            [
+                Result(state=State.OK, summary="Total CPU: 25.00%"),
+                Metric("util", 25.0),
+            ],
+            id="redis CPU utilization",
+        ),
     ],
 )
-def test_check_azure_redis_connections(
+def test_check_azure_redis_check_functions(
     section: Section,
+    check_plugin: CheckPlugin,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    check_function = azure_redis.check_plugin_azure_redis_connections.check_function
+    check_function = check_plugin.check_function
     assert list(check_function(params, section)) == expected_result

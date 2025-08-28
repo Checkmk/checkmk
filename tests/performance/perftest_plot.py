@@ -703,6 +703,7 @@ class PerftestPlotArgs(argparse.Namespace):
         dbuser (str): Username for database authentication.
         dbhost (str): Hostname or IP address of the database server.
         dbport (int): Port number for the database connection.
+        dbcheck (bool): If True, DB connection is checked only (nothing else is done).
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
         sslmode (str): The SSL mode for the Postgres authentication.
@@ -729,6 +730,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbuser: str
     dbhost: str
     dbport: int
+    dbcheck: bool
     validate_baselines: bool
     alert_on_failure: bool
     sslmode: str
@@ -786,6 +788,10 @@ class PerftestPlot:
         else:
             print("Database access disabled; switching to filesystem mode!")
             self.read_from_database = self.write_to_database = False
+
+        if self.args.dbcheck:
+            self.jobs = {}
+            sys_exit()
 
         self.write_json_files = self.args.write_json_files and not self.args.skip_filesystem_writes
         self.write_graph_files = not (
@@ -1686,6 +1692,14 @@ def parse_args() -> PerftestPlotArgs:
         help="The port for the database connection (default: %(default)d).",
     )
     parser.add_argument(
+        "--dbcheck",
+        action=argparse.BooleanOptionalAction,
+        dest="dbcheck",
+        type=bool,
+        default=False,
+        help="Specifies if the DB connection should be checked only (default: %(default)s).",
+    )
+    parser.add_argument(
         "--validate-baselines",
         action=argparse.BooleanOptionalAction,
         dest="validate_baselines",
@@ -1795,7 +1809,6 @@ def main():
     args = parse_args()
     logger.setLevel(args.log_level)
     app = PerftestPlot(args=args)
-
     if len(app.jobs) == 0:
         print(
             "Please provide one or more valid performance test benchmark jobs!\n\n"

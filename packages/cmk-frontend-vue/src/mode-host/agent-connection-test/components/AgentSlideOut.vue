@@ -48,7 +48,7 @@ export interface InstallUrl {
 }
 
 const props = defineProps<{
-  dialogMsg: string
+  dialogMsg: TranslatedString
   tabs: AgentSlideOutTabs[]
   allAgentsUrl: string
   closeButtonTitle: TranslatedString
@@ -115,7 +115,10 @@ function getInitStep() {
     <CmkIcon name="frameurl" />
     {{ _t('View all agents') }}
   </CmkButton>
-  <CmkDialog :message="dialogMsg" :dismissal_button="{ title: 'Do not show again', key: 'key' }" />
+  <CmkDialog
+    :message="dialogMsg"
+    :dismissal_button="{ title: _t('Do not show again'), key: 'key' }"
+  />
   <CmkHeading type="h4" class="select-heading">
     {{ _t('Select the type of system you want to monitor') }}
   </CmkHeading>

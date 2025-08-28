@@ -17,11 +17,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
 interface Props {
-  dialogTitle: string
-  dialogMessage: string
-  slideInTitle: string
-  slideInButtonTitle: string
-  docsButtonTitle: string
+  dialogTitle: TranslatedString
+  dialogMessage: TranslatedString
+  slideInTitle: TranslatedString
+  slideInButtonTitle: TranslatedString
+  docsButtonTitle: TranslatedString
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   allAgentsUrl: string

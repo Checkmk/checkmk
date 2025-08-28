@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { NotificationFallbackWarning } from 'cmk-shared-typing/typescript/notifications'
 
+import { untranslated } from '@/lib/i18n'
+
 import CmkDialog from '@/components/CmkDialog.vue'
 
 const WARNING_KEY = 'notification_fallback'
@@ -21,15 +23,18 @@ function openInSameTab(url: string) {
 
 <template>
   <CmkDialog
-    :title="props.properties['i18n']['title']"
-    :message="props.properties['i18n']['message']"
+    :title="untranslated(props.properties['i18n']['title'])"
+    :message="untranslated(props.properties['i18n']['message'])"
     :buttons="[
       {
-        title: properties['i18n']['setup_link_title'],
+        title: untranslated(properties['i18n']['setup_link_title']),
         variant: 'info',
         onclick: () => openInSameTab(properties['setup_link'])
       }
     ]"
-    :dismissal_button="{ title: properties['i18n']['do_not_show_again_title'], key: WARNING_KEY }"
+    :dismissal_button="{
+      title: untranslated(properties['i18n']['do_not_show_again_title']),
+      key: WARNING_KEY
+    }"
   />
 </template>

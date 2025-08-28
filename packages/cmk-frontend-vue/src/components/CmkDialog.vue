@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
 import usePersistentRef from '@/lib/usePersistentRef'
 import { isWarningDismissed } from '@/lib/userConfig'
@@ -15,10 +16,10 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
-  title?: string
-  message: string
-  buttons?: { title: string; variant: ButtonVariants['variant']; onclick: () => void }[]
-  dismissal_button?: { title: string; key: string }
+  title?: TranslatedString
+  message: TranslatedString
+  buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
+  dismissal_button?: { title: TranslatedString; key: string }
 }>()
 
 const dialogHidden = props.dismissal_button

@@ -50,8 +50,8 @@ export interface NoteTextWidgetProps {
 }
 
 export interface DialogWidgetProps {
-  /** @property {string}  text - Text to be displayed */
-  text: string
+  /** @property {TranslatedString}  text - Text to be displayed */
+  text: TranslatedString
 }
 
 export interface TextWidgetProps {

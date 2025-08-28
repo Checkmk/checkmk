@@ -10,6 +10,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -109,9 +110,9 @@ const { ErrorBoundary } = useErrorBoundary()
     <ErrorBoundary>
       <CmkDialog
         class="fsce-edit-async__dialog"
-        :message="props.i18n.permanent_choice_warning"
+        :message="untranslated(props.i18n.permanent_choice_warning)"
         :dismissal_button="{
-          title: props.i18n.permanent_choice_warning_dismissal,
+          title: untranslated(props.i18n.permanent_choice_warning_dismissal),
           key: DISMISSAL_KEY
         }"
       />

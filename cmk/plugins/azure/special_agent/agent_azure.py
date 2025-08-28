@@ -690,8 +690,16 @@ class AzureLabelsSection(AzureSection):
         self,
         piggytarget: str,
         subscription: AzureSubscription,
+        *,
+        labels: Mapping[str, str],
+        tags: Mapping[str, str],
     ) -> None:
         super().__init__("labels", [piggytarget], separator=0, subscription=subscription)
+        super().add((json.dumps(labels),))  # first line: labels
+        super().add((json.dumps(tags),))  # second line: tags
+
+    def add(self, info):
+        raise NotImplementedError("Use constructor to add labels and tags")
 
 
 class HostTarget(StrEnum):
@@ -1663,10 +1671,9 @@ def get_resource_host_labels_section(
         if tag_name not in resource.tags:
             resource_tags[tag_name] = tag_value
 
-    labels_section = AzureLabelsSection(resource.info["name"], subscription)
-    labels_section.add((json.dumps(labels),))
-    labels_section.add((json.dumps(resource_tags),))
-    return labels_section
+    return AzureLabelsSection(
+        resource.info["name"], subscription, labels=labels, tags=resource_tags
+    )
 
 
 async def get_group_labels(
@@ -1694,21 +1701,17 @@ def write_group_info(
     group_labels: GroupLabels,
 ) -> None:
     for group_name, tags in group_labels.items():
-        labels_section = AzureLabelsSection(group_name, subscription)
-        labels_section.add(
-            (
-                json.dumps(
-                    {
-                        "resource_group": group_name,
-                        "subscription_name": subscription.hostname,
-                        "subscription_id": subscription.id,
-                        "entity": "resource_group",
-                    }
-                ),
-            )
-        )
-        labels_section.add((json.dumps(tags),))
-        labels_section.write()
+        AzureLabelsSection(
+            group_name,
+            subscription,
+            labels={
+                "resource_group": group_name,
+                "subscription_name": subscription.hostname,
+                "subscription_id": subscription.id,
+                "entity": "resource_group",
+            },
+            tags=tags,
+        ).write()
 
     section = AzureSection("agent_info", [subscription.hostname], subscription=subscription)
     section.add(("monitored-groups", json.dumps(monitored_groups)))
@@ -1727,20 +1730,16 @@ def write_group_info(
 
 
 def write_subscription_info(subscription: AzureSubscription) -> None:
-    labels_section = AzureLabelsSection(subscription.hostname, subscription)
-    labels_section.add(
-        (
-            json.dumps(
-                {
-                    "subscription_name": subscription.hostname,
-                    "subscription_id": subscription.id,
-                    "entity": "subscription",
-                }
-            ),
-        )
-    )
-    labels_section.add((json.dumps(subscription.tags),))
-    labels_section.write()
+    AzureLabelsSection(
+        subscription.hostname,
+        subscription,
+        labels={
+            "subscription_name": subscription.hostname,
+            "subscription_id": subscription.id,
+            "entity": "subscription",
+        },
+        tags=subscription.tags,
+    ).write()
 
 
 def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscription) -> None:

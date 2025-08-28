@@ -3684,22 +3684,25 @@ def main() -> None:
     # Some commands need a site to be specified. If we are
     # called as root, this must be done explicitly. If we
     # are site user, the site name is our user name
-    site: SiteContext | RootContext
     if command.needs_site > 0:
         if is_root():
             if len(args) >= 1:
                 site_name = args[0]
                 args = args[1:]
-                site = _site_environment(site_name, command, global_opts.verbose)
             elif command.needs_site == 1:
                 sys.exit("omd: please specify site.")
             else:
-                site = RootContext()
+                site_name = None
         else:
             site_name = site_name_from_uid()
-            site = _site_environment(site_name, command, global_opts.verbose)
     else:
-        site = RootContext()
+        site_name = None
+
+    site = (
+        RootContext()
+        if site_name is None
+        else _site_environment(site_name, command, global_opts.verbose)
+    )
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
         answer = None

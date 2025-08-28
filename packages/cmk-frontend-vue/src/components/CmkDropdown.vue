@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
 
@@ -35,13 +36,13 @@ const {
   label
 } = defineProps<{
   options: Suggestions
-  inputHint?: string
-  noResultsHint?: string
+  inputHint?: TranslatedString
+  noResultsHint?: TranslatedString
   disabled?: boolean
   componentId?: string | null
-  noElementsText?: string
+  noElementsText?: TranslatedString
   required?: boolean
-  label: string
+  label: TranslatedString
   startOfGroup?: boolean
   width?: 'wide' | 'default'
 }>()

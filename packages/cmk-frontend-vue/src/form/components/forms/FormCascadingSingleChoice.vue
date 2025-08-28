@@ -11,6 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref, toRaw, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
@@ -148,9 +149,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             type: spec.elements.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
             suggestions: spec.elements
           }"
-          :no-elements-text="spec.no_elements_text"
-          :input-hint="props.spec.input_hint || ''"
-          :label="props.spec.label || props.spec.title"
+          :no-elements-text="untranslated(spec.no_elements_text)"
+          :input-hint="untranslated(props.spec.input_hint || '')"
+          :label="untranslated(props.spec.label || props.spec.title)"
           required
         />
       </template>

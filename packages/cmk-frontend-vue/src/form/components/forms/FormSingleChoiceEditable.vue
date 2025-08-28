@@ -8,6 +8,8 @@ import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuratio
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { onMounted, ref, toRaw } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -129,9 +131,9 @@ const { ErrorBoundary, error } = useErrorBoundary()
         type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
         suggestions: choices
       }"
-      :input-hint="spec.i18n.no_selection"
-      :no-elements-text="spec.i18n.no_objects"
-      :label="spec.title"
+      :input-hint="untranslated(spec.i18n.no_selection)"
+      :no-elements-text="untranslated(spec.i18n.no_objects)"
+      :label="untranslated(spec.title)"
       class="fsce__dropdown"
       required
     />

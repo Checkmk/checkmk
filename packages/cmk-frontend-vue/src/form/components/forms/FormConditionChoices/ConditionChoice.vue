@@ -11,6 +11,7 @@ import {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
@@ -127,7 +128,7 @@ watch(selectedOperator, (operator) => {
   <CmkDropdown
     v-model:selected-option="selectedOperator"
     :options="{ type: 'fixed', suggestions: operatorChoices }"
-    :label="props.i18n.choose_operator"
+    :label="untranslated(props.i18n.choose_operator)"
   />
   <CmkSpace :size="'small'" />
   <template v-if="allValueChoices.length === 1">
@@ -162,7 +163,7 @@ watch(selectedOperator, (operator) => {
               }))
             ]
           }"
-          :label="props.i18n.choose_condition"
+          :label="untranslated(props.i18n.choose_condition)"
           @update:selected-option="(value) => updateMultiValue(index, value!)"
         />
       </template>
@@ -175,7 +176,7 @@ watch(selectedOperator, (operator) => {
         type: allValueChoices.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
         suggestions: allValueChoices
       }"
-      :label="props.i18n.choose_condition"
+      :label="untranslated(props.i18n.choose_condition)"
       @update:selected-option="(value) => updateValue(selectedOperator, value)"
     />
   </template>

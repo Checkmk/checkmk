@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { DataSize } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
@@ -54,7 +56,7 @@ const magnitudeOptions = computed(() => {
   <CmkDropdown
     v-model:selected-option="value[1]"
     :options="{ type: 'fixed', suggestions: magnitudeOptions }"
-    :label="spec.i18n.choose_unit"
+    :label="untranslated(spec.i18n.choose_unit)"
   />
   <FormValidation :validation="validation"></FormValidation>
 </template>

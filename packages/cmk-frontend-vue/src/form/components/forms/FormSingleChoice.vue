@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import { untranslated } from '@/lib/i18n'
+
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
@@ -40,11 +42,11 @@ const componentId = useId()
         type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
         suggestions: props.spec.elements
       }"
-      :input-hint="spec.input_hint || ''"
+      :input-hint="untranslated(spec.input_hint || '')"
       :disabled="spec.frozen"
       :component-id="componentId"
-      :no-elements-text="props.spec.no_elements_text || ''"
-      :label="props.spec.label || props.spec.title"
+      :no-elements-text="untranslated(props.spec.no_elements_text || '')"
+      :label="untranslated(props.spec.label || props.spec.title)"
       required
     />
   </div>

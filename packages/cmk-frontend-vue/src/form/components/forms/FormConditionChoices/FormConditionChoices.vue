@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
@@ -109,10 +110,10 @@ const elementRequired = computed(() => {
       type: remainingGroups.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
       suggestions: remainingGroups.map(([name, value]) => ({ name, title: value.title }))
     }"
-    :input-hint="spec.i18n.select_condition_group_to_add"
+    :input-hint="untranslated(spec.i18n.select_condition_group_to_add)"
     :required="elementRequired"
-    :no-elements-text="spec.i18n.no_more_condition_groups_to_add"
-    :label="spec.i18n.select_condition_group_to_add"
+    :no-elements-text="untranslated(spec.i18n.no_more_condition_groups_to_add)"
+    :label="untranslated(spec.i18n.select_condition_group_to_add)"
     @update:selected-option="addElement"
   />
   <FormValidation :validation="validation"></FormValidation>

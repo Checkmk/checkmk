@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Password } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
@@ -98,7 +98,7 @@ const passwordStoreOptions = computed(() => {
   <CmkDropdown
     v-model:selected-option="passwordType"
     :options="{ type: 'fixed', suggestions: passwordTypeOptions }"
-    :label="props.spec.i18n.choose_password_type"
+    :label="untranslated(props.spec.i18n.choose_password_type)"
   />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
@@ -117,7 +117,7 @@ const passwordStoreOptions = computed(() => {
       v-else
       v-model:selected-option="passwordStoreChoice"
       :options="{ type: 'fixed', suggestions: passwordStoreOptions }"
-      :label="props.spec.i18n.choose_password_from_store"
+      :label="untranslated(props.spec.i18n.choose_password_from_store)"
       required
     />
   </template>

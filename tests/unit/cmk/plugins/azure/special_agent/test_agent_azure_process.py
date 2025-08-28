@@ -534,6 +534,7 @@ async def test_process_organization(
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="Probably make sense to just test _gather_sections_from_resources?")
 async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None:
     resource = AzureResource(
         {

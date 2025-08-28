@@ -20,7 +20,7 @@ import re
 import string
 import sys
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import auto, Enum, StrEnum
 from multiprocessing import Lock
 from pathlib import Path
@@ -948,22 +948,6 @@ async def _collect_app_gateways_resources(
     return applications_gateways
 
 
-# TODO: test
-async def process_app_gateways(
-    mgmt_client: BaseAsyncApiClient,
-    monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[AzureResourceSection]:
-    applications_gateways = await _collect_app_gateways_resources(mgmt_client, monitored_resources)
-
-    sections = []
-    for resource in applications_gateways:
-        section = AzureResourceSection(resource)
-        section.add(resource.dumpinfo())
-        sections.append(section)
-
-    return sections
-
-
 async def _collect_load_balancers_resources(
     mgmt_client: BaseAsyncApiClient,
     monitored_resources: Mapping[ResourceId, AzureResource],
@@ -1010,22 +994,6 @@ async def _collect_load_balancers_resources(
         load_balancers_resources.append(resource)
 
     return load_balancers_resources
-
-
-# TODO: test
-async def process_load_balancers(
-    mgmt_client: BaseAsyncApiClient,
-    monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[AzureResourceSection]:
-    load_balancers = await _collect_load_balancers_resources(mgmt_client, monitored_resources)
-
-    sections = []
-    for resource in load_balancers:
-        section = AzureResourceSection(resource)
-        section.add(resource.dumpinfo())
-        sections.append(section)
-
-    return sections
 
 
 async def _get_standard_network_interface_config(
@@ -1202,7 +1170,7 @@ async def get_vnet_gw_health(
 
 async def process_virtual_net_gw(
     api_client: BaseAsyncApiClient, resource: AzureResource
-) -> AzureResourceSection:
+) -> AzureResource:
     gw_keys = (
         "bgpSettings",
         "disableIPSecReplayProtection",
@@ -1230,17 +1198,11 @@ async def process_virtual_net_gw(
         "health": vnet_health,
     }
 
-    section = AzureResourceSection(resource)
-    section.add(resource.dumpinfo())
-
-    return section
+    return resource
 
 
-async def process_redis(resource: AzureResource) -> AzureResourceSection:
-    section = AzureResourceSection(resource)
-    section.add(resource.dumpinfo())
-
-    return section
+async def process_redis(resource: AzureResource) -> AzureResource:
+    return resource
 
 
 class AzureAsyncCache(DataCache):
@@ -2017,7 +1979,7 @@ async def process_virtual_machines(
 async def process_vault(
     api_client: BaseAsyncApiClient,
     resource: AzureResource,
-) -> AzureResourceSection:
+) -> AzureResource:
     vault_properties = (
         "friendlyName",
         "backupManagementType",
@@ -2049,10 +2011,7 @@ async def process_vault(
     resource.info["properties"] = {}
     resource.info["properties"]["backup_containers"] = [properties]
 
-    section = AzureResourceSection(resource)
-    section.add(resource.dumpinfo())
-
-    return section
+    return resource
 
 
 class ResourceHealth(TypedDict, total=False):
@@ -2127,21 +2086,59 @@ async def _test_connection(args: Args) -> int:
     return 0
 
 
-def get_bulk_tasks(
+def _gather_sections_from_resources(
+    resources: list[AzureResource],
+    subscription: AzureSubscription,
+) -> Sequence[AzureSection]:
+    sections: list[AzureSection] = []
+    for resource in resources:
+        section = AzureResourceSection(resource)
+        section.add(resource.dumpinfo())
+        sections.append(section)
+        # TODO: here go labels
+
+    return sections
+
+
+async def process_bulk_resources(
     mgmt_client: BaseAsyncApiClient,
     args: Args,
     group_labels: GroupLabels,
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Iterator[asyncio.Task]:
+    subscription: AzureSubscription,
+) -> Sequence[AzureSection]:
+    sections: list[AzureSection] = []
     if FetchedResource.virtual_machines.type in monitored_services:
-        yield asyncio.create_task(
-            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources)
+        vm_sections = await process_virtual_machines(
+            mgmt_client, args, group_labels, monitored_resources
         )
+
+        sections.extend(vm_sections)
+
+    tasks = set()
     if FetchedResource.app_gateways.type in monitored_services:
-        yield asyncio.create_task(process_app_gateways(mgmt_client, monitored_resources))
+        tasks.add(_collect_app_gateways_resources(mgmt_client, monitored_resources))
     if FetchedResource.load_balancers.type in monitored_services:
-        yield asyncio.create_task(process_load_balancers(mgmt_client, monitored_resources))
+        tasks.add(_collect_load_balancers_resources(mgmt_client, monitored_resources))
+
+    processed_resources: list[AzureResource] = []
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for resources_async in results:
+        if isinstance(resources_async, BaseException):
+            if args.debug:
+                raise resources_async
+            write_exception_to_agent_info_section(
+                resources_async, "Process bulk resources (async)", subscription
+            )
+            continue
+
+        processed_resources.extend(resources_async)
+
+    async_sections = _gather_sections_from_resources(processed_resources, subscription)
+    sections.extend(async_sections)
+
+    return sections
 
 
 # TODO: test
@@ -2151,7 +2148,7 @@ async def process_single_resources(
     subscription: AzureSubscription,
     monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[Section]:
-    sections: list[AzureSection] = []
+    processed_resources: list[AzureResource] = []
     tasks = set()
     for _resource_id, resource in monitored_resources.items():
         resource_type = resource.info["type"]
@@ -2165,27 +2162,25 @@ async def process_single_resources(
         elif resource_type == FetchedResource.redis.type:
             tasks.add(process_redis(resource))
         else:
-            # simple sections without further processing
+            # simple resource without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
                 resource.section = "servers"  # use the same section as for single servers
 
-            section = AzureResourceSection(resource)
-            section.add(resource.dumpinfo())
-            sections.append(section)
+            processed_resources.append(resource)
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    for section_async in results:
-        if isinstance(section_async, BaseException):
+    for resource_async in results:
+        if isinstance(resource_async, BaseException):
             if args.debug:
-                raise section_async
+                raise resource_async
             write_exception_to_agent_info_section(
-                section_async, "Process single resources (async)", subscription
+                resource_async, "Process single resources (async)", subscription
             )
             continue
 
-        sections.append(section_async)
+        processed_resources.append(resource_async)
 
-    return sections
+    return _gather_sections_from_resources(processed_resources, subscription)
 
 
 async def process_resources(
@@ -2209,12 +2204,13 @@ async def process_resources(
         process_resource_health(
             mgmt_client, subscription, monitored_resources_by_id, monitored_groups, args.debug
         ),
-        *get_bulk_tasks(
+        process_bulk_resources(
             mgmt_client,
             args,
             group_labels,
             monitored_services,
             monitored_resources_by_id,
+            subscription,
         ),
         process_single_resources(mgmt_client, args, subscription, monitored_resources_by_id),
     }

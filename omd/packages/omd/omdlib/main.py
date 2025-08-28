@@ -3532,9 +3532,6 @@ def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) 
 
 def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
     site = SiteContext(site_name)
-    site_home = SitePaths.from_site_name(site.name).home
-    _exec_omd_version_of_site(site_name, site_home, command)
-
     site.set_config(load_config(site, verbose))
 
     # Commands which affect a site and can be called as root *or* as
@@ -3697,6 +3694,9 @@ def main() -> None:
             site_name = site_name_from_uid()
     else:
         site_name = None
+
+    if site_name is not None:
+        _exec_omd_version_of_site(site_name, SitePaths.from_site_name(site_name).home, command)
 
     site = (
         RootContext()

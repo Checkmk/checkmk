@@ -197,9 +197,10 @@ def _check_smart_ata(
             metric_name="harddrive_reallocated_sectors",
         )
 
-    if (power_on_hours := disk.by_id(9)) is not None:
+    if disk.power_on_time is not None:
+        # Smartctl already has the power_on_hours as a global attribute in the json
         yield from check_levels(
-            value=power_on_hours.raw.value * 3600,
+            value=disk.power_on_time.hours * 3600,  # time is in hours, but we need seconds
             label="Powered on",
             render_func=render.timespan,
             metric_name="uptime",

@@ -80,7 +80,7 @@ class GeneralRestAPIException(HTTPException):
 class RestAPIRequestGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 401, 403, 404, 406, 415],
+        status: Literal[400, 401, 403, 404, 406, 409, 415],
         title: str,
         detail: str,
         fields: FIELDS | None = None,

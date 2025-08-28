@@ -326,7 +326,7 @@ class RequestDataValidator:
     @staticmethod
     def format_error_details(
         errors: Iterable[ErrorDetails],
-        status_code: Literal[400, 401, 403, 404, 406, 415] = 400,
+        status_code: Literal[400, 401, 403, 404, 406, 409, 415] = 400,
     ) -> RestAPIRequestGeneralException:
         """Create a RestAPIRequestGeneralException from error details."""
         error_dict = {

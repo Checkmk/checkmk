@@ -63,16 +63,15 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
-from omdlib.global_options import GlobalOptions, parse_global_opts
+from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.options import (
     Arguments,
     Command,
     CommandOptions,
-    get_command,
     is_root,
     main_help,
-    parse_command_options,
+    parse_args_or_exec_other_omd,
 )
 from omdlib.package_manager import get_edition, PackageManager, select_matching_packages
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
@@ -122,7 +121,6 @@ from omdlib.utils import (
     exec_other_omd,
     get_editor,
     replace_tags,
-    site_exists,
 )
 from omdlib.version import (
     default_version,
@@ -3502,34 +3500,6 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) -> None:
-    if command.site_must_exist and not site_exists(Path(site_home)):
-        sys.exit(
-            "omd: The site '%s' does not exist. You need to execute "
-            "omd as root or site user." % site_name
-        )
-    # Commands operating on an existing site *must* run omd in
-    # the same version as the site has! Sole exception: update.
-    # That command must be run in the target version
-    if command.site_must_exist and command.command != "update":
-        v = version_from_site_dir(Path(site_home))
-        if v is None:  # Site has no home directory or version link
-            if command.command == "rm":
-                sys.stdout.write(
-                    "WARNING: This site has an empty home directory and is not\n"
-                    "assigned to any OMD version. You are running version %s.\n"
-                    % omdlib.__version__
-                )
-            elif command.command != "init":
-                sys.exit(
-                    "This site has an empty home directory /omd/sites/%s.\n"
-                    "If you have created that site with 'omd create --no-init %s'\n"
-                    "then please first do an 'omd init %s'." % (3 * (site_name,))
-                )
-        elif omdlib.__version__ != v:
-            exec_other_omd(v)
-
-
 def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
     site = SiteContext(site_name)
     site.set_config(load_config(site, verbose))
@@ -3644,8 +3614,6 @@ def _run_command(
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
-    main_args = sys.argv[1:]
-
     version_info = VersionInfo(omdlib.__version__)
     version_info.load()
 
@@ -3654,49 +3622,9 @@ def main() -> None:
     except FileNotFoundError:
         orig_working_directory = "/"
 
-    global_opts, main_args = parse_global_opts(main_args)
-    if global_opts.version is not None and global_opts.version != omdlib.__version__:
-        # Switch to other version of bin/omd
-        exec_other_omd(global_opts.version)
-
-    if len(main_args) < 1:
-        main_help()
-        sys.exit(1)
-
-    args = main_args[1:]
-
-    command = get_command(main_args[0])
-
-    if not is_root() and command.only_root:
-        sys.exit("omd: root permissions are needed for this command.")
-
-    # Parse command options. We need to do this now in order to know
-    # if a site name has been specified or not.
-
-    # Give a short description for the command when the user specifies --help:
-    if args and args[0] in ["-h", "--help"]:
-        sys.stdout.write("%s\n\n" % command.description)
-    args, command_options = parse_command_options(args, command.options)
-
-    # Some commands need a site to be specified. If we are
-    # called as root, this must be done explicitly. If we
-    # are site user, the site name is our user name
-    if command.needs_site > 0:
-        if is_root():
-            if len(args) >= 1:
-                site_name = args[0]
-                args = args[1:]
-            elif command.needs_site == 1:
-                sys.exit("omd: please specify site.")
-            else:
-                site_name = None
-        else:
-            site_name = site_name_from_uid()
-    else:
-        site_name = None
-
-    if site_name is not None:
-        _exec_omd_version_of_site(site_name, SitePaths.from_site_name(site_name).home, command)
+    site_name, global_opts, command, command_options, args = parse_args_or_exec_other_omd(
+        sys.argv[1:]
+    )
 
     site = (
         RootContext()

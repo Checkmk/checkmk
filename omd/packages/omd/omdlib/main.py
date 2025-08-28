@@ -3605,7 +3605,6 @@ def _run_command(
         sys.exit(tty.normal + "Aborted.")
 
 
-# TODO: Refactor these global variables
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 

@@ -705,6 +705,12 @@ def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) 
 def parse_args_or_exec_other_omd(
     main_args: list[str],
 ) -> tuple[str | None, GlobalOptions, Command, CommandOptions, Arguments]:
+    # Why not argparse: We only want to parse the arguments until the first command is encountered.
+    # However, we also allow *any* command while parsing global options.
+    # E.g., running `omd -V XY abc` should raise an error if and only if Version `XY` does not
+    # support `abc`.
+    # Note, that `XY` might be different from the `omd` version currently executing.
+    # Iterative parsing is painful with `argparse`, I couldn't even get it to work.
     global_opts, main_args = parse_global_opts(main_args)
     if global_opts.version is not None and global_opts.version != omdlib.__version__:
         # Switch to other version of bin/omd

@@ -3605,12 +3605,7 @@ def _run_command(
         sys.exit(tty.normal + "Aborted.")
 
 
-# Handle global options.
-# A problem here is that we have options appearing
-# *before* the command and command specific ones. We handle
-# the options before the command here only.
 # TODO: Refactor these global variables
-# TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 

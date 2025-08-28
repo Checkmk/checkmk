@@ -29,9 +29,7 @@ from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui import hooks, log
-from cmk.gui.config import (
-    load_config,
-)
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -511,9 +509,11 @@ class SiteManagement:
         # Do not activate when just the site's global settings have
         # been edited
         if activate:
-            load_config()  # make new site configuration active
-            _update_distributed_wato_file(sites)
+            # Patch the current requests config with the changed config
+            active_config.sites = sites
             folder_tree().invalidate_caches()
+
+            _update_distributed_wato_file(sites)
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
             if cmk_version.edition_supports_nagvis(cmk_version.edition(paths.omd_root)):

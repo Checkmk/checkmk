@@ -422,7 +422,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
     def _update_config(
         self, custom_attributes: Sequence[CustomHostAttrSpec], *, pprint_value: bool
     ) -> None:
-        update_host_custom_attrs(pprint_value=pprint_value)
+        update_host_custom_attrs(custom_attributes, pprint_value=pprint_value)
 
     def _show_in_table_option(self) -> None:
         self._render_table_option(
@@ -629,7 +629,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     def _update_config(
         self, custom_attributes: Sequence[CustomHostAttrSpec], *, pprint_value: bool
     ) -> None:
-        update_host_custom_attrs(pprint_value=pprint_value)
+        update_host_custom_attrs(custom_attributes, pprint_value=pprint_value)
 
     def title(self) -> str:
         return _("Custom host attributes")

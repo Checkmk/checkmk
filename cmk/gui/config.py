@@ -130,14 +130,22 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
 
 
 @tracer.instrument("config.initialize")
-def initialize() -> None:
-    load_config()
+def initialize() -> Config:
+    config = load_config()
+
+    # Sets the request local `active_config`. In the long run we want to get rid of this. But for
+    # now it is still needed in many places. So we keep it for now but already return the config
+    # object here so that we can pass it to new code.
+    set_global_var("config", config)
+
     log_levels = {
-        **active_config.log_levels,
-        **_determine_pysaml2_log_level(active_config.log_levels),
+        **config.log_levels,
+        **_determine_pysaml2_log_level(config.log_levels),
     }
     log.set_log_levels(log_levels)
-    cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
+    cmk.gui.i18n.set_user_localizations(config.user_localizations)
+
+    return config
 
 
 def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
@@ -151,13 +159,12 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (path, e))
 
 
-# Load multisite.mk and all files in multisite.d/. This will happen
-# for *each* HTTP request.
-# FIXME: Optimize this to cache the config etc. until either the config files or plugins
-# have changed. We could make this being cached for multiple requests just like the
-# plug-ins of other modules. This may save significant time in case of small requests like
-# the graph ajax page or similar.
-def load_config() -> None:
+def load_config() -> Config:
+    """Load the GUI domain configuration
+
+    Processes the `multisite.mk` and all files in `multisite.d/`.
+    This is executed for *each* HTTP request.
+    """
     # Set default values for all user-changable configuration settings
     raw_config = get_default_config()
 
@@ -194,8 +201,8 @@ def load_config() -> None:
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
-    set_global_var("config", make_config_object(raw_config))
-    execute_post_config_load_hooks()
+    execute_post_config_load_hooks(config := make_config_object(raw_config))
+    return config
 
 
 def make_config_object(raw_config: dict[str, Any]) -> Config:
@@ -224,15 +231,15 @@ def make_config_object(raw_config: dict[str, Any]) -> Config:
     return cls(**raw_config)  # type: ignore[no-any-return]
 
 
-def execute_post_config_load_hooks() -> None:
+def execute_post_config_load_hooks(config: Config) -> None:
     for func in _post_config_load_hooks:
-        func()
+        func(config)
 
 
-_post_config_load_hooks: list[Callable[[], None]] = []
+_post_config_load_hooks: list[Callable[[Config], None]] = []
 
 
-def register_post_config_load_hook(func: Callable[[], None]) -> None:
+def register_post_config_load_hook(func: Callable[[Config], None]) -> None:
     _post_config_load_hooks.append(func)
 
 

@@ -155,9 +155,9 @@ def set_config(**kwargs: Any) -> Iterator[None]:
     through the registered callback.
     """
 
-    def _set_config():
+    def _set_config(config: Config) -> None:
         for key, val in kwargs.items():
-            setattr(active_config, key, val)
+            setattr(config, key, val)
 
     def fake_load_single_global_wato_setting(
         varname: str,

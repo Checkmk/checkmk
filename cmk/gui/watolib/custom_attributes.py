@@ -9,7 +9,7 @@ from typing import TypedDict
 
 from cmk.ccc import store
 from cmk.gui import userdb
-from cmk.gui.config import load_config
+from cmk.gui.config import active_config
 from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec
 from cmk.gui.userdb import UserAttribute
 from cmk.gui.watolib.config_domain_name import wato_fileheader
@@ -28,8 +28,12 @@ def update_user_custom_attrs(
     userdb.rewrite_users(user_attributes, now)
 
 
-def update_host_custom_attrs(*, pprint_value: bool) -> None:
-    load_config()
+def update_host_custom_attrs(
+    custom_attributes: Sequence[CustomHostAttrSpec], *, pprint_value: bool
+) -> None:
+    # Patch the current requests config with the changed config
+    active_config.wato_host_attrs = custom_attributes
+
     tree = folder_tree()
     tree.invalidate_caches()
     tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)

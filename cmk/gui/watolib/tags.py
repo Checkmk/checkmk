@@ -15,7 +15,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.gui import hooks
-from cmk.gui.config import load_config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
@@ -102,7 +102,7 @@ def update_tag_config(tag_config: TagConfig, pprint_value: bool) -> None:
     """
     user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format(), pprint_value)
-    _update_tag_dependencies(pprint_value=pprint_value)
+    _update_tag_dependencies(tag_config, pprint_value=pprint_value)
     hooks.call("tags-changed")
 
 
@@ -147,8 +147,11 @@ def tag_group_exists(ident: TagGroupID, builtin_included: bool = False) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def _update_tag_dependencies(*, pprint_value: bool) -> None:
-    load_config()
+def _update_tag_dependencies(tag_config: TagConfig, *, pprint_value: bool) -> None:
+    # Patch the current requests config with the changed config
+    active_config.wato_tags = tag_config.get_dict_format()
+    active_config.tags = cmk.utils.tags.get_effective_tag_config(tag_config.get_dict_format())
+
     tree = folder_tree()
     tree.invalidate_caches()
     tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)

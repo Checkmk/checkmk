@@ -6,6 +6,8 @@
 import { type Plugin, type Ref, computed, ref } from 'vue'
 import { type Translations, createGettext, useGettext } from 'vue3-gettext'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
 
 const AVAILABLE_LANGUAGES: Record<string, string> = {
@@ -72,14 +74,22 @@ async function switchLanguage(language: SupportedLanguage): Promise<void> {
 }
 
 /**
- * Hook to offer i18n functionality in Vue components.
+ * Marks a string as already translated.
  *
- * Callsites must not be renamed, they are parsed in the build process to extract all strings to be translated.
+ * This is useful for strings that are not to be translated (e.g., product names or technical terms.)
+ * or come translated from the backend.
+ *
+ * Example usage:
+ * ```ts
+ * untranslated('Checkmk')
+ * untranslated('CPU')
+ * ```
  */
-export default function usei18n() {
-  const { $gettext, $ngettext, $npgettext, $pgettext } = useGettext()
-  const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
+export function untranslated(alreadyTranslatedString: string): TranslatedString {
+  return alreadyTranslatedString as TranslatedString
+}
 
+interface I18nFunctions {
   /**
    * Defines a string to be translated.
    *
@@ -98,14 +108,8 @@ export default function usei18n() {
    * _t('Hello %{name}!', { name: 'Alice' })
    * ```
    */
-  function _t(msg: string): string
-  function _t(msg: string, interpolation: InterpolationValues): string
-  function _t(msg: string, interpolation?: InterpolationValues): string {
-    if (showEnglish.value) {
-      return dummyT(msg, interpolation)
-    }
-    return interpolation === undefined ? $gettext(msg) : $gettext(msg, interpolation)
-  }
+  _t(msg: string): TranslatedString
+  _t(msg: string, interpolation: InterpolationValues): TranslatedString
 
   /**
    * Defines a string to be translated with pluralization.
@@ -134,26 +138,13 @@ export default function usei18n() {
    * _tn('We found 1 item', 'We found {n} items', items.length, { n: items.length })
    * ```
    */
-  function _tn(singular: string, plural: string, count: number): string
-  function _tn(
+  _tn(singular: string, plural: string, count: number): TranslatedString
+  _tn(
     singular: string,
     plural: string,
     count: number,
     interpolation: InterpolationValues
-  ): string
-  function _tn(
-    singular: string,
-    plural: string,
-    count: number,
-    interpolation?: InterpolationValues
-  ): string {
-    if (showEnglish.value) {
-      return dummyTn(singular, plural, count, interpolation)
-    }
-    return interpolation === undefined
-      ? $ngettext(singular, plural, count)
-      : $ngettext(singular, plural, count, interpolation)
-  }
+  ): TranslatedString
 
   /**
    * Defines a string to be translated with context.
@@ -179,16 +170,8 @@ export default function usei18n() {
    * _tp('a bank for money, not for sitting', 'A bank in %{location}', { location })
    * ```
    */
-  function _tp(context: string, msg: string): string
-  function _tp(context: string, msg: string, interpolation: InterpolationValues): string
-  function _tp(context: string, msg: string, interpolation?: InterpolationValues): string {
-    if (showEnglish.value) {
-      return dummyTp(context, msg, interpolation)
-    }
-    return interpolation === undefined
-      ? $pgettext(context, msg)
-      : $pgettext(context, msg, interpolation)
-  }
+  _tp(context: string, msg: string): TranslatedString
+  _tp(context: string, msg: string, interpolation: InterpolationValues): TranslatedString
 
   /**
    * Defines a string to be translated with pluralization and context.
@@ -223,14 +206,55 @@ export default function usei18n() {
    * _tnp('Body part, not unit of measurement', '{n_feet} foot', '{n_feet} feet', n_feet, { n_feet })
    * ```
    */
-  function _tnp(context: string, singular: string, plural: string, count: number): string
-  function _tnp(
+  _tnp(context: string, singular: string, plural: string, count: number): TranslatedString
+  _tnp(
     context: string,
     singular: string,
     plural: string,
     count: number,
     interpolation: InterpolationValues
-  ): string
+  ): TranslatedString
+}
+
+/**
+ * Hook to offer i18n functionality in Vue components.
+ *
+ * Callsites must not be renamed, they are parsed in the build process to extract all strings to be translated.
+ */
+export default function usei18n() {
+  const { $gettext, $ngettext, $npgettext, $pgettext } = useGettext()
+  const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
+
+  function _t(msg: string, interpolation?: InterpolationValues): string {
+    if (showEnglish.value) {
+      return dummyT(msg, interpolation)
+    }
+    return interpolation === undefined ? $gettext(msg) : $gettext(msg, interpolation)
+  }
+
+  function _tn(
+    singular: string,
+    plural: string,
+    count: number,
+    interpolation?: InterpolationValues
+  ): string {
+    if (showEnglish.value) {
+      return dummyTn(singular, plural, count, interpolation)
+    }
+    return interpolation === undefined
+      ? $ngettext(singular, plural, count)
+      : $ngettext(singular, plural, count, interpolation)
+  }
+
+  function _tp(context: string, msg: string, interpolation?: InterpolationValues): string {
+    if (showEnglish.value) {
+      return dummyTp(context, msg, interpolation)
+    }
+    return interpolation === undefined
+      ? $pgettext(context, msg)
+      : $pgettext(context, msg, interpolation)
+  }
+
   function _tnp(
     context: string,
     singular: string,
@@ -247,10 +271,10 @@ export default function usei18n() {
   }
 
   return {
-    _t,
-    _tn,
-    _tp,
-    _tnp,
+    _t: _t as I18nFunctions['_t'],
+    _tn: _tn as I18nFunctions['_tn'],
+    _tp: _tp as I18nFunctions['_tp'],
+    _tnp: _tnp as I18nFunctions['_tnp'],
     switchLanguage,
     translationLoading: globalState.translationLoading
   }

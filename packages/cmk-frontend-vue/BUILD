@@ -67,6 +67,7 @@ js_run_binary(
 SRCS = [
     ".prettierrc.json",
     "env.d.ts",
+    "weaki18nString.d.ts",
     "eslint.config.js",
     "index.html",
     "package.json",

@@ -15,7 +15,8 @@ vi.mock('@/lib/i18n', () => ({
     _tn: dummyTn,
     _tp: dummyTp,
     _tnp: dummyTnp
-  })
+  }),
+  untranslated: (msg: string) => msg
 }))
 
 // Mock the scrollIntoView method to prevent errors. jsdom has no concept of scrolling anyway

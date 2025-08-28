@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.app.json",
-  "include": ["env.d.ts", "src/**/*", "tests/**/*.ts", "tests/**/*.vue"],
-  "exclude": [],
+  "include": ["env.d.ts", "weaki18nString.d.ts", "src/**/*", "tests/**/*.ts", "tests/**/*.vue"],
+  "exclude": ["src/lib/i18nString.ts"],
   "compilerOptions": {
-    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+    "paths": {
+      "@/lib/i18nString": ["weaki18nString.d.ts"],
+      "@/*": ["./src/*"],
+      "@demo/*": ["./demo/*"],
+      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
+    }
   }
 }

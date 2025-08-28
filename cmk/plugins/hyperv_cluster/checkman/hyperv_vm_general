@@ -1,14 +1,14 @@
-title: Hyper-V VM General Information
+title: Hyper-V VM Summary
 agents: windows
 catalog: os/storage
 license: GPLv2
 distribution: check_mk
 
 description:
- This check monitors name of the virtual machines running on a Microsoft Hyper-V cluster.
+ This check monitors general parameters of the virtual machines running on a Microsoft Hyper-V cluster.
 
  The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
- the name of the virtual machines.
+ the name, power state, host, generation of the virtual machines.
 
 item:
  The name of the virtual machine

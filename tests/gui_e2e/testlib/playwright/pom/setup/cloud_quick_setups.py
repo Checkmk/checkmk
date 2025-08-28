@@ -276,7 +276,7 @@ class AWSConfigurationList(BaseQuickSetupConfigurationList):
 
     suffix = "aws"
     page_title = "Amazon Web Services (AWS)"
-    setup_entry = "Amazon Web Service (AWS)"
+    setup_entry = "Amazon Web Services (AWS)"
 
 
 class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):

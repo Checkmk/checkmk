@@ -476,7 +476,7 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
     @property
     @override
     def title(self) -> str:
-        return _("Amazon Web Service (AWS)")
+        return _("Amazon Web Services (AWS)")
 
     @property
     @override
@@ -486,7 +486,7 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
     @property
     @override
     def description(self) -> str:
-        return _("Configure Amazon Web Service (AWS) monitoring in Checkmk")
+        return _("Configure Amazon Web Services (AWS) monitoring in Checkmk")
 
     @property
     @override

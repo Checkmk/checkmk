@@ -569,11 +569,12 @@ def _get_command(command_arg: str) -> Command:
 
 
 def _parse_command_options(
-    args: Arguments, options: list[Option]
+    description: str, args: Arguments, options: list[Option]
 ) -> tuple[Arguments, CommandOptions]:
     # Give a short overview over the command specific options
     # when the user specifies --help:
     if len(args) and args[0] in ["-h", "--help"]:
+        sys.stdout.write("%s\n\n" % description)
         if options:
             sys.stdout.write("Possible options for this command:\n")
         else:
@@ -722,11 +723,7 @@ def parse_args_or_exec_other_omd(
 
     # Parse command options. We need to do this now in order to know
     # if a site name has been specified or not.
-
-    # Give a short description for the command when the user specifies --help:
-    if args and args[0] in ["-h", "--help"]:
-        sys.stdout.write("%s\n\n" % command.description)
-    args, command_options = _parse_command_options(args, command.options)
+    args, command_options = _parse_command_options(command.description, args, command.options)
 
     # Some commands need a site to be specified. If we are
     # called as root, this must be done explicitly. If we

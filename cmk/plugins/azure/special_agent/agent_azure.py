@@ -685,6 +685,7 @@ class AzureSection(Section):
 
 
 class AzureLabelsSection(AzureSection):
+    # TODO: refactor, first line labels, second line tags
     def __init__(
         self,
         piggytarget: str,
@@ -1640,20 +1641,31 @@ async def _gather_metrics(
     return err
 
 
-def get_vm_labels_section(
-    vm: AzureResource, group_labels: GroupLabels, subscription: AzureSubscription
+def get_resource_host_labels_section(
+    resource: AzureResource, group_labels: GroupLabels
 ) -> AzureLabelsSection:
-    group_name = vm.info["group"]
-    vm_labels = dict(vm.tags)
+    subscription = resource.subscription
+    labels = {
+        "resource_group": resource.info["group"],
+        "entity": resource.section,
+        "subscription_name": subscription.hostname,
+        "subscription_id": subscription.id,
+    }
+    # for backward compatibility
+    if resource.info["type"] == "Microsoft.Compute/virtualMachines":
+        labels["vm_instance"] = True
 
+    group_name = resource.info["group"]
+    resource_tags = dict(resource.tags)
+
+    # merge resource tags with group tags, resource tags have precedence
     for tag_name, tag_value in group_labels[group_name].items():
-        if tag_name not in vm.tags:
-            vm_labels[tag_name] = tag_value
+        if tag_name not in resource.tags:
+            resource_tags[tag_name] = tag_value
 
-    labels_section = AzureLabelsSection(vm.info["name"], subscription=subscription)
-    labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
-    labels_section.add((json.dumps(vm_labels),))
-
+    labels_section = AzureLabelsSection(resource.info["name"], subscription)
+    labels_section.add((json.dumps(labels),))
+    labels_section.add((json.dumps(resource_tags),))
     return labels_section
 
 
@@ -1683,7 +1695,18 @@ def write_group_info(
 ) -> None:
     for group_name, tags in group_labels.items():
         labels_section = AzureLabelsSection(group_name, subscription)
-        labels_section.add((json.dumps({"group_name": group_name}),))
+        labels_section.add(
+            (
+                json.dumps(
+                    {
+                        "resource_group": group_name,
+                        "subscription_name": subscription.hostname,
+                        "subscription_id": subscription.id,
+                        "entity": "resource_group",
+                    }
+                ),
+            )
+        )
         labels_section.add((json.dumps(tags),))
         labels_section.write()
 
@@ -1709,8 +1732,9 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
         (
             json.dumps(
                 {
-                    "subscription": subscription.get_safe_hostname(subscription.hostname),
-                    "entity_subscription": "yes",
+                    "subscription_name": subscription.hostname,
+                    "subscription_id": subscription.id,
+                    "entity": "subscription",
                 }
             ),
         )
@@ -1951,7 +1975,7 @@ async def process_virtual_machines(
     args: Args,
     group_labels: GroupLabels,
     monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[AzureResourceSection]:
+) -> Sequence[AzureSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
         params={
@@ -1979,11 +2003,10 @@ async def process_virtual_machines(
         resource.info["specific_info"] = {"statuses": statuses}
         virtual_machines.append(resource)
 
-    sections = []
+    sections: list[AzureSection] = []
     for resource in virtual_machines:
         if args.piggyback_vms == "self":
-            labels_section = get_vm_labels_section(resource, group_labels, resource.subscription)
-            labels_section.write()
+            sections.append(get_resource_host_labels_section(resource, group_labels))
 
         section = AzureResourceSection(
             resource,
@@ -2030,7 +2053,6 @@ async def process_vault(
 
     resource.info["properties"] = {}
     resource.info["properties"]["backup_containers"] = [properties]
-
     return resource
 
 
@@ -2108,14 +2130,14 @@ async def _test_connection(args: Args) -> int:
 
 def _gather_sections_from_resources(
     resources: list[AzureResource],
-    subscription: AzureSubscription,
+    group_labels: GroupLabels,
 ) -> Sequence[AzureSection]:
     sections: list[AzureSection] = []
     for resource in resources:
         section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         sections.append(section)
-        # TODO: here go labels
+        sections.append(get_resource_host_labels_section(resource, group_labels))
 
     return sections
 
@@ -2155,7 +2177,7 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    async_sections = _gather_sections_from_resources(processed_resources, subscription)
+    async_sections = _gather_sections_from_resources(processed_resources, group_labels)
     sections.extend(async_sections)
 
     return sections
@@ -2166,8 +2188,9 @@ async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
     args: Args,
     subscription: AzureSubscription,
+    group_labels: GroupLabels,
     monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[Section]:
+) -> Sequence[AzureSection]:
     processed_resources: list[AzureResource] = []
     tasks = set()
     for _resource_id, resource in monitored_resources.items():
@@ -2185,7 +2208,6 @@ async def process_single_resources(
             # simple resource without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
                 resource.section = "servers"  # use the same section as for single servers
-
             processed_resources.append(resource)
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -2200,7 +2222,7 @@ async def process_single_resources(
 
         processed_resources.append(resource_async)
 
-    return _gather_sections_from_resources(processed_resources, subscription)
+    return _gather_sections_from_resources(processed_resources, group_labels)
 
 
 async def process_resources(
@@ -2232,7 +2254,9 @@ async def process_resources(
             monitored_resources_by_id,
             subscription,
         ),
-        process_single_resources(mgmt_client, args, subscription, monitored_resources_by_id),
+        process_single_resources(
+            mgmt_client, args, subscription, group_labels, monitored_resources_by_id
+        ),
     }
 
     for coroutine in asyncio.as_completed(tasks):

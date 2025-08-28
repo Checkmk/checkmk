@@ -57989,6 +57989,10 @@ msgstr "Größe der Agenten"
 msgid "Size of core"
 msgstr "Größe des Kerns"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Größe des Kerns"
+
 msgid "Size of deferred mail queue"
 msgstr "Größe der Deferred-Mailqueue"
 

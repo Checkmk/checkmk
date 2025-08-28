@@ -56584,6 +56584,10 @@ msgstr "エージェントのサイズ"
 msgid "Size of core"
 msgstr "コアのサイズ"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "コアのサイズ"
+
 msgid "Size of deferred mail queue"
 msgstr "遅延メールキューのサイズ"
 

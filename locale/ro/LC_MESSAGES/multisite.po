@@ -60619,6 +60619,10 @@ msgstr "Dimensiunea licenței"
 msgid "Size of core"
 msgstr "Dimensiunea fișierelor jurnal"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Dimensiunea fișierelor jurnal"
+
 msgid "Size of deferred mail queue"
 msgstr "Dimensiunea cozii de așteptare a corespondenței amânate"
 

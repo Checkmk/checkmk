@@ -60456,6 +60456,10 @@ msgstr "Tamanho da licença"
 msgid "Size of core"
 msgstr "Tamanho dos ficheiros de registo"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Tamanho dos ficheiros de registo"
+
 msgid "Size of deferred mail queue"
 msgstr "Tamanho da fila de correio diferido"
 

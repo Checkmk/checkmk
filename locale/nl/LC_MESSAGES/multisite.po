@@ -60472,6 +60472,10 @@ msgstr "Omvang van de licentie"
 msgid "Size of core"
 msgstr "Grootte van de logbestanden"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Grootte van de logbestanden"
+
 msgid "Size of deferred mail queue"
 msgstr "Grootte van uitgestelde mail wachtrij"
 

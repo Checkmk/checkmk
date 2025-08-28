@@ -59988,6 +59988,10 @@ msgstr "Dimensione della licenza"
 msgid "Size of core"
 msgstr "Dimensione dei file di log"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Dimensione dei file di log"
+
 msgid "Size of deferred mail queue"
 msgstr "Dimensione della coda di posta differita"
 

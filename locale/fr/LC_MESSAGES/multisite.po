@@ -60980,6 +60980,10 @@ msgstr "Taille de la licence"
 msgid "Size of core"
 msgstr "Taille des fichiers journaux"
 
+#, fuzzy
+msgid "Size of crashes"
+msgstr "Taille des fichiers journaux"
+
 msgid "Size of deferred mail queue"
 msgstr "Taille de la file d'attente du courrier différé"
 

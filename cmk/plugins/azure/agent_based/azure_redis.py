@@ -9,6 +9,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    render,
     Result,
     Service,
     State,
@@ -87,5 +88,31 @@ check_plugin_azure_redis_connections = CheckPlugin(
     check_default_parameters={
         "connected_clients": ("fixed", (200, 250)),
         "created_connections": ("no_levels", None),
+    },
+)
+
+
+check_plugin_azure_cpu_utilization = CheckPlugin(
+    name="azure_redis_cpu_utilization",
+    sections=["azure_redis"],
+    service_name="Azure/Redis CPU utilization",
+    discovery_function=create_discover_by_metrics_function_single(
+        "maximum_allpercentprocessortime",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "maximum_allpercentprocessortime",
+                "util",
+                "Total CPU",
+                render.percent,
+                upper_levels_param="connected_clients",
+            ),
+        ],
+        check_levels=check_levels_v2,
+    ),
+    check_ruleset_name="azure_redis_cpu_utilization",
+    check_default_parameters={
+        "cpu_utilization": ("fixed", (70.0, 80.0)),
     },
 )

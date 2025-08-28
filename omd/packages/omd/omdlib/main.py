@@ -3502,15 +3502,12 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
-    site = SiteContext(site_name)
-    site_home = SitePaths.from_site_name(site.name).home
+def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) -> None:
     if command.site_must_exist and not site_exists(Path(site_home)):
         sys.exit(
             "omd: The site '%s' does not exist. You need to execute "
-            "omd as root or site user." % site.name
+            "omd as root or site user." % site_name
         )
-
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
@@ -3527,10 +3524,16 @@ def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteCo
                 sys.exit(
                     "This site has an empty home directory /omd/sites/%s.\n"
                     "If you have created that site with 'omd create --no-init %s'\n"
-                    "then please first do an 'omd init %s'." % (3 * (site.name,))
+                    "then please first do an 'omd init %s'." % (3 * (site_name,))
                 )
         elif omdlib.__version__ != v:
             exec_other_omd(v)
+
+
+def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
+    site = SiteContext(site_name)
+    site_home = SitePaths.from_site_name(site.name).home
+    _exec_omd_version_of_site(site_name, site_home, command)
 
     site.set_config(load_config(site, verbose))
 

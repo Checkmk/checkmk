@@ -424,29 +424,41 @@ def fetch_interfaces_counters(
         "sent_errors",
     )
 
-    for interface in interfaces:
-        interface_id = (f"{interface.node_name}:{interface.name}:*",)
+    # Create a lookup set of interface identifiers for filtering
+    # Format: {node_name}:{interface_name}
+    interface_lookup = {f"{interface.node_name}:{interface.name}" for interface in interfaces}
 
-        for element in NetAppResource.CounterRow.get_collection(
-            "lif",
-            id=interface_id,
-            connection=connection,
-            fields="counters",
-            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
-            **{"counters.name": "|".join(interfaces_counters_field_query)},
-        ):
-            element_data = element.to_dict()
-            counters = {el["name"]: el["value"] for el in element_data["counters"]}
+    # Use bulk query with wildcard to fetch all LIF counters in a single API call
+    for element in NetAppResource.CounterRow.get_collection(
+        "lif",
+        id="*",
+        connection=connection,
+        fields="counters",
+        max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
+        **{"counters.name": "|".join(interfaces_counters_field_query)},
+    ):
+        element_data = element.to_dict()
+        element_id = element_data["id"]
 
-            yield models.InterfaceCounters(
-                id=element_data["id"],
-                recv_data=counters["received_data"],
-                recv_packet=counters["received_packets"],
-                recv_errors=counters["received_errors"],
-                send_data=counters["sent_data"],
-                send_packet=counters["sent_packets"],
-                send_errors=counters["sent_errors"],
-            )
+        # Extract node_name:interface_name from the full ID
+        # Full ID format: node_name:interface_name:unique_id
+        id_parts = element_id.split(":", 2)
+        if len(id_parts) >= 2:
+            node_interface_key = f"{id_parts[0]}:{id_parts[1]}"
+
+            # Only yield data for interfaces we're monitoring
+            if node_interface_key in interface_lookup:
+                counters = {el["name"]: el["value"] for el in element_data["counters"]}
+
+                yield models.InterfaceCounters(
+                    id=element_id,
+                    recv_data=counters["received_data"],
+                    recv_packet=counters["received_packets"],
+                    recv_errors=counters["received_errors"],
+                    send_data=counters["sent_data"],
+                    send_packet=counters["sent_packets"],
+                    send_errors=counters["sent_errors"],
+                )
 
 
 def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:

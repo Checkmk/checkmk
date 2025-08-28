@@ -33,7 +33,7 @@ export default [
   {
     languageOptions: {
       parserOptions: {
-        project: ['tsconfig.test.json', 'tsconfig.app.json'],
+        project: ['tsconfig.test.json', 'tsconfig.demo.json', 'tsconfig.app.json'],
         tsconfigRootDir: '.',
         parser: '@typescript-eslint/parser',
         ecmaVersion: 'latest'

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": ["env.d.ts", "weaki18nString.d.ts", "src/**/*", "demo/**/*", "demo/**/*.vue"],
+  "exclude": ["src/lib/i18nString.ts"],
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@/lib/i18nString": ["weaki18nString.d.ts"],
+      "@/*": ["./src/*"],
+      "@demo/*": ["./demo/*"],
+      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
+    }
+  }
+}

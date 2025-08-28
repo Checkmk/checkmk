@@ -73,6 +73,7 @@ SRCS = [
     "package.json",
     "tsconfig.app.json",
     "tsconfig.json",
+    "tsconfig.demo.json",
     "tsconfig.node.json",
     "tsconfig.test.json",
     "vite.config.demo.ts",
@@ -230,7 +231,7 @@ eslint_bin.eslint_test(
         ".",
     ],
     chdir = package_name(),
-    data = SRCS,
+    data = SRCS_AND_TESTS,
 )
 
 pkg_files(

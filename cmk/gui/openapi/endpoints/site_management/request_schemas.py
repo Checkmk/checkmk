@@ -441,11 +441,6 @@ class SiteConfigAttributes(BaseSchema):
         ConfigurationConnectionAttributes,
         required=True,
     )
-    secret = fields.String(
-        required=False,
-        description="The shared secret used by the central site to authenticate with the remote site for configuring Checkmk.",
-        example="secret",
-    )
 
 
 class SiteConfigAttributesCreate(SiteConfigAttributes):

@@ -248,6 +248,9 @@ def _convert_validate_and_save_site_data(
         site_obj: SiteConfig = SiteConfig.from_external(site_config)
         internal_config: SiteConfiguration = site_obj.to_internal()
 
+        if old_site_config is not None and old_site_config.get("secret") is not None:
+            internal_config["secret"] = old_site_config["secret"]
+
         sites_to_update = SitesApiMgr().get_connected_sites_to_update(
             is_new_connection,
             site_id,

@@ -526,7 +526,6 @@ class SiteConfig:
     basic_settings: BasicSettings
     status_connection: StatusConnection
     configuration_connection: ConfigurationConnection
-    secret: str | None = None
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> SiteConfig:
@@ -536,7 +535,6 @@ class SiteConfig:
             configuration_connection=ConfigurationConnection.from_internal(
                 site_id, internal_config
             ),
-            secret=internal_config.get("secret"),
         )
 
     @classmethod
@@ -547,15 +545,12 @@ class SiteConfig:
             configuration_connection=ConfigurationConnection.from_external(
                 external_config["configuration_connection"]
             ),
-            secret=external_config.get("secret"),
         )
 
     def to_external(self) -> Iterator[tuple[str, dict | None | str]]:
         yield "basic_settings", dict(self.basic_settings.to_external())
         yield "status_connection", dict(self.status_connection.to_external())
         yield "configuration_connection", dict(self.configuration_connection.to_external())
-        if self.secret:
-            yield "secret", self.secret
 
     def to_internal(self) -> SiteConfiguration:
         internal_config: SiteConfiguration = (
@@ -563,8 +558,6 @@ class SiteConfig:
             | self.status_connection.to_internal()
             | self.configuration_connection.to_internal()
         )
-        if self.secret:
-            internal_config["secret"] = self.secret
         return internal_config
 
 

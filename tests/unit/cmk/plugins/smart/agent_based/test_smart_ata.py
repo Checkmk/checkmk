@@ -28,6 +28,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     ATATable,
     ATATableEntry,
     parse_smart_posix,
+    PowerOnTime,
     SCSIAll,
     SCSIDevice,
     Section,
@@ -110,6 +111,7 @@ SECTION_ATA = Section(
                 ]
             ),
             temperature=Temperature(current=38),
+            power_on_time=PowerOnTime(hours=2901),
         )
     },
     failures=[],
@@ -274,6 +276,50 @@ def test_check_command_timeout_critical() -> None:
             summary="Command Timeout Counter: 94 (counter increased more than 100 counts / h (!!))",
         ),
         Metric("harddrive_cmd_timeouts", 94.0),
+    ]
+
+
+def test_check_smart_power_on_time_parsing() -> None:
+    ata_params: AtaParams = DEFAULT_PARAMS | {  # type: ignore[assignment]
+        "id_5": 0,
+        "id_10": 0,
+        "id_184": None,
+        "id_187": None,
+        "id_188": None,
+        "id_196": 0,
+        "id_197": 0,
+        "id_199": 0,
+    }
+
+    section = Section(
+        devices={
+            "Test Disk 1": ATAAll(
+                device=ATADevice(protocol="ATA", name="/dev/sda"),
+                model_name="WDC WD3200BUCT-63TWBY0",
+                serial_number="XXXATA",
+                ata_smart_attributes=ATATable(
+                    table=[
+                        ATATableEntry(
+                            id=9,
+                            name="Power_On_Hours",
+                            value=100,
+                            thresh=0,
+                            raw=ATARawValue(value=1234),
+                        ),
+                    ]
+                ),
+                temperature=Temperature(current=38),
+                power_on_time=PowerOnTime(hours=1234),
+            )
+        },
+        failures=[],
+    )
+
+    check_results = list(_check_smart_ata("Test Disk 1", ata_params, section, None, {}, 0))
+
+    assert check_results == [
+        Result(state=State.OK, summary="Powered on: 51 days 10 hours"),
+        Metric("uptime", 1234.0 * 3600),
     ]
 
 

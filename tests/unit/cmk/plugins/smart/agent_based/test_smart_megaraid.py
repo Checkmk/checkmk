@@ -13,6 +13,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     CantOpenDevice,
     FailureAll,
     parse_smart_posix,
+    PowerOnTime,
     SCSIAll,
     SCSIDevice,
     SCSITemperature,
@@ -257,6 +258,7 @@ SECTION_SMART_POSIX_SCAN_ARG = Section(
                 ]
             ),
             temperature=Temperature(current=27),
+            power_on_time=PowerOnTime(hours=11464),
         ),
         "DELL PERC H740P Mini 0098f53cb2b061dd2c00f4f469f0a7ce": SCSIAll(
             device=SCSIDevice(protocol="SCSI", name="/dev/sda"),

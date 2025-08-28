@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { BooleanChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import { untranslated } from '@/lib/i18n'
+
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
@@ -24,5 +26,9 @@ const [validation, value] = useValidation<boolean>(
 </script>
 
 <template>
-  <CmkCheckbox v-model="value" :label="spec.label ?? ''" :external-errors="validation" />
+  <CmkCheckbox
+    v-model="value"
+    :label="untranslated(spec.label ?? '')"
+    :external-errors="validation"
+  />
 </template>

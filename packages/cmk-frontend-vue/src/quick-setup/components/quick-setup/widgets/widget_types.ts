@@ -45,8 +45,8 @@ export interface ListWidgetProps {
 }
 
 export interface NoteTextWidgetProps {
-  /** @property {string}  text - Text to be displayed */
-  text: string
+  /** @property {TranslatedString}  text - Text to be displayed */
+  text: TranslatedString
 }
 
 export interface DialogWidgetProps {
@@ -55,11 +55,11 @@ export interface DialogWidgetProps {
 }
 
 export interface TextWidgetProps {
-  /** @property {string}  text - Text to be displayed */
-  text: string
+  /** @property {TranslatedString}  text - Text to be displayed */
+  text: TranslatedString
 
-  /** @property {string}  tooltip - Text used as tooltip */
-  tooltip?: string | null
+  /** @property {TranslatedString}  tooltip - Text used as tooltip */
+  tooltip?: TranslatedString | null
 }
 
 export interface CompositeWidgetProps {

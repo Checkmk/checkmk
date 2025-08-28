@@ -8,6 +8,7 @@ import { cva } from 'class-variance-authority'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -112,8 +113,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 <CmkCheckbox
                   v-else
                   v-model="dict_element.is_active"
-                  :label="dict_element.dict_config.parameter_form.title"
-                  :help="dict_element.dict_config.parameter_form.help"
+                  :label="untranslated(dict_element.dict_config.parameter_form.title)"
+                  :help="untranslated(dict_element.dict_config.parameter_form.help)"
                   @update:model-value="
                     toggleElement(data, spec.elements, dict_element.dict_config.name)
                   "

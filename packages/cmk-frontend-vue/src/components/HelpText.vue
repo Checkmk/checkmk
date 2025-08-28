@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
 import { getUserFrontendConfig } from '@/lib/userConfig'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
@@ -19,7 +20,7 @@ defineOptions({
 })
 
 const props = defineProps<{
-  help: string
+  help: TranslatedString
 }>()
 
 const open = ref(false)

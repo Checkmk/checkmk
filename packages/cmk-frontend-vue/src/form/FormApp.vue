@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import HelpText from '@/components/HelpText.vue'
@@ -75,7 +76,7 @@ const { ErrorBoundary } = useErrorBoundary()
         <FormReadonly :data="dataRef" :backend-validation="validation" :spec="spec"></FormReadonly>
       </div>
 
-      <HelpText :help="spec.help" />
+      <HelpText :help="untranslated(spec.help)" />
       <div v-if="activeMode === 'edit' || activeMode === 'both'">
         <table class="nform">
           <tbody>

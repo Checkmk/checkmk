@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
+
 import FormIndent from '@/components/CmkIndent.vue'
 import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -59,8 +61,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
-  <HelpText :help="spec.help" />
+  <CmkCheckbox v-model="checkboxValue" :label="untranslated(spec.i18n.label)" />
+  <HelpText :help="untranslated(spec.help)" />
   <FormIndent v-if="data !== null">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}

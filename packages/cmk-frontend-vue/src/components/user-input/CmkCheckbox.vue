@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkHtml from '@/components/CmkHtml.vue'
 import HelpText from '@/components/HelpText.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
@@ -15,9 +17,9 @@ defineOptions({ inheritAttrs: false })
 const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
-  label?: string
+  label?: TranslatedString
   padding?: 'top' | 'bottom' | 'both'
-  help?: string
+  help?: TranslatedString
   externalErrors?: string[]
 }
 

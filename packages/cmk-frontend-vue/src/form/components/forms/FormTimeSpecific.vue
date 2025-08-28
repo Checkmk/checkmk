@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkButton from '@/components/CmkButton.vue'
@@ -70,7 +71,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <span>
     <CmkButton @click="toggleTimeSpecific">
       {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }} </CmkButton
-    ><CmkSpace size="small" /><HelpText :help="spec.help" />
+    ><CmkSpace size="small" /><HelpText :help="untranslated(spec.help)" />
     <br />
     <CmkSpace size="small" direction="vertical" />
     <template v-if="timespecificActive">

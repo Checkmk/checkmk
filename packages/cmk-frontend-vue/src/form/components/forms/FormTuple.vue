@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { capitalizeFirstLetter } from '@/lib/utils'
 
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -70,7 +71,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           :spec="element"
           :backend-validation="elementValidation[index]!"
         />
-        <HelpText :help="element.help" />
+        <HelpText :help="untranslated(element.help)" />
       </div>
     </div>
   </div>

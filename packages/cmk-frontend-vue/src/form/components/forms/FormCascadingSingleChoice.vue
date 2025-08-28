@@ -160,7 +160,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       </template>
       <template v-if="activeElement !== null">
         <CmkSpace size="small" />
-        <HelpText :help="activeElement.spec.help" />
+        <HelpText :help="untranslated(activeElement.spec.help)" />
       </template>
     </div>
     <CmkSpace v-if="props.spec.layout === 'horizontal'" :size="'medium'" />

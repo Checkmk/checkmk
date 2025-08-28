@@ -100,7 +100,10 @@ from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
-from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
+from cmk.fetchers.config import (
+    make_cached_snmp_sections_dir,
+    make_persisted_section_dir,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -143,7 +146,11 @@ from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import (
+    BundledHostRulesetMatcher,
+    RulesetMatcher,
+    RuleSpec,
+)
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
@@ -1456,10 +1463,10 @@ def mode_flush(hosts: list[HostName]) -> None:
             print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
-        inventory_tree = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
-        if inventory_tree.path.exists() or inventory_tree.legacy.exists():
-            inventory_tree.path.unlink(missing_ok=True)
-            inventory_tree.legacy.unlink(missing_ok=True)
+        tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
+        if tree_path.path.exists() or tree_path.legacy.exists():
+            tree_path.path.unlink(missing_ok=True)
+            tree_path.legacy.unlink(missing_ok=True)
             print_(tty.bold + tty.yellow + " inventory")
 
         if not flushed:

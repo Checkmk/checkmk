@@ -13,7 +13,7 @@ from playwright.sync_api import expect
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.agent_bakery import AgentBakeryPage
 from tests.gui_e2e.testlib.playwright.pom.setup.signature_keys import (
     AddSignatureKeyPage,
@@ -32,13 +32,13 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
     )
 
 
-def send_pem_content(page: Dashboard, description: str, password: str, content: str) -> None:
+def send_pem_content(page: MainDashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
     upload_key_page = UploadSignatureKeyPage(page.page)
     upload_key_page.upload_key_pem_content(description, password, content)
 
 
-def send_pem_file(page: Dashboard, description: str, password: str, content: str) -> None:
+def send_pem_file(page: MainDashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via upload."""
     upload_key_page = UploadSignatureKeyPage(page.page)
     upload_key_page.upload_key_pem_file(description, password, content)
@@ -56,7 +56,7 @@ def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
 
 @pytest.mark.parametrize("upload_function", (send_pem_content, send_pem_file))
 def test_upload_signing_keys(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     self_signed_cert: CertificateWithPrivateKey,
     upload_function: Callable[[SignatureKeysPage, str, str, str], None],
 ) -> None:
@@ -90,7 +90,7 @@ def test_upload_signing_keys(
         signature_keys_page.delete_key()
 
 
-def test_generate_key(dashboard_page: Dashboard) -> None:
+def test_generate_key(dashboard_page: MainDashboard) -> None:
     """Add a key, aka let Checkmk generate it."""
     add_key_page = AddSignatureKeyPage(dashboard_page.page)
 
@@ -114,7 +114,7 @@ def test_generate_key(dashboard_page: Dashboard) -> None:
 
 @pytest.fixture(name="with_key", scope="function")
 def with_key_fixture(
-    dashboard_page: Dashboard, self_signed_cert: CertificateWithPrivateKey
+    dashboard_page: MainDashboard, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[str]:
     """Create a signature key via the GUI, yield and then delete it again."""
     key_name = "with_key_fixture"
@@ -135,7 +135,7 @@ def with_key_fixture(
         SignatureKeysPage(dashboard_page.page).delete_key(key_name)
 
 
-def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
+def test_download_key(dashboard_page: MainDashboard, with_key: str) -> None:
     """Test downloading a key.
 
     First a wrong password is provided, checking the error message;
@@ -156,7 +156,7 @@ def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     )
 
 
-def test_bake_and_sign(test_site: Site, dashboard_page: Dashboard, with_key: str) -> None:
+def test_bake_and_sign(test_site: Site, dashboard_page: MainDashboard, with_key: str) -> None:
     """Go to agents and click "bake and sign."""
     agent_bakery_page = AgentBakeryPage(dashboard_page.page)
     agent_bakery_page.bake_and_sign(with_key, "foo")
@@ -168,7 +168,7 @@ def test_bake_and_sign(test_site: Site, dashboard_page: Dashboard, with_key: str
     agent_bakery_page.assert_baking_succeeded()
 
 
-def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
+def test_bake_and_sign_disabled(dashboard_page: MainDashboard) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     signature_keys_page = SignatureKeysPage(dashboard_page.page)
     signature_keys_page.delete_all_keys()

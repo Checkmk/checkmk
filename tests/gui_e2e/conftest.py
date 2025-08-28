@@ -19,8 +19,8 @@ from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.plugin import PageGetter
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.testlib.common.repo import repo_path
@@ -39,7 +39,7 @@ from tests.testlib.utils import is_cleanup_enabled, run
 logger = logging.getLogger(__name__)
 
 
-TDashboard = TypeVar("TDashboard", Dashboard, DashboardMobile)
+TDashboard = TypeVar("TDashboard", MainDashboard, DashboardMobile)
 
 # loading pom fixtures
 setup_fixtures = [notification_user]
@@ -95,9 +95,9 @@ def fixture_credentials(test_site: Site) -> CmkCredentials:
 @pytest.fixture(name="dashboard_page")
 def fixture_dashboard_page(
     cmk_page: Page, test_site: Site, credentials: CmkCredentials
-) -> Dashboard:
+) -> MainDashboard:
     """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
-    return _navigate_to_dashboard(cmk_page, test_site.internal_url, credentials, Dashboard)
+    return _navigate_to_dashboard(cmk_page, test_site.internal_url, credentials, MainDashboard)
 
 
 @pytest.fixture(name="dashboard_page_mobile")
@@ -154,7 +154,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture(name="created_host")
 def fixture_host(
-    dashboard_page: Dashboard, request: pytest.FixtureRequest, test_site: Site
+    dashboard_page: MainDashboard, request: pytest.FixtureRequest, test_site: Site
 ) -> Iterator[HostDetails]:
     """Create a host and delete it after the test.
 

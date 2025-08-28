@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     linux_hosts: list[str],
     notification_user: tuple[str, str],
     email_manager: EmailManager,

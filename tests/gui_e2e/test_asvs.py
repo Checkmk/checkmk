@@ -15,12 +15,14 @@ from playwright.sync_api import BrowserContext, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.testlib.site import Site
 
 
-def test_v2_1_5(test_site: Site, dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
+def test_v2_1_5(
+    test_site: Site, dashboard_page: MainDashboard, credentials: CmkCredentials
+) -> None:
     """Verify users can change their password."""
 
     page = dashboard_page
@@ -43,7 +45,7 @@ def test_v2_1_5(test_site: Site, dashboard_page: Dashboard, credentials: CmkCred
     page.main_area.check_page_title("Main dashboard")
 
 
-def test_password_truncation_error(dashboard_page: Dashboard) -> None:
+def test_password_truncation_error(dashboard_page: MainDashboard) -> None:
     """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
 
     change_password_page = ChangePassword(dashboard_page.page)

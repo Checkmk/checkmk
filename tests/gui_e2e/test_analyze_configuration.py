@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.analyze_configuration import (
     AnalyzeConfiguration,
 )
@@ -73,7 +73,9 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
         test_site.delete_file(f"{path}/fake.py")
 
 
-def test_analyze_configuration_page(dashboard_page: Dashboard, simulate_deprecations: None) -> None:
+def test_analyze_configuration_page(
+    dashboard_page: MainDashboard, simulate_deprecations: None
+) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 
     1. Trigger 'Deprecations' file-based checks by adding fake files in the specified locations.

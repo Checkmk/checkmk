@@ -9,8 +9,8 @@ from typing import override
 from playwright.sync_api import expect, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
-from tests.gui_e2e.testlib.playwright.pom.custom_dashboard import CustomDashboard
-from tests.gui_e2e.testlib.playwright.pom.dashboard import BaseDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)

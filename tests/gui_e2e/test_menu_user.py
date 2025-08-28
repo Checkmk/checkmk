@@ -9,11 +9,11 @@ from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
 
-def test_user_color_theme(dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
+def test_user_color_theme(dashboard_page: MainDashboard, credentials: CmkCredentials) -> None:
     # Open user menu and locate `color theme button`.
     _loc = dashboard_page.main_menu.user_color_theme_button
     default_label = str(_loc.get_attribute("value"))
@@ -45,7 +45,7 @@ def test_user_color_theme(dashboard_page: Dashboard, credentials: CmkCredentials
     assert reverted_value == default_value, "Reverted color theme is not properly reflected!"
 
 
-def test_user_sidebar_position(dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
+def test_user_sidebar_position(dashboard_page: MainDashboard, credentials: CmkCredentials) -> None:
     # Open user menu and locate `sidebar position button`.
     _loc = dashboard_page.main_menu.user_sidebar_position_button
     default_label = str(_loc.get_attribute("value"))
@@ -77,24 +77,24 @@ def test_user_sidebar_position(dashboard_page: Dashboard, credentials: CmkCreden
     assert reverted_value == default_value, "Reverted sidebar position is not properly reflected!"
 
 
-def test_user_edit_profile(dashboard_page: Dashboard) -> None:
+def test_user_edit_profile(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.user_edit_profile.click()
     dashboard_page.page.wait_for_url(url=re.compile("user_profile.py$"), wait_until="load")
     dashboard_page.main_area.check_page_title("Edit profile")
 
 
-def test_user_notification_rules(dashboard_page: Dashboard) -> None:
+def test_user_notification_rules(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.user_notification_rules.click()
     dashboard_page.page.wait_for_url(url=re.compile("user_notifications_p$"), wait_until="load")
     dashboard_page.main_area.check_page_title("Your personal notification rules")
 
 
-def test_user_change_password(dashboard_page: Dashboard) -> None:
+def test_user_change_password(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.user_change_password.click()
     _ = ChangePassword(dashboard_page.page, navigate_to_page=False)
 
 
-def test_user_two_factor_authentication(dashboard_page: Dashboard) -> None:
+def test_user_two_factor_authentication(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.user_two_factor_authentication.click()
     dashboard_page.page.wait_for_url(
         url=re.compile("user_two_factor_overview.py$"), wait_until="load"
@@ -102,6 +102,6 @@ def test_user_two_factor_authentication(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.check_page_title("Two-factor authentication")
 
 
-def test_user_logout(dashboard_page: Dashboard) -> None:
+def test_user_logout(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.logout()
     _ = LoginPage(dashboard_page.page, navigate_to_page=False)

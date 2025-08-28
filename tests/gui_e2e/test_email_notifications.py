@@ -11,8 +11,8 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.plugin import PageGetter
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.email import EmailPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
@@ -67,7 +67,7 @@ def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterat
 
 @pytest.mark.skip(reason="CMK-22883; Investigation ongoing ...")
 def test_filesystem_email_notifications(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     linux_hosts: list[str],
     notification_user: tuple[str, str],
     email_manager: EmailManager,
@@ -195,7 +195,7 @@ def test_filesystem_email_notifications(
 
 def test_email_notifications_host_filters(
     modify_notification_rule: str,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
 ) -> None:
     """Test to verify that the host filter is working as expected.
 

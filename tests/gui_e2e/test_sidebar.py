@@ -10,11 +10,11 @@ from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.helpers import Keys
 from tests.gui_e2e.testlib.playwright.pom.add_sidebar_element import AddSidebarElement
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])
-def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
+def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> None:
     """Add and remove a snapin (aka a sidebar element)"""
 
     add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
@@ -27,7 +27,7 @@ def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
     add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
 
 
-def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
+def test_monitor_searchbar(dashboard_page: MainDashboard) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
     dashboard_page.main_menu.global_searchbar.fill("all hosts")
@@ -42,7 +42,7 @@ def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.check_page_title("CPU inventory of all hosts")
 
 
-def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
+def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
     """Tests the addition of the NagVis snapin to the sidebar and verifies its functionality.
 
     This test performs the following steps:

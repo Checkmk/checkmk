@@ -11,7 +11,7 @@ from typing import assert_never
 
 import pytest
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import (
     EditPiggybackHubGlobally,
     EditPiggybackHubSiteSpecific,
@@ -53,7 +53,7 @@ class HubDisableActions(enum.Enum):
 
 
 def _enable_hub_globally(
-    dashboard_page: Dashboard, enable_actions: HubEnableActions = HubEnableActions.SAVE
+    dashboard_page: MainDashboard, enable_actions: HubEnableActions = HubEnableActions.SAVE
 ) -> None:
     logger.info("Enable the piggyback-hub globally")
     match enable_actions:
@@ -69,7 +69,7 @@ def _enable_hub_globally(
 
 
 def _disable_hub_globally(
-    dashboard_page: Dashboard, disable_action: HubDisableActions = HubDisableActions.SAVE
+    dashboard_page: MainDashboard, disable_action: HubDisableActions = HubDisableActions.SAVE
 ) -> None:
     logger.info("Disable the piggyback-hub globally")
     match disable_action:
@@ -88,7 +88,7 @@ def _disable_hub_globally(
 
 
 def _enable_hub_site_specific(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     site_id: str,
     enable_action: HubEnableActions = HubEnableActions.SAVE,
 ) -> None:
@@ -108,7 +108,7 @@ def _enable_hub_site_specific(
 
 
 def _disable_hub_site_specific(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     site_id: str,
     disable_action: HubDisableActions = HubDisableActions.SAVE,
 ) -> None:
@@ -223,7 +223,7 @@ def _wait_for_file_change(site: Site, file_path: Path, original_mtime: float) ->
 def test_disabled_on_central__enable_on_remote__error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
     enable_action: HubEnableActions,
@@ -278,7 +278,7 @@ def test_disabled_on_central__enable_on_remote__error(
 def test_enabled_on_central__enable_on_remote__no_error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: Mapping[str, object],
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
     enable_action: HubEnableActions,
@@ -329,7 +329,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
 def test_enabled_on_remote__disable_on_remote__no_error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]],
     disable_action: HubDisableActions,
@@ -382,7 +382,7 @@ def test_enabled_on_remote__disable_on_remote__no_error(
 def test_enabled_on_remote__disable_on_central__error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: dict[str, object] | None,
     site_specific_settings: dict[str, dict[str, object]],
     disable_action: HubDisableActions,
@@ -419,7 +419,7 @@ def test_enabled_on_remote__disable_on_central__error(
 def test_enabled_on_remote__disable_on_central_by_reset__error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site by resetting to factory setting fails if it is enabled for a remote site"""
 
@@ -487,7 +487,7 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
 def test_disabled_on_remote_site__disable_on_central__no_error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: dict[str, object] | None,
     site_specific_settings: dict[str, dict[str, object]],
     disable_action: HubDisableActions,
@@ -523,7 +523,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
 def test_enabled_on_remote__disable_globally__error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     disable_action: HubDisableActions,
 ) -> None:
     """Test that disabling the piggyback-hub globally fails if it is enabled for any remote sites"""
@@ -574,7 +574,7 @@ def test_enabled_on_remote__disable_globally__error(
 def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
     disable_action: HubDisableActions,
@@ -606,7 +606,7 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
 def test_disabled_on_central__enable_globally__error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub globally fails if it is disabled for the central site"""
@@ -638,7 +638,7 @@ def test_disabled_on_central__enable_globally__error(
 def test_unset_on_central_and_remote__enable_globally__no_error(
     test_site: Site,
     remote_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub globally works if it is not disabled for the central site"""

@@ -12,14 +12,14 @@ import pytest
 from playwright.sync_api import expect
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.werks import Werks
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="werks_page", scope="function")
-def fixture_werks_page(dashboard_page: Dashboard) -> Iterator[Werks]:
+def fixture_werks_page(dashboard_page: MainDashboard) -> Iterator[Werks]:
     yield Werks(dashboard_page.page)
 
 

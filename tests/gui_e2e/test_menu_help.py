@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import pytest
 from playwright.sync_api import Page, Request, Route
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.timeouts import handle_playwright_timeouterror
 
 
@@ -90,7 +90,7 @@ def fixture_help_menu_button(
 
 
 def test_help_menu(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     help_menu_button: HelpMenuButton,
 ) -> None:
     browser_context = dashboard_page.page.context

@@ -172,7 +172,7 @@ class BaseDashboard(CmkPage):
         self.main_area.get_suggestion("Save").click()
 
 
-class Dashboard(BaseDashboard):
+class MainDashboard(BaseDashboard):
     """Represent the page `Main dashboard`."""
 
     page_title: str = "Main dashboard"

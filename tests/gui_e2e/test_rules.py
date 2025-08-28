@@ -15,7 +15,7 @@ from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_cpu_load import AddRuleCPULoad
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_disk_io_levels import AddRuleDiskIOLevels
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
@@ -42,7 +42,7 @@ from tests.testlib.utils import is_cleanup_enabled, makedirs
 logger = logging.getLogger(__name__)
 
 
-def _goto_setup_page(pw: Dashboard, setup_page: str) -> None:
+def _goto_setup_page(pw: MainDashboard, setup_page: str) -> None:
     pw.click_and_wait(pw.main_menu.setup_menu(setup_page), navigate=True)
     pw.main_area.page.wait_for_load_state("load")
     pw.main_area.check_page_title(setup_page)
@@ -92,7 +92,7 @@ def _get_tasks() -> dict[str, list[dict[str, str]]]:
     return tasks
 
 
-def _create_rule(rule_name: str, pw: Dashboard, tasks: dict[str, list[dict[str, str]]]) -> None:
+def _create_rule(rule_name: str, pw: MainDashboard, tasks: dict[str, list[dict[str, str]]]) -> None:
     logger.info('Creating rule "%s"...', rule_name)
     pw.click_and_wait(
         pw.main_area.locator(".rulesets").get_by_role("link").get_by_text(rule_name),
@@ -114,7 +114,7 @@ def _create_rule(rule_name: str, pw: Dashboard, tasks: dict[str, list[dict[str, 
     expect(pw.main_area.locator("div.error")).not_to_be_attached()
 
 
-def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
+def _create_rules(pw: MainDashboard) -> dict[str, list[str]]:
     rules_pages = ["Host monitoring rules"]
     tasks = _get_tasks()
     created_rules: dict[str, list[str]] = {}
@@ -155,7 +155,7 @@ def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
 
 def test_create_rules(
     test_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     pytestconfig: pytest.Config,
     restore_site_state: None,
 ) -> None:
@@ -236,7 +236,7 @@ def test_create_rules(
     indirect=["created_host"],
 )
 def test_periodic_service_discovery_rule(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     created_host: HostDetails,
     test_site: Site,
 ) -> None:
@@ -304,7 +304,7 @@ def test_periodic_service_discovery_rule(
     indirect=["created_host"],
 )
 def test_use_default_periodic_service_discovery_rule(
-    dashboard_page: Dashboard, created_host: HostDetails
+    dashboard_page: MainDashboard, created_host: HostDetails
 ) -> None:
     """Test the default 'Periodic service discovery' rule values for monitoring hosts.
 
@@ -330,7 +330,9 @@ def test_use_default_periodic_service_discovery_rule(
     assert default_rule_values == rule_values, "Unexpected rule values"
 
 
-def test_predictive_levels_with_default_values(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_predictive_levels_with_default_values(
+    dashboard_page: MainDashboard, test_site: Site
+) -> None:
     """Test configuring predictive levels with default values with adding a new rule
     for 'Disk IO levels' page.
     """
@@ -389,7 +391,9 @@ def test_predictive_levels_with_default_values(dashboard_page: Dashboard, test_s
             service_rules_page.activate_changes(test_site)
 
 
-def test_predictive_levels_with_custom_values(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_predictive_levels_with_custom_values(
+    dashboard_page: MainDashboard, test_site: Site
+) -> None:
     """Test configuring predictive levels with custom values while adding a new rule
     for 'CPU Load (not utilization!)' page.
     """

@@ -13,9 +13,9 @@ from playwright.sync_api import Page
 
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.all_hosts import AllHosts
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.distributed_monitoring import (
     DistributedMonitoring,
 )
@@ -27,7 +27,7 @@ from tests.testlib.utils import is_cleanup_enabled
 
 @contextmanager
 def _configure_a_host_to_be_deleted(
-    dashboard_page: Dashboard, central_site: Site, remote_site: Site
+    dashboard_page: MainDashboard, central_site: Site, remote_site: Site
 ) -> Iterator[HostDetails]:
     """Context Manager to configure a host to be deleted on exit.
 
@@ -103,7 +103,7 @@ def fixture_remote_site(
 
 
 def test_remote_host_configuring(
-    dashboard_page: Dashboard, test_site: Site, credentials: CmkCredentials, remote_site: Site
+    dashboard_page: MainDashboard, test_site: Site, credentials: CmkCredentials, remote_site: Site
 ) -> None:
     """Test distributed monitoring setup and verify it creating a host.
 

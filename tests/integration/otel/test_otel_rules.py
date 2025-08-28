@@ -82,7 +82,7 @@ def update_dump(site: Site, dump_path: Path) -> None:
                     "all_metrics",
                     {
                         "rate_computation": "never",
-                        "aggregation": "latest",
+                        "resource_aggregation": "latest",
                         "levels_lower": ("fixed", (30.0, 15.0)),
                         "levels_upper": ("fixed", (50.0, 65.0)),
                     },
@@ -104,7 +104,7 @@ def update_dump(site: Site, dump_path: Path) -> None:
                     "all_metrics",
                     {
                         "rate_computation": "never",
-                        "aggregation": "max",
+                        "resource_aggregation": "max",
                         "levels_lower": ("no_levels", None),
                         "levels_upper": ("fixed", (80.0, 90.0)),
                     },
@@ -123,7 +123,7 @@ def update_dump(site: Site, dump_path: Path) -> None:
                     "all_metrics",
                     {
                         "rate_computation": "always",
-                        "aggregation": "latest",
+                        "resource_aggregation": "latest",
                         "levels_lower": ("fixed", (1.0, 0.5)),
                         "levels_upper": ("no_levels", None),
                     },
@@ -143,14 +143,14 @@ def update_dump(site: Site, dump_path: Path) -> None:
                     [
                         {
                             "metric_name": "region_asia",
-                            "aggregation": "latest",
+                            "resource_aggregation": "latest",
                             "rate_computation": "never",
                             "levels_lower": ("no_levels", None),
                             "levels_upper": ("fixed", (100, 130)),
                         },
                         {
                             "metric_name": "observable_gauge_2",
-                            "aggregation": "latest",
+                            "resource_aggregation": "latest",
                             "rate_computation": "never",
                             "levels_lower": ("fixed", (30, 20)),
                             "levels_upper": ("no_levels", None),

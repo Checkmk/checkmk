@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n.ts'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon.vue'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
@@ -15,7 +16,7 @@ export interface CmkWizardButtonProps {
   type: 'next' | 'previous' | 'finish' | 'other'
   iconName?: string
   iconRotate?: number
-  overrideLabel?: string
+  overrideLabel?: TranslatedString
 }
 
 const { _t } = usei18n()

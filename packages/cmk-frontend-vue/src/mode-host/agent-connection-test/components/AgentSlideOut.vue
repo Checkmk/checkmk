@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
@@ -28,21 +29,21 @@ import type { PackageOptions } from '@/mode-host/agent-connection-test/component
 export interface AgentSlideOutTabs {
   id: string
   title: string
-  installMsg?: string
+  installMsg?: TranslatedString
   installCmd?: string | undefined
   installDebCmd?: string
   installRpmCmd?: string
   installTgzCmd?: string | undefined
-  registrationMsg?: string
+  registrationMsg?: TranslatedString
   registrationCmd?: string
   installUrl?: InstallUrl | undefined
   toggleButtonOptions?: PackageOptions
 }
 
 export interface InstallUrl {
-  title: string
+  title: TranslatedString
   url: string
-  msg: string
+  msg: TranslatedString
   icon?: string
 }
 
@@ -50,7 +51,7 @@ const props = defineProps<{
   dialogMsg: string
   tabs: AgentSlideOutTabs[]
   allAgentsUrl: string
-  closeButtonTitle: string
+  closeButtonTitle: TranslatedString
   saveHost: boolean
   agentInstalled: boolean
   isPushMode: boolean

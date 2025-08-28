@@ -10,6 +10,7 @@ import {
 } from 'cmk-shared-typing/typescript/agent_slideout'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
@@ -20,7 +21,7 @@ const props = defineProps<{
   hostName: string
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
-  closeButtonTitle: string
+  closeButtonTitle: TranslatedString
   saveHost: boolean
   agentInstalled: boolean
   isPushMode: boolean

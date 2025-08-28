@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
 import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkBadge from '../CmkBadge.vue'
@@ -17,8 +19,8 @@ export interface CmkAccordionStepPanelItemProps {
   accomplished?: boolean | undefined
   disabled?: boolean | undefined
   step: number
-  title: string
-  info?: string
+  title: TranslatedString
+  info?: TranslatedString
 }
 
 const props = defineProps<CmkAccordionStepPanelItemProps>()

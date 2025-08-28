@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
@@ -22,11 +24,12 @@ const cmkLinkCardVariants = cva('', {
     variant: 'standard'
   }
 })
+
 export type CmkLinkCardVariants = VariantProps<typeof cmkLinkCardVariants>
 interface CmkLinkCardProps {
   iconName?: string | undefined
-  title: string
-  subtitle?: string
+  title: TranslatedString
+  subtitle?: TranslatedString
   url: string
   openInNewTab: boolean
   disabled?: boolean

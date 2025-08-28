@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { useTemplateRef } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkChip from '@/components/CmkChip.vue'
@@ -38,7 +39,7 @@ immediateWatch(
       <span>
         <CmkChip
           :color="option.type === 'provider' ? 'success' : 'default'"
-          :content="option.value"
+          :content="untranslated(option.value)"
           size="small"
         ></CmkChip
       ></span>

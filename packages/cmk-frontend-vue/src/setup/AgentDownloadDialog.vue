@@ -8,6 +8,8 @@ import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import { TooltipArrow } from 'radix-vue'
 import { ref } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
@@ -20,7 +22,7 @@ interface Props {
   slideInTitle: string
   slideInButtonTitle: string
   docsButtonTitle: string
-  closeButtonTitle: string
+  closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   allAgentsUrl: string
   isNotRegistered: boolean

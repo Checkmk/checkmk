@@ -45,13 +45,10 @@ import socket
 import time
 
 try:
-    from collections.abc import (  # noqa: F401
-        Collection,
-        Iterable,
-        Iterator,
-        Sequence,
-    )
-    from typing import Any  # noqa: F401
+    from collections.abc import Collection, Iterable, Iterator, Sequence
+    from typing import Any
+
+    _ = Collection, Iterable, Iterator, Sequence, Any  # make ruff happy
 except ImportError:
     # We need typing only for testing
     pass

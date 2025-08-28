@@ -9,7 +9,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 
 # courtesy to RS: leave this in until 2.4 for MKP compatibility
-from cmk.gui.wato import RulespecGroupIntegrateOtherServices  # noqa: F401
+from cmk.gui.wato import RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices
 
 
 def ip_address_family_element() -> tuple[Literal["address_family"], DropdownChoice]:

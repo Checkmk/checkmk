@@ -17,7 +17,9 @@ except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
-    from typing import Any  # noqa: F401
+    from typing import Any
+
+    _ = Any  # make ruff happy
 except ImportError:
     pass
 

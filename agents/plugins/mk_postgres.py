@@ -69,8 +69,10 @@ import sys
 import tempfile
 
 try:
-    from collections.abc import Callable, Iterable, Sequence  # noqa: F401
-    from typing import Any  # noqa: F401
+    from collections.abc import Callable, Iterable, Sequence
+    from typing import Any
+
+    _ = Callable, Iterable, Sequence, Any  # make ruff happy
 except ImportError:
     # We need typing only for testing
     pass

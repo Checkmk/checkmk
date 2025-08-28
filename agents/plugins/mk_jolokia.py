@@ -24,12 +24,11 @@ if sys.version_info[0] >= 3:
     )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
-# Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Any, TYPE_CHECKING  # noqa: F401
+    from collections.abc import Callable
+    from typing import Any
 
-    if TYPE_CHECKING:
-        from collections.abc import Callable  # noqa: F401
+    _ = Callable, Any  # make ruff happy
 except ImportError:
     pass
 

@@ -22,14 +22,14 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.ccc import site
 from cmk.utils.escaping import escape, escape_permissive
-from cmk.utils.html import (  # noqa: F401
-    replace_state_markers as format_plugin_output,
-)
+from cmk.utils.html import replace_state_markers
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.notify_types import PluginNotificationContext
 from cmk.utils.paths import omd_root
+
+format_plugin_output = replace_state_markers
 
 
 def collect_context() -> PluginNotificationContext:

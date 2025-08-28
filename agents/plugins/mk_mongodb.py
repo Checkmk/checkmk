@@ -38,8 +38,10 @@ from collections import defaultdict
 from urllib.parse import quote_plus
 
 try:
-    from collections.abc import Iterable  # noqa: F401
-    from typing import Any  # noqa: F401
+    from collections.abc import Iterable
+    from typing import Any
+
+    _ = Iterable, Any  # make ruff happy
 except ImportError:
     pass
 

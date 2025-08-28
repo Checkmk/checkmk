@@ -42,7 +42,9 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401
+    from typing import Any
+
+    _ = Any  # make ruff happy
 except ImportError:
     pass
 

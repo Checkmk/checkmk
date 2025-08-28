@@ -1696,20 +1696,20 @@ def rename(
     omd_root: Path, *, old_host_name: HostName, new_host_name: HostName
 ) -> Sequence[Literal["inv", "invarch"]]:
     inv_paths = InventoryPaths(omd_root)
-    old_inventory_tree = inv_paths.inventory_tree(HostName(old_host_name))
-    old_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(old_host_name))
-    old_status_data_tree = inv_paths.status_data_tree(HostName(old_host_name))
-    new_inventory_tree = inv_paths.inventory_tree(HostName(new_host_name))
-    new_inventory_tree_gz = inv_paths.inventory_tree_gz(HostName(new_host_name))
-    new_status_data_tree = inv_paths.status_data_tree(HostName(new_host_name))
+    old_inv_tree_path = inv_paths.inventory_tree(HostName(old_host_name))
+    old_inv_tree_path_gz = inv_paths.inventory_tree_gz(HostName(old_host_name))
+    old_stat_tree_path = inv_paths.status_data_tree(HostName(old_host_name))
+    new_inv_tree_path = inv_paths.inventory_tree(HostName(new_host_name))
+    new_inv_tree_path_gz = inv_paths.inventory_tree_gz(HostName(new_host_name))
+    new_stat_tree_path = inv_paths.status_data_tree(HostName(new_host_name))
     actions: set[Literal["inv", "invarch"]] = set()
     for old_file_path, new_file_path in [
-        (old_inventory_tree.path, new_inventory_tree.path),
-        (old_inventory_tree.legacy, new_inventory_tree.legacy),
-        (old_inventory_tree_gz.path, new_inventory_tree_gz.path),
-        (old_inventory_tree_gz.legacy, new_inventory_tree_gz.legacy),
-        (old_status_data_tree.path, new_status_data_tree.path),
-        (old_status_data_tree.legacy, new_status_data_tree.legacy),
+        (old_inv_tree_path.path, new_inv_tree_path.path),
+        (old_inv_tree_path.legacy, new_inv_tree_path.legacy),
+        (old_inv_tree_path_gz.path, new_inv_tree_path_gz.path),
+        (old_inv_tree_path_gz.legacy, new_inv_tree_path_gz.legacy),
+        (old_stat_tree_path.path, new_stat_tree_path.path),
+        (old_stat_tree_path.legacy, new_stat_tree_path.legacy),
     ]:
         try:
             old_file_path.rename(new_file_path)

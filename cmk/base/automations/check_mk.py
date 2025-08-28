@@ -172,7 +172,10 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_section_dir
+from cmk.fetchers.config import (
+    make_cached_snmp_sections_dir,
+    make_persisted_section_dir,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherType, SourceType
@@ -2489,8 +2492,8 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-        inventory_tree = inv_paths.inventory_tree(hostname)
-        inventory_tree_gz = inv_paths.inventory_tree_gz(hostname)
+        tree_path = inv_paths.inventory_tree(hostname)
+        tree_path_gz = inv_paths.inventory_tree_gz(hostname)
         status_data_tree = inv_paths.status_data_tree(hostname)
         return [
             f"{precompiled_hostchecks_dir / hostname}",
@@ -2502,10 +2505,10 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
             f"{var_dir}/persisted/{hostname}",
             f"{var_dir}/agent_deployment/{hostname}",
         ] + [
-            str(inventory_tree.path),
-            str(inventory_tree.legacy),
-            str(inventory_tree_gz.path),
-            str(inventory_tree_gz.legacy),
+            str(tree_path.path),
+            str(tree_path.legacy),
+            str(tree_path_gz.path),
+            str(tree_path_gz.legacy),
             str(status_data_tree.path),
             str(status_data_tree.legacy),
         ]

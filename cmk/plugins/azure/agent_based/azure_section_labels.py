@@ -33,36 +33,47 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
         cmk/azure/resource_group:
             This label contains the name of the resource group.
 
-        cmk/azure/subscription:
+        cmk/azure/subscription_name:
             This label contains the name of the subscription.
 
-        cmk/azure/entity_subscription:
-            This label is set for all hosts monitoring a subscription an its services.
+        cmk/azure/subscription_id:
+            This label contains the azure id of the subscription.
+
+        cmk/azure/entity:subscription:
+            This label is set for all hosts that are monitoring a subscription.
+
+        cmk/azure/entity:resource_group:
+            This label is set for all hosts that are monitoring a resource group.
+
+        cmk/azure/entity:<entity_type>:
+            This label is set for all hosts that are monitoring a resource.
 
         cmk/azure/vm:instance:
             This label is set for all virtual machines monitored as hosts.
 
         cmk/azure/tag/{key}:{value}:
-            These labels are yielded for each tag of a resource group or of a virtual machine which
-            is monitored as a host. This can be configured via the rule 'Microsoft Azure'.
+            If the host is a resource group host
+            this label is set for each tag of the resource group.
+            If the host is a resource host,
+            the label is set for each tag of the monitored resource,
+            merged with the tags of its own resource group.
     """
-    if "group_name" in section.host_labels:
-        yield HostLabel("cmk/azure/resource_group", str(section.host_labels["group_name"]))
-    elif "entity_subscription" in section.host_labels:
-        yield HostLabel("cmk/azure/subscription", str(section.host_labels["subscription"]))
-        yield HostLabel(
-            "cmk/azure/entity_subscription", str(section.host_labels["entity_subscription"])
-        )
+    for label, value in section.host_labels.items():
+        if label == "group_name":
+            yield HostLabel("cmk/azure/resource_group", str(value))
+            continue
+        if label == "vm_instance":
+            yield HostLabel("cmk/azure/vm", "instance")
+            continue
 
-    if section.host_labels.get("vm_instance"):
-        yield HostLabel("cmk/azure/vm", "instance")
+        yield HostLabel(f"cmk/azure/{label}", str(value))
 
     if not section.tags:
         return
 
-    labels = custom_tags_to_valid_labels(section.tags)
-    for key, value in labels.items():
-        yield HostLabel(f"cmk/azure/tag/{key}", value)
+    tags = custom_tags_to_valid_labels(section.tags)
+    for label, value in tags.items():
+        yield HostLabel(f"cmk/azure/tag/{label}", value)
 
 
 agent_section_azure_labels = AgentSection(

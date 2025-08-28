@@ -18,7 +18,7 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     AzureSubscription,
     filter_tags,
     get_group_labels,
-    get_vm_labels_section,
+    get_resource_host_labels_section,
     GroupLabels,
     process_app_registrations,
     process_organization,
@@ -38,7 +38,7 @@ Args = argparse.Namespace
 
 
 @pytest.mark.parametrize(
-    "vm, group_tags, expected_result",
+    "resource, group_tags, expected_result",
     [
         (
             AzureResource(
@@ -61,21 +61,84 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"group_name": "burningman", "vm_instance": true}\n',
+                    '{"resource_group": "burningman", "entity": "virtualmachines", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id", "vm_instance": true}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
             ),
-        )
+        ),
+        (
+            AzureResource(
+                {
+                    "id": "resource_id",
+                    "name": "my_resource",
+                    "type": "Microsoft.Network/loadBalancers",
+                    "location": "westeurope",
+                    "tags": {"my-unique-tag": "unique", "tag4all": "True"},
+                    "group": "resource_group_name",
+                },
+                TagsImportPatternOption.import_all,
+                subscription=AzureSubscription(
+                    id="mock_subscription_id",
+                    name="mock_subscription_name",
+                    tags={},
+                    safe_hostnames=False,
+                    tenant_id="tenant_id",
+                ),
+            ),
+            {
+                "resource_group_name": {
+                    "resource_group": "resource_group_name",
+                    "another_group_tag": "another_value",
+                }
+            },
+            (
+                [
+                    '{"resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id"}\n',
+                    '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
+                ],
+                ["my_resource"],
+            ),
+        ),
+        (
+            AzureResource(
+                {
+                    "id": "resource_id",
+                    "name": "my_resource",
+                    "type": "Microsoft.Network/loadBalancers",
+                    "location": "westeurope",
+                    "tags": {},
+                    "group": "resource_group_name",
+                },
+                TagsImportPatternOption.import_all,
+                subscription=AzureSubscription(
+                    id="mock_subscription_id",
+                    name="mock_subscription_name",
+                    tags={},
+                    safe_hostnames=False,
+                    tenant_id="tenant_id",
+                ),
+            ),
+            {"resource_group_name": {}},
+            (
+                [
+                    '{"resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id"}\n',
+                    "{}\n",
+                ],
+                ["my_resource"],
+            ),
+        ),
     ],
 )
-def test_get_vm_labels_section(
-    vm: AzureResource,
+def test_get_resource_host_labels_section(
+    resource: AzureResource,
     group_tags: GroupLabels,
     expected_result: tuple[Sequence[str], Sequence[str]],
-    mock_azure_subscription: AzureSubscription,
 ) -> None:
-    labels_section = get_vm_labels_section(vm, group_tags, mock_azure_subscription)
+    labels_section = get_resource_host_labels_section(resource, group_tags)
 
     assert labels_section._cont == expected_result[0]
     assert labels_section._piggytargets == expected_result[1]
@@ -207,23 +270,46 @@ async def test_filter_tags(
                     subscription=fake_azure_subscription(),
                 ),
             ],
-            {
-                "burningman": {
-                    "my-resource-tag": "my-resource-value",
-                    "cmk/azure/resource_group": "BurningMan",
-                }
-            },
+            {"burningman": {"my-resource-tag": "my-resource-value"}},
             "<<<<burningman>>>>\n"
             "<<<azure_labels:sep(0)>>>\n"
-            '{"group_name": "burningman"}\n'
-            '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
+            '{"resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
-            "<<<<subscription_name>>>>\n"
+            "<<<<mock_subscription_name>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
-        )
+        ),
+        (
+            ["burningman", "resource_group_name"],
+            [
+                AzureResource(
+                    {
+                        "id": "resource_id",
+                        "name": "my_resource",
+                        "type": "Microsoft.Network/loadBalancers",
+                        "location": "westeurope",
+                        "tags": {},
+                        "group": "resource_group_name",
+                    },
+                    TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+            ],
+            {"resource_group_name": {"my-resource-tag": "my-resource-value"}},
+            "<<<<resource_group_name>>>>\n"
+            "<<<azure_labels:sep(0)>>>\n"
+            '{"resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"my-resource-tag": "my-resource-value"}\n'
+            "<<<<>>>>\n"
+            "<<<<mock_subscription_name>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\n"
+            'monitored-groups|["burningman", "resource_group_name"]\n'
+            'monitored-resources|["my_resource"]\n'
+            "<<<<>>>>\n",
+        ),
     ],
 )
 def test_write_group_info(
@@ -236,13 +322,7 @@ def test_write_group_info(
     write_group_info(
         monitored_groups,
         monitored_resources,
-        AzureSubscription(
-            "subscription_id",
-            "subscription_name",
-            {},
-            False,
-            "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
-        ),
+        fake_azure_subscription(),
         group_tags,
     )
     captured = capsys.readouterr()

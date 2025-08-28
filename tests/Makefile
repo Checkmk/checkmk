@@ -268,7 +268,7 @@ test-performance:
   	--benchmark-verbose --html="$${BENCHMARK_DIR}/report.htm" \
   	--self-contained-html --ignore-running-procs ; \
  	$(UVENV) "$(realpath performance)/perftest_plot.py" \
- 	--root-dir="$${ROOT_DIR}" \
+ 	--root-dir="$${ROOT_DIR}" --log-level=INFO --sslmode=prefer \
  	--dbhost=qa.lan.checkmk.net --validate-baselines --alert-on-failure
 
 test-performance-docker:

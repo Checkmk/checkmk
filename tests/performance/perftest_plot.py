@@ -57,7 +57,7 @@ from os import getenv
 from pathlib import Path
 from statistics import fmean
 from sys import exit as sys_exit
-from typing import NamedTuple
+from typing import get_args, Literal, NamedTuple
 
 import psycopg
 from jira import JIRA
@@ -68,6 +68,7 @@ logger = logging.getLogger(__name__)
 
 Measurements = Mapping[str, object]
 MeasurementsList = list[Measurements]
+SslMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
 
 
 class AverageValues(NamedTuple):
@@ -159,7 +160,7 @@ class PerformanceDb:
         sslrootcert: Path,
         sslcert: Path,
         sslkey: Path,
-        sslmode: str = "require",
+        sslmode: SslMode = "require",
         dbname: str = "performance",
         user: str = "performance",
         host: str = "qa.lan.checkmk.net",
@@ -198,7 +199,7 @@ class PerformanceDb:
                 self.user,
                 self.host,
                 self.port,
-                self.sslrootcert,
+                self.sslrootcert if sslmode in ("verify-ca", "verify-full") else "",
                 self.sslcert,
                 self.sslkey,
             )
@@ -706,7 +707,7 @@ class PerftestPlotArgs(argparse.Namespace):
         dbcheck (bool): If True, DB connection is checked only (nothing else is done).
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
-        sslmode (str): The SSL mode for the Postgres authentication.
+        sslmode (SslMode): The SSL mode for the Postgres authentication.
         sslrootcert_var (str): The name of the environment variable that holds the root certificate.
         sslcert_var (str): The name of the environment variable that holds the Postgres certificate.
         sslkey_var (str): The name of the environment variable that holds the Postgres key.
@@ -733,7 +734,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbcheck: bool
     validate_baselines: bool
     alert_on_failure: bool
-    sslmode: str
+    sslmode: SslMode
     sslrootcert_var: str
     sslcert_var: str
     sslkey_var: str
@@ -762,6 +763,7 @@ class PerftestPlot:
         super().__init__()
         self.args = args
         self.root_dir = self.args.root_dir
+        self.root_dir.mkdir(parents=True, exist_ok=True)
         self.read_from_database = not self.args.skip_database_reads
         self.read_from_filesystem = not self.args.skip_filesystem_reads
         self.write_to_database = not self.args.skip_database_writes
@@ -904,30 +906,34 @@ class PerftestPlot:
 
         Returns a tuple with the paths to the client cert, client key and root cert.
         """
-        sslrootcert = self.args.cert_folder / "root.crt"
-        sslcert = self.args.cert_folder / "postgresql.crt"
-        sslkey = self.args.cert_folder / "postgresql.key"
+        sslrootcert_path = self.args.cert_folder / "root.crt"
+        sslcert_path = self.args.cert_folder / "postgresql.crt"
+        sslkey_path = self.args.cert_folder / "postgresql.key"
         if not (self.args.cert_folder).exists():
             logger.info("Certificate setup...")
+            sslrootcert = getenv(self.args.sslrootcert_var, "")
+            sslcert = getenv(self.args.sslcert_var, "")
+            sslkey = getenv(self.args.sslkey_var, "")
             self.args.cert_folder.mkdir(mode=750)
-            sslrootcert.unlink(missing_ok=True)
-            sslrootcert.write_text(getenv(self.args.sslrootcert_var, ""))
-            sslrootcert.chmod(mode=600)
-            sslcert.unlink(missing_ok=True)
-            sslcert.write_text(getenv(self.args.sslcert_var, ""))
-            sslcert.chmod(mode=644)
-            sslkey.unlink(missing_ok=True)
-            sslkey.write_text(getenv(self.args.sslkey_var, ""))
-            sslkey.chmod(mode=600)
+            sslrootcert_path.unlink(missing_ok=True)
+            if self.args.sslmode in ("verify-ca", "verify-full"):
+                sslrootcert_path.write_text(sslrootcert)
+                sslrootcert_path.chmod(mode=600)
+            sslcert_path.unlink(missing_ok=True)
+            sslcert_path.write_text(sslcert)
+            sslcert_path.chmod(mode=644)
+            sslkey_path.unlink(missing_ok=True)
+            sslkey_path.write_text(sslkey)
+            sslkey_path.chmod(mode=600)
             cert_files = ", ".join(_.name for _ in self.args.cert_folder.glob("*"))
             if cert_files:
                 logger.info("Certificate files created: %s", cert_files)
             else:
                 logger.error("Certificate setup failed!")
         return (
-            sslrootcert,
-            sslcert,
-            sslkey,
+            sslrootcert_path,
+            sslcert_path,
+            sslkey_path,
         )
 
     def _plottable_benchmark_data(
@@ -1585,6 +1591,14 @@ def parse_args() -> PerftestPlotArgs:
 
         return validator
 
+    def sslmode() -> Callable:
+        def validator(value: str) -> str:
+            if value in get_args(SslMode):
+                return value
+            raise argparse.ArgumentTypeError(f"Value '{value}' is not a valid sslmode!")
+
+        return validator
+
     parser = argparse.ArgumentParser(
         description="Plots graphs for the given performance test jobs."
     )
@@ -1739,7 +1753,7 @@ def parse_args() -> PerftestPlotArgs:
     parser.add_argument(
         "--sslmode",
         dest="sslmode",
-        type=str,
+        type=sslmode(),
         default="require",
         help="The SSL mode for the Postgres authentication (default: %(default)s).",
     )
@@ -1747,7 +1761,7 @@ def parse_args() -> PerftestPlotArgs:
         "--cert-folder",
         dest="cert_folder",
         type=Path,
-        default="/tmp/.postgresql" if getenv("CI") else Path.home() / ".postgresql",
+        default=Path.home() / ".postgresql",
         help="The path to write the certificate files to (default: %(default)s).",
     )
     parser.add_argument(

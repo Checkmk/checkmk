@@ -18,6 +18,7 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 
 from ._family import DASHBOARD_FAMILY
+from ._model.type_defs import AnnotatedInfoName
 from ._model.widget import WidgetPosition, WidgetSize
 from ._utils import INTERNAL_TO_API_TYPE_NAME
 
@@ -39,8 +40,21 @@ class LayoutConstraints:
 
 
 @api_model
+class FilterContextConstants:
+    restricted_to_single: list[AnnotatedInfoName] = api_field(
+        description=(
+            "A list of single infos that this widget content is restricted to. "
+            "This means that the widget must be filtered to exactly one item for each info name."
+        )
+    )
+
+
+@api_model
 class WidgetConstraints:
     layout: LayoutConstraints = api_field(description="Layout constraints for the widget.")
+    filter_context: FilterContextConstants = api_field(
+        description="Filter context constraints for the widget type."
+    )
 
 
 @api_model
@@ -70,7 +84,10 @@ def show_dashboard_constraints_v1() -> DashboardConstraintsObject:
                         initial_position=WidgetPosition.from_internal(widget.initial_position()),
                         is_resizable=widget.is_resizable(),
                     )
-                )
+                ),
+                filter_context=FilterContextConstants(
+                    restricted_to_single=list(widget.single_infos()),
+                ),
             )
 
     return DashboardConstraintsObject(

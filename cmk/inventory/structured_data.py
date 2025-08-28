@@ -1762,23 +1762,32 @@ def _save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawT
     store.save_bytes_to_file(tree_path_gz.path, buf.getvalue())
 
 
-def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
-    tree_path = inv_paths.inventory_tree(host_name)
-    is_json = False
+@dataclass(frozen=True)
+class _TreePathMTime:
+    mtime: float
+    is_json: bool
+
+
+def _compute_mtime(tree_path: TreePath) -> _TreePathMTime | None:
     try:
-        mtime = tree_path.path.stat().st_mtime
-        is_json = True
+        return _TreePathMTime(tree_path.path.stat().st_mtime, True)
     except FileNotFoundError:
         # TODO CMK-23408
         try:
-            mtime = tree_path.legacy.stat().st_mtime
+            return _TreePathMTime(tree_path.legacy.stat().st_mtime, False)
         except FileNotFoundError:
-            return
+            return None
+
+
+def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
+    tree_path = inv_paths.inventory_tree(host_name)
+    if (tree_path_mtime := _compute_mtime(tree_path)) is None:
+        return
 
     tree_path_gz = inv_paths.inventory_tree_gz(host_name)
-    archive_tree = inv_paths.archive_tree(host_name, int(mtime))
+    archive_tree = inv_paths.archive_tree(host_name, int(tree_path_mtime.mtime))
 
-    if is_json:
+    if tree_path_mtime.is_json:
         archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
         tree_path.path.rename(archive_tree.path)
         tree_path_gz.path.unlink(missing_ok=True)

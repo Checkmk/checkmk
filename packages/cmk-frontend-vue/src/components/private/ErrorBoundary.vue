@@ -44,7 +44,7 @@ const props = defineProps<{ error: Ref<Error | null> }>()
       }}
     </p>
     <CmkCollapsibleTitle
-      :title="'Details'"
+      :title="_t('Details')"
       :open="showDetails"
       @toggle-open="() => (showDetails = !showDetails)"
     />

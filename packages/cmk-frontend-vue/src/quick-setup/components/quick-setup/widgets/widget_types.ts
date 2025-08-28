@@ -5,6 +5,8 @@
  */
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import type { ValidationMessages } from '@/form'
 
 export interface FormSpecRecapWidgetProps {
@@ -71,11 +73,11 @@ export interface CollapsibleWidgetProps extends CompositeWidgetProps {
   /** @property {boolean} open - If false, the collapsible will be rendered collapsed */
   open?: boolean
 
-  /** @property {string} title - Title of the collapsible element */
-  title: string
+  /** @property {TranslatedString} title - Title of the collapsible element */
+  title: TranslatedString
 
-  /** @property {string} help_text - Help of the collapsible element */
-  help_text: string | null
+  /** @property {TranslatedString} help_text - Help of the collapsible element */
+  help_text: TranslatedString | null
 }
 
 /** The conditional notification event stage widgets are a really specific solution to a really

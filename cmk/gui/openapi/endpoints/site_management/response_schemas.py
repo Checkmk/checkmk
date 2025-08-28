@@ -284,11 +284,6 @@ class SiteConfigAttributes(BaseSchema):
     configuration_connection = fields.Nested(
         ConfigurationConnectionAttributesOutput,
     )
-    secret = fields.String(
-        required=False,
-        description="The shared secret used by the central site to authenticate with the remote site for configuring Checkmk.",
-        example="secret",
-    )
 
 
 class SiteConnectionResponse(DomainObject):

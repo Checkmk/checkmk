@@ -528,7 +528,6 @@ class SiteConfig:
     basic_settings: BasicSettings
     status_connection: StatusConnection
     configuration_connection: ConfigurationConnection
-    secret: str | None = None
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> SiteConfig:
@@ -538,7 +537,6 @@ class SiteConfig:
             configuration_connection=ConfigurationConnection.from_internal(
                 site_id, internal_config
             ),
-            secret=internal_config.get("secret"),
         )
 
     @classmethod
@@ -549,7 +547,6 @@ class SiteConfig:
             configuration_connection=ConfigurationConnection.from_external(
                 external_config["configuration_connection"]
             ),
-            secret=external_config.get("secret"),
         )
 
     def to_external(self) -> Iterator[tuple[str, dict | None | str]]:
@@ -559,8 +556,6 @@ class SiteConfig:
             "configuration_connection",
             dict(self.configuration_connection.to_external()),
         )
-        if self.secret:
-            yield "secret", self.secret
 
     def to_internal(self) -> SiteConfiguration:
         internal_config: SiteConfiguration = (
@@ -568,8 +563,6 @@ class SiteConfig:
             | self.status_connection.to_internal()
             | self.configuration_connection.to_internal()
         )
-        if self.secret:
-            internal_config["secret"] = self.secret
         return internal_config
 
 
@@ -608,6 +601,10 @@ class SitesApiMgr:
 
     def validate_and_save_site(self, site_id: SiteId, site_config: SiteConfiguration) -> None:
         self.site_mgmt.validate_configuration(site_id, site_config, self.all_sites)
+
+        if self.all_sites.get(site_id) and self.all_sites[site_id].get("secret") is not None:
+            site_config["secret"] = self.all_sites[site_id]["secret"]
+
         sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)

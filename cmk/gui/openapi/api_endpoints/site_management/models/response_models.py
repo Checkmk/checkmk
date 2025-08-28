@@ -106,7 +106,6 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
             basic_settings=BasicSettingsModel.from_internal(site_configuration),
             status_connection=StatusConnectionModel.from_internal(site_configuration),
             configuration_connection=_configuration_connection_from_internal(site_configuration),
-            secret=site_configuration.get("secret", ApiOmitted()),
         )
 
 

@@ -48,6 +48,9 @@ def edit_site_connection_v1(
     site_config_spec_from_request = body.site_config.to_internal()
     body.site_config.basic_settings.site_id = site_id
 
+    if (secret := SitesApiMgr().get_a_site(site_id).get("secret")) is not None:
+        site_config_spec_from_request["secret"] = secret
+
     try:
         sites_to_update = SitesApiMgr().get_connected_sites_to_update(
             new_or_deleted_connection=False,

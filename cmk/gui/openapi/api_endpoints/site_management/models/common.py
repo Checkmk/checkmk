@@ -608,12 +608,6 @@ class SiteConnectionBaseModel:
     ] = api_field(
         description="The configuration connection attributes",
     )
-    secret: str | ApiOmitted = api_field(
-        description="The shared secret used by the central site to authenticate with "
-        "the remote site for configuring Checkmk.",
-        example="secret",
-        default_factory=ApiOmitted,
-    )
 
     def base_to_internal(self) -> SiteConfiguration:
         # TODO: These three fields should have default values but currently blocked
@@ -644,9 +638,6 @@ class SiteConnectionBaseModel:
             replicate_mkps=True,
             message_broker_port=5672,
         )
-
-        if isinstance(self.secret, str):
-            site_configuration["secret"] = self.secret
 
         if isinstance(self.status_connection.status_host, StatusHostEnabled):
             site_configuration["status_host"] = self.status_connection.status_host.to_internal()

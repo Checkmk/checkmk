@@ -718,9 +718,6 @@ def parse_args_or_exec_other_omd(
 
     command = _get_command(main_args[0])
 
-    if not is_root() and command.only_root:
-        sys.exit("omd: root permissions are needed for this command.")
-
     # Parse command options. We need to do this now in order to know
     # if a site name has been specified or not.
     args, command_options = _parse_command_options(command.description, args, command.options)

@@ -3626,6 +3626,9 @@ def main() -> None:
         sys.argv[1:]
     )
 
+    if not is_root() and command.only_root:
+        sys.exit("omd: root permissions are needed for this command.")
+
     site = (
         RootContext()
         if site_name is None

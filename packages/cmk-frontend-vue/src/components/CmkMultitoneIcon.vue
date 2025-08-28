@@ -106,7 +106,6 @@ immediateWatch(
     class="cmk-multitone-icon"
     :class="getColorClasses()"
     :title="props.title || cmkIconVariants({ name: props.name, size: null, color: null })"
-    :alt="props.title || cmkIconVariants({ name: props.name, size: null, color: null })"
     v-html="svg"
   ></div>
 </template>

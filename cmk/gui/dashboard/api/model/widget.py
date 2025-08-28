@@ -244,47 +244,11 @@ class WidgetFilterContext:
         description="Active filters in the format filter_id -> (variable -> value)"
     )
 
-    @staticmethod
-    def _get_used_infos(config: DashletConfig) -> list[AnnotatedInfoName]:
-        dashlet_type = dashlet_registry[config["type"]]
-        # pretty sure the only thing used here is the (empty) dashboard context...
-        dummy_dashboard = DashboardConfig(
-            owner=UserId.builtin(),
-            name="dummy-dashboard",
-            context={},
-            single_infos=[],
-            add_context_to_title=False,
-            title="Dummy Dashboard",
-            description="",
-            topic="",
-            sort_index=0,
-            is_show_more=False,
-            icon=None,
-            hidden=False,
-            hidebutton=False,
-            public=False,
-            packaged=False,
-            link_from={},
-            main_menu_search_terms=[],
-            mtime=0,
-            dashlets=[config],
-            show_title=True,
-            mandatory_context_filters=[],
-        )
-        dashlet = dashlet_type(
-            str(dummy_dashboard["title"]),
-            dummy_dashboard["owner"],
-            dummy_dashboard,
-            0,
-            config,
-        )
-        return list(dashlet.infos())
-
     @classmethod
     def from_internal(cls, config: DashletConfig) -> Self:
         return cls(
             restricted_to_single=list(config["single_infos"]),
-            uses_infos=cls._get_used_infos(config),
+            uses_infos=determine_widget_filter_used_infos(config),
             filters=config["context"],
         )
 
@@ -318,3 +282,39 @@ class RelativeGridWidgetResponse(BaseWidgetResponse):
             filter_context=WidgetFilterContext.from_internal(config),
             layout=WidgetRelativeGridLayout.from_internal(config),
         )
+
+
+def determine_widget_filter_used_infos(widget_config: DashletConfig) -> list[AnnotatedInfoName]:
+    dashlet_type = dashlet_registry[widget_config["type"]]
+    # pretty sure the only thing used here is the (empty) dashboard context...
+    dummy_dashboard = DashboardConfig(
+        owner=UserId.builtin(),
+        name="dummy-dashboard",
+        context={},
+        single_infos=[],
+        add_context_to_title=False,
+        title="Dummy Dashboard",
+        description="",
+        topic="",
+        sort_index=0,
+        is_show_more=False,
+        icon=None,
+        hidden=False,
+        hidebutton=False,
+        public=False,
+        packaged=False,
+        link_from={},
+        main_menu_search_terms=[],
+        mtime=0,
+        dashlets=[widget_config],
+        show_title=True,
+        mandatory_context_filters=[],
+    )
+    dashlet = dashlet_type(
+        str(dummy_dashboard["title"]),
+        dummy_dashboard["owner"],
+        dummy_dashboard,
+        0,
+        widget_config,
+    )
+    return list(dashlet.infos())

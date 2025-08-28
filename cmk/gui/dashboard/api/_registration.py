@@ -6,6 +6,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._family import DASHBOARD_FAMILY
+from .compute_widget_attributes import ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES
 from .create_relative_grid_dashboard import ENDPOINT_CREATE_RELATIVE_GRID_DASHBOARD
 from .delete_dashboard import ENDPOINT_DELETE_DASHBOARD
 from .edit_relative_grid_dashboard import ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD
@@ -35,4 +36,7 @@ def register_endpoints(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_SHOW_RELATIVE_GRID_DASHBOARD, ignore_duplicates=ignore_duplicates
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES, ignore_duplicates=ignore_duplicates
     )

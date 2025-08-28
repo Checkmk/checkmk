@@ -3413,6 +3413,18 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def compute_widget_attributes(
+        self, widget_content: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/compute-widget-attributes/invoke",
+            body={
+                "content": widget_content,
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class ConstantClient(RestApiClient):
     domain: DomainType = "constant"

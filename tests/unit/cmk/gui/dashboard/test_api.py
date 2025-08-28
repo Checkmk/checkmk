@@ -784,6 +784,16 @@ class TestInventoryContent:
             },
         )
 
+    def test_compute_widget_attributes(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_attributes(
+            {
+                "type": "inventory",
+                "path": "hardware.cpu.cores",
+            }
+        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.json["value"]["filter_context"]["uses_infos"] == ["host"]
+
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestAlertOverviewContent:
@@ -896,6 +906,17 @@ class TestStaticTextContent:
                 "text": "This is a static text widget",
             },
         )
+
+    def test_compute_widget_attributes(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_attributes(
+            {
+                "type": "static_text",
+                "text": "This is a static text widget",
+            }
+        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert set(resp.json["value"]) == {"filter_context"}
+        assert resp.json["value"]["filter_context"]["uses_infos"] == []
 
 
 class TestLinkedViewContent:

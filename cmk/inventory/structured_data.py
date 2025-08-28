@@ -1788,7 +1788,7 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
     archive_tree = inv_paths.archive_tree(host_name, int(tree_path_mtime.mtime))
 
     if tree_path_mtime.is_json:
-        archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
+        inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
         tree_path.path.rename(archive_tree.path)
         tree_path_gz.path.unlink(missing_ok=True)
         tree_path.legacy.unlink(missing_ok=True)
@@ -1796,7 +1796,7 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
         return
 
     if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
-        archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
+        inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
@@ -2201,7 +2201,7 @@ class HistoryStore:
             history_entry.previous_timestamp,
             history_entry.current_timestamp,
         )
-        delta_cache_tree.path.parent.mkdir(parents=True, exist_ok=True)
+        self.inv_paths.delta_cache_host(host_name).mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
             delta_cache_tree.path,
             json.dumps(

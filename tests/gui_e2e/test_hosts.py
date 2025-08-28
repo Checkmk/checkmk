@@ -13,7 +13,7 @@ from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.api_helpers import create_and_delete_hosts, LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, HostProperties, SetupHost
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="host")
-def fixture_host(dashboard_page: Dashboard, test_site: Site) -> Iterator[HostProperties]:
+def fixture_host(dashboard_page: MainDashboard, test_site: Site) -> Iterator[HostProperties]:
     _host = HostProperties(
         dashboard_page.page,
         HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
@@ -46,7 +46,7 @@ def test_navigate_to_host_properties(host: HostProperties) -> None:
     expect(host.main_area.locator("div.warning")).to_have_count(0)
 
 
-def test_create_and_delete_a_host(dashboard_page: Dashboard, test_site: Site) -> None:
+def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site) -> None:
     """Validate creation and deletes of a host."""
     # create Host
     host = HostProperties(
@@ -106,7 +106,7 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
 
 
 def test_filter_hosts_with_host_labels(
-    hosts_with_labels: tuple[list[HostDetails], str], dashboard_page: Dashboard
+    hosts_with_labels: tuple[list[HostDetails], str], dashboard_page: MainDashboard
 ) -> None:
     expected_hosts_list, expected_label = hosts_with_labels
     host_status_page = HostStatus(dashboard_page.page, expected_hosts_list[0])
@@ -143,7 +143,7 @@ def fixture_host_to_be_deleted(test_site: Site) -> Iterator[list[HostDetails]]:
 
 
 def test_delete_host_row(
-    dashboard_page: Dashboard, host_to_be_deleted: list[HostDetails], test_site: Site
+    dashboard_page: MainDashboard, host_to_be_deleted: list[HostDetails], test_site: Site
 ) -> None:
     """Validate deletion of a host using the burger menu."""
     setup_host = SetupHost(dashboard_page.page)
@@ -168,7 +168,7 @@ def test_delete_host_row(
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
-def test_agent_connection_test(dashboard_page: Dashboard) -> None:
+def test_agent_connection_test(dashboard_page: MainDashboard) -> None:
     """Validate agent connection test of a host."""
     add_host = AddHost(dashboard_page.page)
     main_area = add_host.main_area
@@ -228,7 +228,7 @@ def test_agent_connection_test(dashboard_page: Dashboard) -> None:
     expect(agent_test_button_default_tag).not_to_be_disabled()
 
 
-def test_agent_test(dashboard_page: Dashboard) -> None:
+def test_agent_test(dashboard_page: MainDashboard) -> None:
     """Validate agent download slideout when creating a host."""
     host_name = "localhost"
     add_host = AddHost(dashboard_page.page)
@@ -265,7 +265,7 @@ def test_agent_test(dashboard_page: Dashboard) -> None:
             SetupHost(dashboard_page.page).delete_host(host_name)
 
 
-def test_ping_host(dashboard_page: Dashboard) -> None:
+def test_ping_host(dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)
 

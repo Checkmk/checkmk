@@ -11,15 +11,15 @@ import pytest
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.password_policy import PasswordPolicy
 from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
 
 
-def navigate_to_edit_user_page(dashboard_page: Dashboard, user_name: str) -> None:
+def navigate_to_edit_user_page(dashboard_page: MainDashboard, user_name: str) -> None:
     logger.info("Navigate to 'Edit user' page")
     dashboard_page.main_menu.setup_menu("Users").click()
     dashboard_page.page.wait_for_url(
@@ -35,7 +35,7 @@ def navigate_to_edit_user_page(dashboard_page: Dashboard, user_name: str) -> Non
 
 @pytest.fixture(name="char_groups_number_password_policy")
 def set_number_of_character_groups_password_policy(
-    request: pytest.FixtureRequest, dashboard_page: Dashboard
+    request: pytest.FixtureRequest, dashboard_page: MainDashboard
 ) -> Iterator[None]:
     """Set the number of character groups required in the password policy.
 
@@ -49,7 +49,7 @@ def set_number_of_character_groups_password_policy(
     password_policy_page = PasswordPolicy(dashboard_page.page)
     password_policy_page.set_the_number_of_character_groups(request.param)
 
-    _ = Dashboard(dashboard_page.page)
+    _ = MainDashboard(dashboard_page.page)
 
     yield
 
@@ -58,7 +58,7 @@ def set_number_of_character_groups_password_policy(
 
 
 def change_user_password_and_check_success(
-    test_site: Site, dashboard_page: Dashboard, new_password: str, confirm_new_password: str
+    test_site: Site, dashboard_page: MainDashboard, new_password: str, confirm_new_password: str
 ) -> None:
     """Change user's password and check that the change was successful.
 
@@ -103,7 +103,7 @@ def change_user_password_and_check_success(
 )
 def test_user_change_password_success(
     test_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     new_pw: str,
     new_pw_conf: str,
 ) -> None:
@@ -120,7 +120,7 @@ def test_user_change_password_success(
 )
 def test_user_change_password_strict_policy_success(
     test_site: Site,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     char_groups_number_password_policy: None,
     password: str,
 ) -> None:
@@ -145,7 +145,7 @@ def test_user_change_password_strict_policy_success(
     ],
 )
 def test_user_change_password_errors(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     new_pw: str,
     new_pw_conf: str,
     old_pw: str,
@@ -167,7 +167,7 @@ def test_user_change_password_errors(
     indirect=["char_groups_number_password_policy"],
 )
 def test_user_change_password_incompatible_with_policy(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     char_groups_number_password_policy: None,
     expected_groups_number: int,
     password: str,
@@ -194,7 +194,7 @@ def test_user_change_password_incompatible_with_policy(
     ],
 )
 def test_edit_user_change_password_errors(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     new_pw: str,
     new_pw_conf: str,
     expect_error_contains: str,
@@ -220,7 +220,7 @@ def test_edit_user_change_password_errors(
     indirect=["char_groups_number_password_policy"],
 )
 def test_setting_password_incompatible_with_policy(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     char_groups_number_password_policy: None,
     expected_groups_number: int,
     password: str,

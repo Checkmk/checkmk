@@ -9,12 +9,12 @@ from collections.abc import Iterator
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.custom_dashboard import CustomDashboard
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
-from tests.gui_e2e.testlib.playwright.pom.dashboard_properties import (
+from tests.gui_e2e.testlib.playwright.pom.customize.dashboard_properties import (
     CreateDashboard,
     EditDashboard,
 )
+from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
     EditElementTopList,
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="function")
 def cloned_linux_hosts_dashboard(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
 ) -> Iterator[CustomDashboard]:
     """Fixture to clone the 'Linux hosts' dashboard and return the cloned instance."""
     linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
@@ -45,7 +45,7 @@ def cloned_linux_hosts_dashboard(
         cloned_linux_hosts_dashboard.delete()
 
 
-def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
+def test_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
     """Sanity check for the dashboard page.
 
     Check that all default dashlets, dropdown buttons and icons are visible on the dashboard page.
@@ -71,7 +71,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
     expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()
 
 
-def test_builtin_dashboard_filter(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
+def test_builtin_dashboard_filter(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
     """
     Test the built-in dashboard filter functionality.
 
@@ -162,7 +162,7 @@ def test_builtin_dashboard_filter(dashboard_page: Dashboard, linux_hosts: list[s
     ],
 )
 def test_host_dashboard(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],
     dashlets_expected_row_count: dict[str, int],
     hosts: str,
@@ -456,7 +456,7 @@ def test_dashboard_required_context_filter_by_host_name(
         ).to_have_text("No entries.")
 
 
-def test_create_new_dashboard(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
+def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
     """Test dashboard creation from scratch.
 
     Steps:

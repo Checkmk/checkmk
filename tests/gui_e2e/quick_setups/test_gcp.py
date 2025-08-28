@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
     GCPAddNewConfiguration,
     GCPConfigurationList,
@@ -46,7 +46,7 @@ def fixture_fake_gcp_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="gcp_qs_config_page")
 def fixture_gcp_qs_config_page(
-    fake_gcp_dump: None, dashboard_page: Dashboard, test_site: Site
+    fake_gcp_dump: None, dashboard_page: MainDashboard, test_site: Site
 ) -> Iterator[GCPAddNewConfiguration]:
     """Navigate to the GCP Quick setup page and add new configuration page"""
     configuration_name = "my_gcp_account"

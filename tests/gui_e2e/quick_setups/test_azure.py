@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
     AzureAddNewConfiguration,
     AzureConfigurationList,
@@ -48,7 +48,7 @@ def fixture_fake_azure_dump(test_site: Site) -> Iterator[None]:
 @pytest.fixture(name="azure_qs_config_page")
 def fixture_azure_qs_config_page(
     fake_azure_dump: None,
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     test_site: Site,
 ) -> Iterator[AzureAddNewConfiguration]:
     """Navigate to the Azure Quick setup page and add new configuration page"""

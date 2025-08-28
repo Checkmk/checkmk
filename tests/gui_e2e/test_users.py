@@ -10,8 +10,8 @@ import pytest
 from playwright.sync_api import BrowserContext, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, ProblemDashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard, ProblemDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.edit_role import EditRole, RoleData
 from tests.gui_e2e.testlib.playwright.pom.setup.roles_and_permissions import RolesAndPermissions
 from tests.gui_e2e.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="new_role")
 def create_new_role_by_cloning(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> Iterator[RoleData]:
@@ -62,7 +62,7 @@ def create_new_role_by_cloning(
 
 @pytest.fixture(name="new_user")
 def create_new_user(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> Iterator[UserData]:
@@ -97,7 +97,7 @@ def create_new_user(
     indirect=True,
 )
 def test_delete_role_in_use(
-    dashboard_page: Dashboard, new_role: RoleData, new_user: UserData
+    dashboard_page: MainDashboard, new_role: RoleData, new_user: UserData
 ) -> None:
     """Test that a role in use cannot be deleted.
 
@@ -124,7 +124,7 @@ def test_delete_role_in_use(
     indirect=True,
 )
 def test_locked_user(
-    dashboard_page: Dashboard,
+    dashboard_page: MainDashboard,
     new_browser_context_and_page: tuple[BrowserContext, Page],
     new_user: UserData,
     test_site: Site,

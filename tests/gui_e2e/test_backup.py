@@ -9,16 +9,16 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
 _backup_passphrase = "cmk-12-chars"
 
 
-def _go_to_backups_page(dashboard_page: Dashboard) -> None:
+def _go_to_backups_page(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_menu.setup_menu("Backups").click()
 
 
-def _create_backup_target(dashboard_page: Dashboard) -> None:
+def _create_backup_target(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_area.get_suggestion("Backup targets").click()
     dashboard_page.main_area.expect_no_entries()
 
@@ -31,7 +31,7 @@ def _create_backup_target(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.get_suggestion("Save").click()
 
 
-def _create_encryption_key(dashboard_page: Dashboard) -> None:
+def _create_encryption_key(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_area.get_suggestion("Backup encryption keys").click()
     dashboard_page.main_area.expect_no_entries()
 
@@ -50,7 +50,7 @@ def _create_encryption_key(dashboard_page: Dashboard) -> None:
     )
 
 
-def _create_backup_job(dashboard_page: Dashboard) -> None:
+def _create_backup_job(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_area.get_suggestion("Add job").click()
     dashboard_page.main_area.get_input("edit_job_p_ident").fill("mybackup")
     dashboard_page.main_area.get_input("edit_job_p_title").fill("My backup")
@@ -65,7 +65,7 @@ def _create_backup_job(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.get_suggestion("Save").click()
 
 
-def _start_backup(dashboard_page: Dashboard) -> None:
+def _start_backup(dashboard_page: MainDashboard) -> None:
     # todo: reload needed to refresh the status bar (see CMK-11721). Once the issue is fixed,
     #  remove reload.
     dashboard_page.click_and_wait(
@@ -75,7 +75,7 @@ def _start_backup(dashboard_page: Dashboard) -> None:
     )
 
 
-def _restore_backup(dashboard_page: Dashboard) -> None:
+def _restore_backup(dashboard_page: MainDashboard) -> None:
     dashboard_page.main_area.get_suggestion("Restore").click()
     dashboard_page.main_area.get_link_from_title("Restore from this backup target").click()
     dashboard_page.main_area.get_link_from_title("Start restore of this backup").click()
@@ -100,7 +100,7 @@ def _restore_backup(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.get_suggestion("Complete the restore").click()
 
 
-def _cleanup(dashboard_page: Dashboard) -> None:
+def _cleanup(dashboard_page: MainDashboard) -> None:
     """Remove the created backup job, target and encryption key."""
     _go_to_backups_page(dashboard_page)
 
@@ -125,7 +125,7 @@ def _cleanup(dashboard_page: Dashboard) -> None:
 
 
 @pytest.mark.skip("Flaky, uses old valuespec varprefixes. See CMK-25653")
-def test_backups(dashboard_page: Dashboard) -> None:
+def test_backups(dashboard_page: MainDashboard) -> None:
     _go_to_backups_page(dashboard_page)
     dashboard_page.main_area.expect_no_entries()
 

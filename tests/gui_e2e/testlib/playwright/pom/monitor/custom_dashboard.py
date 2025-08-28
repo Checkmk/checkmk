@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import BaseDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 
 logger = logging.getLogger(__name__)
 

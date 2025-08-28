@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
     AWSAddNewConfiguration,
     AWSConfigurationList,
@@ -47,7 +47,7 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="aws_qs_config_page")
 def fixture_aws_qs_config_page(
-    fake_aws_dump: None, dashboard_page: Dashboard, test_site: Site
+    fake_aws_dump: None, dashboard_page: MainDashboard, test_site: Site
 ) -> Iterator[AWSAddNewConfiguration]:
     """Navigate to the AWS Quick setup page and add new configuration page"""
     configuration_name = "my_aws_account"

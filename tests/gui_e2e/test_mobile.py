@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 from playwright.sync_api import expect, Playwright
 
-from tests.gui_e2e.testlib.playwright.pom.dashboard import DashboardMobile
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import DashboardMobile
 
 _mobile_devices = ("iPhone 6", "Galaxy S8")
 

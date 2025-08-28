@@ -15,7 +15,7 @@ from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 @dataclass(frozen=True, kw_only=True)
 class LabelsSection:
-    host_labels: Mapping[str, str]
+    host_labels: Mapping[str, str | bool]
     tags: Mapping[str, str]
 
 
@@ -47,10 +47,12 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
             is monitored as a host. This can be configured via the rule 'Microsoft Azure'.
     """
     if "group_name" in section.host_labels:
-        yield HostLabel("cmk/azure/resource_group", section.host_labels["group_name"])
+        yield HostLabel("cmk/azure/resource_group", str(section.host_labels["group_name"]))
     elif "entity_subscription" in section.host_labels:
-        yield HostLabel("cmk/azure/subscription", section.host_labels["subscription"])
-        yield HostLabel("cmk/azure/entity_subscription", section.host_labels["entity_subscription"])
+        yield HostLabel("cmk/azure/subscription", str(section.host_labels["subscription"]))
+        yield HostLabel(
+            "cmk/azure/entity_subscription", str(section.host_labels["entity_subscription"])
+        )
 
     if section.host_labels.get("vm_instance"):
         yield HostLabel("cmk/azure/vm", "instance")
@@ -63,7 +65,6 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
         yield HostLabel(f"cmk/azure/tag/{key}", value)
 
 
-# This section contains the tags of either a resource group or a VM montiored as a host
 agent_section_azure_labels = AgentSection(
     name="azure_labels",
     parse_function=_parse_host_labels,

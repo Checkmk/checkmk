@@ -76,6 +76,10 @@ class PrivateKey:
     def __init__(self, key: PrivateKeyType) -> None:
         self._key = key
 
+    @property
+    def key(self) -> PrivateKeyType:
+        return self._key
+
     @classmethod
     def generate_rsa(cls, key_size: int) -> PrivateKey:
         return cls(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
@@ -211,6 +215,10 @@ class PublicKey:
 
     def __init__(self, key: PublicKeyType) -> None:
         self._key = key
+
+    @property
+    def key(self) -> PublicKeyType:
+        return self._key
 
     @classmethod
     def load_pem(cls, pem_data: PublicKeyPEM) -> PublicKey:

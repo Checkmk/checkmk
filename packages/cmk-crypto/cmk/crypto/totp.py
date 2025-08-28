@@ -50,7 +50,7 @@ class TOTP:
         """
         return secrets.token_bytes(length)
 
-    def _hmac_hash(self, counter: int) -> hmac.HMAC:
+    def hmac_hash(self, counter: int) -> hmac.HMAC:
         """
         Generate hmac based on rfc4226 where counter is a 8 byte length value
         Currently limited to SHA1
@@ -92,7 +92,7 @@ class TOTP:
         return math.floor(current_time.timestamp() / self.time_step)
 
     def generate_totp(self, generation_time: int) -> str:
-        hash_object = self._hmac_hash(generation_time)
+        hash_object = self.hmac_hash(generation_time)
         totp = self.generate_hotp(hash_object)
         return str(totp).zfill(self.code_length)
 

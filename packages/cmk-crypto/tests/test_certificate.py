@@ -48,7 +48,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
         == self_signed_cert.private_key.public_key
     )
 
-    assert self_signed_cert.certificate._is_self_signed()  # noqa: SLF001
+    assert self_signed_cert.certificate.is_self_signed()
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
@@ -266,7 +266,7 @@ CdnYjBDhp0Ud
 -----END CERTIFICATE-----"""
     )
     ca = Certificate.load_pem(ca_pem)
-    assert ca._is_self_signed()  # noqa: SLF001
+    assert ca.is_self_signed()
     ca.verify_is_signed_by(ca)
 
     # an ed25519 certificate issued by that CA:
@@ -312,7 +312,7 @@ def test_subject_alt_names(
 ) -> None:
     """test setting and retrieval of subject-alt-names (DNS)"""
     assert (
-        Certificate._create(  # noqa: SLF001
+        Certificate.create(
             subject_public_key=self_signed_cert.private_key.public_key,
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alternative_names=sans,
@@ -356,6 +356,6 @@ JxDm8nhVOD3txg6wadiqhhdB
         # Only if the extension is there but the key_cert_sign bit is missing the cert should not be
         # used for signing.
         # This is a regression test.
-        cert._cert.extensions.get_extension_for_class(pyca_x509.KeyUsage)  # noqa: SLF001
+        cert.get_extension_for_class(pyca_x509.KeyUsage)
 
     assert cert.may_sign_certificates()

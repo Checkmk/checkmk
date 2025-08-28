@@ -101,7 +101,7 @@ class CertificateWithPrivateKey(NamedTuple):
             organizational_unit=organizational_unit,
         )
 
-        certificate = Certificate._create(  # noqa: SLF001
+        certificate = Certificate.create(
             subject_public_key=private_key.public_key,
             subject_name=name,
             subject_alternative_names=subject_alternative_names,
@@ -183,7 +183,7 @@ class CertificateWithPrivateKey(NamedTuple):
             organizational_unit=organizational_unit,
         )
 
-        issued_certificate = Certificate._create(  # noqa: SLF001
+        issued_certificate = Certificate.create(
             subject_public_key=issued_key.public_key,
             subject_name=issued_name,
             subject_alternative_names=subject_alternative_names,
@@ -221,7 +221,7 @@ class CertificateWithPrivateKey(NamedTuple):
 
         effective_sans = subject_alternative_names or csr.subject_alternative_names
 
-        return Certificate._create(  # noqa: SLF001
+        return Certificate.create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
             subject_alternative_names=effective_sans,
@@ -324,7 +324,7 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def _create(
+    def create(
         cls,
         *,
         # subject info
@@ -354,7 +354,7 @@ class Certificate:
             .not_valid_before(start_date)
             .not_valid_after(start_date + expiry)
             .serial_number(pyca_x509.random_serial_number())
-            .public_key(subject_public_key._key)  # noqa: SLF001
+            .public_key(subject_public_key.key)
         )
 
         # RFC 5280 4.2.1.9.  Basic Constraints
@@ -366,7 +366,7 @@ class Certificate:
         #     ...
         #     this extension SHOULD be included in all end entity certificates
         builder = builder.add_extension(
-            pyca_x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key),  # noqa: SLF001
+            pyca_x509.SubjectKeyIdentifier.from_public_key(subject_public_key.key),
             critical=False,
         )
 
@@ -406,11 +406,11 @@ class Certificate:
 
         hash_algo = (
             hash_.value
-            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))  # noqa: SLF001
+            if (hash_ := Certificate.preferred_signing_hash_algorithm(issuer_signing_key.key))
             is not None
             else None
         )
-        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))  # noqa: SLF001
+        return cls(builder.sign(private_key=issuer_signing_key.key, algorithm=hash_algo))
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
@@ -487,7 +487,7 @@ class Certificate:
         """
         # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
         # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
-        if not signer.may_sign_certificates() and not self._is_self_signed():
+        if not signer.may_sign_certificates() and not self.is_self_signed():
             raise ValueError(
                 "Signer certificate does not allow certificate signature verification "
                 "(CA flag or keyCertSign bit missing)."
@@ -498,6 +498,11 @@ class Certificate:
         except pyca_exceptions.InvalidSignature as e:
             raise InvalidSignatureError(str(e)) from e
 
+    def get_extension_for_class[T: pyca_x509.ExtensionType](
+        self, extclass: type[T]
+    ) -> pyca_x509.Extension[T]:
+        return self._cert.extensions.get_extension_for_class(extclass)
+
     def may_sign_certificates(self) -> bool:
         """
         Check if this certificate may be used to sign other certificates, that is, has the
@@ -506,18 +511,14 @@ class Certificate:
         Note that self-signed, non-CA end entity certificates may self-sign without this.
         """
         try:
-            if not self._cert.extensions.get_extension_for_class(
-                pyca_x509.BasicConstraints
-            ).value.ca:
+            if not self.get_extension_for_class(pyca_x509.BasicConstraints).value.ca:
                 return False
         except pyca_x509.ExtensionNotFound:
             # This extension and flag MUST be set for a CA
             return False
 
         try:
-            if not self._cert.extensions.get_extension_for_class(
-                pyca_x509.KeyUsage
-            ).value.key_cert_sign:
+            if not self.get_extension_for_class(pyca_x509.KeyUsage).value.key_cert_sign:
                 return False
         except pyca_x509.ExtensionNotFound:
             # If key usage is not restricted, that's ok
@@ -525,7 +526,7 @@ class Certificate:
 
         return True
 
-    def _is_self_signed(self) -> bool:
+    def is_self_signed(self) -> bool:
         """Is the issuer the same as the subject?"""
         return self._cert.subject == self._cert.issuer
 
@@ -604,7 +605,7 @@ class Certificate:
         return dt.tzinfo is not None
 
     @staticmethod
-    def _preferred_signing_hash_algorithm(key: PrivateKeyType) -> HashAlgorithm | None:
+    def preferred_signing_hash_algorithm(key: PrivateKeyType) -> HashAlgorithm | None:
         """
         Choose the signature hash algorithm based on the type of the private key.
         Some keys (Ed25519 and Ed448) must use 'None'.
@@ -655,7 +656,7 @@ class CertificateSigningRequest:
 
         hash_algo = (
             hash_.value
-            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))  # noqa: SLF001
+            if (hash_ := Certificate.preferred_signing_hash_algorithm(subject_private_key.key))
             is not None
             else None
         )
@@ -666,7 +667,7 @@ class CertificateSigningRequest:
                 subject_alternative_names.to_extension(), critical=False
             )
 
-        return cls(builder.sign(subject_private_key._key, hash_algo))  # noqa: SLF001
+        return cls(builder.sign(subject_private_key.key, hash_algo))
 
     @property
     def subject(self) -> X509Name:

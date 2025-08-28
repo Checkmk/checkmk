@@ -223,7 +223,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
 -----END PRIVATE KEY-----"""
         )
     )
-    peter_cert = Certificate._create(
+    peter_cert = Certificate.create(
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),
         subject_alternative_names=None,

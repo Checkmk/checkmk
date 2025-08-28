@@ -33,7 +33,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
-    parse_data_from_frontend,
+    parse_data_from_field_id,
     RawDiskData,
     RawFrontendData,
     render_form_spec,
@@ -4096,7 +4096,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         if not transactions.check_transaction():
             return self._back_mode()
 
-        value = parse_data_from_frontend(
+        value = parse_data_from_field_id(
             self._form_spec(),
             self._vue_field_id(),
         )

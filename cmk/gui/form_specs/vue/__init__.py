@@ -20,7 +20,8 @@ from ._type_defs import (
 )
 from .form_spec_visitor import (
     DisplayMode,
-    parse_data_from_frontend,
+    parse_and_validate_frontend_data,
+    parse_data_from_field_id,
     process_validation_messages,
     read_data_from_frontend,
     render_form_spec,
@@ -41,7 +42,8 @@ __all__ = [
     "FormSpecValidationError",
     "serialize_data_for_frontend",
     "read_data_from_frontend",
-    "parse_data_from_frontend",
+    "parse_and_validate_frontend_data",
+    "parse_data_from_field_id",
     "process_validation_messages",
     "create_validation_error_for_mk_user_error",
     "render_form_spec",

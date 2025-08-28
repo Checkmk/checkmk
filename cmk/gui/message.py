@@ -32,7 +32,7 @@ from cmk.gui.form_specs.generators.dict_to_catalog import (
     create_flat_catalog_from_dictionary,
 )
 from cmk.gui.form_specs.private import LegacyValueSpec, OptionalChoice
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue import DEFAULT_VALUE, parse_data_from_field_id, render_form_spec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -276,7 +276,7 @@ def page_message(config: Config) -> None:
     catalog_field_id = "_message_id"
     if transactions.check_transaction():
         try:
-            msg = parse_data_from_frontend(flat_catalog, catalog_field_id)
+            msg = parse_data_from_field_id(flat_catalog, catalog_field_id)
             assert isinstance(msg, dict)
             _process_message(
                 create_message(

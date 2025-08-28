@@ -107,14 +107,15 @@ def read_data_from_frontend(field_id: str) -> RawFrontendData:
     return RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
 
 
-def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> object:
-    """Computes/validates the value from a vue formular field"""
-    if not request.has_var(field_id):
-        raise MKGeneralException("Formular data is missing in request")
-    value_from_frontend = read_data_from_frontend(field_id)
+def parse_and_validate_frontend_data(form_spec: FormSpec[T], data: RawFrontendData) -> object:
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
-    _process_validation_errors(visitor.validate(value_from_frontend))
-    return visitor.to_disk(value_from_frontend)
+    _process_validation_errors(visitor.validate(data))
+    return visitor.to_disk(data)
+
+
+def parse_data_from_field_id(form_spec: FormSpec[T], field_id: str) -> object:
+    """Computes/validates the value from a vue formular field"""
+    return parse_and_validate_frontend_data(form_spec, read_data_from_frontend(field_id))
 
 
 def validate_value_from_frontend(

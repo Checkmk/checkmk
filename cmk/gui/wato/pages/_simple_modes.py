@@ -36,7 +36,7 @@ from cmk.gui.form_specs.private import (
 from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
     IncomingData,
-    parse_data_from_frontend,
+    parse_data_from_field_id,
     RawDiskData,
     RawFrontendData,
     render_form_spec,
@@ -704,7 +704,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         self._entry = cast(T, config)
 
     def _update_entry_from_vars_form_spec(self, form_spec: FormSpec) -> None:
-        config = parse_data_from_frontend(
+        config = parse_data_from_field_id(
             form_spec,
             self._vue_field_id(),
         )

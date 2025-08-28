@@ -30,7 +30,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.form_specs.vue import (
     DisplayMode,
-    parse_data_from_frontend,
+    parse_data_from_field_id,
     render_form_spec,
 )
 from cmk.gui.hooks import call as call_hooks
@@ -2231,7 +2231,7 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
                 assert registered_form_spec is not None
-                value = parse_data_from_frontend(
+                value = parse_data_from_field_id(
                     registered_form_spec,
                     self._vue_field_id(),
                 )

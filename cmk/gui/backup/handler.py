@@ -50,7 +50,7 @@ from cmk.gui.form_specs.private import (
 )
 from cmk.gui.form_specs.vue import (
     DisplayMode,
-    parse_data_from_frontend,
+    parse_data_from_field_id,
     RawDiskData,
     read_data_from_frontend,
     render_form_spec,
@@ -969,7 +969,7 @@ class PageEditBackupJob:
         backup_config = BackupConfig.load()
         flat_catalog = create_flat_catalog_from_dictionary(self._fs_backup_job(backup_config))
         try:
-            job_config = cast(dict, parse_data_from_frontend(flat_catalog, "edit_job"))
+            job_config = cast(dict, parse_data_from_field_id(flat_catalog, "edit_job"))
         except MKUserError as e:
             self._received_data_from_frontend = True
             raise e
@@ -1897,7 +1897,7 @@ class PageEditBackupTarget:
         flat_catalog = create_flat_catalog_from_dictionary(self.fs_backup_target(backup_config))
         self._received_data_from_frontend = True
         try:
-            target_config = cast(dict, parse_data_from_frontend(flat_catalog, "edit_target"))
+            target_config = cast(dict, parse_data_from_field_id(flat_catalog, "edit_target"))
         except MKUserError as e:
             raise e
 
@@ -2288,7 +2288,7 @@ class PageBackupRestore:
         if html.form_submitted("key"):
             try:
                 fs = self._fs_key()
-                value = parse_data_from_frontend(fs, key_field_id)
+                value = parse_data_from_field_id(fs, key_field_id)
                 assert isinstance(value, dict)
                 if "passphrase" in value:
                     passphrase = PasswordType(value["passphrase"])

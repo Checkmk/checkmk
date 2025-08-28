@@ -16,7 +16,7 @@ from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_al
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
 from cmk.gui.form_specs.private import LegacyValueSpec, ListExtended, UserSelection
 from cmk.gui.form_specs.vue import (
-    parse_data_from_frontend,
+    parse_data_from_field_id,
     RawDiskData,
     RawFrontendData,
     read_data_from_frontend,
@@ -73,7 +73,7 @@ class ModeManageReadOnly(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        raw_settings = parse_data_from_frontend(self._fs(), self._vue_field_id())
+        raw_settings = parse_data_from_field_id(self._fs(), self._vue_field_id())
         settings = cast(ReadOnlySpec, raw_settings)
 
         self._save(settings, pprint_value=config.wato_pprint_config)

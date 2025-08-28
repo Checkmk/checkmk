@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Plugin, type Ref, computed, ref } from 'vue'
-import { type Translations, createGettext, useGettext } from 'vue3-gettext'
+import { type Plugin, type Ref, computed, getCurrentInstance, ref } from 'vue'
+import { type Translations, createGettext } from 'vue3-gettext'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -222,7 +222,11 @@ interface I18nFunctions {
  * Callsites must not be renamed, they are parsed in the build process to extract all strings to be translated.
  */
 export default function usei18n() {
-  const { $gettext, $ngettext, $npgettext, $pgettext } = useGettext()
+  if (!globalState.instance) {
+    globalState.instance = _createI18n()
+  }
+
+  const { $gettext, $ngettext, $npgettext, $pgettext } = globalState.instance
   const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
 
   function _t(msg: string, interpolation?: InterpolationValues): string {
@@ -270,23 +274,36 @@ export default function usei18n() {
       : $npgettext(context, singular, plural, count, interpolation)
   }
 
+  // To support i18n in .ts files, we need to wrap the translation functions in computed() outside the setup context.
+  const isInSetupContext = getCurrentInstance() !== null
+
+  const wrapInComputed = <T extends (...args: never[]) => string>(fn: T) => {
+    return (...args: Parameters<T>) => {
+      return computed(() => fn(...args))
+    }
+  }
+
   return {
-    _t: _t as I18nFunctions['_t'],
-    _tn: _tn as I18nFunctions['_tn'],
-    _tp: _tp as I18nFunctions['_tp'],
-    _tnp: _tnp as I18nFunctions['_tnp'],
+    _t: (isInSetupContext ? _t : wrapInComputed(_t)) as I18nFunctions['_t'],
+    _tn: (isInSetupContext ? _tn : wrapInComputed(_tn)) as I18nFunctions['_tn'],
+    _tp: (isInSetupContext ? _tp : wrapInComputed(_tp)) as I18nFunctions['_tp'],
+    _tnp: (isInSetupContext ? _tnp : wrapInComputed(_tnp)) as I18nFunctions['_tnp'],
     switchLanguage,
     translationLoading: globalState.translationLoading
   }
 }
 
+function _createI18n(): GettextInstance {
+  return createGettext({
+    availableLanguages: AVAILABLE_LANGUAGES,
+    defaultLanguage: 'en',
+    translations: {}
+  })
+}
+
 export function createi18n(): Plugin {
   if (!globalState.instance) {
-    globalState.instance = createGettext({
-      availableLanguages: AVAILABLE_LANGUAGES,
-      defaultLanguage: 'en',
-      translations: {}
-    })
+    globalState.instance = _createI18n()
   }
 
   return globalState.instance

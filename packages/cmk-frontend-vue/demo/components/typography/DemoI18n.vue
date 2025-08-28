@@ -13,6 +13,8 @@ import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import translatedStringFromTS from './_ts_file_using_i18n'
+
 defineProps<{ screenshotMode: boolean }>()
 
 const { _t, _tn, switchLanguage, translationLoading } = usei18n()
@@ -67,6 +69,8 @@ const name = ref<string>('Alice')
       })
     }}</CmkParagraph
   >
+  <br />
+  <CmkParagraph>{{ translatedStringFromTS }}</CmkParagraph>
 </template>
 
 <style scoped></style>

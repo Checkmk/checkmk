@@ -45,12 +45,14 @@ std::ostream &operator<<(std::ostream &os, const LogPeriod &p) {
               << FormattedTimePoint(p.until) << ")";
 }
 
-LogCache::LogCache(ICore *core)
-    : core_{core}, num_cached_log_messages_{0}, num_at_last_check_{0} {}
+LogCache::LogCache(Logger *logger)
+    : logger_{logger}, num_cached_log_messages_{0}, num_at_last_check_{0} {}
 
-void LogCache::update() {
-    if (!log_files_.empty() &&
-        core_->last_logfile_rotation() <= last_index_update_) {
+void LogCache::update(
+    const std::filesystem::path &history_file,
+    const std::filesystem::path &history_archive_directory,
+    std::chrono::system_clock::time_point last_logfile_rotation) {
+    if (!log_files_.empty() && last_logfile_rotation <= last_index_update_) {
         return;
     }
 
@@ -62,12 +64,11 @@ void LogCache::update() {
     last_index_update_ = std::chrono::system_clock::now();
     // We need to find all relevant log files. This includes directory, the
     // current nagios.log and all files in the archive.
-    const auto paths = core_->paths();
-    addToIndex(paths->history_file(), true);
+    addToIndex(history_file, true);
 
-    const std::filesystem::path dirpath = paths->history_archive_directory();
     try {
-        for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
+        for (const auto &entry :
+             std::filesystem::directory_iterator(history_archive_directory)) {
             addToIndex(entry.path(), false);
         }
     } catch (const std::filesystem::filesystem_error &e) {
@@ -77,8 +78,7 @@ void LogCache::update() {
     }
 
     if (log_files_.empty()) {
-        Notice{logger()} << "no log file found, not even "
-                         << paths->history_file();
+        Notice{logger()} << "no log file found, not even " << history_file;
     }
 }
 
@@ -105,10 +105,11 @@ void LogCache::addToIndex(const std::filesystem::path &path, bool watch) {
 // The parameters to this method reflect the current query, not the messages
 // that have just been loaded.
 void LogCache::logLineHasBeenAdded(Logfile *log_file,
-                                   LogEntryClasses log_entry_classes_to_keep) {
+                                   LogEntryClasses log_entry_classes_to_keep,
+                                   size_t max_cached_messages) {
     const unsigned log_classes =
         log_entry_classes_to_keep.to_ulong();  // TODO(sp)
-    if (++num_cached_log_messages_ <= core_->maxCachedMessages()) {
+    if (++num_cached_log_messages_ <= max_cached_messages) {
         return;  // current message count still allowed, everything ok
     }
 
@@ -131,7 +132,7 @@ void LogCache::logLineHasBeenAdded(Logfile *log_file,
         }
         if (it->second->size() > 0) {
             num_cached_log_messages_ -= it->second->freeMessages(~0);
-            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+            if (num_cached_log_messages_ <= max_cached_messages) {
                 num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
@@ -151,7 +152,7 @@ void LogCache::logLineHasBeenAdded(Logfile *log_file,
             Debug{logger()} << "freeing classes " << ~log_classes << " of file "
                             << it->second->path();
             num_cached_log_messages_ -= it->second->freeMessages(~log_classes);
-            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+            if (num_cached_log_messages_ <= max_cached_messages) {
                 num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
@@ -166,7 +167,7 @@ void LogCache::logLineHasBeenAdded(Logfile *log_file,
             Debug{logger()} << "flush newer log, " << it->second->size()
                             << " number of entries";
             num_cached_log_messages_ -= it->second->freeMessages(~0);
-            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+            if (num_cached_log_messages_ <= max_cached_messages) {
                 num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
@@ -177,7 +178,5 @@ void LogCache::logLineHasBeenAdded(Logfile *log_file,
     num_at_last_check_ = num_cached_log_messages_;
     Debug{logger()} << "cannot unload more messages, still "
                     << num_cached_log_messages_ << " loaded (max is "
-                    << core_->maxCachedMessages() << ")";
+                    << max_cached_messages << ")";
 }
-
-Logger *LogCache::logger() const { return core_->loggerLivestatus(); }

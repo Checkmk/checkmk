@@ -99,7 +99,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     , _data_encoding(data_encoding)
     , edition_{std::move(edition)}
     , state_file_created_{state_file_created}
-    , _store(this) {
+    , _store(_logger) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
         ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst, *this);
         if (const char *address = hst->address) {
@@ -510,7 +510,9 @@ const Triggers &NebCore::triggers() const { return _triggers; }
 size_t NebCore::numQueuedNotifications() const { return 0; }
 size_t NebCore::numQueuedAlerts() const { return 0; }
 
-size_t NebCore::numCachedLogMessages() { return _store.numCachedLogMessages(); }
+size_t NebCore::numCachedLogMessages() {
+    return _store.numCachedLogMessages(*this);
+}
 
 namespace {
 int pnpgraph_present(const std::filesystem::path &pnp_path,
@@ -700,7 +702,7 @@ bool NebCore::handleGet(InputBuffer &input, OutputBuffer &output,
                         const std::string &table_name) {
     auto lines = input.getLines();
     logRequest(line, lines);
-    return _store.answerGetRequest(lines, output, table_name);
+    return _store.answerGetRequest(*this, lines, output, table_name);
 }
 
 void NebCore::answerCommandRequest(const ExternalCommand &command) {

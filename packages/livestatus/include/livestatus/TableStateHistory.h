@@ -29,10 +29,12 @@ class User;
 class LogEntryForwardIterator {
 public:
     LogEntryForwardIterator(const LogFiles &log_files,
-                            size_t max_lines_per_log_file)
+                            size_t max_lines_per_log_file,
+                            size_t max_cached_messages)
         : log_files_{&log_files}
         , it_logs_{log_files.end()}
-        , max_lines_per_log_file_{max_lines_per_log_file} {}
+        , max_lines_per_log_file_{max_lines_per_log_file}
+        , max_cached_messages_{max_cached_messages} {}
 
     bool rewind_to_start(const LogPeriod &period, Logger *logger);
     LogEntry *getNextLogentry();
@@ -45,6 +47,7 @@ private:
     const Logfile::map_type *entries_{nullptr};
     Logfile::const_iterator it_entries_;
     size_t max_lines_per_log_file_;
+    size_t max_cached_messages_;
 };
 
 class ObjectBlacklist {

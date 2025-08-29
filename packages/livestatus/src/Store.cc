@@ -14,9 +14,9 @@
 #include "livestatus/Query.h"
 #include "livestatus/Table.h"
 
-Store::Store(ICore *mc)
-    : _mc{mc}
-    , _log_cache{mc}
+Store::Store(Logger *logger)
+    : logger_{logger}
+    , _log_cache{logger}
     , _table_log{&_log_cache}
     , _table_statehistory{&_log_cache} {
     addTable(_table_columns);
@@ -45,24 +45,27 @@ Store::Store(ICore *mc)
     addTable(_table_timeperiods);
 }
 
-Logger *Store::logger() const { return _mc->loggerLivestatus(); }
+Logger *Store::logger() const { return logger_; }
 
-size_t Store::numCachedLogMessages() {
+size_t Store::numCachedLogMessages(const ICore &core) {
     return _log_cache.apply(
-        [](const LogFiles & /*log_cache*/, size_t num_cached_log_messages) {
+        core.paths()->history_file(), core.paths()->history_archive_directory(),
+        core.last_logfile_rotation(),
+        [](const LogFiles & /*log_files*/, size_t num_cached_log_messages) {
             return num_cached_log_messages;
         });
 }
 
-bool Store::answerGetRequest(const std::vector<std::string> &lines,
+bool Store::answerGetRequest(const ICore &core,
+                             const std::vector<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
     return Query{ParsedQuery{lines, [&table]() { return table.allColumns(); },
-                             [this, &table](const auto &colname) {
-                                 return table.column(colname, *_mc);
+                             [&table, &core](const auto &colname) {
+                                 return table.column(colname, core);
                              }},
-                 table, *_mc, output}
+                 table, core, output}
         .process();
 }
 

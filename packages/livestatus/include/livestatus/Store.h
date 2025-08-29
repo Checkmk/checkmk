@@ -44,10 +44,11 @@ class Table;
 
 class Store {
 public:
-    explicit Store(ICore *mc);
+    explicit Store(Logger *logger);
     [[nodiscard]] Logger *logger() const;
-    size_t numCachedLogMessages();
-    bool answerGetRequest(const std::vector<std::string> &lines,
+    size_t numCachedLogMessages(const ICore &core);
+    bool answerGetRequest(const ICore &core,
+                          const std::vector<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
     void addTable(Table &table);
 
@@ -55,7 +56,7 @@ public:
     TableStateHistory &getTableStateHistory() { return _table_statehistory; }
 
 private:
-    ICore *_mc;
+    Logger *logger_;
     LogCache _log_cache;
 
     TableColumns _table_columns;

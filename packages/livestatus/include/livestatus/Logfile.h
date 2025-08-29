@@ -53,7 +53,8 @@ public:
     // *at least* the requested log classes, but they could contain entries with
     // other classes, too! Both are weird API design decisions which need to be
     // fixed.
-    const Logfile::map_type *getEntriesFor(const LogRestrictions &restrictions);
+    const Logfile::map_type *getEntriesFor(const LogRestrictions &restrictions,
+                                           size_t max_cached_messages);
 
     // Used internally and by TableLog::answerQueryReverse(). Should be nuked.
     static Logfile::key_type makeKey(std::chrono::system_clock::time_point t,
@@ -72,9 +73,9 @@ private:
     Logfile::map_type _entries;
     unsigned _logclasses_read;  // only these types have been read
 
-    void load(const LogRestrictions &restrictions);
+    void load(const LogRestrictions &restrictions, size_t max_cached_messages);
     void loadRange(const LogRestrictions &restrictions, FILE *file,
-                   unsigned missing_types);
+                   unsigned missing_types, size_t max_cached_messages);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
 };
 

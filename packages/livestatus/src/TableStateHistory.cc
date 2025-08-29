@@ -182,14 +182,16 @@ std::string TableStateHistory::name() const { return "statehist"; }
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
 void LogEntryForwardIterator::setEntries() {
-    entries_ = it_logs_->second->getEntriesFor({
-        .max_lines_per_log_file = max_lines_per_log_file_,
-        .log_entry_classes =
-            LogEntryClasses{}
-                .set(static_cast<int>(LogEntry::Class::alert))
-                .set(static_cast<int>(LogEntry::Class::program))
-                .set(static_cast<int>(LogEntry::Class::state)),
-    });
+    entries_ = it_logs_->second->getEntriesFor(
+        {
+            .max_lines_per_log_file = max_lines_per_log_file_,
+            .log_entry_classes =
+                LogEntryClasses{}
+                    .set(static_cast<int>(LogEntry::Class::alert))
+                    .set(static_cast<int>(LogEntry::Class::program))
+                    .set(static_cast<int>(LogEntry::Class::state)),
+        },
+        max_cached_messages_);
     it_entries_ = entries_->begin();
 }
 
@@ -236,9 +238,12 @@ private:
 void TableStateHistory::answerQuery(Query &query, const User &user,
                                     const ICore &core) {
     log_cache_->apply(
+        core.paths()->history_file(), core.paths()->history_archive_directory(),
+        core.last_logfile_rotation(),
         [this, &query, &user, &core](const LogFiles &log_files,
                                      size_t /*num_cached_log_messages*/) {
-            LogEntryForwardIterator it{log_files, core.maxLinesPerLogFile()};
+            LogEntryForwardIterator it{log_files, core.maxLinesPerLogFile(),
+                                       core.maxCachedMessages()};
             answerQueryInternal(query, user, core, it);
         });
 }

@@ -4,7 +4,6 @@
 // source code package.
 
 #include <algorithm>
-#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
@@ -13,30 +12,10 @@
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
-#include "livestatus/Store.h"
 #include "livestatus/StringColumn.h"
 #include "neb/MacroExpander.h"
 #include "neb/nagios.h"
 #include "test_utilities.h"
-
-// TODO(sp) Move this to a better place.
-TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
-    // Segfault if the (not entirely constructed) core is accessed during
-    // the construction of the store.
-    //
-    // There are circular dependencies in the code and this test avoids
-    // shooting oneself in the foot.
-    //
-    // Make sure that the ICore abstraction is not accessed during the
-    // construction of Store. This is a bit fragile, but it is needed to tie the
-    // knot between NebCore and Store.
-    ASSERT_EXIT(
-        {
-            Store(nullptr);
-            ::exit(0);  // NOLINT(concurrency-mt-unsafe)
-        },
-        ::testing::ExitedWithCode(0), "");
-}
 
 namespace {
 // First test fixture: A single host

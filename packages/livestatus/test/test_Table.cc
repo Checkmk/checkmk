@@ -11,10 +11,10 @@
 #include <utility>
 #include <vector>
 
-#include "DummyMonitoringCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogCache.h"
+#include "livestatus/Logger.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
@@ -42,8 +42,7 @@
 
 struct ColumnNamesAndTypesTest : public ::testing::Test {
 protected:
-    DummyMonitoringCore mc_;
-    LogCache log_cache_{&mc_};
+    LogCache log_cache_{Logger::getLogger("test")};
 };
 
 using ColumnDefinition = std::pair<std::string, ColumnType>;

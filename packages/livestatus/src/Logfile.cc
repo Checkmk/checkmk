@@ -50,7 +50,8 @@ std::ostream &operator<<(std::ostream &os, const Logfile &f) {
               << FormattedTimePoint(f.since()) << ")";
 }
 
-void Logfile::load(const LogRestrictions &restrictions) {
+void Logfile::load(const LogRestrictions &restrictions,
+                   size_t max_cached_messages) {
     const unsigned missing_types = restrictions.log_entry_classes.to_ulong() &
                                    ~_logclasses_read;  // TODO(sp)
     // The current logfile has the _watch flag set to true.
@@ -76,7 +77,8 @@ void Logfile::load(const LogRestrictions &restrictions) {
         // have read to the end of the file
         if (_logclasses_read != 0U) {
             (void)fsetpos(file, &_read_pos);  // continue at previous end
-            loadRange(restrictions, file, _logclasses_read);
+            loadRange(restrictions, file, _logclasses_read,
+                      max_cached_messages);
             if (::ferror(file) == 0) {
                 (void)fgetpos(file, &_read_pos);
             }
@@ -84,7 +86,7 @@ void Logfile::load(const LogRestrictions &restrictions) {
         if (missing_types != 0U) {
             (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(restrictions, file, missing_types);
+            loadRange(restrictions, file, missing_types, max_cached_messages);
             _logclasses_read |= missing_types;
             if (::ferror(file) == 0) {
                 (void)fgetpos(file, &_read_pos);
@@ -106,7 +108,7 @@ void Logfile::load(const LogRestrictions &restrictions) {
         }
 
         _lineno = 0;
-        loadRange(restrictions, file, missing_types);
+        loadRange(restrictions, file, missing_types, max_cached_messages);
         _logclasses_read |= missing_types;
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
@@ -114,7 +116,7 @@ void Logfile::load(const LogRestrictions &restrictions) {
 }
 
 void Logfile::loadRange(const LogRestrictions &restrictions, FILE *file,
-                        unsigned missing_types) {
+                        unsigned missing_types, size_t max_cached_messages) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(linebuffer.data(), static_cast<int>(linebuffer.size()),
@@ -133,8 +135,8 @@ void Logfile::loadRange(const LogRestrictions &restrictions, FILE *file,
             *it = '\0';
         }
         if (processLogLine(_lineno, linebuffer.data(), missing_types)) {
-            _log_cache->logLineHasBeenAdded(this,
-                                            restrictions.log_entry_classes);
+            _log_cache->logLineHasBeenAdded(
+                this, restrictions.log_entry_classes, max_cached_messages);
         }
     }
 }
@@ -180,7 +182,8 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
 }
 
 const Logfile::map_type *Logfile::getEntriesFor(
-    const LogRestrictions &restrictions) {
-    load(restrictions);  // make sure all messages are present
+    const LogRestrictions &restrictions, size_t max_cached_messages) {
+    // make sure all messages are present
+    load(restrictions, max_cached_messages);
     return &_entries;
 }

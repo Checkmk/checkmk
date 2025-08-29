@@ -99,6 +99,7 @@ def render_form_spec(
         logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
         logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_component(component_name="cmk-form-spec", data=asdict(vue_app_config))
+    html.form_vars.append(field_id)
 
 
 def read_data_from_frontend(field_id: str) -> RawFrontendData:

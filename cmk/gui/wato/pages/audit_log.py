@@ -2,18 +2,47 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Handling of the audit logfiles"""
 
+import copy
+import dataclasses
 import time
 from collections.abc import Collection, Iterator
+from dataclasses import dataclass
+from typing import Any
 
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.form_specs.generators.cascading_choice_utils import (
+    CascadingDataConversion,
+    enable_deprecated_cascading_elements,
+)
+from cmk.gui.form_specs.generators.regex_utils import create_regex
+from cmk.gui.form_specs.private import (
+    CascadingSingleChoiceExtended,
+    LegacyValueSpec,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
+from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+    CascadingSingleChoiceElementExtended,
+)
+from cmk.gui.form_specs.vue import (
+    DEFAULT_VALUE,
+    get_visitor,
+    IncomingData,
+    parse_data_from_field_id,
+    RawDiskData,
+    render_form_spec,
+    VisitorOptions,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import ContentDispositionType, request, response
+from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -26,7 +55,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -35,22 +64,24 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri
-from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import (
-    AbsoluteDate,
-    CascadingDropdown,
-    DropdownChoice,
-    Integer,
-    RegExp,
-    TextInput,
-    ValueSpec,
-)
+from cmk.gui.valuespec import AbsoluteDate
+from cmk.gui.valuespec import Integer as IntegerVS
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    MatchingScope,
+    String,
+)
 from cmk.utils import render
 
 
@@ -58,7 +89,58 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeAuditLog)
 
 
-class ModeAuditLog(WatoMode):
+@dataclass(frozen=True, kw_only=True)
+class AuditLogRequestData:
+    selected_filename: str | None = None
+    audit_log_options: dict[str, object] = dataclasses.field(default_factory=dict)
+
+
+class ModeAuditLog(WatoMode[AuditLogRequestData]):
+    def _audit_options_id(self) -> str:
+        return "audit_options"
+
+    def _filename_selection_id(self) -> str:
+        return "selected_filename"
+
+    def _parse_data_from_request(self, req: Request) -> Result[AuditLogRequestData, None]:
+        if not req.has_var(self._filename_selection_id()):
+            return Error(None)
+
+        try:
+            parsed_filename = parse_data_from_field_id(
+                self._fs_file_selection(), self._filename_selection_id()
+            )
+            audit_log_options = {}
+            if req.has_var(self._audit_options_id()):
+                options = parse_data_from_field_id(
+                    self._audit_log_options_fs(), self._audit_options_id()
+                )
+                audit_log_options = options if isinstance(options, dict) else {}
+
+            # Add special vars from table pagination
+            # This modifies the data from the AbsoluteDate ValueSpec...
+            if req.has_var("audit_options_start_1_day"):
+                if req.var("audit_options_start_sel", "0") == "1":
+                    audit_log_options["start"] = (
+                        "time",
+                        AbsoluteDate().from_html_vars("audit_options_start_1"),
+                    )
+
+            if req.has_var("audit_options_start_sel"):
+                audit_log_options["sel"] = int(
+                    req.get_str_input_mandatory("audit_options_start_sel")
+                )
+
+            assert isinstance(parsed_filename, str)
+            return OK(
+                AuditLogRequestData(
+                    selected_filename=parsed_filename,
+                    audit_log_options=audit_log_options,
+                )
+            )
+        except MKUserError:
+            return Error(None)
+
     @classmethod
     def name(cls) -> str:
         return "auditlog"
@@ -68,8 +150,12 @@ class ModeAuditLog(WatoMode):
         return ["auditlog"]
 
     def __init__(self) -> None:
-        self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
+        self._options = get_visitor(
+            self._audit_log_options_fs(), VisitorOptions(migrate_values=False, mask_values=False)
+        ).to_disk(DEFAULT_VALUE)
+        if self._request_data.is_ok():
+            self._options.update(self._request_data.ok.audit_log_options)
         self._current_audit_log = wato_var_dir() / "log" / "wato_audit.log"
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
         self._show_object_type = request.get_integer_input_mandatory("show_object_type", 1) == 1
@@ -115,7 +201,7 @@ class ModeAuditLog(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-        if request.var("file_selection"):
+        if self._request_data.is_ok():
             self._extend_display_dropdown(menu)
         return menu
 
@@ -134,10 +220,11 @@ class ModeAuditLog(WatoMode):
         if not user.may("wato.edit"):
             return
 
-        if user.may("wato.clear_auditlog") and request.var("file_selection"):
-            vs_file_selection = self._vs_file_selection()
-            file_selection = vs_file_selection.from_html_vars("file_selection")
-            vs_file_selection.validate_value(file_selection, "file_selection")
+        if (
+            user.may("wato.clear_auditlog")
+            and self._request_data.is_ok()
+            and self._request_data.ok.selected_filename
+        ):
             yield PageMenuEntry(
                 title=_("Archive log"),
                 icon_name="delete",
@@ -154,7 +241,8 @@ class ModeAuditLog(WatoMode):
                         confirm_button=_("Archive"),
                     )
                 ),
-                is_enabled=wato_var_dir() / "log" / file_selection == self._current_audit_log,
+                is_enabled=wato_var_dir() / "log" / self._request_data.ok.selected_filename
+                == self._current_audit_log,
                 disabled_tooltip=_("You can only archive the current audit log"),
             )
 
@@ -168,7 +256,7 @@ class ModeAuditLog(WatoMode):
         if not user.may("general.csv_export"):
             return
 
-        if request.var("file_selection"):
+        if self._request_data.is_ok() and self._request_data.ok.selected_filename:
             yield PageMenuEntry(
                 title=_("Export CSV"),
                 icon_name="download_csv",
@@ -178,7 +266,7 @@ class ModeAuditLog(WatoMode):
                         transactions,
                         [
                             ("_action", "csv"),
-                            ("file_selection", request.var("file_selection")),
+                            ("file_selection", self._request_data.ok.selected_filename),
                         ],
                     )
                 ),
@@ -264,7 +352,6 @@ class ModeAuditLog(WatoMode):
 
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
-
         if not transactions.check_transaction():
             return None
 
@@ -282,26 +369,34 @@ class ModeAuditLog(WatoMode):
 
     def page(self, config: Config) -> None:
         with html.form_context("fileselection_form", method="POST"):
-            if not request.has_var("file_selection"):
+            if self._request_data.is_error() or not self._request_data.ok.selected_filename:
                 html.write_text_permissive(_("Please choose an audit log to view:"))
                 html.br()
                 html.br()
-            self._vs_file_selection().render_input("file_selection", None)
+            value: IncomingData = DEFAULT_VALUE
+            if self._request_data.is_ok() and self._request_data.ok.selected_filename:
+                value = RawDiskData(self._request_data.ok.selected_filename)
+            render_form_spec(
+                form_spec=self._fs_file_selection(),
+                field_id=self._filename_selection_id(),
+                value=value,
+                do_validate=False,
+            )
+            html.br()
             html.button(varname="_view_log", title=_("View"), cssclass="hot")
             html.hidden_fields()
 
-        if request.var("file_selection"):
-            self._options.update(self._get_audit_log_options_from_request())
+        if self._request_data.is_ok() and self._request_data.ok.selected_filename:
             self._show_audit_log()
 
-    def _vs_file_selection(self):
-        return DropdownChoice(
-            title=_("File selection"),
-            choices=self._get_audit_log_files(),
-            no_preselect_title="",
+    def _fs_file_selection(self):
+        return SingleChoiceExtended(
+            title=Title("File selection"),
+            elements=self._get_audit_log_files(),
+            no_elements_text=Message(""),
         )
 
-    def _get_audit_log_files(self) -> list[tuple[str, str]]:
+    def _get_audit_log_files(self) -> list[SingleChoiceElementExtended]:
         """
         Collect all audit log files in ~/var/checkmk/wato/log and sort like:
 
@@ -314,13 +409,17 @@ class ModeAuditLog(WatoMode):
         """
         return sorted(
             [
-                (
-                    f.name,
-                    f.name if f.name != "wato_audit.log" else "wato_audit.log (%s)" % _("current"),
+                SingleChoiceElementExtended(
+                    name=f.name,
+                    title=Title(  # pylint: disable=localization-of-non-literal-string
+                        f.name
+                        if f.name != "wato_audit.log"
+                        else "wato_audit.log (%s)" % _("current"),
+                    ),
                 )
                 for f in (wato_var_dir() / "log").glob("wato_audit.*")
             ],
-            key=lambda x: x[1].split(".")[-1],
+            key=lambda x: repr(x.title).split(".")[-1],
             reverse=True,
         )
 
@@ -335,20 +434,6 @@ class ModeAuditLog(WatoMode):
 
         else:
             self._display_multiple_days_audit_log(audit)
-
-    def _get_audit_log_options_from_request(self):
-        options = {}
-        for name, vs in self._audit_log_options():
-            if not list(request.itervars("options_" + name)):
-                continue
-
-            try:
-                value = vs.from_html_vars("options_" + name)
-                vs.validate_value(value, "options_" + name)
-                options[name] = value
-            except MKUserError as e:
-                user_errors.add(e)
-        return options
 
     def _display_daily_audit_log(self, log):
         log, times = self._get_next_daily_paged_log(log)
@@ -482,10 +567,10 @@ class ModeAuditLog(WatoMode):
 
         def time_url_args(t):
             return [
-                ("options_start_1_day", time.strftime("%d", time.localtime(t))),
-                ("options_start_1_month", time.strftime("%m", time.localtime(t))),
-                ("options_start_1_year", time.strftime("%Y", time.localtime(t))),
-                ("options_start_sel", "1"),
+                ("audit_options_start_1_day", time.strftime("%d", time.localtime(t))),
+                ("audit_options_start_1_month", time.strftime("%m", time.localtime(t))),
+                ("audit_options_start_1_year", time.strftime("%Y", time.localtime(t))),
+                ("audit_options_start_sel", "1"),
             ]
 
         if next_log_time is not None:
@@ -494,7 +579,7 @@ class ModeAuditLog(WatoMode):
                     request,
                     transactions,
                     [
-                        ("options_start_sel", "0"),
+                        ("audit_options_start_sel", "0"),
                     ],
                 ),
                 _("Most recent events"),
@@ -541,21 +626,19 @@ class ModeAuditLog(WatoMode):
         if display_options.disabled(display_options.C):
             return
 
-        with html.form_context("options", method="GET"):
+        with html.form_context("options", method="POST"):
             self._show_audit_log_options_controls()
-
             html.open_div(class_="side_popup_content")
             html.show_user_errors()
-
-            for name, vs in self._audit_log_options():
-
-                def renderer(name: str = name, vs: ValueSpec = vs) -> None:
-                    vs.render_input("options_" + name, self._options[name])
-
-                html.render_floating_option(name, "single", vs.title(), renderer)
-
+            new_options = copy.deepcopy(self._options)  # to detect changes in the form
+            new_options.pop("sel", None)
+            render_form_spec(
+                self._audit_log_options_fs(),
+                self._audit_options_id(),
+                RawDiskData(new_options),
+                self._request_data.is_ok() and bool(self._request_data.ok.audit_log_options),
+            )
             html.close_div()
-
             html.hidden_fields()
 
     def _show_audit_log_options_controls(self):
@@ -567,7 +650,7 @@ class ModeAuditLog(WatoMode):
             makeuri(
                 request,
                 [],
-                remove_prefix="options_",
+                remove_prefix="audit_options",
             ),
             _("Reset"),
         )
@@ -575,79 +658,114 @@ class ModeAuditLog(WatoMode):
 
         html.close_div()
 
-    def _audit_log_options(self):
-        object_types: Choices = [
-            ("", _("All object types")),
-            (None, _("No object type")),
-        ] + [(t.name, t.name) for t in ObjectRefType]
+    def _audit_log_options_fs(self):
+        object_types = [
+            SingleChoiceElementExtended[Any](name="", title=Title("All object types")),
+            SingleChoiceElementExtended[Any](name=None, title=Title("No object type")),
+        ] + [
+            SingleChoiceElementExtended[Any](name=t.name, title=Title(t.name))  # pylint: disable=localization-of-non-literal-string
+            for t in ObjectRefType
+        ]
 
         users = load_users()
-        user_choices: Choices = [(None, "All users")] + sorted(
-            [("-", "internal")] + [(name, name) for (name, us) in users.items()],
-            key=lambda x: x[1],
+        user_choices: list[SingleChoiceElementExtended] = [
+            SingleChoiceElementExtended(name=None, title=Title("All users"))
+        ] + sorted(
+            [SingleChoiceElementExtended(name="-", title=Title("internal"))]
+            + [
+                SingleChoiceElementExtended(name=name, title=Title(name))  # pylint: disable=localization-of-non-literal-string
+                for (name, us) in users.items()
+            ],
+            key=lambda x: str(x.title),
         )
 
-        return [
+        all_options = [
             (
                 "object_type",
-                DropdownChoice(
-                    title=_("Object type"),
-                    choices=object_types,
+                SingleChoiceExtended[Any](
+                    title=Title("Object type"), elements=object_types, prefill=DefaultValue("")
                 ),
             ),
             (
                 "object_ident",
-                TextInput(
-                    title=_("Object"),
-                ),
+                String(title=Title("Object"), prefill=DefaultValue("")),
             ),
             (
                 "user_id",
-                DropdownChoice(
-                    title=_("User"),
-                    choices=user_choices,
+                SingleChoiceExtended(
+                    title=Title("User"), elements=user_choices, prefill=DefaultValue(None)
                 ),
             ),
             (
                 "filter_regex",
-                RegExp(
-                    title=_("Filter pattern (RegExp)"),
-                    mode="infix",
+                create_regex(
+                    title=Title("Filter pattern (RegExp)"),
+                    scope=MatchingScope.INFIX,
+                    prefill=DefaultValue(""),
                 ),
             ),
             (
                 "start",
-                CascadingDropdown(
-                    title=_("Start log from"),
-                    default_value="now",
-                    orientation="horizontal",
-                    choices=[
-                        ("now", _("Current date")),
-                        ("time", _("Specific date"), AbsoluteDate()),
+                enable_deprecated_cascading_elements(
+                    wrapped_form_spec=CascadingSingleChoiceExtended(
+                        title=Title("Start log from"),
+                        prefill=DefaultValue("now"),
+                        elements=[
+                            CascadingSingleChoiceElementExtended(
+                                name="now",
+                                title=Title("Current date"),
+                                parameter_form=FixedValue(value=True, label=Label("")),
+                            ),
+                            CascadingSingleChoiceElementExtended(
+                                name="time",
+                                title=Title("Specific date"),
+                                parameter_form=LegacyValueSpec.wrap(AbsoluteDate()),
+                            ),
+                        ],
+                    ),
+                    special_value_mapping=[
+                        CascadingDataConversion(
+                            name_in_form_spec="now", value_on_disk="now", has_form_spec=False
+                        )
                     ],
                 ),
             ),
             (
                 "display",
-                CascadingDropdown(
-                    title=_("Display mode of entries"),
-                    default_value="daily",
-                    orientation="horizontal",
-                    choices=[
-                        ("daily", _("Daily paged display")),
-                        (
-                            "number_of_days",
-                            _("Number of days from now (single page)"),
-                            Integer(
-                                minvalue=1,
-                                unit=_("days"),
-                                default_value=1,
+                enable_deprecated_cascading_elements(
+                    wrapped_form_spec=CascadingSingleChoiceExtended(
+                        title=Title("Display mode of entries"),
+                        prefill=DefaultValue("daily"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="daily",
+                                title=Title("Daily paged display"),
+                                parameter_form=FixedValue(value=True, label=Label("")),
                             ),
+                            CascadingSingleChoiceElement(
+                                name="number_of_days",
+                                title=Title("Number of days from now (single page)"),
+                                parameter_form=LegacyValueSpec.wrap(
+                                    IntegerVS(minvalue=1, unit=_("days"), default_value=1)
+                                ),
+                            ),
+                        ],
+                    ),
+                    special_value_mapping=[
+                        CascadingDataConversion(
+                            name_in_form_spec="daily", value_on_disk="daily", has_form_spec=False
                         ),
                     ],
                 ),
             ),
         ]
+
+        return Dictionary(
+            title=Title("Display Options"),
+            elements={
+                name: DictElement(required=True, parameter_form=fs) for name, fs in all_options
+            },
+        )
 
     def _clear_audit_log_after_confirm(self) -> ActionResult:
         AuditLogStore().clear()
@@ -706,10 +824,6 @@ class ModeAuditLog(WatoMode):
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
-        vs_file_selection = self._vs_file_selection()
-        file_selection = vs_file_selection.from_html_vars("file_selection")
-        vs_file_selection.validate_value(file_selection, "file_selection")
-        self._options.update(self._get_audit_log_options_from_request())
         options: AuditLogFilterRaw = {
             "object_type": self._options.get("object_type"),
             "object_ident": self._options.get("object_ident"),
@@ -718,6 +832,12 @@ class ModeAuditLog(WatoMode):
         }
 
         entries_filter = build_audit_log_filter(options)
+        if not self._request_data.is_ok() or not self._request_data.ok.selected_filename:
+            return []
         return list(
-            reversed(AuditLogStore(wato_var_dir() / "log" / file_selection).read(entries_filter))
+            reversed(
+                AuditLogStore(
+                    wato_var_dir() / "log" / self._request_data.ok.selected_filename
+                ).read(entries_filter)
+            )
         )

@@ -22,8 +22,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry
 
 
-class WatoMode[T](abc.ABC):
-    _request_data: Result[T, None]
+class WatoMode[RequestOK](abc.ABC):
+    _request_data: Result[RequestOK, None]
 
     def __init__(self) -> None:
         super().__init__()
@@ -83,7 +83,7 @@ class WatoMode[T](abc.ABC):
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
 
-    def _parse_data_from_request(self, request: Request) -> Result[T, None]:
+    def _parse_data_from_request(self, request: Request) -> Result[RequestOK, None]:
         """Parses request and returns a data structure of type T or None"""
         return Error(None)
 

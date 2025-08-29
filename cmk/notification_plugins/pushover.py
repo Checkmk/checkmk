@@ -11,6 +11,14 @@ from cmk.notification_plugins import utils
 
 api_url = "https://api.pushover.net/1/messages.json"
 
+PRIORITY_MAP: dict[str, int] = {
+    "emergency": 2,
+    "high": 1,
+    "normal": 0,
+    "low": -1,
+    "lowest": -2,
+}
+
 
 def main() -> int:
     context = utils.collect_context()
@@ -88,17 +96,19 @@ def send_push_notification(
         ("html", 1),
     ]
 
-    if context.get("PARAMETER_PRIORITY") in ["-2", "-1", "0", "1"]:
-        params += [("priority", context["PARAMETER_PRIORITY"])]
-
-    elif context.get("PARAMETER_PRIORITY_PRIORITY") == "2":
-        params += [
-            ("priority", context["PARAMETER_PRIORITY_PRIORITY"]),
-            ("expire", context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
-            ("retry", context.get("PARAMETER_PRIORITY_RETRY", 0)),
-        ]
-        if context.get("PARAMETER_PRIORITY_RECEIPTS"):
-            params.append(("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]))
+    if (priority := context.get("PARAMETER_PRIORITY_1")) and priority in PRIORITY_MAP:
+        if priority == "emergency":
+            expire = context.get("PARAMETER_PRIORITY_2_1", 0)
+            retry = context.get("PARAMETER_PRIORITY_2_2", 0)
+            params += [
+                ("priority", PRIORITY_MAP[priority]),
+                ("expire", str(int(float(expire)))),
+                ("retry", str(int(float(retry)))),
+            ]
+            if recipient := context.get("PARAMETER_RECIPIENT_KEY"):
+                params.append(("receipts", recipient))
+        else:
+            params += [("priority", PRIORITY_MAP[priority])]
 
     if context.get("PARAMETER_SOUND", "none") != "none":
         params.append(("sound", context["PARAMETER_SOUND"]))

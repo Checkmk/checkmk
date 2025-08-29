@@ -58,6 +58,7 @@ class MetricData(NamedTuple):
     # Apply this function to the value before using it when yielding metrics
     # This gives the opportunity to manipulate metrics before they are counted.
     map_func: Callable[[float], float] | None = None
+    notice_only: bool = False
 
 
 class PublicIP(BaseModel):
@@ -296,6 +297,7 @@ def check_resource_metrics(
             label=metric_data.metric_label,
             render_func=metric_data.render_func,
             boundaries=metric_data.boundaries,
+            notice_only=metric_data.notice_only,
         )
 
 

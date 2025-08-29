@@ -733,3 +733,35 @@ def test_check_resource_metric_map_func() -> None:
             Metric("connections_failed_2", 20.0),
         ]
     )
+
+
+def test_check_resource_metric_notice_only() -> None:
+    metric_data = MetricData(
+        "total_connections_failed",
+        "connections_failed",
+        "Connections failed",
+        str,
+    )
+
+    metric_data_with_notice_only = MetricData(
+        "total_connections_failed",
+        "connections_failed_2",
+        "Connections failed 2",
+        str,
+        notice_only=True,
+    )
+
+    check_result = check_resource_metrics(
+        PARSED_RESOURCES["checkmk-mysql-server"],
+        {},
+        [metric_data, metric_data_with_notice_only],
+    )
+
+    assert list(check_result) == (
+        [
+            Result(state=State.OK, summary="Connections failed: 2.0"),
+            Metric("connections_failed", 2.0),
+            Result(state=State.OK, notice="Connections failed 2: 2.0"),
+            Metric("connections_failed_2", 2.0),
+        ]
+    )

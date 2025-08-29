@@ -269,8 +269,8 @@ test-performance:
 	--benchmark-verbose --html="$${BENCHMARK_DIR}/report.htm" \
 	--self-contained-html --ignore-running-procs ; \
 	$(UVENV) "$(realpath performance)/perftest_plot.py" \
-	--root-dir="$${ROOT_DIR}" --log-level=INFO \
-	--dbhost=qa.lan.checkmk.net --validate-baselines --alert-on-failure
+	--root-dir="$${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
+	--validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/"
 
 test-performance-docker:
 	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

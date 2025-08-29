@@ -15,7 +15,7 @@ import abc
 import copy
 import json
 from collections.abc import Mapping
-from typing import Any, cast, Generic, TypeVar
+from typing import Any, cast
 
 import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
@@ -89,12 +89,10 @@ from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.utils.urls import is_allowed_url
 
-_T = TypeVar("_T", bound=Mapping[str, Any])
-
 DoValidate = bool
 
 
-class SimpleModeType(Generic[_T], abc.ABC):
+class SimpleModeType[T: Mapping[str, Any]](abc.ABC):
     @abc.abstractmethod
     def type_name(self) -> str:
         """A GUI globally unique identifier (in singular form) for the managed type of object"""
@@ -145,7 +143,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         """The mode name of the Setup edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
-    def affected_sites(self, entry: _T) -> list[SiteId] | None:
+    def affected_sites(self, entry: T) -> list[SiteId] | None:
         """Sites that are affected by changes to objects of this type
 
         Returns either a list of sites affected by a change or None.
@@ -160,14 +158,14 @@ class SimpleModeType(Generic[_T], abc.ABC):
         return None
 
 
-class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
+class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
     """Base for specific Setup modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
     """
 
-    def __init__(self, mode_type: SimpleModeType[_T], store: WatoSimpleConfigFile[_T]) -> None:
+    def __init__(self, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]) -> None:
         self._mode_type = mode_type
         self._store = store
 
@@ -197,7 +195,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         )
 
 
-class SimpleListMode(_SimpleWatoModeBase[_T]):
+class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     """Base class for list modes"""
 
     @abc.abstractmethod
@@ -206,7 +204,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _show_entry_cells(self, table: Table, ident: str, entry: _T) -> None:
+    def _show_entry_cells(self, table: Table, ident: str, entry: T) -> None:
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
@@ -299,7 +297,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
-    def _validate_deletion(self, ident: str, entry: _T, *, debug: bool) -> None:
+    def _validate_deletion(self, ident: str, entry: T, *, debug: bool) -> None:
         """Override this to implement custom validations"""
 
     def _delete_confirm_title(self, nr: int) -> str:
@@ -311,7 +309,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
     def page(self, config: Config) -> None:
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
-    def _show_table(self, entries: dict[str, _T]) -> None:
+    def _show_table(self, entries: dict[str, T]) -> None:
         with table_element(self._mode_type.type_name(), self._table_title()) as table:
             for nr, (ident, entry) in enumerate(
                 sorted(entries.items(), key=lambda e: e[1]["title"])
@@ -319,14 +317,14 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                 table.row()
                 self._show_row(nr, table, ident, entry)
 
-    def _show_row(self, nr: int, table: Table, ident: str, entry: _T) -> None:
+    def _show_row(self, nr: int, table: Table, ident: str, entry: T) -> None:
         table.cell("#", css=["narrow nowrap"])
         html.write_text_permissive(nr)
 
         self._show_action_cell(nr, table, ident, entry)
         self._show_entry_cells(table, ident, entry)
 
-    def _show_action_cell(self, nr: int, table: Table, ident: str, entry: _T) -> None:
+    def _show_action_cell(self, nr: int, table: Table, ident: str, entry: T) -> None:
         table.cell(_("Actions"), css=["buttons"])
 
         edit_url = makeuri_contextless(
@@ -349,7 +347,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
 
         self._show_delete_action(nr, ident, entry)
 
-    def _show_delete_action(self, nr: int, ident: str, entry: _T) -> None:
+    def _show_delete_action(self, nr: int, ident: str, entry: T) -> None:
         confirm_delete: str = _("ID: %s") % ident
         if delete_confirm_msg := self._delete_confirm_message():
             confirm_delete += "<br><br>" + delete_confirm_msg
@@ -370,7 +368,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
 
 
-class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
+class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     """Base class for edit modes"""
 
     def __init__(self, mode_type, store):
@@ -395,7 +393,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         self._from_vars(ident_var)
 
     @property
-    def entry(self) -> _T:
+    def entry(self) -> T:
         return self._entry
 
     def _from_vars(self, ident_var: str = "ident") -> None:
@@ -428,12 +426,12 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
         self._entry = self._default_entry()
 
-    def _clone_entry(self, entry: _T) -> _T:
+    def _clone_entry(self, entry: T) -> T:
         return copy.deepcopy(entry)
 
-    def _default_entry(self) -> _T:
+    def _default_entry(self) -> T:
         # This is only relevant when rendering with form specs
-        return cast(_T, {})
+        return cast(T, {})
 
     def title(self) -> str:
         if self._new:
@@ -703,7 +701,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             config = {**config, "locked_by": entries[self._ident]["locked_by"]}
 
         # No typing support from valuespecs here, so we need to cast
-        self._entry = cast(_T, config)
+        self._entry = cast(T, config)
 
     def _update_entry_from_vars_form_spec(self, form_spec: FormSpec) -> None:
         config = parse_data_from_frontend(
@@ -729,7 +727,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             config = {**config, "locked_by": entries[self._ident]["locked_by"]}
 
         # No typing support from form specs here, so we need to cast
-        self._entry = cast(_T, config)
+        self._entry = cast(T, config)
 
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
@@ -789,7 +787,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(
-        self, entries: dict[str, _T], *, pprint_value: bool, debug: bool, use_git: bool
+        self, entries: dict[str, T], *, pprint_value: bool, debug: bool, use_git: bool
     ) -> None:
         self._store.save(entries, pprint_value=pprint_value)
 
@@ -862,7 +860,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         catalog_converter = self._get_catalog_converter()
 
         # The ident is not part of the saved config
-        # So, the entry is not longer a type _T
+        # So, the entry is not longer a type T
         cloned_entry: Any = copy.deepcopy(self._entry)
         cloned_entry["ident"] = self._ident
         catalog_config = catalog_converter.convert_flat_to_catalog_config(cloned_entry)

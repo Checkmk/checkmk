@@ -8,7 +8,6 @@ import abc
 import re
 from collections.abc import Collection, Iterable, Sequence
 from datetime import datetime
-from typing import Generic, TypeVar
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
@@ -65,11 +64,8 @@ def custom_attr_types() -> Choices:
     ]
 
 
-_T_CustomAttrSpec = TypeVar("_T_CustomAttrSpec", bound=CustomAttrSpec)
-
-
 # TODO: Refactor to be valuespec based
-class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
+class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
     def _from_vars(self):
         self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
@@ -83,7 +79,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             matching_attrs = [a for a in self._attrs if a["name"] == self._name]
             if not matching_attrs:
                 raise MKUserError(None, _("The attribute does not exist."))
-            self._attr: _T_CustomAttrSpec = matching_attrs[0]
+            self._attr: T = matching_attrs[0]
         else:
             self._attr = self._default_value
 
@@ -94,7 +90,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     @property
     @abc.abstractmethod
-    def _attrs(self) -> list[_T_CustomAttrSpec]: ...
+    def _attrs(self) -> list[T]: ...
 
     @property
     @abc.abstractmethod
@@ -103,7 +99,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     @property
     @abc.abstractmethod
-    def _default_value(self) -> _T_CustomAttrSpec: ...
+    def _default_value(self) -> T: ...
 
     @property
     @abc.abstractmethod
@@ -116,9 +112,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(
-        self, custom_attributes: Sequence[_T_CustomAttrSpec], *, pprint_value: bool
-    ) -> None:
+    def _update_config(self, custom_attributes: Sequence[T], *, pprint_value: bool) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -441,7 +435,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
         return _("Edit host attribute")
 
 
-class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
+class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
     def __init__(self) -> None:
         super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -456,7 +450,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     @property
     @abc.abstractmethod
-    def _attrs(self) -> list[_T_CustomAttrSpec]: ...
+    def _attrs(self) -> list[T_CustomAttrSpec]: ...
 
     @abc.abstractmethod
     def title(self) -> str:
@@ -464,7 +458,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     @abc.abstractmethod
     def _update_config(
-        self, custom_attributes: Sequence[_T_CustomAttrSpec], *, pprint_value: bool
+        self, custom_attributes: Sequence[T_CustomAttrSpec], *, pprint_value: bool
     ) -> None:
         raise NotImplementedError()
 

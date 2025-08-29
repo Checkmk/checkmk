@@ -7,10 +7,11 @@ import abc
 from collections.abc import Collection, Iterable
 from typing import final
 
+from cmk.ccc.resulttype import Error, Result
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -21,10 +22,13 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry
 
 
-class WatoMode(abc.ABC):
+class WatoMode[T](abc.ABC):
+    _request_data: Result[T, None]
+
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()
+        self._request_data = self._parse_data_from_request(request)
 
     @staticmethod
     @abc.abstractmethod
@@ -78,6 +82,10 @@ class WatoMode(abc.ABC):
     def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
+
+    def _parse_data_from_request(self, request: Request) -> Result[T, None]:
+        """Parses request and returns a data structure of type T or None"""
+        return Error(None)
 
     def title(self) -> str:
         return _("(Untitled module)")

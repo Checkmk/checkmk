@@ -28,7 +28,7 @@ from cmk.gui.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
-from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
+from cmk.gui.type_defs import CustomUserAttrSpec, Users, UserSpec
 from cmk.gui.userdb import ConnectorType, get_user_attributes, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
@@ -1231,10 +1231,9 @@ def test_openapi_all_authorized_sites(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="mock_users_config")
-def fixture_mock_users_config(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
-        "cmk.gui.userdb.load_users",
-        return_value={
+def fixture_mock_users_config(mocker: MockerFixture) -> None:
+    user_cfg = Users(
+        {
             "saml.user@example.com": {
                 "alias": "Samler",
                 "force_authuser": False,
@@ -1245,8 +1244,11 @@ def fixture_mock_users_config(mocker: MockerFixture) -> MagicMock:
                 "icons_per_item": None,
                 "show_mode": None,
             },
-        },
+        }
     )
+
+    mocker.patch("cmk.gui.fields.definitions.load_users", return_value=user_cfg)
+    mocker.patch("cmk.gui.openapi.endpoints.user_config.load_users", return_value=user_cfg)
 
 
 @pytest.fixture(name="mock_user_connections_config")

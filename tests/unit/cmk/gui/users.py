@@ -14,11 +14,9 @@ import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.config import Config
-from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.store import load_users, save_users
-from cmk.gui.watolib.users import create_user, user_features_registry
 
 
 def _mk_user_obj(
@@ -76,14 +74,18 @@ def create_and_destroy_user(
     if user_id in config.multisite_users:
         raise ValueError(f"User {user_id} already exists!")
 
-    user_attributes = get_user_attributes(config.wato_user_attrs)
-    create_user(
-        user_id,
-        (user := _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs)),
-        user_features_registry.features().sites,
-        user_attributes,
-        use_git=False,
-        acting_user=LoggedInSuperUser(),
+    save_users(
+        profiles={
+            **load_users(),
+            user_id: (
+                user := _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs)
+            ),
+        },
+        user_attributes=(user_attributes := get_user_attributes(config.wato_user_attrs)),
+        user_connections=config.user_connections,
+        now=datetime.now(),
+        pprint_value=config.wato_pprint_config,
+        call_users_saved_hook=False,
     )
 
     config.multisite_users[user_id] = user

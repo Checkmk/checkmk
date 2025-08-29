@@ -113,7 +113,7 @@ describe('FormDualListChoice', () => {
       name: 'Filter Available options'
     })
     await fireEvent.update(filterInactiveElements, 'Choice 1')
-    const addAll = screen.getByRole<HTMLButtonElement>('button', { name: 'Add all' })
+    const addAll = screen.getByRole<HTMLButtonElement>('button', { name: 'Add all >>' })
     await fireEvent.click(addAll)
     expect(
       screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
@@ -137,7 +137,7 @@ describe('FormDualListChoice', () => {
       name: 'Filter Selected options'
     })
     await fireEvent.update(filterActiveElements, 'Choice 1')
-    const removeAll = screen.getByRole<HTMLButtonElement>('button', { name: 'Remove all' })
+    const removeAll = screen.getByRole<HTMLButtonElement>('button', { name: '<< Remove all' })
     await fireEvent.click(removeAll)
     expect(
       screen.getByRole<HTMLSelectElement>('listbox', { name: 'Available options' }).options.length

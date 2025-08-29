@@ -119,7 +119,7 @@ const elementCounter = computed(() => props.elements.length)
         <div class="cmk-dual-list-action-button">
           <CmkButton
             :disabled="!unselectedListRef?.getSelected().length"
-            :aria-label="_t('Add')"
+            :aria-label="_t('Add >')"
             @click="addSelected"
           >
             &gt;
@@ -128,7 +128,7 @@ const elementCounter = computed(() => props.elements.length)
         <div class="cmk-dual-list-action-button">
           <CmkButton
             :disabled="!unselectedListRef?.getVisibleItems().length"
-            :aria-label="_t('Add all')"
+            :aria-label="_t('Add all >>')"
             @click="addAllFiltered"
           >
             &gt;&gt;&gt;
@@ -137,7 +137,7 @@ const elementCounter = computed(() => props.elements.length)
         <div class="cmk-dual-list-action-button">
           <CmkButton
             :disabled="!selectedListRef?.getVisibleItems().length"
-            :aria-label="_t('Remove all')"
+            :aria-label="_t('<< Remove all')"
             @click="removeAllFiltered"
           >
             &lt;&lt;&lt;
@@ -146,7 +146,7 @@ const elementCounter = computed(() => props.elements.length)
         <div class="cmk-dual-list-action-button">
           <CmkButton
             :disabled="!selectedListRef?.getSelected().length"
-            :aria-label="_t('Remove')"
+            :aria-label="_t('< Remove')"
             @click="removeSelected"
           >
             &lt;

@@ -19,10 +19,18 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTasksHandler,
     GetTasksRelayNotFoundError,
     UpdateTaskHandler,
+    UpdateTaskNotFoundError,
+    UpdateTaskRelayNotFoundError,
 )
-from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskStatus, TaskType
+from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    ResultType,
+    TaskID,
+    TaskStatus,
+    TaskType,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
+    TaskResponseSerializer,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols import tasks as tasks_protocol
@@ -94,7 +102,7 @@ async def update_task(
     relay_id: str,
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
-    _handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
+    handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -130,7 +138,24 @@ async def update_task(
     # - Update last_update_timestamp
     # - Store updated task
 
-    raise NotImplementedError("Task update business logic not implemented")
+    try:
+        updated_task = handler.process(
+            RelayID(relay_id),
+            TaskID(task_id),
+            ResultType(request.result_type.value),
+            request.result_payload,
+        )
+    except UpdateTaskRelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay with ID {relay_id} not found",
+        )
+    except UpdateTaskNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found",
+        )
+    return TaskResponseSerializer.serialize(updated_task)
 
 
 @router.get("/{relay_id}/tasks")

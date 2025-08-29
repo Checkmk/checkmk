@@ -28,11 +28,18 @@ class TaskType(StrEnum):
     FETCH_AD_HOC = "FETCH_AD_HOC"
 
 
+class ResultType(StrEnum):
+    OK = "OK"
+    ERROR = "ERROR"
+
+
 @dataclass(frozen=True)
 class Task:
     type: TaskType
     payload: str
     creation_timestamp: datetime
+    result_type: ResultType | None = None
+    result_payload: str | None = None
     status: TaskStatus = TaskStatus.PENDING
     id: TaskID = dataclasses.field(default_factory=lambda: TaskID(str(uuid.uuid4())))
 
@@ -44,6 +51,10 @@ class Task:
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
 GLOBAL_TASKS: dict[RelayID, dict[TaskID, Task]] = {}
+
+
+class TaskNotFoundError(Exception):
+    pass
 
 
 @dataclasses.dataclass
@@ -61,3 +72,20 @@ class TasksRepository:
             GLOBAL_TASKS[relay_id] = {}
         GLOBAL_TASKS[relay_id][task.id] = task
         return task
+
+    def update_task(
+        self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
+    ) -> Task:
+        try:
+            task = GLOBAL_TASKS[relay_id][task_id]
+        except KeyError:
+            logging.warning(f"Task with ID {task_id} not found")
+            raise TaskNotFoundError(task_id)
+
+        new_task = dataclasses.replace(
+            task,
+            result_type=result_type,
+            result_payload=result_payload,
+        )
+        GLOBAL_TASKS[relay_id][task_id] = new_task
+        return new_task

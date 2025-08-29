@@ -7,11 +7,24 @@
 import dataclasses
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    ResultType,
+    Task,
     TaskID,
     TasksRepository,
 )
+from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    TaskNotFoundError as RepositoryTaskNotFoundError,
+)
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
+
+
+class RelayNotFoundError(Exception):
+    pass
+
+
+class TaskNotFoundError(Exception):
+    pass
 
 
 @dataclasses.dataclass
@@ -20,6 +33,22 @@ class UpdateTaskHandler:
     relays_repository: RelaysRepository
 
     def process(
-        self, relay_id: RelayID, task_id: TaskID, result_type: str, result_payload: str
-    ) -> None:
-        pass
+        self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
+    ) -> Task:
+        if not self.relays_repository.has_relay(relay_id):
+            raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
+        return self._update_task(relay_id, task_id, result_type, result_payload)
+
+    def _update_task(
+        self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
+    ) -> Task:
+        try:
+            task = self.tasks_repository.update_task(
+                relay_id=relay_id,
+                task_id=task_id,
+                result_type=result_type,
+                result_payload=result_payload,
+            )
+        except RepositoryTaskNotFoundError as e:
+            raise TaskNotFoundError(f"Task with ID {task_id} does not exist") from e
+        return task

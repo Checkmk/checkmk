@@ -11,6 +11,7 @@ from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_rela
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
     GetRelayTasksHandler,
+    UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
@@ -35,6 +36,16 @@ def get_create_task_handler(
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
 ) -> CreateTaskHandler:
     return CreateTaskHandler(
+        tasks_repository=tasks_repository,
+        relays_repository=relays_repository,
+    )
+
+
+def get_update_task_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+) -> UpdateTaskHandler:
+    return UpdateTaskHandler(
         tasks_repository=tasks_repository,
         relays_repository=relays_repository,
     )

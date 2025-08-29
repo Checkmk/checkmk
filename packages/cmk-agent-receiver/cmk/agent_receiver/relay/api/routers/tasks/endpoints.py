@@ -11,12 +11,14 @@ import fastapi
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_create_task_handler,
     get_relay_tasks_handler,
+    get_update_task_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
     CreateTaskRelayNotFoundError,
     GetRelayTasksHandler,
     GetTasksRelayNotFoundError,
+    UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskStatus, TaskType
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
@@ -89,7 +91,10 @@ async def create_task_endpoint(
     },
 )
 async def update_task(
-    relay_id: str, task_id: str, request: tasks_protocol.TaskUpdateRequest
+    relay_id: str,
+    task_id: str,
+    request: tasks_protocol.TaskUpdateRequest,
+    _handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 

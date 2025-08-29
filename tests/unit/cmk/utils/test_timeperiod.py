@@ -25,37 +25,38 @@ from cmk.gui.wato.pages.timeperiods import ICalEvent, TimeperiodUsage
 def test_is_timeperiod_active() -> None:
     timeperiods: TimeperiodSpecs = {
         "time_period_1": {
-            "alias": "Simple time period",  # within time period
+            "alias": "Simple time period, matches",
             "exclude": [],
             "wednesday": [("11:00", "12:00")],
         },
         "time_period_2": {
-            "alias": "Simple time period (False)",  # out of time period
+            "alias": "Simple time period, does not match",
             "exclude": [],
             "wednesday": [("12:00", "13:00")],
         },
         "time_period_3": {
-            "alias": "Exceptional day/time that matches",  # exclude matches
-            "2024-01-03": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
+            "alias": "Multiple exceptional day/time, matches",
+            "2024-01-03": [("11:10", "11:15")],
+            "2024-01-04": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
         "time_period_4": {
-            "alias": "Exclude via exceptional day/time that does not match",  # exclude not matching
+            "alias": "Single exceptional day/time, matches",
             "2024-01-03": [("11:12", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
         "time_period_5": {
-            "alias": "Exclude via timeperiod without own exclude",  # exclude of other timeperiod matches
+            "alias": "Exclude via timeperiod, does not match",
             "exclude": ["time_period_1"],
             "wednesday": [("00:00", "24:00")],
         },
         "time_period_6": {
-            "alias": "Exclude via timeperiod with own exclude",  # exclude of other timeperiod matches
+            "alias": "Exclude via timeperiod with own exclude, does not match",
             "exclude": ["time_period_4"],
             "wednesday": [("00:00", "24:00")],
         },
         "time_period_7": {
-            "alias": "Exclude by matching time, but not matching day",  # no time defined
+            "alias": "Exceptional by not matching day/time",
             "2024-01-04": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
         },
     }
@@ -66,9 +67,9 @@ def test_is_timeperiod_active() -> None:
         assert is_timeperiod_active(test_timestamp, "time_period_1", timeperiods)
         assert not is_timeperiod_active(test_timestamp, "time_period_2", timeperiods)
         assert is_timeperiod_active(test_timestamp, "time_period_3", timeperiods)
-        assert not is_timeperiod_active(test_timestamp, "time_period_4", timeperiods)
+        assert is_timeperiod_active(test_timestamp, "time_period_4", timeperiods)
         assert not is_timeperiod_active(test_timestamp, "time_period_5", timeperiods)
-        assert is_timeperiod_active(test_timestamp, "time_period_6", timeperiods)
+        assert not is_timeperiod_active(test_timestamp, "time_period_6", timeperiods)
         assert not is_timeperiod_active(test_timestamp, "time_period_7", timeperiods)
 
 

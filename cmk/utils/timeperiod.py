@@ -178,12 +178,12 @@ def is_timeperiod_active(
         "sunday",
     ]
     current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
-    if _is_timeperiod_excluded_via_exception(
+    if _is_timeperiod_active_via_exception(
         timeperiod_definition,
         days,
         current_datetime,
     ):
-        return False
+        return True
 
     if (weekday := days[current_datetime.weekday()]) in timeperiod_definition:
         time_ranges = timeperiod_definition[weekday]
@@ -209,7 +209,7 @@ def _is_timeperiod_excluded_via_timeperiod(
     return False
 
 
-def _is_timeperiod_excluded_via_exception(
+def _is_timeperiod_active_via_exception(
     timeperiod_definition: TimeperiodSpec,
     days: Sequence[Weekday],
     current_time: datetime,
@@ -226,8 +226,7 @@ def _is_timeperiod_excluded_via_exception(
         if not is_time_range_list(value):
             continue
 
-        if not _is_time_in_timeperiod(current_time, value, day):
-            return True
+        return _is_time_in_timeperiod(current_time, value, day)
 
     return False
 

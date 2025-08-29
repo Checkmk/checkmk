@@ -157,6 +157,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
         user_features_registry.features().sites,
         get_user_attributes(active_config.wato_user_attrs),
         use_git=active_config.wato_use_git,
+        acting_user=user,
     )
     return serve_user(username)
 
@@ -177,6 +178,7 @@ def delete_user(params: Mapping[str, Any]) -> Response:
         user_features_registry.features().sites,
         user_attributes=get_user_attributes(active_config.wato_user_attrs),
         use_git=active_config.wato_use_git,
+        acting_user=user,
     )
     return Response(status=204)
 
@@ -230,6 +232,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         user_features_registry.features().sites,
         user_attributes,
         use_git=active_config.wato_use_git,
+        acting_user=user,
     )
     return serve_user(username)
 

@@ -291,6 +291,7 @@ class ModeUsers(WatoMode):
                 user_features_registry.features().sites,
                 get_user_attributes(config.wato_user_attrs),
                 use_git=config.wato_use_git,
+                acting_user=user,
             )
             return redirect(self.mode_url())
 
@@ -360,6 +361,7 @@ class ModeUsers(WatoMode):
                 user_features_registry.features().sites,
                 user_attributes,
                 use_git=use_git,
+                acting_user=user,
             )
 
     def page(self, config: Config) -> None:
@@ -875,6 +877,7 @@ class ModeEditUser(WatoMode):
                 user_features_registry.features().sites,
                 user_attributes,
                 use_git=config.wato_use_git,
+                acting_user=user,
             )
         else:
             edit_users(
@@ -882,6 +885,7 @@ class ModeEditUser(WatoMode):
                 user_features_registry.features().sites,
                 user_attributes,
                 use_git=config.wato_use_git,
+                acting_user=user,
             )
 
         return redirect(mode_url("users"))

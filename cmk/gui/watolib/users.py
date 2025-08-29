@@ -68,9 +68,10 @@ def delete_users(
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
     use_git: bool,
+    acting_user: LoggedInUser,
 ) -> None:
-    user.need_permission("wato.users")
-    user.need_permission("wato.edit")
+    acting_user.need_permission("wato.users")
+    acting_user.need_permission("wato.edit")
     if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -88,7 +89,7 @@ def delete_users(
                 UserManagementEvent(
                     event="user deleted",
                     affected_user=entry,
-                    acting_user=user.id,
+                    acting_user=acting_user.id,
                     connector=connection.type() if connection else None,
                     connection_id=connection_id,
                 )
@@ -102,14 +103,14 @@ def delete_users(
             log_audit(
                 action="edit-user",
                 message="Deleted user: %s" % user_id,
-                user_id=user.id,
+                user_id=acting_user.id,
                 use_git=use_git,
                 object_ref=make_user_object_ref(user_id),
             )
         add_change(
             action_name="edit-users",
             text=_l("Deleted user: %s") % ", ".join(deleted_users),
-            user_id=user.id,
+            user_id=acting_user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
             use_git=use_git,
         )
@@ -122,9 +123,10 @@ def edit_users(
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
     use_git: bool,
+    acting_user: LoggedInUser,
 ) -> None:
-    user.need_permission("wato.users")
-    user.need_permission("wato.edit")
+    acting_user.need_permission("wato.users")
+    acting_user.need_permission("wato.edit")
 
     all_users = userdb.load_users(lock=True)
     modified_users_info = []
@@ -135,7 +137,7 @@ def edit_users(
         if (old_user_attrs := all_users.get(user_id)) is None:
             raise MKUserError(None, _("The user you are trying to edit does not exist."))
 
-        _validate_user_attributes(user_id, changed_user_attrs, user_attributes)
+        _validate_user_attributes(user_id, changed_user_attrs, user_attributes, user)
 
         affected_sites = _update_affected_sites(affected_sites, sites(changed_user_attrs))
         affected_sites = _update_affected_sites(affected_sites, sites(old_user_attrs))
@@ -145,7 +147,7 @@ def edit_users(
         log_audit(
             action="edit-user",
             message="Modified user: %s" % user_id,
-            user_id=user.id,
+            user_id=acting_user.id,
             use_git=use_git,
             diff_text=make_diff_text(
                 make_user_audit_log_object(old_user_attrs),
@@ -160,7 +162,7 @@ def edit_users(
             UserManagementEvent(
                 event="user modified",
                 affected_user=user_id,
-                acting_user=user.id,
+                acting_user=acting_user.id,
                 connector=connection.type() if connection else None,
                 connection_id=connection_id,
             )
@@ -172,7 +174,7 @@ def edit_users(
         add_change(
             action_name="edit-users",
             text=_l("Modified users: %s") % ", ".join(modified_users_info),
-            user_id=user.id,
+            user_id=acting_user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
             use_git=use_git,
         )
@@ -187,9 +189,10 @@ def create_user(
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
     use_git: bool,
+    acting_user: LoggedInUser,
 ) -> None:
-    user.need_permission("wato.users")
-    user.need_permission("wato.edit")
+    acting_user.need_permission("wato.users")
+    acting_user.need_permission("wato.edit")
 
     if user_id == "":  # reserved for UserId.builtin()
         raise ValueError("UserId cannot be empty")
@@ -199,14 +202,14 @@ def create_user(
     if user_id in all_users:
         raise MKUserError("user_id", _("This username is already being used by another user."))
 
-    _validate_user_attributes(user_id, new_user, user_attributes)
+    _validate_user_attributes(user_id, new_user, user_attributes, acting_user)
 
     add_internal_attributes(new_user)
 
     log_audit(
         action="edit-user",
         message="Created new user: %s" % user_id,
-        user_id=user.id,
+        user_id=acting_user.id,
         use_git=use_git,
         diff_text=make_diff_text({}, make_user_audit_log_object(new_user)),
         object_ref=make_user_object_ref(user_id),
@@ -218,7 +221,7 @@ def create_user(
         UserManagementEvent(
             event="user created",
             affected_user=user_id,
-            acting_user=user.id,
+            acting_user=acting_user.id,
             connector=connection.type() if connection else None,
             connection_id=connection_id,
         )
@@ -228,7 +231,7 @@ def create_user(
     add_change(
         action_name="edit-users",
         text=_l("Created new users: %s") % new_user,
-        user_id=user.id,
+        user_id=acting_user.id,
         sites=None if affected_sites == "all" else list(affected_sites),
         use_git=use_git,
     )
@@ -254,6 +257,7 @@ def remove_custom_attribute_from_all_users(
         sites,
         user_attributes,
         use_git=use_git,
+        acting_user=user,
     )
 
 
@@ -287,6 +291,7 @@ def _validate_user_attributes(
     user_id: UserId,
     user_attrs: UserSpec,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    acting_user: LoggedInUser,
 ) -> None:
     # Full name
     alias = user_attrs.get("alias")
@@ -297,7 +302,7 @@ def _validate_user_attributes(
 
     # Locking
     locked = user_attrs["locked"]
-    if user_id == user.id and locked:
+    if user_id == acting_user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
     # Automation Secret

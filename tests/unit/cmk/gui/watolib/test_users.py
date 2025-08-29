@@ -12,6 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.paths import wato_var_dir
@@ -124,7 +125,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context", "with_admin_login")
+@pytest.mark.usefixtures("request_context")
 def test_only_affected_sites_require_activation_when_adding_users(
     sites: list[SiteId],
     added_users: list[tuple[UserId, UserSpec]],
@@ -132,13 +133,20 @@ def test_only_affected_sites_require_activation_when_adding_users(
 ) -> None:
     for added_user in added_users:
         user_id, userspec = added_user
-        create_user(user_id, userspec, default_sites, get_user_attributes([]), use_git=False)
+        create_user(
+            user_id,
+            userspec,
+            default_sites,
+            get_user_attributes([]),
+            use_git=False,
+            acting_user=LoggedInSuperUser(),
+        )
     all_users = userdb.load_users()
     assert user_id in all_users
     assert expected_changed_sites == _changed_sites(sites)
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
+@pytest.mark.usefixtures("request_context")
 def test_only_affected_sites_require_activation_when_changing_user(sites: list[SiteId]) -> None:
     # GIVEN one user added on site1
     create_user(
@@ -147,6 +155,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         default_sites,
         get_user_attributes([]),
         use_git=False,
+        acting_user=LoggedInSuperUser(),
     )
     _reset_site_changes(ALL_SITES)
 
@@ -156,6 +165,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         default_sites,
         get_user_attributes([]),
         use_git=False,
+        acting_user=LoggedInSuperUser(),
     )
 
     # THEN both site1 and site2 should require activation
@@ -182,7 +192,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context", "with_admin_login")
+@pytest.mark.usefixtures("request_context")
 def test_only_affected_sites_require_activation_when_deleting_users(
     sites: list[SiteId], users_to_delete: list[UserId], expected_changed_sites: list[SiteId]
 ) -> None:
@@ -193,6 +203,7 @@ def test_only_affected_sites_require_activation_when_deleting_users(
         default_sites,
         get_user_attributes([]),
         use_git=False,
+        acting_user=LoggedInSuperUser(),
     )
     create_user(
         USER2_ID,
@@ -200,11 +211,18 @@ def test_only_affected_sites_require_activation_when_deleting_users(
         default_sites,
         get_user_attributes([]),
         use_git=False,
+        acting_user=LoggedInSuperUser(),
     )
     _reset_site_changes(ALL_SITES)
 
     # WHEN
-    delete_users(users_to_delete, default_sites, get_user_attributes([]), use_git=False)
+    delete_users(
+        users_to_delete,
+        default_sites,
+        get_user_attributes([]),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+    )
 
     # THEN
     all_users = userdb.load_users()

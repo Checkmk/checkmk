@@ -14,6 +14,7 @@ import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
@@ -77,14 +78,14 @@ def create_and_destroy_user(
         raise ValueError(f"User {user_id} already exists!")
 
     user_attributes = get_user_attributes(config.wato_user_attrs)
-    with SuperUserContext():
-        create_user(
-            user_id,
-            (user := _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs)),
-            user_features_registry.features().sites,
-            user_attributes,
-            use_git=False,
-        )
+    create_user(
+        user_id,
+        (user := _mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs)),
+        user_features_registry.features().sites,
+        user_attributes,
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+    )
 
     config.multisite_users[user_id] = user
 

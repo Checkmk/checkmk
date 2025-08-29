@@ -21,14 +21,13 @@ from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui import userdb
 from cmk.gui.config import active_config
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.openapi.endpoints.user_config import (
     _api_to_internal_format,
     _internal_to_api_format,
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
-from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import ConnectorType, get_user_attributes, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
@@ -135,7 +134,6 @@ def test_openapi_user_minimal_settings(
 ) -> None:
     with (
         time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
-        SuperUserContext(),
     ):
         user_object: UserSpec = {
             "ui_theme": None,
@@ -156,7 +154,12 @@ def test_openapi_user_minimal_settings(
             "disable_notifications": {},
         }
         create_user(
-            UserId("user"), user_object, default_sites, get_user_attributes([]), use_git=False
+            UserId("user"),
+            user_object,
+            default_sites,
+            get_user_attributes([]),
+            use_git=False,
+            acting_user=LoggedInSuperUser(),
         )
 
     user_attributes = _load_internal_attributes(UserId("user"))
@@ -315,8 +318,14 @@ def test_openapi_user_internal_with_notifications(
         "serial": 1,
         "disable_notifications": {"timerange": (1577836800.0, 1577923200.0)},
     }
-    with SuperUserContext():
-        create_user(name, user_object, default_sites, get_user_attributes([]), use_git=False)
+    create_user(
+        name,
+        user_object,
+        default_sites,
+        get_user_attributes([]),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+    )
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -517,8 +526,14 @@ def test_openapi_user_internal_auth_handling(
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
-        with SuperUserContext():
-            create_user(name, user_object, default_sites, get_user_attributes([]), use_git=False)
+        create_user(
+            name,
+            user_object,
+            default_sites,
+            get_user_attributes([]),
+            use_git=False,
+            acting_user=LoggedInSuperUser(),
+        )
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -546,13 +561,13 @@ def test_openapi_user_internal_auth_handling(
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
             PasswordPolicy(12, None),
         )
-        with SuperUserContext():
-            edit_users(
-                {name: updated_internal_attributes},
-                default_sites,
-                get_user_attributes([]),
-                use_git=False,
-            )
+        edit_users(
+            {name: updated_internal_attributes},
+            default_sites,
+            get_user_attributes([]),
+            use_git=False,
+            acting_user=LoggedInSuperUser(),
+        )
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -581,13 +596,13 @@ def test_openapi_user_internal_auth_handling(
             {"auth_option": {"auth_type": "remove"}},
             PasswordPolicy(12, None),
         )
-        with SuperUserContext():
-            edit_users(
-                {name: updated_internal_attributes},
-                default_sites,
-                get_user_attributes([]),
-                use_git=False,
-            )
+        edit_users(
+            {name: updated_internal_attributes},
+            default_sites,
+            get_user_attributes([]),
+            use_git=False,
+            acting_user=LoggedInSuperUser(),
+        )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
         "customer": "provider",
@@ -647,10 +662,14 @@ def test_managed_global_internal(
         "fallback_contact": False,
         "disable_notifications": {},
     }
-    with SuperUserContext():
-        create_user(
-            UserId("user"), user_object, default_sites, get_user_attributes([]), use_git=False
-        )
+    create_user(
+        UserId("user"),
+        user_object,
+        default_sites,
+        get_user_attributes([]),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+    )
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -730,10 +749,14 @@ def test_managed_idle_internal(
         "fallback_contact": False,
         "disable_notifications": {},
     }
-    with SuperUserContext():
-        create_user(
-            UserId("user"), user_object, default_sites, get_user_attributes([]), use_git=False
-        )
+    create_user(
+        UserId("user"),
+        user_object,
+        default_sites,
+        get_user_attributes([]),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+    )
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))

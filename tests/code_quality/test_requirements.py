@@ -373,12 +373,12 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("buildscripts/scripts/lib/registry.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/conftest.py"),
         Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_core_does_not_mix_host_data.py"
+            "non-free/packages/cmk-relay-engine/tests/component/test_engine_does_not_mix_host_data.py"
         ),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_returns_data.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_timeouts.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_handle_dying_fetchers.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/core_helpers.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/engine_helpers.py"),
         Path(
             "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/behavior.py"
         ),
@@ -394,7 +394,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         ),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/worker.py"),
         Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/test_fake_fetcher.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_core.py"),
+        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_engine.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
         Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),

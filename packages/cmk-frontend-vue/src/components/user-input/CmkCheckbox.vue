@@ -21,9 +21,10 @@ interface CmkCheckboxProps {
   padding?: 'top' | 'bottom' | 'both'
   help?: TranslatedString
   externalErrors?: string[]
+  disabled?: boolean
 }
 
-const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
+const { padding = 'both', label, disabled = false } = defineProps<CmkCheckboxProps>()
 </script>
 
 <template>
@@ -32,10 +33,11 @@ const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
       class="cmk-checkbox"
       :class="{
         'cmk-checkbox__pad_top': padding !== 'bottom',
-        'cmk-checkbox__pad_bottom': padding !== 'top'
+        'cmk-checkbox__pad_bottom': padding !== 'top',
+        'cmk-checkbox__disabled': disabled
       }"
     >
-      <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button">
+      <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button" :disabled="disabled">
         <CheckboxIndicator class="cmk-checkbox__indicator">
           <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
             <g transform="rotate(45,9,9)">
@@ -73,6 +75,15 @@ span {
     padding-bottom: 2px;
   }
 
+  &.cmk-checkbox__disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    & :deep(.cmk-checkbox__button) {
+      cursor: not-allowed;
+    }
+  }
+
   & :deep(.cmk-checkbox__button) {
     background-color: var(--default-form-element-bg-color);
     border: 1px solid var(--default-form-element-bg-color);
@@ -86,7 +97,7 @@ span {
     vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
   }
 
-  &:hover :deep(.cmk-checkbox__button) {
+  &:hover:not(.cmk-checkbox__disabled) :deep(.cmk-checkbox__button) {
     background-color: var(--input-hover-bg-color);
   }
 

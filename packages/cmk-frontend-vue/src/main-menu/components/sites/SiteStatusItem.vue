@@ -49,7 +49,6 @@ const emit = defineEmits<{
   <CmkZebra :num="idx" class="cmk-changes-sites-item-wrapper">
     <div class="cmk-changes-sites-item">
       <div class="cmk-changes-sites-item-start">
-        <!-- @vue-ignore disabled is not implemented in CmkCheckbox, remove this comment after CMK-25555 !-->
         <CmkCheckbox
           v-if="!hideCheckbox"
           :model-value="checked"

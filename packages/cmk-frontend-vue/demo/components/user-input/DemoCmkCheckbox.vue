@@ -18,6 +18,8 @@ const value4 = ref<boolean>(false)
 const value5 = ref<boolean>(false)
 const value6 = ref<boolean>(false)
 const value7 = ref<boolean>(false)
+const value8 = ref<boolean>(true)
+const value9 = ref<boolean>(false)
 
 const externalErrors = ref<string[]>([])
 </script>
@@ -66,6 +68,19 @@ const externalErrors = ref<string[]>([])
       </li>
       <li>
         <CmkCheckbox v-model="value7" :padding="'top'" />&nbsp;<CmkCheckbox v-model="value7" />
+      </li>
+    </ul>
+    <li>Disabled checkboxes:</li>
+    <ul>
+      <li>
+        <CmkCheckbox v-model="value8" label="Disabled checked checkbox" :disabled="true" />
+      </li>
+      <li>
+        <CmkCheckbox v-model="value9" label="Disabled unchecked checkbox" :disabled="true" />
+      </li>
+      <li>
+        Without label:
+        <CmkCheckbox v-model="value9" :disabled="true" />
       </li>
     </ul>
   </ul>

@@ -569,6 +569,33 @@ def test_fileinfo_discovery(
     [
         pytest.param(
             [
+                ["1756366821"],
+                ["c:\\temp\\file1.txt", "7", "1607410450"],
+                ["c:\\temp\\file2.txt", "8", "1607410450"],
+                ["c:\\temp\\file3.txt", "9", "1607410450"],
+                ["c:\\temp\\file4.txt", "0", "1607410450"],
+            ],
+            "c:\\temp\\file4.txt",
+            {
+                "minage": ("fixed", (3600.0, 3600.0)),
+                "maxage": ("fixed", (3600.0, 3600.0)),
+                "minsize": ("no_levels", None),
+                "maxsize": ("no_levels", None),
+                "state_missing": 2,
+                "negative_age_tolerance": 540.0,
+            },
+            [
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("size", 0.0),
+                Result(
+                    state=State.CRIT,
+                    summary="Age: 4 years 264 days (warn/crit at 1 hour 0 minutes/1 hour 0 minutes)",
+                ),
+                Metric("age", 148956371.0, levels=(3600.0, 3600.0)),
+            ],
+        ),
+        pytest.param(
+            [
                 ["1536557964"],
                 ["regular.txt", "4242", "1536421281"],
                 ["missing_file.txt", "missing"],
@@ -857,6 +884,105 @@ def test_fileinfo_group_discovery(
 @pytest.mark.parametrize(
     "info, item, params, expected_result",
     [
+        pytest.param(
+            [
+                ["1756366821"],
+                ["c:\\temp\\file1.txt", "0", "1607410450"],
+                ["c:\\temp\\file2.txt", "0", "1607410450"],
+                ["c:\\temp\\file3.txt", "0", "1607410450"],
+                ["c:\\temp\\file4.txt", "0", "1607410450"],
+            ],
+            "banana",
+            {
+                "group_patterns": [
+                    {"group_pattern_exclude": "", "group_pattern_include": "c:\\temp\\*.txt"}
+                ],
+                "maxage_newest": ("no_levels", None),
+                "minage_oldest": ("fixed", (86400.0, 3600.0)),
+                "maxcount": ("no_levels", None),
+                "maxsize": ("no_levels", None),
+                "maxsize_largest": ("no_levels", None),
+                "maxsize_smallest": ("no_levels", None),
+                "minage_newest": ("no_levels", None),
+                "mincount": ("no_levels", None),
+                "minsize": ("no_levels", None),
+                "minsize_largest": ("no_levels", None),
+                "minsize_smallest": ("no_levels", None),
+                "negative_age_tolerance": 5.0,
+            },
+            [
+                Result(state=State.OK, notice="Include patterns: c:\\temp\\*.txt"),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file1.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file2.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file3.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file4.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(state=State.OK, summary="Count: 4"),
+                Metric("count", 4.0),
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("size", 0.0),
+                Result(state=State.OK, summary="Largest size: 0 B"),
+                Metric("size_largest", 0.0),
+                Result(state=State.OK, summary="Smallest size: 0 B"),
+                Metric("size_smallest", 0.0),
+                Result(state=State.OK, summary="Oldest age: 4 years 264 days"),
+                Metric("age_oldest", 148956371.0),
+                Result(state=State.OK, summary="Newest age: 4 years 264 days"),
+                Metric("age_newest", 148956371.0),
+            ],
+            id="regex group pattern",
+        ),
+        pytest.param(
+            [
+                ["1756366821"],
+                ["c:\\temp\\file1.txt", "0", "1607410450"],
+                ["c:\\temp\\file2.txt", "0", "1607410450"],
+                ["c:\\temp\\file3.txt", "0", "1607410450"],
+                ["c:\\temp\\file4.txt", "0", "1607410450"],
+            ],
+            "banana",
+            {
+                "group_patterns": [
+                    {"group_pattern_exclude": "", "group_pattern_include": "c:\\temp\\*.txt"}
+                ],
+                "minage_oldest": ("fixed", (86400.0, 3600.0)),
+            },
+            [
+                Result(state=State.OK, notice="Include patterns: c:\\temp\\*.txt"),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file1.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file2.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file3.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(
+                    state=State.OK, notice="[c:\\temp\\file4.txt] Age: 4 years 264 days, Size: 0 B"
+                ),
+                Result(state=State.OK, summary="Count: 4"),
+                Metric("count", 4.0),
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("size", 0.0),
+                Result(state=State.OK, summary="Largest size: 0 B"),
+                Metric("size_largest", 0.0),
+                Result(state=State.OK, summary="Smallest size: 0 B"),
+                Metric("size_smallest", 0.0),
+                Result(state=State.OK, summary="Oldest age: 4 years 264 days"),
+                Metric("age_oldest", 148956371.0),
+                Result(state=State.OK, summary="Newest age: 4 years 264 days"),
+                Metric("age_newest", 148956371.0),
+            ],
+            id="regex group pattern",
+        ),
         pytest.param(
             INFO,
             "log",

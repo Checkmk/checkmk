@@ -421,8 +421,8 @@ def _check_individual_files(
         ("size_smallest", file_size),
         ("size_largest", file_size),
     ]:
-        levels_upper = params.get("max" + key, (None, None))
-        levels_lower = params.get("min" + key, (None, None))
+        levels_upper = params.get("max" + key, (None, None))[1]
+        levels_lower = params.get("min" + key, (None, None))[1]
         results = check_levels_v1(
             value,
             metric_name=key,

@@ -229,6 +229,7 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
             "maximum",
         ),
         ("allpercentprocessortime", "PT1M", "maximum"),
+        ("allcachehits,allcachemisses,cachemissrate,allgetcommands", "PT1M", "total"),
     ],
 }
 

@@ -51,6 +51,30 @@ AZURE_REDIS_WITH_METRICS = {
                 value=25,
                 unit="percent",
             ),
+            "total_allcachehits": AzureMetric(
+                name="allcachehits",
+                aggregation="total",
+                value=385,
+                unit="count",
+            ),
+            "total_allcachemisses": AzureMetric(
+                name="allcachemisses",
+                aggregation="total",
+                value=99,
+                unit="count",
+            ),
+            "total_cachemissrate": AzureMetric(
+                name="cachemissrate",
+                aggregation="total",
+                value=20.454545454545457,
+                unit="percent",
+            ),
+            "total_allgetcommands": AzureMetric(
+                name="allgetcommands",
+                aggregation="total",
+                value=484,
+                unit="count",
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
@@ -108,6 +132,26 @@ def test_check_azure_redis(
                 Metric("util", 25.0),
             ],
             id="redis CPU utilization",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
+                "cache_hit_ratio": ("fixed", (85.0, 80.0)),
+            },
+            azure_redis.check_plugin_azure_redis_cache_effectiveness,
+            [
+                Result(
+                    state=State.CRIT, summary="Hit ratio: 79.55% (warn/crit below 85.00%/80.00%)"
+                ),
+                Metric("azure_redis_cache_hit_ratio", 79.54545454545455),
+                Result(state=State.OK, summary="Cache hits: 385"),
+                Metric("azure_redis_cache_hits", 385.0),
+                Result(state=State.OK, summary="Cache misses: 99"),
+                Metric("azure_redis_cache_misses", 99.0),
+                Result(state=State.OK, notice="Gets: 484"),
+                Metric("azure_redis_gets", 484.0),
+            ],
+            id="redis Cache effectiveness",
         ),
     ],
 )

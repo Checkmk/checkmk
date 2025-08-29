@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -14,9 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2 import (
-    check_levels as check_levels_v2,
-)
+from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
@@ -114,5 +113,53 @@ check_plugin_azure_redis_cpu_utilization = CheckPlugin(
     check_ruleset_name="azure_redis_cpu_utilization",
     check_default_parameters={
         "cpu_utilization": ("fixed", (70.0, 80.0)),
+    },
+)
+
+
+check_plugin_azure_redis_cache_effectiveness = CheckPlugin(
+    name="azure_redis_cache_effectiveness",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Cache effectiveness",
+    discovery_function=create_discover_by_metrics_function_single(
+        "total_cachemissrate",
+        "total_allcachehits",
+        "total_allcachemisses",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "total_cachemissrate",
+                "azure_redis_cache_hit_ratio",
+                "Hit ratio",
+                render.percent,
+                lower_levels_param="cache_hit_ratio",
+                map_func=lambda x: 100.0 - x,  # Convert miss rate to hit rate
+            ),
+            MetricData(
+                "total_allcachehits",
+                "azure_redis_cache_hits",
+                "Cache hits",
+                str,
+            ),
+            MetricData(
+                "total_allcachemisses",
+                "azure_redis_cache_misses",
+                "Cache misses",
+                str,
+            ),
+            MetricData(
+                "total_allgetcommands",
+                "azure_redis_gets",
+                "Gets",
+                str,
+                notice_only=True,
+            ),
+        ],
+        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+    ),
+    check_ruleset_name="azure_redis_cache_effectiveness",
+    check_default_parameters={
+        "cache_hit_ratio": ("fixed", (85.0, 80.0)),
     },
 )

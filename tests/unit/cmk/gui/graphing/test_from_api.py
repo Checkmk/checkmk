@@ -341,6 +341,9 @@ _ALLOWED_DUPLICATES = {
     "Available capacity": {"emcvnx_avail_capacity", "capacity_perc"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
+    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
+    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
+    "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Cluster utilization": {
         "kube_cpu_cluster_allocatable_utilization",
         "kube_memory_cluster_allocatable_utilization",

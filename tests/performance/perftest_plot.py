@@ -207,12 +207,12 @@ class PerformanceDb:
         self.connection = psycopg.connect(self.dsn, autocommit=True)
 
     @contextmanager
-    def cursor(self) -> Iterator[psycopg.cursor.Cursor]:
+    def _cursor(self) -> Iterator[psycopg.cursor.Cursor]:
         """Return an active cursor in a new autocommit connection."""
         with self.connection.cursor() as cursor:
             yield cursor
 
-    def add_job(
+    def _add_job(
         self,
         job_name: str,
         start_timestamp: Datetime,
@@ -230,7 +230,7 @@ class PerformanceDb:
         try:
             return self.get_job(job_name=job_name)[0]
         except ValueError:
-            with self.cursor() as cursor:
+            with self._cursor() as cursor:
                 cursor.execute(
                     """
                     INSERT INTO jobs(
@@ -275,7 +275,7 @@ class PerformanceDb:
         Raises:
             ValueError: If no job with the specified name is found in the database.
         """
-        with self.cursor() as cursor:
+        with self._cursor() as cursor:
             cursor.execute(
                 """
                 SELECT
@@ -317,7 +317,7 @@ class PerformanceDb:
             print(excp)
             return False
 
-    def add_scenario(self, scenario_name: str, scenario_description: str | None = None) -> int:
+    def _add_scenario(self, scenario_name: str, scenario_description: str | None = None) -> int:
         """
         Adds a scenario to the database if it does not already exist.
 
@@ -338,7 +338,7 @@ class PerformanceDb:
         if scenario_details := self.get_scenario(scenario_name=scenario_name):
             return scenario_details[0]
         else:
-            with self.cursor() as cursor:
+            with self._cursor() as cursor:
                 cursor.execute(
                     """
                     INSERT INTO scenarios(
@@ -366,7 +366,7 @@ class PerformanceDb:
             ScenarioDetails | None: An object containing the scenario's ID, name and description
                 or None if the scenario was not found.
         """
-        with self.cursor() as cursor:
+        with self._cursor() as cursor:
             cursor.execute(
                 """
                 SELECT
@@ -395,12 +395,12 @@ class PerformanceDb:
         Returns:
             list[str]: A list containing the distinct scenario names.
         """
-        with self.cursor() as cursor:
+        with self._cursor() as cursor:
             cursor.execute("""SELECT DISTINCT scenario_name FROM scenarios""")
             scenario_names = [_[0] for _ in cursor.fetchall()]
         return scenario_names
 
-    def add_test(
+    def _add_test(
         self, job_id: int, scenario_id: int, start_timestamp: Datetime, end_timestamp: Datetime
     ) -> int:
         """
@@ -417,12 +417,11 @@ class PerformanceDb:
 
         Raises:
             ValueError: If the test cannot be added to the database.
-
         """
         if test_details := self.get_test(job_id=job_id, scenario_id=scenario_id):
             return test_details[0]
         else:
-            with self.cursor() as cursor:
+            with self._cursor() as cursor:
                 cursor.execute(
                     """
                     INSERT INTO tests(
@@ -453,7 +452,7 @@ class PerformanceDb:
             TestDetails | None: An object containing the details of the test
                 or None if the test was not found.
         """
-        with self.cursor() as cursor:
+        with self._cursor() as cursor:
             cursor.execute(
                 """
                 SELECT
@@ -471,78 +470,9 @@ class PerformanceDb:
             return None
         return TestDetails(*test_details)
 
-    def write_measurements(self, test_id: int, measurements: MeasurementsList) -> None:
+    def read_benchmark_data(self, test_id: int) -> Measurements:
         """
-        Inserts measurement data into the 'metrics' database table for a given test.
-
-        Args:
-            test_id (int): The identifier of the test to associate the measurements with.
-            measurements (MeasurementsList): A list of dictionaries, each containing metric names
-                and their corresponding values. Each dictionary must include a "time" key
-                representing the measurement timestamp.
-
-        Notes:
-            - Each metric is inserted as a separate row in the 'metrics' table.
-        """
-        with self.cursor() as cursor:
-            data = []
-            for measurement in measurements:
-                assert isinstance(measurement, dict)
-                for metric_name in measurement:
-                    if metric_name == "time":
-                        continue
-                    data.append(
-                        (test_id, metric_name, measurement[metric_name], measurement["time"])
-                    )
-            cursor.executemany(
-                """
-                INSERT INTO metrics (
-                    test_id,
-                    metric_name,
-                    measured_value,
-                    measured_at
-                )
-                VALUES (%s,%s,%s,%s)
-                """,
-                data,
-            )
-
-    def write_benchmark_statistics(self, test_id: int, benchmark_statistics: Measurements) -> None:
-        """
-        Writes benchmark statistics to the database for a given test.
-
-        Args:
-            test_id (int): The identifier of the test for which statistics are recorded.
-            benchmark_statistics (Measurements): A dictionary containing benchmark metrics and
-                their values.
-
-        Note:
-            Any value types other than int and float are ignored.
-        """
-        write_benchmark_statistics: dict[str, int | float] = {
-            key: val for key, val in benchmark_statistics.items() if isinstance(val, int | float)
-        }
-        if "data" in benchmark_statistics:
-            assert isinstance(benchmark_statistics["data"], list)
-            for i, value in enumerate(benchmark_statistics["data"]):
-                write_benchmark_statistics[f"data{i}"] = value
-        with self.cursor() as cursor:
-            for metric_name, value in write_benchmark_statistics.items():
-                cursor.execute(
-                    """
-                    INSERT INTO benchmarks (
-                        test_id,
-                        metric_name,
-                        measured_value
-                    )
-                    VALUES (%s,%s,%s)
-                    """,
-                    (test_id, metric_name, value),
-                )
-
-    def read_benchmark_statistics(self, test_id: int) -> Measurements:
-        """
-        Reads benchmark statistics for a given test ID from the database.
+        Reads benchmark data for a given test from the database.
 
         Fetches metric names and their measured values associated with the specified test ID,
         ignoring any values that are not of type int or float. The results are returned as a
@@ -557,7 +487,7 @@ class PerformanceDb:
         Note:
             Any value types other than int and float are ignored.
         """
-        with self.cursor() as cursor:
+        with self._cursor() as cursor:
             cursor.execute(
                 """
                     SELECT metric_name, measured_value
@@ -575,22 +505,62 @@ class PerformanceDb:
 
         return measurements
 
-    def read_measurements(self, test_id: int) -> MeasurementsList:
+    def write_benchmark_data(self, test_id: int, benchmark_statistics: Measurements) -> None:
         """
-        Retrieves and organizes measurement data for a given test ID from the database.
+        Writes benchmark data for a given test to the database.
 
         Args:
-            test_id (int): The ID of the test for which measurements are to be read.
+            test_id (int): The identifier of the test for which statistics are recorded.
+            benchmark_statistics (Measurements): A dictionary containing benchmark metrics and
+                their values.
+
+        Note:
+            Any value types other than int and float are ignored.
+        """
+        benchmark_data: dict[str, int | float] = {
+            key: val for key, val in benchmark_statistics.items() if isinstance(val, int | float)
+        }
+        if "data" in benchmark_statistics:
+            assert isinstance(benchmark_statistics["data"], list)
+            for i, value in enumerate(benchmark_statistics["data"]):
+                benchmark_data[f"data{i}"] = value
+        with self._cursor() as cursor:
+            for metric_name, value in benchmark_data.items():
+                cursor.execute(
+                    """
+                    INSERT INTO benchmarks (
+                        test_id,
+                        metric_name,
+                        measured_value
+                    )
+                    VALUES (%s,%s,%s)
+                    """,
+                    (test_id, metric_name, value),
+                )
+
+    def read_scenario_data(self, job_name: str, scenario_name: str) -> MeasurementsList:
+        """
+        Reads measurement data for a given job name and scenario from the database.
+
+        Args:
+            job_name (str): The name of the job for which scenario data should be retrieved.
+            scenario_name (str): The name of the scenario for which data should be retrieved.
 
         Returns:
-            MeasurementsList: A list of dictionaries, each containing a 'time' key (timestamp)
-            and metric name/value pairs for that time.
+            MeasurementsList: A list with the measurements for the scenario.
 
-        Raises:
-            AssertionError: If the database returns a 'measured_at' value that is not a Datetime instance,
-            or if the internal data structures do not match expected types.
+        Notes:
+            - If no data is found for the scenario, an empty list is returned.
         """
-        with self.cursor() as cursor:
+        if (job_details := self.get_job(job_name=job_name)) is None:
+            return []
+        if (scenario_details := self.get_scenario(scenario_name=scenario_name)) is None:
+            return []
+        if (
+            test_details := self.get_test(job_id=job_details[0], scenario_id=scenario_details[0])
+        ) is None:
+            return []
+        with self._cursor() as cursor:
             cursor.execute(
                 """
                     SELECT metric_name, measured_at, measured_value
@@ -598,7 +568,7 @@ class PerformanceDb:
                     WHERE test_id = %s
                     ORDER BY metric_name ASC, measured_at ASC
                     """,
-                (test_id,),
+                (test_details[0],),
             )
             raw_measurements: dict = {}
             while rows := cursor.fetchmany(100):
@@ -617,7 +587,7 @@ class PerformanceDb:
 
         return measurements
 
-    def write_performance_data(
+    def write_scenario_data(
         self,
         job_name: str,
         job_starttime: Datetime,
@@ -652,7 +622,7 @@ class PerformanceDb:
             and isinstance((machine_info := benchmark_data["machine_info"]), dict)
         ):
             machine_info = {}
-        job_id = self.add_job(
+        job_id = self._add_job(
             job_name=job_name,
             start_timestamp=job_starttime,
             end_timestamp=job_endtime,
@@ -662,21 +632,38 @@ class PerformanceDb:
             system_machine=str(machine_info.get("machine", "")),
             host_name=str(machine_info.get("node", "")),
         )
-        scenario_id = self.add_scenario(scenario_name)
+        scenario_id = self._add_scenario(scenario_name)
         if not self.get_test(job_id=job_id, scenario_id=scenario_id):
-            test_id = self.add_test(
+            test_id = self._add_test(
                 job_id=job_id,
                 scenario_id=scenario_id,
                 start_timestamp=test_starttime,
                 end_timestamp=test_endtime,
             )
-            self.write_measurements(test_id=test_id, measurements=performance_data)
+            with self._cursor() as cursor:
+                data = []
+                for measurement in performance_data:
+                    assert isinstance(measurement, dict)
+                    for metric_name in measurement:
+                        if metric_name == "time":
+                            continue
+                        data.append(
+                            (test_id, metric_name, measurement[metric_name], measurement["time"])
+                        )
+                cursor.executemany(
+                    """
+                    INSERT INTO metrics (test_id, metric_name, measured_value, measured_at)
+                    VALUES (%s,%s,%s,%s)
+                    """,
+                    data,
+                )
+
             assert isinstance(benchmarks := benchmark_data["benchmarks"], list)
             benchmark_statistics: Measurements | None = next(
                 (_["stats"] for _ in benchmarks if _["name"] == scenario_name), None
             )
             if benchmark_statistics:
-                self.write_benchmark_statistics(
+                self.write_benchmark_data(
                     test_id=test_id,
                     benchmark_statistics=benchmark_statistics,
                 )
@@ -796,24 +783,24 @@ class PerftestPlot:
             self.args.skip_graph_generation or self.args.skip_filesystem_writes
         )
         self.jira_url = self.args.jira_url
-        self.jira_token = self.read_jira_token()
+        self.jira_token = self._read_jira_token()
         self.alert_on_failure = self.args.alert_on_failure and self.jira_url and self.jira_token
         self.validate_baselines = self.args.validate_baselines or self.alert_on_failure
-        self.job_names = self.read_job_names()
-        self.scenario_names = self.read_scenario_names()
+        self.job_names = self._read_job_names()
+        self.scenario_names = self._read_scenario_names()
         self.jobs = self.read_performance_data()
         self.output_dir = self.args.output_dir or (
-            self.job_file_path(self.job_names[-1]).parent if self.job_names else self.root_dir
+            self._job_file_path(self.job_names[-1]).parent if self.job_names else self.root_dir
         )
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def px(val: int) -> int:
+    def _px(val: int) -> int:
         """Return a figsize value given in pixels"""
         return 1 / pyplot.rcParams["figure.dpi"] * val
 
     @staticmethod
-    def read_json(json_path: Path) -> Measurements | MeasurementsList | None:
+    def _read_json(json_path: Path) -> Measurements | MeasurementsList | None:
         """
         Reads and parses a JSON file from the given path.
 
@@ -836,7 +823,7 @@ class PerftestPlot:
             logger.error('Can not parse JSON file "%s"!', json_path)
         return None
 
-    def job_file_path(self, job_name: str) -> Path:
+    def _job_file_path(self, job_name: str) -> Path:
         """
         Returns the file path to the benchmark JSON file for a given job.
 
@@ -848,7 +835,7 @@ class PerftestPlot:
         """
         return self.root_dir / f"{job_name}/benchmark.json"
 
-    def read_jira_token(self) -> str | None:
+    def _read_jira_token(self) -> str | None:
         """
         Read JIRA authentication token from environment variable or file.
 
@@ -961,7 +948,7 @@ class PerftestPlot:
 
             fig, times = pyplot.subplots(1)
             fig.suptitle(f"Execution time: {scenario_name}")
-            fig.set_size_inches(self.px(1920), self.px(1080))
+            fig.set_size_inches(self._px(1920), self._px(1080))
             times.errorbar(x=names, y=values, yerr=err_values)
             times.set_ylim(ymin=0)
             times.set_ylabel("time (s)")
@@ -1054,7 +1041,7 @@ class PerftestPlot:
         for scenario_name in self.scenario_names:
             fig, ax = pyplot.subplots(2)
             fig.suptitle(f"Resource usage: {scenario_name}")
-            fig.set_size_inches(self.px(1920), self.px(1080))
+            fig.set_size_inches(self._px(1920), self._px(1080))
             graph_file_path = graph_file.parent / f"{scenario_name}.{graph_file.name}"
             logger.info('Writing graph "%s"...', graph_file_path)
             for job_name, data in self.jobs.items():
@@ -1091,7 +1078,7 @@ class PerftestPlot:
             pyplot.savefig(graph_file_path)
             pyplot.close()
 
-    def read_job_names(self) -> list[str]:
+    def _read_job_names(self) -> list[str]:
         """
         Retrieves and returns a sorted list of job names that are either present on disk or exist
         in the database.
@@ -1119,7 +1106,7 @@ class PerftestPlot:
             job_names_on_disk = [
                 job.name
                 for job in self.root_dir.iterdir()
-                if job.is_dir() and self.job_file_path(job.name).exists()
+                if job.is_dir() and self._job_file_path(job.name).exists()
             ]
         else:
             print(f'Skipping root dir "{self.root_dir}": Folder not found!')
@@ -1133,7 +1120,7 @@ class PerftestPlot:
             ]
         )
 
-    def read_job_data(self, job_name: str) -> Measurements:
+    def _read_benchmark_data(self, job_name: str) -> Measurements:
         """
         Reads benchmark job data from disk or database.
 
@@ -1155,10 +1142,10 @@ class PerftestPlot:
         Args:
             job_name (str): The name of the job to read data for.
         """
-        job_file_path = self.job_file_path(job_name)
+        job_file_path = self._job_file_path(job_name)
         if job_file_path.exists() and self.read_from_filesystem:
             logger.info('Reading data for job "%s" from the filesystem...', job_name)
-            data = self.read_json(job_file_path)
+            data = self._read_json(job_file_path)
             if isinstance(data, dict):
                 return data
 
@@ -1176,7 +1163,7 @@ class PerftestPlot:
             if not test_details:
                 continue
             test_id = test_details[0]
-            if benchmark_statistics := self.database.read_benchmark_statistics(test_id):
+            if benchmark_statistics := self.database.read_benchmark_data(test_id):
                 benchmarks.append(
                     {
                         "name": scenario_name,
@@ -1195,36 +1182,7 @@ class PerftestPlot:
             },
         }
 
-    def read_scenario_names(self) -> list[str]:
-        """
-        Retrieves a sorted list of scenario names from the filesystem and/or database.
-
-        Scenarios are identified by files matching the pattern '*.resources.json' in the job
-        directories. The scenario name is derived from the file stem, with the '.resources' suffix
-        removed. If enabled, scenario names are also retrieved from the database and combined with
-        those from the filesystem.
-
-        Returns:
-            list[str]: A sorted list of scenario names.
-        """
-        scenario_names = (
-            list(
-                {
-                    _.stem.removesuffix(".resources")
-                    for job_name in self.job_names
-                    if (job_file_path := self.job_file_path(job_name)).exists()
-                    for _ in list(job_file_path.parent.glob("*.resources.json"))
-                }
-            )
-            if self.read_from_filesystem
-            else []
-        )
-        if self.read_from_database:
-            scenario_names += self.database.get_scenario_names()
-        scenario_names.sort()
-        return scenario_names
-
-    def read_scenario_data(self, job_name: str) -> dict[str, MeasurementsList]:
+    def _read_scenario_data(self, job_name: str) -> dict[str, MeasurementsList]:
         """
         Reads measurement data for each scenario associated with a given job name from either the
         filesystem or a database.
@@ -1246,29 +1204,43 @@ class PerftestPlot:
             if scenario_file_path.exists() and self.read_from_filesystem:
                 # read measurements from file
                 scenario_data[scenario_name] = (
-                    data if isinstance(data := self.read_json(scenario_file_path), list) else []
+                    data if isinstance(data := self._read_json(scenario_file_path), list) else []
                 )
             elif self.read_from_database and self.database.check_job(job_name=job_name):
-                # read measurements from database
-                if (job_details := self.database.get_job(job_name=job_name)) is None:
-                    scenario_data[scenario_name] = []
-                    continue
-                job_id = job_details[0]
-                if (
-                    scenario_details := self.database.get_scenario(scenario_name=scenario_name)
-                ) is None:
-                    scenario_data[scenario_name] = []
-                    continue
-                scenario_id = scenario_details[0]
-                if (
-                    test_details := self.database.get_test(job_id=job_id, scenario_id=scenario_id)
-                ) is None:
-                    scenario_data[scenario_name] = []
-                    continue
-                test_id = test_details[0]
-                scenario_data[scenario_name] = self.database.read_measurements(test_id=test_id)
+                scenario_data[scenario_name] = self.database.read_scenario_data(
+                    job_name=job_name, scenario_name=scenario_name
+                )
 
         return scenario_data
+
+    def _read_scenario_names(self) -> list[str]:
+        """
+        Retrieves a sorted list of scenario names from the filesystem and/or database.
+
+        Scenarios are identified by files matching the pattern '*.resources.json' in the job
+        directories. The scenario name is derived from the file stem, with the '.resources' suffix
+        removed. If enabled, scenario names are also retrieved from the database and combined with
+        those from the filesystem.
+
+        Returns:
+            list[str]: A sorted list of scenario names.
+        """
+        scenario_names = (
+            list(
+                {
+                    _.stem.removesuffix(".resources")
+                    for job_name in self.job_names
+                    if (job_file_path := self._job_file_path(job_name)).exists()
+                    for _ in list(job_file_path.parent.glob("*.resources.json"))
+                }
+            )
+            if self.read_from_filesystem
+            else []
+        )
+        if self.read_from_database:
+            scenario_names += self.database.get_scenario_names()
+        scenario_names.sort()
+        return scenario_names
 
     def read_performance_data(self) -> PerformanceData:
         """
@@ -1285,7 +1257,10 @@ class PerftestPlot:
         return dict(
             sorted(
                 {
-                    job_name: (self.read_job_data(job_name), self.read_scenario_data(job_name))
+                    job_name: (
+                        self._read_benchmark_data(job_name),
+                        self._read_scenario_data(job_name),
+                    )
                     for job_name in self.job_names
                 }.items()
             )
@@ -1311,7 +1286,7 @@ class PerftestPlot:
         """
         for job_name in self.jobs:
             benchmark_data, scenario_data = self.jobs[job_name]
-            job_file_path = self.job_file_path(job_name)
+            job_file_path = self._job_file_path(job_name)
             if self.write_json_files:
                 logger.info('Writing data for job "%s" to the filesystem...', job_name)
                 job_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1341,7 +1316,7 @@ class PerftestPlot:
                     )
                     if not performance_data:
                         continue
-                    self.database.write_performance_data(
+                    self.database.write_scenario_data(
                         job_name=job_name,
                         job_starttime=job_starttime,
                         job_endtime=job_endtime,
@@ -1357,7 +1332,7 @@ class PerftestPlot:
                     )
 
     @staticmethod
-    def get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
+    def _get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
         """
         Compute the arithmetic mean for a specified metric across a list of measurement records.
 
@@ -1375,7 +1350,7 @@ class PerftestPlot:
         values: list[float] = [float(str(row[metric_name])) for row in measurements]
         return fmean(values or [0])
 
-    def calculate_baseline(self, scenario_name: str) -> AverageValues:
+    def _calculate_baseline(self, scenario_name: str) -> AverageValues:
         """
         Compute average (baseline) metrics for a given benchmark scenario across all loaded jobs.
 
@@ -1407,9 +1382,9 @@ class PerftestPlot:
                 continue
             if not (measurements := job[1][scenario_name]):
                 continue
-            cpu_averages.append(self.get_mean_value(measurements, "cpu_info.cpu_percent"))
+            cpu_averages.append(self._get_mean_value(measurements, "cpu_info.cpu_percent"))
             mem_averages.append(
-                self.get_mean_value(measurements, "memory_info.virtual_memory_percent")
+                self._get_mean_value(measurements, "memory_info.virtual_memory_percent")
             )
         time_baseline = fmean(time_averages) if time_averages else 0.0
         cpu_baseline = fmean(cpu_averages) if cpu_averages else 0.0
@@ -1417,7 +1392,7 @@ class PerftestPlot:
 
         return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
 
-    def current_averages(self, scenario_name: str) -> AverageValues | None:
+    def _current_averages(self, scenario_name: str) -> AverageValues | None:
         """
         Return averaged performance metrics for a given benchmark scenario of the most recent job.
 
@@ -1441,8 +1416,8 @@ class PerftestPlot:
         if not benchmark:
             return None
         time_avg = benchmark["stats"]["mean"]
-        cpu_avg = self.get_mean_value(job[1][scenario_name], "cpu_info.cpu_percent")
-        mem_avg = self.get_mean_value(job[1][scenario_name], "memory_info.virtual_memory_percent")
+        cpu_avg = self._get_mean_value(job[1][scenario_name], "cpu_info.cpu_percent")
+        mem_avg = self._get_mean_value(job[1][scenario_name], "memory_info.virtual_memory_percent")
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 
@@ -1477,11 +1452,11 @@ class PerftestPlot:
                 continue
             if not scenario_name.startswith("test_"):
                 continue
-            averages = self.current_averages(scenario_name)
+            averages = self._current_averages(scenario_name)
             if not averages:
                 alerts.append(f"{msg_prefix}Missing data! Test aborted or skipped?")
                 continue
-            baseline = self.calculate_baseline(scenario_name)
+            baseline = self._calculate_baseline(scenario_name)
             if averages.avg_time > baseline.avg_time * (100 + overshoot_tolerance) / 100:
                 overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
                 msg = (

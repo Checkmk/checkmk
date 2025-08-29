@@ -69,13 +69,13 @@ def _modify_test_site(otel_site: Site, hostname: str) -> Iterator[None]:
         )
         rule_id = otel_site.openapi.rules.create(
             ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": True},
             conditions={
                 "host_name": {
                     "match_on": [hostname],
                     "operator": "one_of",
                 },
             },
+            value={},
             folder="/",
         )
         yield

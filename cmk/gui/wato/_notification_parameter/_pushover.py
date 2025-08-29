@@ -50,7 +50,7 @@ class NotificationParameterPushover(NotificationParameter):
                         help_text=Help(
                             "You need to provide a valid API key to be able to send push notifications "
                             'using Pushover. Register and login to <a href="https://www.pushover.net" '
-                            'target="_blank">Pushover</a>, thn create your Checkmk installation as '
+                            'target="_blank">Pushover</a>, create your Checkmk installation as '
                             "application and obtain your API key."
                         ),
                         custom_validate=[

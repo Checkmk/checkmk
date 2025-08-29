@@ -31,7 +31,7 @@ public:
     template <typename Rep, typename Period, typename Predicate>
     void wait_for(Kind trigger,
                   const std::chrono::duration<Rep, Period> &rel_time,
-                  Predicate pred) {
+                  Predicate pred) const {
         std::unique_lock<std::mutex> ul(_mutex);
         auto &cond = condition_variable_for(trigger);
         if (rel_time == rel_time.zero()) {
@@ -42,17 +42,22 @@ public:
     }
 
 private:
-    std::mutex _mutex;
-    std::condition_variable _cond_all;
-    std::condition_variable _cond_check;
-    std::condition_variable _cond_state;
-    std::condition_variable _cond_log;
-    std::condition_variable _cond_downtime;
-    std::condition_variable _cond_comment;
-    std::condition_variable _cond_command;
-    std::condition_variable _cond_program;
+    // TODO(sp): All of this "mutable" Kung Fu is here to make wait_for() const,
+    // which in turn is a prerequisite to make the ICore used by Query const: It
+    // calls wait_for() if there is a WaitCondition in the Livestatus query.
+    // Although this is semantically OK, perhaps there is a nicer way to achieve
+    // this without all those "mutable"s.
+    mutable std::mutex _mutex;
+    mutable std::condition_variable _cond_all;
+    mutable std::condition_variable _cond_check;
+    mutable std::condition_variable _cond_state;
+    mutable std::condition_variable _cond_log;
+    mutable std::condition_variable _cond_downtime;
+    mutable std::condition_variable _cond_comment;
+    mutable std::condition_variable _cond_command;
+    mutable std::condition_variable _cond_program;
 
-    std::condition_variable &condition_variable_for(Kind trigger);
+    std::condition_variable &condition_variable_for(Kind trigger) const;
 };
 
 #endif  // Triggers_h

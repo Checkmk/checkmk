@@ -224,7 +224,8 @@ public:
     [[nodiscard]] Logger *loggerLivestatus() const override;
     [[nodiscard]] Logger *loggerRRD() const override;
 
-    Triggers &triggers() override;
+    [[nodiscard]] Triggers &triggers() override;
+    [[nodiscard]] const Triggers &triggers() const override;
 
     [[nodiscard]] size_t numQueuedNotifications() const override;
     [[nodiscard]] size_t numQueuedAlerts() const override;

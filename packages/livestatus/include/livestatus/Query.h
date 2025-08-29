@@ -34,7 +34,7 @@ class Logger;
 
 class Query {
 public:
-    Query(ParsedQuery parsed_query, Table &table, ICore &core,
+    Query(ParsedQuery parsed_query, Table &table, const ICore &core,
           OutputBuffer &output);
 
     bool process();
@@ -70,7 +70,7 @@ public:
 private:
     const ParsedQuery parsed_query_;
     Table &table_;
-    ICore &core_;
+    const ICore &core_;
     OutputBuffer &output_;
     std::unique_ptr<const User> user_;
 

@@ -254,6 +254,7 @@ class DummyMonitoringCore : public ICore {
     [[nodiscard]] Logger *loggerRRD() const override { return {}; }
 
     Triggers &triggers() override { return triggers_; }
+    const Triggers &triggers() const override { return triggers_; }
 
     [[nodiscard]] size_t numQueuedNotifications() const override { return {}; }
     [[nodiscard]] size_t numQueuedAlerts() const override { return {}; }

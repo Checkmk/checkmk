@@ -28,7 +28,7 @@
 
 using namespace std::chrono_literals;
 
-Query::Query(ParsedQuery parsed_query, Table &table, ICore &core,
+Query::Query(ParsedQuery parsed_query, Table &table, const ICore &core,
              OutputBuffer &output)
     : parsed_query_{std::move(parsed_query)}
     , table_{table}

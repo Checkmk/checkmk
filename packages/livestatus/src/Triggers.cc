@@ -43,7 +43,7 @@ void Triggers::notify_all(Kind trigger) {
     condition_variable_for(trigger).notify_all();
 }
 
-std::condition_variable &Triggers::condition_variable_for(Kind trigger) {
+std::condition_variable &Triggers::condition_variable_for(Kind trigger) const {
     switch (trigger) {
         case Kind::all:
             return _cond_all;

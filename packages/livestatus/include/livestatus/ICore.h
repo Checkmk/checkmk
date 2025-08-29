@@ -172,7 +172,8 @@ public:
     [[nodiscard]] virtual Logger *loggerLivestatus() const = 0;
     [[nodiscard]] virtual Logger *loggerRRD() const = 0;
 
-    virtual Triggers &triggers() = 0;
+    [[nodiscard]] virtual Triggers &triggers() = 0;
+    [[nodiscard]] virtual const Triggers &triggers() const = 0;
 
     [[nodiscard]] virtual size_t numQueuedNotifications() const = 0;
     [[nodiscard]] virtual size_t numQueuedAlerts() const = 0;

@@ -505,6 +505,7 @@ Logger *NebCore::loggerLivestatus() const { return _logger; }
 Logger *NebCore::loggerRRD() const { return _logger; }
 
 Triggers &NebCore::triggers() { return _triggers; }
+const Triggers &NebCore::triggers() const { return _triggers; }
 
 size_t NebCore::numQueuedNotifications() const { return 0; }
 size_t NebCore::numQueuedAlerts() const { return 0; }

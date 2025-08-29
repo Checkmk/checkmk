@@ -335,9 +335,9 @@ class PerformanceDb:
         Raises:
             ValueError: If there is an error adding the scenario to the database.
         """
-        try:
-            return self.get_scenario(scenario_name=scenario_name)[0]
-        except ValueError:
+        if scenario_details := self.get_scenario(scenario_name=scenario_name):
+            return scenario_details[0]
+        else:
             with self.cursor() as cursor:
                 cursor.execute(
                     """
@@ -355,7 +355,7 @@ class PerformanceDb:
                 raise ValueError(f'Error adding scenario "{scenario_name}"!')
             return scenario_id
 
-    def get_scenario(self, scenario_name: str) -> ScenarioDetails:
+    def get_scenario(self, scenario_name: str) -> ScenarioDetails | None:
         """
         Retrieves the details of a scenario from the database by its name.
 
@@ -363,10 +363,8 @@ class PerformanceDb:
             scenario_name (str): The name of the scenario to retrieve.
 
         Returns:
-            ScenarioDetails: An object containing the scenario's ID, name, and description.
-
-        Raises:
-            ValueError: If no scenario with the given name is found in the database.
+            ScenarioDetails | None: An object containing the scenario's ID, name and description
+                or None if the scenario was not found.
         """
         with self.cursor() as cursor:
             cursor.execute(
@@ -382,7 +380,12 @@ class PerformanceDb:
             )
             scenario_details = cursor.fetchone()
         if scenario_details is None:
-            raise ValueError(f'Error retrieving scenario "{scenario_name}"!')
+            logger.log(
+                logging.WARNING if scenario_name.startswith("test_") else logging.DEBUG,
+                'Failed to retrieve scenario "%s"!',
+                scenario_name,
+            )
+            return None
         return ScenarioDetails(*scenario_details)
 
     def get_scenario_names(self) -> list[str]:
@@ -416,9 +419,9 @@ class PerformanceDb:
             ValueError: If the test cannot be added to the database.
 
         """
-        try:
-            return self.get_test(job_id=job_id, scenario_id=scenario_id)[0]
-        except ValueError:
+        if test_details := self.get_test(job_id=job_id, scenario_id=scenario_id):
+            return test_details[0]
+        else:
             with self.cursor() as cursor:
                 cursor.execute(
                     """
@@ -438,7 +441,7 @@ class PerformanceDb:
                 raise ValueError(f'Error adding test "{scenario_id}" to job "{job_id}"!')
             return test_id
 
-    def get_test(self, job_id: int, scenario_id: int) -> TestDetails:
+    def get_test(self, job_id: int, scenario_id: int) -> TestDetails | None:
         """
         Retrieve the details of a specific test from the database based on job and scenario IDs.
 
@@ -447,10 +450,8 @@ class PerformanceDb:
             scenario_id (int): The ID of the scenario associated with the test.
 
         Returns:
-            TestDetails: An object containing the details of the test.
-
-        Raises:
-            ValueError: If no test details are found for the given job_id and scenario_id.
+            TestDetails | None: An object containing the details of the test
+                or None if the test was not found.
         """
         with self.cursor() as cursor:
             cursor.execute(
@@ -467,9 +468,7 @@ class PerformanceDb:
             )
             test_details = cursor.fetchone()
         if test_details is None:
-            raise ValueError(
-                f'Test details for scenario "{scenario_id}" not found in job "{job_id}"!'
-            )
+            return None
         return TestDetails(*test_details)
 
     def write_measurements(self, test_id: int, measurements: MeasurementsList) -> None:
@@ -664,9 +663,7 @@ class PerformanceDb:
             host_name=str(machine_info.get("node", "")),
         )
         scenario_id = self.add_scenario(scenario_name)
-        try:
-            self.get_test(job_id=job_id, scenario_id=scenario_id)[0]
-        except ValueError:
+        if not self.get_test(job_id=job_id, scenario_id=scenario_id):
             test_id = self.add_test(
                 job_id=job_id,
                 scenario_id=scenario_id,
@@ -1169,8 +1166,14 @@ class PerftestPlot:
         logger.info('Reading data for job "%s" from the database...', job_name)
         job_details = self.database.get_job(job_name=job_name)
         for scenario_name in self.scenario_names:
-            scenario_id, _, scenario_description = self.database.get_scenario(scenario_name)
-            test_id = self.database.get_test(job_details.job_id, scenario_id)[0]
+            scenario_details = self.database.get_scenario(scenario_name)
+            if not scenario_details:
+                continue
+            scenario_id, _, scenario_description = scenario_details
+            test_details = self.database.get_test(job_details.job_id, scenario_id)
+            if not test_details:
+                continue
+            test_id = test_details[0]
             if benchmark_statistics := self.database.read_benchmark_statistics(test_id):
                 benchmarks.append(
                     {
@@ -1249,9 +1252,20 @@ class PerftestPlot:
                     scenario_data[scenario_name] = []
                     continue
                 job_id = job_details[0]
-                scenario_id = self.database.get_scenario(scenario_name=scenario_name)[0]
-                test_id = self.database.get_test(job_id=job_id, scenario_id=scenario_id)[0]
+                if (
+                    scenario_details := self.database.get_scenario(scenario_name=scenario_name)
+                ) is None:
+                    scenario_data[scenario_name] = []
+                    continue
+                scenario_id = scenario_details[0]
+                if (
+                    test_details := self.database.get_test(job_id=job_id, scenario_id=scenario_id)
+                ) is None:
+                    scenario_data[scenario_name] = []
+                    continue
+                test_id = test_details[0]
                 scenario_data[scenario_name] = self.database.read_measurements(test_id=test_id)
+
         return scenario_data
 
     def read_performance_data(self) -> PerformanceData:
@@ -1301,18 +1315,18 @@ class PerftestPlot:
                 job_file_path.parent.mkdir(parents=True, exist_ok=True)
                 with job_file_path.open("w", encoding="utf-8") as json_file:
                     json.dump(benchmark_data, json_file, indent=4, default=str)
-            for scenario_name, performance_data in scenario_data.items():
-                if self.write_json_files:
+                for scenario_name, performance_data in scenario_data.items():
                     with self.scenario_file_path(job_name, scenario_name).open(
                         "w", encoding="utf-8"
                     ) as json_file:
                         json.dump(performance_data, json_file, indent=4, default=str)
 
-                if not len(performance_data) > 0:
-                    continue
+                    if not len(performance_data) > 0:
+                        continue
 
-                if self.write_to_database:
-                    logger.info('Writing data for job "%s" to the database...', job_name)
+            if self.write_to_database:
+                logger.info('Writing data for job "%s" to the database...', job_name)
+                for scenario_name, performance_data in scenario_data.items():
                     job_endtime = (
                         Datetime.fromisoformat(str(_ts))
                         if (_ts := benchmark_data.get("end_time", benchmark_data.get("datetime")))
@@ -1323,6 +1337,8 @@ class PerftestPlot:
                         if (_ts := benchmark_data.get("start_time"))
                         else job_endtime
                     )
+                    if not performance_data:
+                        continue
                     self.database.write_performance_data(
                         job_name=job_name,
                         job_starttime=job_starttime,
@@ -1461,7 +1477,7 @@ class PerftestPlot:
                 continue
             averages = self.current_averages(scenario_name)
             if not averages:
-                alerts.append(f"{msg_prefix}Missing data! Test aborted?")
+                alerts.append(f"{msg_prefix}Missing data! Test aborted or skipped?")
                 continue
             baseline = self.calculate_baseline(scenario_name)
             if averages.avg_time > baseline.avg_time * (100 + overshoot_tolerance) / 100:

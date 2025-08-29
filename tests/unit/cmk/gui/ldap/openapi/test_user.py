@@ -13,8 +13,12 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import (
+    Fixed,
+    LDAPConnectionConfigFixed,
+    LDAPUserConnectionConfig,
+)
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.watolib.users import create_user, default_sites
 from cmk.utils import paths
 from tests.testlib.unit.rest_api_client import ClientRegistry

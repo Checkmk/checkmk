@@ -27,6 +27,7 @@ from cmk.gui.type_defs import (
     UserSpec,
     VirtualHostTreeSpec,
 )
+from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.inventory.config import InvHousekeepingParams
 from cmk.utils import paths
@@ -441,7 +442,7 @@ class CREConfig:
     user_login: bool = True
 
     # Holds dicts defining user connector instances and their properties
-    user_connections: list = field(default_factory=list)
+    user_connections: Sequence[ConfigurableUserConnectionSpec] = field(default_factory=list)
 
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True

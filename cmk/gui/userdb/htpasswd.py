@@ -12,10 +12,10 @@ from cmk.crypto.password import Password
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import HtpasswdUserConnectionConfig
 from cmk.gui.userdb import (
     CheckCredentialsResult,
     ConnectorType,
-    HtpasswdUserConnectionConfig,
     UserAttribute,
     UserConnector,
 )

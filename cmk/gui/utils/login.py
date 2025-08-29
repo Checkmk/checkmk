@@ -9,7 +9,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.userdb import SAMLUserConnectionConfig
+from cmk.gui.user_connection_config_types import SAMLUserConnectionConfig
 from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.urls import makeuri_contextless

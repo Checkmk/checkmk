@@ -81,16 +81,18 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import Users, UserSpec
-from cmk.gui.userdb._connections import (
-    active_connections,
+from cmk.gui.user_connection_config_types import (
     ActivePlugins,
-    get_connection,
-    get_ldap_connections,
     GroupsToAttributes,
     GroupsToContactGroups,
     GroupsToRoles,
     LDAPUserConnectionConfig,
     SyncAttribute,
+)
+from cmk.gui.userdb import (
+    active_connections,
+    get_connection,
+    get_ldap_connections,
 )
 from cmk.gui.userdb._connector import (
     CheckCredentialsResult,

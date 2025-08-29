@@ -32,8 +32,12 @@ from cmk.gui.type_defs import (
     TwoFactorCredentials,
     WebAuthnCredential,
 )
+from cmk.gui.user_connection_config_types import (
+    Fixed,
+    LDAPConnectionConfigFixed,
+    LDAPUserConnectionConfig,
+)
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users

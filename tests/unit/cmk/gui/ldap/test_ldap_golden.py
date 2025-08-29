@@ -20,8 +20,12 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import Users
+from cmk.gui.user_connection_config_types import (
+    Fixed,
+    LDAPConnectionConfigFixed,
+    LDAPUserConnectionConfig,
+)
 from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 
 
 @pytest.fixture(name="mock_ldap", autouse=True)

@@ -33,12 +33,11 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.user_connection_config_types import ACTIVE_DIR, LDAPUserConnectionConfig
 from cmk.gui.userdb import (
-    ACTIVE_DIR,
     get_connection,
     get_ldap_connections,
     get_user_attributes,
-    LDAPUserConnectionConfig,
     load_connection_config,
     UserConnectionConfigFile,
 )

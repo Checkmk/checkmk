@@ -6,20 +6,16 @@
 import abc
 from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Generic, Literal, TypedDict, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 
 from .._user_attribute import UserAttribute
 
 CheckCredentialsResult = UserId | None | Literal[False]
-
-
-class UserConnectionConfig(TypedDict):
-    id: str
-    disabled: bool
 
 
 _T_Config = TypeVar("_T_Config", bound=UserConnectionConfig)

@@ -32,11 +32,8 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.userdb import (
-    ConfigurableUserConnectionSpec,
-    load_connection_config,
-    UserConnectionConfigFile,
-)
+from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
+from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage

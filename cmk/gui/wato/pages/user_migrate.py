@@ -306,11 +306,10 @@ def _get_selected_users() -> list[str]:
 def _get_connector_choices() -> list[tuple[str, str, None]]:
     connector_choices = [("htpasswd", "Local user (htpasswd)", None)]
 
-    for connector_type in [ConnectorType.LDAP, ConnectorType.SAML2]:
-        connector_choices += [
-            (connection["id"], f"{connector_type.upper()}: {connection['id']}", None)
-            for connection in connections_by_type(connector_type)
-        ]
+    connector_choices += [
+        (connection["id"], f"{connection['type'].upper()}: {connection['id']}", None)
+        for connection in connections_by_type("ldap") + connections_by_type("saml2")
+    ]
     return connector_choices
 
 

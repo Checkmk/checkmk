@@ -56,12 +56,8 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.userdb import (
-    get_ldap_connections,
-    LDAPUserConnectionConfig,
-    SAMLUserConnectionConfig,
-    UserConnectionConfigFile,
-)
+from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig, SAMLUserConnectionConfig
+from cmk.gui.userdb import get_ldap_connections, UserConnectionConfigFile
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.userdb_common import get_affected_sites
 from cmk.gui.watolib.config_domains import ConfigDomainGUI

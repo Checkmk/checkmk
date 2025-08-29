@@ -44265,6 +44265,10 @@ msgstr "Anzahl von Anmeldefehlern bis zu Sperrung"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Anzahl zutreffender Regeln in diesem Paket: %d"
 
+#, fuzzy
+msgid "Number of max hops"
+msgstr "Anzahl der Hops"
+
 msgid "Number of messages currently queued"
 msgstr "Anzahl von Meldungen in der Warteschlange"
 
@@ -59064,6 +59068,11 @@ msgid "Specify roles of a control plane node"
 msgstr "Festlegen der Rollen eines Steuerebenen-Knotens"
 
 msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
+
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
 

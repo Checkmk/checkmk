@@ -8,6 +8,17 @@ set -e
 JOBS=6
 readonly ALL_LINTERS=clippy
 
+if
+    getopt --test >/dev/null 2>&1
+    [ $? -eq 4 ]
+then
+    # Provide better commandline with enhanced 'getopt' from util-linux
+    GETOPT_OPTIONS=(--options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" --)
+else
+    # Compatibility with basic 'getopt' as found on non-Linux systems.
+    GETOPT_OPTIONS=('buFl:afDj:h')
+fi
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -16,6 +27,7 @@ failure() {
 usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
+    echo "(long options only available on Linux)"
     echo
     echo "  -b, --build                 build executable"
     echo "  -u, --unit-tests            run unit tests"
@@ -37,7 +49,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt "${GETOPT_OPTIONS[@]}" "$@"); then
         usage >&2
         failure
     fi
@@ -106,35 +118,98 @@ parse_options() {
     readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
+run_build() {
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo build --release
+            ;;
+        *)
+            bazel build :all
+            ;;
+    esac
+}
+
 run_format() {
-    bazel run //:format "$PWD"
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo fmt
+            ;;
+        *)
+            bazel run //:format "$PWD"
+            ;;
+    esac
 }
 
 run_check_format() {
-    bazel run //:format.check "$PWD"
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo fmt --check
+            ;;
+        *)
+            bazel run //:format.check "$PWD"
+            ;;
+    esac
 }
 
 run_test_all() {
-    # 1. obtain rebundled client
-    bazel build //omd/packages/oci:oci_light_lin_x64
+    case "$(uname)" in
+        'SunOS')
+            gmake -C runtimes solaris_libs
+            LD_LIBRARY_PATH="$(pwd)/runtimes/solaris_x86-64/instantclient_19_28:${LD_LIBRARY_PATH}"
+            export LD_LIBRARY_PATH
+            cargo test
+            ;;
+        'AIX')
+            make -C runtimes aix_libs
+            LIB_PATH="$(pwd)/runtimes/solaris_x86-64/instantclient_19_28:${LIB_PATH}"
+            export LIB_PATH
+            cargo test
+            ;;
+        *)
+            # 1. obtain rebundled client
+            bazel build //omd/packages/oci:oci_light_lin_x64
 
-    # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
-    # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
-    path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
-    path_to_runtime="${PWD}/runtimes/oci_light_lin_x64.zip"
-    mkdir -p "${path_to_runtime}"
-    unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
+            # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
+            # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
+            path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
+            path_to_runtime="${PWD}/runtimes/oci_light_lin_x64.zip"
+            mkdir -p "${path_to_runtime}"
+            unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
 
-    # 3. relink libaio
-    libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
-    if [ -e "${libaio}" ]; then
-        ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
-    else
-        echo "libaio absent. Integration tsting is not possible"
-    fi
+            # 3. relink libaio
+            libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
+            if [ -e "${libaio}" ]; then
+                ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
+            else
+                echo "libaio absent. Integration tsting is not possible"
+            fi
 
-    export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
-    bazel test :all
+            export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
+            bazel test :all
+            ;;
+    esac
+}
+
+run_clippy() {
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo clippy
+            ;;
+        *)
+            bazel build --config=clippy :all
+            ;;
+    esac
+}
+
+run_documentation() {
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo doc
+            ;;
+        *)
+            bazel build :doc
+            ;;
+    esac
 }
 
 main() {
@@ -143,12 +218,12 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && bazel build :all
+    test ${RUN_BUILD} = yes && run_build
     test ${RUN_UNIT_TESTS} = yes && run_test_all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
+    test ${RUN_CLIPPY} = yes && run_clippy
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && bazel build :doc
+    test ${RUN_DOCUMENTATION} = yes && run_documentation
     true
 }
 

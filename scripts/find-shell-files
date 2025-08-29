@@ -126,7 +126,6 @@ get_files_from_filesystem() {
         --exclude=".git*" \
         $(: 3rd party C++ libraries -----------------------------------------) \
         --exclude-dir="asio-*-patched" \
-        --exclude-dir="cpp-httplib-0.13.3" \
         --exclude-dir="googletest-*-patched" \
         $(: various artifact directories ------------------------------------) \
         --exclude-dir="bazel-*" \

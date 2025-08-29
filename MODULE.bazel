@@ -51,7 +51,7 @@ bazel_dep(
 )
 bazel_dep(
     name = "cpp-httplib",
-    version = "0.16.3.bzl.1",
+    version = "0.22.0",
     dev_dependency = True,
     repo_name = "httplib",
 )

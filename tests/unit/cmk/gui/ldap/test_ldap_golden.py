@@ -24,6 +24,7 @@ from cmk.gui.user_connection_config_types import (
     Fixed,
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
+    UserConnectionConfig,
 )
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 
@@ -198,7 +199,10 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     def assert_expected_users(
         users_to_save: Users,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         _now: datetime.datetime,
+        _pprint_value: bool,
+        _call_users_saved_hook: bool,
     ) -> None:
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
@@ -234,6 +238,7 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
             UserId("carol"),
             Password("hunter2"),
             get_user_attributes([]),
+            [_test_config],
             default_user_profile={},
         )
 
@@ -254,6 +259,7 @@ def test_check_credentials_invalid(mocker: MockerFixture) -> None:
                 UserId("carol"),
                 Password("hunter2"),
                 get_user_attributes([]),
+                [_test_config],
                 default_user_profile={},
             )
             is False
@@ -272,6 +278,7 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
             UserId("alice"),
             Password("hunter2"),
             get_user_attributes([]),
+            [_test_config],
             default_user_profile={},
         )
         is None

@@ -38,12 +38,16 @@ def check_credentials(
     now: datetime,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
-    for connection_id, connection in active_connections():
+    for connection_id, connection in active_connections(active_config.user_connections):
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed
         result = connection.check_credentials(
-            username, password, user_attributes, active_config.default_user_profile
+            username,
+            password,
+            user_attributes,
+            active_config.user_connections,
+            active_config.default_user_profile,
         )
 
         if result is False:
@@ -102,7 +106,14 @@ def _create_non_existing_user(
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id, active_config.default_user_profile)
     users[username].setdefault("alias", username)
-    save_users(users, user_attributes, now)
+    save_users(
+        users,
+        user_attributes,
+        active_config.user_connections,
+        now=now,
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
     # Call the sync function for this new user
     connection = get_connection(connection_id)

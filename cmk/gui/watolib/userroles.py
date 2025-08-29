@@ -8,6 +8,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import NewType
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
@@ -127,7 +128,14 @@ def _rename_user_role(
             user["roles"].remove(role_id)
             if new_role_id:
                 user["roles"].append(new_role_id)
-    save_users(users, user_attributes, datetime.now())
+    save_users(
+        users,
+        user_attributes,
+        active_config.user_connections,
+        now=datetime.now(),
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 def validate_new_alias(old_alias: str, new_alias: str) -> None:
@@ -193,4 +201,11 @@ def logout_users_with_role(
     for user_id, user in users.items():
         if role_id in user["roles"] and not is_two_factor_login_enabled(user_id):
             user["serial"] = user.get("serial", 0) + 1
-    save_users(users, user_attributes, datetime.now())
+    save_users(
+        users,
+        user_attributes,
+        active_config.user_connections,
+        now=datetime.now(),
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )

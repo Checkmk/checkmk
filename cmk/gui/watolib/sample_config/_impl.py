@@ -303,10 +303,12 @@ class ConfigGeneratorRegistrationUser(SampleConfigGenerator):
 
     def generate(self) -> None:
         create_cmk_automation_user(
-            datetime.now(),
             name=self.name,
             role=self.role,
             alias=self.alias,
             store_secret=True,
             user_attributes=get_user_attributes([]),
+            user_connections=[],
+            now=datetime.now(),
+            pprint_value=True,
         )

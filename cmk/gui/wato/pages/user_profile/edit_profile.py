@@ -84,7 +84,14 @@ class UserProfile(Page):
                 vs.validate_value(value, "ua_" + name)
                 user_spec[name] = value  # type: ignore[literal-required]
 
-        userdb.save_users(users, user_attributes, datetime.now())
+        userdb.save_users(
+            users,
+            user_attributes,
+            config.user_connections,
+            now=datetime.now(),
+            pprint_value=config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
         flash(_("Successfully updated user profile."))
 

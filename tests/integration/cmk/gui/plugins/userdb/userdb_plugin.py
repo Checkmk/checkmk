@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     CheckCredentialsResult,
     user_connector_registry,
@@ -38,6 +39,7 @@ class TestConnector(UserConnector):
         user_id: UserId,
         password: Password,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         return None

@@ -21,7 +21,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.gui import userdb
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l
@@ -355,7 +355,14 @@ def _rename_host_in_event_rules(
         NotificationRuleConfigFile().save(nrules, pprint_value)
 
     if some_user_changed:
-        userdb.save_users(users, get_user_attributes(custom_user_attributes), datetime.now())
+        userdb.save_users(
+            users,
+            get_user_attributes(custom_user_attributes),
+            active_config.user_connections,
+            now=datetime.now(),
+            pprint_value=active_config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
     return actions
 

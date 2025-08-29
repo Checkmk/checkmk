@@ -88,6 +88,7 @@ from cmk.gui.user_connection_config_types import (
     GroupsToRoles,
     LDAPUserConnectionConfig,
     SyncAttribute,
+    UserConnectionConfig,
 )
 from cmk.gui.userdb import (
     active_connections,
@@ -1498,6 +1499,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         userid: UserId,
         existing_users: Users,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> None:
         new_user = _create_checkmk_user_for_this_ldap_connection(
@@ -1508,7 +1510,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             default_user_profile=default_user_profile,
         )
         existing_users[userid] = new_user
-        save_users(existing_users, user_attributes, datetime.now())
+        save_users(
+            existing_users,
+            user_attributes,
+            user_connections,
+            now=datetime.now(),
+            pprint_value=active_config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
         try:
             # logged_in_user_id() can return None when a user is created on login
@@ -1547,6 +1556,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self,
         user_id: UserId,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> UserId | None:
         """This function will try to match an existing user profile, or create a new one if
@@ -1556,7 +1566,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         def get_user_id_create_user_if_neccessary(user_id_to_check: UserId) -> UserId | None:
             if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
                 self._create_ldap_user_on_login(
-                    user_id_to_check, existing_users, user_attributes, default_user_profile
+                    user_id_to_check,
+                    existing_users,
+                    user_attributes,
+                    user_connections,
+                    default_user_profile,
                 )
                 return user_id_to_check
             return user_id_to_check if user_from_config.get("connector") == self.id else None
@@ -1577,6 +1591,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         user_id: UserId,
         password: Password,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         """This function only validates credentials, no locked checking or similar"""
@@ -1627,7 +1642,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             self._bind(user_dn, ("password", password.raw))
             userid = self._get_matching_user_profile(
-                UserId(ldap_user_id), user_attributes, default_user_profile
+                UserId(ldap_user_id), user_attributes, user_connections, default_user_profile
             )
             result: CheckCredentialsResult = False if userid is None else userid
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
@@ -1710,7 +1725,17 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         only_username: UserId | None,
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        save_users_func: Callable[
+            [
+                Users,
+                Sequence[tuple[str, UserAttribute]],
+                Sequence[UserConnectionConfig],
+                datetime,
+                bool,
+                bool,
+            ],
+            None,
+        ],
         default_user_profile: UserSpec,
     ) -> None:
         if not self.has_user_base_dn_configured():
@@ -1719,7 +1744,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._logger.info("SYNC STARTED")
 
-        if self.id not in [connection[0] for connection in active_connections()]:
+        if self.id not in [
+            connection[0] for connection in active_connections(active_config.user_connections)
+        ]:
             self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
             return
 
@@ -1776,7 +1803,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         )
 
         if sync_users_result.changes or sync_users_result.has_changed_passwords:
-            save_users_func(users, user_attributes, datetime.now())
+            save_users_func(
+                users,
+                user_attributes,
+                active_config.user_connections,
+                datetime.now(),
+                active_config.wato_pprint_config,
+                True,
+            )
         else:
             release_users_lock()
 

@@ -2480,7 +2480,14 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
             del self._rules[nr]
-            userdb.save_users(self._users, userdb.get_user_attributes(config.wato_user_attrs), now)
+            userdb.save_users(
+                self._users,
+                userdb.get_user_attributes(config.wato_user_attrs),
+                config.user_connections,
+                now=now,
+                pprint_value=config.wato_pprint_config,
+                call_users_saved_hook=True,
+            )
             self._add_change(
                 action_name="notification-delete-user-rule",
                 text=_("Deleted notification rule %d of user %s") % (nr, self._user_id()),
@@ -2494,7 +2501,14 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             rule = self._rules[from_pos]
             del self._rules[from_pos]  # make to_pos now match!
             self._rules[to_pos:to_pos] = [rule]
-            userdb.save_users(self._users, userdb.get_user_attributes(config.wato_user_attrs), now)
+            userdb.save_users(
+                self._users,
+                userdb.get_user_attributes(config.wato_user_attrs),
+                config.user_connections,
+                now=now,
+                pprint_value=config.wato_pprint_config,
+                call_users_saved_hook=True,
+            )
 
             self._add_change(
                 action_name="notification-move-user-rule",
@@ -3395,7 +3409,14 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         pprint_value: bool,
     ) -> None:
-        userdb.save_users(self._users, user_attributes, datetime.now())
+        userdb.save_users(
+            self._users,
+            user_attributes,
+            active_config.user_connections,
+            now=datetime.now(),
+            pprint_value=active_config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
@@ -3475,7 +3496,14 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         pprint_value: bool,
     ) -> None:
-        userdb.save_users(self._users, user_attributes, datetime.now())
+        userdb.save_users(
+            self._users,
+            user_attributes,
+            active_config.user_connections,
+            now=datetime.now(),
+            pprint_value=active_config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())

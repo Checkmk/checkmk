@@ -3568,7 +3568,14 @@ def _reintegrate_site_local_users(
             # This user is only known on the remote site, keep it
             local_site_users[username] = settings
     new_users.update(local_site_users)
-    save_users(new_users, user_attributes, datetime.now())
+    save_users(
+        new_users,
+        user_attributes,
+        active_config.user_connections,
+        now=datetime.now(),
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 @dataclass

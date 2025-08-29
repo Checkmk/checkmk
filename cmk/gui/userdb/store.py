@@ -43,12 +43,13 @@ from cmk.gui.type_defs import (
     Users,
     UserSpec,
 )
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 
-from ._connections import active_connections, get_connection
+from ._connections import active_connections, get_connection, get_connection_uncached
 from ._connector import UserConnector
 from ._user_attribute import UserAttribute
 from ._user_spec import add_internal_attributes
@@ -104,7 +105,14 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
 
 
 def rewrite_users(user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime) -> None:
-    save_users(load_users(lock=True), user_attributes, now)
+    save_users(
+        load_users(lock=True),
+        user_attributes,
+        active_config.user_connections,
+        now=now,
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 def _root_dir() -> Path:
@@ -356,14 +364,24 @@ def _update_users(
     changed_users: Sequence[UserId],
     all_users: Users,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
+    *,
     now: datetime,
+    pprint_value: bool,
+    call_users_saved_hook: bool,
 ) -> None:
     logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(all_users))}")
 
-    write_contacts_and_users_file(all_users, user_attributes)
+    write_contacts_and_users_file(
+        all_users,
+        user_attributes,
+        user_connections,
+        custom_default_config_dir=None,
+        pprint_value=pprint_value,
+    )
 
     # Execute user connector save hooks
-    hook_save(all_users)
+    _hook_save(all_users, user_connections)
 
     all_users_with_custom_macros = _add_custom_macro_attributes(user_attributes, all_users)
 
@@ -384,14 +402,27 @@ def _update_users(
     # The magic attribute has been added by the lru_cache decorator.
     load_users.cache_clear()  # type: ignore[attr-defined]
 
-    # Call the users_saved hook
-    hooks.call("users-saved", all_users_with_custom_macros)
+    if call_users_saved_hook:
+        hooks.call("users-saved", all_users_with_custom_macros)
 
 
 def save_users(
-    profiles: Users, user_attributes: Sequence[tuple[str, UserAttribute]], now: datetime
+    profiles: Users,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
+    now: datetime,
+    pprint_value: bool,
+    call_users_saved_hook: bool,
 ) -> None:
-    _update_users(list(profiles.keys()), profiles, user_attributes, now)
+    _update_users(
+        list(profiles.keys()),
+        profiles,
+        user_attributes,
+        user_connections,
+        now=now,
+        pprint_value=pprint_value,
+        call_users_saved_hook=call_users_saved_hook,
+    )
 
 
 def update_user(
@@ -400,7 +431,15 @@ def update_user(
     user_attributes: Sequence[tuple[str, UserAttribute]],
     now: datetime,
 ) -> None:
-    _update_users([changed_user], all_users, user_attributes, now)
+    _update_users(
+        [changed_user],
+        all_users,
+        user_attributes,
+        active_config.user_connections,
+        now=now,
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 # TODO: Isn't this needed only while generating the contacts.mk?
@@ -522,7 +561,10 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 def write_contacts_and_users_file(
     profiles: Users,
     user_attributes: Sequence[tuple[str, UserAttribute]],
-    custom_default_config_dir: str | None = None,
+    user_connections: Sequence[UserConnectionConfig],
+    custom_default_config_dir: str | None,
+    *,
+    pprint_value: bool,
 ) -> None:
     non_contact_keys = _non_contact_keys(user_attributes)
     multisite_keys = _multisite_keys(user_attributes)
@@ -538,14 +580,21 @@ def write_contacts_and_users_file(
     non_contact_attributes_cache: dict[str | None, Sequence[str]] = {}
     multisite_attributes_cache: dict[str | None, Sequence[str]] = {}
     for user_settings in updated_profiles.values():
-        connector = user_settings.get("connector")
-        if connector not in non_contact_attributes_cache:
-            non_contact_attributes_cache[connector] = _non_contact_attributes(
-                connector, user_attributes
+        connection_id = user_settings.get("connector")
+        if connection_id is None:
+            non_contact_attributes_cache[None] = []
+            multisite_attributes_cache[None] = []
+            continue
+
+        if connection_id not in non_contact_attributes_cache:
+            connection = get_connection_uncached(connection_id, user_connections)
+            non_contact_attributes_cache[connection_id] = (
+                connection.non_contact_attributes(user_attributes) if connection else []
             )
-        if connector not in multisite_attributes_cache:
-            multisite_attributes_cache[connector] = _multisite_attributes(
-                connector, user_attributes
+        if connection_id not in multisite_attributes_cache:
+            connection = get_connection_uncached(connection_id, user_connections)
+            multisite_attributes_cache[connection_id] = (
+                connection.multisite_attributes(user_attributes) if connection else []
             )
 
     # Remove multisite keys in contacts.
@@ -584,7 +633,7 @@ def write_contacts_and_users_file(
         check_mk_config_dir / "contacts.mk",
         key="contacts",
         value=contacts,
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
     )
 
     # GUI specific user configuration
@@ -592,7 +641,7 @@ def write_contacts_and_users_file(
         multisite_config_dir / "users.mk",
         key="multisite_users",
         value=users,
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
     )
 
 
@@ -676,12 +725,15 @@ def _save_auth_serials(updated_profiles: Users) -> None:
 
 
 def create_cmk_automation_user(
-    now: datetime,
     name: str,
     alias: str,
     role: str,
     store_secret: bool,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
+    *,
+    now: datetime,
+    pprint_value: bool,
 ) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
@@ -701,7 +753,14 @@ def create_cmk_automation_user(
         "language": "en",
         "connector": "htpasswd",
     }
-    save_users(users, user_attributes, now)
+    save_users(
+        users,
+        user_attributes,
+        user_connections,
+        now=now,
+        pprint_value=pprint_value,
+        call_users_saved_hook=True,
+    )
 
 
 def _save_cached_profile(
@@ -780,10 +839,10 @@ def show_exception(connection_id: str, title: str, e: Exception, debug: bool = T
     )
 
 
-def hook_save(users: Users) -> None:
+def _hook_save(users: Users, user_connections: Sequence[UserConnectionConfig]) -> None:
     """Hook function can be registered here to be executed during saving of the
     new user construct"""
-    for connection_id, connection in active_connections():
+    for connection_id, connection in active_connections(user_connections):
         try:
             connection.save_users(users)
         except Exception as e:

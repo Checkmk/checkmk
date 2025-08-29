@@ -18,7 +18,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -30,6 +30,7 @@ from cmk.gui.type_defs import (
     Users,
     UserSpec,
 )
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
@@ -146,7 +147,8 @@ class UserSyncBackgroundJob(BackgroundJob):
     def shall_start(self) -> bool:
         """Some basic preliminary check to decide quickly whether to start the job"""
         return any(
-            connection.sync_is_needed() for _connection_id, connection in active_connections()
+            connection.sync_is_needed()
+            for _connection_id, connection in active_connections(active_config.user_connections)
         )
 
     def do_sync(
@@ -154,7 +156,17 @@ class UserSyncBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         args: UserSyncArgs,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        save_users_func: Callable[
+            [
+                Users,
+                Sequence[tuple[str, UserAttribute]],
+                Sequence[UserConnectionConfig],
+                datetime,
+                bool,
+                bool,
+            ],
+            None,
+        ],
     ) -> None:
         logger = job_interface.get_logger()
         with job_interface.gui_context():
@@ -182,11 +194,21 @@ class UserSyncBackgroundJob(BackgroundJob):
         enforce_sync: bool,
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        save_users_func: Callable[
+            [
+                Users,
+                Sequence[tuple[str, UserAttribute]],
+                Sequence[UserConnectionConfig],
+                datetime,
+                bool,
+                bool,
+            ],
+            None,
+        ],
         default_user_profile: UserSpec,
         now: datetime,
     ) -> bool:
-        for connection_id, connection in active_connections():
+        for connection_id, connection in active_connections(active_config.user_connections):
             try:
                 if not enforce_sync and not connection.sync_is_needed():
                     continue
@@ -196,8 +218,8 @@ class UserSyncBackgroundJob(BackgroundJob):
                     add_to_changelog=add_to_changelog,
                     only_username=None,
                     user_attributes=user_attributes,
-                    load_users_func=load_users,
-                    save_users_func=save_users,
+                    load_users_func=load_users_func,
+                    save_users_func=save_users_func,
                     default_user_profile=default_user_profile,
                 )
                 logger.info(_("[%s] Finished sync for connection") % connection_id)

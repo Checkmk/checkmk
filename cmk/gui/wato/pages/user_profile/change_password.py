@@ -109,7 +109,14 @@ class UserChangePasswordPage(Page):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users, user_attributes, now)
+        userdb.save_users(
+            users,
+            user_attributes,
+            config.user_connections,
+            now=now,
+            pprint_value=config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
         connection_id = user_spec.get("connector", None)
         connection = get_connection(connection_id)
         log_security_event(

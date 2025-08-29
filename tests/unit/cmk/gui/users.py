@@ -15,7 +15,6 @@ from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInSuperUser
-from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.store import load_users, save_users
@@ -94,15 +93,17 @@ def create_and_destroy_user(
     finally:
         config.multisite_users.pop(user_id, None)
 
-        with SuperUserContext():
-            users = load_users()
-            if user_id in users:
-                del users[user_id]
-                save_users(
-                    profiles=users,
-                    user_attributes=user_attributes,
-                    now=datetime.now(),
-                )
+        users = load_users()
+        if user_id in users:
+            del users[user_id]
+            save_users(
+                profiles=users,
+                user_attributes=user_attributes,
+                user_connections=config.user_connections,
+                now=datetime.now(),
+                pprint_value=config.wato_pprint_config,
+                call_users_saved_hook=False,
+            )
 
-            # User directories are not deleted by WATO by default. Clean it up here!
-            shutil.rmtree(str(cmk.utils.paths.omd_root.joinpath("var/check_mk/web", user_id)))
+        # User directories are not deleted by WATO by default. Clean it up here!
+        shutil.rmtree(str(cmk.utils.paths.omd_root.joinpath("var/check_mk/web", user_id)))

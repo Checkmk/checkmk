@@ -71,6 +71,7 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
         user_id: UserId,
         password: Password,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         return None
@@ -84,7 +85,17 @@ class UserConnector(abc.ABC, Generic[_T_Config]):
         only_username: UserId | None,
         user_attributes: Sequence[tuple[str, UserAttribute]],
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users, Sequence[tuple[str, UserAttribute]], datetime], None],
+        save_users_func: Callable[
+            [
+                Users,
+                Sequence[tuple[str, UserAttribute]],
+                Sequence[UserConnectionConfig],
+                datetime,
+                bool,
+                bool,
+            ],
+            None,
+        ],
         default_user_profile: UserSpec,
     ) -> None:
         pass

@@ -12,7 +12,7 @@ from cmk.crypto.password import Password
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.user_connection_config_types import HtpasswdUserConnectionConfig
+from cmk.gui.user_connection_config_types import HtpasswdUserConnectionConfig, UserConnectionConfig
 from cmk.gui.userdb import (
     CheckCredentialsResult,
     ConnectorType,
@@ -85,6 +85,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
         user_id: UserId,
         password: Password,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         if not (pw_hash := self._htpasswd.get_hash(user_id)):

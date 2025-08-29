@@ -34,8 +34,19 @@ def get_connection(connection_id: str | None) -> UserConnector | None:
 
     This function maintains a cache that for a single connection_id only one object per request is
     created."""
-    connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+    connections_with_id = [
+        c for cid, c in _all_connections(active_config.user_connections) if cid == connection_id
+    ]
     return connections_with_id[0] if connections_with_id else None
+
+
+def get_connection_uncached(
+    connection_id: str, user_connections: Sequence[UserConnectionConfig]
+) -> UserConnector | None:
+    for connection_config in _get_connection_configs(user_connections):
+        if connection_config["id"] == connection_id:
+            return user_connector_registry[connection_config["type"]](connection_config)
+    return None
 
 
 @overload
@@ -68,8 +79,12 @@ def clear_user_connection_cache() -> None:
     get_connection.cache_clear()  # type: ignore[attr-defined]
 
 
-def active_connections() -> list[tuple[str, UserConnector]]:
-    enabled_configs = [cfg for cfg in _get_connection_configs() if not cfg["disabled"]]
+def active_connections(
+    user_connections: Sequence[UserConnectionConfig],
+) -> list[tuple[str, UserConnector]]:
+    enabled_configs = [
+        cfg for cfg in _get_connection_configs(user_connections) if not cfg["disabled"]
+    ]
     return [
         (connection_id, connection)
         for connection_id, connection in _get_connections_for(enabled_configs)
@@ -81,15 +96,17 @@ def connection_choices() -> list[tuple[str, str]]:
     return sorted(
         [
             (connection_id, f"{connection_id} ({connection.type()})")
-            for connection_id, connection in _all_connections()
+            for connection_id, connection in _all_connections(active_config.user_connections)
             if connection.type() == ConnectorType.LDAP
         ],
         key=lambda id_and_description: id_and_description[1],
     )
 
 
-def _all_connections() -> list[tuple[str, UserConnector]]:
-    return _get_connections_for(_get_connection_configs())
+def _all_connections(
+    user_connections: Sequence[UserConnectionConfig],
+) -> list[tuple[str, UserConnector]]:
+    return _get_connections_for(_get_connection_configs(user_connections))
 
 
 def _get_connections_for(
@@ -98,8 +115,10 @@ def _get_connections_for(
     return [(cfg["id"], user_connector_registry[cfg["type"]](cfg)) for cfg in configs]
 
 
-def _get_connection_configs() -> list[UserConnectionConfig]:
-    return [*builtin_connections, *active_config.user_connections]
+def _get_connection_configs(
+    user_connections: Sequence[UserConnectionConfig],
+) -> list[UserConnectionConfig]:
+    return [*builtin_connections, *user_connections]
 
 
 _HTPASSWD_CONNECTION = HtpasswdUserConnectionConfig(

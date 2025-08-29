@@ -482,6 +482,7 @@ class ACTestOldDefaultCredentials(ACTest):
                 UserId("omdadmin"),
                 Password("omd"),
                 get_user_attributes(config.wato_user_attrs),
+                config.user_connections,
                 config.default_user_profile,
             )
             == "omdadmin"

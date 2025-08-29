@@ -662,7 +662,14 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
-    save_users(users, user_attributes, now)
+    save_users(
+        users,
+        user_attributes,
+        user_connections=[],
+        now=now,
+        pprint_value=True,
+        call_users_saved_hook=False,
+    )
 
     with pytest.raises(MKUserError, match="User is locked"):
         userdb.check_credentials(user_id, Password(password), user_attributes, now)
@@ -690,7 +697,14 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    save_users(users, (user_attributes := get_user_attributes([])), now)
+    save_users(
+        users,
+        (user_attributes := get_user_attributes([])),
+        user_connections=[],
+        now=now,
+        pprint_value=True,
+        call_users_saved_hook=False,
+    )
     assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
 
 
@@ -701,7 +715,14 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "test-customer"
-    save_users(users, (user_attributes := get_user_attributes([])), now)
+    save_users(
+        users,
+        (user_attributes := get_user_attributes([])),
+        user_connections=[],
+        now=now,
+        pprint_value=True,
+        call_users_saved_hook=False,
+    )
     assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
 
 
@@ -714,7 +735,14 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "wrong-customer"
-    save_users(users, (user_attributes := get_user_attributes([])), now)
+    save_users(
+        users,
+        (user_attributes := get_user_attributes([])),
+        user_connections=[],
+        now=now,
+        pprint_value=True,
+        call_users_saved_hook=False,
+    )
     assert userdb.check_credentials(user_id, Password(password), user_attributes, now) is False
 
 

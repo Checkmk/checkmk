@@ -15,10 +15,12 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import site_config, userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, Users, UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import add_internal_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -114,7 +116,14 @@ def delete_users(
             sites=None if affected_sites == "all" else list(affected_sites),
             use_git=use_git,
         )
-        userdb.save_users(all_users, user_attributes, datetime.now())
+        userdb.save_users(
+            all_users,
+            user_attributes,
+            active_config.user_connections,
+            now=datetime.now(),
+            pprint_value=active_config.wato_pprint_config,
+            call_users_saved_hook=True,
+        )
 
 
 def edit_users(
@@ -179,7 +188,14 @@ def edit_users(
             use_git=use_git,
         )
 
-    userdb.save_users(all_users, user_attributes, datetime.now())
+    userdb.save_users(
+        all_users,
+        user_attributes,
+        active_config.user_connections,
+        now=datetime.now(),
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 def create_user(
@@ -190,7 +206,12 @@ def create_user(
     *,
     use_git: bool,
     acting_user: LoggedInUser,
+    # TODO: Make this a mandatory parameter in the next commit
+    user_connections: Sequence[UserConnectionConfig] | None = None,
 ) -> None:
+    if user_connections is None:
+        user_connections = active_config.user_connections
+
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
 
@@ -237,7 +258,14 @@ def create_user(
     )
 
     all_users[user_id] = new_user
-    userdb.save_users(all_users, user_attributes, datetime.now())
+    userdb.save_users(
+        all_users,
+        user_attributes,
+        user_connections,
+        now=datetime.now(),
+        pprint_value=active_config.wato_pprint_config,
+        call_users_saved_hook=True,
+    )
 
 
 def remove_custom_attribute_from_all_users(

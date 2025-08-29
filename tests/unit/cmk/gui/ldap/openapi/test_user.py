@@ -2,15 +2,13 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 from cmk.ccc import version
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
-from cmk.gui.ldap.ldap_connector import LDAPUserConnector
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.user_connection_config_types import (
@@ -18,7 +16,7 @@ from cmk.gui.user_connection_config_types import (
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
 )
-from cmk.gui.userdb import get_user_attributes
+from cmk.gui.userdb import get_user_attributes, UserConnectionConfigFile
 from cmk.gui.watolib.users import create_user, default_sites
 from cmk.utils import paths
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -28,9 +26,9 @@ managedtest = pytest.mark.skipif(
 )
 
 
-@pytest.fixture(name="mock_ldap_locked_attributes")
-def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFixture) -> MagicMock:
-    """Mock the locked attributes of a LDAP user"""
+@managedtest
+def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
+    name = UserId("foo")
     ldap_config = LDAPUserConnectionConfig(
         id="CMKTest",
         description="",
@@ -86,18 +84,10 @@ def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFix
         type="ldap",
     )
 
-    return mocker.patch(
-        "cmk.gui.openapi.endpoints.user_config.locked_attributes",
-        return_value=LDAPUserConnector(ldap_config).locked_attributes(get_user_attributes([])),
-    )
+    UserConnectionConfigFile().save([ldap_config], pprint_value=False)
+    # Hope that this is not needed anymore soon
+    active_config.user_connections = [ldap_config]
 
-
-@pytest.mark.usefixtures("mock_ldap_locked_attributes")
-@managedtest
-def test_edit_ldap_user_with_locked_attributes(
-    clients: ClientRegistry,
-) -> None:
-    name = UserId("foo")
     user_object: UserSpec = {
         "ui_theme": None,
         "ui_sidebar_position": None,
@@ -126,6 +116,7 @@ def test_edit_ldap_user_with_locked_attributes(
         user_object,
         default_sites,
         get_user_attributes([]),
+        user_connections=[ldap_config],
         use_git=False,
         acting_user=LoggedInSuperUser(),
     )

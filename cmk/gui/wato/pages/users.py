@@ -227,7 +227,7 @@ class ModeUsers(WatoMode):
                 ),
                 is_shortcut=True,
                 is_suggested=True,
-                is_enabled=len(active_connections()) > 1,
+                is_enabled=len(active_connections(active_config.user_connections)) > 1,
                 disabled_tooltip=_("There is only one active user connector available"),
             )
 
@@ -1544,5 +1544,5 @@ def _sync_possible() -> bool:
     """When at least one LDAP connection is defined and active a sync is possible"""
     return any(
         connection.type() == ConnectorType.LDAP
-        for _connection_id, connection in active_connections()
+        for _connection_id, connection in active_connections(active_config.user_connections)
     )

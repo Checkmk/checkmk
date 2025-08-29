@@ -26,6 +26,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     connections_by_type,
     ConnectorType,
@@ -184,7 +185,11 @@ class ModeUserMigrate(WatoMode):
 
         attributes: list[str] = migration_params.get("attributes", [])
         users_with_warning, users_migrated = self._migrate_users(
-            connector, attributes, user_attributes
+            connector,
+            attributes,
+            user_attributes,
+            config.user_connections,
+            pprint_value=config.wato_pprint_config,
         )
 
         flashed_msg: str = _("Migrated %d %s to connector '%s': %s") % (
@@ -240,6 +245,9 @@ class ModeUserMigrate(WatoMode):
         connector: str,
         attributes: list[str],
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
+        *,
+        pprint_value: bool,
     ) -> tuple[list[str], list[str]]:
         users_with_warning: list[str] = []
         users_migrated: list[str] = []
@@ -267,7 +275,14 @@ class ModeUserMigrate(WatoMode):
 
             users_migrated.append(username)
 
-        userdb.save_users(all_users, user_attributes, datetime.now())
+        userdb.save_users(
+            all_users,
+            user_attributes,
+            user_connections,
+            now=datetime.now(),
+            pprint_value=pprint_value,
+            call_users_saved_hook=True,
+        )
 
         return users_with_warning, users_migrated
 

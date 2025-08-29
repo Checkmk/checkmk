@@ -76,16 +76,6 @@ def _del_host_downtime(
         site_id:
             Id of site where command should be executed.
 
-    Examples:
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> expect = simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
-        >>> with expect as live, SuperUserContext():
-        ...     load_config()
-        ...     _del_host_downtime(live, 1, "")
 
     """
 
@@ -112,16 +102,6 @@ def _del_service_downtime(
         site_id:
             Id of site where command should be executed.
 
-    Examples:
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> expect = simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
-        >>> with expect as live, SuperUserContext():
-        ...     load_config()
-        ...     _del_service_downtime(live, 1, "")
 
     """
     connection.command_obj(
@@ -291,30 +271,6 @@ def schedule_service_downtime(
     See Also:
         https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=119
 
-    Examples:
-
-        >>> from zoneinfo import ZoneInfo
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live, SuperUserContext():
-        ...     load_config()
-        ...     _ = live.expect_query("GET services\\nColumns: description\\nFilter: host_name = example.com\\nFilter: description = Memory\\nAnd: 2")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
-        ...     schedule_service_downtime(live,
-        ...             SiteId('NO_SITE'),
-        ...             'example.com',
-        ...             'Memory',
-        ...             _start_time,
-        ...             _end_time,
-        ...             recur="day_of_month",
-        ...             duration=2,
-        ...             comment="Boom")
 
     """
 
@@ -699,27 +655,6 @@ def schedule_host_downtime(
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=118
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=122
 
-    Examples:
-        >>> from zoneinfo import ZoneInfo
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live, SuperUserContext():
-        ...     load_config()
-        ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
-        ...     schedule_host_downtime(live,
-        ...             'example.com',
-        ...             _start_time,
-        ...             _end_time,
-        ...             recur="day_of_month",
-        ...             duration=2,
-        ...             comment="Boom")
 
     """
     if isinstance(host_entry, str):
@@ -885,19 +820,6 @@ def _recur_mode(recur: RecurMode, duration: int) -> int:
        16: (undefined?)
        17: repeats on the same day of the month as ??? (start_date or end_date?)
 
-    Examples:
-
-        We don't test the KeyError case as it's supposed to be one execution path and mypy will
-        check for the input.
-
-        >>> _recur_mode('fixed', 0)
-        1
-
-        >>> _recur_mode('fixed', 30)
-        0
-
-        >>> _recur_mode('second_week', 0)
-        9
 
     """
     mapping: dict[str, int] = {
@@ -935,16 +857,6 @@ def _deduplicate(seq):
         Deduplicated sequence. The first entry of duplications is kept, any repeating entries
         are discarded.
 
-    Examples:
-
-        >>> _deduplicate([1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1])
-        [1, 2, 3, 4, 5, 6]
-
-        >>> _deduplicate((1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1))
-        [1, 2, 3, 4, 5, 6]
-
-        >>> _deduplicate(['Hello', 'Hello', 'World', 'World', 'World', '!', '!', '!'])
-        ['Hello', 'World', '!']
 
     """
     result = []

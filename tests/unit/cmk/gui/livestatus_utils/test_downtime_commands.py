@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from cmk.gui import sites
-from cmk.gui.config import load_config
 from cmk.gui.livestatus_utils.commands import downtimes
 from cmk.gui.session import SuperUserContext
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -29,7 +28,6 @@ def test_host_downtime(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
@@ -53,7 +51,6 @@ def test_host_downtime_with_services(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
@@ -89,7 +86,6 @@ def test_hostgroup_host_downtime(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query(
             [
                 "GET hostgroups",
@@ -124,7 +120,6 @@ def test_hostgroup_host_downtime_with_services(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query(
             [
                 "GET hostgroups",
@@ -175,7 +170,6 @@ def test_servicegroup_service_downtime(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query(
             [
                 "GET servicegroups",
@@ -213,7 +207,6 @@ def test_servicegroup_service_downtime_and_hosts(
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
-        load_config()
         live.expect_query(
             [
                 "GET servicegroups",
@@ -252,3 +245,45 @@ def test_servicegroup_service_downtime_and_hosts(
             duration=2,
             comment="Boom",
         )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_del_host_downtime(mock_livestatus: MockLiveStatusConnection) -> None:
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
+        live.expect_query("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
+        downtimes._del_host_downtime(sites.live(), 1, None)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_del_service_downtime(mock_livestatus: MockLiveStatusConnection) -> None:
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
+        live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
+        downtimes._del_service_downtime(sites.live(), 1, None)
+
+
+def test_recur_mode_fixed_no_duration() -> None:
+    assert downtimes._recur_mode("fixed", 0) == 1
+
+
+def test_recur_mode_fixed_with_duration() -> None:
+    assert downtimes._recur_mode("fixed", 30) == 0
+
+
+def test_recur_mode_second_week_no_duration() -> None:
+    assert downtimes._recur_mode("second_week", 0) == 9
+
+
+def test_deduplicate_list() -> None:
+    assert downtimes._deduplicate([1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1]) == [1, 2, 3, 4, 5, 6]
+
+
+def test_deduplicate_tuple() -> None:
+    assert downtimes._deduplicate((1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1)) == [1, 2, 3, 4, 5, 6]
+
+
+def test_deduplicate_strings() -> None:
+    assert downtimes._deduplicate(["Hello", "Hello", "World", "World", "World", "!", "!", "!"]) == [
+        "Hello",
+        "World",
+        "!",
+    ]

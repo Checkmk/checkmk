@@ -68,6 +68,7 @@ def _diff(before: dict[str, Info], after: dict[str, Info]) -> str:
     updated = {(v.name, v.version) for v in after.values() if v.name not in added} - {
         (v.name, v.version) for v in before.values()
     }
+    return_value = ""
     if deleted:
         return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
 

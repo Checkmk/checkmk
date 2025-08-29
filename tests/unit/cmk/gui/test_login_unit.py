@@ -16,7 +16,7 @@ from werkzeug.test import create_environ
 
 from cmk.ccc.user import UserId
 from cmk.gui import auth, http, login
-from cmk.gui.config import active_config, load_config
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.session import session
@@ -235,7 +235,6 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
     environ = {**create_environ(), "HTTP_COOKIE": f"{cookie_name}={cookie_value}"}
 
     with application_and_request_context(environ):
-        load_config()
         yield cookie_name
 
 

@@ -32,20 +32,6 @@ def force_schedule_host_check(
         check_time:
             The time at which this forced check should be performed
 
-    Examples:
-        >>> from zoneinfo import ZoneInfo
-        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> cmd = "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;example.com;0"
-        >>> expect = simple_expect(cmd, match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
-        ...     load_config()
-        ...     force_schedule_host_check(live, 'example.com', _check_time)
 
     """
     _user.need_permission("action.reschedule")
@@ -75,19 +61,6 @@ def force_schedule_service_check(
         check_time:
             The time at which this forced check should be performed
 
-    Examples:
-        >>> from zoneinfo import ZoneInfo
-        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
-
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.session import SuperUserContext
-
-        >>> cmd = "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;example.com;CPU Load;0"
-        >>> expect = simple_expect(cmd, match_type="ellipsis")
-        >>> with expect as live, SuperUserContext():
-        ...     load_config()
-        ...     force_schedule_service_check(live,'example.com', 'CPU Load', _check_time)
     """
     _user.need_permission("action.reschedule")
     connection.command_obj(

@@ -31,6 +31,7 @@ from cmk.plugins.lib.azure import (
     check_cpu,
     check_memory,
     check_network,
+    check_resource_metrics,
     check_storage,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
@@ -700,3 +701,35 @@ def test_create_check_azure_metrics_function_single_specified_check_levels(
         check_levels=check_levels_v2,
     )
     assert list(check_func({}, section)) == expected_result
+
+
+def test_check_resource_metric_map_func() -> None:
+    metric_data = MetricData(
+        "total_connections_failed",
+        "connections_failed",
+        "Connections failed",
+        str,
+    )
+
+    metric_data_with_map_fn = MetricData(
+        "total_connections_failed",
+        "connections_failed_2",
+        "Connections failed 2",
+        str,
+        map_func=lambda x: x * 10,
+    )
+
+    check_result = check_resource_metrics(
+        PARSED_RESOURCES["checkmk-mysql-server"],
+        {},
+        [metric_data, metric_data_with_map_fn],
+    )
+
+    assert list(check_result) == (
+        [
+            Result(state=State.OK, summary="Connections failed: 2.0"),
+            Metric("connections_failed", 2.0),
+            Result(state=State.OK, summary="Connections failed 2: 20.0"),
+            Metric("connections_failed_2", 20.0),
+        ]
+    )

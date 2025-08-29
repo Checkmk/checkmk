@@ -55,6 +55,9 @@ class MetricData(NamedTuple):
     upper_levels_param: str = ""
     lower_levels_param: str = ""
     boundaries: tuple[float | None, float | None] | None = None
+    # Apply this function to the value before using it when yielding metrics
+    # This gives the opportunity to manipulate metrics before they are counted.
+    map_func: Callable[[float], float] | None = None
 
 
 class PublicIP(BaseModel):
@@ -286,7 +289,7 @@ def check_resource_metrics(
             continue
 
         yield from check_levels(
-            metric.value,
+            metric_data.map_func(metric.value) if metric_data.map_func else metric.value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),
             metric_name=metric_data.metric_name,

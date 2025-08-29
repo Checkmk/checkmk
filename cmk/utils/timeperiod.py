@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import TypeAlias
+from typing import TypeAlias, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -161,12 +161,12 @@ def is_timeperiod_active(
         "sunday",
     ]
     current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
-    if _is_timeperiod_excluded_via_exception(
+    if _is_timeperiod_active_via_exception(
         timeperiod_definition,
         days,
         current_datetime,
     ):
-        return False
+        return True
 
     if (weekday := days[current_datetime.weekday()]) in timeperiod_definition:
         return _is_time_in_timeperiod(current_datetime, timeperiod_definition[weekday])
@@ -190,7 +190,18 @@ def _is_timeperiod_excluded_via_timeperiod(
     return False
 
 
-def _is_timeperiod_excluded_via_exception(
+DayTimeFrame: TypeAlias = tuple[str, str]
+
+
+def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:
+    return isinstance(obj, tuple) and len(obj) == 2 and all(isinstance(item, str) for item in obj)
+
+
+def is_time_range_list(obj: object) -> TypeGuard[list[tuple[str, str]]]:
+    return isinstance(obj, list) and all(_is_time_range(item) for item in obj)
+
+
+def _is_timeperiod_active_via_exception(
     timeperiod_definition: TimeperiodSpec,
     days: list[str],
     current_time: datetime,
@@ -204,7 +215,9 @@ def _is_timeperiod_excluded_via_exception(
         except ValueError:
             continue
 
-        if not _is_time_in_timeperiod(current_time, value, day):
-            return True
+        if not is_time_range_list(value):
+            continue
+
+        return _is_time_in_timeperiod(current_time, value, day)
 
     return False

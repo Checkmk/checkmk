@@ -31,3 +31,6 @@ coverage
 *.tsbuildinfo
 
 package-lock.json
+
+# i18n process files
+locale/
